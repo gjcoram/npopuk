@@ -45,7 +45,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.03")
+#define APP_NAME				TEXT("nPOPuk Ver 2.04")
 #define APP_VERSION_NUM			2000
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")

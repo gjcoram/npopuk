@@ -1,4 +1,4 @@
-//{{NO_DEPENDENCIES}}
+CHAR *q, *s;//{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
 // Used by nPOP.rc
 //
@@ -236,6 +236,8 @@
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
 #define ID_MENUITEM_MOVESAVE            1209
+#define IDD_DIALOG_NEWDIR               1210
+#define IDC_NEWDIRNAME                  1211
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
