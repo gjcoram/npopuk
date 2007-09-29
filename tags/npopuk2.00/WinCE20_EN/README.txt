@@ -1,0 +1,1 @@
+For WinCE2.0, I just start up the project from WinCE2.11, and select the correct CE version (2.0), Platform, and Configuration (eg, WCE MIPS Release).
