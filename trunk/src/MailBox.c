@@ -325,7 +325,7 @@ BOOL mailbox_menu_rebuild(HWND unused) {
 		vMenu = GetSubMenu(hViewMenu, 0);
 #else
 #define IDC_VCB 2000
-		vMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hViewWnd, IDC_VCB), 0), 0);
+		vMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hViewWnd, IDC_VCB), 0), 2);
 #endif
 #else
 		vMenu = GetSubMenu(GetMenu(hViewWnd), 2);

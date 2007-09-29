@@ -40,7 +40,7 @@ extern TCHAR *DataDir;
 static MAILBOX *tpOptionMailBox;
 static BOOL PropRet;
 static HWND hLvFilter;
-static int ViewClose;
+static int ViewClose; // to synchronize option on Recv and Fwd tabs
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;

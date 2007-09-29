@@ -60,6 +60,7 @@ UINT nBroadcastMsg = 0;
 HINSTANCE hInst;							// Local copy of hInstance
 TCHAR *AppDir = NULL;						// アプリケーションパス
 TCHAR *DataDir = NULL;						// データ保存先のパス
+TCHAR *IniFile = NULL;						// ini file specified by /y:
 TCHAR *g_Pass = NULL;						// 一時パスワード
 int gPassSt;								// 一時パスワード保存フラグ
 static TCHAR *CmdLine = NULL;				// コマンドライン
@@ -143,7 +144,7 @@ extern BOOL RasLoop;
 extern HANDLE hEvent;
 
 /* Local Function Prototypes */
-static BOOL GetAppPath(HINSTANCE hinst);
+static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
 #ifndef _WIN32_WCE
 static BOOL ConfirmPass(HWND hWnd, TCHAR *ps);
 #endif
@@ -193,15 +194,9 @@ static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned i
 int GetUserDiskName(HINSTANCE hInstance, LPTSTR lpDiskName, int nMaxCount);
 #endif
 
-static BOOL GetAppPath(HINSTANCE hinst)
+static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 {
-#ifdef _WCE_OLD
-#define SAVEPATH	TEXT("\\My Documents\\")
-	AppDir = alloc_copy_t(SAVEPATH);
-	if (AppDir == NULL) {
-		return FALSE;
-	}
-#elif defined(_WIN32_WCE_LAGENDA)
+#ifdef _WIN32_WCE_LAGENDA
 	TCHAR buf[BUF_SIZE];
 
 	GetUserDiskName(hinst, buf, BUF_SIZE - 1);
@@ -214,14 +209,89 @@ static BOOL GetAppPath(HINSTANCE hinst)
 	CreateDirectory(AppDir, NULL);
 #else
 	TCHAR *p, *r;
+	TCHAR name[BUF_SIZE];
+	BOOL slash_y, slash_a;
 
-	AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
-	if (AppDir == NULL) {
-		return FALSE;
+	if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
+
+		// GJC remove the command-line options from this
+#ifdef _WIN32_WCE
+		CmdLine = alloc_copy_t(lpCmdLine);
+#else
+		CmdLine = alloc_char_to_tchar(lpCmdLine);
+#endif
+
+		for (p = lpCmdLine; *p == TEXT(' '); p++); // remove spaces
+		// command-line options should preceed any mailto: arguments
+		// /y:inifile
+		// /a:account handled elsewhere
+		while (*p == TEXT('/') && *(p+2) == TEXT(':')) {
+			p++;
+			if (*p == TEXT('y') || *p == TEXT('Y')) {
+				slash_y = TRUE;
+			} else if (*p == TEXT('a') || *p == TEXT('A')) {
+				slash_a = TRUE;
+			} else {
+				// unknown switch
+			}
+
+			if (slash_y || slash_a) {
+				p += 2;
+				if (*p == TEXT('\"')) { // Collect everything between double quotes
+					p++;
+					for (r = p; *r != TEXT('\0') && *r != TEXT('\"'); r++);
+				} else { // otherwise collect up to the end of the word
+					for (r = p; *r != TEXT('\0') && *r != TEXT(' '); r++);
+				}
+			}
+			if (slash_y) {
+#ifdef _WIN32_WCE
+				WIN32_FIND_DATA FindData;
+				HANDLE hFindFile;
+#else
+				DWORD ret;
+#endif
+				BOOL Found = TRUE;
+				int len;
+
+				len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
+				str_cpy_n_t(name, p, len);
+#ifdef _WIN32_WCE
+				if ((hFindFile = FindFirstFile(name, &FindData)) == INVALID_HANDLE_VALUE) {
+					Found = FALSE;
+				}
+				FindClose(hFindFile);
+#else
+				if ((ret = GetFullPathName(name, BUF_SIZE, name, NULL)) == 0) {
+					Found = FALSE;
+				}
+#endif
+				if (Found == FALSE) {
+					TCHAR buf[BUF_SIZE];
+					wsprintf(buf, STR_ERR_INIFILE, name);
+					return FALSE;
+				}
+				IniFile = alloc_copy_t(name);
+			} else if (slash_a) {
+				// GJC presently handled in CommandLine -- need to work it in here
+			}
+			for (p = r; *p == TEXT(' '); p++); // remove spaces
+		}
 	}
 
-	//Pass of application acquisition
-	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
+	if (IniFile == NULL) {
+		AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
+		if (AppDir == NULL) {
+			return FALSE;
+		}
+		//Pass of application acquisition
+		GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
+	} else {
+		AppDir = alloc_copy_t(IniFile);
+		if (AppDir == NULL) {
+			return FALSE;
+		}
+	}
 	for (p = r = AppDir; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
@@ -236,7 +306,8 @@ static BOOL GetAppPath(HINSTANCE hinst)
 	*r = TEXT('\0');
 
 	lstrcat(AppDir, TEXT("\\"));
-#endif	// _WCE_OLD
+#endif	// _WIN32_WCE_LAGENDA
+
 	return TRUE;
 }
 
@@ -287,12 +358,10 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 	// If there was 'a:'
 	p += 2;
 
-	// Collect everything between double quotes if there
-	if (*p == TEXT('\"')) {
+	if (*p == TEXT('\"')) { // Collect everything between double quotes
 		p++;
 		for (r = p; *r != TEXT('\0') && *r != TEXT('\"'); r++);
-		// otherwise collect up to the end of the word
-	} else {
+	} else { // otherwise collect up to the end of the word
 		for (r = p; *r != TEXT('\0') && *r != TEXT(' '); r++);
 	}
 	len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
@@ -4557,8 +4626,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif	// _WCE_OLD
 #endif	// _DEBUG
 
-	//Acquisition
-	if (GetAppPath(hInstance) == FALSE) {
+	// Sets AppDir and parses lpCmdLine to set IniFile and static CmdLine
+	if (GetAppPath(hInstance, (TCHAR *)lpCmdLine) == FALSE) {
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -4573,6 +4642,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		TmpCmdShow = CmdShow;
 		if (ini_start_auth_check() == FALSE) {
 			mem_free(&AppDir);
+			mem_free(&IniFile);
 			mem_free(&g_Pass);
 			if (hMutex != NULL) {
 				CloseHandle(hMutex);
@@ -4588,6 +4658,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//of starting password Initialization
 	if (WSAStartup(0x101, &WsaData) != 0) {
 		mem_free(&AppDir);
+		mem_free(&IniFile);
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -4608,6 +4679,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (!InitApplication(hInstance) || !View_InitApplication(hInstance)
 		|| !Edit_InitApplication(hInstance)) {
 		mem_free(&AppDir);
+		mem_free(&IniFile);
 		WSACleanup();
 		FreeRas();
 #ifndef _WCE_OLD
@@ -4618,14 +4690,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
-	}
-
-	if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
-#ifdef _WIN32_WCE
-		CmdLine = alloc_copy_t(lpCmdLine);
-#else
-		CmdLine = alloc_char_to_tchar(lpCmdLine);
-#endif
 	}
 
 #ifndef _WCE_OLD
@@ -4643,6 +4707,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FreeAllMailBox();
 		mem_free(&CmdLine);
 		mem_free(&AppDir);
+		mem_free(&IniFile);
 		WSACleanup();
 		FreeRas();
 #ifndef _WCE_OLD
@@ -4675,6 +4740,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	mem_free(&AppDir);
+	mem_free(&IniFile);
 	DestroyMenu(hPOPUP);
 	UnregisterClass(MAIN_WND_CLASS, hInstance);
 	UnregisterClass(VIEW_WND_CLASS, hInstance);
