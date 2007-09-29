@@ -1,0 +1,1170 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resrc1.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_WINDOW MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ"
+    BEGIN
+        MENUITEM "ﾒｯｾｰｼﾞの作成...",             ID_MENUITEM_NEWMAIL
+        MENUITEM SEPARATOR
+        POPUP "ｱｶｳﾝﾄ"
+        BEGIN
+            MENUITEM "追加...",                     ID_MENUITEM_ADDMAILBOX
+            MENUITEM "設定...",                     ID_MENUITEM_SETMAILBOX
+            MENUITEM "削除",                        ID_MENUITEM_DELETEMAILBOX
+
+            MENUITEM SEPARATOR
+            MENUITEM "上へ移動",                    ID_MENUITEM_MOVEUPMAILBOX
+
+            MENUITEM "下へ移動",                    ID_MENUITEM_MOVEDOWNMAILBOX
+
+            MENUITEM SEPARATOR
+            MENUITEM "新着取得位置の初期化",        ID_MENUITEM_LISTINIT
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "ｱﾄﾞﾚｽ帳...",                  ID_MENUITEM_ADDRESS
+        MENUITEM "ｵﾌﾟｼｮﾝ...",                   ID_MENUITEM_OPTION
+        POPUP "ﾀﾞｲﾔﾙｱｯﾌﾟ"
+        BEGIN
+            MENUITEM "接続",                        ID_MENUITEM_RAS_CONNECT
+            MENUITEM "切断",                        ID_MENUITEM_RAS_DISCONNECT
+
+            MENUITEM SEPARATOR
+            MENUITEM "LAN接続中",                   ID_MENUITEM_LAN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "ﾊﾞｰｼﾞｮﾝ情報...",              ID_MENUITEM_ABOUT
+        MENUITEM "終了",                        ID_MENUITE_QUIT
+    END
+    POPUP "ﾒｰﾙ"
+    BEGIN
+        MENUITEM "開く",                        ID_MENUITEM_OPEN
+        MENUITEM "返信...",                     ID_MENUITEM_REMESSEGE
+        MENUITEM SEPARATOR
+        POPUP "送受信"
+        BEGIN
+            MENUITEM "新着ﾁｪｯｸ",                    ID_MENUITEM_RECV
+            MENUITEM "巡回ﾁｪｯｸ",                    ID_MENUITEM_ALLCHECK
+            MENUITEM SEPARATOR
+            MENUITEM "ﾏｰｸを実行",                   ID_MENUITEM_EXEC
+            MENUITEM "巡回実行",                    ID_MENUITEM_ALLEXEC
+            MENUITEM SEPARATOR
+            MENUITEM "中止",                        ID_MENUITEM_STOP
+        END
+        MENUITEM SEPARATOR
+        POPUP "ﾏｰｸ"
+        BEGIN
+            MENUITEM "受信用にﾏｰｸ",                 ID_MENUITEM_DOWNMARK
+            MENUITEM "削除用にﾏｰｸ",                 ID_MENUITEM_DELMARK
+            MENUITEM "ﾏｰｸ解除",                     ID_MENUITEM_UNMARK
+            MENUITEM SEPARATOR
+            MENUITEM "開封済みにする",              ID_MENUITEM_READMAIL
+            MENUITEM "未開封にする",                ID_MENUITEM_NOREADMAIL
+        END
+        MENUITEM SEPARATOR
+        POPUP "編集"
+        BEGIN
+            MENUITEM "保存箱へｺﾋﾟｰ",                ID_MENUITE_SAVECOPY
+            MENUITEM "一覧から削除",                ID_MENUITEM_DELETE
+            MENUITEM SEPARATOR
+            MENUITEM "ｱｲｺﾝ順にｿｰﾄ",                 ID_MENUITEM_ICONSORT
+            MENUITEM "ｽﾚｯﾄﾞ表示",                   ID_MENUITEM_THREADVIEW
+            MENUITEM SEPARATOR
+            MENUITEM "すべて選択",                  ID_MENUITEM_ALLSELECT
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "ｱｶｳﾝﾄの切り替え",             ID_MENUITEM_CHANGEMAILBOX
+    END
+END
+
+IDR_MENU_POPUP MENU DISCARDABLE 
+BEGIN
+    POPUP "tray"
+    BEGIN
+        MENUITEM "表示(&V)",                    ID_MENUITEM_SHOWLASTWINDOW
+        MENUITEM SEPARATOR
+        MENUITEM "巡回ﾁｪｯｸ(&J)",                40050
+        MENUITEM "中止(&S)",                    40016
+        MENUITEM SEPARATOR
+        MENUITEM "ﾒｯｾｰｼﾞの作成(&C)...",         ID_MENUITEM_NEWMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)",                    ID_MENUITE_QUIT
+    END
+END
+
+IDR_MENU_VIEW MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ"
+    BEGIN
+        MENUITEM "前のﾒｰﾙ",                     ID_MENUITEM_PREVMAIL
+        MENUITEM "次のﾒｰﾙ",                     ID_MENUITEM_NEXTMAIL
+        MENUITEM "次の未開封ﾒｰﾙ",               ID_MENUITEM_NEXTNOREAD
+        MENUITEM SEPARATOR
+        MENUITEM "返信...",                     ID_MENUITEM_REMESSEGE
+        MENUITEM "全員に返信...",               ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "ｱﾄﾞﾚｽ情報...",                ID_MENUITEM_PROP
+        MENUITEM SEPARATOR
+        MENUITEM "受信用にﾏｰｸ(&M)\tCtrl+D",     ID_MENUITEM_DOWNMARK
+        MENUITEM "削除用にﾏｰｸ(&D)\tCtrl+Del",   ID_MENUITEM_DELMARK
+        MENUITEM SEPARATOR
+        MENUITEM "名前を付けて保存...",         ID_MENUITEM_SAVE
+        MENUITEM "外部ﾋﾞｭｰｱ",                   ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
+        MENUITEM "閉じる",                      ID_MENUITEM_CLOSE
+    END
+    POPUP "編集"
+    BEGIN
+        MENUITEM "ｺﾋﾟｰ",                        ID_MENUITEM_COPY
+        MENUITEM "すべて選択",                  ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "検索...",                     ID_MENUITEM_FIND
+        MENUITEM "次を検索",                    ID_MENUITEM_NEXTFIND
+        MENUITEM SEPARATOR
+        MENUITEM "右端で折り返す",              ID_MENUITEM_WORDBREAK
+        MENUITEM "日付を表示",                  ID_MENUITEM_SHOW_DATE
+    END
+END
+
+IDR_MENU_EDIT MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ"
+    BEGIN
+        MENUITEM "直ちに送信",                  ID_MENUITEM_SEND
+        MENUITEM "送信箱に保存",                ID_MENUITEM_SENDBOX
+        MENUITEM SEPARATOR
+        MENUITEM "送信情報...",                 ID_MENUITEM_SENDINFO
+        MENUITEM "添付ﾌｧｲﾙ...",                 ID_MENUITEM_ATTACH
+        MENUITEM SEPARATOR
+        MENUITEM "閉じる",                      ID_MENUITEM_CLOSE
+    END
+    POPUP "編集"
+    BEGIN
+        MENUITEM "元に戻す",                    ID_MENUITEM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り",                    ID_MENUITEM_CUT
+        MENUITEM "ｺﾋﾟｰ",                        ID_MENUITEM_COPY
+        MENUITEM "貼り付け",                    ID_MENUITEM_PASTE
+        MENUITEM "すべて選択",                  ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "ﾌｧｲﾙから貼り付け...",         ID_MENUITEM_FILEOPEN
+        MENUITEM SEPARATOR
+        MENUITEM "右端で折り返す",              ID_MENUITEM_WORDBREAK
+    END
+END
+
+IDR_MENU_WINDOW_HPC MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ(&F)"
+    BEGIN
+        MENUITEM "ﾒｯｾｰｼﾞの作成(&N)...\tCtrl+W", ID_MENUITEM_NEWMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "ｱﾄﾞﾚｽ帳(&A)...",              ID_MENUITEM_ADDRESS
+        MENUITEM "ｵﾌﾟｼｮﾝ(&O)...",               ID_MENUITEM_OPTION
+        MENUITEM SEPARATOR
+        MENUITEM "ﾀﾞｲﾔﾙｱｯﾌﾟ接続(&C)",           ID_MENUITEM_RAS_CONNECT
+        MENUITEM "ﾀﾞｲﾔﾙｱｯﾌﾟ切断(&D)",           ID_MENUITEM_RAS_DISCONNECT
+        MENUITEM "LAN接続中(&L)",               ID_MENUITEM_LAN
+        MENUITEM SEPARATOR
+        MENUITEM "ﾊﾞｰｼﾞｮﾝ情報(&A)...",          ID_MENUITEM_ABOUT
+        MENUITEM "終了(&Q)",                    ID_MENUITE_QUIT
+    END
+    POPUP "ｱｶｳﾝﾄ(&T)"
+    BEGIN
+        MENUITEM "追加(&N)...",                 ID_MENUITEM_ADDMAILBOX
+        MENUITEM "設定(&O)...",                 ID_MENUITEM_SETMAILBOX
+        MENUITEM "削除(&D)",                    ID_MENUITEM_DELETEMAILBOX
+        MENUITEM SEPARATOR
+        MENUITEM "上へ移動(&U)",                ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "下へ移動(&W)",                ID_MENUITEM_MOVEDOWNMAILBOX
+        MENUITEM SEPARATOR
+        MENUITEM "ｱｲｺﾝ順にｿｰﾄ(&S)",             ID_MENUITEM_ICONSORT
+        MENUITEM "ｽﾚｯﾄﾞ表示(&T)",               ID_MENUITEM_THREADVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "新着取得位置の初期化(&I)",    ID_MENUITEM_LISTINIT
+    END
+    POPUP "送受信(&S)"
+    BEGIN
+        MENUITEM "新着ﾁｪｯｸ(&N)\tCtrl+N",        ID_MENUITEM_RECV
+        MENUITEM "巡回ﾁｪｯｸ(&J)\tCtrl+J",        ID_MENUITEM_ALLCHECK
+        MENUITEM SEPARATOR
+        MENUITEM "ﾏｰｸを実行(&E)\tCtrl+E",       ID_MENUITEM_EXEC
+        MENUITEM "巡回実行(&G)\tCtrl+G",        ID_MENUITEM_ALLEXEC
+        MENUITEM SEPARATOR
+        MENUITEM "中止(&S)\tCtrl+S",            ID_MENUITEM_STOP
+    END
+    POPUP "ﾒｰﾙ(&M)"
+    BEGIN
+        MENUITEM "開く(&O)",                    ID_MENUITEM_OPEN
+        MENUITEM "返信(&R)...\tCtr+R",          ID_MENUITEM_REMESSEGE
+        MENUITEM SEPARATOR
+        MENUITEM "受信用にﾏｰｸ(&M)\tCtrl+D",     ID_MENUITEM_DOWNMARK
+        MENUITEM "削除用にﾏｰｸ(&D)\tCtrl+Del",   ID_MENUITEM_DELMARK
+        MENUITEM "ﾏｰｸ解除(&U)\tCtrl+U",         ID_MENUITEM_UNMARK
+        MENUITEM SEPARATOR
+        MENUITEM "開封済みにする(&K)\tCtrl+B",  ID_MENUITEM_READMAIL
+        MENUITEM "保存箱へｺﾋﾟｰ(&C)\tCtrl+C",    ID_MENUITE_SAVECOPY
+        MENUITEM "一覧から削除(&L)",            ID_MENUITEM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "すべて選択(&A)\tCtrl+A",      ID_MENUITEM_ALLSELECT
+    END
+END
+
+IDR_MENU_EDIT_HPC MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ(&F)"
+    BEGIN
+        MENUITEM "直ちに送信(&S)\tSCtrl+G",     ID_MENUITEM_SEND
+        MENUITEM "送信箱に保存(&O)\tCtrl+G",    ID_MENUITEM_SENDBOX
+        MENUITEM SEPARATOR
+        MENUITEM "送信情報(&I)...\tCtrl+I",     ID_MENUITEM_SENDINFO
+        MENUITEM "添付ﾌｧｲﾙ(&A)...",             ID_MENUITEM_ATTACH
+        MENUITEM SEPARATOR
+        MENUITEM "閉じる(&C)",                  ID_MENUITEM_CLOSE
+    END
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "元に戻す(&U)\tCtrl+Z",        ID_MENUITEM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "切り取り(&T)\tCtrl+X",        ID_MENUITEM_CUT
+        MENUITEM "ｺﾋﾟｰ(&C)\tCtrl+C",            ID_MENUITEM_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",        ID_MENUITEM_PASTE
+        MENUITEM "すべて選択(&A)\tCtrl+A",      ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "ﾌｧｲﾙから貼り付け(&F)...",     ID_MENUITEM_FILEOPEN
+        MENUITEM SEPARATOR
+        MENUITEM "右端で折り返す(&W)",          ID_MENUITEM_WORDBREAK
+    END
+END
+
+IDR_MENU_VIEW_HPC MENU DISCARDABLE 
+BEGIN
+    POPUP "ﾌｧｲﾙ(&F)"
+    BEGIN
+        MENUITEM "名前を付けて保存(&S)...\tCtrl+S", ID_MENUITEM_SAVE
+        MENUITEM "外部ﾋﾞｭｰｱ(&V)",               ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
+        MENUITEM "閉じる(&C)",                  ID_MENUITEM_CLOSE
+    END
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "ｺﾋﾟｰ(&C)\tCtrl+C",            ID_MENUITEM_COPY
+        MENUITEM "すべて選択(&A)\tCtrl+A",      ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "検索(&F)...\tCtrl+F",         ID_MENUITEM_FIND
+        MENUITEM "次を検索(&N)\tF3",            ID_MENUITEM_NEXTFIND
+        MENUITEM SEPARATOR
+        MENUITEM "右端で折り返す(&W)",          ID_MENUITEM_WORDBREAK
+        MENUITEM "日付を表示(&D)",              ID_MENUITEM_SHOW_DATE
+    END
+    POPUP "ﾒｰﾙ(&M)"
+    BEGIN
+        MENUITEM "前のﾒｰﾙ(&P)\tBack",           ID_MENUITEM_PREVMAIL
+        MENUITEM "次のﾒｰﾙ(&N)\tEnter",          ID_MENUITEM_NEXTMAIL
+        MENUITEM "次の未開封ﾒｰﾙ(&D)\tCtrl+Enter", ID_MENUITEM_NEXTNOREAD
+        MENUITEM SEPARATOR
+        MENUITEM "返信(&R)...\tCtrl+R",         ID_MENUITEM_REMESSEGE
+        MENUITEM "全員に返信(&A)...",           ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "ｱﾄﾞﾚｽ情報(&I)...\tCtrl+I",    ID_MENUITEM_PROP
+        MENUITEM SEPARATOR
+        MENUITEM "受信用にﾏｰｸ(&M)\tCtrl+D",     ID_MENUITEM_DOWNMARK
+        MENUITEM "削除用にﾏｰｸ(&D)\tCtrl+Del",   ID_MENUITEM_DELMARK
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_POP_HPC DIALOG DISCARDABLE  0, 0, 131, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "受信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ｱｶｳﾝﾄ名:",IDC_STATIC,5,5,30,10
+    EDITTEXT        IDC_EDIT_NAME,44,1,81,13,ES_AUTOHSCROLL
+    LTEXT           "POP3ｻｰﾊﾞ:",IDC_STATIC,5,20,35,10
+    EDITTEXT        IDC_EDIT_SERVER,44,16,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾎﾟｰﾄ:",IDC_STATIC,5,35,30,10
+    EDITTEXT        IDC_EDIT_PORT,44,31,32,13,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ﾕｰｻﾞ名:",IDC_STATIC,5,50,30,10
+    EDITTEXT        IDC_EDIT_USER,44,46,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC,5,65,30,10
+    EDITTEXT        IDC_EDIT_PASS,44,61,81,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "APOP",IDC_CHECK_APOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,77,30,10
+    CONTROL         "SSL",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,65,77,25,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETSSL,100,76,25,13
+    CONTROL         "巡回ﾁｪｯｸ対象外",IDC_CHECK_CYCLIC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,88,90,10
+    CONTROL         "'RETR' を使わない",IDC_CHECK_NORETR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,99,70,10
+END
+
+IDD_DIALOG_OPTION_RECV_HPC DIALOG DISCARDABLE  0, 0, 130, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "受信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "新着取得時に受信する行数:",IDC_STATIC,5,8,85,10
+    EDITTEXT        IDC_EDIT_READLINE,95,5,29,15,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "新着取得時に本文を全て受信",IDC_CHECK_LISTDOWNLOAD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,25,120,10
+    CONTROL         "ﾍｯﾀﾞを表示",IDC_CHECK_SHOWHEAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,39,120,10
+    CONTROL         "ﾍｯﾀﾞと本文を保存",IDC_RADIO_ALLSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,67,105,10
+    CONTROL         "ﾍｯﾀﾞのみを保存",IDC_RADIO_HEADSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,79,105,10
+    CONTROL         "保存しない",IDC_RADIO_NOSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,91,105,10
+    GROUPBOX        "ﾒｰﾙ一覧の保存",IDC_STATIC,5,55,120,50
+END
+
+IDD_DIALOG_SETSEND DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "送信情報"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ｱｶｳﾝﾄ:",IDC_STATIC,3,5,25,10
+    COMBOBOX        IDC_COMBO_SMTP,30,3,100,102,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "宛先:",IDC_BUTTON_TO,0,20,30,12
+    EDITTEXT        IDC_EDIT_TO,30,20,99,25,ES_MULTILINE | ES_AUTOVSCROLL
+    LTEXT           "件名:",IDC_STATIC,3,53,20,10
+    EDITTEXT        IDC_EDIT_TITLE,30,50,99,25,ES_MULTILINE | ES_AUTOVSCROLL
+    PUSHBUTTON      "Cc, Bcc",IDC_BUTTON_CC,8,80,40,15
+    PUSHBUTTON      "添付",IDC_BUTTON_ATTACH,48,80,41,15
+    PUSHBUTTON      "その他",IDC_BUTTON_ETC,89,80,41,15
+    CONTROL         "引用",IDC_CHECK_QUOTATION,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,8,99,30,10
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_SMTP DIALOG DISCARDABLE  0, 0, 131, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "送信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "名前:",IDC_STATIC,5,5,30,10
+    EDITTEXT        IDC_EDIT_NAME,44,1,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾒｰﾙｱﾄﾞﾚｽ:",IDC_STATIC,5,20,32,10
+    EDITTEXT        IDC_EDIT_MAILADDRESS,44,16,81,13,ES_AUTOHSCROLL
+    LTEXT           "SMTPｻｰﾊﾞ:",IDC_STATIC,5,35,36,10
+    EDITTEXT        IDC_EDIT_SERVER,44,31,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾎﾟｰﾄ:",IDC_STATIC,5,50,30,10
+    EDITTEXT        IDC_EDIT_PORT,44,46,32,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "SMTP認証",IDC_CHECK_SMTPAUTH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,65,45,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETAUTH,50,63,24,13
+    CONTROL         "SSL",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,80,65,25,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETSSL,105,63,25,13
+    CONTROL         "POP before SMTP",IDC_CHECK_POPBEFORESMTP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,77,75,10
+    CONTROL         "送信時に自分宛てにｺﾋﾟｰを送信",IDC_CHECK_MYADDR2BCC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,89,120,10
+END
+
+IDD_DIALOG_MAKE DIALOG DISCARDABLE  0, 0, 131, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "作成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "署名:",IDC_STATIC,5,0,70,10
+    EDITTEXT        IDC_EDIT_SIG,0,10,130,95,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_DIALOG_OPTION_SEND DIALOG DISCARDABLE  0, 0, 131, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "送信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "保存時の自動折り返し桁数:",IDC_STATIC,5,8,85,10
+    EDITTEXT        IDC_EDIT_BREAKCNT,95,5,29,15,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "引用行は折り返さない",IDC_CHECK_QBREAK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,25,105,10
+    CONTROL         "'Message-Id' を送信",IDC_CHECK_SENDMESSAGEID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,3,38,110,10
+    CONTROL         "'Date' を送信",IDC_CHECK_SENDDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,3,51,85,10
+    CONTROL         "添付ﾌｧｲﾙ名はMIMEBencodingで送信",IDC_CHECK_ENCODETYPE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,64,122,10
+    CONTROL         "送信箱に保存で送信箱を表示",IDC_CHECK_SELECTSENDBOX,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,77,115,10
+    PUSHBUTTON      "ｴﾝｺｰﾄﾞ設定",IDC_BUTTON_ENCODE,3,90,60,15
+END
+
+IDD_DIALOG_OPTION_MAKE DIALOG DISCARDABLE  0, 0, 131, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "作成"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "自動引用",IDC_CHECK_AUTOQUOT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,5,115,10
+    LTEXT           "引用記号:",IDC_STATIC,15,20,35,10
+    EDITTEXT        IDC_EDIT_QUOTCHAR,55,15,65,15,ES_AUTOHSCROLL
+    LTEXT           "返信用ﾍｯﾀﾞ:",IDC_STATIC,5,33,40,10
+    EDITTEXT        IDC_EDIT_REHEAD,0,45,130,60,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_DIALOG_CC DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cc, Bcc 設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_EDIT_MAILADDRESS,40,4,90,15,ES_AUTOHSCROLL
+    CONTROL         "Cc",IDC_RADIO_CC,"Button",BS_AUTORADIOBUTTON,16,24,24,
+                    10
+    CONTROL         "Bcc",IDC_RADIO_BCC,"Button",BS_AUTORADIOBUTTON,44,24,27,
+                    10
+    DEFPUSHBUTTON   "追加",IDC_BUTTON_ADD,76,22,25,15
+    PUSHBUTTON      "削除",IDC_BUTTON_DELETE,105,22,25,15
+    CONTROL         "List1",IDC_LIST_CC,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_TABSTOP,0,40,135,65
+    PUSHBUTTON      "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+    PUSHBUTTON      "ﾒｰﾙｱﾄﾞﾚｽ:",IDC_BUTTON_TO,0,4,40,16
+END
+
+IDD_DIALOG_ETCHEAD DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "その他のﾍｯﾀﾞ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "Reply-To:",IDC_STATIC,5,5,35,10
+    EDITTEXT        IDC_EDIT_REPLYTO,5,15,125,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_OPTION_CHECK DIALOG DISCARDABLE  0, 0, 131, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ﾁｪｯｸ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "新着ﾒｰﾙがあるときﾒｯｾｰｼﾞを出す",IDC_CHECK_SHIWNEWMESSAGE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,2,110,10
+    CONTROL         "新着ﾒｰﾙがないときﾒｯｾｰｼﾞを出す",IDC_CHECK_SHIWNOMESSAGE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,14,110,10
+    CONTROL         "新着ﾒｰﾙがあるとき音を鳴らす",IDC_CHECK_SOUND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,26,115,10
+    CONTROL         "実行が完了したとき音を鳴らす",IDC_CHECK_EXECSOUND,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,38,115,10
+    CONTROL         "自動ﾁｪｯｸ:",IDC_CHECK_AUTOCHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,50,45,10
+    EDITTEXT        IDC_EDIT_AUTOCHECKTIME,55,48,45,13,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "分毎",IDC_STATIC,105,50,15,10
+    CONTROL         "起動時に新着ﾒｰﾙをﾁｪｯｸ",IDC_CHECK_STARTCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,62,110,10
+    CONTROL         "ﾒｰﾙ受信時のｴﾗｰを無視",IDC_CHECK_IGNOREERROR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,86,110,10
+    CONTROL         "ﾒｰﾙ送信時のｴﾗｰを無視",IDC_CHECK_SENDIGNOREERROR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,98,110,10
+    CONTROL         "実行後に新着ﾒｰﾙをﾁｪｯｸ",IDC_CHECK_CHECKAFTERUPDATE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,74,110,10
+END
+
+IDD_DIALOG_ADDRESS DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｱﾄﾞﾚｽ帳"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,0,0,125,90
+    PUSHBUTTON      "↑",IDC_BUTTON_UP,125,20,10,20
+    PUSHBUTTON      "↓",IDC_BUTTON_DOWN,125,50,10,20
+    PUSHBUTTON      "追加",IDC_BUTTON_ADD,0,92,30,14
+    PUSHBUTTON      "編集",IDC_BUTTON_EDIT,34,92,30,14
+    PUSHBUTTON      "削除",IDC_BUTTON_DELETE,69,92,31,14
+    PUSHBUTTON      "ﾒｰﾙ",IDC_BUTTON_MAIL,104,92,31,14
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_ADDRESS_EDIT DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｱﾄﾞﾚｽ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ﾒｰﾙｱﾄﾞﾚｽ:",IDC_STATIC,5,5,45,10
+    EDITTEXT        IDC_EDIT_MAILADDRESS,5,15,125,15,ES_AUTOHSCROLL
+    LTEXT           "ｺﾒﾝﾄ:",IDC_STATIC,5,35,45,10
+    EDITTEXT        IDC_EDIT_COMMENT,5,45,125,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_MSG DIALOG DISCARDABLE  0, 0, 123, 57
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    ICON            IDI_ICON_MAIN,IDC_STATIC_ICON,7,7,20,20
+    LTEXT           "ﾒｰﾙが到着しました\n表示しますか？",IDC_STATIC,35,10,75,
+                    20
+    DEFPUSHBUTTON   "はい(&Y)",IDOK,25,35,35,15
+    PUSHBUTTON      "いいえ(&N)",IDCANCEL,65,35,35,15
+END
+
+IDD_DIALOG_OPTION_ETC DIALOG DISCARDABLE  0, 0, 131, 49
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "その他"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "ﾀｽｸﾄﾚｲにｱｲｺﾝを表示",IDC_CHECK_SHOWTRAYICON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,5,115,10
+    CONTROL         "閉じるで非表示",IDC_CHECK_CLOSEHIDE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,19,105,10
+    CONTROL         "ｱｶｳﾝﾄをまたがって未開封の移動",IDC_CHECK_MOVEALLMAILBOX,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,34,115,10
+END
+
+IDD_DIALOG_FILTER DIALOG DISCARDABLE  0, 0, 131, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ﾌｨﾙﾀ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "ﾌｨﾙﾀを使用",IDC_CHECK_FILTER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,4,2,66,10
+    CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_TABSTOP,0,15,120,75
+    PUSHBUTTON      "↑",IDC_BUTTON_UP,121,20,10,20
+    PUSHBUTTON      "↓",IDC_BUTTON_DOWN,121,50,10,20
+    PUSHBUTTON      "追加",IDC_BUTTON_ADD,5,91,30,14
+    PUSHBUTTON      "編集",IDC_BUTTON_EDIT,40,91,30,14
+    PUSHBUTTON      "削除",IDC_BUTTON_DELETE,75,91,31,14
+END
+
+IDD_DIALOG_FILTER_EDIT DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ﾌｨﾙﾀ設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "このﾌｨﾙﾀを使用",IDC_CHECK_FLAG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,0,63,10
+    LTEXT           "動作:",IDC_STATIC,5,15,25,10
+    COMBOBOX        IDC_COMBO_ACTION,35,11,95,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "項目1:",IDC_STATIC,5,34,25,10
+    COMBOBOX        IDC_COMBO_HEAD1,35,30,95,63,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "内容1:",IDC_STATIC,5,49,25,10
+    EDITTEXT        IDC_EDIT_CONTENT1,35,45,95,15,ES_AUTOHSCROLL
+    CTEXT           "AND",IDC_STATIC,65,64,30,8
+    LTEXT           "項目2:",IDC_STATIC,5,78,25,10
+    COMBOBOX        IDC_COMBO_HEAD2,35,75,95,62,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "内容2:",IDC_STATIC,5,93,25,10
+    EDITTEXT        IDC_EDIT_CONTENT2,35,90,95,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_INITMAILBOX DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "初期化"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "新着を取得する位置を初期化します",IDC_STATIC,10,5,120,
+                    10
+    CONTROL         "最初から取得",IDC_RADIO_FIRSTGET,"Button",
+                    BS_AUTORADIOBUTTON,10,21,115,10
+    CONTROL         "取得を開始する位置を指定:",IDC_RADIO_SETGET,"Button",
+                    BS_AUTORADIOBUTTON,10,34,115,10
+    EDITTEXT        IDC_EDIT_GETNUM,20,47,40,15,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ﾒｰﾙ数:",IDC_STATIC,10,80,25,8
+    LTEXT           "",IDC_STATIC_MAILCNT,35,80,85,8
+    LTEXT           "ｻｲｽﾞ:",IDC_STATIC,10,90,25,8
+    LTEXT           "",IDC_STATIC_MAILSIZE,35,90,85,8
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+    GROUPBOX        "",IDC_STATIC,5,70,125,35
+END
+
+IDD_DIALOG_RAS DIALOG DISCARDABLE  0, 0, 131, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "接続"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "LAN接続",IDC_RADIO_RASMODE_0,"Button",
+                    BS_AUTORADIOBUTTON,5,3,120,10
+    CONTROL         "ﾀﾞｲﾔﾙｱｯﾌﾟ",IDC_RADIO_RASMODE_1,"Button",
+                    BS_AUTORADIOBUTTON,5,17,120,10
+    LTEXT           "接続先:",IDC_STATIC,3,35,30,10
+    COMBOBOX        IDC_COMBO_ENTRY,37,32,90,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ﾕｰｻﾞ名:",IDC_STATIC,3,52,30,10
+    EDITTEXT        IDC_EDIT_USER,37,49,90,15,ES_AUTOHSCROLL
+    LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC,3,70,30,10
+    EDITTEXT        IDC_EDIT_PASS,37,67,90,15,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "既に接続中の場合は接続し直す",IDC_CHECK_RASRECON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,85,116,10
+    LTEXT           "※ nPOP で接続した場合のみ有効",IDC_STATIC,6,96,108,10
+END
+
+IDD_DIALOG_ATTACH DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "添付ﾌｧｲﾙ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LISTBOX         IDC_LIST_FILE,0,0,134,86,LBS_NOINTEGRALHEIGHT | 
+                    LBS_WANTKEYBOARDINPUT | LBS_EXTENDEDSEL | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "追加",IDC_BUTTON_ADD,25,92,50,14
+    PUSHBUTTON      "削除",IDC_BUTTON_DELETE,80,92,50,14
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_MAILPROP DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｱﾄﾞﾚｽ情報"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,0,0,135,85
+    DEFPUSHBUTTON   "新規ﾒｰﾙ",IDC_BUTTON_NEW,5,90,60,14
+    PUSHBUTTON      "返信",IDC_BUTTON_REPLY,70,90,60,14
+    PUSHBUTTON      "ｱﾄﾞﾚｽ帳に追加",IDC_BUTTON_ADDADDRESS,5,110,60,14
+    PUSHBUTTON      "閉じる",IDCANCEL,70,110,60,14
+END
+
+IDD_DIALOG_FIND DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "検索"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "検索文字列:",IDC_STATIC,5,10,60,10
+    EDITTEXT        IDC_EDIT_FIND,5,25,120,15,ES_AUTOHSCROLL
+    CONTROL         "大文字と小文字を区別する",IDC_CHECK_CASE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,50,105,10
+    CONTROL         "全てのﾒｰﾙから検索する",IDC_CHECK_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,64,110,10
+    CONTROL         "件名も検索する",IDC_CHECK_SUBJECT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,78,85,10
+    DEFPUSHBUTTON   "次を検索",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+IDD_DIALOG_OPTION_RAS DIALOG DISCARDABLE  0, 0, 130, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "接続"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "送受信時にﾀﾞｲﾔﾙｱｯﾌﾟ接続",IDC_CHECK_RASCON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,5,110,10
+    CONTROL         "送受信終了時に切断 (nPOP接続時)",IDC_CHECK_CHENDDISCON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,19,120,10
+    CONTROL         "終了時に切断 (nPOP接続時)",IDC_CHECK_ENDDISCON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,33,115,10
+    CONTROL         "未接続時は自動ﾁｪｯｸを行わない",IDC_CHECK_NORASNOCHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,47,115,10
+    LTEXT           "接続を切り替えるまでの待ち時間: ",IDC_STATIC,7,64,110,8
+    EDITTEXT        IDC_EDIT_WAIT,7,76,30,15,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "秒",IDC_STATIC,42,80,18,10
+    LTEXT           "接続先の設定はｱｶｳﾝﾄ毎に行ってください",IDC_STATIC,2,97,
+                    123,8
+END
+
+IDD_DIALOG_SETSMTPAUTH DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SMTP認証 - 設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "POP3のﾕｰｻﾞ名とﾊﾟｽﾜｰﾄﾞを使用する",IDC_CHECK_POP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,5,125,10
+    LTEXT           "ﾕｰｻﾞ名:",IDC_STATIC,5,25,40,10
+    EDITTEXT        IDC_EDIT_USER,5,35,123,15,ES_AUTOHSCROLL
+    LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC,5,55,40,10
+    EDITTEXT        IDC_EDIT_PASS,5,66,123,15,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,25,111,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,111,50,14
+END
+
+IDD_DIALOG_OPTION_RECV DIALOG DISCARDABLE  0, 0, 129, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "受信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "新着取得時に受信する行数:",IDC_STATIC,5,8,85,10
+    EDITTEXT        IDC_EDIT_READLINE,95,5,29,15,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "新着取得時に本文を全て受信",IDC_CHECK_LISTDOWNLOAD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,25,120,10
+    CONTROL         "ﾍｯﾀﾞを表示",IDC_CHECK_SHOWHEAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,39,120,10
+    CONTROL         "ﾍｯﾀﾞと本文を保存",IDC_RADIO_ALLSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,67,105,10
+    CONTROL         "ﾍｯﾀﾞのみを保存",IDC_RADIO_HEADSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,79,105,10
+    CONTROL         "保存しない",IDC_RADIO_NOSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,91,105,10
+    GROUPBOX        "ﾒｰﾙ一覧の保存",IDC_STATIC,5,55,120,50
+END
+
+IDD_DIALOG_POP DIALOG DISCARDABLE  0, 0, 131, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "受信"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ｱｶｳﾝﾄ名:",IDC_STATIC,5,5,30,10
+    EDITTEXT        IDC_EDIT_NAME,44,1,81,13,ES_AUTOHSCROLL
+    LTEXT           "POP3ｻｰﾊﾞ:",IDC_STATIC,5,20,36,10
+    EDITTEXT        IDC_EDIT_SERVER,44,16,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾎﾟｰﾄ:",IDC_STATIC,5,35,30,10
+    EDITTEXT        IDC_EDIT_PORT,44,31,32,13,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "ﾕｰｻﾞ名:",IDC_STATIC,5,50,30,10
+    EDITTEXT        IDC_EDIT_USER,44,46,81,13,ES_AUTOHSCROLL
+    LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC,5,65,30,10
+    EDITTEXT        IDC_EDIT_PASS,44,61,81,13,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "APOP",IDC_CHECK_APOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,77,45,10
+    CONTROL         "SSL",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,65,77,25,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETSSL,100,76,25,13
+    CONTROL         "巡回ﾁｪｯｸ対象外",IDC_CHECK_CYCLIC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,88,90,10
+    CONTROL         "'RETR' を使わない",IDC_CHECK_NORETR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,99,70,10
+END
+
+IDD_DIALOG_SETSSL DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SSL設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_COMBO_SSLTYPE,10,10,105,75,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "サーバ証明書を検証する (verify)",IDC_CHECK_VERIFY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,29,115,10
+    DEFPUSHBUTTON   "OK",IDOK,25,111,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,111,50,14
+END
+
+IDD_DIALOG_ATTACH_NOTICE DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "添付ﾌｧｲﾙ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    RTEXT           "差出人:",IDC_STATIC,0,5,30,10
+    LTEXT           "",IDC_STATIC_FROM,30,5,104,15
+    RTEXT           "種類:",IDC_STATIC,0,25,30,10
+    LTEXT           "",IDC_STATIC_TYPE,30,25,104,15
+    RTEXT           "ﾌｧｲﾙ名:",IDC_STATIC,0,45,30,10
+    LTEXT           "",IDC_STATIC_FILENAME,30,45,104,25
+    CONTROL         "開く",IDC_RADIO_OPEN,"Button",BS_AUTORADIOBUTTON,15,80,
+                    85,10
+    CONTROL         "名前を付けて保存する",IDC_RADIO_SAVE,"Button",
+                    BS_AUTORADIOBUTTON,15,95,85,10
+    DEFPUSHBUTTON   "OK",IDOK,15,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,70,110,50,14
+END
+
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｴﾝｺｰﾄﾞ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ﾍｯﾀﾞ ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,5,120,10
+    COMBOBOX        IDC_COMBO_CHARSET_H,5,15,125,115,CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ﾍｯﾀﾞ ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,30,120,10
+    COMBOBOX        IDC_COMBO_ENCODE_H,5,40,125,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "本文 ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,55,120,10
+    COMBOBOX        IDC_COMBO_CHARSET,5,65,125,90,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "本文 ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,81,120,10
+    COMBOBOX        IDC_COMBO_ENCODE,5,91,125,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,25,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,110,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG_SETSEND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_DIALOG_SMTP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_MAKE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_OPTION_SEND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_OPTION_MAKE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_CC, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_ETCHEAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 62
+    END
+
+    IDD_DIALOG_OPTION_CHECK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_ADDRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_ADDRESS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+
+    IDD_DIALOG_MSG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 52
+    END
+
+    IDD_DIALOG_OPTION_ETC, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_FILTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_FILTER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_INITMAILBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 108
+    END
+
+    IDD_DIALOG_RAS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_ATTACH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_MAILPROP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+
+    IDD_DIALOG_OPTION_RAS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_SETSMTPAUTH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 82
+    END
+
+    IDD_DIALOG_OPTION_RECV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_POP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_SETSSL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 123
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
+
+    IDD_DIALOG_ATTACH_NOTICE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_MAIN           ICON    DISCARDABLE     "..\\res\\icon.ico"
+IDI_ICON_DOWN           ICON    DISCARDABLE     "..\\res\\icon_dow.ico"
+IDI_ICON_DEL            ICON    DISCARDABLE     "..\\res\\icon_del.ico"
+IDI_ICON_NON            ICON    DISCARDABLE     "..\\res\\icon_non.ico"
+IDI_ICON_READ           ICON    DISCARDABLE     "..\\res\\icon1.ico"
+IDI_ICON_NEW            ICON    DISCARDABLE     "..\\res\\ico00001.ico"
+IDI_ICON_SENDMAIL       ICON    DISCARDABLE     "..\\res\\ico00007.ico"
+IDI_ICON_SEND           ICON    DISCARDABLE     "..\\res\\ico00009.ico"
+IDI_ICON_NOCHECK        ICON    DISCARDABLE     "..\\res\\ico00012.ico"
+IDI_ICON_CHECK          ICON    DISCARDABLE     "..\\res\\ico00004.ico"
+IDI_ICON_CLIP           ICON    DISCARDABLE     "..\\res\\ico00010.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_READMAIL,   VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_NOREADMAIL, VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "C",            ID_MENUITE_SAVECOPY,    VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_MENUITEM_EXEC,       VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_MENUITEM_EXEC,       VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "S",            ID_MENUITEM_STOP,       VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_MENUITEM_THREADVIEW, VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_MENUITEM_UNMARK,     VIRTKEY, CONTROL, NOINVERT
+    VK_APPS,        ID_KEY_SHOWMENU,        VIRTKEY, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELETE,     VIRTKEY, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_KEY_ALTDOWN,         VIRTKEY, ALT, NOINVERT
+    VK_ESCAPE,      ID_KEY_ESC,             VIRTKEY, NOINVERT
+    VK_F10,         ID_KEY_SHOWMENU,        VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+    VK_F5,          ID_MENUITEM_EXEC,       VIRTKEY, NOINVERT
+    VK_F5,          ID_MENUITEM_ALLEXEC,    VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_MENUITEM_EXEC,       VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_F6,          ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_F6,          ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
+    VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_KEY_ALTUP,           VIRTKEY, ALT, NOINVERT
+    "W",            ID_MENUITEM_NEWMAIL,    VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_MENUITEM_NEWMAIL,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+END
+
+IDR_ACCELERATOR_EDIT ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
+END
+
+IDR_ACCELERATOR_VIEW ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_MENUITEM_COPY,       VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_MENUITEM_PROP,       VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "S",            ID_MENUITEM_SAVE,       VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_MENUITEM_PREVMAIL,   VIRTKEY, NOINVERT
+    VK_DELETE,      WM_NOMSG,               VIRTKEY, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_KEY_DOWN,            VIRTKEY, NOINVERT
+    VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, ALT, NOINVERT
+    VK_DOWN,        ID_MENUITEM_NEXTNOREAD, VIRTKEY, CONTROL, ALT, NOINVERT
+    VK_DOWN,        WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+    VK_LEFT,        ID_KEY_LEFT,            VIRTKEY, NOINVERT
+    VK_LEFT,        WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_MENUITEM_NEXTMAIL,   VIRTKEY, NOINVERT
+    VK_RETURN,      ID_MENUITEM_NEXTNOREAD, VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_MENUITEM_PREVMAIL,   VIRTKEY, SHIFT, NOINVERT
+    VK_RIGHT,       ID_KEY_RIGHT,           VIRTKEY, NOINVERT
+    VK_RIGHT,       WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         ID_MENUITEM_NEXTMAIL,   VIRTKEY, NOINVERT
+    VK_TAB,         ID_MENUITEM_PREVMAIL,   VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_KEY_UP,              VIRTKEY, NOINVERT
+    VK_UP,          ID_MENUITEM_PREVMAIL,   VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          ID_MENUITEM_PREVMAIL,   VIRTKEY, ALT, NOINVERT
+    VK_UP,          WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TOOLBAR             BITMAP  DISCARDABLE     "..\\res\\bitmap.bmp"
+IDB_TOOLBAR_VIEW        BITMAP  DISCARDABLE     "..\\res\\toolbar_.bmp"
+IDB_TOOLBAR_EDIT        BITMAP  DISCARDABLE     "..\\res\\bmp00003.bmp"
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
