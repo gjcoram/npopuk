@@ -60,6 +60,21 @@
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDD_DIALOG_SETSSL               182
 #define IDD_DIALOG_ENCODE               183
+#define IDI_ICON_CLIP_LOW               184	 
+#define IDI_ICON_CLIP_HIGH              185
+#define IDI_ICON_LOW                    186
+#define IDI_ICON_HIGH                   187
+#define IDD_DIALOG_ABOUT                188
+#define IDC_CHECK_SORTORDER             195
+#define IDC_SORTITEM1                   196
+#define IDC_SORTITEM2                   197
+#define IDC_SORTITEM3                   198
+#define IDC_SORTITEM4                   199
+#define IDC_STATIC_SORT                 200
+#define IDC_AUTOSORT1                   201
+#define IDC_AUTOSORT2                   202
+#define IDC_AUTOSORT3                   203
+#
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
 #define IDM_MAIN_EDIT                   452
@@ -175,8 +190,19 @@
 #define IDC_STATIC_FILENAME             1093
 #define IDC_COMBO_ENCODE                1093
 #define IDC_RADIO_OPEN                  1094
-#define IDC_RADIO_SAVE                  1095
-#define LVS_NOSORTHEADER                0x8000
+#define IDC_RADIO_SAVE                  1095 
+#define IDC_PRIORITY                    1096
+#define IDC_APPNAME                     1097
+#define IDC_CHECK_USEPOOM               1098
+#define IDC_CHECK_AUTOMARKSEND          1099
+#define IDC_CHECK_PARANOID              1100
+#define IDC_ABOUT_TEXT                  1101
+#define IDC_DEL							1102
+#define IDC_READ						1103
+#define IDC_QUOTFWD                     1200
+#define IDC_SIGNFWD                     1201
+#define IDC_FWDHEAD                     1202
+#define IDC_COMBO_REPLYTO               1203
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
 #define ID_KEY_ESC                      40004
@@ -263,16 +289,18 @@
 #define IDS_MENUITEM40144               40145
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
-#define ID_MENUITEM_ENCODE              40148
+#define ID_MENUITEM_ENCODE              40148  
+#define ID_MENUITEM_SAVEALL             40149
+#define ID_MENUITEM_FORWARD             40150
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        184
-#define _APS_NEXT_COMMAND_VALUE         40149
-#define _APS_NEXT_CONTROL_VALUE         1091
+#define _APS_NEXT_RESOURCE_VALUE        200
+#define _APS_NEXT_COMMAND_VALUE         40151
+#define _APS_NEXT_CONTROL_VALUE         1104
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -394,6 +394,23 @@ int str_cmp_ni_t(const TCHAR *buf1, const TCHAR *buf2, int len)
 }
 
 /*
+ * str_cmp_n_t - case-sensitive TCHAR compare
+ */
+int str_cmp_n_t(const TCHAR *buf1, const TCHAR *buf2, int len)
+{
+	while (*buf1 == *buf2) {
+		len--;
+		if (len <= 0 || *buf1 == TEXT('\0')) {
+			return 0;
+		}
+		buf1++;
+		buf2++;
+	}
+	return 1;
+}
+
+
+/*
  * str_cmp_ni - •¶Žš—ñ‚Ì‘å•¶Žš¬•¶Žš‚ð‹æ•Ê‚µ‚È‚¢”äŠr‚ðs‚¤
  */
 #ifdef UNICODE

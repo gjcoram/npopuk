@@ -111,14 +111,14 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void EndWindow(HWND hWnd);
 static void SetEditMenu(HWND hWnd);
-static void ModfyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc);
+static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc);
 static MAILITEM *View_NextMail(HWND hWnd, BOOL St);
 static void View_PrevMail(HWND hWnd);
 static void View_NextNoReadMail(HWND hWnd);
 static void View_NextScroll(HWND hEditWnd);
 static BOOL ShellOpen(TCHAR *FileName);
 static void OpenURL(HWND hWnd);
-static void SetReMessage(HWND hWnd, int ReplyFag);
+static void SetReMessage(HWND hWnd, int ReplyFlag);
 static BOOL Decode(HWND hWnd, int id);
 static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head);
 static BOOL AppViewMail(MAILITEM *tpMailItem);
@@ -207,10 +207,28 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	len += SetCcAddressSize(tpMailItem->Bcc);
 	if (op.ViewShowDate == 1) {
 		len += lstrlen(STR_VIEW_HEAD_DATE);
-		if (tpMailItem->Date != NULL) {
-			len += lstrlen(tpMailItem->Date);
+		if (tpMailItem->FmtDate != NULL) {
+			len += lstrlen(tpMailItem->FmtDate);
 		}
 	}
+
+	///////////// MRP /////////////////////
+	len+= lstrlen(STR_VIEW_HEAD_PRIORITY);
+	if (tpMailItem->Priority == 1)
+	{
+		len+= lstrlen(HIGH_PRIORITY);
+	}
+
+	if (tpMailItem->Priority == 3)
+	{
+		len+= lstrlen(NORMAL_PRIORITY);
+	}
+
+	if (tpMailItem->Priority == 5)
+	{
+		len+= lstrlen(LOW_PRIORITY);
+	}
+	///////////// --- /////////////////////
 
 	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (buf == NULL) {
@@ -226,8 +244,26 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
 	if (op.ViewShowDate == 1) {
-		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->Date, (TCHAR *)-1);
+		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->FmtDate, (TCHAR *)-1);
 	}
+
+	///////////// MRP /////////////////////
+	if (tpMailItem->Priority == 1)
+	{
+		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, HIGH_PRIORITY, (TCHAR *)-1);
+	}
+
+	if (tpMailItem->Priority == 3)
+	{
+		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, NORMAL_PRIORITY, (TCHAR *)-1);
+	}
+
+	if (tpMailItem->Priority == 5)
+	{
+		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, LOW_PRIORITY, (TCHAR *)-1);
+	}
+	///////////// --- /////////////////////
+
 	SetWindowText(hHeader, buf);
 	mem_free(&buf);
 }
@@ -675,10 +711,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{3,	ID_MENUITEM_REMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{4,	ID_MENUITEM_ALLREMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{5,	ID_MENUITEM_FORWARD,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 #ifndef _WIN32_WCE_PPC
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{5,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{6,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{6,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{7,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 #endif	// _WIN32_WCE_PPC
 	};
 #ifdef _WIN32_WCE
@@ -692,6 +729,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_NEXTNOREAD,
 		STR_CMDBAR_REMESSEGE,
 		STR_CMDBAR_ALLREMESSEGE,
+		STR_CMDBAR_FORWARD,
 #ifndef _WIN32_WCE_PPC
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
@@ -720,8 +758,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hToolBar = mbi.hwndMB;
 
-	CommandBar_AddToolTips(hToolBar, 7, szTips);
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 5, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddToolTips(hToolBar, 8, szTips);
+	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -745,19 +783,19 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-    CommandBar_AddToolTips(hToolBar, 8, szTips);
+	CommandBar_AddToolTips(hToolBar, 8, szTips);
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
 	} else {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_VIEW, 0);
 	}
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 7, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 8, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 #endif
 #else
 	// Win32
-	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 7, hInst, IDB_TOOLBAR_VIEW,
+	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 8, hInst, IDB_TOOLBAR_VIEW,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hToolBar, GWL_STYLE, GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hToolBar, TB_SETINDENT, 5, 0);
@@ -850,7 +888,24 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 #ifdef _WIN32_WCE
-#ifdef _WIN32_WCE_LAGENDA
+	RECT rcClient, HeaderRect;
+	int Height = 0;
+
+	GetClientRect(hWnd, &rcClient);
+	GetWindowRect(GetDlgItem(hWnd, IDC_HEADER), &HeaderRect);
+
+#ifndef _WIN32_WCE_PPC
+	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_VCB));
+#endif
+	MoveWindow(GetDlgItem(hWnd, IDC_HEADER), 0, Height, rcClient.right, HeaderRect.bottom - HeaderRect.top, TRUE);
+	InvalidateRect(GetDlgItem(hWnd, IDC_HEADER), NULL, FALSE);
+	UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
+
+	Height += HeaderRect.bottom - HeaderRect.top;
+	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, Height + 1,
+		rcClient.right, rcClient.bottom - Height, TRUE);
+	return TRUE;
+#elif defined _WIN32_WCE_LAGENDA
 	COSIPINFO CoSipInfo;
 	SIPINFO SipInfo;
 	RECT rcClient, HeaderRect;
@@ -880,26 +935,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, hHeight + 1,
 		rcClient.right, rcClient.bottom - hHeight - sip_height, TRUE);
 	return ret;
-#else	//_WIN32_WCE_LAGENDA
-	RECT rcClient, HeaderRect;
-	int Height = 0;
-
-	GetClientRect(hWnd, &rcClient);
-	GetWindowRect(GetDlgItem(hWnd, IDC_HEADER), &HeaderRect);
-
-#ifndef _WIN32_WCE_PPC
-	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_VCB));
-#endif	//_WIN32_WCE_PPC
-	MoveWindow(GetDlgItem(hWnd, IDC_HEADER), 0, Height, rcClient.right, HeaderRect.bottom - HeaderRect.top, TRUE);
-	InvalidateRect(GetDlgItem(hWnd, IDC_HEADER), NULL, FALSE);
-	UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
-
-	Height += HeaderRect.bottom - HeaderRect.top;
-	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, Height + 1,
-		rcClient.right, rcClient.bottom - Height, TRUE);
-	return TRUE;
-#endif	//_WIN32_WCE_LAGENDA
-#else	//_WIN32_WCE
+#else
 	HWND hHeader, hBody;
 	RECT rcClient, HeaderRect, ToolbarRect;
 	int hHeight = 0, tHeight = 0;
@@ -922,7 +958,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	MoveWindow(hBody, 0, tHeight + hHeight + 1,
 		rcClient.right, rcClient.bottom - tHeight - hHeight - 1, TRUE);
 	return TRUE;
-#endif	//_WIN32_WCE
+#endif
 }
 
 /*
@@ -1008,6 +1044,10 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 		(*tpMultiPart)->sPos == tpMailItem->Body && (*tpMultiPart)->ePos == NULL &&
 		(*tpMultiPart)->ContentType != NULL &&
 		str_cmp_ni((*tpMultiPart)->ContentType, "text", tstrlen("text")) == 0) {
+
+		if (tpMailItem->HasHeader == TRUE) {
+			AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
+		}
 		return 0;
 	}
 	if (MultiPartCnt == 1 && ViewSrc == TRUE) {
@@ -1073,11 +1113,11 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 }
 
 /*
- * ModfyWindow - 内容の変更
+ * ModifyWindow - 内容の変更
  */
-static void ModfyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
+static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 {
-	TCHAR *buf;
+	TCHAR *buf, *mbuf, *p;
 	int LvFocus;
 #ifndef _WIN32_WCE
 	OSVERSIONINFO os_info;
@@ -1110,7 +1150,7 @@ static void ModfyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
 
-	SetItemCntStatusText(MainWnd, NULL);
+	SetItemCntStatusText(MainWnd, NULL, FALSE);
 
 	// マーク状態取得
 	GetMarkStatus(hWnd, tpMailItem);
@@ -1120,6 +1160,14 @@ static void ModfyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	MultiPartCnt = 0;
 	// マルチパートの展開
 	buf = MIME_body_decode(tpMailItem, ViewSrc, &tpMultiPart, &MultiPartCnt);
+	mbuf = buf;
+
+	// GJC don't show headers unless ViewSrc
+	if (ViewSrc == FALSE && tpMailItem->HasHeader == TRUE && tpMailItem->Multipart == FALSE) {
+		if ((p = GetBodyPointaT(buf)) != NULL) {
+			buf = p;
+		}
+	}
 
 	// 表示するpartの選択と添付メニューの設定
 	SetAttachMenu(hWnd, tpMailItem, ViewSrc);
@@ -1143,7 +1191,7 @@ static void ModfyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 		}
 #endif
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
-		mem_free(&buf);
+		mem_free(&mbuf);
 	} else {
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)TEXT(""));
 	}
@@ -1190,7 +1238,7 @@ static MAILITEM *View_NextMail(HWND hWnd, BOOL St)
 
 	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
-	ModfyWindow(hWnd, tpMailItem, FALSE);
+	ModifyWindow(hWnd, tpMailItem, FALSE);
 	return tpMailItem;
 }
 
@@ -1222,7 +1270,7 @@ static void View_PrevMail(HWND hWnd)
 
 	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
-	ModfyWindow(hWnd, tpMailItem, FALSE);
+	ModifyWindow(hWnd, tpMailItem, FALSE);
 }
 
 /*
@@ -1276,7 +1324,7 @@ static void View_NextNoReadMail(HWND hWnd)
 
 	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
-	ModfyWindow(hWnd, tpMailItem, FALSE);
+	ModifyWindow(hWnd, tpMailItem, FALSE);
 	SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
 }
 
@@ -1406,14 +1454,14 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 
 	while (1) {
 		// 本文から検索して見つかった位置を選択状態にする
-		if (FindEditString(hEdit, FindStr, op.MstchCase) == TRUE) {
+		if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
 			break;
 		}
 
 		// １メール内での検索の場合
 		if (op.AllFind == 0) {
 			SendMessage(hEdit, EM_SETSEL, 0, 0);
-			if (FindEditString(hEdit, FindStr, op.MstchCase) == TRUE) {
+			if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
 				break;
 			}
 			buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) + lstrlen(STR_MSG_NOFIND) + 1));
@@ -1450,7 +1498,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 
 		// Subjectから検索
 		if (op.SubjectFind != 0 && tpMailItem->Subject != NULL) {
-			p = str_find(FindStr, tpMailItem->Subject, op.MstchCase);
+			p = str_find(FindStr, tpMailItem->Subject, op.MatchCase);
 			if (*p != TEXT('\0')) {
 				break;
 			}
@@ -1649,7 +1697,7 @@ static void OpenURL(HWND hWnd)
 /*
  * SetReMessage - 返信の設定を行う
  */
-static void SetReMessage(HWND hWnd, int ReplyFag)
+static void SetReMessage(HWND hWnd, int ReplyFlag)
 {
 	int ret;
 	if (item_is_mailbox(MailBox + vSelBox,
@@ -1659,7 +1707,7 @@ static void SetReMessage(HWND hWnd, int ReplyFag)
 	}
 
 	ret = Edit_InitInstance(hInst, hWnd, vSelBox,
-		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), EDIT_REPLY, ReplyFag);
+		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), ReplyFlag);
 #ifdef _WIN32_WCE
 	if (ret == EDIT_INSIDEEDIT) {
 		ShowWindow(hWnd, SW_HIDE);
@@ -2114,7 +2162,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_MODFYMESSAGE:
 		SetWindowLong(hWnd, GWL_USERDATA, lParam);
-		ModfyWindow(hWnd, (MAILITEM *)lParam, FALSE);
+		ModifyWindow(hWnd, (MAILITEM *)lParam, FALSE);
 		_SetForegroundWindow(hWnd);
 		break;
 
@@ -2145,11 +2193,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 #endif
 
-#ifndef _WIN32_WCE_LAGENDA
 	case WM_SIZE:
 		SetWindowSize(hWnd, wParam, lParam);
 		break;
-#endif
 
 #ifndef _WIN32_WCE
 	case WM_EXITSIZEMOVE:
@@ -2293,11 +2339,15 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_REMESSEGE:
-			SetReMessage(hWnd, 0);
+			SetReMessage(hWnd, EDIT_REPLY);
 			break;
 
 		case ID_MENUITEM_ALLREMESSEGE:
-			SetReMessage(hWnd, 1);
+			SetReMessage(hWnd, EDIT_REPLYALL);
+			break;
+
+		case ID_MENUITEM_FORWARD:
+			SetReMessage(hWnd, EDIT_FORWARD);
 			break;
 
 		// 受信用にマーク
@@ -2401,7 +2451,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				// Editウィンドウのフォントを設定
 				EnumWindows((WNDENUMPROC)enum_windows_proc, 0);
 				if (item_is_mailbox(MailBox + vSelBox, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == TRUE) {
-					ModfyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), FALSE);
+					ModifyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), FALSE);
 				}
 			}
 			break;
@@ -2424,7 +2474,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			ModfyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA),
+			ModifyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA),
 				((GET_WM_COMMAND_ID(wParam, lParam) == ID_VIEW_SOURCE) ? TRUE : FALSE));
 			break;
 
@@ -2438,7 +2488,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 			DeleteAttachFile(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA));
-			ModfyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), FALSE);
+			ModifyWindow(hWnd, (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), FALSE);
 			break;
 
 		case ID_MENUITEM_VIEW:

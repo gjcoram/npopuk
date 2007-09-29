@@ -46,7 +46,7 @@ extern BOOL PPCFlag;
 BOOL mailbox_init(void)
 {
 
-	//メールボックスのリストの確保
+	//Guaranty
 	MailBoxCnt = 2;
 	MailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(MailBox == NULL){
@@ -68,7 +68,7 @@ int mailbox_create(HWND hWnd, BOOL ShowFlag)
 	MAILBOX *TmpMailBox;
 	int cnt, index;
 
-	//メールボックスのリストに追加
+	//It adds to the list of the mailbox
 	index = MailBoxCnt;
 	cnt = MailBoxCnt + 1;
 
@@ -93,7 +93,7 @@ int mailbox_create(HWND hWnd, BOOL ShowFlag)
 	if(ShowFlag == TRUE){
 		int i;
 
-		//コンボボックスにメールボックスを追加して選択する
+		//Adding the mailbox to the ?, it selects the
 		i = SendDlgItemMessage(hWnd, IDC_COMBO, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
 		if(i == CB_ERR){
 			return -1;
@@ -101,7 +101,7 @@ int mailbox_create(HWND hWnd, BOOL ShowFlag)
 		SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, i, 0);
 		return i;
 	}
-	//メモリの確保のみ
+	//Only guaranty of memory
 	return index;
 }
 
@@ -114,7 +114,7 @@ int mailbox_delete(HWND hWnd, int DelIndex)
 	int cnt;
 	int i, j;
 
-	//メールボックスのリストから削除
+	//From list of mailbox deletion
 	cnt = MailBoxCnt - 1;
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
 	if(TmpMailBox == NULL){
@@ -133,7 +133,7 @@ int mailbox_delete(HWND hWnd, int DelIndex)
 	MailBox = TmpMailBox;
 	MailBoxCnt = cnt;
 
-	//コンボボックスから削除して、一つ前のメールボックスを選択する
+	//Deleting from the ???????, it selects the mailbox of one ago the
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, DelIndex, 0);
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, DelIndex - 1, 0);
 	return DelIndex - 1;
@@ -177,7 +177,7 @@ void mailbox_move_up(HWND hWnd)
 		return;
 	}
 
-	//メモリの位置を移動
+	//Position of memory portable
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(TmpMailBox == NULL){
 		return;
@@ -195,7 +195,7 @@ void mailbox_move_up(HWND hWnd)
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
-	//コンボボックスに表示されている位置を移動
+	//The position where it is indicated in the ??????? the portable
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
 	SelBox--;
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
@@ -234,7 +234,7 @@ void mailbox_move_down(HWND hWnd)
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
-	//コンボボックスに表示されている位置を移動
+	//The position where it is indicated in the ??????? the portable
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
 	SelBox++;
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
@@ -297,12 +297,12 @@ void mailbox_select(HWND hWnd, int Sel)
 	p = ((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name;
 	(MailBox + SelBox)->NoRead = FALSE;
-	//新着ありを示す "*" が付いている場合はコンボボックスのリストを設定し直す
+	//There is a new arrival and shows when " * " it has been attached, it does again to set the list of the ??????? the
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)p);
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 
-	//メニューの取得
+	//Acquisition
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL);
@@ -315,13 +315,14 @@ void mailbox_select(HWND hWnd, int Sel)
 	hMenu = GetSubMenu(GetMenu(hWnd), MailMenuPos);
 #endif
 
-	//返信、受信用にマーク の項目を削除する
+	//of menu Item of the mark is deleted to reply and one for reception the
 	DeleteMenu(hMenu, ID_MENUITEM_REMESSEGE, MF_BYCOMMAND);
+	DeleteMenu(hMenu, ID_MENUITEM_FORWARD, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITE_SAVECOPY, MF_BYCOMMAND);
 
 	if(SelBox == MAILBOX_SEND){
-		//送信箱
+		//Transmission box
 #ifdef _WIN32_WCE
 		InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING,
 			ID_MENUITEM_REMESSEGE,
@@ -342,11 +343,14 @@ void mailbox_select(HWND hWnd, int Sel)
 #endif
 		lvc.pszText = STR_LIST_LVHEAD_TO;
 	}else{
-		//受信箱
+		//Reception box
 #ifdef _WIN32_WCE
 		InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING,
 			ID_MENUITEM_REMESSEGE,
 			(PPCFlag == TRUE) ? STR_LIST_PPCMENU_REPLY : STR_LIST_MENU_REPLY);
+		InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING,
+			ID_MENUITEM_FORWARD,
+			(PPCFlag == TRUE) ? STR_LIST_PPCMENU_FORWARD : STR_LIST_MENU_FORWARD);
 		InsertMenu(hMenu, ID_MENUITEM_DELMARK, MF_STRING,
 			ID_MENUITEM_DOWNMARK,
 			(PPCFlag == TRUE) ? STR_LIST_PPCMENU_RECVMARK : STR_LIST_MENU_RECVMARK);
@@ -356,6 +360,8 @@ void mailbox_select(HWND hWnd, int Sel)
 #else
 		InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING,
 			ID_MENUITEM_REMESSEGE, STR_LIST_MENU_REPLY);
+		InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING,
+			ID_MENUITEM_FORWARD, STR_LIST_MENU_FORWARD);
 		InsertMenu(hMenu, ID_MENUITEM_DELMARK, MF_STRING,
 			ID_MENUITEM_DOWNMARK, STR_LIST_MENU_RECVMARK);
 		InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_STRING,
@@ -364,7 +370,7 @@ void mailbox_select(HWND hWnd, int Sel)
 		lvc.pszText = STR_LIST_LVHEAD_FROM;
 	}
 
-	//リストビューヘッダの設定
+	//Setting
 	lvc.mask = LVCF_TEXT;
 	lvc.cchTextMax = BUF_SIZE;
 	ListView_SetColumn(GetDlgItem(hWnd, IDC_LISTVIEW), 1, &lvc);
@@ -372,13 +378,13 @@ void mailbox_select(HWND hWnd, int Sel)
 	LvSortFlag = SORT_NO + 1;
 	EndThreadSortFlag = FALSE;
 
-	//リストビューにアイテムを設定する
+	//of list view header The release
 	SwitchCursor(FALSE);
 	ListView_ShowItem(GetDlgItem(hWnd, IDC_LISTVIEW), (MailBox + SelBox));
 	SwitchCursor(TRUE);
 
 	SetMailMenu(hWnd);
-	SetItemCntStatusText(hWnd, NULL);
+	SetItemCntStatusText(hWnd, NULL, FALSE);
 	SetNoReadCntTitle(hWnd);
 }
 
@@ -401,9 +407,9 @@ int mailbox_name_to_index(TCHAR *Name)
 }
 
 /*
- * filer_free - フィルタ情報の解放
+ * filter_free - フィルタ情報の解放
  */
-void filer_free(MAILBOX *tpMailBox)
+void filter_free(MAILBOX *tpMailBox)
 {
 	int i;
 
@@ -459,7 +465,8 @@ void mailbox_free(MAILBOX *tpMailBox)
 	mem_free(&tpMailBox->RasEntry);
 
 	//フィルタ情報の解放
-	filer_free(tpMailBox);
+	filter_free(tpMailBox);
+	tpMailBox->FilterCnt = 0;
 
 	//メール情報の解放
 	if(tpMailBox->tpMailItem != NULL){

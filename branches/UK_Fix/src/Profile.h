@@ -27,7 +27,7 @@ void profile_free_string(TCHAR *buf);
 int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int default_str, const TCHAR *file_path);
 BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path);
 BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const int num, const TCHAR *file_path);
-
+BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name);
 
 #endif
 /* End of source */

@@ -510,6 +510,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 {
 #ifdef UNICODE
 	TCHAR *body;
+	char *din, *dout;
 #endif
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
@@ -563,27 +564,8 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 	mem_free(&tpMailItem->Date);
-#ifdef UNICODE
-	{
-		char *cbuf, *dbuf;
-
-		cbuf = alloc_tchar_to_char(buf);
-		if (cbuf != NULL) {
-			dbuf = (char *)mem_alloc(BUF_SIZE);
-			if (dbuf != NULL) {
-				DateConv(cbuf, dbuf);
-				tpMailItem->Date = alloc_char_to_tchar(dbuf);
-				mem_free(&dbuf);
-			}
-			mem_free(&cbuf);
-		}
-	}
-#else
-	tpMailItem->Date = (char *)mem_alloc(BUF_SIZE);
-	if (tpMailItem->Date != NULL) {
-		DateConv(buf, tpMailItem->Date);
-	}
-#endif
+	tpMailItem->Date = alloc_copy_t(buf);
+	
 	// Subject
 	if (send_mime_header(soc, tpMailItem, TEXT(HEAD_SUBJECT), tpMailItem->Subject, FALSE, ErrStr) == FALSE) {
 		return FALSE;
@@ -683,8 +665,84 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		break;
 	}
 
+////////////////////// MRP ////////////////////
+// this is where the Priority and receipts go.
+	if (tpMailItem->Priority == 1)
+	{
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), HIGH_PRIORITY, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+	if (tpMailItem->Priority == 3)
+	{
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), NORMAL_PRIORITY, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+	if (tpMailItem->Priority == 5)
+	{
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), LOW_PRIORITY, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+
+// delivery receipt
+	if (tpMailItem->DeliveryReceipt == 1)
+	{
+		if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+// read receipt
+	if (tpMailItem->ReadReceipt == 1)
+	{
+		if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	
+		if(send_header_t(soc, TEXT(HEAD_READ2), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+////////////////////// ---- //////////////////
+
 	// X-Mailer
-	if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
+	if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME_VERSION, ErrStr) == FALSE) {
 		mem_free(&send_body);
 		send_body = NULL;
 		return FALSE;
@@ -723,6 +781,26 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 #endif
+
+	// format the date only if we get this far 
+#ifdef UNICODE
+	din = alloc_tchar_to_char(tpMailItem->Date);
+	dout = (char *)mem_alloc(BUF_SIZE);
+	if (dout != NULL) {
+		DateConv(din, dout, FALSE);
+		tpMailItem->FmtDate = alloc_char_to_tchar(dout);
+		mem_free(&dout);
+	} else {
+		tpMailItem->FmtDate = NULL;
+	}
+	mem_free(&din);
+#else
+	tpMailItem->FmtDate = (char *)mem_alloc(BUF_SIZE);
+	if (tpMailItem->FmtDate != NULL) {
+		DateConv(tpMailItem->Date, tpMailItem->FmtDate, FALSE);
+	}
+#endif
+
 	return TRUE;
 }
 
