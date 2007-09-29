@@ -13,6 +13,7 @@
 #include "Memory.h"
 #include "String.h"
 #include "Profile.h"
+#include "charset.h"
 
 /* Define */
 #define GENERAL				TEXT("GENERAL")
@@ -33,53 +34,19 @@ extern int MailBoxCnt;
 extern BOOL first_start;
 
 /* Local Function Prototypes */
+static void ini_get_encode_info(void);
 
 /*
- * FreeIniInfo - 設定情報を解放する
- */
-void FreeIniInfo(void)
-{
-	mem_free(&op.FontName);
-	mem_free(&op.LvFontName);
-	mem_free(&op.SendHelo);
-	mem_free(&op.CAFile);
-	mem_free(&op.QuotationChar);
-	mem_free(&op.ReSubject);
-	mem_free(&op.ReHeader);
-	mem_free(&op.Bura);
-	mem_free(&op.Oida);
-	mem_free(&op.sBura);
-	mem_free(&op.sOida);
-	mem_free(&op.HeadCharset);
-	mem_free(&op.BodyCharset);
-	mem_free(&op.TimeZone);
-	mem_free(&op.DateFormat);
-	mem_free(&op.TimeFormat);
-	mem_free(&op.NewMailSoundFile);
-	mem_free(&op.ExecEndSoundFile);
-	mem_free(&op.ViewApp);
-	mem_free(&op.ViewAppCmdLine);
-	mem_free(&op.ViewFileSuffix);
-	mem_free(&op.ViewFileHeader);
-	mem_free(&op.EditApp);
-	mem_free(&op.EditAppCmdLine);
-	mem_free(&op.EditFileSuffix);
-	mem_free(&op.URLApp);
-	mem_free(&op.AttachPath);
-	mem_free(&op.Password);
-}
-
-/*
- * CheckStartPass - 起動時のパスワード
+ * ini_start_auth_check - 起動時のパスワード
  */
 #ifndef _WIN32_WCE
-BOOL CheckStartPass(void)
+BOOL ini_start_auth_check(void)
 {
 	TCHAR app_path[BUF_SIZE];
 	TCHAR ret[BUF_SIZE];
 	TCHAR pass[BUF_SIZE];
 
-	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	profile_initialize(app_path, TRUE);
 
 	op.StertPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
@@ -111,9 +78,56 @@ BOOL CheckStartPass(void)
 #endif
 
 /*
- * GetINI - INIファイルから設定情報を読みこむ
+ * ini_get_encode_info - エンコード情報の取得
  */
-BOOL GetINI(HWND hWnd)
+static void ini_get_encode_info(void)
+{
+	mem_free(&op.HeadCharset);
+	mem_free(&op.BodyCharset);
+
+	switch (GetACP()) {
+	case 932:	// ISO-2022-JP, euc-jp
+		op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_2022_JP));
+		op.HeadEncoding = 2;
+		op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_2022_JP));
+		op.BodyEncoding = 0;
+		break;
+
+	case 1250:	// ISO-8859-2
+	case 1251:	// ISO-8859-5, koi8-r, koi8-ru
+	case 1252:	// ISO-8859-1
+	case 1257:	// ISO-8859-4
+		op.HeadEncoding = 3;
+		op.BodyEncoding = 3;
+		break;
+
+	case 874:	// tis-620, windows-874
+	case 936:	// GB2312, hz-gb-2312
+	case 949:	// ISO-2022-KR, euc-kr
+	case 950:	// BIG5
+	case 1253:	// ISO-8859-7
+	case 1254:	// ISO-8859-3, ISO-8859-9
+	case 1255:	// ISO-8859-8, ISO-8859-8-i, DOS-862
+	case 1256:	// ISO-8859-6, ASMO-708, DOS-720, windows-1256
+	case 1258:	// windows-1258
+	default:
+		op.HeadEncoding = 2;
+		op.BodyEncoding = 2;
+		break;
+	}
+	set_default_encode(GetACP(), &op.HeadCharset, &op.BodyCharset);
+	if (op.HeadCharset == NULL) {
+		op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+	}
+	if (op.BodyCharset == NULL) {
+		op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+	}
+}
+
+/*
+ * ini_read_setting - INIファイルから設定情報を読みこむ
+ */
+BOOL ini_read_setting(HWND hWnd)
 {
 	FILTER *tpFilter;
 	HDC hdc;
@@ -137,7 +151,7 @@ BOOL GetINI(HWND hWnd)
 #endif
 	ReleaseDC(hWnd, hdc);
 
-	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	if (profile_initialize(app_path, TRUE) == FALSE) {
 		return FALSE;
 	}
@@ -165,16 +179,27 @@ BOOL GetINI(HWND hWnd)
 
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 0, app_path);
 
-	op.FontName = profile_alloc_string(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT, app_path);
-	op.FontSize = profile_get_int(GENERAL, TEXT("FontSize"), 9, app_path);
-	op.FontCharset = profile_get_int(GENERAL, TEXT("FontCharset"), char_set, app_path);
-	op.LvFontName = profile_alloc_string(GENERAL, TEXT("LvFontName"), TEXT(""), app_path);
-	op.LvFontSize = profile_get_int(GENERAL, TEXT("LvFontSize"), 9, app_path);
-	op.LvFontCharset = profile_get_int(GENERAL, TEXT("LvFontCharset"), char_set, app_path);
+	op.view_font.name = profile_alloc_string(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT, app_path);
+	op.view_font.size = profile_get_int(GENERAL, TEXT("FontSize"), 9, app_path);
+	op.view_font.weight = profile_get_int(GENERAL, TEXT("FontWeight"), 0, app_path);
+	op.view_font.italic = profile_get_int(GENERAL, TEXT("FontItalic"), 0, app_path);
+	op.view_font.charset = profile_get_int(GENERAL, TEXT("FontCharset"), char_set, app_path);
+
+	op.lv_font.name = profile_alloc_string(GENERAL, TEXT("LvFontName"), TEXT(""), app_path);
+	op.lv_font.size = profile_get_int(GENERAL, TEXT("LvFontSize"), 9, app_path);
+	op.lv_font.weight = profile_get_int(GENERAL, TEXT("LvFontWeight"), 0, app_path);
+	op.lv_font.italic = profile_get_int(GENERAL, TEXT("LvFontItalic"), 0, app_path);
+	op.lv_font.charset = profile_get_int(GENERAL, TEXT("LvFontCharset"), char_set, app_path);
+
 	op.HeadCharset = profile_alloc_string(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET, app_path);
 	op.HeadEncoding = profile_get_int(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE, app_path);
 	op.BodyCharset = profile_alloc_string(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET, app_path);
 	op.BodyEncoding = profile_get_int(GENERAL, TEXT("BodyEncoding"), STR_DEFAULT_BODY_ENCODE, app_path);
+	if (op.HeadCharset == NULL || *op.HeadCharset == TEXT('\0') ||
+		op.BodyCharset == NULL || *op.BodyCharset == TEXT('\0')) {
+		ini_get_encode_info();
+	}
+
 	op.TimeZone = profile_alloc_string(GENERAL, TEXT("TimeZone"), TEXT(""), app_path);
 	op.DateFormat = profile_alloc_string(GENERAL, TEXT("DateFormat"), STR_DEFAULT_DATEFORMAT, app_path);
 	op.TimeFormat = profile_alloc_string(GENERAL, TEXT("TimeFormat"), STR_DEFAULT_TIMEFORMAT, app_path);
@@ -208,7 +233,7 @@ BOOL GetINI(HWND hWnd)
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
 	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
-	op.Password = alloc_copy(tmp);
+	op.Password = alloc_copy_t(tmp);
 
 	op.LvColSize[0] = profile_get_int(GENERAL, TEXT("LvColSize-0"), 150, app_path);
 	op.LvColSize[1] = profile_get_int(GENERAL, TEXT("LvColSize-1"), 100, app_path);
@@ -355,18 +380,18 @@ BOOL GetINI(HWND hWnd)
 		wsprintf(key_buf, TEXT("RASINFO-%d_%s"), j, TEXT("RasPass"));
 		len = profile_get_string(TEXT("RASINFO"), key_buf, TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((*(op.RasInfo + j))->RasUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(*(op.RasInfo + j))->RasPass = alloc_copy(tmp);
+		(*(op.RasInfo + j))->RasPass = alloc_copy_t(tmp);
 	}
 
 	i = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
 	if (i == 0) {
-		CreateMailBox(hWnd, FALSE);
+		mailbox_create(hWnd, FALSE);
 		first_start = TRUE;
 		profile_free();
 		return TRUE;
 	}
 	for (j = 0; j < i; j++) {
-		if ((cnt = CreateMailBox(hWnd, FALSE)) == -1) {
+		if ((cnt = mailbox_create(hWnd, FALSE)) == -1) {
 			continue;
 		}
 		wsprintf(buf, TEXT("MAILBOX-%d"), j);
@@ -382,7 +407,7 @@ BOOL GetINI(HWND hWnd)
 		// Pass
 		profile_get_string(buf, TEXT("Pass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((MailBox + cnt)->User, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->Pass = alloc_copy(tmp);
+		(MailBox + cnt)->Pass = alloc_copy_t(tmp);
 		// APOP
 		(MailBox + cnt)->APOP = profile_get_int(buf, TEXT("APOP"), 0, app_path);
 		// POP SSL
@@ -456,7 +481,7 @@ BOOL GetINI(HWND hWnd)
 		// SMTP Authentication Pass
 		profile_get_string(buf, TEXT("SmtpPass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((MailBox + cnt)->SmtpUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->SmtpPass = alloc_copy(tmp);
+		(MailBox + cnt)->SmtpPass = alloc_copy_t(tmp);
 		// SMTP SSL
 		(MailBox + cnt)->SmtpSSL = profile_get_int(buf, TEXT("SmtpSSL"), 0, app_path);
 		// SMTP SSL Option
@@ -512,7 +537,7 @@ BOOL GetINI(HWND hWnd)
 
 		// メールアイテム
 		wsprintf(buf, TEXT("MailBox%d.dat"), j);
-		if (ReadItemList(buf, (MailBox + cnt)) == FALSE) {
+		if (file_read_mailbox(buf, (MailBox + cnt)) == FALSE) {
 			profile_free();
 			return FALSE;
 		}
@@ -522,9 +547,9 @@ BOOL GetINI(HWND hWnd)
 }
 
 /*
- * PutINI - INIファイルへ設定情報を書き出す
+ * ini_save_setting - INIファイルへ設定情報を書き出す
  */
-BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 {
 	FILTER *tpFilter;
 	TCHAR app_path[BUF_SIZE];
@@ -539,18 +564,24 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 	int j, t;
 	BOOL rc = TRUE;
 
-	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	profile_initialize(app_path, TRUE);
 
 	profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir, app_path);
 	profile_write_int(GENERAL, TEXT("SocLog"), op.SocLog, app_path);
 
-	profile_write_string(GENERAL, TEXT("FontName"), op.FontName, app_path);
-	profile_write_int(GENERAL, TEXT("FontSize"), op.FontSize, app_path);
-	profile_write_int(GENERAL, TEXT("FontCharset"), op.FontCharset, app_path);
-	profile_write_string(GENERAL, TEXT("LvFontName"), op.LvFontName, app_path);
-	profile_write_int(GENERAL, TEXT("LvFontSize"), op.LvFontSize, app_path);
-	profile_write_int(GENERAL, TEXT("LvFontCharset"), op.LvFontCharset, app_path);
+	profile_write_string(GENERAL, TEXT("FontName"), op.view_font.name, app_path);
+	profile_write_int(GENERAL, TEXT("FontSize"), op.view_font.size, app_path);
+	profile_write_int(GENERAL, TEXT("FontWeight"), op.view_font.weight, app_path);
+	profile_write_int(GENERAL, TEXT("FontItalic"), op.view_font.italic, app_path);
+	profile_write_int(GENERAL, TEXT("FontCharset"), op.view_font.charset, app_path);
+	
+	profile_write_string(GENERAL, TEXT("LvFontName"), op.lv_font.name, app_path);
+	profile_write_int(GENERAL, TEXT("LvFontSize"), op.lv_font.size, app_path);
+	profile_write_int(GENERAL, TEXT("LvFontWeight"), op.lv_font.weight, app_path);
+	profile_write_int(GENERAL, TEXT("LvFontItalic"), op.lv_font.italic, app_path);
+	profile_write_int(GENERAL, TEXT("LvFontCharset"), op.lv_font.charset, app_path);
+
 	profile_write_string(GENERAL, TEXT("HeadCharset"), op.HeadCharset, app_path);
 	profile_write_int(GENERAL, TEXT("HeadEncoding"), op.HeadEncoding, app_path);
 	profile_write_string(GENERAL, TEXT("BodyCharset"), op.BodyCharset, app_path);
@@ -866,10 +897,45 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 		}
 		// メールアイテム
 		wsprintf(buf, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
-		if (SaveMail(buf, MailBox + j, op.ListSaveMode) == FALSE) {
+		if (file_save_mailbox(buf, MailBox + j, op.ListSaveMode) == FALSE) {
 			rc = FALSE;
 		}
 	}
 	return rc;
+}
+
+/*
+ * ini_free - 設定情報を解放する
+ */
+void ini_free(void)
+{
+	mem_free(&op.view_font.name);
+	mem_free(&op.lv_font.name);
+	mem_free(&op.SendHelo);
+	mem_free(&op.CAFile);
+	mem_free(&op.QuotationChar);
+	mem_free(&op.ReSubject);
+	mem_free(&op.ReHeader);
+	mem_free(&op.Bura);
+	mem_free(&op.Oida);
+	mem_free(&op.sBura);
+	mem_free(&op.sOida);
+	mem_free(&op.HeadCharset);
+	mem_free(&op.BodyCharset);
+	mem_free(&op.TimeZone);
+	mem_free(&op.DateFormat);
+	mem_free(&op.TimeFormat);
+	mem_free(&op.NewMailSoundFile);
+	mem_free(&op.ExecEndSoundFile);
+	mem_free(&op.ViewApp);
+	mem_free(&op.ViewAppCmdLine);
+	mem_free(&op.ViewFileSuffix);
+	mem_free(&op.ViewFileHeader);
+	mem_free(&op.EditApp);
+	mem_free(&op.EditAppCmdLine);
+	mem_free(&op.EditFileSuffix);
+	mem_free(&op.URLApp);
+	mem_free(&op.AttachPath);
+	mem_free(&op.Password);
 }
 /* End of source */

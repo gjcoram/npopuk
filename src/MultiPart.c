@@ -9,9 +9,14 @@
  */
 
 /* Include Files */
+#include <stdio.h>
+
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
+#include "code.h"
+#include "mime.h"
+#include "multipart.h"
 
 /* Define */
 
@@ -19,16 +24,15 @@
 extern OPTION op;
 
 /* Local Function Prototypes */
-static BOOL GetContentValue(TCHAR *Content, TCHAR *Attribute, TCHAR *ret);
-static TCHAR *NextPartPos(TCHAR *buf, TCHAR *Boundary);
-static void GetContent(TCHAR *buf, TCHAR *str, TCHAR **ret);
-static TCHAR *GetFilenameEx(TCHAR *Content);
+static char *get_next_part(char *buf, char *Boundary);
+static void get_content(char *buf, char *str, char **ret);
+static BOOL get_content_value(char *Content, char *Attribute, char *ret);
+static char *multipart_get_filename_rfc2231(char *buf);
 
 /*
- * AddMultiPartInfo - Part情報の追加
+ * multipart_add - Part情報の追加
  */
-
-MULTIPART *AddMultiPartInfo(MULTIPART ***tpMultiPart, int cnt)
+MULTIPART *multipart_add(MULTIPART ***tpMultiPart, int cnt)
 {
 	MULTIPART **TmpMultiPart;
 
@@ -47,9 +51,9 @@ MULTIPART *AddMultiPartInfo(MULTIPART ***tpMultiPart, int cnt)
 }
 
 /*
- * FreeMultipartInfo - Part情報の解放
+ * multipart_free - Part情報の解放
  */
-void FreeMultipartInfo(MULTIPART ***tpMultiPart, int cnt)
+void multipart_free(MULTIPART ***tpMultiPart, int cnt)
 {
 	int i;
 
@@ -68,63 +72,25 @@ void FreeMultipartInfo(MULTIPART ***tpMultiPart, int cnt)
 }
 
 /*
- * GetContentValue - コンテンツ内の指定した値を取得
+ * get_next_part - 次のPartの位置を取得
  */
-static BOOL GetContentValue(TCHAR *Content, TCHAR *Attribute, TCHAR *ret)
+static char *get_next_part(char *buf, char *Boundary)
 {
-	TCHAR *p = Content;
-	TCHAR *r = ret;
+	char *p = buf;
 
-	for (; *p == TEXT(' ') || *p == TEXT('\t'); p++);
-
-	while (*p != TEXT('\0')) {
-		// attributeをチェック
-		if (str_cmp_ni_t(p, Attribute, lstrlen(Attribute)) != 0) {
-			// 次のparameterに移動
-			for (; *p != TEXT('\0') && *p != TEXT(';'); p++);
-			if (*p == TEXT(';')) p++;
-			for (; *p == TEXT(' ') || *p == TEXT('\t'); p++);
-			continue;
-		}
-		p += lstrlen(Attribute);
-		for (; *p == TEXT(' ') || *p == TEXT('\t'); p++);
-		if (*p == TEXT('=')) {
-			p++;
-		}
-		for (; *p == TEXT(' ') || *p == TEXT('\t'); p++);
-		if (*p == TEXT('\"')) {
-			p++;
-		}
-		// valueの取得
-		for (; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++, r++) {
-			*r = *p;
-		}
-		*r = TEXT('\0');
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/*
- * NextPartPos - 次のPartの位置を取得
- */
-static TCHAR *NextPartPos(TCHAR *buf, TCHAR *Boundary)
-{
-	TCHAR *p = buf;
-
-	if (*p == TEXT('-') && *(p + 1) == TEXT('-') && str_cmp_ni_t(p + 2, Boundary, lstrlen(Boundary)) == 0) {
+	if (*p == '-' && *(p + 1) == '-' && str_cmp_ni(p + 2, Boundary, tstrlen(Boundary)) == 0) {
 		return p;
 	}
 	while (1) {
-		for (; !(*p == TEXT('\r') && *(p + 1) == TEXT('\n')) && *p != TEXT('\0'); p++);
-		if (*p == TEXT('\0')) {
+		for (; !(*p == '\r' && *(p + 1) == '\n') && *p != '\0'; p++);
+		if (*p == '\0') {
 			break;
 		}
 		p += 2;
-		if (!(*p == TEXT('-') && *(p + 1) == TEXT('-'))) {
+		if (!(*p == '-' && *(p + 1) == '-')) {
 			continue;
 		}
-		if (str_cmp_ni_t(p + 2, Boundary, lstrlen(Boundary)) != 0) {
+		if (str_cmp_ni(p + 2, Boundary, tstrlen(Boundary)) != 0) {
 			continue;
 		}
 		break;
@@ -133,37 +99,75 @@ static TCHAR *NextPartPos(TCHAR *buf, TCHAR *Boundary)
 }
 
 /*
- * GetContent - コンテンツの取得
+ * get_content - コンテンツの取得
  */
-static void GetContent(TCHAR *buf, TCHAR *str, TCHAR **ret)
+static void get_content(char *buf, char *str, char **ret)
 {
-	TCHAR *p;
+	char *p;
 	int len;
 
 	// 位置の取得
-	p = GetHeaderStringPointT(buf, str);
+	p = GetHeaderStringPoint(buf, str);
 	if (p == NULL) {
 		*ret = NULL;
 		return;
 	}
 	// サイズの取得
-	len = GetHeaderStringSizeT(p, FALSE);
-	*ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	len = GetHeaderStringSize(p, FALSE);
+	*ret = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (*ret == NULL) {
 		return;
 	}
-	GetHeaderStringT(p, *ret, FALSE);
+	GetHeaderString(p, *ret, FALSE);
 }
 
 /*
- * GetFileNameEx - ファイル名の取得 (RFC 2231)
+ * get_content_value - コンテンツ内の指定した値を取得
  */
-static TCHAR *GetFilenameEx(TCHAR *buf)
+static BOOL get_content_value(char *Content, char *Attribute, char *ret)
 {
-	TCHAR *p = buf, *r;
-	TCHAR *tmp;
-	TCHAR *ret;
-	TCHAR **Names = NULL, **NamesTmp;
+	char *p = Content;
+	char *r = ret;
+
+	for (; *p == ' ' || *p == '\t'; p++);
+
+	while (*p != '\0') {
+		// attributeをチェック
+		if (str_cmp_ni(p, Attribute, tstrlen(Attribute)) != 0) {
+			// 次のparameterに移動
+			for (; *p != '\0' && *p != ';'; p++);
+			if (*p == ';') p++;
+			for (; *p == ' ' || *p == '\t'; p++);
+			continue;
+		}
+		p += tstrlen(Attribute);
+		for (; *p == ' ' || *p == '\t'; p++);
+		if (*p == '=') {
+			p++;
+		}
+		for (; *p == ' ' || *p == '\t'; p++);
+		if (*p == '\"') {
+			p++;
+		}
+		// valueの取得
+		for (; *p != '\0' && *p != '\"' && *p != ';'; p++, r++) {
+			*r = *p;
+		}
+		*r = '\0';
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*
+ * multipart_get_filename_rfc2231 - ファイル名の取得 (RFC 2231)
+ */
+static char *multipart_get_filename_rfc2231(char *buf)
+{
+	char *p = buf, *r;
+	char *tmp;
+	char *ret;
+	char **Names = NULL, **NamesTmp;
 	int No;
 	int AllocNo = 0;
 	int len;
@@ -173,60 +177,59 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 		return NULL;
 	}
 
-	while (*p != TEXT('\0')) {
+	while (*p != '\0') {
 		// attributeをチェック
-		if (str_cmp_ni_t(p, TEXT("filename*"), lstrlen(TEXT("filename*"))) != 0) {
+		if (str_cmp_ni(p, "filename*", tstrlen("filename*")) != 0) {
 			// 次のparameterに移動
-			for (; *p != TEXT('\0') && *p != TEXT(';'); p++);
-			if (*p == TEXT(';')) p++;
-			for (; *p == TEXT(' ') || *p == TEXT('\t'); p++);
+			for (; *p != '\0' && *p != ';'; p++);
+			if (*p == ';') p++;
+			for (; *p == ' ' || *p == '\t'; p++);
 			continue;
 		}
-		p += lstrlen(TEXT("filename"));
-		if (*(p + 1) == TEXT('=')) {
+		p += tstrlen("filename");
+		if (*(p + 1) == '=') {
 			// 単一の場合
 			No = 0;
 		} else {
 			// 連番が付いている場合
 			p++;
-			No = _ttoi(p);
+			No = a2i(p);
 		}
 		if (AllocNo <= No) {
 			// ファイル名のリストの確保
-			NamesTmp = (TCHAR **)mem_calloc(sizeof(TCHAR *) * (No + 1));
+			NamesTmp = (char **)mem_calloc(sizeof(char *) * (No + 1));
 			if (NamesTmp == NULL) {
 				break;
 			}
 			if (Names != NULL) {
-				CopyMemory(NamesTmp, Names, sizeof(TCHAR *) * AllocNo);
+				CopyMemory(NamesTmp, Names, sizeof(char *) * AllocNo);
 				mem_free((void **)&Names);
 			}
 			Names = NamesTmp;
 			AllocNo = No + 1;
 		}
-		for (; *p != TEXT('\0') && *p != TEXT('*') && *p != TEXT('='); p++);
+		for (; *p != '\0' && *p != '*' && *p != '='; p++);
 		if (No == 0) {
-			EncFlag = (*p == TEXT('*')) ? TRUE : FALSE;
+			EncFlag = (*p == '*') ? TRUE : FALSE;
 		}
-		for (; *p == TEXT('*') || *p == TEXT('=') || *p == TEXT('\"'); p++);
+		for (; *p == '*' || *p == '=' || *p == '\"'; p++);
 
 		// valueの取得
-		for (r = p; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++);
-		tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (p - r + 1));
+		for (r = p; *p != '\0' && *p != '\"' && *p != ';'; p++);
+		tmp = (char *)mem_alloc(sizeof(char) * (p - r + 1));
 		if (tmp == NULL) {
 			break;
 		}
-		str_cpy_n_t(tmp, r, p - r + 1);
+		str_cpy_n(tmp, r, p - r + 1);
 
-		*(Names + No) = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + 1));
+		*(Names + No) = (char *)mem_alloc(sizeof(char) * (tstrlen(tmp) + 1));
 		if (*(Names + No) == NULL) {
 			mem_free(&tmp);
 			break;
 		}
-		lstrcpy(*(Names + No), tmp);
+		tstrcpy(*(Names + No), tmp);
 		mem_free(&tmp);
 	}
-
 	if (Names == NULL) {
 		return NULL;
 	}
@@ -234,20 +237,20 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 	// ファイル名の長さを計算
 	for (No = 0, len = 0; No < AllocNo; No++) {
 		if (*(Names + No) != NULL) {
-			len += lstrlen(*(Names + No));
+			len += tstrlen(*(Names + No));
 		}
 	}
-	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	ret = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (ret != NULL) {
 		// ファイル名を連結
 		for (No = 0, r = ret; No < AllocNo; No++) {
 			if (*(Names + No) != NULL) {
-				r = str_cpy_t(r, *(Names + No));
+				r = str_cpy(r, *(Names + No));
 			}
 		}
 		// デコード
 		if (EncFlag == TRUE) {
-			tmp = ExtendedDecode(ret);
+			tmp = MIME_rfc2231_decode(ret);
 			if (tmp != NULL) {
 				mem_free(&ret);
 				ret = tmp;
@@ -265,132 +268,126 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 }
 
 /*
- * GetFilename - ファイル名の取得
+ * multipart_get_filename - ファイル名の取得
  */
-TCHAR *GetFilename(TCHAR *buf, TCHAR *Attribute)
+char *multipart_get_filename(char *buf, char *Attribute)
 {
-	TCHAR *p = buf;
-	TCHAR *fname, *dname;
+	char *p = buf;
+	char *fname, *dname;
 #ifdef UNICODE
-	char *cfname;
-	char *cdname;
+	TCHAR *wdname;
 #endif
+	int len;
 
 	if (buf == NULL) {
 		return NULL;
 	}
 
-	fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 1));
+	fname = (char *)mem_alloc(sizeof(char) * (tstrlen(buf) + 1));
 	if (fname == NULL) {
 		return NULL;
 	}
-	if (GetContentValue(buf, Attribute, fname) == FALSE) {
+	if (get_content_value(buf, Attribute, fname) == FALSE) {
 		mem_free(&fname);
 		return NULL;
 	}
-
+	len = MIME_decode(fname, NULL);
 #ifdef UNICODE
-	// TCHAR から char に変換
-	cfname = alloc_tchar_to_char(fname);
+	wdname = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	if (wdname == NULL) {
+		mem_free(&fname);
+		return NULL;
+	}
+	MIME_decode(fname, wdname);
 	mem_free(&fname);
-	if (cfname == NULL) {
-		return NULL;
-	}
-	cdname = (char *)mem_alloc(tstrlen(cfname) + 1);
-	if (cdname == NULL) {
-		return NULL;
-	}
-	MIMEdecode(cfname, cdname);
-	mem_free(&cfname);
-	// char から TCHAR に変換
-	dname = alloc_char_to_tchar(cdname);
-	mem_free(&cdname);
+	dname = alloc_tchar_to_char(wdname);
+	mem_free(&wdname);
 #else
-	dname = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 1));
+	dname = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (dname == NULL) {
 		mem_free(&fname);
 		return NULL;
 	}
-	MIMEdecode(fname, dname);
+	MIME_decode(fname, dname);
 	mem_free(&fname);
 #endif
 	return dname;
 }
 
 /*
- * MultiPart_Parse - Partを解析する (RFC 2046)
+ * multipart_parse - Partを解析する (RFC 2046)
  */
-int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, MULTIPART ***tpMultiPart, int cnt)
+int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int cnt)
 {
 	MULTIPART *tpMultiPartItem;
-	TCHAR *Boundary;
-	TCHAR *p;
-	TCHAR *Content, *sPos;
+	char *Boundary;
+	char *p;
+	char *Content, *sPos;
 
 	if (ContentType == NULL || buf == NULL) {
 		return 0;
 	}
 
 	// boundaryの取得
-	Boundary = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(ContentType) + 1));
+	Boundary = (char *)mem_alloc(sizeof(char) * (tstrlen(ContentType) + 1));
 	if (Boundary == NULL) {
 		return 0;
 	}
-	if (GetContentValue(ContentType, TEXT("boundary"), Boundary) == FALSE) {
+	if (get_content_value(ContentType, "boundary", Boundary) == FALSE) {
 		mem_free(&Boundary);
 		return 0;
 	}
 
 	// partの位置の取得
-	p = NextPartPos(buf, Boundary);
+	p = get_next_part(buf, Boundary);
 
 	while (1) {
-		if (*p == TEXT('\0')) {
+		if (*p == '\0') {
 			break;
 		}
-		p += (2 + lstrlen(Boundary));
+		p += (2 + tstrlen(Boundary));
 		// パーツの終わりかチェック
-		if (*p == TEXT('-') && *(p + 1) == TEXT('-')) {
+		if (*p == '-' && *(p + 1) == '-') {
 			break;
 		}
 
-		GetContent(p, TEXT(HEAD_CONTENTTYPE), &Content);
+		get_content(p, HEAD_CONTENTTYPE, &Content);
 		if (Content != NULL &&
-			str_cmp_ni_t(Content, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
+			str_cmp_ni(Content, "multipart", tstrlen("multipart")) == 0) {
 			// 階層になっている場合は再帰する
-			sPos = GetBodyPointaT(p);
-			cnt = MultiPart_Parse(Content, sPos, tpMultiPart, cnt);
+			sPos = GetBodyPointa(p);
+			cnt = multipart_parse(Content, sPos, tpMultiPart, cnt);
 			mem_free(&Content);
-			p = NextPartPos(sPos, Boundary);
+			p = get_next_part(sPos, Boundary);
 			continue;
 		}
 
 		// マルチパート情報の追加
-		if ((tpMultiPartItem = AddMultiPartInfo(tpMultiPart, cnt)) == NULL) {
+		if ((tpMultiPartItem = multipart_add(tpMultiPart, cnt)) == NULL) {
 			break;
 		}
 		cnt++;
 
 		// ヘッダを取得
 		tpMultiPartItem->ContentType = Content;
-		GetContent(p, TEXT(HEAD_ENCODING), &tpMultiPartItem->Encoding);
-		GetContent(p, TEXT(HEAD_DISPOSITION), &Content);
+		get_content(p, HEAD_ENCODING, &tpMultiPartItem->Encoding);
+		get_content(p, HEAD_DISPOSITION, &Content);
 
 		// ファイル名の取得
-		if ((tpMultiPartItem->Filename = GetFilenameEx(Content)) == NULL &&
-			(tpMultiPartItem->Filename = GetFilename(Content, TEXT("filename"))) == NULL &&
-			(tpMultiPartItem->Filename = GetFilename(tpMultiPartItem->ContentType, TEXT("name"))) == NULL) {
+		if ((tpMultiPartItem->Filename = multipart_get_filename_rfc2231(Content)) == NULL &&
+			(tpMultiPartItem->Filename = multipart_get_filename(Content, "filename")) == NULL &&
+			(tpMultiPartItem->Filename = multipart_get_filename(tpMultiPartItem->ContentType, "name")) == NULL) {
 		}
 		mem_free(&Content);
 
 		// 本文の位置の取得
-		tpMultiPartItem->sPos = GetBodyPointaT(p);
+		tpMultiPartItem->sPos = GetBodyPointa(p);
 		if (tpMultiPartItem->sPos == NULL) {
 			break;
 		}
 		// 次のpartの位置を取得
-		p = NextPartPos(tpMultiPartItem->sPos, Boundary);
-		if (*p != TEXT('\0')) {
+		p = get_next_part(tpMultiPartItem->sPos, Boundary);
+		if (*p != '\0') {
 			tpMultiPartItem->ePos = p;
 		}
 	}
@@ -399,27 +396,32 @@ int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, MULTIPART ***tpMultiPart, in
 }
 
 /*
- * CreateMultipart - マルチパートを作成する (RFC 2046, RFC 2183)
+ * multipart_create - マルチパートを作成する (RFC 2046, RFC 2183)
  */
-int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR **RetContentType, TCHAR *body, TCHAR **RetBody)
+int multipart_create(TCHAR *Filename, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody)
 {
 #define BREAK_LEN			76
-#define	CTYPE_MULTIPART		TEXT("multipart/mixed;\r\n boundary=\"")
-#define CONTENT_DIPPOS		TEXT("Content-Disposition: attachment;")
-#define ENCODING_BASE64		TEXT("Content-Transfer-Encoding: base64")
-#define CONTENT_TYPE_NAME	TEXT(";\r\n name=\"")
+#define	CTYPE_MULTIPART		"multipart/mixed;\r\n boundary=\""
+#define CONTENT_DIPPOS		"Content-Disposition: attachment;"
+#define ENCODING_BASE64		"Content-Transfer-Encoding: base64"
+#define CONTENT_TYPE_NAME	";\r\n name=\""
 	SYSTEMTIME st;
-	TCHAR *Boundary, *ctype;
 	TCHAR *fpath, *fname;
-	TCHAR *buf, *ret, *tmp;
-	TCHAR *p, *f, *ef;
+	TCHAR *f;
 	TCHAR date[15];
+	char *Boundary, *ctype;
+	char *buf, *ret, *tmp;
+	char *cfname;
+	char *p, *ef;
 	char *cBuf;
 	char *b64str;
 	char *cp, *cr;
 	unsigned char digest[16];
 	long FileSize;
 	int i, len;
+#ifdef UNICODE
+	TCHAR *wtmp;
+#endif
 
 	if (Filename == NULL || *Filename == TEXT('\0')) {
 		return MP_NO_ATTACH;
@@ -440,31 +442,35 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 	HMAC_MD5(Filename, lstrlen(Filename), date, lstrlen(date), digest);
 #endif
 
-	Boundary = (TCHAR *)mem_alloc(sizeof(TCHAR) * ((16 * 2) + 17 + 1));
+	Boundary = (char *)mem_alloc(sizeof(char) * ((16 * 2) + 17 + 1));
 	if (Boundary == NULL) {
 		return MP_ERROR_ALLOC;
 	}
-	p = str_cpy_t(Boundary, TEXT("-----_MULTIPART_"));
+	p = str_cpy(Boundary, "-----_MULTIPART_");
 	for (i = 0; i < 16; i++) {
-		wsprintf(p, TEXT("%02X"), digest[i]);
+#ifdef UNICODE
+		sprintf(p, "%02X", digest[i]);
+#else
+		wsprintf(p, "%02X", digest[i]);
+#endif
 		p += 2;
 	}
-	str_cpy_t(p, TEXT("_"));
+	tstrcpy(p, "_");
 
 	// マルチパートの作成
-	len = 2 + lstrlen(Boundary) + 2 +
-		lstrlen(TEXT(HEAD_CONTENTTYPE)) + 1 + lstrlen(ContentType) + 2 +
-		lstrlen(TEXT(HEAD_ENCODING)) + 1 + lstrlen(Encoding) + 4 +
-		lstrlen(body) + 4;
-	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	len = 2 + tstrlen(Boundary) + 2 +
+		tstrlen(HEAD_CONTENTTYPE) + 1 + tstrlen(ContentType) + 2 +
+		tstrlen(HEAD_ENCODING) + 1 + tstrlen(Encoding) + 4 +
+		tstrlen(body) + 4;
+	ret = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (ret == NULL) {
 		mem_free(&Boundary);
 		return MP_ERROR_ALLOC;
 	}
-	str_join(ret, TEXT("--"), Boundary, TEXT("\r\n"),
-		TEXT(HEAD_CONTENTTYPE), TEXT(" "), ContentType, TEXT("\r\n"),
-		TEXT(HEAD_ENCODING), TEXT(" "), Encoding, TEXT("\r\n\r\n"),
-		body, TEXT("\r\n\r\n"), (TCHAR *)-1);
+	str_join(ret, "--", Boundary, "\r\n",
+		HEAD_CONTENTTYPE, " ", ContentType, "\r\n",
+		HEAD_ENCODING, " ", Encoding, "\r\n\r\n",
+		body, "\r\n\r\n", (char *)-1);
 
 	fpath = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Filename) + 1));
 	if (fpath == NULL) {
@@ -475,12 +481,12 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 
 	f = Filename;
 	while (*f != TEXT('\0')) {
-		f = str_cpy_f(fpath, f, ATTACH_SEP);
+		f = str_cpy_f_t(fpath, f, ATTACH_SEP);
 		fname = GetFileNameString(fpath);
 
 		// ファイルを読み込む
-		FileSize = GetFileSerchSize(fpath);
-		if (FileSize < 0 || (cBuf = ReadFileBuf(fpath, FileSize)) == NULL) {
+		FileSize = file_get_size(fpath);
+		if (FileSize < 0 || (cBuf = file_read(fpath, FileSize)) == NULL) {
 			mem_free(&Boundary);
 			mem_free(&ret);
 			mem_free(&fpath);
@@ -496,7 +502,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 			mem_free(&cBuf);
 			return MP_ERROR_ALLOC;
 		}
-		Base64Encode(cBuf, b64str, FileSize);
+		base64_encode(cBuf, b64str, FileSize);
 		mem_free(&cBuf);
 
 		// 折り返し
@@ -519,21 +525,16 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		*cr = '\0';
 		mem_free(&b64str);
 
-#ifdef UNICODE
-		buf = alloc_char_to_tchar(cBuf);
-		mem_free(&cBuf);
-		if (buf == NULL) {
-			mem_free(&Boundary);
-			mem_free(&ret);
-			mem_free(&fpath);
-			return MP_ERROR_ALLOC;
-		}
-#else
 		buf = cBuf;
-#endif
 
 		// MIME typeの取得
+#ifdef UNICODE
+		wtmp = GetMIME2Extension(NULL, fname);
+		ctype = alloc_tchar_to_char(wtmp);
+		mem_free(&wtmp);
+#else
 		ctype = GetMIME2Extension(NULL, fname);
+#endif
 		if (ctype == NULL) {
 			mem_free(&Boundary);
 			mem_free(&ret);
@@ -545,20 +546,30 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		// ファイル名のエンコード
 		p = NULL;
 		if (op.EncodeType == 1) {
-			p = MIMEencode(fname, FALSE);
-			if (p == NULL) {
-				mem_free(&Boundary);
-				mem_free(&ret);
-				mem_free(&fpath);
-				mem_free(&buf);
-				mem_free(&ctype);
-				mem_free(&p);
-				return MP_ERROR_ALLOC;
-			}
+#ifdef UNICODE
+			wtmp = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding);
+			fname = wtmp;
+#else
+			p = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding);
 			fname = p;
+#endif
 		}
-
-		ef = ExtendedEncode(fname);
+		if (fname == NULL) {
+			mem_free(&Boundary);
+			mem_free(&ret);
+			mem_free(&fpath);
+			mem_free(&buf);
+			mem_free(&ctype);
+			mem_free(&p);
+			return MP_ERROR_ALLOC;
+		}
+#ifdef UNICODE
+		wtmp = MIME_rfc2231_encode(fname, op.HeadCharset);
+		ef = alloc_tchar_to_char(wtmp);
+		mem_free(&wtmp);
+#else
+		ef = MIME_rfc2231_encode(fname, op.HeadCharset);
+#endif
 		if (ef == NULL) {
 			mem_free(&p);
 			mem_free(&Boundary);
@@ -569,16 +580,22 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 			return MP_ERROR_ALLOC;
 		}
 
+#ifdef UNICODE
+		cfname = alloc_tchar_to_char(fname);
+#else
+		cfname = fname;
+#endif
+
 		// Partの追加
-		len += (2 + lstrlen(Boundary) + 2 +
-			lstrlen(TEXT(HEAD_CONTENTTYPE)) + 1 + lstrlen(ctype) + 2 +
-			lstrlen(CONTENT_DIPPOS) + lstrlen(ef) + 2 +
-			lstrlen(ENCODING_BASE64) + 4 +
-			lstrlen(buf) + 4);
+		len += (2 + tstrlen(Boundary) + 2 +
+			tstrlen(HEAD_CONTENTTYPE) + 1 + tstrlen(ctype) + 2 +
+			tstrlen(CONTENT_DIPPOS) + tstrlen(ef) + 2 +
+			tstrlen(ENCODING_BASE64) + 4 +
+			tstrlen(buf) + 4);
 		if (op.EncodeType == 1) {
-			len += lstrlen(CONTENT_TYPE_NAME) + lstrlen(fname) + 1;
+			len += tstrlen(CONTENT_TYPE_NAME) + tstrlen(cfname) + 1;
 		}
-		tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 		if (tmp == NULL) {
 			mem_free(&p);
 			mem_free(&Boundary);
@@ -587,20 +604,23 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 			mem_free(&buf);
 			mem_free(&ctype);
 			mem_free(&ef);
+#ifdef UNICODE
+			mem_free(&cfname);
+#endif
 			return MP_ERROR_ALLOC;
 		}
 		if (op.EncodeType == 1) {
-			str_join(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
-				TEXT(HEAD_CONTENTTYPE), TEXT(" "), ctype, CONTENT_TYPE_NAME, fname, TEXT("\"\r\n"),
-				CONTENT_DIPPOS, ef, TEXT("\r\n"),
-				ENCODING_BASE64, TEXT("\r\n\r\n"),
-				buf, TEXT("\r\n\r\n"), (TCHAR *)-1);
+			str_join(tmp, ret, "--", Boundary, "\r\n",
+				HEAD_CONTENTTYPE, " ", ctype, CONTENT_TYPE_NAME, cfname, "\"\r\n",
+				CONTENT_DIPPOS, ef, "\r\n",
+				ENCODING_BASE64, "\r\n\r\n",
+				buf, "\r\n\r\n", (char *)-1);
 		} else {
-			str_join(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
-				TEXT(HEAD_CONTENTTYPE), TEXT(" "), ctype, TEXT("\r\n"),
-				CONTENT_DIPPOS, ef, TEXT("\r\n"),
-				ENCODING_BASE64, TEXT("\r\n\r\n"),
-				buf, TEXT("\r\n\r\n"), (TCHAR *)-1);
+			str_join(tmp, ret, "--", Boundary, "\r\n",
+				HEAD_CONTENTTYPE, " ", ctype, "\r\n",
+				CONTENT_DIPPOS, ef, "\r\n",
+				ENCODING_BASE64, "\r\n\r\n",
+				buf, "\r\n\r\n", (char *)-1);
 		}
 
 		mem_free(&p);
@@ -608,30 +628,33 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		mem_free(&ctype);
 		mem_free(&buf);
 		mem_free(&ret);
+#ifdef UNICODE
+		mem_free(&cfname);
+#endif
 		ret = tmp;
 	}
 	mem_free(&fpath);
 
 	// マルチパートの終わり
-	len += (2 + lstrlen(Boundary) + 2 + 2);
-	*RetBody = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	len += (2 + tstrlen(Boundary) + 2 + 2);
+	*RetBody = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (*RetBody == NULL) {
 		mem_free(&Boundary);
 		mem_free(&ret);
 		return MP_ERROR_ALLOC;
 	}
-	str_join(*RetBody, ret, TEXT("--"), Boundary, TEXT("--\r\n"), (TCHAR *)-1);
+	str_join(*RetBody, ret, "--", Boundary, "--\r\n", (char *)-1);
 	mem_free(&ret);
 
 	// Content typeの生成
-	*RetContentType = (TCHAR *)mem_alloc(
-		sizeof(TCHAR) * (lstrlen(CTYPE_MULTIPART) + lstrlen(Boundary) + 2));
+	*RetContentType = (char *)mem_alloc(
+		sizeof(TCHAR) * (tstrlen(CTYPE_MULTIPART) + tstrlen(Boundary) + 2));
 	if (*RetContentType == NULL) {
 		mem_free(&Boundary);
 		mem_free(&*RetBody);
 		return MP_ERROR_ALLOC;
 	}
-	str_join(*RetContentType, CTYPE_MULTIPART, Boundary, TEXT("\""), (TCHAR *)-1);
+	str_join(*RetContentType, CTYPE_MULTIPART, Boundary, "\"", (char *)-1);
 	mem_free(&Boundary);
 	return MP_ATTACH;
 }

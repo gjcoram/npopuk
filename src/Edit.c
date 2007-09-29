@@ -12,6 +12,12 @@
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
+#include "Charset.h"
+#include "mime.h"
+#include "multipart.h"
+#ifdef USE_NEDIT
+#include "nEdit.h"
+#endif
 
 /* Define */
 #define ID_MENU				(WM_APP + 102)
@@ -58,7 +64,9 @@ extern int SelBox;
 extern SOCKET g_soc;
 extern BOOL gSockFlag;
 
-extern HFONT hEditFont;
+extern HWND hViewWnd;
+extern HFONT hViewFont;
+extern int font_charset;
 
 /* Local Function Prototypes */
 static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress);
@@ -79,9 +87,27 @@ static void SetEditMenu(HWND hWnd);
 static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag);
 static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag);
 static void ShowSendInfo(HWND hWnd);
-static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem);
+static BOOL AppEditMail(HWND hWnd, long id, char *buf, MAILITEM *tpMailItem);
 static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag);
 static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
+
+/*
+ * enum_windows_proc - ウィンドウ列挙プロシージャ
+ */
+#ifndef _WIN32_WCE
+BOOL CALLBACK enum_windows_proc(const HWND hWnd, const LPARAM lParam)
+{
+	TCHAR class_name[BUF_SIZE];
+
+	// クラス名取得
+	GetClassName(hWnd, class_name, BUF_SIZE - 1);
+	// フォント設定
+	if (lstrcmp(class_name, EDIT_WND_CLASS) == 0) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
+	}
+	return TRUE;
+}
+#endif
 
 /*
  * GetCcListSize - メールアドレスのリストの長さを取得する
@@ -170,7 +196,7 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 	int i;
 
 	// 自分のメールアドレスの取得
-	i = GetNameToMailBox(tpMailItem->MailBox);
+	i = mailbox_name_to_index(tpMailItem->MailBox);
 	if (i != -1) {
 		MyMailAddress = (MailBox + i)->MailAddress;
 	}
@@ -230,16 +256,16 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 	// 返信のMailBoxの設定
 	if (rebox >= MAILBOX_USER) {
-		tpMailItem->MailBox = alloc_copy((MailBox + rebox)->Name);
+		tpMailItem->MailBox = alloc_copy_t((MailBox + rebox)->Name);
 	} else if (tpReMailItem->MailBox != NULL) {
-		tpMailItem->MailBox = alloc_copy(tpReMailItem->MailBox);
+		tpMailItem->MailBox = alloc_copy_t(tpReMailItem->MailBox);
 	}
 
 	// 返信の宛先の設定
 	if (tpReMailItem->ReplyTo != NULL) {
-		tpMailItem->To = alloc_copy(tpReMailItem->ReplyTo);
+		tpMailItem->To = alloc_copy_t(tpReMailItem->ReplyTo);
 	} else if (tpReMailItem->From != NULL) {
-		tpMailItem->To = alloc_copy(tpReMailItem->From);
+		tpMailItem->To = alloc_copy_t(tpReMailItem->From);
 	}
 
 	// 全員に返信の場合は Cc を設定
@@ -249,17 +275,17 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 	if (tpReMailItem->MessageID != NULL && *tpReMailItem->MessageID == TEXT('<')) {
 		// 返信のIn-Reply-Toの設定
-		tpMailItem->InReplyTo = alloc_copy(tpReMailItem->MessageID);
+		tpMailItem->InReplyTo = alloc_copy_t(tpReMailItem->MessageID);
 
 		// 返信のReferencesの設定
 		if (tpReMailItem->InReplyTo != NULL && *tpReMailItem->InReplyTo == TEXT('<')) {
 			tpMailItem->References = (TCHAR *)mem_alloc(
 				sizeof(TCHAR) * (lstrlen(tpReMailItem->InReplyTo) + lstrlen(tpReMailItem->MessageID) + 2));
 			if (tpMailItem->References != NULL) {
-				str_join(tpMailItem->References, tpReMailItem->InReplyTo, TEXT(" "), tpReMailItem->MessageID, (TCHAR *)-1);
+				str_join_t(tpMailItem->References, tpReMailItem->InReplyTo, TEXT(" "), tpReMailItem->MessageID, (TCHAR *)-1);
 			}
 		} else {
-			tpMailItem->References = alloc_copy(tpReMailItem->MessageID);
+			tpMailItem->References = alloc_copy_t(tpReMailItem->MessageID);
 		}
 	}
 
@@ -273,7 +299,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	for (; *subject == TEXT(' '); subject++);
 	p = tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(subject) + lstrlen(op.ReSubject) + 1));
 	if (tpMailItem->Subject != NULL) {
-		str_join(p, op.ReSubject, subject, (TCHAR *)-1);
+		str_join_t(p, op.ReSubject, subject, (TCHAR *)-1);
 	}
 }
 
@@ -284,45 +310,78 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 {
 	MULTIPART **tpMultiPart = NULL;
 	TCHAR *p, *mBody;
+	TCHAR *body;
 	int len;
 	int cnt, i;
 
 	// 本文の設定
 	if (tpMailItem->Status == 1 && tpReMailItem != NULL && tpReMailItem->Body != NULL) {
-		mBody = BodyDecode(tpReMailItem, FALSE, &tpMultiPart, &cnt);
-		FreeMultipartInfo(&tpMultiPart, cnt);
+		mBody = MIME_body_decode(tpReMailItem, FALSE, &tpMultiPart, &cnt);
+		multipart_free(&tpMultiPart, cnt);
 
 		len = CreateHeaderStringSize(op.ReHeader, tpReMailItem) + 2;
 		len += GetReplyBodySize(mBody, op.QuotationChar);
 
-		i = GetNameToMailBox(tpMailItem->MailBox);
+		i = mailbox_name_to_index(tpMailItem->MailBox);
 		if (i != -1 && (MailBox + i)->Signature != NULL && *(MailBox + i)->Signature != TEXT('\0')) {
 			len += lstrlen((MailBox + i)->Signature) + 2;
 		}
 
-		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-		if (tpMailItem->Body != NULL) {
-			p = CreateHeaderString(op.ReHeader, tpMailItem->Body, tpReMailItem);
+		body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		if (body != NULL) {
+			p = CreateHeaderString(op.ReHeader, body, tpReMailItem);
 			p = str_cpy_t(p, TEXT("\r\n"));
 			if (mBody != NULL) {
 				p = SetReplyBody(mBody, p, op.QuotationChar);
 			}
 			if (i != -1 && (MailBox + i)->Signature != NULL && *(MailBox + i)->Signature != TEXT('\0')) {
-				str_join(p, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
+				str_join_t(p, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 			}
 		}
 		mem_free(&mBody);
 
+		if (tpMailItem->BodyCharset == NULL &&
+			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
+			lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
+			// UTF-7, UTF-8 は常にエンコードして保存
+			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
+			tpMailItem->BodyEncoding = op.BodyEncoding;
+		}
+		if (tpMailItem->BodyCharset == NULL ||
+			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
+#ifdef UNICODE
+			tpMailItem->Body = alloc_tchar_to_char(body);
+#else
+			tpMailItem->Body = alloc_copy(body);
+#endif
+		}
+		mem_free(&body);
 	} else {
-		i = GetNameToMailBox(tpMailItem->MailBox);
+		i = mailbox_name_to_index(tpMailItem->MailBox);
 		if (i == -1 || (MailBox + i)->Signature == NULL || *(MailBox + i)->Signature == TEXT('\0')) {
 			return;
 		}
 		len = lstrlen((MailBox + i)->Signature);
-		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
-		if (tpMailItem->Body != NULL) {
-			str_join(tpMailItem->Body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
+		body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
+		if (body != NULL) {
+			str_join_t(body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 		}
+		if (tpMailItem->BodyCharset == NULL &&
+			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
+			lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
+			// UTF-7, UTF-8 は常にエンコードして保存
+			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
+			tpMailItem->BodyEncoding = op.BodyEncoding;
+		}
+		if (tpMailItem->BodyCharset == NULL ||
+			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
+#ifdef UNICODE
+			tpMailItem->Body = alloc_tchar_to_char(body);
+#else
+			tpMailItem->Body = alloc_copy(body);
+#endif
+		}
+		mem_free(&body);
 	}
 }
 
@@ -343,7 +402,7 @@ static void SetWindowString(HWND hWnd, TCHAR *Subject)
 		SetWindowText(hWnd, STR_TITLE_MAILEDIT);
 		return;
 	}
-	str_join(buf, STR_TITLE_MAILEDIT TEXT(" - ["), Subject, TEXT("]"), (TCHAR *)-1);
+	str_join_t(buf, STR_TITLE_MAILEDIT TEXT(" - ["), Subject, TEXT("]"), (TCHAR *)-1);
 	if (lstrlen(buf) > BUF_SIZE) {
 		*(buf + BUF_SIZE) = TEXT('\0');
 	}
@@ -379,10 +438,10 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		return;
 	}
 
-	p = str_join(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, tpMailItem->To, (TCHAR *)-1);
+	p = str_join_t(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, tpMailItem->To, (TCHAR *)-1);
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
-	p = str_join(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
+	p = str_join_t(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
 	SetAttachList(tpMailItem->Attach, p);
 
 	SetWindowText(hHeader, buf);
@@ -484,6 +543,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	TEXTMETRIC lptm;
 	RECT rcClient, StRect;
 	TCHAR *buf;
+	TCHAR *tmp;
 	int Height;
 	int FontHeight;
 
@@ -656,6 +716,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	// 本文を表示するEDITコントロールの作成
 	Height += FontHeight + 1;
+#ifndef USE_NEDIT
 	CreateWindowEx(
 #ifdef _WIN32_WCE_PPC
 		0,
@@ -669,8 +730,17 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ((op.EditWordBreakFlag == 1) ? 0 : WS_HSCROLL),
 		0, Height, rcClient.right, rcClient.bottom - Height,
 		hWnd, (HMENU)IDC_EDIT_BODY, hInst, NULL);
-	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hEditFont, MAKELPARAM(TRUE,0));
-
+#else
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE,
+		NEDIT_WND_CLASS, TEXT(""),
+		WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ((op.EditWordBreakFlag == 1) ? 0 : WS_HSCROLL),
+		0, Height, rcClient.right, rcClient.bottom - Height,
+		hWnd, (HMENU)IDC_EDIT_BODY, hInst, NULL);
+#endif
+	if (hViewFont != NULL) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
+	}
 	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 
 #ifdef _WIN32_WCE_PPC
@@ -700,15 +770,26 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	if (tpMailItem->Body != NULL) {
 		SwitchCursor(FALSE);
-		buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->Body) + 1));
-		if (buf != NULL) {
-			DelDot(tpMailItem->Body, buf);
-			if (EditMaxLength != 0 && (int)lstrlen(buf) > EditMaxLength) {
-				*(buf + EditMaxLength) = TEXT('\0');
-			}
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
-			mem_free(&buf);
+		if (tpMailItem->BodyCharset == NULL ||
+			(tmp = MIME_charset_decode(charset_to_cp((BYTE)font_charset), tpMailItem->Body, tpMailItem->BodyCharset)) == NULL) {
+#ifdef UNICODE
+			tmp = alloc_char_to_tchar(tpMailItem->Body);
+#else
+			tmp = alloc_copy(tpMailItem->Body);
+#endif
 		}
+		if (tmp != NULL) {
+			buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + 1));
+			if (buf != NULL) {
+				DelDot(tmp, buf);
+				if (EditMaxLength != 0 && (int)lstrlen(buf) > EditMaxLength) {
+					*(buf + EditMaxLength) = TEXT('\0');
+				}
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
+				mem_free(&buf);
+			}
+		}
+		mem_free(&tmp);
 		SwitchCursor(TRUE);
 	}
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETMODIFY, (WPARAM)FALSE, 0);
@@ -726,24 +807,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 #ifdef _WIN32_WCE
-	RECT rcClient, HeaderRect;
-	int Height = 0;
-
-	GetClientRect(hWnd, &rcClient);
-	GetWindowRect(GetDlgItem(hWnd, IDC_HEADER), &HeaderRect);
-
-#ifndef _WIN32_WCE_PPC
-	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_VCB));
-#endif
-	MoveWindow(GetDlgItem(hWnd, IDC_HEADER), 0, Height, rcClient.right, HeaderRect.bottom - HeaderRect.top, TRUE);
-	InvalidateRect(GetDlgItem(hWnd, IDC_HEADER), NULL, FALSE);
-	UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
-
-	Height += HeaderRect.bottom - HeaderRect.top;
-	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, Height + 1,
-		rcClient.right, rcClient.bottom - Height, TRUE);
-	return TRUE;
-#elif defined _WIN32_WCE_LAGENDA
+#ifdef _WIN32_WCE_LAGENDA
 	COSIPINFO CoSipInfo;
 	SIPINFO SipInfo;
 	RECT rcClient, HeaderRect;
@@ -773,7 +837,26 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, hHeight + 1,
 		rcClient.right, rcClient.bottom - hHeight - sip_height, TRUE);
 	return ret;
-#else
+#else	//_WIN32_WCE_LAGENDA
+	RECT rcClient, HeaderRect;
+	int Height = 0;
+
+	GetClientRect(hWnd, &rcClient);
+	GetWindowRect(GetDlgItem(hWnd, IDC_HEADER), &HeaderRect);
+
+#ifndef _WIN32_WCE_PPC
+	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_VCB));
+#endif	//_WIN32_WCE_PPC
+	MoveWindow(GetDlgItem(hWnd, IDC_HEADER), 0, Height, rcClient.right, HeaderRect.bottom - HeaderRect.top, TRUE);
+	InvalidateRect(GetDlgItem(hWnd, IDC_HEADER), NULL, FALSE);
+	UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
+
+	Height += HeaderRect.bottom - HeaderRect.top;
+	MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), 0, Height + 1,
+		rcClient.right, rcClient.bottom - Height, TRUE);
+	return TRUE;
+#endif	//_WIN32_WCE_LAGENDA
+#else	//_WIN32_WCE
 	HWND hHeader, hBody;
 	RECT rcClient, HeaderRect, ToolbarRect;
 	int hHeight, tHeight;
@@ -796,7 +879,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	MoveWindow(hBody, 0, tHeight + hHeight + 1,
 		rcClient.right, rcClient.bottom - tHeight - hHeight - 1, TRUE);
 	return TRUE;
-#endif
+#endif	//_WIN32_WCE
 }
 
 /*
@@ -818,8 +901,8 @@ static BOOL EndWindow(HWND hWnd)
 			ReadEditMail(hWnd, (long)hWnd, tpMailItem, FALSE);
 			tpMailItem->hProcess = NULL;
 		}
-		if (Item_IsMailBox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
-			FreeMailItem(&tpMailItem, 1);
+		if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
+			item_free(&tpMailItem, 1);
 		}
 	}
 
@@ -916,7 +999,6 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 		if (buf != NULL) {
 			*buf = TEXT('\0');
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
-
 			// 自動折り返し
 			tmp = (TCHAR *)mem_alloc(
 				sizeof(TCHAR) * (WordBreakStringSize(buf, op.QuotationChar, op.WordBreakSize, op.QuotationBreak) + 1));
@@ -925,26 +1007,40 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 				mem_free(&buf);
 				buf = tmp;
 			}
-
 			// 行頭の . を .. に変換
 			len = SetDotSize(buf);
-			tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-			if (tpMailItem->Body != NULL) {
-				SetDot(buf, tpMailItem->Body);
+			tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+			if (tmp != NULL) {
+				SetDot(buf, tmp);
 			}
 			mem_free(&buf);
+			if (tpMailItem->BodyCharset == NULL &&
+				(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
+				lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
+				// UTF-7, UTF-8 は常にエンコードして保存
+				tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
+				tpMailItem->BodyEncoding = op.BodyEncoding;
+			}
+			if (tpMailItem->BodyCharset == NULL ||
+				(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset)) == NULL) {
+#ifdef UNICODE
+				tpMailItem->Body = alloc_tchar_to_char(tmp);
+#else
+				tpMailItem->Body = alloc_copy(tmp);
+#endif
+			}
+			mem_free(&tmp);
 		}
 		SwitchCursor(TRUE);
 	}
 
 	// サイズを設定
 	mem_free(&tpMailItem->Size);
-	wsprintf(numbuf, TEXT("%d"), (tpMailItem->Body != NULL)
-		? tchar_to_char_size(tpMailItem->Body) - 1 : 0);
-	tpMailItem->Size = alloc_copy(numbuf);
+	wsprintf(numbuf, TEXT("%d"), (tpMailItem->Body != NULL) ? tstrlen(tpMailItem->Body) : 0);
+	tpMailItem->Size = alloc_copy_t(numbuf);
 
-	if (Item_IsMailBox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
-		if (Item_Add(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
+	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
+		if (item_add(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
 			return FALSE;
 		}
 		if (EndFlag == 0 && SelBox == MAILBOX_SEND) {
@@ -956,12 +1052,11 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 	}
 	if (EndFlag == 0) {
 		if (op.SelectSendBox == 1 && SelBox != MAILBOX_SEND) {
-			SelectMailBox(MainWnd, MAILBOX_SEND);
+			mailbox_select(MainWnd, MAILBOX_SEND);
 		}
 		if (SelBox == MAILBOX_SEND) {
 			i = ListView_GetMemToItem(GetDlgItem(MainWnd, IDC_LISTVIEW), tpMailItem);
 			if (i != -1) {
-
 				ListView_SetItemState(GetDlgItem(MainWnd, IDC_LISTVIEW), i,
 					((tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) ? INDEXTOSTATEIMAGEMASK(1) : 0),
 					LVIS_STATEIMAGEMASK)
@@ -1001,7 +1096,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 
 	if (op.AutoSave == 1) {
 		// 送信箱をファイルに保存
-		SaveMail(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
+		file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
 	}
 
 	SetWindowLong(hWnd, GWL_USERDATA, (LPARAM)0);
@@ -1049,7 +1144,7 @@ static void ShowSendInfo(HWND hWnd)
 /*
  * AppEditMail - 外部エディタで編集
  */
-static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
+static BOOL AppEditMail(HWND hWnd, long id, char *buf, MAILITEM *tpMailItem)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -1060,7 +1155,7 @@ static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
 #endif
 
 #ifdef _WIN32_WCE
-	str_join(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
+	str_join_t(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 #else
 	wsprintf(path, TEXT("%s%ld.%s"), DataDir, id, op.EditFileSuffix);
 #endif
@@ -1071,7 +1166,7 @@ static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
 		return FALSE;
 	}
 	// メールの保存
-	if (buf != NULL && WriteAsciiFile(hFile, buf, lstrlen(buf)) == FALSE) {
+	if (buf != NULL && file_write(hFile, buf, tstrlen(buf)) == FALSE) {
 		CloseHandle(hFile);
 		DeleteFile(path);
 		return FALSE;
@@ -1083,7 +1178,7 @@ static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
 		PROCESS_INFORMATION ProcInfo;
 		TCHAR param[BUF_SIZE];
 
-		str_join(param, TEXT(" "), path, (TCHAR *)-1);
+		str_join_t(param, TEXT(" "), path, (TCHAR *)-1);
 		p = CreateCommandLine(op.EditAppCmdLine, path, TRUE);
 
 		// 起動
@@ -1147,7 +1242,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 #endif
 
 #ifdef _WIN32_WCE
-	str_join(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
+	str_join_t(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 #else
 	wsprintf(path, TEXT("%s%ld.%s"), DataDir, id, op.EditFileSuffix);
 #endif
@@ -1157,8 +1252,8 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 		return TRUE;
 	}
 
-	len = GetFileSerchSize(path);
-	fbuf = ReadFileBuf(path, len);
+	len = file_get_size(path);
+	fbuf = file_read(path, len);
 #ifdef UNICODE
 	// UNICODEに変換
 	tmp = alloc_char_to_tchar(fbuf);
@@ -1181,10 +1276,19 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 
 		// 行頭の . を .. に変換
 		len = SetDotSize(p);
+#ifdef UNICODE
+		tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		if (tmp != NULL) {
+			SetDot(p, tmp);
+		}
+		tpMailItem->Body = alloc_tchar_to_char(tmp);
+		mem_free(&tmp);
+#else
 		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (tpMailItem->Body != NULL) {
 			SetDot(p, tpMailItem->Body);
 		}
+#endif
 		mem_free(&p);
 	}
 
@@ -1247,7 +1351,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			// サイズ取得
 			for (i = 0; i < len; i++) {
 				DragQueryFile((HANDLE)wParam, i, fpath, BUF_SIZE - 1);
-				if (CheckDir(fpath) == FALSE) {
+				if (dir_check(fpath) == FALSE) {
 					size += lstrlen(fpath) + 1;
 				}
 			}
@@ -1267,7 +1371,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 					*(p++) = ATTACH_SEP;
 				}
 				DragQueryFile((HANDLE)wParam, i, fpath, BUF_SIZE - 1);
-				if (CheckDir(fpath) == FALSE) {
+				if (dir_check(fpath) == FALSE) {
 					p = str_cpy_t(p, fpath);
 				}
 			}
@@ -1480,6 +1584,14 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			}
 			break;
 
+		case ID_MENUITEM_ENCODE:
+			// エンコード設定
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (tpMailItem != NULL) {
+				DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ENCODE), hWnd, SetEncodeProc, (LPARAM)tpMailItem);
+			}
+			break;
+
 		case ID_MENUITEM_CLOSE:
 			SendMessage(hWnd, WM_CLOSE, 0, 0);
 			break;
@@ -1514,7 +1626,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			{
 				TCHAR *buf;
 
-				if (OpenFileBuf(hWnd, &buf) == FALSE) {
+				if (file_read_select(hWnd, &buf) == FALSE) {
 					ErrorMessage(hWnd, STR_ERR_OPEN);
 					break;
 				}
@@ -1537,6 +1649,24 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 #endif
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 			break;
+
+#ifndef _WIN32_WCE
+		case ID_MENUITEM_FONT:
+			// フォント
+			if (font_select(hWnd, &op.view_font) == TRUE) {
+				if (hViewFont != NULL) {
+					DeleteObject(hViewFont);
+				}
+				hViewFont = font_create(hWnd, &op.view_font);
+				if (hViewWnd != NULL) {
+					SendDlgItemMessage(hViewWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
+				}
+				font_charset = op.view_font.charset;
+				// 他のEditウィンドウのフォントを設定
+				EnumWindows((WNDENUMPROC)enum_windows_proc, 0);
+			}
+			break;
+#endif
 		}
 		break;
 
@@ -1594,12 +1724,12 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 
 	// URL(mailto:)をメールアイテムに設定
 	if (URLToMailItem(mail_addr, tpMailItem) == FALSE) {
-		FreeMailItem(&tpMailItem, 1);
+		item_free(&tpMailItem, 1);
 		return FALSE;
 	}
 	ExistFlag = TRUE;
 	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, 0);
-	FreeMailItem(&tpMailItem, 1);
+	item_free(&tpMailItem, 1);
 	ExistFlag = FALSE;
 	return ret;
 }
@@ -1662,13 +1792,13 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			return EDIT_NONEDIT;
 		}
 		if (tpReMailItem != NULL) {
-			CopyItem(tpReMailItem, tpMailItem);
+			item_copy(tpReMailItem, tpMailItem);
 		}
 		tpMailItem->Download = TRUE;
 		// 送信情報設定
 		_SetForegroundWindow(hWnd);
 		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc, (LPARAM)tpMailItem) == FALSE) {
-			FreeMailItem(&tpMailItem, 1);
+			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
 		if (tpMailItem->Body == NULL) {
@@ -1693,7 +1823,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 		// 送信情報設定
 		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc, (LPARAM)tpMailItem) == FALSE) {
-			FreeMailItem(&tpMailItem, 1);
+			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
 		SetReplyMessageBody(tpMailItem, tpReMailItem);
@@ -1739,7 +1869,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 #endif
 	if (hEditWnd == NULL) {
 		if (OpenFlag != EDIT_OPEN) {
-			FreeMailItem(&tpMailItem, 1);
+			item_free(&tpMailItem, 1);
 		}
 		ErrorMessage(hWnd, STR_ERR_INIT);
 		return EDIT_NONEDIT;

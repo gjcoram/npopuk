@@ -297,6 +297,7 @@
 #define STR_TITLE_EDITADDRESS		TEXT("±ÄŞÚ½")
 #define STR_TITLE_ADDRESSLIST		TEXT("±ÄŞÚ½’ ")
 #define STR_TITLE_FIND				TEXT("ŒŸõ")
+#define STR_TITLE_ENCODE			TEXT("´İº°ÄŞ")
 
 #define STR_SF_TITLE				TEXT("Ì§²Ù‘I‘ğ")
 #define STR_SF_LV_NAME				TEXT("–¼‘O")

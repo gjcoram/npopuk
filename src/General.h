@@ -12,7 +12,9 @@
 #define _INC_MAIL_GENERAL_H
 
 /* Include Files */
+#define _INC_OLE
 #include <windows.h>
+#undef  _INC_OLE
 #include <windowsx.h>
 #include <commctrl.h>
 #ifndef _WIN32_WCE_PPC
@@ -30,9 +32,10 @@
 #endif
 #include <resource.h>
 #include <Strtbl.h>
+#include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOP Ver 1.0.6")
+#define APP_NAME				TEXT("nPOP Ver 1.0.7")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
@@ -199,6 +202,10 @@
 #define HEAD_X_DOWNLOAD			"X-Download:"
 #define HEAD_X_MAILBOX			"X-MailBox:"
 #define HEAD_X_ATTACH			"X-File:"
+#define HEAD_X_HEADCHARSET		"X-Header-Charset:"
+#define HEAD_X_HEADENCODE		"X-Header-Encodeing:"
+#define HEAD_X_BODYCHARSET		"X-Body-Charset:"
+#define HEAD_X_BODYENCODE		"X-Body-Encodeing:"
 
 #define HEAD_X_NO_OLD			"X-MailNo:"
 #define HEAD_X_MARK_OLD			"X-MarkStatus:"
@@ -206,9 +213,20 @@
 #define HEAD_X_DOWNLOAD_OLD		"X-MailDownload:"
 #define HEAD_X_ATTACH_OLD		"X-Attach:"
 
+#define CHARSET_US_ASCII		"US-ASCII"
+#define CHARSET_ISO_8859_1		"ISO-8859-1"
+#define CHARSET_ISO_2022_JP		"ISO-2022-JP"
+#define CHARSET_UTF_7			"UTF-7"
+#define CHARSET_UTF_8			"UTF-8"
+
+#define ENCODE_7BIT				"7bit"
+#define ENCODE_8BIT				"8bit"
+#define ENCODE_BASE64			"base64"
+#define ENCODE_Q_PRINT			"quoted-printable"
+
 #define URL_HTTP				TEXT("http://")
-#define URL_HTTPS				TEXT("https:// ")
-#define URL_FTP					TEXT("ftp:// ")
+#define URL_HTTPS				TEXT("https://")
+#define URL_FTP					TEXT("ftp://")
 #define URL_MAILTO				TEXT("mailto:")
 
 #define ABS(n)					((n < 0) ? (n * -1) : n)				// â‘Î’l
@@ -221,9 +239,8 @@ typedef struct _OPTION {
 
 	TCHAR DataFileDir[BUF_SIZE];
 
-	TCHAR *FontName;
-	int FontSize;
-	int FontCharset;
+	FONT_INFO view_font;
+	FONT_INFO lv_font;
 
 	#ifndef _WIN32_WCE
 	RECT MainRect;
@@ -245,9 +262,6 @@ typedef struct _OPTION {
 	int LvThreadView;
 	int LvStyle;
 	int LvStyleEx;
-	TCHAR *LvFontName;
-	int LvFontSize;
-	int LvFontCharset;
 	int MoveAllMailBox;
 	int RecvScroll;
 	int SaveMsg;
@@ -445,10 +459,14 @@ typedef struct _MAILITEM {
 	TCHAR *UIDL;
 	TCHAR *InReplyTo;
 	TCHAR *References;
-	TCHAR *Body;
-	TCHAR *MailBox;
+	char *Body;
 
+	TCHAR *MailBox;
 	TCHAR *Attach;
+	TCHAR *HeadCharset;
+	int HeadEncoding;
+	TCHAR *BodyCharset;
+	int BodyEncoding;
 } MAILITEM;
 
 typedef struct _FILTER {
@@ -461,14 +479,6 @@ typedef struct _FILTER {
 	TCHAR *Header2;
 	TCHAR *Content2;
 } FILTER;
-
-typedef struct _MULTIPART {
-	TCHAR *ContentType;
-	TCHAR *Filename;
-	TCHAR *Encoding;
-	TCHAR *sPos;
-	TCHAR *ePos;
-} MULTIPART;
 
 typedef struct _ATTACHINFO {
 	TCHAR *from;
@@ -503,7 +513,7 @@ int recv_proc(HWND hWnd, SOCKET soc);
 #ifndef WSAASYNC
 int recv_select(HWND hWnd, SOCKET soc);
 #endif	//WSAASYNC
-int send_data(SOCKET soc, TCHAR *wbuf, int len);
+int send_data(SOCKET soc, char *wbuf, int len);
 int send_buf(SOCKET soc, char *buf);
 #ifdef UNICODE
 int send_buf_t(SOCKET soc, TCHAR *wbuf);
@@ -528,6 +538,70 @@ BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX
 SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
 void smtp_set_error(HWND hWnd);
 void smtp_free(void);
+
+// File
+BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
+BOOL log_save(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
+BOOL log_clear(TCHAR *fpath, TCHAR *fname);
+BOOL dir_check(TCHAR *path);
+BOOL dir_delete(TCHAR *Path, TCHAR *file);
+void filename_conv(TCHAR *buf);
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenSave);
+long file_get_size(TCHAR *FileName);
+char *file_read(TCHAR *path, long FileSize);
+BOOL file_read_select(HWND hWnd, TCHAR **buf);
+BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox);
+int file_read_address_book(TCHAR *FileName, MAILBOX *tpMailBox);
+BOOL file_write(HANDLE hFile, char *buf, int len);
+BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
+BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len);
+BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
+BOOL file_save_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag);
+BOOL file_save_address_book(TCHAR *FileName, MAILBOX *tpMailBox);
+
+// Ini
+#ifndef _WIN32_WCE
+BOOL ini_start_auth_check(void);
+#endif
+BOOL ini_read_setting(HWND hWnd);
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag);
+void ini_free(void);
+
+// Item
+BOOL item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
+BOOL item_set_count(MAILBOX *tpMailBox, int i);
+BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
+void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem);
+MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *MailBoxName, BOOL SendClear);
+BOOL item_resize_mailbox(MAILBOX *tpMailBox);
+void item_free(MAILITEM **tpMailItem, int cnt);
+char *item_get_message_id(char *buf);
+int item_get_number_to_index(MAILBOX *tpMailBox, int No);
+int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No);
+int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No);
+int item_get_next_send_mark(MAILBOX *tpMailBox, int Index, int *MailBoxIndex);
+int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
+BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download);
+MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size);
+MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf);
+int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag);
+char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag);
+int item_find_thread(MAILBOX *tpMailBox, TCHAR *p, int Index);
+void item_create_thread(MAILBOX *tpMailBox);
+
+// MailBox
+BOOL mailbox_init(void);
+int mailbox_create(HWND hWnd, BOOL ShowFlag);
+int mailbox_delete(HWND hWnd, int DelIndex);
+BOOL mailbox_read(void);
+void mailbox_move_up(HWND hWnd);
+void mailbox_move_down(HWND hWnd);
+BOOL mailbox_unread_check(int index, BOOL NewFlag);
+int mailbox_next_unread(int index, int endindex);
+void mailbox_select(HWND hWnd, int Sel);
+int mailbox_name_to_index(TCHAR *Name);
+void filer_free(MAILBOX *tpMailBox);
+void mailbox_free(MAILBOX *tpMailBox);
 
 // util
 TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str);
@@ -589,103 +663,6 @@ TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret);
 TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 
-// Code
-int IsDependenceString(TCHAR *buf);
-char *Base64Decode(char *buf, char *ret);
-void Base64Encode(char *buf, char *ret, int size);
-#ifdef UNICODE
-void TBase64Encode(TCHAR *buf, TCHAR *ret, int size);
-#else
-#define TBase64Encode Base64Encode
-#endif
-char *QuotedPrintableDecode(char *buf, char *ret);
-void QuotedPrintableEncode(unsigned char *buf, char *ret, int break_size);
-char *URLDecode(char *buf, char *ret);
-void URLEncode(unsigned char *buf, char *ret);
-TCHAR *AllocURLDecode(TCHAR *buf);
-void MIMEdecode(char *buf, char *ret);
-TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address);
-TCHAR *ExtendedDecode(TCHAR *buf);
-TCHAR *ExtendedEncode(TCHAR *wbuf);
-char *DecodeBodyTransfer(MAILITEM *tpMailItem, char *body);
-TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt);
-TCHAR *BodyEncode(TCHAR *body, TCHAR *content_type, TCHAR *encoding, TCHAR *ErrStr);
-
-// MultiPart
-MULTIPART *AddMultiPartInfo(MULTIPART ***tpMultiPart, int cnt);
-void FreeMultipartInfo(MULTIPART ***tpMultiPart, int cnt);
-TCHAR *GetFilename(TCHAR *buf, TCHAR *Attribute);
-int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, MULTIPART ***tpMultiPart, int cnt);
-int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR **RetContentType, TCHAR *body, TCHAR **RetBody);
-
-// File
-BOOL SaveLog(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
-BOOL SaveLogSep(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
-BOOL LogClear(TCHAR *fpath, TCHAR *fname);
-BOOL CheckDir(TCHAR *path);
-BOOL DeleteDir(TCHAR *Path, TCHAR *file);
-BOOL GetFileName(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenSave);
-char *ReadFileBuf(TCHAR *path, long FileSize);
-BOOL OpenFileBuf(HWND hWnd, TCHAR **buf);
-BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len);
-BOOL SaveFileExec(HWND hWnd, TCHAR *FileName, char *buf, int len);
-int GetSaveHeaderStringSize(TCHAR *Head, TCHAR *buf);
-TCHAR *SaveHeaderString(TCHAR *Head, TCHAR *buf, TCHAR *ret);
-BOOL WriteAsciiFile(HANDLE hFile, TCHAR *buf, int len);
-void ConvFilename(TCHAR *buf);
-BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag);
-long GetFileSerchSize(TCHAR *FileName);
-BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox);
-BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox);
-int ReadAddressBook(TCHAR *FileName, MAILBOX *tpMailBox);
-
-// Ini
-void FreeIniInfo(void);
-#ifndef _WIN32_WCE
-BOOL CheckStartPass(void);
-#endif
-BOOL GetINI(HWND hWnd);
-BOOL PutINI(HWND hWnd, BOOL SaveMailFlag);
-
-// Item
-BOOL Item_SetItemCnt(MAILBOX *tpMailBox, int i);
-BOOL Item_Add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
-void CopyItem(MAILITEM *tpFromNewMailItem, MAILITEM *tpToMailItem);
-MAILITEM *Item_CopyMailBox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem,
-									TCHAR *MailBoxName, BOOL SendClear);
-BOOL Item_Resize(MAILBOX *tpMailBox);
-void FreeMailItem(MAILITEM **tpFreeMailItem, int Cnt);
-int Item_GetContent(char *buf, char *str, char **ret);
-char *Item_GetMessageId(char *buf);
-BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, int Size, BOOL download);
-MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, int Size);
-MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf);
-int Item_GetStringSize(MAILITEM *tpMailItem, BOOL BodyFlag);
-TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag);
-int Item_GetNextDonloadItem(MAILBOX *tpMailBox, int Index, int *No);
-int Item_GetNextSendItem(MAILBOX *tpMailBox, int Index, int *MailBoxIndex);
-int Item_GetNextMailBoxSendItem(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
-int Item_GetNextDeleteItem(MAILBOX *tpMailBox, int Index, int *No);
-int Item_GetMailNoToItemIndex(MAILBOX *tpMailBox, int No);
-BOOL Item_IsMailBox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
-int Item_FindThread(MAILBOX *tpMailBox, TCHAR *p, int Index);
-void Item_SetThread(MAILBOX *tpMailBox);
-
-// MailBox
-BOOL InitMailBox(void);
-void FreeFilterInfo(MAILBOX *tpMailBox);
-void FreeMailBox(MAILBOX *tpMailBox);
-BOOL ReadMailBox(void);
-int CreateMailBox(HWND hWnd, BOOL ShowFlag);
-int DeleteMailBox(HWND hWnd, int DelIndex);
-void MoveUpMailBox(HWND hWnd);
-void MoveDownMailBox(HWND hWnd);
-BOOL CheckNoReadMailBox(int index, BOOL NewFlag);
-int NextNoReadMailBox(int index, int endindex);
-void SetNoReadCntTitle(HWND hWnd);
-void SelectMailBox(HWND hWnd, int Sel);
-int GetNameToMailBox(TCHAR *Name);
-
 // View
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #ifdef _WIN32_WCE_LAGENDA
@@ -698,6 +675,9 @@ BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 
 // Edit
+#ifndef _WIN32_WCE
+BOOL CALLBACK enum_windows_proc(const HWND hWnd, const LPARAM lParam);
+#endif
 BOOL Edit_InitApplication(HINSTANCE hInstance);
 int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
@@ -706,6 +686,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 // Option
 void AllocGetText(HWND hEdit, TCHAR **buf);
 BOOL SetMailBoxOption(HWND hWnd);
+BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void SetOption(HWND hWnd);
 BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -757,6 +738,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);
 int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag);
 void SetMailMenu(HWND hWnd);
+void SetNoReadCntTitle(HWND hWnd);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 
 #endif

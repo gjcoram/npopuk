@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 日本語 resources
+// Japanese resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -181,12 +181,12 @@ END
 IDB_TOOLBAR             BITMAP  DISCARDABLE     "..\\res\\toolbar.bmp"
 IDB_TOOLBAR_EDIT        BITMAP  DISCARDABLE     "..\\res\\bmp00002.bmp"
 IDB_TOOLBAR_VIEW        BITMAP  DISCARDABLE     "..\\res\\bmp00001.bmp"
-#endif    // 日本語 resources
+#endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英語 (アメリカ) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -319,6 +319,7 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,62,150,10
+    PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,75,70,15
 END
 
 IDD_DIALOG_OPTION_MAKE DIALOG DISCARDABLE  0, 0, 160, 101
@@ -698,6 +699,27 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,106,105,50,13
 END
 
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 162, 121
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Encoding"
+FONT 8, "Tahoma"
+BEGIN
+    LTEXT           "Header Charset:",IDC_STATIC,5,5,150,10
+    COMBOBOX        IDC_COMBO_CHARSET_H,5,15,150,85,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Header Encode:",IDC_STATIC,5,30,150,10
+    COMBOBOX        IDC_COMBO_ENCODE_H,5,40,150,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Body Charset:",IDC_STATIC,5,55,150,10
+    COMBOBOX        IDC_COMBO_CHARSET,5,65,150,85,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Body Encode:",IDC_STATIC,5,80,150,10
+    COMBOBOX        IDC_COMBO_ENCODE,5,90,150,85,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,49,106,50,13
+    PUSHBUTTON      "Cancel",IDCANCEL,105,106,50,13
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -871,6 +893,12 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 92
     END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1012,6 +1040,7 @@ BEGIN
         MENUITEM "Save to &Outbox",             ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "&Property...",                ID_MENUITEM_SENDINFO
+        MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
         MENUITEM "&Attach files...",            ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_MENUITEM_CLOSE
@@ -1096,6 +1125,7 @@ BEGIN
         MENUITEM "Save to &Outbox\tCtrl+G",     ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
+        MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
         MENUITEM "&Attach files...",            ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_MENUITEM_CLOSE
@@ -1150,7 +1180,7 @@ BEGIN
     END
 END
 
-#endif    // 英語 (アメリカ) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

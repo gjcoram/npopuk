@@ -71,6 +71,7 @@
 #define IDB_BITMAP_NEXTMAIL             193
 #define IDB_BITMAP_NEXTNOREAD           194
 #define IDB_BITMAP_REMESSEGE            195
+#define IDD_DIALOG_ENCODE               196
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_TITLE                  1003
@@ -175,12 +176,17 @@
 #define IDC_RADIO_OPEN                  1087
 #define IDC_STATIC_MAILSIZE             1088
 #define IDC_RADIO_SAVE                  1088
+#define IDC_BUTTON_ENCODE               1088
 #define IDC_STATIC_FILENAME             1089
+#define IDC_COMBO_CHARSET_H             1089
 #define IDC_STATIC_TYPE                 1090
 #define IDC_BUTTON_SETSSL               1090
+#define IDC_COMBO_ENCODE_H              1090
 #define IDC_STATIC_FROM                 1091
 #define IDC_COMBO_SSLTYPE               1091
 #define IDC_CHECK_VERIFY                1092
+#define IDC_COMBO_CHARSET               1093
+#define IDC_COMBO_ENCODE                1094
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
@@ -250,6 +256,7 @@
 #define ID_MENUITEM_LAN                 40092
 #define ID_MENUITEM_SELMODE             40093
 #define ID_MENUITEM_ATTACH              40094
+#define ID_MENUITEM_ENCODE              40095
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -257,9 +264,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        196
-#define _APS_NEXT_COMMAND_VALUE         40095
-#define _APS_NEXT_CONTROL_VALUE         1088
+#define _APS_NEXT_RESOURCE_VALUE        197
+#define _APS_NEXT_COMMAND_VALUE         40096
+#define _APS_NEXT_CONTROL_VALUE         1090
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

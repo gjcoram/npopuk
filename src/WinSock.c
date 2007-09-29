@@ -263,31 +263,13 @@ int recv_select(HWND hWnd, SOCKET soc)
 /*
  * send_data - 文字列の送信
  */
-int send_data(SOCKET soc, TCHAR *wbuf, int len)
+int send_data(SOCKET soc, char *wbuf, int len)
 {
-#ifdef UNICODE
-	char *p;
-	int ret;
-
-	p = alloc_tchar_to_char(wbuf);
-	if (p == NULL) {
-		return -1;
-	}
-	// データ送信
-	if (ssl_type == -1 || ssl_send == NULL) {
-		ret = send(soc, p, len, 0);
-	} else {
-		ret = ssl_send(ssl, p, len);
-	}
-	mem_free(&p);
-	return ret;
-#else
 	// データ送信
 	if (ssl_type == -1 || ssl_send == NULL) {
 		return send(soc, wbuf, len, 0);
 	}
 	return ssl_send(ssl, wbuf, len);
-#endif
 }
 
 /*

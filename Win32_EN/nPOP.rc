@@ -58,6 +58,7 @@ BEGIN
         MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "F&ont...",                    ID_MENUITEM_FONT
         MENUITEM "Show &date",                  ID_MENUITEM_SHOW_DATE
     END
 END
@@ -70,6 +71,7 @@ BEGIN
         MENUITEM "Save to &Outbox\tCtrl+G",     ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
+        MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
         MENUITEM "&Attach files...",            ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
@@ -86,6 +88,7 @@ BEGIN
         MENUITEM "Paste from &file...",         ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "F&ont...",                    ID_MENUITEM_FONT
     END
 END
 
@@ -330,6 +333,7 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,68,160,10
+    PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,90,80,15
 END
 
 IDD_DIALOG_CC DIALOG DISCARDABLE  0, 0, 254, 175
@@ -671,6 +675,29 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,165,110,50,14
 END
 
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 254, 99
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Encoding"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Header",IDC_STATIC,5,5,120,70
+    LTEXT           "&Charset:",IDC_STATIC,10,20,90,9
+    COMBOBOX        IDC_COMBO_CHARSET_H,10,30,110,155,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Encoding:",IDC_STATIC,10,45,90,9
+    COMBOBOX        IDC_COMBO_ENCODE_H,10,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Body",IDC_STATIC,130,5,120,70
+    LTEXT           "C&harset:",IDC_STATIC,135,20,90,9
+    COMBOBOX        IDC_COMBO_CHARSET,135,30,110,155,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "E&ncoding:",IDC_STATIC,135,45,90,9
+    COMBOBOX        IDC_COMBO_ENCODE,135,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,145,80,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,200,80,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -886,6 +913,14 @@ BEGIN
         RIGHTMARGIN, 216
         TOPMARGIN, 7
         BOTTOMMARGIN, 124
+    END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 92
     END
 END
 #endif    // APSTUDIO_INVOKED

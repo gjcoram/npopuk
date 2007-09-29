@@ -59,6 +59,7 @@
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_SETSSL               181
 #define IDD_DIALOG_ATTACH_NOTICE        182
+#define IDD_DIALOG_ENCODE               185
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
 #define IDM_MAIN_EDIT                   452
@@ -171,6 +172,11 @@
 #define IDC_RADIO2                      1095
 #define IDC_BUTTON_SETSSL               1095
 #define IDC_RADIO_SAVE                  1095
+#define IDC_COMBO_CHARSET_H             1096
+#define IDC_COMBO_ENCODE_H              1097
+#define IDC_BUTTON_ENCODE               1097
+#define IDC_COMBO_CHARSET               1098
+#define IDC_COMBO_ENCODE                1099
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
@@ -257,15 +263,17 @@
 #define ID_MENUITEM_LAN                 40143
 #define ID_MENUITEM_SELMODE             40144
 #define ID_MENUITEM_ATTACH              40145
+#define ID_MENUITEM_FONT                40146
+#define ID_MENUITEM_ENCODE              40147
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        184
-#define _APS_NEXT_COMMAND_VALUE         40146
-#define _APS_NEXT_CONTROL_VALUE         1096
+#define _APS_NEXT_RESOURCE_VALUE        186
+#define _APS_NEXT_COMMAND_VALUE         40148
+#define _APS_NEXT_CONTROL_VALUE         1098
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -13,7 +13,7 @@
 
 // General
 #ifdef _WIN32_WCE
-#define STR_DEFAULT_FONT			TEXT("Tahoma")
+#define STR_DEFAULT_FONT			TEXT("")
 #else
 #define STR_DEFAULT_FONT			TEXT("")
 #endif
@@ -22,10 +22,10 @@
 #define STR_DEFAULT_BURA			TEXT("")
 #define STR_DEFAULT_OIDA			TEXT("")
 
-#define STR_DEFAULT_HEAD_CHARSET	TEXT("ISO-8859-1")
-#define STR_DEFAULT_HEAD_ENCODE		3		// 0-7bit 1-8bit 2-base64 3-quoted-printable
-#define STR_DEFAULT_BODY_CHARSET	TEXT("ISO-8859-1")
-#define STR_DEFAULT_BODY_ENCODE		3		// 0-7bit 1-8bit 2-base64 3-quoted-printable
+#define STR_DEFAULT_HEAD_CHARSET	TEXT("")
+#define STR_DEFAULT_HEAD_ENCODE		0		// 0-7bit 1-8bit 2-base64 3-quoted-printable
+#define STR_DEFAULT_BODY_CHARSET	TEXT("")
+#define STR_DEFAULT_BODY_ENCODE		0		// 0-7bit 1-8bit 2-base64 3-quoted-printable
 
 #define STR_DEFAULT_DATEFORMAT		TEXT("MM/dd/yyyy")
 #define STR_DEFAULT_TIMEFORMAT		TEXT("HH:mm")
@@ -299,6 +299,7 @@
 #define STR_TITLE_EDITADDRESS		TEXT("Address")
 #define STR_TITLE_ADDRESSLIST		TEXT("Address book")
 #define STR_TITLE_FIND				TEXT("Find")
+#define STR_TITLE_ENCODE			TEXT("Encoding")
 
 #define STR_SF_TITLE				TEXT("Select file")
 #define STR_SF_LV_NAME				TEXT("Name")

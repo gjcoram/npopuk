@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 日本語 resources
+// Japanese resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -26,7 +26,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Menubar
+// Menu
 //
 
 IDR_MENU_WINDOW MENU DISCARDABLE 
@@ -161,6 +161,7 @@ BEGIN
         MENUITEM "送信箱に保存",                ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "送信情報...",                 ID_MENUITEM_SENDINFO
+        MENUITEM "ｴﾝｺｰﾄﾞ...",                   ID_MENUITEM_ENCODE
         MENUITEM "添付ﾌｧｲﾙ...",                 ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "閉じる",                      ID_MENUITEM_CLOSE
@@ -334,6 +335,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,51,122,10
     CONTROL         "送信箱に保存で送信箱を表示",IDC_CHECK_SELECTSENDBOX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,63,115,10
+    PUSHBUTTON      "ｴﾝｺｰﾄﾞ設定",IDC_BUTTON_ENCODE,3,75,65,15
 END
 
 IDD_DIALOG_OPTION_MAKE DIALOG DISCARDABLE  0, 0, 133, 137
@@ -658,6 +660,27 @@ BEGIN
     PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,111,50,14
 END
 
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 135, 177
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｴﾝｺｰﾄﾞ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ﾍｯﾀﾞ ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,5,120,10
+    COMBOBOX        IDC_COMBO_CHARSET_H,5,15,125,160,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ﾍｯﾀﾞ ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,30,120,10
+    COMBOBOX        IDC_COMBO_ENCODE_H,5,40,125,135,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "本文 ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,65,120,10
+    COMBOBOX        IDC_COMBO_CHARSET,5,75,125,105,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "本文 ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,91,120,10
+    COMBOBOX        IDC_COMBO_ENCODE,5,101,125,79,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,25,158,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,158,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -836,6 +859,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 58
     END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -977,7 +1008,7 @@ IDB_BITMAP_PREVMAIL     BITMAP  DISCARDABLE     "bmp00008.bmp"
 IDB_BITMAP_NEXTMAIL     BITMAP  DISCARDABLE     "bmp00009.bmp"
 IDB_BITMAP_NEXTNOREAD   BITMAP  DISCARDABLE     "bmp00010.bmp"
 IDB_BITMAP_REMESSEGE    BITMAP  DISCARDABLE     "bitmap_r.bmp"
-#endif    // 日本語 resources
+#endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
 

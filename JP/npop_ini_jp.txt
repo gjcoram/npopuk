@@ -10,27 +10,12 @@ DataFileDir=
 #送受信のログを 0-取らない 1-取る (ファイル名は nPOP.log 固定)
 SocLog=1
 
-#メール表示、編集のフォント名
-FontName="ＭＳ ゴシック"
-#メール表示、編集のフォントサイズ
-FontSize=9
-#メール表示、編集のフォントのキャラクタセット
-FontCharset=128
 #コントロールのフォント名、未設定時はシステムのフォントを使用する
 LvFontName=
 #コントロールのフォントサイズ、LvFontName を設定している時のみ有効
 LvFontSize=9
 #コントロールのフォントキャラクタセット、LvFontName を設定している時のみ有効
 LvFontCharset=128
-
-#送信時のヘッダのキャラクタセット
-HeadCharset="ISO-2022-JP"
-#送信時のヘッダのエンコード方法 0-7bit 1-8bit 2-BASE64 3-quoted-printable
-HeadEncoding=2
-#送信時の本文のキャラクタセット
-BodyCharset="ISO-2022-JP"
-#送信時の本文のエンコード方法 0-7bit 1-8bit 2-BASE64 3-quoted-printable
-BodyEncoding=0
 
 #タイムゾーン、未設定時はシステムのタイムゾーンを使用する。記述は "+0900" のように書く
 TimeZone=""

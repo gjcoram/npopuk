@@ -15,6 +15,8 @@
 #include "String.h"
 
 /* Define */
+#define to_lower_t(c)		((c >= TEXT('A') && c <= TEXT('Z')) ? (c - TEXT('A') + TEXT('a')) : c)
+#define to_lower(c)			((c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c)
 
 /* Global Variables */
 
@@ -60,9 +62,9 @@ void delete_ctrl_char(TCHAR *buf)
 }
 
 /*
- * alloc_copy - バッファを確保して文字列をコピーする
+ * alloc_copy_t - バッファを確保して文字列をコピーする
  */
-TCHAR *alloc_copy(const TCHAR *buf)
+TCHAR *alloc_copy_t(const TCHAR *buf)
 {
 	TCHAR *ret;
 
@@ -75,6 +77,25 @@ TCHAR *alloc_copy(const TCHAR *buf)
 	}
 	return ret;
 }
+
+/*
+ * alloc_copy - バッファを確保して文字列をコピーする
+ */
+#ifdef UNICODE
+char *alloc_copy(const char *buf)
+{
+	char *ret;
+
+	if (buf == NULL) {
+		return NULL;
+	}
+	ret = (char *)mem_alloc(sizeof(char) * (tstrlen(buf) + 1));
+	if (ret != NULL) {
+		tstrcpy(ret, buf);
+	}
+	return ret;
+}
+#endif
 
 /*
  * alloc_tchar_to_char - メモリを確保して TCHAR を char に変換する
@@ -121,9 +142,53 @@ TCHAR *alloc_char_to_tchar(char *str)
 #endif
 
 /*
- * str_join - 文字列を連結して最後の文字のアドレスを返す
+ * alloc_wchar_to_char - ワイド文字をASCII文字に変換
  */
-TCHAR * __cdecl str_join(TCHAR *ret, ... )
+#ifndef UNICODE
+char *alloc_wchar_to_char(const UINT cp, WCHAR *str)
+{
+	char *cchar;
+	int len;
+
+	if (str == NULL) {
+		return NULL;
+	}
+	len = WideCharToMultiByte(cp, 0, str, -1, NULL, 0, NULL, NULL);
+	cchar = (char *)mem_alloc(len + 1);
+	if (cchar == NULL) {
+		return NULL;
+	}
+	WideCharToMultiByte(cp, 0, str, -1, cchar, len, NULL, NULL);
+	return cchar;
+}
+#endif
+
+/*
+ * alloc_char_to_wchar - ASCII文字をワイド文字に変換
+ */
+#ifndef UNICODE
+WCHAR *alloc_char_to_wchar(const UINT cp, char *str)
+{
+	WCHAR *tchar;
+	int len;
+
+	if (str == NULL) {
+		return NULL;
+	}
+	len = MultiByteToWideChar(cp, 0, str, -1, NULL, 0);
+	tchar = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
+	if (tchar == NULL) {
+		return NULL;
+	}
+	MultiByteToWideChar(cp, 0, str, -1, tchar, len);
+	return tchar;
+}
+#endif
+
+/*
+ * str_join_t - 文字列を連結して最後の文字のアドレスを返す
+ */
+TCHAR * __cdecl str_join_t(TCHAR *ret, ... )
 {
 	va_list buf;
 	TCHAR *str;
@@ -142,6 +207,31 @@ TCHAR * __cdecl str_join(TCHAR *ret, ... )
 	va_end(buf);
 	return ret;
 }
+
+/*
+ * str_join - 文字列を連結して最後の文字のアドレスを返す
+ */
+#ifdef UNICODE
+char * __cdecl str_join(char *ret, ... )
+{
+	va_list buf;
+	char *str;
+
+	va_start(buf, ret);
+
+	str = va_arg(buf, char *);
+	while (str != (char *)-1) {
+		if (str != NULL) {
+			while (*(ret++) = *(str++));
+			ret--;
+		}
+		str = va_arg(buf, char *);
+	}
+
+	va_end(buf);
+	return ret;
+}
+#endif
 
 /*
  * str_cpy_t - 文字列をコピーして最後の文字のアドレスを返す
@@ -194,9 +284,9 @@ void str_cpy_n(char *ret, char *buf, int len)
 #endif
 
 /*
- * str_cpy_f - 指定の文字までの文字列をコピーする
+ * str_cpy_f_t - 指定の文字までの文字列をコピーする
  */
-TCHAR *str_cpy_f(TCHAR *ret, TCHAR *buf, TCHAR c)
+TCHAR *str_cpy_f_t(TCHAR *ret, TCHAR *buf, TCHAR c)
 {
 	TCHAR *p, *r;
 
@@ -206,6 +296,22 @@ TCHAR *str_cpy_f(TCHAR *ret, TCHAR *buf, TCHAR c)
 	*r = TEXT('\0');
 	return ((*p == c) ? p + 1 : p);
 }
+
+/*
+ * str_cpy_f - 指定の文字までの文字列をコピーする
+ */
+#ifdef UNICODE
+char *str_cpy_f(char *ret, char *buf, char c)
+{
+	char *p, *r;
+
+	for (p = buf, r = ret; *p != c && *p != '\0'; p++, r++) {
+		*r = *p;
+	}
+	*r = '\0';
+	return ((*p == c) ? p + 1 : p);
+}
+#endif
 
 /*
  * str_cat_n - 指定された文字数まで文字列を追加する
@@ -240,68 +346,51 @@ void str_cat_n(TCHAR *ret, char *buf, int len)
 }
 
 /*
+ * str_cmp_i_t - 文字列の大文字小文字を区別しない比較を行う (TCHAR)
+ */
+int str_cmp_i_t(const TCHAR *buf1, const TCHAR *buf2, int len)
+{
+	while (to_lower_t(*buf1) == to_lower_t(*buf2)) {
+		if (*buf1 == TEXT('\0')) {
+			return 0;
+		}
+		buf1++;
+		buf2++;
+	}
+	return 1;
+}
+
+/*
  * str_cmp_i - 文字列の大文字小文字を区別しない比較を行う
  */
 #ifdef UNICODE
 int str_cmp_i(const char *buf1, const char *buf2)
 {
-	TCHAR *str1, *str2;
-	int ret;
-	int llen;
-
-	llen = char_to_tchar_size(buf1);
-	str1 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (llen + 1));
-	if (str1 == NULL) {
-		return -1;
+	while (to_lower(*buf1) == to_lower(*buf2)) {
+		if (*buf1 == TEXT('\0')) {
+			return 0;
+		}
+		buf1++;
+		buf2++;
 	}
-	char_to_tchar(buf1, str1, llen);
-
-	llen = char_to_tchar_size(buf2);
-	str2 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (llen + 1));
-	if (str2 == NULL) {
-		return -1;
-	}
-	char_to_tchar(buf2, str2, llen);
-
-	ret = CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
-		NORM_IGNORECASE, str1, -1, str2, -1) - 2;
-
-	mem_free(&str1);
-	mem_free(&str2);
-	return ret;
+	return 1;
 }
 #endif
-
-/*
- * str_len_n - 比較用の文字列の長さを取得する
- */
-static int str_len_n(const TCHAR *buf, int len)
-{
-	int i;
-
-	for (i = 0; i < len; i++) {
-		if (*buf == TEXT('\0')) {
-			break;
-		}
-		buf++;
-	}
-	return i;
-}
 
 /*
  * str_cmp_ni_t - 文字列の大文字小文字を区別しない比較を行う (TCHAR)
  */
 int str_cmp_ni_t(const TCHAR *buf1, const TCHAR *buf2, int len)
 {
-	int ret;
-	int len1, len2;
-
-	len1 = str_len_n(buf1, len);
-	len2 = str_len_n(buf2, len);
-
-	ret = CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
-		NORM_IGNORECASE, buf1, len1, buf2, len2);
-	return ret - 2;
+	while (to_lower_t(*buf1) == to_lower_t(*buf2)) {
+		len--;
+		if (len <= 0 || *buf1 == TEXT('\0')) {
+			return 0;
+		}
+		buf1++;
+		buf2++;
+	}
+	return 1;
 }
 
 /*
@@ -310,31 +399,15 @@ int str_cmp_ni_t(const TCHAR *buf1, const TCHAR *buf2, int len)
 #ifdef UNICODE
 int str_cmp_ni(const char *buf1, const char *buf2, int len)
 {
-	TCHAR *str1, *str2;
-	int ret;
-	int llen;
-
-	llen = ((unsigned int)len < tstrlen(buf1)) ? len : tstrlen(buf1);
-	str1 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (llen + 1));
-	if (str1 == NULL) {
-		return -1;
+	while (to_lower(*buf1) == to_lower(*buf2)) {
+		len--;
+		if (len <= 0 || *buf1 == '\0') {
+			return 0;
+		}
+		buf1++;
+		buf2++;
 	}
-	char_to_tchar(buf1, str1, llen);
-	*(str1 + llen) = TEXT('\0');
-
-	llen = ((unsigned int)len < tstrlen(buf2)) ? len : tstrlen(buf2);
-	str2 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (llen + 1));
-	if (str2 == NULL) {
-		return -1;
-	}
-	char_to_tchar(buf2, str2, llen);
-	*(str2 + llen) = TEXT('\0');
-
-	ret = str_cmp_ni_t(str1, str2, len);
-
-	mem_free(&str1);
-	mem_free(&str2);
-	return ret;
+	return 1;
 }
 #endif
 
@@ -343,7 +416,6 @@ int str_cmp_ni(const char *buf1, const char *buf2, int len)
  */
 BOOL str_match_t(const TCHAR *ptn, const TCHAR *str)
 {
-#define to_lower_t(c)		((c >= TEXT('A') && c <= TEXT('Z')) ? (c - TEXT('A') + TEXT('a')) : c)
 	switch (*ptn) {
 	case TEXT('\0'):
 		return (*str == TEXT('\0'));
@@ -384,7 +456,6 @@ BOOL str_match_t(const TCHAR *ptn, const TCHAR *str)
 #ifdef UNICODE
 BOOL str_match(const char *ptn, const char *str)
 {
-#define to_lower(c)		((c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c)
 	switch (*ptn) {
 	case '\0':
 		return (*str == '\0');
@@ -419,6 +490,22 @@ BOOL str_match(const char *ptn, const char *str)
 	}
 }
 #endif
+
+/*
+ * str_len_n - 比較用の文字列の長さを取得する
+ */
+static int str_len_n(const TCHAR *buf, int len)
+{
+	int i;
+
+	for (i = 0; i < len; i++) {
+		if (*buf == TEXT('\0')) {
+			break;
+		}
+		buf++;
+	}
+	return i;
+}
 
 /*
  * str_find - 文字列内に含まれる文字列を検索して位置を返す

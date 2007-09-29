@@ -1,4 +1,4 @@
-nPOP Ver 1.0.6
+nPOP Ver 1.0.7
 --
 
 ■ はじめに
@@ -38,6 +38,8 @@ nPOP Ver 1.0.6
 さい。
 
 	Win32 - Windows 95, 98, Me, NT4.0, 2000, XP
+
+	Win32 Unicode - Windows NT4.0, 2000, XP
 
 	PPC2002 - Pocket PC 2002
 	  └ ARM   - CPU : StrongARM, XScale
@@ -797,6 +799,16 @@ npop_ini.txt を参照してください。
 
 ■ 更新履歴
 
+・Ver 1.0.6 -> Ver 1.0.7
+	・httpsとftpのクリッカブルURLが無効になっていたのを修正した。
+	・JIS以外のエンコードはOSにインストールされているものを使用するように
+	  した。(IE3以上が無い場合はJIS←→SJISのみ)
+	・送信時のエンコード方法を設定できるようにした。
+	  オプションの送信タブでデフォルトのエンコードを設定し、メール編集画面
+	  のメニューからはメール個別のエンコードを設定
+	・Unicode版にてUTF-7とUTF-8に対応した。
+	・表示フォントをメニューから設定できるようにした。
+
 ・Ver 1.0.5 -> Ver 1.0.6
 	・受信しないフィルタで強制終了してしまうのを修正した。
 	・SMTP-AUTH CRAM-MD5 がエラーになってしまうのを修正した。
@@ -947,4 +959,4 @@ documentation and/or software.
 Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-2006/02/22
+2006/03/02
