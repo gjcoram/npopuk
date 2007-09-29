@@ -1,26 +1,23 @@
-/**************************************************************************
-
-	nPOP
-
-	General.h
-
-	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
+/*
+ * nPOP
+ *
+ * General.h
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
 #ifndef _INC_MAIL_GENERAL_H
 #define _INC_MAIL_GENERAL_H
 
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
+/* Include Files */
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#ifndef _WIN32_WCE_PPC
 #include <commdlg.h>
+#endif
 #include <winsock.h>
 #include <tchar.h>
 
@@ -31,19 +28,17 @@
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 #include "stdafx.h"
 #endif
-#include "resource.h"
-#include "Strtbl.h"
+#include <resource.h>
+#include <Strtbl.h>
 
-
-/**************************************************************************
-	Define
-**************************************************************************/
-
-#define APP_NAME				TEXT("nPOP Ver 1.0.2")
+/* Define */
+#define APP_NAME				TEXT("nPOP Ver 1.0.4")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
 #define STR_MUTEX				TEXT("_nPOP_Mutex_")
+#define ATTACH_FILE				TEXT("_attach_")
+#define ATTACH_SEP				TEXT('|')
 
 #ifdef _WIN32_WCE
 #if _WIN32_WCE < 211
@@ -70,23 +65,23 @@
 #define RAS_WAIT_EVENT			TEXT("RAS_WAIT_EVENT")
 #define ID_RASWAIT_TIMER		10
 
-#define BUF_SIZE				256					//バッファサイズ
+#define BUF_SIZE				256					// バッファサイズ
 #define MAXSIZE					32768
 #define EDITMAXSIZE				30000
 
-#define SICONSIZE				16					//小さいアイコンのサイズ
-#define TB_ICONSIZE				16					//ツールバーのボタンサイズ
+#define SICONSIZE				16					// 小さいアイコンのサイズ
+#define TB_ICONSIZE				16					// ツールバーのボタンサイズ
 
-#define TABSTOPLEN				8					//TAB Stop
+#define TABSTOPLEN				8					// TAB Stop
 
-#define LV_COL_CNT				4					//ListViewのカラム数
-#define AD_COL_CNT				2					//ListView Addressbook
+#define LV_COL_CNT				4					// ListViewのカラム数
+#define AD_COL_CNT				2					// ListView Addressbook
 
-#define MAILBOX_SAVE			0					//固定メールボックス
+#define MAILBOX_SAVE			0					// 固定メールボックス
 #define MAILBOX_SEND			1
 #define MAILBOX_USER			2
 
-#define IDC_COMBO				400					//コントロールID
+#define IDC_COMBO				400					// コントロールID
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
 
@@ -94,37 +89,39 @@
 #define LVS_EX_INFOTIP			0x400
 #endif
 
-#define WM_SOCK_SELECT			(WM_APP + 1)		//ソケットイベント
-#define WM_SOCK_RECV			(WM_APP + 2)		//ソケット受信イベント
-#define WM_LV_EVENT				(WM_APP + 3)		//リストビューイベント
-#define WM_STATUSTEXT			(WM_APP + 4)		//ステータスバーへ文字列設定
-#define WM_SHOWLASTWINDOW		(WM_APP + 5)		//ウィンドウ表示
-#define WM_SMTP_SENDMAIL		(WM_APP + 6)		//メール送信
-#define WM_ENDCLOSE				(WM_APP + 7)		//ウィンドウの終了
-#define WM_INITTRAYICON			(WM_APP + 8)		//タスクトレイアイコンの初期化
+#define WM_SOCK_SELECT			(WM_APP + 1)		// ソケットイベント
+#define WM_SOCK_RECV			(WM_APP + 2)		// ソケット受信イベント
+#define WM_LV_EVENT				(WM_APP + 3)		// リストビューイベント
+#define WM_STATUSTEXT			(WM_APP + 4)		// ステータスバーへ文字列設定
+#define WM_SHOWLASTWINDOW		(WM_APP + 5)		// ウィンドウ表示
+#define WM_SMTP_SENDMAIL		(WM_APP + 6)		// メール送信
+#define WM_ENDCLOSE				(WM_APP + 7)		// ウィンドウの終了
+#define WM_INITTRAYICON			(WM_APP + 8)		// タスクトレイアイコンの初期化
 
-#define WM_SHOWDIALOG			(WM_APP + 9)		//メール到着メッセージ表示
-#define WM_ENDDIALOG			(WM_APP + 10)		//メール到着メッセージ終了
+#define WM_SHOWDIALOG			(WM_APP + 9)		// メール到着メッセージ表示
+#define WM_ENDDIALOG			(WM_APP + 10)		// メール到着メッセージ終了
 
-#define EDIT_OPEN				0					//送信メール編集のタイプ
+#define WM_CHANGE_MARK			(WM_APP + 11)
+
+#define EDIT_OPEN				0					// 送信メール編集のタイプ
 #define EDIT_NEW				1
 #define EDIT_REPLY				2
 
-#define EDIT_NONEDIT			0					//送信メール編集の戻り値
+#define EDIT_NONEDIT			0					// 送信メール編集の戻り値
 #define EDIT_INSIDEEDIT			1
 #define EDIT_OUTSIDEEDIT		2
 
-#define SELECT_MEM_ERROR		-2					//ソケット処理の戻り値
+#define SELECT_MEM_ERROR		-2					// ソケット処理の戻り値
 #define SELECT_SOC_ERROR		-1
 #define SELECT_SOC_CLOSE		0
 #define SELECT_SOC_SUCCEED		1
 #define SELECT_SOC_NODATA		2
 
-#define SORT_NO					100					//ソートフラグ
+#define SORT_NO					100					// ソートフラグ
 #define SORT_IOCN				101
 #define SORT_THREAD				102
 
-#define POP_ERR					-2					//POP3コマンドフラグ
+#define POP_ERR					-2					// POP3コマンドフラグ
 #define POP_QUIT				-1
 #define POP_START				0
 #define POP_USER				1
@@ -136,23 +133,27 @@
 #define POP_TOP					7
 #define POP_RETR				8
 #define POP_DELE				9
+#define POP_UIDL2				10
+#define POP_STARTTLS			11
 
-#define SMTP_ERR				POP_ERR				//SMTPコマンドフラグ
+#define SMTP_ERR				POP_ERR				// SMTPコマンドフラグ
 #define SMTP_QUIT				POP_QUIT
 #define SMTP_START				POP_START
 #define SMTP_EHLO				1
 #define SMTP_AUTH				2
 #define SMTP_AUTHLOGIN			3
-#define SMTP_HELO				4
-#define SMTP_RSET				5
-#define SMTP_MAILFROM			6
-#define SMTP_RCPTTO				7
-#define SMTP_DATA				8
-#define SMTP_SENDBODY			9
-#define SMTP_NEXTSEND			10
-#define SMTP_SENDEND			11
+#define SMTP_AUTHLOGIN_PASS		4
+#define SMTP_HELO				5
+#define SMTP_RSET				6
+#define SMTP_MAILFROM			7
+#define SMTP_RCPTTO				8
+#define SMTP_DATA				9
+#define SMTP_SENDBODY			10
+#define SMTP_NEXTSEND			11
+#define SMTP_SENDEND			12
+#define SMTP_STARTTLS			13
 
-#define ICON_NON				0					//アイコン状態
+#define ICON_NON				0					// アイコン状態
 #define ICON_MAIL				1
 #define ICON_READ				2
 #define ICON_DOWN				3
@@ -162,14 +163,14 @@
 #define ICON_ERROR				7
 #define ICON_NEW				8
 
-#define FILTER_UNRECV			1					//フィルタタイプ
+#define FILTER_UNRECV			1					// フィルタタイプ
 #define FILTER_RECV				2
 #define FILTER_DOWNLOADMARK		4
 #define FILTER_DELETEMARK		8
 #define FILTER_READICON			16
 #define FILTER_SAVE				32
 
-#define MP_ERROR_FILE			-2					//マルチパート処理の戻り値
+#define MP_ERROR_FILE			-2					// マルチパート処理の戻り値
 #define MP_ERROR_ALLOC			-1
 #define MP_NO_ATTACH			0
 #define MP_ATTACH				1
@@ -196,25 +197,23 @@
 #define HEAD_X_MSTATUS			"X-Status:"
 #define HEAD_X_DOWNFLAG			"X-Download:"
 #define HEAD_X_MAILBOX			"X-MailBox:"
-#define HEAD_X_ATTACH			"X-Attach:"
+#define HEAD_X_ATTACH			"X-File:"
 
 #define HEAD_X_NO_OLD			"X-MailNo:"
 #define HEAD_X_STATUS_OLD		"X-MarkStatus:"
 #define HEAD_X_MSTATUS_OLD		"X-MailStatus:"
 #define HEAD_X_DOWNFLAG_OLD		"X-MailDownload:"
+#define HEAD_X_ATTACH_OLD		"X-Attach:"
 
 #define RSET					"RSET\r\n"
 #define QUIT					"QUIT\r\n"
 
 #define URL_HTTP				TEXT("http://")
-#define URL_HTTPS				TEXT("https://")
-#define URL_FTP					TEXT("ftp://")
+#define URL_HTTPS				TEXT("https:// ")
+#define URL_FTP					TEXT("ftp:// ")
 #define URL_MAILTO				TEXT("mailto:")
 
-
-#define NULLCHECK_FREE(m)		((m != NULL) ? LocalFree(m) : 0)		//NULLでないメモリの解放
-#define ABS(n)					((n < 0) ? (n * -1) : n)				//絶対値
-
+#define ABS(n)					((n < 0) ? (n * -1) : n)				// 絶対値
 
 #ifdef UNICODE
 #define TcharToCharSize(wbuf) (WideCharToMultiByte(CP_ACP, 0, wbuf, -1, NULL, 0, NULL, NULL))
@@ -264,36 +263,170 @@
 #define tstrlen					lstrlen
 #endif
 
-#define tCopyMemory				memcpy
-#define tZeroMemory(p, len)		(memset(p, 0, len))
-#define tFillMemory(p, len, fill)	(memset(p, fill, len))
+#ifndef CopyMemory
+#define CopyMemory				memcpy
+#endif
+#ifndef ZeroMemory
+#define ZeroMemory(p, len)		(memset(p, 0, len))
+#endif
+#ifndef FillMemory
+#define FillMemory(p, len, fill)	(memset(p, fill, len))
+#endif
 
+/* Struct */
+typedef struct _OPTION {
+	int StertPass;
+	int ShowPass;
+	TCHAR *Password;
 
-/**************************************************************************
-	Struct
-**************************************************************************/
+	TCHAR DataFileDir[BUF_SIZE];
 
-struct TPFILTER{
-	int Enable;
-	int Action;
+	TCHAR *FontName;
+	int FontSize;
+	int FontCharset;
 
-	TCHAR *Header1;
-	TCHAR *Content1;
+	#ifndef _WIN32_WCE
+	RECT MainRect;
+	RECT ViewRect;
+	RECT EditRect;
+	#endif
 
-	TCHAR *Header2;
-	TCHAR *Content2;
-};
+	int ShowTrayIcon;
+	int StartHide;
+	int MinsizeHide;
+	int CloseHide;
+	int TrayIconToggle;
+	int StartInit;
+	int SocLog;
 
-struct TPMAILBOX{
+	int LvDefSelectPos;
+	int LvAutoSort;
+	int LvSortItem;
+	int LvThreadView;
+	int LvStyle;
+	int LvStyleEx;
+	TCHAR *LvFontName;
+	int LvFontSize;
+	int LvFontCharset;
+	int MoveAllMailBox;
+	int RecvScroll;
+	int SaveMsg;
+	int AutoSave;
+	int LvColSize[LV_COL_CNT];
+	int AddColSize[AD_COL_CNT];
+
+	int ListGetLine;
+	int ListDownload;
+	int ShowHeader;
+	int ListSaveMode;
+	int WordBreakFlag;
+	int EditWordBreakFlag;
+	int ViewShowDate;
+	int MstchCase;
+	int AllFind;
+	int SubjectFind;
+
+	int ESMTP;
+	TCHAR *SendHelo;
+	int SendMessageId;
+	int SendDate;
+	int SelectSendBox;
+	int PopBeforeSmtpIsLoginOnly;
+	int PopBeforeSmtpWait;
+
+	// SSL
+	TCHAR *CAFile;
+
+	TCHAR *HeadCharset;
+	int HeadEncoding;
+	TCHAR *BodyCharset;
+	int BodyEncoding;
+
+	int AutoQuotation;
+	TCHAR *QuotationChar;
+	int WordBreakSize;
+	int QuotationBreak;
+	TCHAR *ReSubject;
+	TCHAR *ReHeader;
+	TCHAR *Bura;
+	TCHAR *Oida;
+	TCHAR *sBura;
+	TCHAR *sOida;
+
+	int IPCache;
+	int EncodeType;
+	TCHAR *TimeZone;
+	TCHAR *DateFormat;
+	TCHAR *TimeFormat;
+
+	int ShowNewMailMessgae;
+	int ShowNoMailMessage;
+	int ActiveNewMailMessgae;
+
+	int NewMailSound;
+	TCHAR *NewMailSoundFile;
+	int ExecEndSound;
+	TCHAR *ExecEndSoundFile;
+
+	int AutoCheck;
+	int AutoCheckTime;
+	int StartCheck;
+	int CheckAfterUpdate;
+	int SocIgnoreError;
+	int SendIgnoreError;
+	int CheckEndExec;
+	int CheckEndExecNoDelMsg;
+	int TimeoutInterval;
+
+	int ViewClose;
+	TCHAR *ViewApp;
+	TCHAR *ViewAppCmdLine;
+	TCHAR *ViewFileSuffix;
+	TCHAR *ViewFileHeader;
+	int ViewAppClose;
+	int DefViewApp;
+	TCHAR *EditApp;
+	TCHAR *EditAppCmdLine;
+	TCHAR *EditFileSuffix;
+	int DefEditApp;
+	TCHAR *AttachPath;
+	int AttachDelete;
+
+	TCHAR *URLApp;
+
+	int EnableLAN;
+
+	int RasCon;
+	int RasCheckEndDisCon;
+	int RasEndDisCon;
+	int RasNoCheck;
+	int RasWaitSec;
+	struct _RASINFO **RasInfo;
+	int RasInfoCnt;
+} OPTION;
+
+typedef struct _SSL_INFO {
+	int Type;
+	int Verify;
+	int Depth;
+	TCHAR *Cert;
+	TCHAR *Pkey;
+	TCHAR *Pass;
+} SSL_INFO;
+
+typedef struct _MAILBOX {
 	TCHAR *Name;
 
-	//POP
+	// POP
 	TCHAR *Server;
 	int Port;
 	TCHAR *User;
 	TCHAR *Pass;
 	TCHAR *TmpPass;
 	int APOP;
+	int PopSSL;
+	SSL_INFO PopSSLInfo;
+	int NoRETR;
 	unsigned long PopIP;
 
 	int MailCnt;
@@ -302,7 +435,7 @@ struct TPMAILBOX{
 	char *LastMessageId;
 	int LastNo;
 
-	//SMTP
+	// SMTP
 	TCHAR *SmtpServer;
 	int SmtpPort;
 	TCHAR *UserName;
@@ -318,30 +451,32 @@ struct TPMAILBOX{
 	TCHAR *SmtpUser;
 	TCHAR *SmtpPass;
 	TCHAR *SmtpTmpPass;
+	int SmtpSSL;
+	SSL_INFO SmtpSSLInfo;
 	unsigned long SmtpIP;
 
-	//Check
+	// Check
 	BOOL NewMail;
 	BOOL NoRead;
 	int CyclicFlag;
 
-	//Filter
+	// Filter
 	int FilterEnable;
-	struct TPFILTER **tpFilter;
+	struct _FILTER **tpFilter;
 	int FilterCnt;
 
-	//Ras
+	// Ras
 	int RasMode;
 	TCHAR *RasEntry;
 	int RasReCon;
 
-	//MailItem
-	struct TPMAILITEM **tpMailItem;
+	// MailItem
+	struct _MAILITEM **tpMailItem;
 	int MailItemCnt;
 	int AllocCnt;
-};
+} MAILBOX;
 
-struct TPMAILITEM{
+typedef struct _MAILITEM {
 	int No;
 	int Status;
 	int MailStatus;
@@ -372,30 +507,42 @@ struct TPMAILITEM{
 	TCHAR *MailBox;
 
 	TCHAR *Attach;
-};
+} MAILITEM;
 
-struct TPMULTIPART{
+typedef struct _FILTER {
+	int Enable;
+	int Action;
+
+	TCHAR *Header1;
+	TCHAR *Content1;
+
+	TCHAR *Header2;
+	TCHAR *Content2;
+} FILTER;
+
+typedef struct _MULTIPART {
 	TCHAR *ContentType;
 	TCHAR *Filename;
 	TCHAR *Encoding;
 	TCHAR *sPos;
 	TCHAR *ePos;
-};
+} MULTIPART;
 
-struct TPRASINFO{
+typedef struct _ATTACHINFO {
+	TCHAR *from;
+	TCHAR *fname;
+	TCHAR *mime;
+	int size;
+} ATTACHINFO;
+
+typedef struct _RASINFO {
 	TCHAR *RasEntry;
 	TCHAR *RasUser;
 	TCHAR *RasPass;
-};
+} RASINFO;
 
-
-/**************************************************************************
-	Function Prototypes
-**************************************************************************/
-//--------------------------
-//	String
-//--------------------------
-
+/* Function Prototypes */
+// String
 #ifdef UNICODE
 char *AllocTcharToChar(TCHAR *str);
 TCHAR *AllocCharToTchar(char *str);
@@ -483,8 +630,8 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 void EncodeCtrlChar(TCHAR *buf, TCHAR *ret);
 void DecodeCtrlChar(TCHAR *buf, TCHAR *ret);
 TCHAR *CreateMessageId(long id, TCHAR *MailAddress);
-int CreateHeaderStringSize(TCHAR *buf, struct TPMAILITEM *tpMailItem);
-TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, struct TPMAILITEM *tpMailItem);
+int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem);
+TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem);
 int GetReplyBodySize(TCHAR *body, TCHAR *ReStr);
 TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr);
 int SetDotSize(TCHAR *buf);
@@ -492,7 +639,7 @@ void SetDot(TCHAR *buf, TCHAR *ret);
 void DelDot(TCHAR *buf, TCHAR *ret);
 int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag);
-BOOL URLToMailItem(TCHAR *buf, struct TPMAILITEM *tpMailItem);
+BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem);
 TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote);
 TCHAR *GetMailString(TCHAR *buf, TCHAR *ret);
 void SetUserName(TCHAR *buf, TCHAR *ret);
@@ -504,9 +651,7 @@ TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret);
 TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 
-//--------------------------
-//	Code
-//--------------------------
+// Code
 int IsDependenceString(TCHAR *buf);
 char *Base64Decode(char *buf, char *ret);
 void Base64Encode(char *buf, char *ret, int size);
@@ -524,42 +669,39 @@ void MIMEdecode(char *buf, char *ret);
 TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address);
 TCHAR *ExtendedDecode(TCHAR *buf);
 TCHAR *ExtendedEncode(TCHAR *wbuf);
-char *DecodeBodyTransfer(struct TPMAILITEM *tpMailItem, char *body);
-TCHAR *BodyDecode(struct TPMAILITEM *tpMailItem, BOOL ViewSrc, struct TPMULTIPART ***tpPart, int *cnt);
+char *DecodeBodyTransfer(MAILITEM *tpMailItem, char *body);
+TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt);
 TCHAR *BodyEncode(TCHAR *body, TCHAR *content_type, TCHAR *encoding, TCHAR *ErrStr);
 
-//--------------------------
-//	MultiPart
-//--------------------------
-struct TPMULTIPART *AddMultiPartInfo(struct TPMULTIPART ***tpMultiPart, int cnt);
-void FreeMultipartInfo(struct TPMULTIPART ***tpMultiPart, int cnt);
+// MultiPart
+MULTIPART *AddMultiPartInfo(MULTIPART ***tpMultiPart, int cnt);
+void FreeMultipartInfo(MULTIPART ***tpMultiPart, int cnt);
 TCHAR *GetFilename(TCHAR *buf, TCHAR *Attribute);
-int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, struct TPMULTIPART ***tpMultiPart, int cnt);
+int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, MULTIPART ***tpMultiPart, int cnt);
 int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR **RetContentType, TCHAR *body, TCHAR **RetBody);
 
-//--------------------------
-//	File
-//--------------------------
+// File
 BOOL SaveLog(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
 BOOL SaveLogSep(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
 BOOL LogClear(TCHAR *fpath, TCHAR *fname);
+BOOL CheckDir(TCHAR *path);
+BOOL DeleteDir(TCHAR *Path, TCHAR *file);
 BOOL GetFileName(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenSave);
 char *ReadFileBuf(TCHAR *path, long FileSize);
 BOOL OpenFileBuf(HWND hWnd, TCHAR **buf);
 BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len);
+BOOL SaveExecFile(HWND hWnd, TCHAR *FileName, char *buf, int len);
 int GetSaveHeaderStringSize(TCHAR *Head, TCHAR *buf);
 TCHAR *SaveHeaderString(TCHAR *Head, TCHAR *buf, TCHAR *ret);
 BOOL WriteAsciiFile(HANDLE hFile, TCHAR *buf, int len);
 void ConvFilename(TCHAR *buf);
-BOOL SaveMail(TCHAR *FileName, struct TPMAILBOX *tpMailBox, int SaveFlag);
+BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag);
 long GetFileSerchSize(TCHAR *FileName);
-BOOL ReadItemList(TCHAR *FileName, struct TPMAILBOX *tpMailBox);
-BOOL SaveAddressBook(TCHAR *FileName, struct TPMAILBOX *tpMailBox);
-int ReadAddressBook(TCHAR *FileName, struct TPMAILBOX *tpMailBox);
+BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox);
+BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox);
+int ReadAddressBook(TCHAR *FileName, MAILBOX *tpMailBox);
 
-//--------------------------
-//	Ini
-//--------------------------
+// Ini
 void FreeIniInfo(void);
 #ifndef _WIN32_WCE
 BOOL CheckStartPass(void);
@@ -567,14 +709,10 @@ BOOL CheckStartPass(void);
 BOOL GetINI(HWND hWnd);
 BOOL PutINI(HWND hWnd, BOOL SaveMailFlag);
 
-//--------------------------
-//	Font
-//--------------------------
+// Font
 HFONT CreateEditFont(HWND hWnd, TCHAR *FontName, int FontSize, int Charset);
 
-//--------------------------
-//	Ras
-//--------------------------
+// Ras
 BOOL GetRasInfo(TCHAR *Entry);
 BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass);
 void FreeRasInfo(void);
@@ -586,11 +724,9 @@ void RasDisconnect(void);
 BOOL RasStatusProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL RasMailBoxStart(HWND hWnd, int BoxIndex);
 
-//--------------------------
-//	WinSock
-//--------------------------
+// WinSock
 unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr);
-SOCKET ConnectServer(HWND hWnd, unsigned long IPaddr, unsigned short Port, TCHAR *ErrStr);
+SOCKET ConnectServer(HWND hWnd, unsigned long IPaddr, unsigned short Port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr);
 int RecvBufProc(HWND hWnd, SOCKET soc);
 #ifndef WSAASYNC
 int RecvSelect(HWND hWnd, SOCKET soc);
@@ -603,32 +739,28 @@ int TSendBuf(SOCKET soc, TCHAR *wBuf);
 #define TSendBuf	SendBuf
 #endif
 void SocketClose(HWND hWnd, SOCKET soc);
+int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr);
+void free_ssl(void);
 
-//--------------------------
-//	Pop3
-//--------------------------
+// Pop3
 void FreeMailBuf(void);
 void FreeUidlList(void);
 BOOL ListPopProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-						  struct TPMAILBOX *tpMailBox, BOOL ShowFlag);
+						  MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL DownLoadPopProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-							  struct TPMAILBOX *tpMailBox, BOOL ShowFlag);
+							  MAILBOX *tpMailBox, BOOL ShowFlag);
 
-//--------------------------
-//	Smtp
-//--------------------------
+// Smtp
 void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
 void SmtpError(HWND hWnd);
 BOOL SmtpProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-					   struct TPMAILBOX *tpMailBox, BOOL ShowFlag);
-SOCKET SendMailItem(HWND hWnd, struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
+					   MAILBOX *tpMailBox, BOOL ShowFlag);
+SOCKET SendMailItem(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
 #ifdef WSAASYNC
-BOOL SendProc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, struct TPMAILBOX *tpMailBox);
+BOOL SendProc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox);
 #endif
 
-//--------------------------
-//	ListView
-//--------------------------
+// ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
 HWND CreateListView(HWND hWnd, int Top, int bottom);
 void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
@@ -636,48 +768,44 @@ int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp,
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);
 TCHAR *ListView_GetSelStringList(HWND hListView);
 long ListView_GetlParam(HWND hListView, int i);
-int ListView_GetMemToItem(HWND hListView, struct TPMAILITEM *tpMemMailItem);
+int ListView_GetMemToItem(HWND hListView, MAILITEM *tpMemMailItem);
 int ListView_GetNextDeleteItem(HWND hListView, int Index);
 int ListView_GetNextMailItem(HWND hListView, int Index);
 int ListView_GetPrevMailItem(HWND hListView, int Index);
 int ListView_GetNextNoReadItem(HWND hListView, int Index, int endindex);
-int ListView_GetNewItem(HWND hListView, struct TPMAILBOX *tpMailBox);
-BOOL ListView_ShowItem(HWND hListView, struct TPMAILBOX *tpMailBox);
+int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox);
+BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox);
 int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
 
-//--------------------------
-//	Item
-//--------------------------
-BOOL Item_SetItemCnt(struct TPMAILBOX *tpMailBox, int i);
-BOOL Item_Add(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpNewMailItem);
-void CopyItem(struct TPMAILITEM *tpFromNewMailItem, struct TPMAILITEM *tpToMailItem);
-struct TPMAILITEM *Item_CopyMailBox(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpNewMailItem,
+// Item
+BOOL Item_SetItemCnt(MAILBOX *tpMailBox, int i);
+BOOL Item_Add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
+void CopyItem(MAILITEM *tpFromNewMailItem, MAILITEM *tpToMailItem);
+MAILITEM *Item_CopyMailBox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem,
 									TCHAR *MailBoxName, BOOL SendClear);
-BOOL Item_Resize(struct TPMAILBOX *tpMailBox);
-void FreeMailItem(struct TPMAILITEM **tpFreeMailItem, int Cnt);
+BOOL Item_Resize(MAILBOX *tpMailBox);
+void FreeMailItem(MAILITEM **tpFreeMailItem, int Cnt);
 int Item_GetContent(char *buf, char *str, char **ret);
 char *Item_GetMessageId(char *buf);
-BOOL Item_SetMailItem(struct TPMAILITEM *tpMailItem, char *buf, char *Size);
-struct TPMAILITEM *Item_HeadToItem(struct TPMAILBOX *tpMailBox, char *buf, char *Size);
-struct TPMAILITEM *Item_StringToItem(struct TPMAILBOX *tpMailBox, TCHAR *buf);
-int Item_GetStringSize(struct TPMAILITEM *tpMailItem, BOOL BodyFlag);
-TCHAR *Item_GetString(TCHAR *buf, struct TPMAILITEM *tpMailItem, BOOL BodyFlag);
-int Item_GetNextDonloadItem(struct TPMAILBOX *tpMailBox, int Index, int *No);
-int Item_GetNextSendItem(struct TPMAILBOX *tpMailBox, int Index, int *MailBoxIndex);
-int Item_GetNextMailBoxSendItem(struct TPMAILBOX *tpMailBox, int Index, int MailBoxIndex);
-int Item_GetNextDeleteItem(struct TPMAILBOX *tpMailBox, int Index, int *No);
-int Item_GetMailNoToItemIndex(struct TPMAILBOX *tpMailBox, int No);
-BOOL Item_IsMailBox(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpMailItem);
-int Item_FindThread(struct TPMAILBOX *tpMailBox, TCHAR *p, int Index);
-void Item_SetThread(struct TPMAILBOX *tpMailBox);
+BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download);
+MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, char *Size);
+MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf);
+int Item_GetStringSize(MAILITEM *tpMailItem, BOOL BodyFlag);
+TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag);
+int Item_GetNextDonloadItem(MAILBOX *tpMailBox, int Index, int *No);
+int Item_GetNextSendItem(MAILBOX *tpMailBox, int Index, int *MailBoxIndex);
+int Item_GetNextMailBoxSendItem(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
+int Item_GetNextDeleteItem(MAILBOX *tpMailBox, int Index, int *No);
+int Item_GetMailNoToItemIndex(MAILBOX *tpMailBox, int No);
+BOOL Item_IsMailBox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
+int Item_FindThread(MAILBOX *tpMailBox, TCHAR *p, int Index);
+void Item_SetThread(MAILBOX *tpMailBox);
 
-//--------------------------
-//	MailBox
-//--------------------------
+// MailBox
 BOOL InitMailBox(void);
-void FreeFilterInfo(struct TPMAILBOX *tpMailBox);
-void FreeMailBox(struct TPMAILBOX *tpMailBox);
+void FreeFilterInfo(MAILBOX *tpMailBox);
+void FreeMailBox(MAILBOX *tpMailBox);
 BOOL ReadMailBox(void);
 int CreateMailBox(HWND hWnd, BOOL ShowFlag);
 int DeleteMailBox(HWND hWnd, int DelIndex);
@@ -689,9 +817,7 @@ void SetNoReadCntTitle(HWND hWnd);
 void SelectMailBox(HWND hWnd, int Sel);
 int GetNameToMailBox(TCHAR *Name);
 
-//--------------------------
-//	View
-//--------------------------
+// View
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #ifdef _WIN32_WCE_LAGENDA
 int SetWordBreak(HWND hWnd, HMENU hMenu);
@@ -702,32 +828,28 @@ void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 
-//--------------------------
-//	Edit
-//--------------------------
+// Edit
 BOOL Edit_InitApplication(HINSTANCE hInstance);
 int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
-					   struct TPMAILITEM *tpReMailItem, int OpenFlag, int ReplyFag);
+					   MAILITEM *tpReMailItem, int OpenFlag, int ReplyFag);
 
-//--------------------------
-//	Option
-//--------------------------
+// Option
 void AllocGetText(HWND hEdit, TCHAR **buf);
 BOOL SetMailBoxOption(HWND hWnd);
 void SetOption(HWND hWnd);
 BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CheckDependence(HWND hWnd, int Ctl);
 BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-//--------------------------
-//	main
-//--------------------------
+// main
 void SwitchCursor(const BOOL Flag);
 #ifdef _WIN32_WCE
 #define _SetForegroundWindow		SetForegroundWindow
@@ -741,7 +863,7 @@ void SetStatusText(HWND hWnd, char *buf);
 #else
 #define SetStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf, 1)
 #endif
-void SetItemCntStatusText(HWND hWnd, struct TPMAILBOX *tpViewMailBox);
+void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox);
 void SetStatusRecvLen(HWND hWnd, int len, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);

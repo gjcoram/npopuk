@@ -1,865 +1,105 @@
 nPOP Ver 1.0.2
 --
 
-¡ ‚Í‚¶‚ß‚É
+[Introduzione]
 
-‚±‚Ìƒ\ƒtƒg‚Íƒ[ƒ‹ƒT[ƒo(POP3)ã‚Ìƒ[ƒ‹‚ð•\Ž¦‚·‚é‚à‚Ì‚Å‚·B
-ˆê”Ê“I‚Èƒ[ƒ‰‚ÌƒŠƒ‚[ƒgƒ[ƒ‹A‰¼‘zƒ[ƒ‹‚Ì‹@”\‚ðƒ\ƒtƒg‚É‚µ‚½Š´‚¶‚Ì‚à‚Ì‚Å‚·B
+Questo software ti permette di accedere alle e-mail attraverso un server POP3 direttamente dal tuo Pocket PC or PC.
+Svolge le normali funzioni di accesso remoto alle e-mail.
+Le e-mail visualizzate da nPOP sono solo le mail presenti sul server. Pertanto , se una mail è cancellata dal server scomparirà dalla lista, anche se in quel momento è visualizzata nella lista.
 
-ƒ[ƒ‹ˆê——‚Å•\Ž¦‚³‚ê‚éƒ[ƒ‹‚ÍŒ»ÝƒT[ƒoã‚É‚ ‚éƒ[ƒ‹‚Ì‚Ý‚Å‚·B‚µ‚½‚ª‚Á‚Äˆê——
-‚Éƒ[ƒ‹‚ª•\Ž¦‚³‚ê‚Ä‚¢‚Ä‚àƒT[ƒo‚©‚çƒ[ƒ‹‚ªíœ‚³‚ê‚é‚Æˆê——‚©‚çÁ‚¦‚Ü‚·B
+Quando ti connetti utilizzando nPOP, le mail sono elencate e puoi vedere solo l'intestazione.
+Dall'elenco tu puoi selezionare la mail che vuoi ricevere sul tuo Pocket PC or PC; questo è molto più efficiente che scaricare tutte le mail sul Pocket PC or PC.
 
-ŠOoæ‚È‚Ç‚Å“Ç‚Þ•K—v‚ª–³‚¢ƒ[ƒ‹‚ðŽóM‚µ‚½‚èA•K—v‚Ì–³‚¢ƒ[ƒ‹‚ðŠÇ—‚·‚é‚Ì‚Å‚Í
-‚È‚­Aƒwƒbƒ_‚Ì‚Ý‚ðŽ‚Á‚Ä‚«‚Äˆê——‚ðì¬‚µ‚Ä•K—v‚Èƒ[ƒ‹‚¾‚¯‚ðŽóM‚·‚é‚±‚Æ‚ª‚Å‚«
-‚Ü‚·B
+Può essere usato per la gestione della posta sul server etc. o come metodo per controllare l'arrivo di nuova posta.
 
-‘¼‚ÌŽg‚¢•û‚Æ‚µ‚ÄAƒ[ƒ‹‚Ì’…Mƒ`ƒFƒbƒN‚Æ‚µ‚Ä‚âAƒT[ƒoã‚Ìƒ[ƒ‹‚ÌŠÇ—‚È‚Ç‚É‚à
-Žg‚¦‚Ü‚·Bƒtƒƒbƒs[ƒfƒBƒXƒN‚P–‡‚É“ü‚ê‚Ä‘S‚Ä‚Ìˆ—‚ðs‚¦‚é‚½‚ßƒ}ƒVƒ“‚ªFX•Ï‚í
-‚éê‡‚É‚à•Ö—˜‚Å‚·B(Win32)
 
+[Funzioni]
 
-‹@”\
-    Eƒ[ƒ‹ŽóM (POP3, APOP)
-    Eƒ[ƒ‹‘—M (SMTP, SMTP”FØ, POP before SMTP)
-    Eƒ}ƒ‹ƒ`ƒAƒJƒEƒ“ƒg („‰ñŽóM‰Â”\)
-    EŽ©“®ƒ`ƒFƒbƒN
-    E•Û‘¶” ‚Éƒ[ƒ‹‚ð•Û‘¶
-    Eƒ[ƒ‹ˆê——‚ÌƒXƒŒƒbƒh•\Ž¦
-    E“Y•tƒtƒ@ƒCƒ‹‚Ì‘—ŽóM (RFC 2231)
-    EŽóMƒtƒBƒ‹ƒ^
-    EŠÈˆÕƒAƒhƒŒƒX’ 
-    Eƒ_ƒCƒ„ƒ‹ƒAƒbƒvŠÇ—
+- Recevere E-Mail (POP3 e APOP)
+- Inviare E-Mail (SMTP e SMTP-AUTH e POP prima di SMTP)
+- L'utente può specificare le porte per POP3 e SMTP
+- Supporta multi-account (è possibile una ricezione a 360°)
+- Controllo automatico per nuove mail
+- La posta è salva nella casella di posta.
+- Visualizzazione dei 'thread' della lista delle mail
+- Supporto per allegati quando invii e ricevi e-mail (RFC 2231)
+- Filtro per Routing delle mail ricevute
+- Semplice rubrica
+- Gestione Dial-up
 
 
-¡ “®ìŠÂ‹«
+[Ambiente]
 
-ƒA[ƒJƒCƒu‚ÍWin32—p‚ÆWindows CE—p‚Æ•Ê‚ê‚Ä‚¢‚Ü‚·B—˜—pŠÂ‹«‚É‡‚í‚¹‚Ä‚¨Žg‚¢‚­‚¾
-‚³‚¢B
+- Win32 - Windows95, 98, Me, NT4.0, 2000, XP
 
-	Win32 - Windows 95, 98, Me, NT4.0, 2000, XP
+- Pocket PC 2002
+    + nPOP.arm.CAB   - CPU : StrongARM, XScale
 
-	BE500 - l'agenda BE-500
+- Pocket PC
+    + nPOP.mips.CAB  - CPU : MIPS
+    + nPOP.sh3.CAB   - CPU : SH-3
+    + nPOP.arm.CAB   - CPU : StrongARM, XScale
 
-	PPC2002 - Pocket PC 2002
-	  „¤ ARM   - CPU : StrongARM, XScale
+    Copia i CAB file nel Pocket PC utilizzando ActiveSync, e cliccaci sopra per installare nPOP.
 
-	PPC - Pocket PC
-	  „¥ MIPS  - CPU : MIPS
-	  „¥ SH-3  - CPU : SH-3
-	  „¤ ARM   - CPU : StrongARM, XScale
+- Windows CE 2.11 e successivi  - StrongARM, MIPS, SH-3, SH4
 
-	CE211 - Windows CE 2.11ˆÈã
-	  „¥ MIPS  - CPU : MIPS
-	  „¥ SH-3  - CPU : SH-3
-	  „¥ SH-4  - CPU : SH-4
-	  „¤ ARM   - CPU : StrongARM
+- Windows CE 2.0 e successivi - MIPS, SH-3
 
-	CE20 - Windows CE 2.0ˆÈã
-	  „¥ MIPS  - CPU : MIPS
-	  „¤ SH-3  - CPU : SH-3
 
-¦ Windows CE‚Í“ú–{Œê”Å‚Å‚È‚¢‚Æ³‚µ‚­•\Ž¦‚³‚ê‚È‚¢‚Å‚·B
+[Languaggio di modifica delle mail]
 
-ƒCƒ“ƒXƒg[ƒ‹‚Í“K“–‚ÈƒtƒHƒ‹ƒ_‚ÉƒRƒs[‚µ‚ÄŽÀs‚·‚é‚¾‚¯‚Å‚·B
-Ý’è‚Í nPOP.exe ‚Æ“¯‚¶êŠ‚É nPOP.ini ‚ðì¬‚µ‚Ä‘‚«‚Ý‚Ü‚·BWindows CE 2.0ˆÈ‰º
-‚Ìƒo[ƒWƒ‡ƒ“‚Å‚Í My Documents ‚ÌƒtƒHƒ‹ƒ_‚ÉÝ’èƒtƒ@ƒCƒ‹‚âƒAƒJƒEƒ“ƒg–ˆ‚Ìƒtƒ@ƒCƒ‹
-‚ð•Û‘¶‚µ‚Ü‚·B
+Chiudi "nPOP.exe" e modifica "nPOP.ini"
 
-Pocket PC(2002)”Å‚ÍCABƒtƒ@ƒCƒ‹‚É‚È‚Á‚Ä‚¢‚é‚Ì‚ÅAPocket PC‚ÉCABƒtƒ@ƒCƒ‹‚ðƒRƒs[
-‚µ‚ÄAPocket PC‚ÅƒRƒs[‚µ‚½CABƒtƒ@ƒCƒ‹‚ðŠJ‚­‚ÆŽ©“®“I‚ÉƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·BƒCƒ“
-ƒXƒg[ƒ‹‚³‚ê‚éƒtƒHƒ‹ƒ_‚Í \Program Files\nPOP\ ‚É‚È‚è‚Ü‚·B
+"HeadCharset=" e "BodyCharset="   - Set dei caratteri
+"HeadEncoding=" e "BodyEncoding=" - Codifica (0-7bit 1-8bit 2-BASE64 3-quoted-printable)
 
-l'agenda BE-500”Å‚ÍBE-500‚ÆPC‚ðÚ‘±‚µ‚Ä‚©‚çPC‘¤‚Åsetup.exe‚ð‹N“®‚·‚é‚ÆŽ©“®“I‚É
-ƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·B
-ƒf[ƒ^ƒtƒ@ƒCƒ‹‚Í–{‘Ì‚ÉƒCƒ“ƒXƒg[ƒ‹‚µ‚½ê‡‚Í \Nand Disk\My Documents\nPOP ‚É•Û
-‘¶‚µ‚Ü‚·BƒJ[ƒh‚ÉƒCƒ“ƒXƒg[ƒ‹‚µ‚½ê‡‚ÍA\Storage Card\My Documents\nPOP ‚É•Û
-‘¶‚µ‚Ü‚·B
 
-ƒAƒ“ƒCƒ“ƒXƒg[ƒ‹‚ÍEXEƒtƒ@ƒCƒ‹‚Æ
-	nPOP.ini
-	Address.lst
-	SaveBox.dat
-	SendBox.dat
-	MailBox-n.dat (n ‚Í”Ô†)
-‚ðíœ‚·‚é‚¾‚¯‚Å‚·B
+### ISO-8859-1 (Latin1)
+HeadCharset="ISO-8859-1"
+HeadEncoding=3
+BodyCharset="ISO-8859-1"
+BodyEncoding=3
 
+### ISO-2022-JP (Japanese)
+FontName="MS Gothic"
+FontCharset=128
+LvFontName="MS UI Gothic"
+LvFontCharset=128
+HeadCharset="ISO-2022-JP"
+HeadEncoding=2
+BodyCharset="ISO-2022-JP"
+BodyEncoding=0
 
-nPOP‚ÍAƒCƒ“ƒ^[ƒlƒbƒg‚ÉÚ‘±‚Å‚«‚éŠÂ‹«‚Æ‚¢‚¤‚Ì‚ª‘O’ñ‚Å‚·Bƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚Ìê‡
-‚ÍAƒvƒƒoƒCƒ_‚ÉÚ‘±‚µ‚Ä‚©‚ç‚²Žg—p‚µ‚Ä‚­‚¾‚³‚¢B
+### EUC-KR (Korean)
+FontName="MS Gothic"
+FontCharset=129
+LvFontName="MS UI Gothic"
+LvFontCharset=129
+HeadCharset="EUC-KR"
+HeadEncoding=2
+BodyCharset="EUC-KR"
+BodyEncoding=3
 
+### ISO-2022-KR (Korean)
+FontName="MS Gothic"
+FontCharset=129
+LvFontName="MS UI Gothic"
+LvFontCharset=129
+HeadCharset="EUC-KR"
+HeadEncoding=2
+BodyCharset="ISO-2022-KR"
+BodyEncoding=0
 
-¡ Žg‚¢•û
-
-Šî–{“I‚È“®ì‚ÍA
-	1. ƒAƒJƒEƒ“ƒg‚ÌÝ’è
-	2. uV’…ƒ`ƒFƒbƒNv‚ÅƒT[ƒo“à‚Ìƒ[ƒ‹ˆê——‚ðŽæ“¾
-	3. –{•¶‚ð“Ç‚Ý‚½‚¢ƒ[ƒ‹‚ÉuŽóM—pƒ}[ƒNv‚ð•t‰Á
-	4. uƒ}[ƒN‚µ‚½‚à‚Ì‚ðŽÀsv‚É‚ÄŽóMƒ}[ƒN‚Ì•t‚¢‚½ƒ[ƒ‹‚ðŽóM
-	5. uŠJ‚­v‚Å–{•¶‚ð“Ç‚Þ
-‚Æ‚¢‚¤Š´‚¶‚Å‚·B(uV’…Žæ“¾Žž‚Ìs”v‚ª 0 ‚Ìê‡)
-
-uV’…Žæ“¾Žž‚Ìs”v‚ð100‚È‚Ç‚ÉÝ’è‚µ‚Ä‚ ‚é‚ÆuV’…ƒ`ƒFƒbƒNv‚Å100s•¶‚Ì–{•¶‚ð
-Žæ“¾‚·‚é‚½‚ßA‚»‚Ìƒ[ƒ‹‚ðuŠJ‚­v‚Å–{•¶‚ð“Ç‚Þ‚±‚Æ‚ªo—ˆ‚Ü‚·B
-Š®‘S‚Éƒ[ƒ‹‚ðŽóM‚·‚é‚É‚ÍX‚ÉuŽóM—pƒ}[ƒNv‚ð•t‚¯‚Äuƒ}[ƒN‚µ‚½‚à‚Ì‚ðŽÀsv
-‚ð‘I‘ð‚·‚é‚Æ–{•¶‚ðŠ®‘S‚ÉŽóM‚µ‚Ü‚·B
-
-uV’…Žæ“¾ˆÊ’u‚Ì‰Šú‰»v‚ðs‚¤‚Æˆê——‚©‚çíœ‚µ‚½ƒ[ƒ‹‚ÅƒT[ƒo‚ÉŽc‚Á‚Ä‚¢‚é‚à‚Ì
-‚ðÄŽæ“¾‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-ÅŒã‚ÉŽæ“¾‚µ‚½ƒ[ƒ‹‚ÌƒAƒCƒRƒ“‚É‚Í [!] ƒ}[ƒN‚ª•t‰Á‚³‚ê‚Ä‚¢‚Ü‚·BŽŸ‚ÌV’…ƒ`ƒFƒb
-ƒN‚ÅV‚µ‚¢ƒ[ƒ‹‚ª‘¶Ý‚µ‚Ä‚¢‚éê‡‚É‘O‰ñ‚Ì [!] ‚ª‰ðœ‚³‚ê‚Ü‚·B
-
-ƒT[ƒo‚Éƒ[ƒ‹‚ª–³‚­‚È‚Á‚½Žž“_‚Åˆê——‚©‚çÁ‚¦‚Ä‚µ‚Ü‚¤‚Ì‚Å•Û‘¶‚µ‚Ä‚¨‚«‚½‚¢ƒ[ƒ‹
-‚Í•Û‘¶” ƒRƒs[‚µ‚Ä‚­‚¾‚³‚¢B•Û‘¶” ‚ÉƒRƒs[‚µ‚½ƒ[ƒ‹‚ÍI—¹Žž‚Éƒtƒ@ƒCƒ‹‚É•Û‘¶‚³
-‚ê‚Ü‚·B
-
-
-ŽóM‚µ‚½ƒ[ƒ‹‚Ì“à—e‚ð•\Ž¦‚µ‚½‚Æ‚«‚ÉAURL‚ðƒ_ƒuƒ‹ƒNƒŠƒbƒN‚·‚é‚Æ‚»‚ÌURL‚ðŠJ‚«‚Ü
-‚·B
-http:// ‚Æ https:// ‚Æ ftp:// ‚Ìê‡‚Íƒuƒ‰ƒEƒU‚ð‹N“®‚µ‚Ü‚·Bmailto: ‚Ìê‡‚Í
-nPOP‚Ìƒ[ƒ‹‚ð‘—M‚·‚é‰æ–Ê‚ð•\Ž¦‚µ‚Äƒ[ƒ‹‚ð•ÒW‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-
-¡ ƒAƒJƒEƒ“ƒg
-
-ƒAƒJƒEƒ“ƒg‚Í•¡”ì¬‚·‚é‚±‚Æ‚ª‚Å‚«„‰ñ‚µ‚Äƒ`ƒFƒbƒN‚ðs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-ƒƒjƒ…[‚ÌƒAƒJƒEƒ“ƒg‚Ì’Ç‰Á‚ÅV‚µ‚­ƒAƒJƒEƒ“ƒg‚ðì¬‚·‚é‚±‚Æ‚ª‚Å‚«Aƒƒjƒ…[‚ÌƒA
-ƒJƒEƒ“ƒg‚ÌÝ’è‚É‚ÄƒAƒJƒEƒ“ƒg–ˆ‚ÌÝ’è‚Ì•ÏX‚ðs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·Bì¬‚Å‚«‚éƒAƒJ
-ƒEƒ“ƒg‚Ì”‚É§ŒÀ‚Í‚ ‚è‚Ü‚¹‚ñB‚¢‚­‚Â‚Åì¬‰Â”\‚Å‚·B
-
-ƒAƒJƒEƒ“ƒg‚Ìƒƒjƒ…[‚©‚çu’Ç‰Áv‚ð‘I‘ð‚·‚é‚ÆV‹K‚ÉƒAƒJƒEƒ“ƒg‚ð’Ç‰Á‚·‚é‚±‚Æ‚ª‚Å
-‚«‚Ü‚·BuÝ’èv‚ð‘I‘ð‚·‚é‚ÆƒAƒJƒEƒ“ƒg‚ÌÝ’è‚ðs‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-uŽóMv‚Ìƒ^ƒu‚ÍŽóM(POP3)‚ÌÝ’è‚ðs‚¢‚Ü‚·B
-	EƒAƒJƒEƒ“ƒg‚Ì–¼‘O - ƒAƒJƒEƒ“ƒg‚ðŽ¯•Ê‚·‚é‚½‚ß‚Ì–¼‘O(ƒ^ƒCƒgƒ‹)
-	EPOP3ƒT[ƒo       - POP3(ŽóM—p)‚ÌƒT[ƒo–¼
-	Eƒ|[ƒg”Ô†       - POP3ƒT[ƒo‚Ìƒ|[ƒg”Ô† (’Êí 110)
-	Eƒ†[ƒU–¼         - POP3ƒT[ƒo‚ÉƒƒOƒCƒ“‚·‚é‚½‚ß‚Ìƒ†[ƒU–¼
-	EƒpƒXƒ[ƒh       - POP3ƒT[ƒo‚ÉƒƒOƒCƒ“‚·‚é‚½‚ß‚ÌƒpƒXƒ[ƒh
-
-	uAPOP ‚ðŽg‚Á‚Ä”FØv‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆPOP3ƒT[ƒo‚ÉƒƒOƒCƒ“‚·‚é‚Æ‚«
-	‚ÉƒpƒXƒ[ƒh‚ðˆÃ†‰»‚µ‚Ä”FØ‚ðs‚¢‚Ü‚·BPOP3ƒT[ƒo‚ªAPOP‚É‘Î‰ž‚µ‚Ä‚¢‚é
-	•K—v‚ª‚ ‚è‚Ü‚·B
-
-	u„‰ñƒ`ƒFƒbƒN‘ÎÛŠOv‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚Æ„‰ñƒ`ƒFƒbƒNŽž‚É‚±‚ÌƒAƒJƒEƒ“
-	ƒg‚Íƒ`ƒFƒbƒN‚µ‚È‚¢‚æ‚¤‚É‚È‚è‚Ü‚·B
-
-	ƒpƒXƒ[ƒh‚ðÈ—ª‚µ‚½ê‡‚ÍƒT[ƒo‚ÉÚ‘±‚·‚é‚Æ‚«‚É“ü—Í‚ð‹‚ß‚ç‚ê‚Ü‚·B
-
-u‘—Mv‚Ìƒ^ƒu‚Í‘—M(SMTP)‚ÌÝ’è‚ðs‚¢‚Ü‚·B
-	E–¼‘O             - ‘—MŽÒ‚Ì–¼‘O
-	Eƒ[ƒ‹ƒAƒhƒŒƒX   - ‘—MŽÒ‚Ìƒ[ƒ‹ƒAƒhƒŒƒX
-	ESMTPƒT[ƒo       - SMTP(‘—M—p)‚ÌƒT[ƒo–¼
-	Eƒ|[ƒg”Ô†       - SMTPƒT[ƒo‚Ìƒ|[ƒg”Ô† (’Êí 25)
-
-	uSMTP”FØv‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆSMTPƒT[ƒo‚ÉÚ‘±‚·‚é‚Æ‚«‚É[Ý’è]‚ÅŽw’è
-	‚µ‚½ƒ†[ƒU–¼‚ÆƒpƒXƒ[ƒh‚Å”FØ‚ðs‚¢‚Ü‚·BSMTPƒT[ƒo‚ªSMTP”FØ‚É‘Î‰ž‚µ
-	‚Ä‚¢‚é•K—v‚ª‚ ‚è‚Ü‚·B
-
-	uPOP before SMTPv‚Í‘—M‚·‚é‘O‚ÉŽóM‚ðs‚Á‚Ä”FØ‚ðs‚¤•K—v‚ª‚ ‚éê‡
-	‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚Ä‚­‚¾‚³‚¢B
-
-	u‘—MŽž‚ÉŽ©•ªˆ¶‚Ä‚ÉƒRƒs[‚ð‘—M‚·‚év‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚Æƒ[ƒ‹‘—MŽž
-	‚É‚»‚ÌƒAƒJƒEƒ“ƒg‚Ìƒ[ƒ‹ƒAƒhƒŒƒX‚ð Bcc: ‚É‰Á‚¦‚Ä‘—M‚µ‚Ü‚·B
-
-uì¬v‚Ìƒ^ƒu‚Í‘—Mƒ[ƒ‹‚Ìì¬Žž‚Éƒ[ƒ‹‚ÌÅŒã‚É•t‰Á‚·‚é–¼(ƒVƒOƒlƒ`ƒƒ)‚ÌÝ
-’è‚ðs‚¢‚Ü‚·B
-
-uƒtƒBƒ‹ƒ^v‚Ìƒ^ƒu‚ÍV’…ƒ[ƒ‹‚ðŽóM‚·‚é‚Æ‚«‚É“Á’è‚Ìƒ[ƒ‹‚ðŽóM‚µ‚È‚¢‚â“Á’è‚Ì
-ƒ[ƒ‹‚Ì‚Ý‚ðŽóM‚·‚é‚È‚Ç‚ÌÝ’è‚ðs‚¢‚Ü‚·B
-
-uÚ‘±v‚Ìƒ^ƒu‚Íƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±‚ÌÝ’è‚ðs‚¢‚Ü‚·B
-
-
-ƒAƒJƒEƒ“ƒgŠÔ‚ÌˆÚ“®‚Íˆê——‰æ–Êã•”‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX‚É‚Äs‚¢‚Ü‚·Bˆê——•\Ž¦‰æ–Ê‚ÅƒA
-ƒJƒEƒ“ƒgŠÔ‚ÌˆÚ“®‚Í Alt+ª«‚Å‚às‚¤‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-
-ƒIƒvƒVƒ‡ƒ“‚ÌŽóM‚Å‘SƒAƒJƒEƒ“ƒg‚Ìƒ[ƒ‹‚Ì•Û‘¶•û–@‚ðÝ’è‚Å‚«‚Ü‚·B
-	Eƒwƒbƒ_‚Æ–{•¶‚ð•Û‘¶
-		‘O‰ñI—¹‚µ‚½‚Æ‚«‚Æ“¯‚¶ó‘Ô‚É‚È‚è‚Ü‚·B
-
-	Eƒwƒbƒ_‚Ì‚Ý‚ð•Û‘¶
-		ˆê——‚Í‘O‰ñI—¹‚µ‚½‚Æ‚«‚Ìó‘Ô‚Å‚·‚ª–{•¶‚Í–³‚­‚È‚è‚Ü‚·B
-
-	E•Û‘¶‚µ‚È‚¢
-		ˆê——‚Í‹ó‚É‚È‚è‚Ü‚·B
-		‚µ‚©‚µ‘O‰ñÅŒã‚ÉŽóM‚µ‚½ƒ[ƒ‹‚Ìî•ñ‚ð•ÛŽ‚µ‚Ä‚¢‚é‚Ì‚Åƒ`ƒFƒbƒN
-		‚ðs‚¤‚Æ‘O‰ñÅŒã‚ÉŽóM‚µ‚½‚à‚Ì‚ÌŽŸ‚Ìƒ[ƒ‹‚æ‚èŽóM‚ðs‚¢‚Ü‚·B
-		uV’…Žæ“¾ˆÊ’u‚Ì‰Šú‰»v‚ðs‚¤‚Æ1”Ô–Ú‚Ìƒ[ƒ‹‚æ‚èŽóM‚ðs‚¤‚æ
-		‚¤‚É‚È‚è‚Ü‚·B
-
-
-ƒƒjƒ…[‚ÌƒAƒJƒEƒ“ƒg‚Ìuã‚ÖˆÚ“®v‚Æu‰º‚ÖˆÚ“®v‚Í•¡”‚ÌƒAƒJƒEƒ“ƒg‚Ì•À‚Ñ‘Ö‚¦‚ð
-s‚¤‹@”\‚Å‚·BƒAƒJƒEƒ“ƒg‚Ìã‚É“o˜^‚³‚ê‚Ä‚¢‚é‚à‚Ì‚©‚ç‡‚É„‰ñ‚µ‚Ä‚¢‚­‚Ì‚Å„‰ñ‚³
-‚¹‚½‚¢‡”Ô‚È‚Ç‚É•À‚Ñ‘Ö‚¦‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B‚½‚¾‚µ•Û‘¶” ‚Æ‘—M” ‚ÌˆÚ“®‚Ís‚¦‚Ü‚¹
-‚ñB
-
-ƒƒjƒ…[‚ÌƒAƒJƒEƒ“ƒg‚ÌuV’…Žæ“¾ˆÊ’u‚Ì‰Šú‰»v‚ð‘I‘ð‚·‚é‚ÆA‚»‚ÌƒAƒJƒEƒ“ƒg‚ÌŽŸ
-‚Ìƒ`ƒFƒbƒNŽž‚Éƒ[ƒ‹ˆê——‚ÍÁ‚¦‚ÄAƒT[ƒoã‚Ì1”Ô–Ú‚Ìƒ[ƒ‹‚©‚çŽóM‚·‚é‚æ‚¤‚É‚È
-‚è‚Ü‚·B
-V’…‚ÌŽæ“¾ˆÊ’u‚ðŽw’è‚µ‚½ê‡‚àƒ[ƒ‹ˆê——‚ÍÁ‚¦‚ÄAŽw’è‚µ‚½”Ô†‚Ìƒ[ƒ‹‚©‚çŽóM
-‚ðs‚¤‚æ‚¤‚É‚È‚è‚Ü‚·B
-Žw’è‚µ‚½”Ô†‚ªƒT[ƒoã‚Ìƒ[ƒ‹”‚æ‚è‘å‚«‚¢ê‡‚ÍÅŒã‚Ìƒ[ƒ‹‚©‚çŽóM‚·‚é‚æ‚¤‚É
-‚È‚è‚Ü‚·B
-
-
-¡ ŽóM
-
-ƒƒjƒ…[‚æ‚èuV’…ƒ`ƒFƒbƒNv‚ð‘I‘ð‚·‚é‚Æƒ[ƒ‹‚Ìˆê——‚ðŽóM‚µ‚Ü‚·B
-u„‰ñƒ`ƒFƒbƒNv‚Í‘S‚Ä‚ÌƒAƒJƒEƒ“ƒg‚ð„‰ñ‚µ‚ÄV’…ƒ[ƒ‹‚Ìƒ`ƒFƒbƒN‚ðs‚¢‚Ü‚·B
-ƒIƒvƒVƒ‡ƒ“‚Ìƒ`ƒFƒbƒN‚ÅŽ©“®ƒ`ƒFƒbƒN‚ðs‚¤Ý’è‚É‚µ‚Ä‚ ‚éê‡‚ÍŽw’è‚µ‚½ŠÔŠu‚Å„‰ñ
-ƒ`ƒFƒbƒN‚ðs‚¢‚Ü‚·B
-
-ŽóM—pƒ}[ƒN‚Í–{•¶‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚È‚¢ƒ[ƒ‹‚ðƒ_ƒuƒ‹ƒNƒŠƒbƒN‚·‚é‚Æ•t‰Á‚·‚é‚±
-‚Æ‚ª‚Å‚«‚Ü‚·B
-‚à‚µ‚­‚Íƒƒjƒ…[‚æ‚èuŽóM—p‚Éƒ}[ƒNv‚ð‘I‘ð‚·‚é‚±‚Æ‚Å•t‰Á‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-ŽóMƒ}[ƒN‚Ì•t‚¢‚½ƒ[ƒ‹‚ÍAƒƒjƒ…[‚æ‚èuƒ}[ƒN‚µ‚½‚à‚Ì‚ðŽÀsv‚ð‘I‘ð‚·‚é‚±‚Æ
-‚Å–{•¶‚ð‚·‚×‚ÄŽóM‚µ‚Ü‚·B
-
-
-ƒIƒvƒVƒ‡ƒ“‚ÌuV’…Žæ“¾Žž‚ÉŽóM‚·‚és”v‚ÍAV’…‚ðŽæ“¾‚·‚é‚Æ‚«‚É­‚µ‚¾‚¯–{•¶‚ð
-Ž‚Á‚Ä‚«‚½‚¢ê‡‚ÉÝ’è‚µ‚Ü‚·B
-0 ‚Ìê‡‚Íƒwƒbƒ_‚Ì‚Ý‚µ‚©Ž‚Á‚Ä‚«‚Ü‚¹‚ñB
-–{•¶‚ðŠ®‘S‚Éƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚È‚¢‚ªA­‚µ‚¾‚¯–{•¶‚ðŽ‚Á‚Ä‚«‚Ä‚¢‚éƒ[ƒ‹‚ÍAˆê——
-‚Å”–‚¢ƒ[ƒ‹‚ÌƒAƒCƒRƒ“‚ª•\Ž¦‚³‚ê‚Ü‚·B
-
-ƒIƒvƒVƒ‡ƒ“‚ÌuV’…Žæ“¾Žž‚É–{•¶‚ð‘S‚ÄŽóM‚·‚év‚Éƒ`ƒFƒbƒN‚ª‚ ‚éê‡‚ÍV’…‚ðŽæ“¾
-‚·‚é‚Æ‚«‚É–{•¶‚ð‘S‚ÄŽóM‚·‚é‚æ‚¤‚É‚È‚è‚Ü‚·B‚±‚ê‚Í–{•¶‚ª”ñí‚É‘å‚«‚¢ƒ[ƒ‹‚ª‚ 
-‚éê‡‚È‚Çƒƒ‚ƒŠ‚ð‘½‚­Á”ï‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Å\•ª‚É’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢B
-ƒ[ƒ‹‚ðŠ®‘S‚ÉŽóM‚·‚é‚ÆŽ©“®“I‚Éíœ‚·‚éÝ’è‚É‚È‚Á‚Ä‚¢‚éƒT[ƒo‚Ìê‡‚Í‚±‚ÌÝ’è
-‚ðs‚í‚È‚¢‚æ‚¤‚É‚µ‚Ä‚­‚¾‚³‚¢B
-
-ƒvƒƒoƒCƒ_‚È‚Ç‚ÌÝ’è‚É‚æ‚Á‚Ä‚Í‚·‚×‚ÄŽóM‚·‚é‚ÆƒT[ƒo‚©‚çŽ©“®“I‚Éíœ‚·‚é‚æ‚¤‚É
-‚È‚Á‚Ä‚¢‚éê‡‚ª‚ ‚è‚Ü‚·B‚»‚Ìê‡‚Í–{•¶‚ð‚·‚×‚ÄŽóM‚·‚é‚Ì‚Å‚È‚­uV’…Žæ“¾Žž‚É
-ŽóM‚·‚és”v‚Ì‚Ý‚Å–{•¶‚ð“Ç‚Þ‚æ‚¤‚É‚µ‚Ä‚­‚¾‚³‚¢B
-
-
-ƒIƒvƒVƒ‡ƒ“‚Åuƒwƒbƒ_‚ð•\Ž¦v‚Éƒ`ƒFƒbƒN‚ª‚ ‚é‚ÆAƒwƒbƒ_‚ð–{•¶‚Ìã‚É•\Ž¦‚µ‚Ü‚·B
-iƒwƒbƒ_‚Ì•¶ŽšƒR[ƒh‚ÍƒfƒR[ƒh‚µ‚Ä‚¢‚Ü‚¹‚ñj
-‚±‚ê‚Í–{•¶‚Ìˆê•”‚Æ‚µ‚Ä‚¢‚é‚½‚ß•ÔMŽž‚Ìˆø—p‚É‚à•\Ž¦‚³‚ê‚Ä‚µ‚Ü‚¤‚Ì‚Å•ÒWŽž‚Éíœ
-‚µ‚Ä‚­‚¾‚³‚¢B
-uƒwƒbƒ_‚ð•\Ž¦v‚Éƒ`ƒFƒbƒN‚ª‚ ‚èAV’…ŽóMŽž‚ÌŽæ“¾s”‚ª 0 ‚Ìê‡‚Íƒwƒbƒ_‚Ì‚Ý
-‚ð–{•¶‚Æ‚µ‚Ä“o˜^‚µ‚Ü‚·B
-ŽóMƒ}[ƒN‚ð•t‚¯‚ÄshiftƒL[‚ð‰Ÿ‚µ‚È‚ª‚çŽÀs‚·‚é‚ÆˆêŽž“I‚Éƒwƒbƒ_•\Ž¦‚ÌÝ’è‚É‚È
-‚è‚Ü‚·B
-
-
-“Y•tƒtƒ@ƒCƒ‹‚ª‚ ‚é‚Æˆê——‚ÉƒNƒŠƒbƒv‚ÌƒAƒCƒRƒ“‚ª•\Ž¦‚³‚ê‚Ü‚·B
-ƒNƒŠƒbƒv‚ÌƒAƒCƒRƒ“‚ª•t‚¢‚Ä‚¢‚éƒ[ƒ‹‚ðŠJ‚­‚Æu•ÒWvƒƒjƒ…[‚É“Y•t‚³‚ê‚Ä‚¢‚éƒtƒ@
-ƒCƒ‹–¼‚ª•\Ž¦‚³‚ê‚Ü‚·B
-ƒƒjƒ…[‚©‚ç“Y•tƒtƒ@ƒCƒ‹–¼‚ð‘I‘ð‚·‚é‚Æ•Û‘¶Šm”F‚Ìƒ_ƒCƒAƒƒO‚ª•\Ž¦‚³‚êŽw’è‚³‚ê‚½
-êŠ‚É•Û‘¶‚µ‚Ü‚·B
-ƒƒjƒ…[‚©‚ç‘I‘ð‚Å‚«‚È‚¢‚æ‚¤‚É‚È‚Á‚Ä‚¢‚é“Y•tƒtƒ@ƒCƒ‹–¼‚ÍŠ®‘S‚ÉŽóM‚Å‚«‚Ä‚¢‚È‚¢
-‚±‚Æ‚ðŽ¦‚µ‚Ä‚¢‚Ü‚·BŽóMƒ}[ƒN‚ð•t‚¯‚ÄuŽÀsv‚µ‚ÄŠ®‘S‚É–{•¶‚ðŽóM‚µ‚Ä‚©‚ç‚à‚¤
-ˆê“x‚»‚Ìƒ[ƒ‹‚ðŠJ‚«’¼‚·‚Æ‘I‘ð‚Å‚«‚é‚æ‚¤‚É‚È‚è‚Ü‚·B
-
-
-V’…ƒ[ƒ‹‚ª‚ ‚éê‡‚ÉƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ªo‚Ü‚·‚ªAV’…‚ª‚ ‚éƒAƒJƒEƒ“ƒg‚ª•\Ž¦
-‚³‚ê‚Ä‚¢‚é‚Æ‚«‚ÍƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚Ío‚Ü‚¹‚ñB
-ƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ª•\Ž¦‚³‚ê‚Ä‚¢‚éŠÔ‚ÍŽ©“®ƒ`ƒFƒbƒN‚È‚Ç‚Å‘O‰ñ‚ÌV’…ƒ}[ƒN‚ÍÁ‚¦
-‚Ü‚¹‚ñB
-‚Ü‚½ƒIƒvƒVƒ‡ƒ“‚É‚æ‚èAƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ðo‚³‚È‚¢‚æ‚¤‚É‚µ‚½‚èAV’…‚ª‚È‚­‚Ä‚à
-ƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ðo‚·‚æ‚¤‚É‚à‚Å‚«‚Ü‚·B
-¦ V’…‚ª‚È‚¢‚Æ‚«‚ÌƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ÍƒAƒJƒEƒ“ƒg‚ª•\Ž¦‚³‚ê‚Ä‚¢‚é‚Æ‚«‚ào‚Ü‚·B
-¦ V’…‚ª‚È‚¢‚Æ‚«‚ÌƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ÍŽ©“®ƒ`ƒFƒbƒN‚ÌŽž‚Ío‚Ü‚¹‚ñB
-
-
-ƒAƒJƒEƒ“ƒg‚ÌÝ’è‚ÅAƒpƒXƒ[ƒh‚ðÈ—ª‚µ‚½ê‡‚ÍAŽóMˆ—‚Ì“x‚ÉƒpƒXƒ[ƒh‚ð“ü—Í
-‚·‚éƒ_ƒCƒAƒƒO‚ª•\Ž¦‚³‚ê‚Ü‚·BƒpƒXƒ[ƒh“ü—Í‰æ–Ê‚ÅuƒpƒXƒ[ƒh‚ðˆêŽž“I‚É‹L‰¯v
-‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚Æ“ü—Í‚³‚ê‚½ƒpƒXƒ[ƒh‚ðnPOPI—¹Žž‚Ü‚Å•ÛŽ‚µ‚Ü‚·B
-ƒAƒJƒEƒ“ƒg‚ÌÝ’è‚ðŠJ‚¢‚ÄOK‚ð‰Ÿ‚·‚ÆˆêŽž“I‚É‹L‰¯‚³‚ê‚½ƒpƒXƒ[ƒh‚ÍƒNƒŠƒA‚³‚ê‚Ü‚·B
-
-
-¡ „‰ñƒ`ƒFƒbƒN
-
-ƒƒjƒ…[‚©‚ç„‰ñƒ`ƒFƒbƒN‚ð‘I‘ð‚·‚é‚©Aƒc[ƒ‹ƒo[‚Ì„‰ñƒ`ƒFƒbƒNƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚ÆA
-‚·‚×‚Ä‚ÌƒAƒJƒEƒ“ƒg‚ÌV’…ƒ`ƒFƒbƒN‚ðs‚¢‚Ü‚·B
-¦ •¡”‚ÌƒAƒJƒEƒ“ƒg‚ð“o˜^‚µ‚Ä‚¢‚È‚¢ê‡‚Í•K—v‚È‚¢‹@”\‚Å‚·B
-
-ƒAƒJƒEƒ“ƒg–ˆ‚ÌÝ’è‚É‚æ‚è„‰ñ‚·‚é‚Æ‚«‚Éƒ`ƒFƒbƒN‚µ‚È‚¢ƒAƒJƒEƒ“ƒg‚ðÝ’è‚·‚é‚±‚Æ‚ª
-‚Å‚«‚Ü‚·B
-
-[ƒIƒvƒVƒ‡ƒ“]‚Ì[ƒ`ƒFƒbƒN]‚ÌŽ©“®ƒ`ƒFƒbƒN‚ÍAŽw’è‚Ì•ª–ˆ‚É„‰ñ‚ðs‚¤‚à‚Ì‚Å‚·B
-
-
-V’…ƒ[ƒ‹‚ª‚ ‚éƒAƒJƒEƒ“ƒg‚É‚Í–{‘Ì‚ÌƒRƒ“ƒ{ƒ{ƒbƒNƒX“à‚ÌƒAƒJƒEƒ“ƒg‚Ì–¼‘O‚ÌŒã‚ë‚É
- * ‚ª•t‚«‚Ü‚·B
- * ‚ª•t‚¢‚Ä‚¢‚éƒAƒJƒEƒ“ƒg‚ð‘I‘ð‚µ‚½‚Æ‚«‚É * ‚ÍÁ‚¦‚Ü‚·B
-
-ƒ^ƒCƒgƒ‹ƒo[‚É‚Í * ‚ª•t‚¢‚Ä‚éƒAƒJƒEƒ“ƒg‚Ì”‚ª•\Ž¦‚³‚ê‚Ü‚·B
-	nPOP - [–¢“ÇƒAƒJƒEƒ“ƒg: 3]
-‚±‚Ìê‡ 3ŒÂ‚ÌƒAƒJƒEƒ“ƒg‚ÉV’…‚ª‚ ‚èA‚»‚ê‚ð‚Ü‚¾Œ©‚Ä‚¢‚È‚¢‚Æ‚¢‚¤‚±‚Æ‚É‚È‚è‚Ü‚·B
-ˆê‚Â‚à‚È‚¢ê‡‚Í•\Ž¦‚³‚ê‚Ü‚¹‚ñB
-
-
-¡ „‰ñŽÀs
-
-‚·‚×‚Ä‚ÌƒAƒJƒEƒ“ƒg‚Ìƒ}[ƒN‚³‚ê‚Ä‚¢‚éƒAƒCƒeƒ€‚ðŽÀs‚µ‚Ü‚·B
-„‰ñ‚ÍƒAƒJƒEƒ“ƒg“à‚Ìƒ}[ƒN‚³‚ê‚½ƒ[ƒ‹‚ðŽÀs‚µA‚»‚ÌŒã‚»‚ÌƒAƒJƒEƒ“ƒg‚Ì‘—Mƒ}[
-ƒN‚Ì•t‚¢‚½ƒ[ƒ‹‚ð‘—M‚µ‚Ü‚·B
-ã‹L‚Ì—¬‚ê‚ð„‰ñ‚·‚éÝ’è‚É‚È‚Á‚Ä‚¢‚é‘S‚Ä‚ÌƒAƒJƒEƒ“ƒg‚Ås‚¢‚Ü‚·B
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒv–¢Ú‘±Žž‚É•¡”‚ÌƒAƒJƒEƒ“ƒg‚Ìƒ}[ƒN‚ðÝ’è‚µ‚½‚èA‘—M” ‚Ìƒ[ƒ‹‚É
-‘—Mƒ}[ƒN‚ð‚Â‚¯‚½‚è‚µ‚ÄAƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±Œã‚Éˆê‹C‚É‚·‚×‚Ä‚Ìƒ}[ƒN‚ðŽÀs‚·‚é
-‚Æ‚¢‚¤Žg‚¢•û‚ª‚Å‚«‚Ü‚·B
-
-
-¡ íœ
-
-íœ‚É‚ÍuƒT[ƒo‚©‚çíœv‚Æuˆê——‚©‚çíœv‚Ì2Ží—Þ‚ ‚è‚Ü‚·B
-
-
-ƒT[ƒo‚©‚çíœ‚ÍAƒ[ƒ‹‚Éuíœ—pƒ}[ƒNv‚ð•t‰Á‚µ‚ÄAuƒ}[ƒN‚µ‚½‚à‚Ì‚ðŽÀsv
-‚·‚é‚±‚Æ‚Åíœ‚Å‚«‚Ü‚·BƒT[ƒo‚©‚çƒ[ƒ‹‚ªíœ‚³‚ê‚é‚Æˆê——‚©‚ç‚àÁ‚¦‚Ü‚·B
-iˆê——‚ÍƒT[ƒo‚É‚ ‚éƒ[ƒ‹‚ª•\Ž¦‚³‚ê‚Ä‚¢‚é‚½‚ßj
-•Û‘¶‚µ‚Ä‚¨‚«‚½‚¢ê‡‚ÍAíœ‚ðs‚¤‘O‚É•Û‘¶” ‚ÉƒRƒs[‚µ‚Ä‚­‚¾‚³‚¢B
-
-
-ˆê——‚©‚çíœ‚ÍAƒT[ƒoã‚Ìƒ[ƒ‹‚Í‚»‚Ì‚Ü‚Ü‚ÅAˆê——‚©‚ç‚Ì‚Ýíœ‚µ‚Ü‚·Bíœ‚µ‚Ä
-‚µ‚Ü‚Á‚Ä‚àV’…‚ðæ“ª‚©‚çŽæ“¾‚µ‚È‚¨‚·‚Æ‚Ü‚½•\Ž¦‚·‚é‚±‚Æ‚ª‰Â”\‚Å‚·B
-
-V’…ƒ`ƒFƒbƒN‚Åˆê——‚ðŽóM‚µ‚ÄA“Ç‚ñ‚Å‚µ‚Ü‚Á‚½‚çˆê——‚©‚çíœ‚·‚éA‚»‚µ‚ÄV’…ƒ`ƒFƒb
-ƒN‚Åˆê——‚ðŽóMBBBB‚Æ‚¢‚¤Š´‚¶‚ÅŽg‚¤‚Æƒƒ‚ƒŠ‚ÌÁ”ï‚ð‰Ÿ‚³‚¦‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-iíœ‚µ‚½‚à‚Ì‚ðÄ“x“Ç‚Þê‡‚ÍV’…Žæ“¾ˆÊ’u‚ð‰Šú‰»‚µ‚Äæ“ªˆÊ’u‚©‚çˆê——‚ðŽæ“¾‚µ
-‚Ä‚­‚¾‚³‚¢j
-
-
-¡ ‘—M
-
-‘—M‚·‚é‘O‚ÉƒAƒJƒEƒ“ƒg‚ÌÝ’è‚ÅƒAƒJƒEƒ“ƒg–ˆ‚Ì‘—MÝ’è‚ðs‚Á‚Ä‚­‚¾‚³‚¢B
-–¼iƒVƒOƒlƒ`ƒƒj‚ÍƒAƒJƒEƒ“ƒg–ˆ‚ÉÝ’è‚µ‚Ü‚·B
-
-ƒAƒJƒEƒ“ƒg–ˆ‚ÌÝ’è‚Å‘—MŽž‚ÉŽ©•ªˆ¶‚Ä‚ÉƒRƒs[‚ð‘—M‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B‚±‚ê‚ÍŽ©
-•ª‚Ìƒ[ƒ‹ƒAƒhƒŒƒX‚ðBCC‚É‰Á‚¦‚½“®ì‚ðí‚És‚¤‚æ‚¤‚É‚·‚é‚à‚Ì‚Å‚·B
-
-‘—Mƒ[ƒ‹‚ð•ÒW‚·‚é‘O‚ÉA‘—Mî•ñ‚ðÝ’è‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B
-‘—Mî•ñ‚ÌuƒAƒJƒEƒ“ƒgv‚Í‘—M‚ÅŽg—p‚·‚éƒAƒJƒEƒ“ƒg‚ð‘I‘ð‚µ‚Ü‚·BSMTPƒT[ƒo‚â
-–¼‚ª‘I‘ð‚µ‚½ƒAƒJƒEƒ“ƒg‚Ì‚à‚Ì‚ªŽg‚í‚ê‚é‚æ‚¤‚É‚È‚è‚Ü‚·B
-
-ˆ¶æ‚Íƒ[ƒ‹‚Ì‘—Mæ‚Å‚·B"," ‚Å•¡”ŒŽw’è‚Å‚«‚Ü‚·B
-Œ`Ž®‚ÍA
-	ƒ[ƒ‹ƒAƒhƒŒƒX
-	–¼‘O <ƒ[ƒ‹ƒAƒhƒŒƒX>
-	ƒ[ƒ‹ƒAƒhƒŒƒX (–¼‘O)
-‚Ì‚¢‚¸‚ê‚©‚ÅŽw’è‚µ‚Ä‚­‚¾‚³‚¢B
-¦ ‚±‚êˆÈŠO‚ÌŒ`Ž®‚Ìê‡‚ÍƒGƒ‰[‚É‚È‚é‰Â”\«‚ª‚ ‚è‚Ü‚·
-
-Œ–¼‚Í‚»‚Ìƒ[ƒ‹‚Ìƒ^ƒCƒgƒ‹‚Å‚·B
-
-Cc , Bcc ƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚Æ•¡”‚Ìˆ¶æ‚ðÝ’è‚Å‚«‚Ü‚·B
-Cc ‚ÅŽw’è‚µ‚½ƒ[ƒ‹ƒAƒhƒŒƒX‚ÍŽó‚¯Žæ‚Á‚½l‚ÉŒ©‚¦‚Ü‚·B
-Bcc ‚ÅŽw’è‚µ‚½ƒ[ƒ‹ƒAƒhƒŒƒX‚ÍŽó‚¯Žæ‚Á‚½l‚É‚ÍŒ©‚¦‚Ü‚¹‚ñB
-
-“Y•tƒtƒ@ƒCƒ‹‚ðŽw’è‚·‚éê‡‚ÍA‘—Mî•ñ‚Ì[“Y•tƒtƒ@ƒCƒ‹]‚Ìƒ{ƒ^ƒ“‚ð‰Ÿ‚µ‚Ä“Y•tƒtƒ@
-ƒCƒ‹ˆê——‚Ì‰æ–Ê‚É‚ÄŽw’è‚Å‚«‚Ü‚·B
-Win32”Å‚Ìê‡‚Í“Y•tƒtƒ@ƒCƒ‹ˆê——‚ÌƒEƒBƒ“ƒhƒE‚Éƒtƒ@ƒCƒ‹‚ðƒhƒ‰ƒbƒO•ƒhƒƒbƒv‚·‚é
-‚±‚Æ‚Å’Ç‰Á‚ðs‚¤‚±‚Æ‚à‰Â”\‚Å‚·B
-“Y•t‚·‚éƒtƒ@ƒCƒ‹‚Ìƒtƒ@ƒCƒ‹–¼‚É2ƒoƒCƒgƒR[ƒh‚ªŠÜ‚Ü‚ê‚Ä‚¢‚éê‡‚ÍŽó‚¯Žæ‚Á‚½‘ŠŽè
-‚É‚æ‚Á‚Ä‚Íƒtƒ@ƒCƒ‹–¼‚ªŒ©‚ê‚È‚¢ê‡‚à‚ ‚é‚Ì‚Å’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢B
-ƒIƒvƒVƒ‡ƒ“‚Ì‘—M‚Ìu“Y•tƒtƒ@ƒCƒ‹–¼‚ÍMIME "B" encoding‚Å‘—Mv‚Éƒ`ƒFƒbƒN‚ð“ü‚ê
-‚é‚Æ“Y•t‚·‚éƒtƒ@ƒCƒ‹‚Ìƒtƒ@ƒCƒ‹–¼‚ðMIME "B" encoding‚Å‘—M‚µ‚Ü‚·B
-¦ ƒ`ƒFƒbƒN‚ð“ü‚ê‚Ä‚¢‚È‚¢Žž‚Í RFC 2231 ‚ÌŒ`Ž®‚Å‘—M‚µ‚Ü‚·B
-
-
-‘—M‚·‚éƒ[ƒ‹‚ð•ÒW‚µI‚í‚Á‚ÄAu’¼‚¿‚É‘—Mv‚ð‘I‘ð‚·‚é‚Æ•ÒW‚µ‚Ä‚¢‚½1Œ‚Ì‚Ý
-‘—M‚µ‚Ü‚·B
-
-u‘—M” ‚É•Û‘¶v‚ð‘I‘ð‚µ‚½ê‡‚Í‘—M” ‚É•Û‘¶‚³‚ê‚Ü‚·B‚»‚ÌŒãA‘—Mƒ}[ƒN‚ð•t‚¯
-‚ÄAuƒ}[ƒN‚µ‚½‚à‚Ì‚ðŽÀsv‚ð‘I‘ð‚·‚é‚ÆA•¡”Œˆê“x‚É‘—M‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-‘—M” ‚É•Û‘¶‚·‚é‚Æ‚«‚ÉƒIƒvƒVƒ‡ƒ“‚ÅŽw’è‚³‚ê‚½•¶Žš”‚ÅŽ©“®“I‚ÉÜ‚è•Ô‚µ‚ðs‚¢‚Ü‚·B
-ˆê“x‘—M” ‚É•Û‘¶‚µ‚Ä‚à‚¤ˆê“xÄ•ÒW‚ðs‚¤‚Æ®Œ`‚³‚ê‚Ä•\Ž¦‚³‚ê‚Ü‚·B
-‚à‚µŽ©•ª‚Å‰üs‚ð“ü‚ê‚Ä‚¢‚«‚½‚¢ê‡‚ÍAŽ©“®Ü‚è•Ô‚µŒ…”‚ð 0 ‚ÉÝ’è‚µ‚Ä‚­‚¾‚³‚¢B
-Ü‚è•Ô‚·Œ…”‚ª 0 ‚Ìê‡‚Í‘—M” ‚É•Û‘¶‚·‚é‚Æ‚«‚ÉŽ©“®Ü‚è•Ô‚µ‚ðs‚¢‚Ü‚¹‚ñB
-
-Ž©“®Ü‚è•Ô‚µÝ’è‚Ìuˆø—p‚ÍÜ‚è•Ô‚³‚È‚¢v‚ÍAƒIƒvƒVƒ‡ƒ“‚Ìì¬‚Ìˆø—p‹L†‚ÅŽw’è‚³
-‚ê‚½•¶Žš‚ÅŽn‚Ü‚és‚ÍŽ©“®Ü‚è•Ô‚µ‚ðs‚í‚È‚¢‚Æ‚¢‚¤‚±‚Æ‚Å‚·B
-
-‘—MÝ’è‚Åu‘—M” ‚É•Û‘¶Žž‚É‘—M” ‚ð•\Ž¦v‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚Ä‚¢‚éê‡‚Í‘—M” ‚É
-•Û‘¶‚µ‚½‚Æ‚«‚ÉƒƒCƒ“ƒEƒBƒ“ƒhƒE‚Í‘—M” ‚ð•\Ž¦‚µ‚Ü‚·B
-‚±‚ê‚Íu’¼‚¿‚É‘—Mv‚Ì‚Æ‚«‚àˆêŽž‘—M” ‚É•Û‘¶‚µ‚Ä‚©‚ç‘—M‚µ‚Ä‚¢‚é‚½‚ß“¯—l‚É‘—M
-” ‚ð•\Ž¦‚µ‚Ü‚·B
-
-ˆê——‚Å–¢‘—M‚Ìƒ[ƒ‹‚ÍƒAƒCƒRƒ“‚ª–³‚¢ó‘Ô‚É‚È‚Á‚Ä‚¢‚Ü‚·B
-‘—MÏ‚Ý‚Ìƒ[ƒ‹‚É‚Íƒ[ƒ‹‚ÌƒAƒCƒRƒ“‚ª•t‚«‚Ü‚·B
-u¨v‚ÌƒAƒCƒRƒ“‚Í‘—M—pƒ}[ƒN‚Å‚·B
-
-‘—MŽž‚ÉSubject‚â–{•¶‚É1ƒoƒCƒg‚ÌƒJƒiƒ^ƒi‚ª‚ ‚Á‚½ê‡‚Í2ƒoƒCƒg‚ÌƒJƒ^ƒJƒi‚É•ÏŠ·
-‚µ‚Ä‘—M‚ðs‚¢‚Ü‚·B
-‹@ŽíˆË‘¶•¶Žš(WindowsˆÈŠO‚Å‚Í•\Ž¦‚Å‚«‚È‚¢‰Â”\«‚Ì‚ ‚é•¶Žš)‚ª‚ ‚éê‡‚Í•ÒWI—¹
-Žž‚ÉŒx‚ªo‚Ä‚»‚Ì•¶Žš‚ª‘I‘ðó‘Ô‚É‚È‚è‚Ü‚·B
-
-
-•ÔMŽž‚ÌÝ’è‚ÍA–{‘Ì‚ÌƒIƒvƒVƒ‡ƒ“‚Ìuì¬v‚ÅÝ’è‚Å‚«‚Ü‚·B
-Ž©“®ˆø—p‚Éƒ`ƒFƒbƒN‚ª‚ ‚é‚ÆA•ÔMŽž‚ÉŽw’è‚Ìˆø—p‹L†‚Å‘S•¶ˆø—p‚³‚ê‚Ü‚·B
-•ÒWŽž‚É•K—v‚Ì‚È‚¢ˆø—p•”•ª‚Ííœ‚µ‚Ä‚­‚¾‚³‚¢B
-‘—Mî•ñ‚Å•\Ž¦‚³‚ê‚éuˆø—pv‚Ìƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Å‚»‚Ìƒ[ƒ‹‚Ì‚Ýˆø—p‚·‚éA‚µ‚È‚¢
-‚ÌÝ’è‚ðØ‚è‘Ö‚¦‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-•ÔM—pƒwƒbƒ_‚ÍAŽ©“®ˆø—p‚·‚é‚Æ‚«‚Éˆø—p‚Ì“ª‚É•t‚¯‚Ü‚·B
-	%f - From
-	%d - Date
-	%i - Message-Id
-	%s - Subject
-	%t - To
-	%c - Cc
-	%% - %
-‚ªŽg—p‚Å‚«‚Ü‚·B
-
-
-‚à‚µSMTPƒT[ƒo‚ª SMTP”FØ(SMTP Authentication)‚Åƒ†[ƒU‚Ì”FØ‚ðs‚¤ŠÂ‹«‚Ìê‡‚Í
-ƒAƒJƒEƒ“ƒg‚ÌÝ’è‚Ì‘—M‚ÅuSMTP”FØv‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚Ä‚­‚¾‚³‚¢B
-‘Î‰ž‚µ‚Ä‚¢‚éŒ`Ž®‚Í CRAM-MD5 ‚Æ LOGIN ‚Æ PLAIN ‚Å‚·B
-
-‚à‚µSMTPƒT[ƒo‚ª POP before SMTP (POP3 ‚Ì”FØ‚ð—˜—p‚µ‚ÄA³‹Kƒ†[ƒU‚ÌŠm”F‚ðs
-‚¤•û–@) ‚ÌŠÂ‹«‚Ìê‡‚ÍAƒAƒJƒEƒ“ƒg‚ÌÝ’è‚Ì‘—M‚ÅuPOP before SMTPv‚Éƒ`ƒFƒbƒN
-‚ð“ü‚ê‚Ä‚­‚¾‚³‚¢B
-SMTPƒT[ƒo‚ÉÚ‘±‚·‚é‘O‚ÉPOP3ƒT[ƒo‚ÖÚ‘±‚µƒƒOƒCƒ“‚Ì‚Ý‚ðs‚¢‚Ü‚·B
-
-
-ƒ[ƒ‹•\Ž¦‰æ–Ê‚ÅAƒƒjƒ…[‚æ‚èu‘Sˆõ‚É•ÔMv‚ð‘I‘ð‚·‚é‚Æ‚»‚Ìƒ[ƒ‹‚ÉÝ’è‚³‚ê‚Ä
-‚¢‚é To: ‚Æ Cc: ‚ÉÝ’è‚³‚ê‚Ä‚¢‚él‘Sˆõ‚ð Cc: ‚É‰Á‚¦‚Ä•ÔM‚ðs‚¢‚Ü‚·B
-‚±‚Ì‚Æ‚«‚É•ÔMƒ[ƒ‹‚Ì To: ‚ÉÝ’è‚³‚ê‚éƒ[ƒ‹ƒAƒhƒŒƒX‚Æ‚»‚Ìƒ[ƒ‹‚ðŽó‚¯Žæ‚Á‚½
-ƒAƒJƒEƒ“ƒg‚Ìƒ[ƒ‹ƒAƒhƒŒƒX‚ÍœŠO‚³‚ê‚Ü‚·B
-
-
-¡ ƒtƒBƒ‹ƒ^
-
-ƒAƒJƒEƒ“ƒg–ˆ‚ÌÝ’è‚ÉuƒtƒBƒ‹ƒ^v‚Æ‚¢‚¤‚Ì‚ª‚ ‚è‚Ü‚·B‚±‚ê‚Íˆê——‚ðŽóM‚·‚é‚Æ‚«‚É
-ƒ[ƒ‹‚É‚æ‚Á‚Ä“Á’è‚Ì“®ì‚ðs‚¢‚Ü‚·B—á‚¦‚Îu“Á’è‚Ìƒ[ƒ‹‚ÍŽóM‚µ‚È‚¢v‚âu“Á’è
-‚Ìƒ[ƒ‹‚Ì‚ÝŽóM‚·‚év‚Æ‚¢‚Á‚½Žg‚¢•û‚ª‚Å‚«‚Ü‚·B
-ƒtƒBƒ‹ƒ^‚Íƒ[ƒ‹‚Ìƒwƒbƒ_“à‚Ì•¶Žš—ñ‚ðŽg‚Á‚Äs‚Á‚Ä‚¢‚Ü‚·B
-
-ƒtƒBƒ‹ƒ^‚Ì€–Ú–ˆ‚ÌÝ’è‚ÍA‚P‚Â‚Ì€–Ú‚É‚Â‚«‚Q‚Â‚ÌðŒ‚ð‘g‚Ý‡‚í‚¹‚é‚±‚Æ‚ª‚Å‚«‚Ü
-‚·B—¼•û‚Ì€–Ú‚ðŽw’è‚µ‚½ê‡‚Í€–Ú1‚Æ€–Ú2‚Ì—¼•û‚ð–ž‚½‚·ê‡‚Æ‚¢‚¤Žw’è‚É‚È‚è‚Ü
-‚·B
-
-ƒtƒBƒ‹ƒ^‚É‚Í‚¢‚­‚Â‚©‚Ìƒ‹[ƒ‹‚ª‚ ‚è‚Ü‚·B
-	E‘S‚Ä‚Ìƒ[ƒ‹‚ðuŽóM‚·‚év‚ª•W€‚Ì“®ì‚É‚È‚Á‚Ä‚¢‚éB
-	EuŽóM‚·‚évuŽóM‚µ‚È‚¢v‚Íæ‚Éƒ}ƒbƒ`‚µ‚½•û‚ª—LŒø‚É‚È‚éB
-	EuŽóM—p‚Éƒ}[ƒNvuíœ—p‚Éƒ}[ƒNv‚Íæ‚Éƒ}ƒbƒ`‚µ‚½•û‚ª—LŒø‚É‚È‚éB
-	EuŽóM‚·‚év‚ªæ‚Éƒ}ƒbƒ`‚·‚é‚Æ‚»‚ÌŒã‚Ì‘¼‚Ì“®ì‚Í–³Œø‚É‚È‚éB
-
-“®ì‚ÅƒtƒBƒ‹ƒ^‚Éƒ}ƒbƒ`‚µ‚½ƒ[ƒ‹‚Ì“®ì‚ðŽw’è‚µ‚Ü‚·B
-€–Ú1,2‚Å‚Ç‚Ìƒwƒbƒ_€–Ú‚ðŽg—p‚·‚é‚©Žw’è‚µ‚Ü‚·B
-“à—e1,2‚Å‚»‚Ì“à—e‚ðŽw’è‚µ‚Ü‚·B
-“à—e‚Í * ‚ÅƒƒCƒ‹ƒhƒJ[ƒh‚ðŽg—p‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-	—á) hoge-ML ‚Æ‚¢‚¤ML‚Ìƒ[ƒ‹‚ðŽóM‚µ‚È‚¢ê‡
-	“®ì: ŽóM‚µ‚È‚¢
-	€–Ú1: Subject:
-	“à—e1: [hoge-ML*
-
-‚Æ‚¢‚¤Š´‚¶‚Å‚·B
-
-“Á’è‚Ìƒ[ƒ‹‚Ì‚Ý‚ðŽóM‚·‚éÝ’è‚É‚·‚éê‡‚ÍAƒtƒBƒ‹ƒ^‚ÌÅŒã‚Ì€–Ú‚Å‘S‚Ä‚Ìƒ[ƒ‹
-‚ðŽóM‚µ‚È‚¢ƒtƒBƒ‹ƒ^‚ð’Ç‰Á‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B
-
-	—á) hoge-ML ‚Æ‚¢‚¤ML‚Ìƒ[ƒ‹‚Ì‚Ý‚ðŽóM‚·‚éê‡
-	“®ì: ŽóM‚·‚é
-	€–Ú1: Subject:
-	“à—e1: [hoge-ML*
-
-	“®ì: ŽóM‚µ‚È‚¢
-	€–Ú1: Subject:
-	“à—e1: *
-
-‚Æ‚¢‚¤Š´‚¶‚Å‚·B
-
-ŽóM‚µ‚È‚¢^ŽóM‚·‚é ‚Íæ‚Éƒ}ƒbƒ`‚µ‚½•û‚ª—LŒø‚É‚È‚è‚Ü‚·B
-ŽóM—p‚Éƒ}[ƒN^íœ—p‚Éƒ}[ƒN ‚à“¯—l‚Éæ‚Éƒ}ƒbƒ`‚µ‚½•û‚ª—LŒø‚É‚È‚è‚Ü‚·B
-‚»‚Ì‘¼‚Ì€–Ú‚É‚Â‚¢‚Ä‚Íæ‚Éƒ}ƒbƒ`‚·‚éƒtƒBƒ‹ƒ^‚ª‚ ‚Á‚Ä‚àŽÀs‚³‚ê‚Ü‚·B
-u•Û‘¶” ‚ÖƒRƒs[v‚Ì“®ì‚ÍŽóM‚µ‚È‚¢ƒ[ƒ‹‚É‚Â‚¢‚Ä‚à—LŒø‚É‚È‚èƒRƒs[‚³‚ê‚Ü‚·B
-
-	—áj•¡”‚ÌðŒ‚ð‘g‚Ý‡‚í‚¹‚é
-	“®ì: ŽóM‚µ‚È‚¢
-	€–Ú1: From:
-	“à—e1: *hoge@hoge.hoge*
-
-	“®ì: ŽóM‚·‚é
-	€–Ú1: Subject:
-	“à—e1: [hoge-ML*
-
-	“®ì: íœ—p‚Éƒ}[ƒN
-	€–Ú1: Subject:
-	“à—e1: *
-
-ã‹L—á‚ÍAFrom: ‚ª hoge@hoge.hoge ‚Ì‚à‚Ì‚ÍŽóM‚µ‚È‚¢‚ÅASubject: ‚ª [hoge-ML* 
-‚Ì‚à‚Ì‚Í•W€‚ÌŽóM“®ì‚ð‚µ‚ÄA‚»‚Ì‘¼‚Ìƒ[ƒ‹‚É‚Í‘S‚Äíœ—p‚Éƒ}[ƒN‚ð•t‚¯‚é
-‚Æ‚¢‚¤ƒtƒBƒ‹ƒ^‚É‚È‚è‚Ü‚·B
-
-
-“¯‚¶ƒAƒJƒEƒ“ƒgÝ’è‚ð•¡”ì¬‚µƒtƒBƒ‹ƒ^Ý’è‚¾‚¯‚ð•Ï‚¦‚Ä“Á’è‚Ìƒ[ƒ‹‚¾‚¯‚ðŽóM‚·
-‚é‚Æ‚¢‚Á‚½Žg‚¢•û‚à‚Å‚«‚Ü‚·B
-
-
-¡ ƒAƒhƒŒƒX’ 
-
-ƒAƒhƒŒƒX’ ‚ÍŠÈ’P‚È‚à‚Ì‚ð•t‚¯‚Ä‚¢‚Ü‚·BŒÂlî•ñ‚ðŠÇ—‚·‚é‚æ‚¤‚È‚à‚Ì‚Å‚Í‚È‚­Aƒ[
-ƒ‹ƒAƒhƒŒƒX‚Ì‚Ý‚ðŠÇ—‚Å‚«‚é’ö“x‚Ì‚à‚Ì‚Å‚·B
-
-Ý’è‚Å‚«‚é€–Ú‚ÍAƒ[ƒ‹ƒAƒhƒŒƒX‚ÆƒRƒƒ“ƒg‚Ì‚Ý‚Å‚·B
-ƒ[ƒ‹ƒAƒhƒŒƒX‚ÌŒ`Ž®‚ÍA
-	ƒ[ƒ‹ƒAƒhƒŒƒX
-	–¼‘O <ƒ[ƒ‹ƒAƒhƒŒƒX>
-	ƒ[ƒ‹ƒAƒhƒŒƒX (–¼‘O)
-‚Ì‚¢‚¸‚ê‚©‚ÅŽw’è‚µ‚Ä‚­‚¾‚³‚¢B
-
-ƒRƒƒ“ƒg‚Í256•¶ŽšˆÈ“à‚ÅŽ©—R‚ÉÝ’è‚Å‚«‚Ü‚·B
-
-
-ƒAƒhƒŒƒX’ ‚Éƒ[ƒ‹ƒAƒhƒŒƒX‚ð’Ç‰Á‚·‚é‚É‚Í’¼Ú‘‚«ž‚Þ‚Ì‚ÆŽóM‚µ‚½ƒ[ƒ‹‚©‚ç’Ç‰Á
-‚·‚é•û–@‚ª‚ ‚è‚Ü‚·B
-ŽóM‚µ‚½ƒ[ƒ‹‚ðŠJ‚¢‚ÄAƒ[ƒ‹•\Ž¦‰æ–Ê‚Ìƒƒjƒ…[‚©‚çuƒAƒhƒŒƒXî•ñv‚ð‘I‘ð‚·‚é
-‚Æ‚»‚Ìƒ[ƒ‹‚ªŽ‚Âƒ[ƒ‹ƒAƒhƒŒƒXˆê——‚ª•\Ž¦‚³‚êA‘I‘ð‚µ‚½ƒ[ƒ‹ƒAƒhƒŒƒX‚ªƒAƒhƒŒ
-ƒX’ ‚É’Ç‰Á‚³‚ê‚Ü‚·B
-
-
-ƒAƒhƒŒƒX’ Ý’è‰æ–Ê‚ÅA[ƒ[ƒ‹]‚Æ‚¢‚¤ƒ{ƒ^ƒ“‚ð‰Ÿ‚·‚ÆAƒŠƒXƒg‚Å‘I‘ð‚³‚ê‚Ä‚¢‚éƒ[
-ƒ‹ƒAƒhƒŒƒX‚Éƒ[ƒ‹‚ð‘‚­‚±‚Æ‚ª‚Å‚«‚Ü‚·B•¡”‘I‘ð‚·‚é‚±‚Æ‚à‰Â”\‚Å‚·B
-
-
-ƒAƒhƒŒƒX’ ‚Í Address.lst ‚Æ‚¢‚¤ƒtƒ@ƒCƒ‹–¼‚Å•Û‘¶‚³‚ê‚Ä‚¢‚Ü‚·B“à—e‚Íƒ[ƒ‹ƒAƒh
-ƒŒƒX‚ÆƒRƒƒ“ƒg‚ðTAB‹æØ‚è‚Å1Œ1s(ƒRƒƒ“ƒg‚ÍÈ—ª‰Â)‚È‚Ì‚Åƒ[ƒ‹ƒAƒhƒŒƒX‚Ìˆê——
-‚È‚Ç‚ð Address.lst ‚É“\‚è•t‚¯‚Ä nPOP ‚ð‹N“®‚·‚é‚ÆŽ©“®“I‚ÉƒAƒhƒŒƒX’ ‚É’Ç‰Á‚³‚ê
-‚Ü‚·B
-
-
-¡ ƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±
-
-ƒIƒvƒVƒ‡ƒ“‚ÌuÚ‘±v‚Ìƒ^ƒu‚Åƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌÝ’è‚ðs‚¤‚±‚Æ‚ªo—ˆ‚Ü‚·B
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒvÝ’è‚ÍA
-	E‘—ŽóMŽž‚ÉÚ‘±
-	E‘—ŽóMI—¹Žž‚ÉØ’f
-	EI—¹Žž‚ÉØ’f
-	E–¢Ú‘±Žž‚ÍŽ©“®ƒ`ƒFƒbƒN‚ðs‚í‚È‚¢
-	Eƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±‚ðØ‚è‘Ö‚¦‚é‚Ü‚Å‚Ì‘Ò‚¿ŽžŠÔ
-‚ª‚ ‚è‚Ü‚·B
-
-Ø’f‚ÌƒIƒvƒVƒ‡ƒ“‚ÍnPOP‚©‚ç‚ÌÚ‘±‚Å‚Í‚È‚¢ê‡‚Í‹@”\‚µ‚Ü‚¹‚ñB
-inPOP‚ªÚ‘±‚ðs‚¤‘O‚ÉŠù‚ÉÚ‘±‚ðs‚Á‚Ä‚¢‚½ê‡‚È‚Çj
-
-u–¢Ú‘±Žž‚ÍŽ©“®ƒ`ƒFƒbƒN‚ðs‚í‚È‚¢v‚Íƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ðŽw’è‚µ‚Ä‚¢‚éƒAƒJƒEƒ“ƒg‚Ì
-‚Ý‚É—LŒø‚ÅLANÚ‘±‚ðŽw’è‚µ‚Ä‚¢‚éƒAƒJƒEƒ“ƒg‚ÍŽ©“®ƒ`ƒFƒbƒN‚ðs‚¢‚Ü‚·B
-
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌÚ‘±æ‚ÌÝ’è‚ÍƒAƒJƒEƒ“ƒg–ˆ‚ÉÝ’è‚ðs‚¢‚Ü‚·BƒAƒJƒEƒ“ƒg‚ÌÝ’è‚Ì
-uÚ‘±v‚Ìƒ^ƒu‚Ås‚¢‚Ü‚·B
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒvÝ’è‚ÍÚ‘±æ–ˆ‚Éƒ†[ƒU–¼‚ÆƒpƒXƒ[ƒh‚ð•Û‘¶‚·‚é‚Ì‚ÅAƒ†[ƒU–¼‚Æƒp
-ƒXƒ[ƒh‚ð“ü—Í‚·‚é‘O‚ÉÚ‘±æ‚ð‘I‘ð‚µ‚Ä‚¨‚¢‚Ä‚­‚¾‚³‚¢B
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ðŽw’è‚µ‚ÄÚ‘±æ‚ðŽw’è‚µ‚È‚¢ê‡‚Íƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌƒIƒvƒVƒ‡ƒ“‚Ì‚Ý
-—LŒø‚É‚È‚è‚Ü‚·B(–¢Ú‘±Žž‚ÍŽ©“®ƒ`ƒFƒbƒN‚ðs‚í‚È‚¢ ‚È‚Ç)
-
-LANÚ‘±‚ðŽw’è‚µ‚Ä‚¢‚éê‡‚ÍA‚»‚ÌƒAƒJƒEƒ“ƒg‚Å‘—ŽóM‚ðs‚¤‚Æ‚«‚Éƒ_ƒCƒ„ƒ‹ƒAƒbƒv
-‚ðŽg—p‚µ‚Ü‚¹‚ñB
-ƒƒjƒ…[‚Ìuƒtƒ@ƒCƒ‹v->uƒ_ƒCƒ„ƒ‹ƒAƒbƒvv‚ÌuLANÚ‘±’†v‚ð‘I‘ð‚·‚é‚Æƒ_ƒCƒ„ƒ‹
-ƒAƒbƒv‚ÌÝ’è‚ª‚ ‚Á‚Ä‚àƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ðs‚í‚È‚¢‚æ‚¤‚É‚È‚è‚Ü‚·BˆêŽž“I‚É‘S‚Ä‚ÌƒA
-ƒJƒEƒ“ƒg‚ðLANÚ‘±‚ÌÝ’è‚É‚µ‚½‚¢ê‡‚ÉŽg—p‚µ‚Ä‚­‚¾‚³‚¢B
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ðŽw’è‚µ‚Ä‚¢‚éê‡‚Í‚»‚ÌƒAƒJƒEƒ“ƒg‚Å‘—ŽóM‚ðs‚¤‚Æ‚«‚ÉÚ‘±Ý’è‚Å
-Žw’è‚µ‚½Ú‘±æ‚ÉÚ‘±‚ðs‚¢‚Ü‚·B
-Žè“®‚Åƒƒjƒ…[‚©‚çuƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±v‚ð‘I‘ð‚µ‚½ê‡‚Í•\Ž¦‚µ‚Ä‚¢‚éƒAƒJƒEƒ“ƒg
-‚ÌÚ‘±Ý’è‚Åƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±‚ðŠJŽn‚µ‚Ü‚·B
-
-uŠù‚ÉÚ‘±’†‚Ìê‡‚ÍÚ‘±‚µ’¼‚·v‚Éƒ`ƒFƒbƒN‚ª‚ ‚éê‡‚Í nPOP ‚ÅÚ‘±’†‚Å‚»‚ÌƒAƒJ
-ƒEƒ“ƒg‚ÌÚ‘±Ý’è‚Æˆá‚¤Ý’è‚Ìê‡‚Éˆê“xØ’f‚µ‚ÄÚ‘±‚µ’¼‚µ‚Ü‚·BnPOP ‚©‚çˆÈŠO‚Ì
-Ú‘±‚Ìê‡‚Í‚±‚ÌƒIƒvƒVƒ‡ƒ“‚ÍŒø‰Ê‚ª–³‚¢‚Å‚·B
-Ú‘±‚µ’¼‚·‚Æ‚«‚ÍØ’fŒã‚Éƒ_ƒCƒ„ƒ‹ƒAƒbƒvÝ’è‚Ìuƒ_ƒCƒ„ƒ‹ƒAƒbƒvÚ‘±‚ðØ‚è‘Ö‚¦‚é‚Ü
-‚Å‚Ì‘Ò‚¿ŽžŠÔv‚ÅŽw’è‚µ‚½•b‚¾‚¯‘Ò‚Á‚Ä‚©‚çÚ‘±‚ðŠJŽn‚µ‚Ü‚·B
-i‘Ò‚¿ŽžŠÔ‚ð’Z‚­‚·‚é‚Æƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ðŽ¸”s‚·‚é‰Â”\«‚ª‚ ‚è‚Ü‚·j
-
-Ú‘±Ý’è‚ÍÚ‘±æAƒ†[ƒU–¼AƒpƒXƒ[ƒh‚ðÝ’è‚µ‚Ä‚¢‚È‚¢‚ÆƒGƒ‰[‚É‚È‚è‚Ü‚·B
-¦ ƒpƒXƒ[ƒh‚ðÈ—ª‚·‚é‚±‚Æ‚Í‚Å‚«‚Ü‚¹‚ñB
-
-ƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌŠJŽnAisó‹µ‚Íƒ[ƒ‹ˆê——‰æ–Ê‚ÌƒXƒe[ƒ^ƒXƒo[‚É•\Ž¦‚³‚ê‚Ü‚·B
-
-
-¡ ŒŸõ
-
-ŽóM‚µ‚½ƒ[ƒ‹‚Ì–{•¶’†‚âƒAƒJƒEƒ“ƒg“à‚Ì‘S‚Ä‚Ìƒ[ƒ‹‚©‚ç“Á’è‚Ì•¶Žš—ñ‚ð–{•¶‚ÉŠÜ‚Þ
-ƒ[ƒ‹‚ðŒŸõ‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-
-ƒ[ƒ‹•\Ž¦‰æ–Ê‚Ì•ÒWƒƒjƒ…[‚ÌuŒŸõv‚ð‘I‘ð‚·‚é‚ÆŒŸõ‚ÌðŒ‚ðÝ’è‚Å‚«‚Ü‚·B
-ŒŸõ•¶Žš—ñ‚É‚ÍŒŸõ‚µ‚½‚¢•¶Žš—ñ‚ð“ü—Í‚µ‚Ä‚­‚¾‚³‚¢BƒƒCƒ‹ƒhƒJ[ƒh(*)‚È‚Ç‚ÍŽg‚¦
-‚Ü‚¹‚ñB
-‘å•¶Žš‚Æ¬•¶Žš‚ð‹æ•Ê‚·‚é‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚Æ‘å•¶Žš‚Æ¬•¶Žš‚ð‹æ•Ê‚µ‚ÄŒŸõ‚ðs‚¢
-‚Ü‚·B
-‘S‚Ä‚Ìƒ[ƒ‹‚©‚çŒŸõ‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆŒ»Ý•\Ž¦‚³‚ê‚Ä‚¢‚éƒAƒJƒEƒ“ƒg‚Ì‘S‚Ä‚Ìƒ[
-ƒ‹‚ªŒŸõ‘ÎÛ‚É‚È‚è‚Ü‚·Bƒ`ƒFƒbƒN‚ð“ü‚ê‚Ä‚È‚¢ê‡‚ÍŒ»Ý•\Ž¦‚³‚ê‚Ä‚¢‚éƒ[ƒ‹‚Ì–{
-•¶‚Ì‚Ý‚©‚çŒŸõ‚µ‚Ü‚·B
-Œ–¼‚àŒŸõ‚·‚é‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆŒ–¼‚àŒŸõ‘ÎÛ‚É‚È‚è‚Ü‚·BŒŸõ‚ðs‚Á‚½‚Æ‚«‚É
-ŒŸõ‚³‚ê‚½•¶Žš—ñ‚ª‘I‘ðó‘Ô‚É‚È‚Á‚Ä‚¢‚È‚¢ê‡‚ÍŒ–¼‚ªƒ}ƒbƒ`‚µ‚½ê‡‚Å‚·B
-–{•¶‚ªŽæ“¾‚³‚ê‚Ä‚¢‚È‚¢ƒ[ƒ‹‚ÍŒ–¼‚àŒŸõ‘ÎÛ‚É‚È‚ç‚È‚¢‚Ì‚Å’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢B
-
-ŒŸõ•¶Žš—ñ‚ªŒ©‚Â‚©‚Á‚½ê‡‚Í‚»‚Ì•¶Žš—ñ‚ª‘I‘ðó‘Ô‚É‚È‚è‚Ü‚·BF3ƒL[‚ð‰Ÿ‚·‚©ƒ
-ƒjƒ…[‚©‚çuŽŸ‚ðŒŸõv‚ð‘I‘ð‚·‚é‚±‚Æ‚ÅŒŸõðŒ‚ð•Ï‚¦‚¸‚ÉŽŸ‚Ì•¶Žš—ñ‚ðŒŸõ‚µ‚Ü‚·B
-i•¶Žš—ñ‚ª‘I‘ðó‘Ô‚É‚È‚ç‚È‚¢ê‡‚ÍŒ–¼‚ÉŒŸõ•¶Žš—ñ‚ªŒ©‚Â‚©‚Á‚½‚Æ‚¢‚¤‚±‚Æ‚Å‚·j
-
-‘S‚Ä‚Ìƒ[ƒ‹‚ðŒŸõ‚·‚é‚Æ‚«‚Í ESCƒL[‚ÅŒŸõ‚ðƒLƒƒƒ“ƒZƒ‹‚Å‚«‚Ü‚·B
-
-ƒ[ƒ‹ˆê——‚Ì‰æ–Ê‚©‚ç Ctrl+F ‚â F3 ‚ð‰Ÿ‚·‚ÆŽ©“®“I‚Éƒ[ƒ‹‚Ì“à—e‚ª•\Ž¦‚³‚êŒŸõ‚Ì
-“®ì‚ðs‚¢‚Ü‚·B
-
-
-¡ ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
-
-nPOP‚ÉƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ðÝ’è‚µ‚Ä‹N“®‚Å‚«‚Ü‚·B
-“n‚¹‚éƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Íƒ[ƒ‹ƒAƒhƒŒƒX‚©URL(mailto:)‚Å‚·BURL(mailto:)‚Ìê‡‚Íƒwƒb
-ƒ_‚É“WŠJ‚³‚ê‚Ü‚·B
-
-—á)
-mailto:hoge@hoge.hoge?Subject=test&Body=‚±‚ñ‚É‚¿‚Í
-
-ã‹L‚Íˆ¶æ‚É hoge@hoge.hoge ‚ªÝ’è‚³‚ê‚ÄAŒ–¼‚É test ‚ªÝ’è‚³‚ê‚ÄA–{•¶‚Éu‚±
-‚ñ‚É‚¿‚Ív‚ªÝ’è‚³‚ê‚Ü‚·B
-
-Ý’è‰Â”\‚È€–Ú‚ÍA
-	To - ˆ¶æ
-	Cc - Cc
-	Bcc - Bcc
-	ReplyTo - •ÔMæ
-	Subject - Œ–¼
-	Body - –{•¶
-
-	(ˆÈ‰º‚ÍnPOPŒÅ—L)
-	MailBox - ‘—MƒAƒJƒEƒ“ƒg–¼
-	Attach - “Y•tƒtƒ@ƒCƒ‹ ("`"‚È‚Ç‚ÌƒNƒH[ƒg•s‰Â)
-‚Å‚·B
-
-Cc‚â“Y•tƒtƒ@ƒCƒ‹‚È‚Ç•¡”€–ÚŽw’è‚·‚éê‡‚Í ,(ƒJƒ“ƒ}) ‚Å‹æØ‚Á‚Ä‚­‚¾‚³‚¢B
-
-—á1)
-mailto:?Cc=aaa@aaa,bbb@bbb,ccc@ccc
-—á2)
-mailto:?Attach=C:\hoge.txt,C:\My%20Documents\aaa,C:\My Documents\bbb
-
-
-‹N“®Žž‚É•\Ž¦‚·‚éƒAƒJƒEƒ“ƒg‚ðƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ÅŽw’è‚·‚é‚±‚Æ‚à‰Â”\‚Å‚·B
-
-nPOP.exe /a:ƒAƒJƒEƒ“ƒg–¼
-
-‚Æ‚â‚é‚±‚Æ‚ÅŽw’è‚³‚ê‚½ƒAƒJƒEƒ“ƒg‚ð‰Šú•\Ž¦‚µ‚Ü‚·B
-Šù‚ÉnPOP‚ª‹N“®Ï‚Ìê‡‚Í‹N“®’†‚ÌnPOP‚ÅƒAƒJƒEƒ“ƒg•\Ž¦‚ðØ‚è‘Ö‚¦‚Ü‚·B
-ŠÔ‚É‹ó”’‚ª‚ ‚éê‡‚ÍA
-
-nPOP.exe /a:"ƒAƒJƒEƒ“ƒg –¼"
-
-‚Æ"`"‚ÅŠ‡‚Á‚ÄŽw’è‚µ‚Ü‚·B
-ƒ[ƒ‹ƒAƒhƒŒƒX‚Æ“¯Žž‚É“n‚·ê‡‚ÍA /a: ‚Ì•û‚ðæ‚ÉŽw’è‚µ‚Ä‚­‚¾‚³‚¢B
-
-nPOP.exe /a:ƒAƒJƒEƒ“ƒg–¼ hoge@hoge.hoge
-nPOP.exe /a:ƒAƒJƒEƒ“ƒg–¼ mailto:hoge@hoge.hoge
-
-
-¡ ŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“
-
-Windows 95,98,CE‚Å‚Í32KˆÈã‚Ìƒ[ƒ‹‚ð•\Ž¦‚Å‚«‚Ü‚¹‚ñ‚ªAŠO•”ƒrƒ…[ƒA‚ðŽg‚¤‚±‚Æ
-‚Å‘S‚Ä•\Ž¦‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·BŠO•”ƒrƒ…[ƒA‚Íƒ[ƒ‹•\Ž¦‰æ–Ê‚Ì•ÒWƒƒjƒ…[‚ÉuŠO
-•”ƒrƒ…[ƒAv‚Æ‚¢‚¤€–Ú‚ð‘I‘ð‚·‚é‚±‚Æ‚Å‹N“®‚Å‚«‚Ü‚·B‚Ü‚½ˆê——‚ÅShiftƒL[‚ð‰Ÿ‚µ
-‚È‚ª‚çƒ[ƒ‹‚ðŠJ‚­‚ÆŠO•”ƒrƒ…[ƒA‚ÅŠJ‚«‚Ü‚·B
-ŠO•”ƒrƒ…[ƒA‚Í .txt ‚ÉŠÖ˜A•t‚¯‚ç‚ê‚½ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ª‹N“®‚µ‚Ü‚·‚ª iniƒtƒ@ƒCƒ‹
-‚Å‹N“®‚·‚éƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ðŽw’è‚·‚é‚±‚Æ‚à‰Â”\‚Å‚·B
-
-	[GENERAL]
-	   `
-	ViewApp=		ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒpƒX
-	ViewAppClose=0		ƒ[ƒ‹•\Ž¦‚©‚çŠJ‚­‚Æ‚«ƒ[ƒ‹•\Ž¦‚ð•Â‚¶‚éê‡‚Í1
-	DefViewApp=0		ŠJ‚­‚ÅŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ð‹N“®‚·‚é‚æ‚¤‚É‚·‚é
-
-DefViewApp ‚ð 1 ‚É‚·‚é‚Æˆê——‚Åƒ_ƒuƒ‹ƒNƒŠƒbƒN‚µ‚½ê‡‚ÉŠO•”ƒrƒ…[ƒA‚ª‹N“®‚·‚é‚æ
-‚¤‚É‚È‚è‚Ü‚·B‚±‚ÌÝ’è‚Ì‚Æ‚«‚ÉshiftƒL[‚ð‰Ÿ‚µ‚ÄŠJ‚­‚ÆnPOP‚Ì“à•”ƒrƒ…[ƒA‚Å•\Ž¦
-‚µ‚Ü‚·B
-
-•ÒW‚àã‹L‚Æ“¯—l‚ÉŠO•”ƒGƒfƒBƒ^‚ðŽg—p‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-ŠO•”ƒGƒfƒBƒ^‚Í .txt ‚ÉŠÖ˜A•t‚¯‚ç‚ê‚½ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ª‹N“®‚µ‚Ü‚·‚ª iniƒtƒ@ƒCƒ‹
-‚Å‹N“®‚·‚éƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ðŽw’è‚·‚é‚±‚Æ‚à‰Â”\‚Å‚·B
-
-	[GENERAL]
-	   `
-	EditApp=		ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒpƒX
-	DefEditApp=0		ŠJ‚­‚ÅŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ð‹N“®‚·‚é‚æ‚¤‚É‚·‚é
-
-DefEditApp ‚ð 1 ‚É‚·‚é‚Æˆê——‚Åƒ_ƒuƒ‹ƒNƒŠƒbƒN‚µ‚½ê‡‚ÉŠO•”ƒGƒfƒBƒ^‚ª‹N“®‚·‚é‚æ
-‚¤‚É‚È‚è‚Ü‚·B‚±‚ÌÝ’è‚Ì‚Æ‚«‚ÉshiftƒL[‚ð‰Ÿ‚µ‚ÄŠJ‚­‚ÆnPOP‚Ì“à•”ƒGƒfƒBƒ^‚Å•\Ž¦
-‚µ‚Ü‚·B
-ŠO•”ƒGƒfƒBƒ^‚ÌI—¹‚ðŠÄŽ‹‚µ‚Ä–{‘Ì‚Ì“à—e‚É”½‰f‚³‚¹‚Ä‚¢‚é‚½‚ßAŠO•”ƒGƒfƒBƒ^‚Í•¡”
-‹N“®‚Å‚«‚éŒ`Ž®‚ÌƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ðŽw’è‚µ‚Ä‚­‚¾‚³‚¢B
-
-ŠO•”ƒrƒ…[ƒA‚ÆŠO•”ƒGƒfƒBƒ^‚ÉƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ð“n‚·‚±‚Æ‚à‚Å‚«‚Ü‚·B
-
-	[GENERAL]
-	   `
-	ViewAppCmdLine=		ŠO•”ƒrƒ…[ƒA‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
-	EditAppCmdLine=		ŠO•”ƒGƒfƒBƒ^‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“
-
-ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Í %1 ‚Å“n‚·ƒtƒ@ƒCƒ‹–¼(ƒpƒX‚ðŠÜ‚Þ)‚É‚È‚è‚Ü‚·B—á‚¦‚ÎA
-"ƒtƒ@ƒCƒ‹–¼" ‚Æ‚¢‚¤Š´‚¶‚Åƒtƒ@ƒCƒ‹–¼‚ð "`" ‚ÅŠ‡‚è‚½‚¢ê‡‚ÍA
-	ViewAppCmdLine=""%1""
-‚ÆŽw’è‚µ‚Ü‚·B‘¼‚ÉƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ð’Ç‰Á‚µ‚½‚¢ê‡‚ÍA
-	ViewAppCmdLine="/abc "%1""
-‚ÆŽw’è‚µ‚Ü‚·B
-
-ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚ðŽw’è‚µ‚È‚¢ê‡‚Í %1 ‚Ì‚ÝŽw’è‚µ‚½‚Ì‚Æ“¯‚¶“®ì‚ð‚µ‚Ü‚·B
-
-
-¡ ‚»‚Ì‘¼
-
-Win32 ‚â H/PC ‚Å‚ÍAƒ[ƒ‹•\Ž¦ƒEƒBƒ“ƒhƒE‚Å Space ‚ÅPageDown‚ð‚µ‚È‚ª‚ç–¢ŠJ••
-ƒ[ƒ‹‚ð•\Ž¦‚µ‚Ä‚¢‚­‚±‚Æ‚ª‚Å‚«‚Ü‚·B‘¼‚ÉAlt+ª«‚Åƒ[ƒ‹‚ÌˆÚ“®‚È‚Ç‚à‚Å‚«‚Ü‚·B
-(ˆê——‰æ–Ê‚Å‚ÍƒAƒJƒEƒ“ƒg‚ÌˆÚ“®)
-
-ƒ[ƒ‹•\Ž¦‰æ–Ê‚Åu‰E’[‚ÅÜ‚è•Ô‚·v‚æ‚¤‚É‚µ‚Ä‚¢‚é‚Æ\ŽšƒL[‚Ì‰E‚Å Space ‚Ì“®ì
-(PageDown‚ð‚µ‚È‚ª‚ç–¢ŠJ••ƒ[ƒ‹‚ð•\Ž¦)‚ð‚µ‚ÄA¶‚Å Shift + Space ‚Ì“®ì(PageUp)
-‚ðs‚¢‚Ü‚·BPocket PC‚âPalm-size PC‚Å\ŽšƒL[‚Ì‚Ý‚Å–¢“Çƒ[ƒ‹‚ð“Ç‚Ýi‚ß‚é‚±‚Æ
-‚ª‚Å‚«‚Ü‚·B
-
-ƒAƒhƒŒƒX’ ‚Ì€–Ú‚âƒtƒBƒ‹ƒ^€–Ú‚ðˆÚ“®‚·‚éê‡‚ÉAlt+U‚ÅãAAlt+D‚Å‰º‚ÉˆÚ“®‚·‚é‚±
-‚Æ‚ª‚Å‚«‚Ü‚·B
-
-
-V’…ƒ[ƒ‹‚ª‚ ‚é‚Æ‚«‚É–Â‚ç‚·WAVƒtƒ@ƒCƒ‹‚Íiniƒtƒ@ƒCƒ‹‚ÅÝ’è‚Å‚«‚Ü‚·B
-	[GENERAL]
-	NewMailSoundFile=
-‚ÉWaveƒtƒ@ƒCƒ‹–¼‚ðŽw’è‚µ‚Ü‚·BŽw’è‚ª‚È‚¢ê‡‚ÍƒfƒtƒHƒ‹ƒg‚Ì‰¹‚ª–Â‚è‚Ü‚·B
-Win32”Å‚ÍƒIƒvƒVƒ‡ƒ“‰æ–Ê‚ÅÝ’è‚Å‚«‚Ü‚·B
-
-•Û‘¶” A‘—M” AƒAƒhƒŒƒX’ AƒAƒJƒEƒ“ƒg–ˆ‚Ìƒtƒ@ƒCƒ‹‚Ì•Û‘¶æ‚ÍAEXEƒtƒ@ƒCƒ‹‚Æ“¯
-‚¶êŠ‚É‚È‚Á‚Ä‚¢‚Ü‚·‚ªA•Û‘¶æ‚ð‘¼‚ÌêŠ‚ÉŽw’è‚µ‚½‚¢ê‡‚ÍAiniƒtƒ@ƒCƒ‹‚ÅÝ’è
-‚Å‚«‚Ü‚·B
-	[GENERAL]
-	DataFileDir=
-‚ÉŠù‘¶‚ÌƒtƒHƒ‹ƒ_‚ÌƒpƒX‚ðŽw’è‚µ‚Ü‚·BiWin32‚Ìê‡‚ÍEXEƒtƒ@ƒCƒ‹‚©‚ç‚Ì‘Š‘ÎƒpƒX‚Å
-‚à‚¢‚¢‚Å‚·j
-Žw’è‚µ‚½ƒtƒHƒ‹ƒ_‚É‚ ‚ç‚©‚¶‚ßƒtƒ@ƒCƒ‹‚ðƒRƒs[‚µ‚Ä‚¨‚©‚È‚¢‚Æ‹ó‚Ìƒtƒ@ƒCƒ‹‚ðì¬‚µ
-‚Ä‚µ‚Ü‚¢‚Ü‚·BŒã‚Åã‘‚«ƒRƒs[‚Å‚à\‚¢‚Ü‚¹‚ñ‚ªAƒvƒƒOƒ‰ƒ€‚ðI—¹‚µ‚Ä‚©‚çƒRƒs[
-‚µ‚Ä‚­‚¾‚³‚¢B
-¦ Windows CE 2.0ˆÈ‰º‚Ìê‡‚ÍA\My Documents\ ‚ª•W€‚Ì•Û‘¶æ‚É‚È‚Á‚Ä‚¢‚Ü‚·B
-
-
-Win32”Å‚Å‚Í‹N“®Žž‚âƒEƒBƒ“ƒhƒE•\Ž¦Žž‚ÉƒpƒXƒ[ƒh‚ð—v‹‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
-Ý’è‚ÍƒIƒvƒVƒ‡ƒ“‚Ìu‚»‚Ì‘¼v‚ÌuƒpƒXƒ[ƒhÝ’èv‚Ås‚¢‚Ü‚·B
-u‹N“®Žž‚ÉƒpƒXƒ[ƒh‚ð—v‹v‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆnPOP‚Ì‹N“®Žž‚ÉÝ’è‚³‚ê‚Ä‚¢‚éƒp
-ƒXƒ[ƒh‚ð“ü—Í‚µ‚È‚¢‚Æ‹N“®‚Å‚«‚È‚¢‚æ‚¤‚É‚È‚è‚Ü‚·B
-uƒEƒBƒ“ƒhƒE•\Ž¦Žž‚ÉƒpƒXƒ[ƒh‚ð—v‹v‚Éƒ`ƒFƒbƒN‚ð“ü‚ê‚é‚ÆƒEƒBƒ“ƒhƒE‚ªƒAƒCƒRƒ“
-‰»‚µ‚Ä‚¢‚½‚èƒ^ƒXƒNƒgƒŒƒC‚ÉŠi”[‚³‚ê‚Ä‚¢‚éó‘Ô‚©‚çƒEƒBƒ“ƒhƒE‚ð•\Ž¦‚·‚é‚Æ‚«‚ÉÝ’è
-‚³‚ê‚Ä‚¢‚éƒpƒXƒ[ƒh‚ð“ü—Í‚µ‚È‚¢‚Æ•\Ž¦‚Å‚«‚È‚¢‚æ‚¤‚É‚È‚è‚Ü‚·B
-ã‹L‚Ì‚Q‚Â‚ÌÝ’è‚ÌƒpƒXƒ[ƒh‚Íˆê”Ô‰º‚É‚ ‚éƒpƒXƒ[ƒh‚Ì“ü—Íˆæ‚ÅÝ’è‚µ‚Ü‚·B
-
-ƒpƒXƒ[ƒh‚ð–Y‚ê‚Ä‚µ‚Ü‚Á‚½ê‡‚Í‹N“®‚Å‚«‚È‚­‚È‚é‚Ì‚Å’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢B
-
-
-ƒAƒhƒŒƒX’ A•Û‘¶” A‘—M” ‚Í•ÏX‚ª‚ ‚é‚½‚Ñ‚Éƒtƒ@ƒCƒ‹‚É”½‰f‚³‚¹‚Ä‚¢‚Ü‚·B‚µ‚½‚ª‚Á
-‚Äƒtƒƒbƒs[‚Å“®ì‚³‚¹‚éê‡‚È‚Ç•p”É‚Éƒtƒƒbƒs[‚ÉƒAƒNƒZƒX‚·‚é‚±‚Æ‚É‚È‚è‚Ü‚·B
-‚»‚ê‚ð‰ñ”ð‚·‚é‚É‚Í iniƒtƒ@ƒCƒ‹‚Ì [GENERAL] ‚Ì AutoSave ‚ð 0 ‚É‚·‚é‚ÆI—¹Žž‚Ì‚Ý
-•Û‘¶‚·‚é‚æ‚¤‚É‚È‚è‚Ü‚·B
-‚µ‚©‚µ‚È‚ñ‚ç‚©‚Ìƒgƒ‰ƒuƒ‹‚È‚Ç‚ÅnPOP‚ª‹­§I—¹‚µ‚½ê‡‚È‚Çî•ñ‚ðŽ¸‚¤ê‡‚ª‚ ‚é‚Ì
-‚Å’ˆÓ‚µ‚Ä‚­‚¾‚³‚¢B
-
-
-‚»‚Ì‘¼ƒIƒvƒVƒ‡ƒ“‰æ–Ê‚ÅÝ’è‚Å‚«‚È‚¢€–Ú‚ðiniƒtƒ@ƒCƒ‹‚ÅÝ’è‚Å‚«‚Ü‚·BÚ×‚ÍA
-npop_ini.txt ‚ðŽQÆ‚µ‚Ä‚­‚¾‚³‚¢B
-
-
-ˆÈ‰º‚ÍŽd—l‚Å‚·B
-	ELIST ‚Íˆê‹C‚ÉŽó‚¯Žæ‚é‚Ì‚Å‚Í‚È‚­ˆê’Ê‚¸‚ÂŽæ“¾‚µ‚Ä‚¢‚Ü‚·B
-	EŽóM‚µ‚½ƒ[ƒ‹‚Ìƒwƒbƒ_‚Ì‚Ù‚Æ‚ñ‚Ç‚ÍŽÌ‚Ä‚Ä‚¢‚Ü‚·B
-	  (References: ‚ÍÅŒã‚Ìˆê‚Â‚Ì‚Ý‚ð•Û‘¶)
-	EWindows 95,98,CE‚Å‚Íƒ[ƒ‹•\Ž¦A•ÒW‚Æ‚à‚É32K‚Ü‚Å‚µ‚©ˆµ‚¦‚Ü‚¹‚ñB
-	  ŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ð—˜—p‚·‚é‚Æ32KˆÈãˆµ‚¦‚Ü‚·B
-	EÅŒã‚Ìƒ[ƒ‹‚ðƒT[ƒo‚©‚çíœ‚·‚é‚ÆAŽŸ‰ñƒ`ƒFƒbƒNŽž‚Éíœ‚µ‚½ƒ[ƒ‹‚Ì
-	  ‘O‚É•\Ž¦‚³‚ê‚Ä‚¢‚éƒ[ƒ‹‚©‚çŽóM‚ðs‚¤‚½‚ßAˆê——‚©‚çíœ‚µ‚½(ƒT[ƒo
-	  ‚É‚ÍŽc‚Á‚Ä‚¢‚é)ƒ[ƒ‹‚ªÄ‚Ñ•\Ž¦‚³‚ê‚é‚±‚Æ‚ª‚ ‚è‚Ü‚·B
-	EˆÈ‰º‚Ì——R‚É‚æ‚èƒ[ƒ‹‚Ì“]‘—‹@”\‚Í‚ ‚è‚Ü‚¹‚ñB
-		Eƒwƒbƒ_‚Ì‚Ù‚Æ‚ñ‚Ç‚ðŽÌ‚Ä‚Ä‚¢‚éB
-		E–{•¶‚ðŠ®‘S‚ÉŽóM‚µ‚Ä‚¢‚È‚¢ê‡‚ª‚ ‚éB
-		E“Y•tƒtƒ@ƒCƒ‹‚àˆê‚É‘—M‚·‚é‚Ì‚ª‘å•ÏB
-	  •ÔM‚ÌŒ–¼‚Æ–{•¶‚ðC³‚µ‚Ä“]‘—‚Ì‚æ‚¤‚ÉŽg‚¤‚±‚Æ‚Í‚Å‚«‚Ü‚·B
-	Eƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌØ’f‚ÉŠÖ‚·‚éƒIƒvƒVƒ‡ƒ“‚ÍnPOP‚ªƒ_ƒCƒ„ƒ‹ƒAƒbƒv‚ÌÚ‘±‚ð
-	  s‚Á‚½ê‡‚Ì‚Ý—LŒø‚Å‚·B
-
-
-¡ XV—š—ð
-
-EVer 1.0.1 -> Ver 1.0.2
-	EŽóMƒ[ƒ‹‚Ì“r’†‚Éƒkƒ‹•¶Žš('\0')‚ªŠÜ‚Ü‚ê‚é‚ÆŽóMˆ—‚ªi‚Ü‚È‚­‚È‚é‚Ì
-	  ‚ðC³‚µ‚½B
-	EƒAƒhƒŒƒX’ ‚ÌƒŠƒXƒgƒrƒ…[‚ÌƒJƒ‰ƒ€•‚ð‹L‰¯‚·‚é‚æ‚¤‚É‚µ‚½B
-	EƒEƒBƒ“ƒhƒE•\Ž¦Žž‚ÌƒpƒXƒ[ƒh”FØ‚ªŒø‚©‚È‚¢ê‡‚ª‚ ‚Á‚½‚Ì‚ðC³‚µ‚½B
-
-EVer 1.0.0 -> Ver 1.0.1
-	EWindowsXP SP1‚ÅƒNƒŠƒbƒJƒuƒ‹URL‚ª‹@”\‚µ‚Ä‚¢‚È‚©‚Á‚½‚Ì‚ðC³‚µ‚½B
-	Einiƒtƒ@ƒCƒ‹‚Åu‘—MŽž‚ÉŽ©•ªˆ¶‚ÉƒRƒs[‚ð‘—Mv‚Ìˆ¶æ‚ðÝ’è‚Å‚«‚é‚æ‚¤
-	  ‚É‚µ‚½ (ƒAƒJƒEƒ“ƒg–ˆ‚ÌBccAddr)
-	E‘—‚ç‚ê‚Ä‚«‚½ƒ[ƒ‹‚Ìƒ^ƒCƒ€ƒ][ƒ“‚ª GMT ‚É‚È‚Á‚Ä‚¢‚éê‡‚ÉŽžŠÔ•ÏŠ·‚ª
-	  s‚í‚ê‚È‚¢‚Ì‚ðC³‚µ‚½B
-	E•\Ž¦ƒpƒXƒ[ƒh‚ðƒLƒƒƒ“ƒZƒ‹‚·‚é‚Æ‹­§I—¹‚·‚éê‡‚ª‚ ‚Á‚½‚Ì‚ðC³‚µ‚½B
-	E•s³ƒƒ‚ƒŠ‚ðŽQÆ‚·‚é‰Â”\«‚ª‚ ‚éŒÂŠ‚ðC³‚µ‚½B
-
-EVer 0.9.9 -> Ver 1.0.0
-	EƒGƒ“ƒR[ƒhAƒfƒR[ƒhˆ—‚ð”÷’²®‚µ‚½B
-
-EVer 0.9.8 -> Ver 0.9.9
-	E‘—M” ‚Ì“úŽžŒ`Ž®‚ðiniƒtƒ@ƒCƒ‹‚ÅÝ’è‚³‚ê‚½ƒtƒH[ƒ}ƒbƒg‚É•ÏŠ·‚·‚é‚æ‚¤
-	  ‚É‚µ‚½B
-	  ‚½‚¾‚µV‚µ‚­ì¬‚µ‚½ƒ[ƒ‹‚©‚ç—LŒø‚Å‰ß‹Ž‚Ì‘—Mƒ[ƒ‹‚ÌŒ`Ž®‚Í•Ï‚í‚ç
-	  ‚È‚¢B
-	EISO-2022-KR ‚ÌƒGƒ“ƒR[ƒhAƒfƒR[ƒhˆ—‚ð‰Á‚¦‚½B
-
-EVer 0.9.7 -> Ver 0.9.8
-	EƒRƒ}ƒ“ƒhƒ‰ƒCƒ“•t‚«‚Å•¡”‹N“®‚µ‚½ê‡‚ÍÅ‰‚Ì‚P‚Â‚Ì‚Ý‚ðˆ—‚·‚é‚æ‚¤
-	  ‚É‚µ‚½B
-	EƒEƒBƒ“ƒhƒE•\Ž¦‚ÅƒpƒXƒ[ƒh‚ð—v‹‚·‚éÝ’è‚É‚µ‚Ä‚¢‚é‚Æ‚«AƒƒbƒZ[ƒW
-	  ‚Ìì¬‚Å‚àƒpƒXƒ[ƒh‚ð—v‹‚·‚é‚æ‚¤‚É‚µ‚½B
-	ESMTP”FØ‚Ì”FØ•ûŽ®‚ðÝ’è‚Å‚«‚é‚æ‚¤‚É‚µ‚½ (SmtpAuthType)
-	Eƒ[ƒ‹ƒ{ƒbƒNƒX‚ª‹ó‚Ìê‡‚ÉƒSƒ~ƒ[ƒ‹‚ª‚Å‚«‚Ä‚µ‚Ü‚¤‚Ì‚ðC³‚µ‚½B
-
-EVer 0.9.6 -> Ver 0.9.7
-	EƒtƒBƒ‹ƒ^‚ÅuŽóM‚·‚év‚Í‘¼‚Ì“®ì‚ð–³Œø‚É‚È‚é‚æ‚¤‚É‚µ‚½B
-	  ‚±‚ê‚É‚æ‚èŠJ••Ï‚Ý‚É‚·‚é‚È‚Ç‚Ì“®ì‚Å“Á’è‚ÌðŒ‚Ìƒ[ƒ‹‚ðœŠO‚·‚éŽ–
-	  ‚ª‰Â”\‚É‚È‚éB
-
-EVer 0.9.5 -> Ver 0.9.6
-	Eƒ[ƒ‹ˆê——‚Ì•Û‘¶ˆ—‚ð•ÏX‚µ‚½B
-	Einiƒtƒ@ƒCƒ‹‚Åƒ^ƒCƒ€ƒAƒEƒg‚ÌŽžŠÔ‚ðÝ’è‚Å‚«‚é‚æ‚¤‚É‚µ‚½B
-
-EVer 0.9.4 -> Ver 0.9.5
-	E‹N“®Žž‚ÌƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Å‰Šú•\Ž¦‚·‚éƒAƒJƒEƒ“ƒg‚ðŽw’è‚Å‚«‚é‚æ‚¤‚É‚µ
-	  ‚½B(/a:)
-	EƒAƒJƒEƒ“ƒgÝ’èŽž‚ÌŽ©“®•Û‘¶‚Ì‘ÎÛ€–Ú‚ð•ÏX‚µ‚½B
-	El'agenda”Å‚Ì2d‹N“®‚Ìˆ—‚ð‰ü‘P‚µ‚½B
-	Eƒ[ƒ‹•\Ž¦‰æ–Ê‚Ìƒƒjƒ…[‚Éu“Y•tíœv‚Ì€–Ú‚ð’Ç‰Á‚µ‚½B
-	ESMTP”FØ‚ª³í‚É‹@”\‚µ‚Ä‚¢‚È‚©‚Á‚½‚Ì‚ðC³‚µ‚½B
-
-EVer 0.9.3 -> Ver 0.9.4
-	EWindowsXP‚ÅƒNƒŠƒbƒJƒuƒ‹URL‚ª‹@”\‚µ‚Ä‚¢‚È‚©‚Á‚½‚Ì‚ðC³‚µ‚½B
-	EWin32”Å‚ÅƒEƒBƒ“ƒhƒE‚ðƒAƒNƒeƒBƒu‚É‚·‚éˆ—‚ð‰ü‘P‚µ‚½B
-	Eƒ[ƒ‹ƒAƒhƒŒƒX‚Ì’Šoˆ—‚ð‰ü‘P‚µ‚½B
-	Einiƒtƒ@ƒCƒ‹‚É‹N“®Žž‚É”ñ•\Ž¦‚É‚·‚éƒIƒvƒVƒ‡ƒ“‚ð‰Á‚¦‚½B
-	Einiƒtƒ@ƒCƒ‹‚Ì AutoSave ‚ª 0 ‚Ìê‡‚ÍÝ’èŒã‚ÌŽ©“®•Û‘¶‚ðs‚í‚È‚¢‚æ‚¤‚É
-	  ‚µ‚½B
-	Einiƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚ÝA•Û‘¶ˆ—‚ð‰ü‘P‚µ‚½B
-
-EVer 0.9.2 -> Ver 0.9.3
-	EƒIƒvƒVƒ‡ƒ“‚Ì‘—M‚Éu'Date'‚ð‘—Mv‚ð‰Á‚¦‚½B
-	EƒIƒvƒVƒ‡ƒ“‚âƒAƒJƒEƒ“ƒg‚ÌÝ’è‚ð‚µ‚½Œã‚ÉÝ’è‚ð•Û‘¶‚·‚é‚æ‚¤‚É‚µ‚½B
-	EPocket PC”Å‚ÌListView‚Ì“®ì‚ð‰ü‘P‚µ‚½B
-	EURL‚ðˆ—‚·‚éƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ðiniƒtƒ@ƒCƒ‹‚ÅÝ’è‚µ‚Ä‚à—LŒø‚É‚È‚ç‚È‚¢
-	  ‚Ì‚ðC³‚µ‚½B
-
-EVer 0.9.1 -> Ver 0.9.2
-	EƒT[ƒo‚©‚ç—˜—p‰Â”\‚ÈSMTP”FØ‚ÌŽí—Þ‚ª•¡”s‚Å•Ô‚³‚ê‚½ê‡‚ÉÅŒã‚Ì•ûŽ®
-	  ‚ª—LŒø‚É‚È‚Á‚Ä‚¢‚½‚Ì‚ðCRAM-MD5ALOGINAPLAIN‚Ì‡‚É‘I‘ð‚·‚é‚æ‚¤‚ÉC³
-	  ‚µ‚½B
-	Eƒ[ƒ‹•\Ž¦Žž‚É•s³ƒƒ‚ƒŠ‚ðŽQÆ‚·‚éê‡‚ª‚ ‚Á‚½‚Ì‚ðC³‚µ‚½B
-	E‚»‚Ì‘¼ƒoƒOƒtƒBƒbƒNƒX
-
+### UTF-8 (UNICODE) [Windows CE: Non supportato]
+HeadCharset="UTF-8"
+HeadEncoding=2
+BodyCharset="UTF-8"
+BodyEncoding=2
 
 --
 
-Special thanks:
+Ringraziamenti Speciali:
   Manabu & Naomi Anzai
   Chris De Herrera
   Marlof Bregonje
@@ -869,36 +109,7 @@ Special thanks:
 
 --
 
-/* Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
-rights reserved.
-
-License to copy and use this software is granted provided that it
-is identified as the "RSA Data Security, Inc. MD5 Message-Digest
-Algorithm" in all material mentioning or referencing this software
-or this function.
-
-License is also granted to make and use derivative works provided
-that such works are identified as "derived from the RSA Data
-Security, Inc. MD5 Message-Digest Algorithm" in all material
-mentioning or referencing the derived work.
-
-RSA Data Security, Inc. makes no representations concerning either
-the merchantability of this software or the suitability of this
-software for any particular purpose. It is provided "as is"
-without express or implied warranty of any kind.
-
-These notices must be retained in any copies of any part of this
-documentation and/or software.
- */
-
---
-
-‚±‚ÌƒvƒƒOƒ‰ƒ€‚É‚æ‚Á‚Ä‹N‚«‚½‚¢‚©‚È‚éáŠQ‚àìŽÒ‚ÍÓ”C‚ðŽ‚¿‚Ü‚¹‚ñB
-‘åØ‚Èƒtƒ@ƒCƒ‹‚ÍƒoƒbƒNƒAƒbƒv‚ð‚Æ‚Á‚Ä‚¨‚­‚±‚Æ‚ð‹­‚­‘E‚ß‚Ü‚·B
-
-ƒoƒOA—v–]AŽ¿–â‚Í nakka@nakka.com ‚Ü‚Å‚¨Šè‚¢‚µ‚Ü‚·B
-
 Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-2005/02/11
+02/11/2005

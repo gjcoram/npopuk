@@ -26,7 +26,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Menu
+// Menubar
 //
 
 IDR_MENU_WINDOW MENU DISCARDABLE 
@@ -74,7 +74,7 @@ BEGIN
             MENUITEM "新着ﾁｪｯｸ",                    ID_MENUITEM_RECV
             MENUITEM "巡回ﾁｪｯｸ",                    ID_MENUITEM_ALLCHECK
             MENUITEM SEPARATOR
-            MENUITEM "ﾏｰｸしたものを実行",           ID_MENUITEM_EXEC
+            MENUITEM "ﾏｰｸを実行",                   ID_MENUITEM_EXEC
             MENUITEM "巡回実行",                    ID_MENUITEM_ALLEXEC
             MENUITEM SEPARATOR
             MENUITEM "中止",                        ID_MENUITEM_STOP
@@ -132,6 +132,9 @@ BEGIN
         MENUITEM "全員に返信...",               ID_MENUITEM_ALLREMESSEGE
         MENUITEM "ｱﾄﾞﾚｽ情報...",                ID_MENUITEM_PROP
         MENUITEM SEPARATOR
+        MENUITEM "受信用にﾏｰｸ",                 ID_MENUITEM_DOWNMARK
+        MENUITEM "削除用にﾏｰｸ",                 ID_MENUITEM_DELMARK
+        MENUITEM SEPARATOR
         MENUITEM "名前を付けて保存...",         ID_MENUITEM_SAVE
         MENUITEM "外部ﾋﾞｭｰｱ",                   ID_MENUITEM_VIEW
         MENUITEM SEPARATOR
@@ -158,6 +161,7 @@ BEGIN
         MENUITEM "送信箱に保存",                ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "送信情報...",                 ID_MENUITEM_SENDINFO
+        MENUITEM "添付ﾌｧｲﾙ...",                 ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "閉じる",                      ID_MENUITEM_CLOSE
     END
@@ -226,10 +230,15 @@ BEGIN
     EDITTEXT        IDC_EDIT_USER,44,43,81,13,ES_AUTOHSCROLL
     LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC,5,61,30,10
     EDITTEXT        IDC_EDIT_PASS,44,57,81,13,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "APOP を使って認証",IDC_CHECK_APOP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,72,90,10
+    CONTROL         "APOP",IDC_CHECK_APOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,74,45,10
+    CONTROL         "SSL",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,65,74,25,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETSSL,100,72,25,13
     CONTROL         "巡回ﾁｪｯｸ対象外",IDC_CHECK_CYCLIC,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,83,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,85,90,10
+    CONTROL         "'RETR' を使わない",IDC_CHECK_NORETR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,96,70,10
 END
 
 IDD_DIALOG_OPTION_RECV DIALOG DISCARDABLE  0, 0, 129, 135
@@ -250,19 +259,6 @@ BEGIN
     CONTROL         "保存しない",IDC_RADIO_NOSAVE,"Button",
                     BS_AUTORADIOBUTTON,10,72,105,10
     GROUPBOX        "ﾒｰﾙ一覧の保存",IDC_STATIC,5,40,120,44
-END
-
-IDD_DIALOG_INPUTPASS DIALOG DISCARDABLE  0, 0, 135, 73
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "nPOP"
-FONT 9, "ＭＳ Ｐゴシック"
-BEGIN
-    LTEXT           "ﾊﾟｽﾜｰﾄﾞ:",IDC_STATIC_TITLE,5,5,125,10
-    EDITTEXT        IDC_EDIT_PASS,5,20,124,15,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "ﾊﾟｽﾜｰﾄﾞを一時的に記憶",IDC_CHECK_TMPPASS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,40,105,10
-    DEFPUSHBUTTON   "OK",IDOK,15,54,50,14
-    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,70,54,50,14
 END
 
 IDD_DIALOG_SETSEND DIALOG DISCARDABLE  0, 0, 135, 101
@@ -300,12 +296,15 @@ BEGIN
     LTEXT           "ﾎﾟｰﾄ:",IDC_STATIC,5,47,30,10
     EDITTEXT        IDC_EDIT_PORT,44,43,32,13,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "SMTP認証",IDC_CHECK_SMTPAUTH,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,59,47,10
-    PUSHBUTTON      "設定",IDC_BUTTON_SETAUTH,62,58,24,12
+                    WS_TABSTOP,5,65,45,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETAUTH,50,63,24,13
+    CONTROL         "SSL",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,80,65,25,10
+    PUSHBUTTON      "設定",IDC_BUTTON_SETSSL,105,63,25,13
     CONTROL         "POP before SMTP",IDC_CHECK_POPBEFORESMTP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,70,70,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,77,75,10
     CONTROL         "送信時に自分宛てにｺﾋﾟｰを送信",IDC_CHECK_MYADDR2BCC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,81,120,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,89,120,10
 END
 
 IDD_DIALOG_MAKE DIALOG DISCARDABLE  0, 0, 133, 137
@@ -382,7 +381,7 @@ BEGIN
     PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,85,50,14
 END
 
-IDC_CHECK_CHECKAFTERUPDATE DIALOG DISCARDABLE  0, 0, 129, 135
+IDD_DIALOG_OPTION_CHECK DIALOG DISCARDABLE  0, 0, 129, 135
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ﾁｪｯｸ"
 FONT 9, "ＭＳ Ｐゴシック"
@@ -627,6 +626,38 @@ BEGIN
     PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,85,50,14
 END
 
+IDD_DIALOG_ATTACH_NOTICE DIALOG DISCARDABLE  0, 0, 135, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "添付ﾌｧｲﾙ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    RTEXT           "差出人:",IDC_STATIC,0,5,30,10
+    LTEXT           "",IDC_STATIC_FROM,30,5,104,15
+    RTEXT           "種類:",IDC_STATIC,0,25,30,10
+    LTEXT           "",IDC_STATIC_TYPE,30,25,104,15
+    RTEXT           "ﾌｧｲﾙ名:",IDC_STATIC,0,45,30,10
+    LTEXT           "",IDC_STATIC_FILENAME,30,45,104,25
+    CONTROL         "開く",IDC_RADIO_OPEN,"Button",BS_AUTORADIOBUTTON,15,80,
+                    85,10
+    CONTROL         "名前を付けて保存する",IDC_RADIO_SAVE,"Button",
+                    BS_AUTORADIOBUTTON,15,95,85,10
+    DEFPUSHBUTTON   "OK",IDOK,15,110,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,70,110,50,14
+END
+
+IDD_DIALOG_SETSSL DIALOG DISCARDABLE  0, 0, 134, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SSL設定"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_COMBO_SSLTYPE,10,10,105,75,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "サーバ証明書を検証する (verify)",IDC_CHECK_VERIFY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,29,115,10
+    DEFPUSHBUTTON   "OK",IDOK,25,111,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,80,111,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -647,14 +678,6 @@ BEGIN
     BEGIN
         LEFTMARGIN, 7
         TOPMARGIN, 7
-    END
-
-    IDD_DIALOG_INPUTPASS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 128
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 66
     END
 
     IDD_DIALOG_SETSEND, DIALOG
@@ -705,7 +728,7 @@ BEGIN
         TOPMARGIN, 7
     END
 
-    IDC_CHECK_CHECKAFTERUPDATE, DIALOG
+    IDD_DIALOG_OPTION_CHECK, DIALOG
     BEGIN
         LEFTMARGIN, 7
         TOPMARGIN, 7
@@ -798,6 +821,21 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 54
     END
+
+    IDD_DIALOG_ATTACH_NOTICE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_DIALOG_SETSSL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 123
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -809,17 +847,17 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_MAIN           ICON    DISCARDABLE     "ico00005.ico"
-IDI_ICON_DEL            ICON    DISCARDABLE     "ico00002.ico"
-IDI_ICON_DOWN           ICON    DISCARDABLE     "ico00003.ico"
-IDI_ICON_NEW            ICON    DISCARDABLE     "icon_new.ico"
-IDI_ICON_NON            ICON    DISCARDABLE     "ico00006.ico"
-IDI_ICON_SENDMAIL       ICON    DISCARDABLE     "icon_sen.ico"
-IDI_ICON_SEND           ICON    DISCARDABLE     "ico00008.ico"
-IDI_ICON_NOCHECK        ICON    DISCARDABLE     "ico00011.ico"
-IDI_ICON_CHECK          ICON    DISCARDABLE     "icon_che.ico"
-IDI_ICON_CLIP           ICON    DISCARDABLE     "icon_cli.ico"
-IDI_ICON_READ           ICON    DISCARDABLE     "icon_rea.ico"
+IDI_ICON_MAIN           ICON    DISCARDABLE     "..\\res\\ico00005.ico"
+IDI_ICON_DEL            ICON    DISCARDABLE     "..\\res\\ico00002.ico"
+IDI_ICON_DOWN           ICON    DISCARDABLE     "..\\res\\ico00003.ico"
+IDI_ICON_NEW            ICON    DISCARDABLE     "..\\res\\icon_new.ico"
+IDI_ICON_NON            ICON    DISCARDABLE     "..\\res\\ico00006.ico"
+IDI_ICON_SENDMAIL       ICON    DISCARDABLE     "..\\res\\icon_sen.ico"
+IDI_ICON_SEND           ICON    DISCARDABLE     "..\\res\\ico00008.ico"
+IDI_ICON_NOCHECK        ICON    DISCARDABLE     "..\\res\\ico00011.ico"
+IDI_ICON_CHECK          ICON    DISCARDABLE     "..\\res\\icon_che.ico"
+IDI_ICON_CLIP           ICON    DISCARDABLE     "..\\res\\icon_cli.ico"
+IDI_ICON_READ           ICON    DISCARDABLE     "..\\res\\icon_rea.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -889,6 +927,7 @@ IDR_ACCELERATOR_VIEW ACCELERATORS DISCARDABLE
 BEGIN
     "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
     "C",            ID_MENUITEM_COPY,       VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
     "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_PROP,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
@@ -897,7 +936,7 @@ BEGIN
     "S",            ID_MENUITEM_SAVE,       VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_MENUITEM_PREVMAIL,   VIRTKEY, NOINVERT
     VK_DELETE,      WM_NOMSG,               VIRTKEY, NOINVERT
-    VK_DELETE,      WM_NOMSG,               VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
     VK_DOWN,        ID_KEY_DOWN,            VIRTKEY, NOINVERT
     VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, CONTROL, NOINVERT
     VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, ALT, NOINVERT

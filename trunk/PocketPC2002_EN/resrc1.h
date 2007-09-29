@@ -14,6 +14,7 @@
 #define IDM_SHOW_VIEW                   102
 #define IDI_ICON_MAIN                   103
 #define IDM_SHOW_MIX                    103
+#define IDD_DIALOG_SELECTFILE           104
 #define IDR_ACCELERATOR                 105
 #define IDI_ICON_DOWN                   107
 #define IDI_ICON_DEL                    108
@@ -56,6 +57,8 @@
 #define IDD_DIALOG_FIND                 174
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
+#define IDD_DIALOG_ATTACH_NOTICE        181
+#define IDD_DIALOG_SETSSL               182
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
 #define IDM_MAIN_EDIT                   452
@@ -70,11 +73,14 @@
 #define IDC_EDIT_READLINE               1009
 #define IDC_CHECK_CYCLIC                1009
 #define IDC_RADIO_NOSAVE                1010
+#define IDC_CHECK_NORETR                1010
 #define IDC_RADIO_HEADSAVE              1011
+#define IDC_CHECK_SSL                   1011
 #define IDC_RADIO_ALLSAVE               1012
 #define IDC_EDIT_TO                     1012
 #define IDC_COMBO_SMTP                  1013
 #define IDC_EDIT_SIG                    1014
+#define IDC_COMBO_PATH                  1014
 #define IDC_CHECK_SHOWHEAD              1015
 #define IDC_EDIT_QUOTCHAR               1016
 #define IDC_CHECK_LISTDOWNLOAD          1016
@@ -153,9 +159,17 @@
 #define IDC_CHECK_SUBJECT               1083
 #define IDC_CHECK_POP                   1083
 #define IDC_BUTTON_SETAUTH              1084
+#define IDC_BUTTON_SETSSL               1085
 #define IDC_CHECK_TMPPASS               1086
 #define IDC_STATIC_MAILCNT              1087
 #define IDC_STATIC_MAILSIZE             1088
+#define IDC_COMBO_SSLTYPE               1089
+#define IDC_CHECK_VERIFY                1090
+#define IDC_STATIC_FROM                 1091
+#define IDC_STATIC_TYPE                 1092
+#define IDC_STATIC_FILENAME             1093
+#define IDC_RADIO_OPEN                  1094
+#define IDC_RADIO_SAVE                  1095
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
@@ -242,14 +256,15 @@
 #define ID_MENUITEM_LAN                 40143
 #define IDS_MENUITEM40144               40145
 #define ID_MENUITEM_SELMODE             40146
+#define ID_MENUITEM_ATTACH              40147
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        181
-#define _APS_NEXT_COMMAND_VALUE         40147
+#define _APS_NEXT_RESOURCE_VALUE        183
+#define _APS_NEXT_COMMAND_VALUE         40148
 #define _APS_NEXT_CONTROL_VALUE         1089
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
