@@ -21,16 +21,19 @@ typedef struct _MULTIPART {
 	char *ContentType;
 	char *Filename;
 	char *Encoding;
+	char *hPos;
 	char *sPos;
 	char *ePos;
+	BOOL Forwardable;
 } MULTIPART;
 
 /* Function Prototypes */
 MULTIPART *multipart_add(MULTIPART ***tpMultiPart, int cnt);
 void multipart_free(MULTIPART ***tpMultiPart, int cnt);
 char *multipart_get_filename(char *buf, char *Attribute);
+int multipart_scan(char *ContentType, char *buf);
 int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int cnt);
-int multipart_create(TCHAR *Filename, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody);
+int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody);
 
 #endif
 /* End of source */

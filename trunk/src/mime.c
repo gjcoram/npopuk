@@ -113,6 +113,7 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 		sjis_iso2022jp(buf, ret);
 #endif
 	} else {
+#ifndef _WCE_OLD
 #ifdef UNICODE
 		ret = charset_encode(charset, buf, -1);
 #else
@@ -124,6 +125,11 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 		ret = charset_encode(wcharset, wbuf, -1);
 		mem_free(&wcharset);
 		mem_free(&wbuf);
+#endif
+#else
+		// not supported in WinCE2.00
+		// ought to pop a warning box, but don't have hWnd in this context
+		ret = NULL;
 #endif
 	}
 	return ret;
@@ -156,6 +162,7 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 		iso2022jp_sjis(buf, ret);
 #endif
 	} else {
+#ifndef _WCE_OLD
 #ifdef UNICODE
 		ret = charset_decode(charset, buf, -1);
 #else
@@ -167,6 +174,11 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 		mem_free(&wcharset);
 		ret = alloc_wchar_to_char(cp, wret);
 		mem_free(&wret);
+#endif
+#else
+		// not supported in WinCE2.00
+		// ought to pop a warning box, but don't have hWnd in this context
+		return NULL;
 #endif
 	}
 	return ret;
@@ -1062,14 +1074,18 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 		MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
 
 		// charsetの変換
+#ifndef _WCE_OLD
 		cret = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, charset_t);
 		if (cret == NULL) {
+#endif
 #ifdef UNICODE
 			cret = alloc_tchar_to_char(buf);
 #else
 			cret = alloc_copy_t(buf);
 #endif
+#ifndef _WCE_OLD
 		}
+#endif
 		switch (encoding) {
 		case ENC_TYPE_7BIT:
 		case ENC_TYPE_8BIT:
@@ -1163,11 +1179,13 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		for (p = charset; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++);
 		*p = TEXT('\0');
 
+#ifndef _WCE_OLD
 		ret = MIME_charset_decode(charset_to_cp((BYTE)font_charset), buf, charset);
 		if (ret != NULL) {
 			mem_free(&charset);
 			return ret;
 		}
+#endif
 		mem_free(&charset);
 		break;
 	}
@@ -1235,7 +1253,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 /*
  * MIME_body_decode - 本文のデコード (RFC 822, RFC 2822, RFC 2045)
  */
-TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt)
+TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt, int *TextIndex)
 {
 #ifdef UNICODE
 	char *ContentType;
@@ -1247,10 +1265,10 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 	char *enc_ret = NULL;
 	int encode = 0;
 	int i;
-	int TextIndex = -1;
+	*TextIndex = -1;
 
 	*cnt = 0;
-	if (tpMailItem->Multipart == TRUE && ViewSrc == FALSE) {
+	if (tpMailItem->Multipart != MULTIPART_NONE && ViewSrc == FALSE) {
 		// マルチパートを解析する
 #ifdef UNICODE
 		ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
@@ -1271,7 +1289,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		if (ViewSrc == TRUE || (**tpPart)->ContentType == NULL ||
 			str_cmp_ni((**tpPart)->ContentType, "text", tstrlen("text")) == 0) {
 			// テキスト
-			TextIndex = 0;
+			*TextIndex = 0;
 		} else {
 			// ファイル名の取得
 #ifdef UNICODE
@@ -1288,21 +1306,21 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		for (i = 0; i < *cnt; i++) {
 			if ((*(*tpPart + i))->ContentType == NULL ||
 				str_cmp_ni((*(*tpPart + i))->ContentType, "text", tstrlen("text")) == 0) {
-				TextIndex = i;
+				*TextIndex = i;
 				break;
 			}
 		}
 	}
 
-	if (*cnt > 0 && TextIndex != -1) {
+	if (*cnt > 0 && *TextIndex != -1) {
 		// 本文の取得
-		if ((*(*tpPart + TextIndex))->ePos == NULL) {
-			body = alloc_copy((*(*tpPart + TextIndex))->sPos);
+		if ((*(*tpPart + *TextIndex))->ePos == NULL) {
+			body = alloc_copy((*(*tpPart + *TextIndex))->sPos);
 			if (body == NULL) {
 				return NULL;
 			}
 		} else {
-			i = (*(*tpPart + TextIndex))->ePos - (*(*tpPart + TextIndex))->sPos;
+			i = (*(*tpPart + *TextIndex))->ePos - (*(*tpPart + *TextIndex))->sPos;
 			body = (char *)mem_alloc(sizeof(char) * (i + 1));
 			if (body == NULL) {
 				return NULL;
@@ -1310,15 +1328,15 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 			if (i == 0) {
 				*body = '\0';
 			} else {
-				str_cpy_n(body, (*(*tpPart + TextIndex))->sPos, i - 1);
+				str_cpy_n(body, (*(*tpPart + *TextIndex))->sPos, i - 1);
 			}
 		}
 
 		// デコード
-		if ((*(*tpPart + TextIndex))->Encoding != NULL) {
-			if (str_cmp_i((*(*tpPart + TextIndex))->Encoding, ENCODE_BASE64) == 0) {
+		if ((*(*tpPart + *TextIndex))->Encoding != NULL) {
+			if (str_cmp_i((*(*tpPart + *TextIndex))->Encoding, ENCODE_BASE64) == 0) {
 				encode = ENC_TYPE_BASE64;
-			} else if (str_cmp_i((*(*tpPart + TextIndex))->Encoding, ENCODE_Q_PRINT) == 0) {
+			} else if (str_cmp_i((*(*tpPart + *TextIndex))->Encoding, ENCODE_Q_PRINT) == 0) {
 				encode = ENC_TYPE_Q_PRINT;
 			}
 		}
@@ -1332,7 +1350,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		}
 
 		// キャラクタセットの変換
-		wenc_ret = MIME_body_decode_charset(body, (*(*tpPart + TextIndex))->ContentType);
+		wenc_ret = MIME_body_decode_charset(body, (*(*tpPart + *TextIndex))->ContentType);
 		if (wenc_ret == NULL) {
 #ifdef UNICODE
 			wenc_ret = alloc_char_to_tchar(body);

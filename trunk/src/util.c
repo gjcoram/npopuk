@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -29,13 +32,8 @@
 #define MAILADDR_END		3
 #define COMMENT_END			4
 
-#define DEF_TIME_ZONE		900
-
 #define NULLCHECK_STRLEN(m)	((m != NULL) ? lstrlen(m) : 0)
-#define is_alnum_wrap(c)		((c >= TEXT('a') && c <= TEXT('z')) || \
-								(c >= TEXT('A') && c <= TEXT('Z')) || \
-								c == TEXT('\'') || \
-								(c >= TEXT('0') && c <= TEXT('9')))
+#define is_white(c)	(c == TEXT(' ') || c == TEXT('\r') || c == TEXT('\t') || c == TEXT('\0'))
 
 /* Global Variables */
 extern OPTION op;
@@ -443,11 +441,10 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
 	int f = 1;
 
 	if (sTime == NULL || tmz == -1) {
-		// タイムゾーンの取得
-		tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-		tmz = tmz * 60 / 100;
-
-		if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
+		if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+			tmz = _ttoi(op.TimeZone);
+			tmz = (tmz / 100) * 60 + tmz - (tmz / 100) * 100;
+		} else {
 			ret = GetTimeZoneInformation(&tmzi);
 			if (ret != 0xFFFFFFFF) {
 				switch (ret) {
@@ -662,7 +659,7 @@ static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 /*
  * DateConv - 日付形式の変換を行う (RFC 822, RFC 2822)
  */
-int DateConv(char *buf, char *ret)
+int DateConv(char *buf, char *ret, BOOL for_sort)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -689,15 +686,26 @@ int DateConv(char *buf, char *ret)
 		return -1;
 	}
 
-	fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
-	if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
-	}
-	fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
-	if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
+	if (for_sort) {
+		if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+	} else {
+		fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
+		if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
+		if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
 	}
 
 #ifdef UNICODE
@@ -710,9 +718,9 @@ int DateConv(char *buf, char *ret)
 }
 
 /*
- * SortDateConv - ソート用の日付形式変換を行う
+ * DateUnConv - ソート用の日付形式変換を行う
  */
-int SortDateConv(char *buf, char *ret)
+int DateUnConv(char *buf, char *ret)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -820,12 +828,15 @@ int SortDateConv(char *buf, char *ret)
 		tstrcpy(ret, buf);
 		return -1;
 	}
+	if (gTime.wYear < 70) {
+		gTime.wYear += 2000;
+	}
 
-	if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+	if (GetDateFormat(0, 0, &gTime, TEXT("ddd, dd MMM yyyy "), fDay, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
-	if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+	if (GetTimeFormat(0, 0, &gTime, TEXT("HH:mm:ss"), fTime, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
@@ -861,14 +872,15 @@ void GetTimeString(TCHAR *buf)
 
 	GetLocalTime(&st);
 
-	tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-	if (tmz < 0) {
-		tmz *= -1;
-		c = TEXT('-');
+	if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+		tmz = _ttoi(op.TimeZone);
+		if (tmz < 0) {
+			tmz *= -1;
+			c = TEXT('-');
+		} else {
+			c = TEXT('+');
+		}
 	} else {
-		c = TEXT('+');
-	}
-	if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
 		ret = GetTimeZoneInformation(&tmzi);
 		if (ret != 0xFFFFFFFF) {
 			switch (ret) {
@@ -890,7 +902,7 @@ void GetTimeString(TCHAR *buf)
 			}
 			tmz = (tmzi.Bias / 60) * 100 + tmzi.Bias % 60;
 		}
-	}
+	} 
 	wsprintf(buf, TEXT("%s, %d %s %d %02d:%02d:%02d %c%04d"), Week[st.wDayOfWeek],
 		st.wDay, Month[st.wMonth - 1], st.wYear, st.wHour, st.wMinute, st.wSecond, c, tmz);
 }
@@ -1145,10 +1157,11 @@ TCHAR *CreateMessageId(long id, TCHAR *MailAddress)
 /*
  * CreateHeaderStringSize - ヘッダ文字列を作成したときのサイズ
  */
-int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
+int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
 	TCHAR *p;
 	int ret = 0;
+	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
 
 	if (buf == NULL) {
 		return 0;
@@ -1161,6 +1174,10 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 			continue;
 		}
 #endif
+		if (quotlen > 0 && *p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+			p++;
+			ret += 2 + quotlen;
+		}
 		if (*p != TEXT('%')) {
 			ret++;
 			continue;
@@ -1172,11 +1189,17 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 			break;
 
 		case TEXT('I'): case TEXT('i'):
-			ret += NULLCHECK_STRLEN(tpMailItem->MessageID);
+			if (tpMailItem->MessageID != NULL && *tpMailItem->MessageID == TEXT('<')) {
+				ret += lstrlen(tpMailItem->MessageID);
+			}
 			break;
 
-		case TEXT('D'): case TEXT('d'):
+		case TEXT('D'):
 			ret += NULLCHECK_STRLEN(tpMailItem->Date);
+			break;
+		
+		case TEXT('d'):
+			ret += NULLCHECK_STRLEN(tpMailItem->FmtDate);
 			break;
 
 		case TEXT('S'): case TEXT('s'):
@@ -1209,9 +1232,11 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 /*
  * CreateHeaderString - ヘッダ文字列の作成
  */
-TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
+TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
 	TCHAR *p, *r, *t;
+	int i;
+	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
 
 	if (buf == NULL) {
 		return ret;
@@ -1224,6 +1249,14 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
 			continue;
 		}
 #endif
+		if (quotlen > 0 && *p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+			*(r++) = *(p++); 
+			*(r++) = *p;
+			for (i=0; i<quotlen; i++) {
+				*(r++) = quotstr[i];
+			}
+			continue;
+		}
 		if (*p != TEXT('%')) {
 			*(r++) = *p;
 			continue;
@@ -1243,8 +1276,11 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
 			break;
 
 		// Date:
-		case TEXT('D'): case TEXT('d'):
+		case TEXT('D'):
 			t = tpMailItem->Date;
+			break;
+		case TEXT('d'):
+			t = tpMailItem->FmtDate;
 			break;
 
 		// Subject:
@@ -1343,24 +1379,16 @@ TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr)
 
 /*
  * SetDotSize - ピリオドから始まる行の先頭にピリオドを付加するためのサイズの取得
- *	(行頭の "From:" は ">From:" に変換)
  */
 
 int SetDotSize(TCHAR *buf)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p;
 	int len = 0;
 
 	p = buf;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
-		len++;
-	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
-			len++;
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
 			len++;
 		}
 		len++;
@@ -1370,28 +1398,17 @@ int SetDotSize(TCHAR *buf)
 
 /*
  * SetDot - ピリオドから始まる行の先頭にピリオドを付加する
- *	(行頭の "From:" は ">From:" に変換)
  */
 
 void SetDot(TCHAR *buf, TCHAR *ret)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p, *r;
 
 	p = buf;
 	r = ret;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
-		*(r++) = TEXT('>');
-	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			*(r++) = TEXT('.');
-
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
-			*(r++) = *(p++);
-			*(r++) = *(p++);
-			*(r++) = TEXT('>');
 		}
 		*(r++) = *p;
 	}
@@ -1439,39 +1456,18 @@ static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag)
 	}
 }
 
-/*
- * sReturnCheck - 半角文字の禁則チェック
- */
-static void sReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag)
-{
-	TCHAR *t;
-
-	if (op.sOida != NULL) {
-		for (t = op.sOida; *t != TEXT('\0'); t++) {
-			if (*p == *t) {
-				*TopFlag = TRUE;
-				return;
-			}
-		}
-	}
-	if (op.sBura != NULL) {
-		for (t = op.sBura; *t != TEXT('\0'); t++) {
-			if (*p == *t) {
-				*EndFlag = TRUE;
-				return;
-			}
-		}
-	}
-}
 
 /*
  * WordBreakStringSize - 文字列を指定の長さで折り返したときのサイズ
+ *                        (line break algorithm modified by GJC)
  */
 int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 {
 	TCHAR *p, *s;
 	int cnt = 0;
 	int ret = 0;
+	int quotlen = (str == NULL) ? 0 : lstrlen(str);
+	BOOL Quoting = FALSE;
 	BOOL Flag = FALSE;
 	BOOL TopFlag;
 	BOOL EndFlag;
@@ -1482,8 +1478,9 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 
 	p = buf;
 
-	if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+	if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 		Flag = BreakFlag;
+		Quoting = TRUE;
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
@@ -1501,6 +1498,10 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 				((cnt + 2) == BreakCnt && TopFlag == TRUE))) {
 				cnt = 0;
 				ret += 2;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			cnt += 2;
 			p += CSTEP;
@@ -1510,10 +1511,12 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 			cnt = 0;
 			p += 2;
 			ret += 2;
-			if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
+				Quoting = TRUE;
 			} else {
 				Flag = FALSE;
+				Quoting = FALSE;
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -1521,44 +1524,38 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 			if (Flag == FALSE && cnt > BreakCnt) {
 				cnt = (TABSTOPLEN - (cnt % TABSTOPLEN));
 				ret += 2;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			p++;
 			ret++;
 
-		} else if (is_alnum_wrap(*p)) {
-			for (s = p; is_alnum_wrap(*p); p++) {
-				cnt++;
-			}
-			if (*p == TEXT(' ')) {
-				cnt++;
+		} else if (*p == TEXT(' ')) {
+			if (cnt == 0 || (Quoting == TRUE && cnt == quotlen)) {
+				// remove spaces at start of line
+				p++;
+			} else {
+				if (Flag == TRUE || cnt < BreakCnt) {
+					cnt++;
+					ret++;
+				}
 				p++;
 			}
+		} else {
+			for (s = p; !(is_white(*p)); p++) {
+				cnt++;
+			}
 			if (Flag == FALSE && cnt > BreakCnt) {
-				if (cnt != p - s) {
-					ret += 2;
-				}
+				ret += 2;
 				cnt = p - s;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			ret += p - s;
-
-		} else {
-			TopFlag = FALSE;
-			EndFlag = FALSE;
-			if (Flag == FALSE && (cnt + 1) >= BreakCnt) {
-				sReturnCheck(p, &TopFlag, &EndFlag);
-			}
-
-			if (Flag == FALSE && (((cnt + 1) > BreakCnt && EndFlag == FALSE) ||
-				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
-				cnt = 0;
-				ret += 2;
-				while (*p == TEXT(' ')) {
-					p++;
-				}
-			}
-			cnt++;
-			p++;
-			ret++;
 		}
 	}
 	return ret;
@@ -1566,11 +1563,14 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 
 /*
  * WordBreakString - 文字列を指定の長さで折り返す
+ *                   (line break algorithm modified by GJC)
  */
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 {
 	TCHAR *p, *r, *s;
-	int cnt = 0;
+	int i, cnt = 0;
+	int quotlen = (str == NULL) ? 0 : lstrlen(str);
+	BOOL Quoting = FALSE;
 	BOOL Flag = FALSE;
 	BOOL TopFlag;
 	BOOL EndFlag;
@@ -1583,8 +1583,9 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 	p = buf;
 	r = ret;
 
-	if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+	if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 		Flag = BreakFlag;
+		Quoting = TRUE;
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
@@ -1604,6 +1605,12 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 				cnt = 0;
 				*(r++) = TEXT('\r');
 				*(r++) = TEXT('\n');
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			cnt += 2;
 			*(r++) = *(p++);
@@ -1616,10 +1623,13 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 			cnt = 0;
 			*(r++) = *(p++);
 			*(r++) = *(p++);
-			if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+			cnt = 0;
+			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
+				Quoting = TRUE;
 			} else {
 				Flag = FALSE;
+				Quoting = FALSE;
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -1629,47 +1639,46 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 				cnt = (TABSTOPLEN - (cnt % TABSTOPLEN));
 				*(r++) = TEXT('\r');
 				*(r++) = TEXT('\n');
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			*(r++) = *(p++);
 
-		} else if (is_alnum_wrap(*p)) {
-			// 英数字は途中改行しない
-			for (s = p; is_alnum_wrap(*p); p++) {
-				cnt++;
-			}
-			if (*p == TEXT(' ')) {
-				cnt++;
+		} else if (*p == TEXT(' ')) {
+			if (cnt == 0 || (Quoting == TRUE && cnt == quotlen)) {
+				// remove spaces at start of line
 				p++;
+			} else {
+				if (Flag == TRUE || cnt < BreakCnt) {
+					*(r++) = *(p++);
+					cnt++;
+				} else {
+					p++;
+				}
+			}
+
+		} else {
+			for (s = p; !(is_white(*p)); p++) {
+				cnt++;
 			}
 			if (Flag == FALSE && cnt > BreakCnt) {
-				if (cnt != p - s) {
-					*(r++) = TEXT('\r');
-					*(r++) = TEXT('\n');
-				}
+				*(r++) = TEXT('\r');
+				*(r++) = TEXT('\n');
 				cnt = p - s;
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			for (; s != p; s++) {
 				*(r++) = *s;
 			}
-
-		} else {
-			TopFlag = FALSE;
-			EndFlag = FALSE;
-			if (Flag == FALSE && (cnt + 1) >= BreakCnt) {
-				sReturnCheck(p, &TopFlag, &EndFlag);
-			}
-
-			if (Flag == FALSE && (((cnt + 1) > BreakCnt && EndFlag == FALSE) ||
-				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
-				cnt = 0;
-				*(r++) = TEXT('\r');
-				*(r++) = TEXT('\n');
-				while (*p == TEXT(' ')) { // GJC strip leading spaces
-					p++;
-				}
-			}
-			cnt++;
-			*(r++) = *(p++);
 		}
 	}
 	*r = TEXT('\0');
@@ -2279,6 +2288,178 @@ TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag)
 		}
 	}
 	*r = TEXT('\0');
+	return ret;
+}
+
+/*
+ * strip_html_tags - convert text/html-only mail to something readable (GJC)
+ */
+#define LAST_NONWHITE 0
+#define LAST_NL       1
+#define LAST_WHITE    2
+TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
+{
+	TCHAR *p, *q, *ret, *s;
+	int len;
+	int last_char = LAST_NONWHITE;
+
+	len = lstrlen(buf) + lstrlen(STR_HTML_CONV) + 1;
+	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (ret == NULL) {
+		return NULL;
+	}
+	q = ret;
+	if (insert_notice == TRUE) {
+		wsprintf(q, TEXT("%s"), STR_HTML_CONV);
+		q += lstrlen(STR_HTML_CONV);
+	}
+
+	for (p = buf; *p != TEXT('\0'); ) {
+		if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+			// compress consecutive newlines
+			if (last_char == LAST_NL) {
+				p += 2;
+			} else if (last_char == LAST_WHITE) {
+				p += 2;
+				q = s; // rewind to start of whitespace
+				last_char = LAST_NL;
+			} else {
+				*(q++) = *(p++);
+				*(q++) = *(p++);
+				last_char = LAST_NL;
+			}
+			continue;
+		}
+		
+		if (*p == TEXT('<')) {
+			// strip <tags>
+			if (str_cmp_ni_t(p, TEXT("<a "), lstrlen(TEXT("<a "))) == 0) {
+				// <a style="link" href="http://www.nowhere.com"> -> [http://www.nowhere.com]
+				for (; *p != TEXT('\0') && *p != TEXT('>'); p++) {
+					if (str_cmp_ni_t(p, TEXT("href=\""), lstrlen(TEXT("href=\""))) == 0) {
+						p += lstrlen(TEXT("href=\""));
+						*(q++) = TEXT('[');
+						while (*p != TEXT('\0') && *p != TEXT('\"')) {
+							*(q++) = *(p++);
+						}
+						if (*p != TEXT('\0')) {
+							*(q++) = TEXT(']');
+							p++;
+						}
+						while (*p != TEXT('\0') && *p != TEXT('>')) {
+							p++;
+						}
+						break;
+					}
+				}
+				if (*p != TEXT('\0')) {
+					p++;
+				}
+				last_char = LAST_NONWHITE;
+			} else if (str_cmp_ni_t(p, TEXT("<br>"), lstrlen(TEXT("<br>"))) == 0) {
+				p += lstrlen(TEXT("<br>"));
+				if (last_char == LAST_NONWHITE) {
+					*(q++) = TEXT('\r');
+					*(q++) = TEXT('\n');
+				}
+				last_char = LAST_NL;
+			} else if (str_cmp_ni_t(p, TEXT("<p>"), lstrlen(TEXT("<p>"))) == 0) {
+				p += lstrlen(TEXT("<p>"));
+				*(q++) = TEXT('\r');
+				*(q++) = TEXT('\n');
+				last_char = LAST_NL;
+			} else if (str_cmp_ni_t(p, TEXT("<head>"), lstrlen(TEXT("<head>"))) == 0) {
+				p += lstrlen(TEXT("<head>"));
+				while (*p != TEXT('\0')) {
+					if (str_cmp_ni_t(p, TEXT("</head>"), lstrlen(TEXT("</head>"))) == 0) {
+						p += lstrlen(TEXT("</head>"));
+						break;
+					} else if (str_cmp_ni_t(p, TEXT("<body"), lstrlen(TEXT("<body"))) == 0) {
+						p += lstrlen(TEXT("<body"));
+						while (*p != TEXT('\0') && *p != TEXT('>')) {
+							p++;
+						}
+						if (*p == TEXT('>')) {
+							p++;
+						}
+						break;
+					} else {
+						p++;
+					}
+				}
+			} else if (str_cmp_ni_t(p, TEXT("<style>"), lstrlen(TEXT("<style>"))) == 0) {
+				p += lstrlen(TEXT("<style>"));
+				while (*p != TEXT('\0') && str_cmp_ni_t(p, TEXT("</style>"), lstrlen(TEXT("</style>"))) != 0) {
+					p++;
+				}
+				if (*p != TEXT('\0')) {
+					p += lstrlen(TEXT("</style>"));
+				}
+			} else if (str_cmp_ni_t(p, TEXT("<script>"), lstrlen(TEXT("<script>"))) == 0) {
+				p += lstrlen(TEXT("<script>"));
+				while (*p != TEXT('\0') && str_cmp_ni_t(p, TEXT("</script>"), lstrlen(TEXT("</script>"))) != 0) {
+					p++;
+				}
+				if (*p != TEXT('\0')) {
+					p += lstrlen(TEXT("</script>"));
+				}
+			} else {
+				int opens = 1;
+				p++;
+				while (*p != TEXT('\0') && opens > 0) {
+					if (*p == TEXT('>')) opens--;
+					if (*p == TEXT('<')) opens++;
+					p++;
+				}
+			}
+		
+		} else if (*p == TEXT('&')) {
+			last_char = LAST_NONWHITE;
+			// convert &-codes (see http://www.htmlgoodies.com/beyond/reference/article.php/3472611)
+			if (str_cmp_ni_t(p, TEXT("&amp;"), lstrlen(TEXT("&amp;"))) == 0) {
+				p += lstrlen(TEXT("&amp;"));
+				*(q++) = TEXT('&');
+			} else if (str_cmp_ni_t(p, TEXT("&lt;"), lstrlen(TEXT("&lt;"))) == 0) {
+				p += lstrlen(TEXT("&lt;"));
+				*(q++) = TEXT('<');
+			} else if (str_cmp_ni_t(p, TEXT("&gt;"), lstrlen(TEXT("&gt;"))) == 0) {
+				p += lstrlen(TEXT("&gt;"));
+				*(q++) = TEXT('>');
+			} else if (str_cmp_ni_t(p, TEXT("&nbsp;"), lstrlen(TEXT("&nbsp;"))) == 0) {
+				p += lstrlen(TEXT("&nbsp;"));
+				*(q++) = TEXT(' ');
+			} else if (str_cmp_ni_t(p, TEXT("&quot;"), lstrlen(TEXT("&quot;"))) == 0) {
+				p += lstrlen(TEXT("&quot;"));
+				*(q++) = TEXT('\"');
+			} else if (str_cmp_ni_t(p, TEXT("&rsquo;"), lstrlen(TEXT("&rsquo;"))) == 0) {
+				p += lstrlen(TEXT("&rsquo;"));
+				*(q++) = TEXT('\'');
+			} else if (str_cmp_ni_t(p, TEXT("&copy;"), lstrlen(TEXT("&copy;"))) == 0) {
+				p += lstrlen(TEXT("&copy;"));
+				*(q++) = TEXT('(');
+				*(q++) = TEXT('C');
+				*(q++) = TEXT(')');
+			} else if (str_cmp_ni_t(p, TEXT("&reg;"), lstrlen(TEXT("&reg;"))) == 0) {
+				p += lstrlen(TEXT("&reg;"));
+				*(q++) = TEXT('(');
+				*(q++) = TEXT('R');
+				*(q++) = TEXT(')');
+			} else {
+				*(q++) = *(p++);
+			}
+		} else {
+			if (*p == TEXT(' ') || *p == TEXT('\t')) {
+				if (last_char == LAST_NL) {
+					s = q;
+					last_char = LAST_WHITE;
+				}
+			} else {
+				last_char = LAST_NONWHITE;
+			}
+			*(q++) = *(p++);
+		}
+	}
+	*q = TEXT('\0');
 	return ret;
 }
 /* End of source */

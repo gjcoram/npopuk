@@ -40,6 +40,18 @@ static FARPROC ssl_recv;
 static FARPROC ssl_close;
 static FARPROC ssl_free;
 
+#ifdef _WIN32_WCE_PPC
+// bj: Use built-in device SSL on PPC
+#include <sslsock.h>
+
+// Dummy SSL Certificate checker - we're not interested if Server cert. is valid!
+int CALLBACK SSLValidateCertHook(DWORD dwType, LPVOID pvArg, DWORD dwChainLen, LPBLOB pCertChain, DWORD dwFlags)
+{ 
+    return SSL_ERR_OKAY; 
+} 
+#endif
+
+
 // äOïîéQè∆
 extern OPTION op;
 
@@ -98,8 +110,9 @@ unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr)
  */
 SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr)
 {
-	SOCKET soc;
-	struct sockaddr_in serversockaddr;
+	SOCKET	soc;
+	struct	sockaddr_in serversockaddr;
+	BOOL	bSSL_Local = FALSE;
 
 	SetSocStatusTextT(hWnd, STR_STATUS_CONNECT);
 
@@ -113,6 +126,46 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 		lstrcpy(ErrStr, STR_ERR_SOCK_CREATESOCKET);
 		return -1;
 	}
+
+#ifdef _WIN32_WCE_PPC
+	// Use built-in SSL if no npopssl.dll
+	if (ssl_tp >= 0 && INVALID_FILE_SIZE == GetFileAttributes(TEXT("\\Windows\\npopssl.dll")))
+	{
+		SSLVALIDATECERTHOOK hook;
+		int		err;
+		DWORD	dwFlags, optval = SO_SEC_SSL;
+
+		bSSL_Local = TRUE;
+
+		err = setsockopt(soc, SOL_SOCKET, SO_SECURE, (const char *)&optval, sizeof(optval)); 
+		if (err==SOCKET_ERROR)
+		{ 
+			lstrcpy(ErrStr, STR_ERR_SOCK_CREATESOCKET);
+			return -1;
+		}
+
+		hook.HookFunc = SSLValidateCertHook;
+		hook.pvArg = (PVOID) soc;
+
+		// Set the certificate validation callback. 
+		if(WSAIoctl(soc, SO_SSL_SET_VALIDATE_CERT_HOOK, &hook, sizeof(SSLVALIDATECERTHOOK),
+			NULL, 0, NULL, NULL, NULL))
+		{
+			lstrcpy(ErrStr, TEXT("SO_SSL_SET_VALIDATE_CERT_HOOK failed!"));
+			return -1;
+		}
+
+		// Select deferred handshake mode. Security protocols will not be negotiated until 
+		// the SO_SSL_PERFORM_HANDSHAKE ioctl is issued
+		dwFlags = SSL_FLAG_DEFER_HANDSHAKE;
+		if(WSAIoctl(soc, SO_SSL_SET_FLAGS, &dwFlags, sizeof(DWORD), NULL, 0, NULL, NULL, NULL))
+		{
+			lstrcpy(ErrStr, TEXT("SO_SSL_SET_FLAGS failed!"));
+			return -1;
+		}
+	}
+#endif
+
 	// ê⁄ë±êÊÇÃê›íË
 	serversockaddr.sin_family = AF_INET;
 	serversockaddr.sin_addr.s_addr = ip_addr;
@@ -136,8 +189,22 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 	}
 #ifndef WSAASYNC
 	// SSLÇÃèâä˙âª
+#ifdef _WIN32_WCE_PPC
+	if (bSSL_Local)
+	{
+		// Negotiate security protocols 
+        if(WSAIoctl(soc, SO_SSL_PERFORM_HANDSHAKE, NULL, 0, NULL, 0, NULL, NULL, NULL)) 
+        { 
+			lstrcpy(ErrStr, TEXT("WSAIoctl(SO_SSL_PERFORM_HANDSHAKE) failed!"));
+			return -1;
+        } 
+	}
+	else if (init_ssl(hWnd, soc, ErrStr) == -1) {
+		return -1;
+#else
 	if (init_ssl(hWnd, soc, ErrStr) == -1) {
 		return -1;
+#endif
 	}
 #endif
 	return soc;

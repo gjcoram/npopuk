@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -508,8 +511,10 @@ static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TC
  */
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr)
 {
+	MAILITEM *tpFwdMailItem = NULL;
 #ifdef UNICODE
 	TCHAR *body;
+	char *din, *dout;
 #endif
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
@@ -563,27 +568,8 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 	mem_free(&tpMailItem->Date);
-#ifdef UNICODE
-	{
-		char *cbuf, *dbuf;
-
-		cbuf = alloc_tchar_to_char(buf);
-		if (cbuf != NULL) {
-			dbuf = (char *)mem_alloc(BUF_SIZE);
-			if (dbuf != NULL) {
-				DateConv(cbuf, dbuf);
-				tpMailItem->Date = alloc_char_to_tchar(dbuf);
-				mem_free(&dbuf);
-			}
-			mem_free(&cbuf);
-		}
-	}
-#else
-	tpMailItem->Date = (char *)mem_alloc(BUF_SIZE);
-	if (tpMailItem->Date != NULL) {
-		DateConv(buf, tpMailItem->Date);
-	}
-#endif
+	tpMailItem->Date = alloc_copy_t(buf);
+	
 	// Subject
 	if (send_mime_header(soc, tpMailItem, TEXT(HEAD_SUBJECT), tpMailItem->Subject, FALSE, ErrStr) == FALSE) {
 		return FALSE;
@@ -640,8 +626,26 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (send_body == NULL) {
 		return FALSE;
 	}
+	if (tpMailItem->FwdAttach != NULL  && *(tpMailItem->FwdAttach) != TEXT('\0')) {
+		// GJC - find original message to forward attachments
+		int i, j;
+		if ((i = mailbox_name_to_index(tpMailItem->MailBox)) != -1) {
+			if ((j = item_find_thread(MailBox + i, tpMailItem->References, (MailBox+i)->MailItemCnt)) != -1) {
+				tpFwdMailItem = (*((MailBox + i)->tpMailItem + j));
+			}
+		}
+		if (tpFwdMailItem == NULL) {
+			tpFwdMailItem = item_find_thread_anywhere(tpMailItem->References);
+		}
+		if (tpFwdMailItem == NULL) {
+			mem_free(&send_body);
+			send_body = NULL;
+			lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
+			return FALSE;
+		}
+	}
 	// 添付ファイルがある場合はマルチパートで送信する
-	switch (multipart_create(tpMailItem->Attach, ctype, enc_type, &mctypr, send_body, &mbody)) {
+	switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, ctype, enc_type, &mctypr, send_body, &mbody)) {
 	case MP_ERROR_FILE:
 		mem_free(&send_body);
 		send_body = NULL;
@@ -683,6 +687,68 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		break;
 	}
 
+	////////////////////// MRP ////////////////////
+	// this is where the Priority and receipts go.
+	if (tpMailItem->Priority == 1) {
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), HIGH_PRIORITY, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	} else if (tpMailItem->Priority == 5) {
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), LOW_PRIORITY, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	} else {
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
+	}
+
+	// delivery receipt
+	if (tpMailItem->DeliveryReceipt == 1)
+	{
+		if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+
+	// read receipt
+	if (tpMailItem->ReadReceipt == 1)
+	{
+		if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	
+		if(send_header_t(soc, TEXT(HEAD_READ2), tpMailItem->From, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+	}
+	////////////////////// ---- //////////////////
+
 	// X-Mailer
 	if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
 		mem_free(&send_body);
@@ -723,6 +789,24 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 #endif
+
+	// format the date only if we get this far 
+#ifdef UNICODE
+	din = alloc_tchar_to_char(tpMailItem->Date);
+	dout = (char *)mem_alloc(BUF_SIZE);
+	if (din != NULL && dout != NULL) {
+		DateConv(din, dout, FALSE);
+		tpMailItem->FmtDate = alloc_char_to_tchar(dout);
+		mem_free(&din);
+		mem_free(&dout);
+	} else {
+		tpMailItem->FmtDate = NULL;
+	}
+#else
+	DateConv(tpMailItem->Date, buf, FALSE);
+	tpMailItem->FmtDate = alloc_copy(buf);
+#endif
+
 	return TRUE;
 }
 
@@ -1175,7 +1259,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_SENDMAIL;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_SENTMAIL;
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1233,7 +1317,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_SENDMAIL;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_SENTMAIL;
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1259,7 +1343,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
  * smtp_send_proc - データ送信プロシージャ
  */
 #ifdef WSAASYNC
-BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox)
+BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 {
 	int len;
 
@@ -1382,7 +1466,7 @@ void smtp_set_error(HWND hWnd)
 	if (send_mail_item == NULL) {
 		return;
 	}
-	send_mail_item->Status = send_mail_item->MailStatus = ICON_ERROR;
+	send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
 
 	if (SelBox == MAILBOX_SEND) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);

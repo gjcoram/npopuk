@@ -121,10 +121,13 @@ int str_cmp_i(const char *buf1, const char *buf2);
 #define str_cmp_i lstrcmpi
 #endif
 int str_cmp_ni_t(const TCHAR *buf1, const TCHAR *buf2, int len);
+int str_cmp_n_t(const TCHAR *buf1, const TCHAR *buf2, int len);
 #ifdef UNICODE
 int str_cmp_ni(const char *buf1, const char *buf2, int len);
+int str_cmp_n(const char *buf1, const char *buf2, int len);
 #else
 #define str_cmp_ni str_cmp_ni_t
+#define str_cmp_n str_cmp_n_t
 #endif
 
 BOOL str_match_t(const TCHAR *ptn, const TCHAR *str);

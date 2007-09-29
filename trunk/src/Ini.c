@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -22,6 +25,7 @@
 
 /* Global Variables */
 OPTION op;
+BOOL ConvertFromNPOP = FALSE;
 
 // 外部参照
 extern HINSTANCE hInst;
@@ -37,20 +41,37 @@ extern BOOL first_start;
 static void ini_get_encode_info(void);
 
 /*
- * ini_start_auth_check - 起動時のパスワード
+ * ini_start_auth_check - Check Password
  */
 #ifndef _WIN32_WCE
 BOOL ini_start_auth_check(void)
 {
-	TCHAR app_path[BUF_SIZE];
+	TCHAR app_path[BUF_SIZE], app_path_old[BUF_SIZE];
 	TCHAR ret[BUF_SIZE];
 	TCHAR pass[BUF_SIZE];
 
+	ConvertFromNPOP = FALSE;
 	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	if (file_get_size(app_path) == -1) {
+		DWORD DirInfo;
+		DirInfo = GetFileAttributes(AppDir);
+		if (DirInfo & (FILE_ATTRIBUTE_READONLY | FILE_READ_ONLY_VOLUME)) {
+			MessageBox(NULL, STR_ERR_READONLY, KEY_NAME, MB_OK | MB_ICONERROR);
+			return FALSE;
+		}
+		// GJC - check if upgrading from original nPOP
+		str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
+		if (file_get_size(app_path_old) != -1) {
+			if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
+				ConvertFromNPOP = TRUE;
+				CopyFile(app_path_old, app_path, FALSE);
+			}
+		}
+	}
 	profile_initialize(app_path, TRUE);
 
-	op.StertPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
-	if (op.StertPass == 1) {
+	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0, app_path);
+	if (op.StartPass == 1) {
 		profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword(TEXT("_pw_"), ret, pass, BUF_SIZE - 1, TRUE);
 		if (*pass == TEXT('\0')) {
@@ -58,7 +79,7 @@ BOOL ini_start_auth_check(void)
 			return TRUE;
 		}
 		while (1) {
-			// 起動パスワード
+			//Starting password
 			gPassSt = 0;
 			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INPUTPASS), NULL, InputPassProc,
 				(LPARAM)STR_TITLE_STARTPASSWORD) == FALSE) {
@@ -115,6 +136,7 @@ static void ini_get_encode_info(void)
 		op.BodyEncoding = 2;
 		break;
 	}
+#ifndef _WCE_OLD
 	set_default_encode(GetACP(), &op.HeadCharset, &op.BodyCharset);
 	if (op.HeadCharset == NULL) {
 		op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
@@ -122,6 +144,10 @@ static void ini_get_encode_info(void)
 	if (op.BodyCharset == NULL) {
 		op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
 	}
+#else
+	op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+	op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+#endif
 }
 
 /*
@@ -129,17 +155,22 @@ static void ini_get_encode_info(void)
  */
 BOOL ini_read_setting(HWND hWnd)
 {
+	DWORD DirInfo;
 	FILTER *tpFilter;
 	HDC hdc;
 	TCHAR app_path[BUF_SIZE];
+#ifdef _WIN32_WCE
+	TCHAR app_path_old[BUF_SIZE];
+#endif
 	TCHAR buf[BUF_SIZE];
 	TCHAR key_buf[BUF_SIZE];
 	TCHAR conv_buf[INI_BUF_SIZE];
 	TCHAR ret[BUF_SIZE];
 	TCHAR tmp[BUF_SIZE];
+	TCHAR *ConvertName = NULL;
 	TCHAR *p, *r;
 	UINT char_set;
-	int i, j, t, cnt;
+	int i, j, t, cnt, num;
 	int len;
 	int fDef;
 
@@ -152,11 +183,35 @@ BOOL ini_read_setting(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 
 	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-	if (profile_initialize(app_path, TRUE) == FALSE) {
+#ifdef _WIN32_WCE
+	if (file_get_size(app_path) == -1) {
+		DirInfo = GetFileAttributes(AppDir);
+		if (DirInfo & FILE_ATTRIBUTE_READONLY) {
+			MessageBox(NULL, STR_ERR_READONLY, KEY_NAME, MB_OK | MB_ICONERROR);
+			return FALSE;
+		}
+		// GJC - check if upgrading from original nPOP
+		str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
+		if (file_get_size(app_path_old) != -1) {
+			if (MessageBox(hWnd, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
+				ConvertFromNPOP = TRUE;
+				CopyFile(app_path_old, app_path, FALSE);
+			}
+		}
+	}
+#endif
+	if (profile_initialize(app_path, FALSE) == FALSE) {
 		return FALSE;
 	}
 
+#ifdef _WIN32_WCE_PPC
+	///////////// MRP /////////////////////
+	len = profile_get_string(GENERAL, TEXT("DataFileDir"), AppDir, op.DataFileDir, BUF_SIZE - 1, app_path);
+	///////////// --- /////////////////////
+#else
 	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1, app_path);
+#endif
+
 	if (*op.DataFileDir == TEXT('\0')) {
 		DataDir = AppDir;
 	} else {
@@ -175,8 +230,26 @@ BOOL ini_read_setting(HWND hWnd)
 		if (r != (DataDir + lstrlen(DataDir) - 1) || lstrlen(DataDir) == 1) {
 			lstrcat(DataDir, TEXT("\\"));
 		}
+		DirInfo = GetFileAttributes(DataDir);
+		if ((DirInfo == 0xFFFFFFFF) || !(DirInfo & FILE_ATTRIBUTE_DIRECTORY)) {
+			MessageBox(NULL, STR_ERR_NODATADIR, KEY_NAME, MB_OK | MB_ICONERROR);
+			return FALSE;
+#ifdef _WIN32_WCE
+		} else if (DirInfo & FILE_ATTRIBUTE_READONLY) {
+#else
+		} else if (DirInfo & (FILE_ATTRIBUTE_READONLY | FILE_READ_ONLY_VOLUME)) {
+#endif
+			MessageBox(NULL, STR_ERR_DATAREADONLY, KEY_NAME, MB_OK);
+		}
 	}
 
+	op.Version = profile_get_int(GENERAL, TEXT("Version"), APP_VERSION_NUM, app_path);
+	if (op.Version > APP_VERSION_NUM) {
+		wsprintf(tmp, STR_MSG_NEWVERSION, app_path, KEY_NAME);
+		MessageBox(hWnd, tmp, WINDOW_TITLE, MB_OK);
+	} else if (op.Version < APP_VERSION_NUM) {
+		op.Version = APP_VERSION_NUM;
+	}
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 0, app_path);
 
 	op.view_font.name = profile_alloc_string(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT, app_path);
@@ -191,6 +264,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.lv_font.italic = profile_get_int(GENERAL, TEXT("LvFontItalic"), 0, app_path);
 	op.lv_font.charset = profile_get_int(GENERAL, TEXT("LvFontCharset"), char_set, app_path);
 
+	op.StatusBarCharWidth = profile_get_int(GENERAL, TEXT("StatusBarCharWidth"), 7, app_path);
+
 	op.HeadCharset = profile_alloc_string(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET, app_path);
 	op.HeadEncoding = profile_get_int(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE, app_path);
 	op.BodyCharset = profile_alloc_string(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET, app_path);
@@ -200,7 +275,7 @@ BOOL ini_read_setting(HWND hWnd)
 		ini_get_encode_info();
 	}
 
-	op.TimeZone = profile_alloc_string(GENERAL, TEXT("TimeZone"), TEXT(""), app_path);
+	op.TimeZone = profile_alloc_string(GENERAL, TEXT("TimeZone"), STR_DEFAULT_TIMEZONE, app_path);
 	op.DateFormat = profile_alloc_string(GENERAL, TEXT("DateFormat"), STR_DEFAULT_DATEFORMAT, app_path);
 	op.TimeFormat = profile_alloc_string(GENERAL, TEXT("TimeFormat"), STR_DEFAULT_TIMEFORMAT, app_path);
 
@@ -220,33 +295,65 @@ BOOL ini_read_setting(HWND hWnd)
 
 	op.LvDefSelectPos = profile_get_int(GENERAL, TEXT("LvDefSelectPos"), 1, app_path);
 	op.LvAutoSort = profile_get_int(GENERAL, TEXT("LvAutoSort"), 1, app_path);
+#ifdef _WIN32_WCE_PPC
+////////////////////// MRP ////////////////////
+	op.LvSortItem = profile_get_int(GENERAL, TEXT("LvSortItem"), 13, app_path);
+#else
 	op.LvSortItem = profile_get_int(GENERAL, TEXT("LvSortItem"), 3, app_path);
+////////////////////// --- ////////////////////
+#endif
 	op.LvThreadView = profile_get_int(GENERAL, TEXT("LvThreadView"), 0, app_path);
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT, app_path);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, app_path);
 	op.MoveAllMailBox = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
+#ifdef _WIN32_WCE_PPC
+////////////////////// MRP ////////////////////
+	op.MoveAllMailBox = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 0, app_path);
+#else
+	op.MoveAllMailBox = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
+////////////////////// --- ////////////////////
+#endif
+
 	op.RecvScroll = profile_get_int(GENERAL, TEXT("RecvScroll"), 1, app_path);
 	op.SaveMsg = profile_get_int(GENERAL, TEXT("SaveMsg"), 1, app_path);
 	op.AutoSave = profile_get_int(GENERAL, TEXT("AutoSave"), 1, app_path);
 
-	op.StertPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
+	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
+	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
 	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
 	op.Password = alloc_copy_t(tmp);
 
+#ifdef _WIN32_WCE
+	op.LvColSize[0] = profile_get_int(GENERAL, TEXT("LvColSize-0"), 158, app_path);
+	op.LvColSize[1] = profile_get_int(GENERAL, TEXT("LvColSize-1"), 146, app_path);
+	op.LvColSize[2] = profile_get_int(GENERAL, TEXT("LvColSize-2"), 123, app_path);
+	op.LvColSize[3] = profile_get_int(GENERAL, TEXT("LvColSize-3"), 77, app_path);
+#else
 	op.LvColSize[0] = profile_get_int(GENERAL, TEXT("LvColSize-0"), 150, app_path);
 	op.LvColSize[1] = profile_get_int(GENERAL, TEXT("LvColSize-1"), 100, app_path);
 	op.LvColSize[2] = profile_get_int(GENERAL, TEXT("LvColSize-2"), 110, app_path);
 	op.LvColSize[3] = profile_get_int(GENERAL, TEXT("LvColSize-3"), 50, app_path);
-
-#ifdef _WIN32_WCE
-	op.AddColSize[0] = profile_get_int(GENERAL, TEXT("AddColSize-0"), 100, app_path);
-	op.AddColSize[1] = profile_get_int(GENERAL, TEXT("AddColSize-1"), 100, app_path);
-#else
-	op.AddColSize[0] = profile_get_int(GENERAL, TEXT("AddColSize-0"), 250, app_path);
-	op.AddColSize[1] = profile_get_int(GENERAL, TEXT("AddColSize-1"), 190, app_path);
 #endif
+
+	op.AddColSize[0] = profile_get_int(GENERAL, TEXT("AddColSize-0"), 200, app_path);
+	op.AddColSize[1] = profile_get_int(GENERAL, TEXT("AddColSize-1"), 150, app_path);
+	op.AddColSize[2] = profile_get_int(GENERAL, TEXT("AddColSize-2"), -1, app_path);
+	if (op.AddColSize[2] == -1) {
+		op.AddColSize[2] = 100;
+		if (op.AddColSize[0] > 200) {
+			op.AddColSize[0] -= 50;
+		}
+		if (op.AddColSize[1] > 150) {
+			op.AddColSize[1] -= 50;
+		}
+	}
+	for (i = 0; i < AD_COL_CNT; i++) {
+		if (op.AddColSize[i] > 1000) {
+			op.AddColSize[i] = 1000;
+		}
+	}
 
 #ifndef _WIN32_WCE
 	op.ViewRect.left = profile_get_int(GENERAL, TEXT("viewleft"), 0, app_path);
@@ -261,13 +368,28 @@ BOOL ini_read_setting(HWND hWnd)
 #endif
 
 	op.ShowHeader = profile_get_int(GENERAL, TEXT("ShowHeader"), 0, app_path);
+#ifdef _WIN32_WCE_PPC
+////////////////////// MRP ////////////////////
+	op.ListGetLine = profile_get_int(GENERAL, TEXT("ListGetLine"), 50, app_path);
+#else
 	op.ListGetLine = profile_get_int(GENERAL, TEXT("ListGetLine"), 100, app_path);
+////////////////////// --- ////////////////////
+#endif
+
 	op.ListDownload = profile_get_int(GENERAL, TEXT("ListDownload"), 0, app_path);
 	op.ListSaveMode = profile_get_int(GENERAL, TEXT("ListSaveMode"), 2, app_path);
 	op.WordBreakFlag = profile_get_int(GENERAL, TEXT("WordBreakFlag"), 1, app_path);
 	op.EditWordBreakFlag = profile_get_int(GENERAL, TEXT("EditWordBreakFlag"), 1, app_path);
+
+#ifdef _WIN32_WCE_PPC
+////////////////////// MRP ////////////////////
+	op.ViewShowDate = profile_get_int(GENERAL, TEXT("ViewShowDate"), 1, app_path);
+#else
 	op.ViewShowDate = profile_get_int(GENERAL, TEXT("ViewShowDate"), 0, app_path);
-	op.MstchCase = profile_get_int(GENERAL, TEXT("MstchCase"), 0, app_path);
+////////////////////// --- ////////////////////
+#endif
+	op.MatchCase = profile_get_int(GENERAL, TEXT("MstchCase"), 0, app_path);
+	op.MatchCase = profile_get_int(GENERAL, TEXT("MatchCase"), op.MatchCase, app_path);
 	op.AllFind = profile_get_int(GENERAL, TEXT("AllFind"), 1, app_path);
 	op.SubjectFind = profile_get_int(GENERAL, TEXT("SubjectFind"), 0, app_path);
 
@@ -276,35 +398,59 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SendMessageId = profile_get_int(GENERAL, TEXT("SendMessageId"), 1, app_path);
 	op.SendDate = profile_get_int(GENERAL, TEXT("SendDate"), 1, app_path);
 	op.SelectSendBox = profile_get_int(GENERAL, TEXT("SelectSendBox"), 1, app_path);
+	op.ExpertMode = profile_get_int(GENERAL, TEXT("DisableWarning"), 0, app_path);		// Added PHH 4-Oct-2003
 	op.PopBeforeSmtpIsLoginOnly = profile_get_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), 1, app_path);
 	op.PopBeforeSmtpWait = profile_get_int(GENERAL, TEXT("PopBeforeSmtpWait"), 300, app_path);
 
 	op.AutoQuotation = profile_get_int(GENERAL, TEXT("AutoQuotation"), 1, app_path);
-	op.QuotationChar = profile_alloc_string(GENERAL, TEXT("QuotationChar"), TEXT(">"), app_path);
+	op.FwdQuotation = profile_get_int(GENERAL, TEXT("FwdQuotation"), 1, app_path);
+	op.SignForward = profile_get_int(GENERAL, TEXT("SignForward"), 1, app_path);
+	op.SignReplyAbove = profile_get_int(GENERAL, TEXT("SignReplyAbove"), 0, app_path);
+	op.QuotationChar = profile_alloc_string(GENERAL, TEXT("QuotationChar"), TEXT("> "), app_path);
+#ifdef _WIN32_WCE_PPC
+////////////////////// MRP ////////////////////
+	op.WordBreakSize = profile_get_int(GENERAL, TEXT("WordBreakSize"), 80, app_path);
+#else
 	op.WordBreakSize = profile_get_int(GENERAL, TEXT("WordBreakSize"), 70, app_path);
+////////////////////// --- ////////////////////
+#endif
 	op.QuotationBreak = profile_get_int(GENERAL, TEXT("QuotationBreak"), 1, app_path);
 	op.ReSubject = profile_alloc_string(GENERAL, TEXT("ReSubject"), TEXT("Re: "), app_path);
-	len = profile_get_string(GENERAL, TEXT("ReHeader"), TEXT("\\n%f wrote:\\n(%d)\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	op.FwdSubject = profile_alloc_string(GENERAL, TEXT("FwdSubject"), TEXT("Fwd: "), app_path);	// Added PHH 4-Oct-2003
+	len = profile_get_string(GENERAL, TEXT("ReHeader"), TEXT("\\n--------------------------------------------------\\n%f wrote:\\n(%d)\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
 	op.ReHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (op.ReHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.ReHeader);
 	}
+	len = profile_get_string(GENERAL, TEXT("FwdHeader"), TEXT("\\n--------------------------------------------------\\nTo: %T\\nCC: %C\\nSubject: %S\\nDate: %D\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	op.FwdHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	if (op.FwdHeader != NULL) {
+		DecodeCtrlChar(conv_buf, op.FwdHeader);
+	}
+    op.AltReplyTo = profile_alloc_string(GENERAL, TEXT("ReplyTo"), TEXT(""), app_path);
 
 	op.Bura = profile_alloc_string(GENERAL, TEXT("Bura"), STR_DEFAULT_BURA, app_path);
 	op.Oida = profile_alloc_string(GENERAL, TEXT("Oida"), STR_DEFAULT_OIDA, app_path);
-	op.sBura = profile_alloc_string(GENERAL, TEXT("sBura"), TEXT(",.?!%:;)]}｣｡､ﾞﾟ"), app_path);
-	op.sOida = profile_alloc_string(GENERAL, TEXT("sOida"), TEXT("\\$([{｢"), app_path);
 
 	op.CAFile = profile_alloc_string(GENERAL, TEXT("CAFile"), TEXT("ca.pem"), app_path);
 	op.IPCache = profile_get_int(GENERAL, TEXT("IPCache"), 1, app_path);
 	op.EncodeType = profile_get_int(GENERAL, TEXT("EncodeType"), 0, app_path);
 
-	op.ShowNewMailMessgae = profile_get_int(GENERAL, TEXT("ShowNewMailMessgae"), 1, app_path);
+	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessgae"), 1, app_path);
+	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage, app_path);
 	op.ShowNoMailMessage = profile_get_int(GENERAL, TEXT("ShowNoMailMessage"), 0, app_path);
 #ifdef _WIN32_WCE
-	op.ActiveNewMailMessgae = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 1, app_path);
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 1, app_path);
 #else
-	op.ActiveNewMailMessgae = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 0, app_path);
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 0, app_path);
+#endif
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
+	op.ClearNewOverlay = profile_get_int(GENERAL, TEXT("ClearNewOverlay"), 0, app_path);
+
+#ifdef _WIN32_WCE_PPC
+	///////////// MRP /////////////////////
+	op.UsePOOMAddressBook = profile_get_int(GENERAL, TEXT("UsePOOMAddressBook"), 0, app_path);
+	///////////// --- /////////////////////
 #endif
 
 	op.NewMailSound = profile_get_int(GENERAL, TEXT("NewMailSound"), 1, app_path);
@@ -326,9 +472,17 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewClose = profile_get_int(GENERAL, TEXT("ViewClose"), 1, app_path);
 	op.ViewApp = profile_alloc_string(GENERAL, TEXT("ViewApp"), TEXT(""), app_path);
 	op.ViewAppCmdLine = profile_alloc_string(GENERAL, TEXT("ViewAppCmdLine"), TEXT(""), app_path);
+#ifdef _WIN32_WCE_PPC
+	///////////// MRP /////////////////////
+	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("html"), app_path);
+	len = profile_get_string(GENERAL, TEXT("ViewFileHeader"),
+	TEXT("<B>From:</B> %f<BR>\\n<B>To:</B> %t<BR>\\n<B>Cc:</B> %c<BR>\\n<B>Subject:</B> %s<BR>\\n<B>Date:</B> %d<BR>\\n<HR>\\n<BR>\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	///////////// --- /////////////////////
+#else
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("txt"), app_path);
 	len = profile_get_string(GENERAL, TEXT("ViewFileHeader"),
 		TEXT("From: %f\\nTo: %t\\nCc: %c\\nSubject: %s\\nDate: %d\\n\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+#endif
 	op.ViewFileHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (op.ViewFileHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.ViewFileHeader);
@@ -340,8 +494,18 @@ BOOL ini_read_setting(HWND hWnd)
 	op.EditFileSuffix = profile_alloc_string(GENERAL, TEXT("EditFileSuffix"), TEXT("txt"), app_path);
 	op.DefEditApp = profile_get_int(GENERAL, TEXT("DefEditApp"), 0, app_path);
 	op.AttachPath = profile_alloc_string(GENERAL, TEXT("AttachPath"), TEXT("attach"), app_path);
-	op.AttachWarning = profile_get_int(GENERAL, TEXT("AttachWarning"), 1, app_path);
+	//op.AttachWarning = profile_get_int(GENERAL, TEXT("AttachWarning"), 1, app_path);
 	op.AttachDelete = profile_get_int(GENERAL, TEXT("AttachDelete"), 1, app_path);
+	op.StripHtmlTags = profile_get_int(GENERAL, TEXT("StripHtmlTags"), 1, app_path);
+#ifdef _WIN32_WCE_PPC
+	op.RememberOSD = profile_get_int(GENERAL, TEXT("RememberOpenSaveDir"), 0, app_path);
+	if (op.RememberOSD == 1) {
+		op.OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+	} else {
+		op.OpenSaveDir = alloc_copy_t(TEXT(""));
+	}
+#endif
+
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_LAGENDA
@@ -357,6 +521,7 @@ BOOL ini_read_setting(HWND hWnd)
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1, app_path);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1, app_path);
+	op.RasCheckEndDisConTimeout = profile_get_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), 0, app_path);
 	op.RasEndDisCon = profile_get_int(GENERAL, TEXT("RasEndDisCon"), 1, app_path);
 	op.RasNoCheck = profile_get_int(GENERAL, TEXT("RasNoCheck"), 1, app_path);
 	op.RasWaitSec = profile_get_int(GENERAL, TEXT("RasWaitSec"), 5, app_path);
@@ -383,126 +548,138 @@ BOOL ini_read_setting(HWND hWnd)
 		(*(op.RasInfo + j))->RasPass = alloc_copy_t(tmp);
 	}
 
-	i = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
-	if (i == 0) {
-		mailbox_create(hWnd, FALSE);
+	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
+	if (cnt == 0) {
+		mailbox_create(hWnd, FALSE, FALSE);
 		first_start = TRUE;
 		profile_free();
 		return TRUE;
 	}
-	for (j = 0; j < i; j++) {
-		if ((cnt = mailbox_create(hWnd, FALSE)) == -1) {
+	for (i = 0; i < cnt; i++) {
+		if ((num = mailbox_create(hWnd, FALSE, FALSE)) == -1) {
 			continue;
 		}
-		wsprintf(buf, TEXT("MAILBOX-%d"), j);
+		wsprintf(buf, TEXT("MAILBOX-%d"), i);
 
 		// Name
-		(MailBox + cnt)->Name = profile_alloc_string(buf, TEXT("Name"), TEXT(""), app_path);
+		(MailBox + num)->Name = profile_alloc_string(buf, TEXT("Name"), TEXT(""), app_path);
+		// Type
+		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0, app_path);
+		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
+			// GJC - SaveBox type (not an account)
+			(MailBox + num)->CyclicFlag = 1;
+			wsprintf(buf, TEXT("MailBox%d.dat"), i);
+			if (file_read_mailbox(buf, (MailBox + num)) == FALSE) {
+				profile_free();
+				return FALSE;
+			}
+			continue;
+		}
 		// Server
-		(MailBox + cnt)->Server = profile_alloc_string(buf, TEXT("Server"), TEXT(""), app_path);
+		(MailBox + num)->Server = profile_alloc_string(buf, TEXT("Server"), TEXT(""), app_path);
 		// Port
-		(MailBox + cnt)->Port = profile_get_int(buf, TEXT("Port"), 110, app_path);
+		(MailBox + num)->Port = profile_get_int(buf, TEXT("Port"), 110, app_path);
 		// User
-		(MailBox + cnt)->User = profile_alloc_string(buf, TEXT("User"), TEXT(""), app_path);
+		(MailBox + num)->User = profile_alloc_string(buf, TEXT("User"), TEXT(""), app_path);
 		// Pass
 		profile_get_string(buf, TEXT("Pass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
-		EncodePassword((MailBox + cnt)->User, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->Pass = alloc_copy_t(tmp);
+		EncodePassword((MailBox + num)->User, ret, tmp, BUF_SIZE - 1, TRUE);
+		(MailBox + num)->Pass = alloc_copy_t(tmp);
 		// APOP
-		(MailBox + cnt)->APOP = profile_get_int(buf, TEXT("APOP"), 0, app_path);
+		(MailBox + num)->APOP = profile_get_int(buf, TEXT("APOP"), 0, app_path);
 		// POP SSL
-		(MailBox + cnt)->PopSSL = profile_get_int(buf, TEXT("PopSSL"), 0, app_path);
+		(MailBox + num)->PopSSL = profile_get_int(buf, TEXT("PopSSL"), 0, app_path);
 		// POP SSL Option
-		(MailBox + cnt)->PopSSLInfo.Type = profile_get_int(buf, TEXT("PopSSLType"), 0, app_path);
-		(MailBox + cnt)->PopSSLInfo.Verify = profile_get_int(buf, TEXT("PopSSLVerify"), 1, app_path);
-		(MailBox + cnt)->PopSSLInfo.Depth = profile_get_int(buf, TEXT("PopSSLDepth"), -1, app_path);
-		(MailBox + cnt)->PopSSLInfo.Cert = profile_alloc_string(buf, TEXT("PopSSLCert"), TEXT(""), app_path);
-		(MailBox + cnt)->PopSSLInfo.Pkey = profile_alloc_string(buf, TEXT("PopSSLPkey"), TEXT(""), app_path);
-		(MailBox + cnt)->PopSSLInfo.Pass = profile_alloc_string(buf, TEXT("PopSSLPass"), TEXT(""), app_path);
+		(MailBox + num)->PopSSLInfo.Type = profile_get_int(buf, TEXT("PopSSLType"), 0, app_path);
+		(MailBox + num)->PopSSLInfo.Verify = profile_get_int(buf, TEXT("PopSSLVerify"), 1, app_path);
+		(MailBox + num)->PopSSLInfo.Depth = profile_get_int(buf, TEXT("PopSSLDepth"), -1, app_path);
+		(MailBox + num)->PopSSLInfo.Cert = profile_alloc_string(buf, TEXT("PopSSLCert"), TEXT(""), app_path);
+		(MailBox + num)->PopSSLInfo.Pkey = profile_alloc_string(buf, TEXT("PopSSLPkey"), TEXT(""), app_path);
+		(MailBox + num)->PopSSLInfo.Pass = profile_alloc_string(buf, TEXT("PopSSLPass"), TEXT(""), app_path);
 		// Disable RETR
-		(MailBox + cnt)->NoRETR = profile_get_int(buf, TEXT("NoRETR"), 0, app_path);
+		(MailBox + num)->NoRETR = profile_get_int(buf, TEXT("NoRETR"), 0, app_path);
 		// Disable UIDL
-		(MailBox + cnt)->NoUIDL = profile_get_int(buf, TEXT("NoUIDL"), 0, app_path);
+		(MailBox + num)->NoUIDL = profile_get_int(buf, TEXT("NoUIDL"), 0, app_path);
 
 		// MailCnt
-		(MailBox + cnt)->MailCnt = profile_get_int(buf, TEXT("MailCnt"), 0, app_path);
+		(MailBox + num)->MailCnt = profile_get_int(buf, TEXT("MailCnt"), 0, app_path);
 		// MailSize
-		(MailBox + cnt)->MailSize = profile_get_int(buf, TEXT("MailSize"), 0, app_path);
+		(MailBox + num)->MailSize = profile_get_int(buf, TEXT("MailSize"), 0, app_path);
 
 		if (op.StartInit == 0) {
 			// LastMessageId
 			profile_get_string(buf, TEXT("LastMessageId"), TEXT(""), ret, BUF_SIZE - 1, app_path);
-			(MailBox + cnt)->LastMessageId = alloc_tchar_to_char(ret);
+			(MailBox + num)->LastMessageId = alloc_tchar_to_char(ret);
 			// LastNo
-			(MailBox + cnt)->LastNo = profile_get_int(buf, TEXT("LastNo"), 0, app_path);
+			(MailBox + num)->LastNo = profile_get_int(buf, TEXT("LastNo"), 0, app_path);
 		} else {
 			// 起動時に新着位置の初期化
-			(MailBox + cnt)->LastNo = -1;
+			(MailBox + num)->LastNo = -1;
 		}
 
 		// CyclicFlag
-		(MailBox + cnt)->CyclicFlag = profile_get_int(buf, TEXT("CyclicFlag"), 0, app_path);
+		(MailBox + num)->CyclicFlag = profile_get_int(buf, TEXT("CyclicFlag"), 0, app_path);
 
 		// SmtpServer
-		(MailBox + cnt)->SmtpServer = profile_alloc_string(buf, TEXT("SmtpServer"), TEXT(""), app_path);
+		(MailBox + num)->SmtpServer = profile_alloc_string(buf, TEXT("SmtpServer"), TEXT(""), app_path);
 		// SmtpPort
-		(MailBox + cnt)->SmtpPort = profile_get_int(buf, TEXT("SmtpPort"), 25, app_path);
+		(MailBox + num)->SmtpPort = profile_get_int(buf, TEXT("SmtpPort"), 25, app_path);
 		// UserName
-		(MailBox + cnt)->UserName = profile_alloc_string(buf, TEXT("UserName"), TEXT(""), app_path);
+		(MailBox + num)->UserName = profile_alloc_string(buf, TEXT("UserName"), TEXT(""), app_path);
 		// MailAddress
-		(MailBox + cnt)->MailAddress = profile_alloc_string(buf, TEXT("MailAddress"), TEXT(""), app_path);
+		(MailBox + num)->MailAddress = profile_alloc_string(buf, TEXT("MailAddress"), TEXT(""), app_path);
 		// Signature
 		p = (TCHAR *)mem_alloc(sizeof(TCHAR) * MAXSIZE);
 		if (p != NULL) {
 			len = profile_get_string(buf, TEXT("Signature"), TEXT(""), p, MAXSIZE - 1, app_path);
-			(MailBox + cnt)->Signature = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-			if ((MailBox + cnt)->Signature != NULL) {
-				DecodeCtrlChar(p, (MailBox + cnt)->Signature);
+			(MailBox + num)->Signature = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+			if ((MailBox + num)->Signature != NULL) {
+				DecodeCtrlChar(p, (MailBox + num)->Signature);
 			}
 			mem_free(&p);
 		}
 		// ReplyTo
-		(MailBox + cnt)->ReplyTo = profile_alloc_string(buf, TEXT("ReplyTo"), TEXT(""), app_path);
+		(MailBox + num)->ReplyTo = profile_alloc_string(buf, TEXT("ReplyTo"), TEXT(""), app_path);
 		// MyAddr2Bcc
-		(MailBox + cnt)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0, app_path);
+		(MailBox + num)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0, app_path);
 		// BccAddr
-		(MailBox + cnt)->BccAddr = profile_alloc_string(buf, TEXT("BccAddr"), TEXT(""), app_path);
+		(MailBox + num)->BccAddr = profile_alloc_string(buf, TEXT("BccAddr"), TEXT(""), app_path);
 
 		// POP before SMTP
-		(MailBox + cnt)->PopBeforeSmtp = profile_get_int(buf, TEXT("PopBeforeSmtp"), 0, app_path);
+		(MailBox + num)->PopBeforeSmtp = profile_get_int(buf, TEXT("PopBeforeSmtp"), 0, app_path);
 		// SMTP Authentication
-		(MailBox + cnt)->SmtpAuth = profile_get_int(buf, TEXT("SmtpAuth"), 0, app_path);
+		(MailBox + num)->SmtpAuth = profile_get_int(buf, TEXT("SmtpAuth"), 0, app_path);
 		// SMTP Authentication type
-		(MailBox + cnt)->SmtpAuthType = profile_get_int(buf, TEXT("SmtpAuthType"), 0, app_path);
+		(MailBox + num)->SmtpAuthType = profile_get_int(buf, TEXT("SmtpAuthType"), 0, app_path);
 		// SMTP Authentication User & Pass mode
-		(MailBox + cnt)->AuthUserPass = profile_get_int(buf, TEXT("AuthUserPass"), 0, app_path);
+		(MailBox + num)->AuthUserPass = profile_get_int(buf, TEXT("AuthUserPass"), 0, app_path);
 		// SMTP Authentication User
-		(MailBox + cnt)->SmtpUser = profile_alloc_string(buf, TEXT("SmtpUser"), TEXT(""), app_path);
+		(MailBox + num)->SmtpUser = profile_alloc_string(buf, TEXT("SmtpUser"), TEXT(""), app_path);
 		// SMTP Authentication Pass
 		profile_get_string(buf, TEXT("SmtpPass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
-		EncodePassword((MailBox + cnt)->SmtpUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->SmtpPass = alloc_copy_t(tmp);
+		EncodePassword((MailBox + num)->SmtpUser, ret, tmp, BUF_SIZE - 1, TRUE);
+		(MailBox + num)->SmtpPass = alloc_copy_t(tmp);
 		// SMTP SSL
-		(MailBox + cnt)->SmtpSSL = profile_get_int(buf, TEXT("SmtpSSL"), 0, app_path);
+		(MailBox + num)->SmtpSSL = profile_get_int(buf, TEXT("SmtpSSL"), 0, app_path);
 		// SMTP SSL Option
-		(MailBox + cnt)->SmtpSSLInfo.Type = profile_get_int(buf, TEXT("SmtpSSLType"), 0, app_path);
-		(MailBox + cnt)->SmtpSSLInfo.Verify = profile_get_int(buf, TEXT("SmtpSSLVerify"), 1, app_path);
-		(MailBox + cnt)->SmtpSSLInfo.Depth = profile_get_int(buf, TEXT("SmtpSSLDepth"), -1, app_path);
-		(MailBox + cnt)->SmtpSSLInfo.Cert = profile_alloc_string(buf, TEXT("SmtpSSLCert"), TEXT(""), app_path);
-		(MailBox + cnt)->SmtpSSLInfo.Pkey = profile_alloc_string(buf, TEXT("SmtpSSLPkey"), TEXT(""), app_path);
-		(MailBox + cnt)->SmtpSSLInfo.Pass = profile_alloc_string(buf, TEXT("SmtpSSLPass"), TEXT(""), app_path);
+		(MailBox + num)->SmtpSSLInfo.Type = profile_get_int(buf, TEXT("SmtpSSLType"), 0, app_path);
+		(MailBox + num)->SmtpSSLInfo.Verify = profile_get_int(buf, TEXT("SmtpSSLVerify"), 1, app_path);
+		(MailBox + num)->SmtpSSLInfo.Depth = profile_get_int(buf, TEXT("SmtpSSLDepth"), -1, app_path);
+		(MailBox + num)->SmtpSSLInfo.Cert = profile_alloc_string(buf, TEXT("SmtpSSLCert"), TEXT(""), app_path);
+		(MailBox + num)->SmtpSSLInfo.Pkey = profile_alloc_string(buf, TEXT("SmtpSSLPkey"), TEXT(""), app_path);
+		(MailBox + num)->SmtpSSLInfo.Pass = profile_alloc_string(buf, TEXT("SmtpSSLPass"), TEXT(""), app_path);
 
 		// Filter
-		(MailBox + cnt)->FilterEnable = profile_get_int(buf, TEXT("FilterEnable"), 0, app_path);
-		(MailBox + cnt)->FilterCnt = profile_get_int(buf, TEXT("FilterCnt"), 0, app_path);
+		(MailBox + num)->FilterEnable = profile_get_int(buf, TEXT("FilterEnable"), 0, app_path);
+		(MailBox + num)->FilterCnt = profile_get_int(buf, TEXT("FilterCnt"), 0, app_path);
 		fDef = profile_get_int(buf, TEXT("FilterFlag"), -1, app_path);
 
-		(MailBox + cnt)->tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * (MailBox + cnt)->FilterCnt);
-		if ((MailBox + cnt)->tpFilter == NULL) {
-			(MailBox + cnt)->FilterCnt = 0;
+		(MailBox + num)->tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * (MailBox + num)->FilterCnt);
+		if ((MailBox + num)->tpFilter == NULL) {
+			(MailBox + num)->FilterCnt = 0;
 		}
-		for (t = 0; t < (MailBox + cnt)->FilterCnt; t++) {
-			tpFilter = *((MailBox + cnt)->tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
+		for (t = 0; t < (MailBox + num)->FilterCnt; t++) {
+			tpFilter = *((MailBox + num)->tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
 			if (tpFilter == NULL) {
 				continue;
 			}
@@ -516,6 +693,9 @@ BOOL ini_read_setting(HWND hWnd)
 			} else {
 				tpFilter->Action = fDef;
 			}
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+			tpFilter->SaveboxName = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 			tpFilter->Header1 = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
@@ -531,17 +711,40 @@ BOOL ini_read_setting(HWND hWnd)
 		}
 
 		// RAS
-		(MailBox + cnt)->RasMode = profile_get_int(buf, TEXT("RasMode"), 0, app_path);
-		(MailBox + cnt)->RasEntry = profile_alloc_string(buf, TEXT("RasEntry"), TEXT(""), app_path);
-		(MailBox + cnt)->RasReCon = profile_get_int(buf, TEXT("RasReCon"), 0, app_path);
+		(MailBox + num)->RasMode = profile_get_int(buf, TEXT("RasMode"), 0, app_path);
+		(MailBox + num)->RasEntry = profile_alloc_string(buf, TEXT("RasEntry"), TEXT(""), app_path);
+		(MailBox + num)->RasReCon = profile_get_int(buf, TEXT("RasReCon"), 0, app_path);
 
-		// メールアイテム
-		wsprintf(buf, TEXT("MailBox%d.dat"), j);
-		if (file_read_mailbox(buf, (MailBox + cnt)) == FALSE) {
+		//of new arrival position Mail item
+		wsprintf(buf, TEXT("MailBox%d.dat"), i);
+		if (file_read_mailbox(buf, (MailBox + num)) == FALSE) {
 			profile_free();
 			return FALSE;
 		}
 	}
+
+	// convert old-style [SaveBox] to a new savebox-type account (GJC)
+	wsprintf(buf, TEXT("MailBox%d.dat"), MailBoxCnt);
+	if (ConvertFromNPOP && file_savebox_convert(buf)) {
+		MessageBox(NULL, TEXT("Converting [Savebox]"), WINDOW_TITLE, MB_OK);
+		num = mailbox_create(hWnd, FALSE, FALSE);
+		if (num == -1) {
+			profile_free();
+			return FALSE;
+		}
+		(MailBox + num)->Name = alloc_copy_t(STR_SAVEBOX_NAME);
+		ConvertName = (MailBox + num)->Name;
+		(MailBox + num)->Type = MAILBOX_TYPE_SAVE;
+		(MailBox + num)->CyclicFlag = 1;
+		if (file_read_mailbox(buf, (MailBox + num)) == FALSE) {
+			profile_free();
+			return FALSE;
+		}
+	}
+
+	// check that Saveboxes for filters are valid
+	filter_sbox_check(hWnd, ConvertName);
+
 	profile_free();
 	return TRUE;
 }
@@ -553,6 +756,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 {
 	FILTER *tpFilter;
 	TCHAR app_path[BUF_SIZE];
+	///////////// MRP /////////////////////
+	TCHAR app_pathBackup[BUF_SIZE];
+	///////////// --- /////////////////////
 	TCHAR buf[BUF_SIZE];
 	TCHAR key_buf[BUF_SIZE];
 	TCHAR conv_buf[INI_BUF_SIZE];
@@ -563,11 +769,26 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	TCHAR *p;
 	int j, t;
 	BOOL rc = TRUE;
+	BOOL found;
 
 	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-	profile_initialize(app_path, TRUE);
+
+	///////////// MRP /////////////////////
+#ifdef UNICODE
+   wcscpy(app_pathBackup, app_path);
+   wcscat(app_pathBackup, TEXT(".bak"));
+#else
+   strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
+   strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+	DeleteFile(app_pathBackup);
+	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
+	///////////// --- /////////////////////
+
+	profile_initialize(app_path, FALSE);
 
 	profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir, app_path);
+	profile_write_int(GENERAL, TEXT("Version"), op.Version, app_path);
 	profile_write_int(GENERAL, TEXT("SocLog"), op.SocLog, app_path);
 
 	profile_write_string(GENERAL, TEXT("FontName"), op.view_font.name, app_path);
@@ -581,6 +802,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("LvFontWeight"), op.lv_font.weight, app_path);
 	profile_write_int(GENERAL, TEXT("LvFontItalic"), op.lv_font.italic, app_path);
 	profile_write_int(GENERAL, TEXT("LvFontCharset"), op.lv_font.charset, app_path);
+
+	profile_write_int(GENERAL, TEXT("StatusBarCharWidth"), op.StatusBarCharWidth, app_path);
 
 	profile_write_string(GENERAL, TEXT("HeadCharset"), op.HeadCharset, app_path);
 	profile_write_int(GENERAL, TEXT("HeadEncoding"), op.HeadEncoding, app_path);
@@ -614,7 +837,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("RecvScroll"), op.RecvScroll, app_path);
 	profile_write_int(GENERAL, TEXT("SaveMsg"), op.SaveMsg, app_path);
 	profile_write_int(GENERAL, TEXT("AutoSave"), op.AutoSave, app_path);
-	profile_write_int(GENERAL, TEXT("StertPass"), op.StertPass, app_path);
+	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass, app_path);
 	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
 	profile_write_string(GENERAL, TEXT("pw"), tmp, app_path);
@@ -626,6 +849,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 
 	profile_write_int(GENERAL, TEXT("AddColSize-0"), op.AddColSize[0], app_path);
 	profile_write_int(GENERAL, TEXT("AddColSize-1"), op.AddColSize[1], app_path);
+	profile_write_int(GENERAL, TEXT("AddColSize-2"), op.AddColSize[2], app_path);
 
 #ifndef _WIN32_WCE
 	profile_write_int(GENERAL, TEXT("viewleft"), op.ViewRect.left, app_path);
@@ -646,7 +870,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("WordBreakFlag"), op.WordBreakFlag, app_path);
 	profile_write_int(GENERAL, TEXT("EditWordBreakFlag"), op.EditWordBreakFlag, app_path);
 	profile_write_int(GENERAL, TEXT("ViewShowDate"), op.ViewShowDate, app_path);
-	profile_write_int(GENERAL, TEXT("MstchCase"), op.MstchCase, app_path);
+	profile_write_int(GENERAL, TEXT("MatchCase"), op.MatchCase, app_path);
 	profile_write_int(GENERAL, TEXT("AllFind"), op.AllFind, app_path);
 	profile_write_int(GENERAL, TEXT("SubjectFind"), op.SubjectFind, app_path);
 
@@ -655,31 +879,43 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("SendMessageId"), op.SendMessageId, app_path);
 	profile_write_int(GENERAL, TEXT("SendDate"), op.SendDate, app_path);
 	profile_write_int(GENERAL, TEXT("SelectSendBox"), op.SelectSendBox, app_path);
+	profile_write_int(GENERAL, TEXT("DisableWarning"), op.ExpertMode, app_path);	// Added PHH 4-Oct-2003
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), op.PopBeforeSmtpIsLoginOnly, app_path);
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpWait"), op.PopBeforeSmtpWait, app_path);
 
 	profile_write_int(GENERAL, TEXT("AutoQuotation"), op.AutoQuotation, app_path);
+	profile_write_int(GENERAL, TEXT("FwdQuotation"), op.FwdQuotation, app_path);
+	profile_write_int(GENERAL, TEXT("SignForward"), op.SignForward, app_path);
+	profile_write_int(GENERAL, TEXT("SignReplyAbove"), op.SignReplyAbove, app_path);
 	profile_write_string(GENERAL, TEXT("QuotationChar"), op.QuotationChar, app_path);
 	profile_write_int(GENERAL, TEXT("WordBreakSize"), op.WordBreakSize, app_path);
 	profile_write_int(GENERAL, TEXT("QuotationBreak"), op.QuotationBreak, app_path);
 	profile_write_string(GENERAL, TEXT("ReSubject"), op.ReSubject, app_path);
+	profile_write_string(GENERAL, TEXT("FwdSubject"), op.FwdSubject, app_path);		// Added PHH 4-10-2003
 	EncodeCtrlChar(op.ReHeader, conv_buf);
 	profile_write_string(GENERAL, TEXT("ReHeader"), conv_buf, app_path);
+	EncodeCtrlChar(op.FwdHeader, conv_buf);
+	profile_write_string(GENERAL, TEXT("FwdHeader"), conv_buf, app_path);
+	profile_write_string(GENERAL, TEXT("ReplyTo"), op.AltReplyTo, app_path);
 
 	profile_write_string(GENERAL, TEXT("Bura"), op.Bura, app_path);
 	profile_write_string(GENERAL, TEXT("Oida"), op.Oida, app_path);
-
-	profile_write_string(GENERAL, TEXT("sBura"), op.sBura, app_path);
-	profile_write_string(GENERAL, TEXT("sOida"), op.sOida, app_path);
 
 	profile_write_string(GENERAL, TEXT("CAFile"), op.CAFile, app_path);
 
 	profile_write_int(GENERAL, TEXT("IPCache"), op.IPCache, app_path);
 	profile_write_int(GENERAL, TEXT("EncodeType"), op.EncodeType, app_path);
 
-	profile_write_int(GENERAL, TEXT("ShowNewMailMessgae"), op.ShowNewMailMessgae, app_path);
+	profile_write_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage, app_path);
 	profile_write_int(GENERAL, TEXT("ShowNoMailMessage"), op.ShowNoMailMessage, app_path);
-	profile_write_int(GENERAL, TEXT("ActiveNewMailMessgae"), op.ActiveNewMailMessgae, app_path);
+	profile_write_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
+	profile_write_int(GENERAL, TEXT("ClearNewOverlay"), op.ClearNewOverlay, app_path);
+
+#ifdef _WIN32_WCE_PPC
+	///////////// MRP /////////////////////
+	profile_write_int(GENERAL, TEXT("UsePOOMAddressBook"), op.UsePOOMAddressBook, app_path);
+	///////////// --- /////////////////////
+#endif
 
 	profile_write_int(GENERAL, TEXT("NewMailSound"), op.NewMailSound, app_path);
 	profile_write_string(GENERAL, TEXT("NewMailSoundFile"), op.NewMailSoundFile, app_path);
@@ -709,8 +945,17 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_string(GENERAL, TEXT("EditFileSuffix"), op.EditFileSuffix, app_path);
 	profile_write_int(GENERAL, TEXT("DefEditApp"), op.DefEditApp, app_path);
 	profile_write_string(GENERAL, TEXT("AttachPath"), op.AttachPath, app_path);
-	profile_write_int(GENERAL, TEXT("AttachWarning"), op.AttachWarning, app_path);
+	//profile_write_int(GENERAL, TEXT("AttachWarning"), op.AttachWarning, app_path);
 	profile_write_int(GENERAL, TEXT("AttachDelete"), op.AttachDelete, app_path);
+	profile_write_int(GENERAL, TEXT("StripHtmlTags"), op.StripHtmlTags, app_path);
+#ifdef _WIN32_WCE_PPC
+	profile_write_int(GENERAL, TEXT("RememberOpenSaveDir"), op.RememberOSD, app_path);
+	if (op.RememberOSD == 1 && op.OpenSaveDir != NULL) {
+		profile_write_string(GENERAL, TEXT("OpenSaveDir"), op.OpenSaveDir, app_path);
+	} else {
+		profile_write_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+	}
+#endif
 
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp, app_path);
 
@@ -718,9 +963,19 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 
 	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon, app_path);
 	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon, app_path);
+	profile_write_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), op.RasCheckEndDisConTimeout, app_path);
 	profile_write_int(GENERAL, TEXT("RasEndDisCon"), op.RasEndDisCon, app_path);
 	profile_write_int(GENERAL, TEXT("RasNoCheck"), op.RasNoCheck, app_path);
 	profile_write_int(GENERAL, TEXT("RasWaitSec"), op.RasWaitSec, app_path);
+
+	// GJC delete obsolete entries
+	profile_delete_key(GENERAL, TEXT("StertPass"));
+	profile_delete_key(GENERAL, TEXT("MstchCase"));
+	profile_delete_key(GENERAL, TEXT("ShowNewMailMessgae"));
+	profile_delete_key(GENERAL, TEXT("ActiveNewMailMessgae"));
+	profile_delete_key(GENERAL, TEXT("sOida"));
+	profile_delete_key(GENERAL, TEXT("sBura"));
+	profile_delete_key(GENERAL, TEXT("AutoMarkSend"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {
 		if (*(op.RasInfo + j) == NULL ||
@@ -740,7 +995,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	}
 	profile_write_int(GENERAL, TEXT("RasInfoCnt"), t, app_path);
 
-	// メールボックスの設定の保存
+	// Retention
 	profile_write_int(GENERAL, TEXT("MailBoxCnt"), MailBoxCnt - MAILBOX_USER, app_path);
 
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
@@ -748,9 +1003,18 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 			continue;
 		}
 		wsprintf(buf, TEXT("MAILBOX-%d"), j - MAILBOX_USER);
+		if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
+			// GJC - SaveBox type (not an account)
+			profile_clear_section(buf);
+			profile_write_string(buf, TEXT("Name"), (MailBox + j)->Name, app_path);
+			profile_write_int(buf, TEXT("Type"), MAILBOX_TYPE_SAVE, app_path);
+			continue;
+		}
 
 		// Name
 		profile_write_string(buf, TEXT("Name"), (MailBox + j)->Name, app_path);
+		// Type
+		profile_write_int(buf, TEXT("Type"), (MailBox + j)->Type, app_path);
 		// Server
 		profile_write_string(buf, TEXT("Server"), (MailBox + j)->Server, app_path);
 		// Port
@@ -862,6 +1126,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 			profile_write_int(buf, key_buf, tpFilter->Action, app_path);
 
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+			profile_write_string(buf, key_buf, tpFilter->SaveboxName, app_path);
+
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 			profile_write_string(buf, key_buf, tpFilter->Header1, app_path);
 
@@ -875,29 +1142,70 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 			profile_write_string(buf, key_buf, tpFilter->Content2, app_path);
 		}
 
+		// GJC clear any further filter keys
+		found = TRUE;
+		while (found) {
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Enable"));
+			found &= profile_delete_key(buf, key_buf);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
+			found &= profile_delete_key(buf, key_buf);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+			profile_delete_key(buf, key_buf); // may not exist in old versions
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
+			found &= profile_delete_key(buf, key_buf);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
+			found &= profile_delete_key(buf, key_buf);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
+			found &= profile_delete_key(buf, key_buf);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
+			found &= profile_delete_key(buf, key_buf);
+
+			t++;
+		}
+
 		// RAS
 		profile_write_int(buf, TEXT("RasMode"), (MailBox + j)->RasMode, app_path);
 		profile_write_string(buf, TEXT("RasEntry"), (MailBox + j)->RasEntry, app_path);
 		profile_write_int(buf, TEXT("RasReCon"), (MailBox + j)->RasReCon, app_path);
 	}
+	// GJC clear keys from deleted mailboxes
+	found = TRUE;
+	j = MailBoxCnt;
+	while (found) {
+		wsprintf(buf, TEXT("MAILBOX-%d"), j - MAILBOX_USER);
+		found = profile_clear_section(buf);
+		j++;
+	}
+
 	if (profile_flush(app_path) == FALSE) {
 		rc = FALSE;
 	}
-	profile_free();
+	profile_free();	 
+
+	///////////// MRP /////////////////////
+	DeleteFile(app_pathBackup);
+	///////////// --- /////////////////////
 
 	if (SaveMailFlag == FALSE) {
 		// 設定保存のみ
 		return rc;
 	}
 
-	// メールボックス内のメールの保存
+	//Retention
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
 		if ((MailBox + j) == NULL) {
 			continue;
 		}
-		// メールアイテム
+		//of mail inside mailbox Mail item
 		wsprintf(buf, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
-		if (file_save_mailbox(buf, MailBox + j, op.ListSaveMode) == FALSE) {
+		if (file_save_mailbox(buf, MailBox + j, 
+			((MailBox + j)->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode) == FALSE) {
 			rc = FALSE;
 		}
 	}
@@ -915,11 +1223,12 @@ void ini_free(void)
 	mem_free(&op.CAFile);
 	mem_free(&op.QuotationChar);
 	mem_free(&op.ReSubject);
+	mem_free(&op.FwdSubject);
 	mem_free(&op.ReHeader);
+	mem_free(&op.FwdHeader);
+	mem_free(&op.AltReplyTo);
 	mem_free(&op.Bura);
 	mem_free(&op.Oida);
-	mem_free(&op.sBura);
-	mem_free(&op.sOida);
 	mem_free(&op.HeadCharset);
 	mem_free(&op.BodyCharset);
 	mem_free(&op.TimeZone);
@@ -934,6 +1243,9 @@ void ini_free(void)
 	mem_free(&op.EditApp);
 	mem_free(&op.EditAppCmdLine);
 	mem_free(&op.EditFileSuffix);
+#ifdef _WIN32_WCE_PPC
+	mem_free(&op.OpenSaveDir);
+#endif
 	mem_free(&op.URLApp);
 	mem_free(&op.AttachPath);
 	mem_free(&op.Password);

@@ -19,7 +19,7 @@
 /* Struct */
 
 /* Function Prototypes */
-BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int mode_open, TCHAR *fname, TCHAR *ret);
+BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret);
 
 #endif
 /* End of source */

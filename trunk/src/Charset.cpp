@@ -8,6 +8,9 @@
  *		nakka@nakka.com
  */
 
+/* charset functions not supported on WinCE 2.0 */
+#if (!defined(_WIN32_WCE) || (_WIN32_WCE >= 211))
+
 /* Include Files */
 #define _INC_OLE
 #include <windows.h>
@@ -275,4 +278,5 @@ void set_default_encode(const UINT cp, TCHAR **HeadCharset, TCHAR **BodyCharset)
 		}
 	}
 }
+#endif // _WCE_OLD
 /* End of source */
