@@ -1,0 +1,55 @@
+[Version]
+Signature = "$Windows NT$"
+Provider = "nakka"
+CESignature = "$Windows CE$"
+
+; String definition
+
+[CEStrings]
+AppName = nPOP
+InstallDir =%CE1%\%AppName%
+
+[Strings]
+reg_path = Software\nakka
+
+; Device Specification
+
+[CEDevice]
+UnsupportedPlatforms = "HPC"
+
+[CEDevice.arm]
+ProcessorType = 2577
+VersionMin = 3.0
+VersionMax = 32767.0
+
+; Installation Items
+
+[DefaultInstall]
+CopyFiles = Files.InstallDir
+CEShortcuts = Links
+
+; CAB file source files on Development PC env.
+
+[SourceDisksNames]
+1 = ,"Common Files",,Common
+
+[SourceDisksNames.arm]
+2 = ,"PPC30 ARM Files",,ARMRel
+
+[SourceDisksFiles]
+nPOP.exe = 2
+
+; on WinCE destication folders
+
+[DestinationDirs]
+Files.InstallDir = 0,%InstallDir%
+Links = 0,%CE11%
+DefaultDestDir = 0,%InstallDir%
+
+; FILES TO BE INSTALLED
+
+[Files.InstallDir]
+nPOP.exe,,,0
+
+[Links]
+"nPOP",0,"nPOP.exe",%CE11%
