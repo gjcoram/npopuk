@@ -425,7 +425,7 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
 
 	if (op.LvThreadView == 1) {
 		// スレッド表示
-		Item_SetThread(tpMailBox);
+		item_create_thread(tpMailBox);
 		ListView_SortItems(hListView, CompareFunc, SORT_THREAD + 1);
 	} else if ((SelBox == MAILBOX_SAVE && op.LvAutoSort == 1) || op.LvAutoSort == 2) {
 		// 自動ソート

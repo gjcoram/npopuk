@@ -59,6 +59,7 @@
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDD_DIALOG_SETSSL               182
+#define IDD_DIALOG_ENCODE               183
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
 #define IDM_MAIN_EDIT                   452
@@ -164,10 +165,15 @@
 #define IDC_STATIC_MAILCNT              1087
 #define IDC_STATIC_MAILSIZE             1088
 #define IDC_COMBO_SSLTYPE               1089
+#define IDC_BUTTON_ENCODE               1089
 #define IDC_CHECK_VERIFY                1090
+#define IDC_COMBO_CHARSET_H             1090
 #define IDC_STATIC_FROM                 1091
+#define IDC_COMBO_ENCODE_H              1091
 #define IDC_STATIC_TYPE                 1092
+#define IDC_COMBO_CHARSET               1092
 #define IDC_STATIC_FILENAME             1093
+#define IDC_COMBO_ENCODE                1093
 #define IDC_RADIO_OPEN                  1094
 #define IDC_RADIO_SAVE                  1095
 #define LVS_NOSORTHEADER                0x8000
@@ -257,15 +263,16 @@
 #define IDS_MENUITEM40144               40145
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
+#define ID_MENUITEM_ENCODE              40148
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        183
-#define _APS_NEXT_COMMAND_VALUE         40148
-#define _APS_NEXT_CONTROL_VALUE         1089
+#define _APS_NEXT_RESOURCE_VALUE        184
+#define _APS_NEXT_COMMAND_VALUE         40149
+#define _APS_NEXT_CONTROL_VALUE         1091
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

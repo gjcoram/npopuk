@@ -60,6 +60,7 @@
 #define IDD_DIALOG_POP_HPC              186
 #define IDD_DIALOG_OPTION_RECV_HPC      187
 #define IDD_DIALOG_SETSSL               189
+#define IDD_DIALOG_ENCODE               191
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_TITLE                  1003
@@ -175,6 +176,11 @@
 #define IDC_COMBO_SSLTYPE               1091
 #define IDC_STATIC_FROM                 1091
 #define IDC_CHECK_VERIFY                1092
+#define IDC_COMBO_CHARSET_H             1093
+#define IDC_COMBO_ENCODE_H              1094
+#define IDC_BUTTON_ENCODE               1096
+#define IDC_COMBO_CHARSET               1097
+#define IDC_COMBO_ENCODE                1098
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
@@ -245,6 +251,8 @@
 #define ID_MENUITEM_ATTACH              40094
 #define ID_MENUITEM_FORWARD             40095
 #define ID_MENUITEM40095                40095
+#define ID_MENUITEM_FONT                40096
+#define ID_MENUITEM_ENCODE              40097
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -252,9 +260,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        191
-#define _APS_NEXT_COMMAND_VALUE         40096
-#define _APS_NEXT_CONTROL_VALUE         1093
+#define _APS_NEXT_RESOURCE_VALUE        192
+#define _APS_NEXT_COMMAND_VALUE         40098
+#define _APS_NEXT_CONTROL_VALUE         1098
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -61,6 +61,7 @@
 #define IDD_DIALOG_SETSMTPAUTH          183
 #define IDD_DIALOG_POP_HPC              184
 #define IDD_DIALOG_OPTION_RECV_HPC      185
+#define IDD_DIALOG_ENCODE               189
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_TITLE                  1003
@@ -166,10 +167,15 @@
 #define IDC_STATIC_MAILCNT              1087
 #define IDC_STATIC_MAILSIZE             1088
 #define IDC_COMBO_SSLTYPE               1089
+#define IDC_BUTTON_ENCODE               1089
 #define IDC_CHECK_VERIFY                1090
+#define IDC_COMBO_CHARSET_H             1090
 #define IDC_STATIC_FROM                 1091
+#define IDC_COMBO_ENCODE_H              1091
 #define IDC_STATIC_TYPE                 1092
+#define IDC_COMBO_CHARSET               1092
 #define IDC_STATIC_FILENAME             1093
+#define IDC_COMBO_ENCODE                1093
 #define IDC_RADIO_OPEN                  1094
 #define IDC_RADIO_SAVE                  1095
 #define IDC_BUTTON_SETSSL               1095
@@ -248,9 +254,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        188
+#define _APS_NEXT_RESOURCE_VALUE        190
 #define _APS_NEXT_COMMAND_VALUE         40094
-#define _APS_NEXT_CONTROL_VALUE         1089
+#define _APS_NEXT_CONTROL_VALUE         1091
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

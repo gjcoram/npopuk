@@ -17,9 +17,21 @@
 /* Define */
 
 /* Struct */
+typedef struct _FONT_INFO {
+	TCHAR *name;
+	int size;
+	int weight;
+	int italic;
+	int charset;
+} FONT_INFO;
 
 /* Function Prototypes */
-HFONT create_font(HWND hWnd, TCHAR *FontName, int FontSize, int Charset);
+HFONT font_create(HWND hWnd, FONT_INFO *fi);
+HFONT font_copy(const HFONT hfont);
+int font_get_charset(const HDC hdc);
+#ifndef _WIN32_WCE
+BOOL font_select(const HWND hWnd, FONT_INFO *fi);
+#endif
 
 #endif
 /* End of source */

@@ -18,6 +18,7 @@
 /* Struct */
 
 /* Function Prototypes */
+int IsDependenceString(TCHAR *buf);
 void sjis_iso2022jp(unsigned char *buf,unsigned char *ret);
 char *iso2022jp_sjis(char *buf, char *ret);
 

@@ -58,6 +58,7 @@ BEGIN
         MENUITEM "次を検索(&N)\tF3",            ID_MENUITEM_NEXTFIND
         MENUITEM SEPARATOR
         MENUITEM "右端で折り返す(&W)",          ID_MENUITEM_WORDBREAK
+        MENUITEM "ﾌｫﾝﾄ(&O)...",                 ID_MENUITEM_FONT
         MENUITEM "日付を表示(&D)",              ID_MENUITEM_SHOW_DATE
     END
 END
@@ -70,6 +71,7 @@ BEGIN
         MENUITEM "送信箱に保存(&O)\tCtrl+G",    ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "送信情報(&I)...\tCtrl+I",     ID_MENUITEM_SENDINFO
+        MENUITEM "ｴﾝｺｰﾄﾞ(&E)...",               ID_MENUITEM_ENCODE
         MENUITEM "添付ﾌｧｲﾙ(&A)...",             ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "閉じる(&C)",                  ID_MENUITEM_CLOSE
@@ -86,6 +88,7 @@ BEGIN
         MENUITEM "ﾌｧｲﾙから貼り付け(&F)...",     ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
         MENUITEM "右端で折り返す(&W)",          ID_MENUITEM_WORDBREAK
+        MENUITEM "ﾌｫﾝﾄ(&O)...",                 ID_MENUITEM_FONT
     END
 END
 
@@ -309,11 +312,11 @@ CAPTION "作成"
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     CONTROL         "自動引用",IDC_CHECK_AUTOQUOT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,10,50,10
-    LTEXT           "引用記号:",IDC_STATIC,15,25,35,10
-    EDITTEXT        IDC_EDIT_QUOTCHAR,55,23,55,12,ES_AUTOHSCROLL
-    LTEXT           "返信用ﾍｯﾀﾞ:",IDC_STATIC,5,43,45,10
-    EDITTEXT        IDC_EDIT_REHEAD,5,53,204,72,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_TABSTOP,5,5,50,10
+    LTEXT           "引用記号:",IDC_STATIC,15,21,35,10
+    EDITTEXT        IDC_EDIT_QUOTCHAR,55,19,55,12,ES_AUTOHSCROLL
+    LTEXT           "返信用ﾍｯﾀﾞ:",IDC_STATIC,5,39,45,10
+    EDITTEXT        IDC_EDIT_REHEAD,5,50,204,75,ES_MULTILINE | ES_WANTRETURN | 
                     WS_VSCROLL | WS_HSCROLL
     CONTROL         "返信作成時に受信ﾒｰﾙを閉じる",IDC_CHECK_VIEWCLOSE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,130,135,10
@@ -324,20 +327,19 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "受信"
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
-    LTEXT           "新着取得時に受信する行数:",IDC_STATIC,5,12,95,10
-    EDITTEXT        IDC_EDIT_READLINE,101,10,40,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
+    LTEXT           "新着取得時に受信する行数:",IDC_STATIC,5,7,95,10
+    EDITTEXT        IDC_EDIT_READLINE,101,5,40,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "新着取得時に本文を全て受信",IDC_CHECK_LISTDOWNLOAD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,25,130,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,21,130,10
     CONTROL         "ﾍｯﾀﾞを表示",IDC_CHECK_SHOWHEAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,39,120,10
-    GROUPBOX        "ﾒｰﾙ一覧の保存",IDC_STATIC,5,53,202,55
+                    WS_TABSTOP,5,35,120,10
+    GROUPBOX        "ﾒｰﾙ一覧の保存",IDC_STATIC,5,49,202,55
     CONTROL         "ﾍｯﾀﾞと本文を保存",IDC_RADIO_ALLSAVE,"Button",
-                    BS_AUTORADIOBUTTON,10,65,105,10
+                    BS_AUTORADIOBUTTON,10,61,105,10
     CONTROL         "ﾍｯﾀﾞのみを保存",IDC_RADIO_HEADSAVE,"Button",
-                    BS_AUTORADIOBUTTON,10,79,105,10
+                    BS_AUTORADIOBUTTON,10,75,105,10
     CONTROL         "保存しない",IDC_RADIO_NOSAVE,"Button",
-                    BS_AUTORADIOBUTTON,10,93,105,10
+                    BS_AUTORADIOBUTTON,10,89,105,10
 END
 
 IDD_DIALOG_OPTION_SEND DIALOG DISCARDABLE  0, 0, 214, 145
@@ -345,21 +347,20 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "送信"
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
-    LTEXT           "送信ﾒｰﾙ保存時の自動折り返し桁数:",IDC_STATIC,5,12,115,
-                    10
-    EDITTEXT        IDC_EDIT_BREAKCNT,125,10,40,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
+    LTEXT           "送信ﾒｰﾙ保存時の自動折り返し桁数:",IDC_STATIC,5,7,115,10
+    EDITTEXT        IDC_EDIT_BREAKCNT,125,5,40,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "引用行は折り返さない",IDC_CHECK_QBREAK,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,25,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,20,90,10
     CONTROL         "'Message-Id' を送信",IDC_CHECK_SENDMESSAGEID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,40,85,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,33,85,10
     CONTROL         "'Date' を送信",IDC_CHECK_SENDDATE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,53,85,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,46,85,10
     CONTROL         "添付ﾌｧｲﾙ名はMIME ""B"" encodingで送信",
                     IDC_CHECK_ENCODETYPE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,67,140,10
+                    WS_TABSTOP,5,59,140,10
     CONTROL         "送信箱に保存で送信箱を表示",IDC_CHECK_SELECTSENDBOX,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,81,125,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,72,125,10
+    PUSHBUTTON      "ｴﾝｺｰﾄﾞ設定",IDC_BUTTON_ENCODE,5,90,60,15
 END
 
 IDD_DIALOG_CC DIALOG DISCARDABLE  0, 0, 254, 175
@@ -400,30 +401,30 @@ FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     CONTROL         "新着ﾒｰﾙがあるときﾒｯｾｰｼﾞﾎﾞｯｸｽを出す",
                     IDC_CHECK_SHIWNEWMESSAGE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,10,140,10
+                    WS_TABSTOP,5,5,140,10
     CONTROL         "新着ﾒｰﾙがないときﾒｯｾｰｼﾞﾎﾞｯｸｽを出す",
                     IDC_CHECK_SHIWNOMESSAGE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,23,140,10
+                    WS_TABSTOP,5,19,140,10
     CONTROL         "新着ﾒｰﾙがあるとき音を鳴らす:",IDC_CHECK_SOUND,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,36,105,10
-    EDITTEXT        IDC_EDIT_SOUND,15,47,172,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BUTTON_SOUND_BROWS,189,47,10,12
-    PUSHBUTTON      "♪",IDC_BUTTON_SOUND_PLAY,200,47,10,12
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,31,105,10
+    EDITTEXT        IDC_EDIT_SOUND,15,43,172,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_SOUND_BROWS,189,43,10,12
+    PUSHBUTTON      "♪",IDC_BUTTON_SOUND_PLAY,200,43,10,12
     CONTROL         "実行が完了したとき音を鳴らす",IDC_CHECK_EXECSOUND,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,62,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,57,110,10
     CONTROL         "自動ﾁｪｯｸ:",IDC_CHECK_AUTOCHECK,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,75,45,10
-    EDITTEXT        IDC_EDIT_AUTOCHECKTIME,55,73,35,12,ES_AUTOHSCROLL | 
+                    WS_TABSTOP,5,71,45,10
+    EDITTEXT        IDC_EDIT_AUTOCHECKTIME,55,69,35,12,ES_AUTOHSCROLL | 
                     ES_NUMBER
-    LTEXT           "分毎",IDC_STATIC,95,77,20,10
+    LTEXT           "分毎",IDC_STATIC,95,73,20,10
     CONTROL         "起動時に新着ﾒｰﾙをﾁｪｯｸ",IDC_CHECK_STARTCHECK,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,89,110,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,85,110,10
     CONTROL         "実行後に新着ﾒｰﾙをﾁｪｯｸ",IDC_CHECK_CHECKAFTERUPDATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,103,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,99,110,10
     CONTROL         "ﾒｰﾙ受信時のｴﾗｰを無視",IDC_CHECK_IGNOREERROR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,117,110,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,113,110,10
     CONTROL         "ﾒｰﾙ送信時のｴﾗｰを無視",IDC_CHECK_SENDIGNOREERROR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,130,110,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,125,110,10
 END
 
 IDD_DIALOG_ADDRESS_EDIT DIALOG DISCARDABLE  0, 0, 269, 85
@@ -476,13 +477,13 @@ CAPTION "その他"
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     CONTROL         "ﾀｽｸﾄﾚｲにｱｲｺﾝを表示",IDC_CHECK_SHOWTRAYICON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,10,115,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,5,115,10
     CONTROL         "最小化で非表示",IDC_CHECK_MINSIZEHIDE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,24,105,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,19,105,10
     CONTROL         "閉じるで非表示",IDC_CHECK_CLOSEHIDE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,37,105,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,33,105,10
     CONTROL         "ｱｶｳﾝﾄをまたがって未開封の移動",IDC_CHECK_MOVEALLMAILBOX,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,51,135,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,47,135,10
     GROUPBOX        "ﾊﾟｽﾜｰﾄﾞ設定",IDC_STATIC,5,75,205,65
     CONTROL         "起動時にﾊﾟｽﾜｰﾄﾞを要求",IDC_CHECK_STARTPASS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,15,89,95,10
@@ -632,17 +633,17 @@ CAPTION "接続"
 FONT 9, "ＭＳ Ｐゴシック"
 BEGIN
     CONTROL         "送受信時にﾀﾞｲﾔﾙｱｯﾌﾟ接続",IDC_CHECK_RASCON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,10,105,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,5,105,10
     CONTROL         "送受信終了時に切断 (nPOP接続時)",IDC_CHECK_CHENDDISCON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,24,185,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,19,185,10
     CONTROL         "終了時に切断 (nPOP接続時)",IDC_CHECK_ENDDISCON,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,38,185,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,33,185,10
     CONTROL         "未接続時は自動ﾁｪｯｸを行わない",IDC_CHECK_NORASNOCHECK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,52,150,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,47,150,10
     LTEXT           "ﾀﾞｲﾔﾙｱｯﾌﾟ接続を切り替えるまでの待ち時間: ",IDC_STATIC,5,
-                    75,155,8
-    EDITTEXT        IDC_EDIT_WAIT,5,85,30,12,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "秒",IDC_STATIC,38,89,17,10
+                    71,155,8
+    EDITTEXT        IDC_EDIT_WAIT,5,81,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "秒",IDC_STATIC,38,85,17,10
     LTEXT           "※ 接続先の設定はｱｶｳﾝﾄ毎に行ってください",IDC_STATIC,5,
                     130,185,8
 END
@@ -693,6 +694,29 @@ BEGIN
                     BS_AUTORADIOBUTTON,15,90,120,10
     DEFPUSHBUTTON   "OK",IDOK,110,115,50,14
     PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,165,115,50,14
+END
+
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 254, 99
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ｴﾝｺｰﾄﾞ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "ﾍｯﾀﾞ",IDC_STATIC,5,5,120,70
+    LTEXT           "ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,10,20,90,10
+    COMBOBOX        IDC_COMBO_CHARSET_H,10,30,110,160,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ｴﾝｺｰﾄﾞ:",IDC_STATIC,10,45,90,10
+    COMBOBOX        IDC_COMBO_ENCODE_H,10,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "本文",IDC_STATIC,130,5,120,70
+    LTEXT           "ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,135,20,90,10
+    COMBOBOX        IDC_COMBO_CHARSET,135,30,110,160,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ｴﾝｺｰﾄﾞ:",IDC_STATIC,135,45,90,10
+    COMBOBOX        IDC_COMBO_ENCODE,135,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,145,80,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,200,80,50,14
 END
 
 
@@ -910,6 +934,14 @@ BEGIN
         RIGHTMARGIN, 214
         TOPMARGIN, 7
         BOTTOMMARGIN, 128
+    END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 92
     END
 END
 #endif    // APSTUDIO_INVOKED

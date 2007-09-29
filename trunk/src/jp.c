@@ -10,6 +10,8 @@
 
 /* Include Files */
 #include "General.h"
+#include "Memory.h"
+#include "String.h"
 
 /* Define */
 #define ESC						0x1B
@@ -18,12 +20,76 @@
 									((unsigned char)c >= (unsigned char)0xE0 && (unsigned char)c <= (unsigned char)0xFC))
 #define	IsHankaku(c)			((unsigned char)c >= (unsigned char)0xa0 && (unsigned char)c <= (unsigned char)0xdf)
 
+#define CHARSET_ISO_2022_JP		"ISO-2022-JP"
+
 /* Global Variables */
+extern OPTION op;
 
 /* Local Function Prototypes */
 static int HanToZen(unsigned int *zenkaku, unsigned char *str);
 static void JisShift(int *ph,int *pl);
 static void SjisShift(int *ph, int *pl);
+
+/*
+ * IsDependenceString - ShiftJISの機種依存文字が含まれているかチェック
+ */
+int IsDependenceString(TCHAR *buf)
+{
+	unsigned char *p;
+	unsigned char c,d;
+	int ret = -1;
+	int index = 0;
+#ifdef UNICODE
+	char *cBuf;
+#endif
+
+	if (buf == NULL) {
+		return ret;
+	}
+	if ((op.HeadCharset == NULL || lstrcmpi(op.HeadCharset, TEXT(CHARSET_ISO_2022_JP)) != 0) &&
+		(op.BodyCharset == NULL || lstrcmpi(op.BodyCharset, TEXT(CHARSET_ISO_2022_JP)) != 0)) {
+		return ret;
+	}
+
+#ifdef UNICODE
+	cBuf = alloc_tchar_to_char(buf);
+	if (cBuf == NULL) {
+		return ret;
+	}
+	p = (unsigned char *)cBuf;
+#else
+	p = buf;
+#endif
+	while ((c = *(p++)) != '\0') {
+		if (IsKanji(c) == TRUE) {
+			d = *(p++);
+			if (
+				// 特殊文字区点コード, 13区
+				(c == 0x87 && (d >= 0x40 && d <= 0x9C)) ||
+
+				// NEC選定IBM拡張文字区点コード, 89区～92区
+				(c == 0xED && (d >= 0x40 && d <= 0xFF)) ||
+				(c == 0xEE && (d >= 0x00 && d <= 0xFC)) ||
+
+				// IBM拡張文字区点コード, 115区～119区
+				(c == 0xFA && (d >= 0x40 && d <= 0xFF)) ||
+				(c == 0xFB && (d >= 0x00 && d <= 0xFF)) ||
+				(c == 0xFC && (d >= 0x00 && d <= 0x4B))
+				) {
+				ret = index;
+				break;
+			}
+#ifndef UNICODE
+			index++;
+#endif
+		}
+		index++;
+	}
+#ifdef UNICODE
+	mem_free(&cBuf);
+#endif
+	return ret;
+}
 
 /*
  * HanToZen - 半角カナを全角カナに変換

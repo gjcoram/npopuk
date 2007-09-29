@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 日本語 resources
+// Japanese resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -143,6 +143,7 @@ BEGIN
         MENUITEM "送信箱に保存",                ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "送信情報",                    ID_MENUITEM_SENDINFO
+        MENUITEM "ｴﾝｺｰﾄﾞ",                      ID_MENUITEM_ENCODE
         MENUITEM "添付ﾌｧｲﾙ",                    ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
         MENUITEM "閉じる",                      ID_MENUITEM_CLOSE
@@ -327,6 +328,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,67,122,10
     CONTROL         "送信箱に保存で送信箱を表示",IDC_CHECK_SELECTSENDBOX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,81,115,10
+    PUSHBUTTON      "ｴﾝｺｰﾄﾞ設定",IDC_BUTTON_ENCODE,3,95,55,15
 END
 
 IDD_DIALOG_OPTION_MAKE DIALOG DISCARDABLE  0, 0, 138, 113
@@ -638,6 +640,25 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,111,14,26,13
 END
 
+IDD_DIALOG_ENCODE DIALOG DISCARDABLE  0, 0, 138, 180
+STYLE WS_POPUP | WS_BORDER
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ﾍｯﾀﾞ ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,5,95,10
+    COMBOBOX        IDC_COMBO_CHARSET_H,5,15,125,85,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ﾍｯﾀﾞ ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,31,95,10
+    COMBOBOX        IDC_COMBO_ENCODE_H,5,41,125,79,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "本文 ｷｬﾗｸﾀｾｯﾄ:",IDC_STATIC,5,65,95,10
+    COMBOBOX        IDC_COMBO_CHARSET,5,75,125,90,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "本文 ｴﾝｺｰﾄﾞ:",IDC_STATIC,5,91,95,10
+    COMBOBOX        IDC_COMBO_ENCODE,5,101,125,79,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,95,120,35,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -822,6 +843,14 @@ BEGIN
         RIGHTMARGIN, 131
         TOPMARGIN, 7
         BOTTOMMARGIN, 173
+    END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 135
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1027,7 +1056,7 @@ BEGIN
     IDS_MENUITEM40140       "MailBox"
 END
 
-#endif    // 日本語 resources
+#endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
 

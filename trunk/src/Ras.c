@@ -116,8 +116,8 @@ BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass)
 	if ((i = GetRasInfo(Entry)) != -1) {
 		mem_free(&(*(op.RasInfo + i))->RasUser);
 		mem_free(&(*(op.RasInfo + i))->RasPass);
-		(*(op.RasInfo + i))->RasUser = alloc_copy(User);
-		(*(op.RasInfo + i))->RasPass = alloc_copy(Pass);
+		(*(op.RasInfo + i))->RasUser = alloc_copy_t(User);
+		(*(op.RasInfo + i))->RasPass = alloc_copy_t(Pass);
 		return TRUE;
 	}
 
@@ -133,9 +133,9 @@ BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass)
 	if (*(TmpRasInfo + op.RasInfoCnt) == NULL) {
 		return FALSE;
 	}
-	(*(TmpRasInfo + op.RasInfoCnt))->RasEntry = alloc_copy(Entry);
-	(*(TmpRasInfo + op.RasInfoCnt))->RasUser = alloc_copy(User);
-	(*(TmpRasInfo + op.RasInfoCnt))->RasPass = alloc_copy(Pass);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasEntry = alloc_copy_t(Entry);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasUser = alloc_copy_t(User);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasPass = alloc_copy_t(Pass);
 
 	mem_free((void **)&op.RasInfo);
 	op.RasInfo = TmpRasInfo;

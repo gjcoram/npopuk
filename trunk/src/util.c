@@ -12,6 +12,7 @@
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
+#include "code.h"
 
 #include "global.h"
 #include "md5.h"
@@ -40,6 +41,7 @@
 extern OPTION op;
 
 /* Local Function Prototypes */
+static TCHAR *AllocURLDecode(TCHAR *buf);
 static TCHAR *StrNextContentT(TCHAR *p);
 #ifdef UNICODE
 static char *StrNextContent(char *p);
@@ -50,6 +52,38 @@ static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
 static void sReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
 static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf);
 static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr);
+
+/*
+ * AllocURLDecode - メモリを確保してURL encodingをデコード
+ */
+static TCHAR *AllocURLDecode(TCHAR *buf)
+{
+	char *cbuf;
+	char *tmp;
+
+#ifdef UNICODE
+	cbuf = alloc_tchar_to_char(buf);
+#else
+	cbuf = buf;
+#endif
+	if (cbuf == NULL) {
+		return NULL;
+	}
+	tmp = (char *)mem_alloc(tstrlen(cbuf) + 1);
+	if (tmp == NULL) {
+#ifdef UNICODE
+		mem_free(&cbuf);
+#endif
+		return NULL;
+	}
+	URL_decode(cbuf, tmp);
+#ifdef UNICODE
+	mem_free(&cbuf);
+	return alloc_char_to_tchar(tmp);
+#else
+	return tmp;
+#endif
+}
 
 /*
  * StrNextContentT - ヘッダ内の次のコンテンツの先頭に移動する (TCHAR)
@@ -102,8 +136,7 @@ TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str)
 	len = lstrlen(str);
 	p = buf;
 	while (1) {
-		if (CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
-			NORM_IGNORECASE, p, len, str, len) != 2) {
+		if (str_cmp_ni_t(p, str, len) != 0) {
 			// 次のコンテンツに移動する
 			p = StrNextContentT(p);
 			if (*p == TEXT('\0') || (*p == TEXT('\r') && *(p + 1) == TEXT('\n'))) {
@@ -663,10 +696,10 @@ int DateConv(char *buf, char *ret)
 	}
 
 #ifdef UNICODE
-	str_join(wret, fDay, TEXT(" "), fTime, (TCHAR *)-1);
+	str_join_t(wret, fDay, TEXT(" "), fTime, (TCHAR *)-1);
 	tchar_to_char(wret, ret, BUF_SIZE);
 #else
-	str_join(ret, fDay, TEXT(" "), fTime, (TCHAR *)-1);
+	str_join_t(ret, fDay, TEXT(" "), fTime, (TCHAR *)-1);
 #endif
 	return 0;
 }
@@ -793,10 +826,10 @@ int SortDateConv(char *buf, char *ret)
 	}
 
 #ifdef UNICODE
-	str_join(wret, fDay, fTime, (TCHAR *)-1);
+	str_join_t(wret, fDay, fTime, (TCHAR *)-1);
 	tchar_to_char(wret, ret, BUF_SIZE);
 #else
-	str_join(ret, fDay, fTime, (TCHAR *)-1);
+	str_join_t(ret, fDay, fTime, (TCHAR *)-1);
 #endif
 	return 0;
 }
@@ -883,7 +916,7 @@ static void EncodePassword_old(TCHAR *buf, TCHAR *ret, int retsize)
 	r = ret;
 #endif
 
-	Base64Decode(p, r);
+	base64_decode(p, r);
 
 	len = tstrlen(r);
 	for (i = 0; i < len; i++) {
@@ -947,7 +980,7 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 			*ret = TEXT('\0');
 			return;
 		}
-		t = Base64Decode(p + 1, r);
+		t = base64_decode(p + 1, r);
 		len = t - r;
 		mem_free(&p);
 		p = r;
@@ -978,7 +1011,7 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 			*ret = TEXT('\0');
 			return;
 		}
-		Base64Encode(p, r, len);
+		base64_encode(p, r, len);
 		mem_free(&p);
 		p = r;
 
@@ -1100,7 +1133,7 @@ TCHAR *CreateMessageId(long id, TCHAR *MailAddress)
 	len = wsprintf(ret, TEXT("<%04d%02d%02d%02d%02d%02d.%08X"),
 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
 		id * ((long)ret + st.wSecond + st.wMilliseconds));
-	str_join(ret + len, TEXT("."), MailAddress, TEXT(">"), (TCHAR *)-1);
+	str_join_t(ret + len, TEXT("."), MailAddress, TEXT(">"), (TCHAR *)-1);
 	return ret;
 }
 
@@ -1660,13 +1693,16 @@ static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf)
  */
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 {
+#ifdef UNICODE
+	TCHAR *body;
+#endif
 	TCHAR *tmp;
 	TCHAR *p, *r, *s;
 
 	for (p = buf; *p == TEXT(' '); p++);
 	if (str_cmp_ni_t(p, URL_MAILTO, lstrlen(URL_MAILTO)) != 0) {
 		// メールアドレスのみ
-		tpMailItem->To = alloc_copy(p);
+		tpMailItem->To = alloc_copy_t(p);
 		return TRUE;
 	}
 
@@ -1704,7 +1740,13 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 		URLHeadToItem(tmp, TEXT("bcc"), &tpMailItem->Bcc);
 		URLHeadToItem(tmp, TEXT("replyto"), &tpMailItem->ReplyTo);
 		URLHeadToItem(tmp, TEXT("subject"), &tpMailItem->Subject);
+#ifdef UNICODE
+		URLHeadToItem(tmp, TEXT("body"), &body);
+		tpMailItem->Body = alloc_tchar_to_char(body);
+		mem_free(&body);
+#else
 		URLHeadToItem(tmp, TEXT("body"), &tpMailItem->Body);
+#endif
 		URLHeadToItem(tmp, TEXT("mailbox"), &tpMailItem->MailBox);
 		URLHeadToItem(tmp, TEXT("attach"), &tpMailItem->Attach);
 	}
@@ -1955,10 +1997,10 @@ TCHAR *SetCcAddress(TCHAR *Type, TCHAR *To, TCHAR *r)
 	}
 	ToMailAddress = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(To) + 1));
 	if (ToMailAddress != NULL) {
-		r = str_join(r, TEXT(" ("), Type, (TCHAR *)-1);
+		r = str_join_t(r, TEXT(" ("), Type, (TCHAR *)-1);
 		while (*To != TEXT('\0')) {
 			To = GetMailAddress(To, ToMailAddress, FALSE);
-			r = str_join(r, sep, ToMailAddress, (TCHAR *)-1);
+			r = str_join_t(r, sep, ToMailAddress, (TCHAR *)-1);
 			To = (*To != TEXT('\0')) ? To + 1 : To;
 			sep = TEXT(", ");
 		}
@@ -2011,7 +2053,7 @@ int SetAttachListSize(TCHAR *buf)
 		if (f != buf) {
 			len += 2;
 		}
-		f = str_cpy_f(fpath, f, ATTACH_SEP);
+		f = str_cpy_f_t(fpath, f, ATTACH_SEP);
 		fname = GetFileNameString(fpath);
 		len += lstrlen(fname);
 	}
@@ -2042,7 +2084,7 @@ TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret)
 		if (f != buf) {
 			p = str_cpy_t(p, TEXT(", "));
 		}
-		f = str_cpy_f(fpath, f, ATTACH_SEP);
+		f = str_cpy_f_t(fpath, f, ATTACH_SEP);
 		fname = GetFileNameString(fpath);
 		p = str_cpy_t(p, fname);
 	}
@@ -2098,7 +2140,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
 		// Content type からファイルタイプを取得
 		for (i = 0; i < (sizeof(MIME_list) / sizeof(TCHAR *)); i += 2) {
 			if (lstrcmpi(MIMEStr, MIME_list[i]) == 0) {
-				ret = alloc_copy(MIME_list[i + 1]);
+				ret = alloc_copy_t(MIME_list[i + 1]);
 				for (p = ret + 1; *p != TEXT('\0') && *p != TEXT('.'); p++);
 				*p = TEXT('\0');
 				return ret;
@@ -2120,11 +2162,11 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
 		if (lstrcmpi(r, TEXT(".txt")) != 0) {
 			for (i = 1; i < (sizeof(MIME_list) / sizeof(TCHAR *)); i += 2) {
 				if (lstrcmpi(r, MIME_list[i]) == 0) {
-					return alloc_copy(MIME_list[i - 1]);
+					return alloc_copy_t(MIME_list[i - 1]);
 				}
 			}
 		}
-		return alloc_copy(TEXT("application/octet-stream"));
+		return alloc_copy_t(TEXT("application/octet-stream"));
 	}
 	return NULL;
 }

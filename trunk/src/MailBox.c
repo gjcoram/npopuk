@@ -41,9 +41,9 @@ extern BOOL PPCFlag;
 /* Local Function Prototypes */
 
 /*
- * InitMailBox - メールボックスの初期化
+ * mailbox_init - メールボックスの初期化
  */
-BOOL InitMailBox(void)
+BOOL mailbox_init(void)
 {
 
 	//メールボックスのリストの確保
@@ -61,105 +61,9 @@ BOOL InitMailBox(void)
 }
 
 /*
- * FreeFilterInfo - フィルタ情報の解放
+ * mailbox_create - メールボックスの追加
  */
-void FreeFilterInfo(MAILBOX *tpMailBox)
-{
-	int i;
-
-	//フィルタ情報の解放
-	for(i = 0; i < tpMailBox->FilterCnt; i++){
-		if(*(tpMailBox->tpFilter + i) == NULL){
-			continue;
-		}
-		mem_free(&(*(tpMailBox->tpFilter + i))->Header1);
-		mem_free(&(*(tpMailBox->tpFilter + i))->Content1);
-
-		mem_free(&(*(tpMailBox->tpFilter + i))->Header2);
-		mem_free(&(*(tpMailBox->tpFilter + i))->Content2);
-
-		mem_free(&*(tpMailBox->tpFilter + i));
-	}
-	mem_free((void **)&tpMailBox->tpFilter);
-	tpMailBox->tpFilter = NULL;
-}
-
-/*
- * FreeMailBox - メールボックスの解放
- */
-void FreeMailBox(MAILBOX *tpMailBox)
-{
-	if(tpMailBox == NULL){
-		return;
-	}
-	//アカウント情報の解放
-	mem_free(&tpMailBox->Name);
-	mem_free(&tpMailBox->Server);
-	mem_free(&tpMailBox->User);
-	mem_free(&tpMailBox->Pass);
-	mem_free(&tpMailBox->TmpPass);
-	mem_free(&tpMailBox->PopSSLInfo.Cert);
-	mem_free(&tpMailBox->PopSSLInfo.Pkey);
-	mem_free(&tpMailBox->PopSSLInfo.Pass);
-
-	mem_free(&tpMailBox->LastMessageId);
-	mem_free(&tpMailBox->SmtpServer);
-	mem_free(&tpMailBox->UserName);
-	mem_free(&tpMailBox->MailAddress);
-	mem_free(&tpMailBox->Signature);
-	mem_free(&tpMailBox->ReplyTo);
-	mem_free(&tpMailBox->BccAddr);
-	mem_free(&tpMailBox->SmtpUser);
-	mem_free(&tpMailBox->SmtpPass);
-	mem_free(&tpMailBox->SmtpTmpPass);
-	mem_free(&tpMailBox->SmtpSSLInfo.Cert);
-	mem_free(&tpMailBox->SmtpSSLInfo.Pkey);
-	mem_free(&tpMailBox->SmtpSSLInfo.Pass);
-
-	mem_free(&tpMailBox->RasEntry);
-
-	//フィルタ情報の解放
-	FreeFilterInfo(tpMailBox);
-
-	//メール情報の解放
-	if(tpMailBox->tpMailItem != NULL){
-		FreeMailItem(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
-		mem_free((void **)&tpMailBox->tpMailItem);
-	}
-	tpMailBox->tpMailItem = NULL;
-	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
-}
-
-/*
- * ReadMailBox - 固定メールボックスの読み込み
- */
-BOOL ReadMailBox(void)
-{
-	//保存箱
-	(MailBox + MAILBOX_SAVE)->Name = alloc_copy(STR_SAVEBOX_NAME);
-	if(ReadItemList(SAVEBOX_FILE, (MailBox + MAILBOX_SAVE)) == FALSE){
-		return FALSE;
-	}
-
-	//送信箱
-	(MailBox + MAILBOX_SEND)->Name = alloc_copy(STR_SENDBOX_NAME);
-	if(ReadItemList(SENDBOX_FILE, (MailBox + MAILBOX_SEND)) == FALSE){
-		return FALSE;
-	}
-
-	//アドレス帳
-	if(ReadAddressBook(ADDRESS_FILE, AddressBox) == 0){
-		if(ReadItemList(ADDRESS_FILE_OLD, AddressBox) == FALSE){
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-/*
- * CreateMailBox - メールボックスの追加
- */
-int CreateMailBox(HWND hWnd, BOOL ShowFlag)
+int mailbox_create(HWND hWnd, BOOL ShowFlag)
 {
 	MAILBOX *TmpMailBox;
 	int cnt, index;
@@ -202,9 +106,9 @@ int CreateMailBox(HWND hWnd, BOOL ShowFlag)
 }
 
 /*
- * DeleteMailBox - メールボックスの削除
+ * mailbox_delete - メールボックスの削除
  */
-int DeleteMailBox(HWND hWnd, int DelIndex)
+int mailbox_delete(HWND hWnd, int DelIndex)
 {
 	MAILBOX *TmpMailBox;
 	int cnt;
@@ -219,7 +123,7 @@ int DeleteMailBox(HWND hWnd, int DelIndex)
 	j = 0;
 	for(i = 0; i < MailBoxCnt; i++){
 		if(i == DelIndex){
-			FreeMailBox(MailBox + i);
+			mailbox_free(MailBox + i);
 			continue;
 		}
 		CopyMemory((TmpMailBox + j), (MailBox + i), sizeof(MAILBOX));
@@ -236,9 +140,35 @@ int DeleteMailBox(HWND hWnd, int DelIndex)
 }
 
 /*
- * MoveUpMailBox - メールボックスの位置を上に移動する
+ * mailbox_read - 固定メールボックスの読み込み
  */
-void MoveUpMailBox(HWND hWnd)
+BOOL mailbox_read(void)
+{
+	//保存箱
+	(MailBox + MAILBOX_SAVE)->Name = alloc_copy_t(STR_SAVEBOX_NAME);
+	if(file_read_mailbox(SAVEBOX_FILE, (MailBox + MAILBOX_SAVE)) == FALSE){
+		return FALSE;
+	}
+
+	//送信箱
+	(MailBox + MAILBOX_SEND)->Name = alloc_copy_t(STR_SENDBOX_NAME);
+	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND)) == FALSE){
+		return FALSE;
+	}
+
+	//アドレス帳
+	if(file_read_address_book(ADDRESS_FILE, AddressBox) == 0){
+		if(file_read_mailbox(ADDRESS_FILE_OLD, AddressBox) == FALSE){
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/*
+ * mailbox_move_up - メールボックスの位置を上に移動する
+ */
+void mailbox_move_up(HWND hWnd)
 {
 	MAILBOX *TmpMailBox;
 	int i;
@@ -275,9 +205,9 @@ void MoveUpMailBox(HWND hWnd)
 }
 
 /*
- * MoveDownMailBox - メールボックスの位置を下に移動する
+ * mailbox_move_down - メールボックスの位置を下に移動する
  */
-void MoveDownMailBox(HWND hWnd)
+void mailbox_move_down(HWND hWnd)
 {
 	MAILBOX *TmpMailBox;
 	int i;
@@ -314,9 +244,9 @@ void MoveDownMailBox(HWND hWnd)
 }
 
 /*
- * CheckNoReadMailBox - メールボックスに未開封メールが存在するか調べる
+ * mailbox_unread_check - メールボックスに未開封メールが存在するか調べる
  */
-BOOL CheckNoReadMailBox(int index, BOOL NewFlag)
+BOOL mailbox_unread_check(int index, BOOL NewFlag)
 {
 	int i;
 
@@ -333,9 +263,9 @@ BOOL CheckNoReadMailBox(int index, BOOL NewFlag)
 }
 
 /*
- * NextNoReadMailBox - 未開封メールが存在するメールボックスのインデックスを取得
+ * mailbox_next_unread - 未開封メールが存在するメールボックスのインデックスを取得
  */
-int NextNoReadMailBox(int index, int endindex)
+int mailbox_next_unread(int index, int endindex)
 {
 	int j;
 
@@ -343,7 +273,7 @@ int NextNoReadMailBox(int index, int endindex)
 		return -1;
 	}
 	for(j = index; j < endindex; j++){
-		if(CheckNoReadMailBox(j, TRUE) == TRUE){
+		if(mailbox_unread_check(j, TRUE) == TRUE){
 			return j;
 		}
 	}
@@ -351,33 +281,9 @@ int NextNoReadMailBox(int index, int endindex)
 }
 
 /*
- * SetNoReadCntTitle - 未読メールボックスの数をタイトルバーに表示
+ * mailbox_select - メールボックスの選択
  */
-void SetNoReadCntTitle(HWND hWnd)
-{
-	TCHAR wbuf[BUF_SIZE];
-	int i;
-	int NoReadMailBox = 0;
-
-	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
-		if((MailBox + i)->NoRead == TRUE){
-			NoReadMailBox++;
-		}
-	}
-
-	//未読アカウント数をタイトルバーに設定
-	if(NoReadMailBox == 0){
-		SetWindowText(hWnd, WINDOW_TITLE);
-	}else{
-		wsprintf(wbuf, STR_TITLE_NOREADMAILBOX, WINDOW_TITLE, NoReadMailBox);
-		SetWindowText(hWnd, wbuf);
-	}
-}
-
-/*
- * SelectMailBox - メールボックスの選択
- */
-void SelectMailBox(HWND hWnd, int Sel)
+void mailbox_select(HWND hWnd, int Sel)
 {
 	HMENU hMenu;
 	LV_COLUMN lvc;
@@ -477,9 +383,9 @@ void SelectMailBox(HWND hWnd, int Sel)
 }
 
 /*
- * GetNameToMailBox - メールボックスの名前からメールボックスのインデックスを取得する
+ * mailbox_name_to_index - メールボックスの名前からメールボックスのインデックスを取得する
  */
-int GetNameToMailBox(TCHAR *Name)
+int mailbox_name_to_index(TCHAR *Name)
 {
 	int i;
 
@@ -492,5 +398,75 @@ int GetNameToMailBox(TCHAR *Name)
 		}
 	}
 	return -1;
+}
+
+/*
+ * filer_free - フィルタ情報の解放
+ */
+void filer_free(MAILBOX *tpMailBox)
+{
+	int i;
+
+	//フィルタ情報の解放
+	for(i = 0; i < tpMailBox->FilterCnt; i++){
+		if(*(tpMailBox->tpFilter + i) == NULL){
+			continue;
+		}
+		mem_free(&(*(tpMailBox->tpFilter + i))->Header1);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Content1);
+
+		mem_free(&(*(tpMailBox->tpFilter + i))->Header2);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Content2);
+
+		mem_free(&*(tpMailBox->tpFilter + i));
+	}
+	mem_free((void **)&tpMailBox->tpFilter);
+	tpMailBox->tpFilter = NULL;
+}
+
+/*
+ * mailbox_free - メールボックスの解放
+ */
+void mailbox_free(MAILBOX *tpMailBox)
+{
+	if(tpMailBox == NULL){
+		return;
+	}
+	//アカウント情報の解放
+	mem_free(&tpMailBox->Name);
+	mem_free(&tpMailBox->Server);
+	mem_free(&tpMailBox->User);
+	mem_free(&tpMailBox->Pass);
+	mem_free(&tpMailBox->TmpPass);
+	mem_free(&tpMailBox->PopSSLInfo.Cert);
+	mem_free(&tpMailBox->PopSSLInfo.Pkey);
+	mem_free(&tpMailBox->PopSSLInfo.Pass);
+
+	mem_free(&tpMailBox->LastMessageId);
+	mem_free(&tpMailBox->SmtpServer);
+	mem_free(&tpMailBox->UserName);
+	mem_free(&tpMailBox->MailAddress);
+	mem_free(&tpMailBox->Signature);
+	mem_free(&tpMailBox->ReplyTo);
+	mem_free(&tpMailBox->BccAddr);
+	mem_free(&tpMailBox->SmtpUser);
+	mem_free(&tpMailBox->SmtpPass);
+	mem_free(&tpMailBox->SmtpTmpPass);
+	mem_free(&tpMailBox->SmtpSSLInfo.Cert);
+	mem_free(&tpMailBox->SmtpSSLInfo.Pkey);
+	mem_free(&tpMailBox->SmtpSSLInfo.Pass);
+
+	mem_free(&tpMailBox->RasEntry);
+
+	//フィルタ情報の解放
+	filer_free(tpMailBox);
+
+	//メール情報の解放
+	if(tpMailBox->tpMailItem != NULL){
+		item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
+		mem_free((void **)&tpMailBox->tpMailItem);
+	}
+	tpMailBox->tpMailItem = NULL;
+	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 }
 /* End of source */

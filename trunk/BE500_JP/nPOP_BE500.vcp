@@ -58,7 +58,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib CS.lib CSO.lib CoShellAPI.lib GetDisk.lib ComComposer.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 ole32.lib commctrl.lib coredll.lib winsock.lib CS.lib CSO.lib CoShellAPI.lib GetDisk.lib ComComposer.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "nPOP_BE500 - Win32 (WCE MIPS) Debug"
 
@@ -88,7 +88,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib CS.lib CSO.lib CoShellAPI.lib GetDisk.lib ComComposer.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 ole32.lib commctrl.lib coredll.lib winsock.lib CS.lib CSO.lib CoShellAPI.lib GetDisk.lib ComComposer.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ENDIF 
 
@@ -101,40 +101,36 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\src\Code.c
-DEP_CPP_CODE_=\
-	"..\JP\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\jp.h"\
-	"..\src\kr.h"\
-	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+SOURCE=..\src\Charset.cpp
+DEP_CPP_CHARS=\
+	"..\src\Charset.h"\
 	
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Code.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\Edit.c
 DEP_CPP_EDIT_=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -142,41 +138,50 @@ DEP_CPP_EDIT_=\
 SOURCE=..\src\File.c
 DEP_CPP_FILE_=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_FILE_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\Font.c
+DEP_CPP_FONT_=\
+	"..\src\Font.h"\
+	
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\Ini.c
 DEP_CPP_INI_C=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_INI_C=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -184,59 +189,67 @@ DEP_CPP_INI_C=\
 SOURCE=..\src\Item.c
 DEP_CPP_ITEM_=\
 	"..\JP\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_ITEM_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\jp.c
-DEP_CPP_JP_Ca=\
+DEP_CPP_JP_Cc=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
 	
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\kr.c
+NODEP_CPP_JP_Cc=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
+	
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\ListView.c
 DEP_CPP_LISTV=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_LISTV=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -244,17 +257,20 @@ DEP_CPP_LISTV=\
 SOURCE=..\src\MailBox.c
 DEP_CPP_MAILB=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_MAILB=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -262,18 +278,21 @@ DEP_CPP_MAILB=\
 SOURCE=..\src\main.c
 DEP_CPP_MAIN_=\
 	"..\JP\Strtbl.h"\
+	"..\src\Charset.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_MAIN_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -290,20 +309,52 @@ SOURCE=..\src\Memory.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\mime.c
+DEP_CPP_MIME_=\
+	"..\JP\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	".\stdafx.h"\
+	
+NODEP_CPP_MIME_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
+	
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\MultiPart.c
 DEP_CPP_MULTI=\
 	"..\JP\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_MULTI=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -315,17 +366,22 @@ SOURCE=.\nPOP.rc
 SOURCE=..\src\Option.c
 DEP_CPP_OPTIO=\
 	"..\JP\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\jp.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_OPTIO=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -333,19 +389,22 @@ DEP_CPP_OPTIO=\
 SOURCE=..\src\Pop3.c
 DEP_CPP_POP3_=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_POP3_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -360,17 +419,20 @@ DEP_CPP_PROFI=\
 SOURCE=..\src\Ras.c
 DEP_CPP_RAS_C=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_RAS_C=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -378,19 +440,25 @@ DEP_CPP_RAS_C=\
 SOURCE=..\src\Smtp.c
 DEP_CPP_SMTP_=\
 	"..\JP\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_SMTP_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -402,19 +470,23 @@ SOURCE=..\src\String.c
 SOURCE=..\src\util.c
 DEP_CPP_UTIL_=\
 	"..\JP\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_UTIL_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -422,19 +494,25 @@ DEP_CPP_UTIL_=\
 SOURCE=..\src\View.c
 DEP_CPP_VIEW_=\
 	"..\JP\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # Begin Source File
@@ -442,23 +520,34 @@ DEP_CPP_VIEW_=\
 SOURCE=..\src\WinSock.c
 DEP_CPP_WINSO=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
+	
+NODEP_CPP_WINSO=\
+	".\ipApi.h"\
+	".\omComposer.h"\
+	".\OShellAPI.h"\
+	".\oSipApi.h"\
+	".\S.h"\
+	".\SO.h"\
+	".\SOBar.h"\
+	".\SOButton.h"\
+	".\Wind.h"\
 	
 # End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\src\Charset.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\code.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\src\Font.h
@@ -477,15 +566,19 @@ SOURCE=..\src\jp.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\kr.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\md5.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\Memory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\mime.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\multipart.h
 # End Source File
 # Begin Source File
 

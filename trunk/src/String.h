@@ -69,16 +69,30 @@
 int a2i(const char *str);
 void delete_ctrl_char(TCHAR *buf);
 
-TCHAR *alloc_copy(const TCHAR *buf);
+TCHAR *alloc_copy_t(const TCHAR *buf);
+#ifdef UNICODE
+char *alloc_copy(const char *buf);
+#else
+#define alloc_copy alloc_copy_t
+#endif
 #ifdef UNICODE
 char *alloc_tchar_to_char(TCHAR *str);
 TCHAR *alloc_char_to_tchar(char *str);
 #else
-#define alloc_tchar_to_char alloc_copy
-#define alloc_char_to_tchar alloc_copy
+#define alloc_tchar_to_char alloc_copy_t
+#define alloc_char_to_tchar alloc_copy_t
+#endif
+#ifndef UNICODE
+char *alloc_wchar_to_char(const UINT cp, WCHAR *str);
+WCHAR *alloc_char_to_wchar(const UINT cp, char *str);
 #endif
 
-TCHAR * __cdecl str_join(TCHAR *ret, ... );
+TCHAR * __cdecl str_join_t(TCHAR *ret, ... );
+#ifdef UNICODE
+char * __cdecl str_join(char *ret, ... );
+#else
+#define str_join str_join_t
+#endif
 
 TCHAR *str_cpy_t(TCHAR *ret, TCHAR *buf);
 #ifdef UNICODE
@@ -92,9 +106,15 @@ void str_cpy_n(char *ret, char *buf, int len);
 #else
 #define str_cpy_n str_cpy_n_t
 #endif
-TCHAR *str_cpy_f(TCHAR *ret, TCHAR *buf, TCHAR c);
+TCHAR *str_cpy_f_t(TCHAR *ret, TCHAR *buf, TCHAR c);
+#ifdef UNICODE
+char *str_cpy_f(char *ret, char *buf, char c);
+#else
+#define str_cpy_f str_cpy_f_t
+#endif
 void str_cat_n(TCHAR *ret, char *buf, int len);
 
+int str_cmp_i_t(const TCHAR *buf1, const TCHAR *buf2, int len);
 #ifdef UNICODE
 int str_cmp_i(const char *buf1, const char *buf2);
 #else

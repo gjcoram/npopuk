@@ -27,46 +27,13 @@ extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 
 /* Local Function Prototypes */
-static int GetMailCnt(TCHAR *buf, long Size);
-static BOOL SaveAddressString(HANDLE hFile, MAILITEM *tpMailItem);
+static int file_get_mail_count(char *buf, long Size);
+static BOOL file_save_address_item(HANDLE hFile, MAILITEM *tpMailItem);
 
 /*
- * SaveLog - ログの保存
+ * log_init - ログの区切りの保存
  */
-BOOL SaveLog(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
-{
-	HANDLE hFile;
-	TCHAR path[BUF_SIZE];
-	DWORD ret;
-
-	// ファイルに保存
-	wsprintf(path, TEXT("%s%s"), fpath, fname);
-
-	// 保存するファイルを開く
-	hFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == NULL || hFile == (HANDLE)-1) {
-		return FALSE;
-	}
-	SetFilePointer(hFile, 0, NULL, FILE_END);
-
-	if (WriteAsciiFile(hFile, buf, lstrlen(buf)) == FALSE) {
-		CloseHandle(hFile);
-		return FALSE;
-	}
-	if (*(buf + lstrlen(buf) - 1) != TEXT('\n')) {
-		if (WriteFile(hFile, "\r\n", 2, &ret, NULL) == FALSE) {
-			CloseHandle(hFile);
-			return FALSE;
-		}
-	}
-	CloseHandle(hFile);
-	return TRUE;
-}
-
-/*
- * SaveLogSep - ログの区切りの保存
- */
-BOOL SaveLogSep(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
+BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
 {
 #define LOG_SEP				TEXT("\r\n-------------------------------- ")
 	TCHAR fDay[BUF_SIZE];
@@ -84,16 +51,49 @@ BOOL SaveLogSep(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
 	if (p == NULL) {
 		return FALSE;
 	}
-	str_join(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
-	ret = SaveLog(fpath, fname, p);
+	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
+	ret = log_save(fpath, fname, p);
 	mem_free(&p);
 	return ret;
 }
 
 /*
- * LogClear - ログのクリア
+ * log_save - ログの保存
  */
-BOOL LogClear(TCHAR *fpath, TCHAR *fname)
+BOOL log_save(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
+{
+	HANDLE hFile;
+	TCHAR path[BUF_SIZE];
+	DWORD ret;
+
+	// ファイルに保存
+	wsprintf(path, TEXT("%s%s"), fpath, fname);
+
+	// 保存するファイルを開く
+	hFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == (HANDLE)-1) {
+		return FALSE;
+	}
+	SetFilePointer(hFile, 0, NULL, FILE_END);
+
+	if (file_write_ascii(hFile, buf, lstrlen(buf)) == FALSE) {
+		CloseHandle(hFile);
+		return FALSE;
+	}
+	if (*(buf + lstrlen(buf) - 1) != TEXT('\n')) {
+		if (WriteFile(hFile, "\r\n", 2, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			return FALSE;
+		}
+	}
+	CloseHandle(hFile);
+	return TRUE;
+}
+
+/*
+ * log_clear - ログのクリア
+ */
+BOOL log_clear(TCHAR *fpath, TCHAR *fname)
 {
 	TCHAR path[BUF_SIZE];
 
@@ -102,9 +102,9 @@ BOOL LogClear(TCHAR *fpath, TCHAR *fname)
 }
 
 /*
- * CheckDir - ディレクトリかどうかチェック
+ * dir_check - ディレクトリかどうかチェック
  */
-BOOL CheckDir(TCHAR *path)
+BOOL dir_check(TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
@@ -121,9 +121,9 @@ BOOL CheckDir(TCHAR *path)
 }
 
 /*
- * DeleteDir - ディレクトリ内のファイルを削除
+ * dir_delete - ディレクトリ内のファイルを削除
  */
-BOOL DeleteDir(TCHAR *Path, TCHAR *file)
+BOOL dir_delete(TCHAR *Path, TCHAR *file)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
@@ -149,9 +149,45 @@ BOOL DeleteDir(TCHAR *Path, TCHAR *file)
 }
 
 /*
- * GetFileName - ファイル名の取得
+ * filename_conv - ファイル名にできない文字を _ に変換する
  */
-BOOL GetFileName(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenSave)
+void filename_conv(TCHAR *buf)
+{
+	TCHAR *p = buf, *r;
+
+	while (*p != TEXT('\0')) {
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+			// 2バイトコード
+			p += 2;
+			continue;
+		}
+#endif
+		// 空白の除去
+		if (*p == TEXT(' ') || *p == TEXT('\t')) {
+			r = p + 1;
+			for (; *r == TEXT(' ') || *r == TEXT('\t'); r++);
+			if (p + 1 != r) {
+				lstrcpy(p + 1, r);
+			}
+		}
+		// ファイル名にできない文字は指定の文字に変換
+		switch (*p) {
+		case TEXT('\\'): case TEXT('/'): case TEXT(':'):
+		case TEXT(','): case TEXT(';'): case TEXT('*'):
+		case TEXT('?'): case TEXT('\"'): case TEXT('<'):
+		case TEXT('>'): case TEXT('|'):
+			*p = TEXT('_');
+			break;
+		}
+		p++;
+	}
+}
+
+/*
+ * filename_select - ファイル名の取得
+ */
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenSave)
 {
 #ifdef _WIN32_WCE_PPC
 	TCHAR path[BUF_SIZE];
@@ -215,9 +251,56 @@ BOOL GetFileName(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenS
 }
 
 /*
- * ReadFileBuf - ファイルを読み込む
+ * file_get_size - ファイルのサイズを取得する
  */
-char *ReadFileBuf(TCHAR *path, long FileSize)
+long file_get_size(TCHAR *FileName)
+{
+	WIN32_FIND_DATA FindData;
+	HANDLE hFindFile;
+
+	if ((hFindFile = FindFirstFile(FileName, &FindData)) == INVALID_HANDLE_VALUE) {
+		return -1;
+	}
+	FindClose(hFindFile);
+
+	if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+		// ディレクトリではない場合はサイズを返す
+		return (long)FindData.nFileSizeLow;
+	}
+	return -1;
+}
+
+/*
+ * file_get_mail_count - メール一覧の文字列からメールの数を取得
+ */
+static int file_get_mail_count(char *buf, long Size)
+{
+	char *p, *r, *t;
+	int ret = 0;
+
+	p = buf;
+	while (Size > p - buf && *p != '\0') {
+		for (t = r = p; Size > r - buf && *r != '\0'; r++) {
+			if (*r == '\r' && *(r + 1) == '\n') {
+				if (*t == '.' && (r - t) == 1) {
+					break;
+				}
+				t = r + 2;
+			}
+		}
+		p = r;
+		if (Size > p - buf && *p != '\0') {
+			p += 2;
+		}
+		ret++;
+	}
+	return ret;
+}
+
+/*
+ * file_read - ファイルを読み込む
+ */
+char *file_read(TCHAR *path, long FileSize)
 {
 	HANDLE hFile;
 	DWORD ret;
@@ -244,9 +327,9 @@ char *ReadFileBuf(TCHAR *path, long FileSize)
 }
 
 /*
- * OpenFileBuf - ファイルを開く
+ * file_read_select - ファイルを選択して読み込む
  */
-BOOL OpenFileBuf(HWND hWnd, TCHAR **buf)
+BOOL file_read_select(HWND hWnd, TCHAR **buf)
 {
 	TCHAR path[BUF_SIZE];
 	char *cBuf;
@@ -256,19 +339,19 @@ BOOL OpenFileBuf(HWND hWnd, TCHAR **buf)
 
 	// ファイル名取得
 	lstrcpy(path, TEXT("*.txt"));
-	if (GetFileName(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, TRUE) == FALSE) {
+	if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, TRUE) == FALSE) {
 		return TRUE;
 	}
 
 	// ファイルのサイズを取得
-	FileSize = GetFileSerchSize(path);
+	FileSize = file_get_size(path);
 	if (FileSize <= 0) {
 		return TRUE;
 	}
 
 	// ファイルを読み込む
 	SwitchCursor(FALSE);
-	cBuf = ReadFileBuf(path, FileSize);
+	cBuf = file_read(path, FileSize);
 	if (cBuf == NULL) {
 		SwitchCursor(TRUE);
 		return FALSE;
@@ -291,9 +374,292 @@ BOOL OpenFileBuf(HWND hWnd, TCHAR **buf)
 }
 
 /*
- * SaveFile - ファイルの保存
+ * file_read_mailbox - ファイルからメールアイテムの作成
  */
-BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len)
+BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
+{
+	MAILITEM *tpMailItem;
+#ifndef _NOFILEMAP
+	HANDLE hFile;
+	HANDLE hMapFile;
+#endif
+	TCHAR path[BUF_SIZE];
+	char *p, *r, *s, *t;
+	char *FileBuf;
+	long FileSize;
+	int i;
+
+#ifndef _WIN32_WCE
+	SetCurrentDirectory(AppDir);
+#endif
+
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+
+	FileSize = file_get_size(path);
+	if (FileSize <= 0) {
+		return TRUE;
+	}
+#ifdef _NOFILEMAP
+	FileBuf = file_read(path, FileSize);
+	if (FileBuf == NULL) {
+		return FALSE;
+	}
+#else	// _NOFILEMAP
+	// ファイルを開く
+#ifdef _WIN32_WCE
+	hFile = CreateFileForMapping(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+#else	// _WIN32_WCE
+	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+#endif	// _WIN32_WCE
+	if (hFile == NULL) {
+		return FALSE;
+	}
+
+	hMapFile = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	if (hMapFile == NULL) {
+#ifndef _WCE_OLD
+		CloseHandle(hFile);
+#endif	// _WCE_OLD
+		return FALSE;
+	}
+	FileBuf = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
+	if (FileBuf == NULL) {
+		CloseHandle(hMapFile);
+#ifndef _WCE_OLD
+		CloseHandle(hFile);
+#endif	// _WCE_OLD
+		return FALSE;
+	}
+#endif	// _NOFILEMAP
+
+	// メール数分のメモリを確保
+	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = file_get_mail_count(FileBuf, FileSize);
+	tpMailBox->tpMailItem = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
+	if (tpMailBox->tpMailItem == NULL) {
+		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
+#ifdef _NOFILEMAP
+		mem_free(&FileBuf);
+#else	// _NOFILEMAP
+		UnmapViewOfFile(FileBuf);
+		CloseHandle(hMapFile);
+#ifndef _WCE_OLD
+		CloseHandle(hFile);
+#endif	// _WCE_OLD
+#endif	// _NOFILEMAP
+		return FALSE;
+	}
+
+	i = 0;
+	p = FileBuf;
+	while (FileSize > p - FileBuf && *p != '\0') {
+		// ヘッダからメールアイテムを作成
+		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, p);
+
+		// Body位置の取得
+		p = GetBodyPointa(p);
+		if (p == NULL) {
+			break;
+		}
+		// メールの終わりの位置を取得
+		for (t = r = p; *r != '\0'; r++) {
+			if (*r == '\r' && *(r + 1) == '\n') {
+				if (*t == '.' && (r - t) == 1) {
+					t -= 2;
+					for (; FileSize > r - FileBuf && (*r == '\r' || *r == '\n'); r++);
+					break;
+				}
+				t = r + 2;
+			}
+		}
+		if (tpMailItem != NULL) {
+			// Bodyをコピー
+			if ((t - p) > 0) {
+				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1));
+				if (tpMailItem->Body != NULL) {
+					for (s = tpMailItem->Body; p < t; p++, s++) {
+						*s = *p;
+					}
+					*s = '\0';
+				}
+			}
+			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENDMAIL) {
+				if (tpMailItem->Download == TRUE) {
+					tpMailItem->Body = (char *)mem_alloc(sizeof(char));
+					if (tpMailItem->Body != NULL) {
+						*tpMailItem->Body = '\0';
+					}
+				} else {
+					tpMailItem->MailStatus = ICON_NON;
+					if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL && tpMailItem->Status != ICON_SEND) {
+						tpMailItem->Status = ICON_NON;
+					}
+					tpMailItem->Download = FALSE;
+				}
+			}
+		}
+		p = r;
+		i++;
+	}
+
+#ifdef _NOFILEMAP
+	mem_free(&FileBuf);
+#else	// _NOFILEMAP
+	UnmapViewOfFile(FileBuf);
+	CloseHandle(hMapFile);
+#ifndef _WCE_OLD
+	CloseHandle(hFile);
+#endif	// _WCE_OLD
+#endif	// _NOFILEMAP
+	return TRUE;
+}
+
+/*
+ * file_read_address_book - ファイルからアドレス帳を読み込む
+ */
+int file_read_address_book(TCHAR *FileName, MAILBOX *tpMailBox)
+{
+	MAILITEM *tpMailItem;
+	TCHAR path[BUF_SIZE];
+	TCHAR *MemFile, *AllocBuf = NULL;
+	TCHAR *p, *r, *s;
+	char *FileBuf;
+	long FileSize;
+#ifdef UNICODE
+	long Len;
+#endif
+	int LineCnt = 0;
+	int i;
+
+#ifndef _WIN32_WCE
+	SetCurrentDirectory(AppDir);
+#endif
+
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+
+	FileSize = file_get_size(path);
+	if (FileSize < 0) {
+		return 0;
+	}
+	if (FileSize == 0) {
+		return 1;
+	}
+	FileBuf = file_read(path, FileSize);
+	if (FileBuf == NULL) {
+		return -1;
+	}
+
+#ifdef UNICODE
+	// UNICODEに変換
+	Len = char_to_tchar_size(FileBuf);
+	MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
+	if (MemFile == NULL) {
+		mem_free(&FileBuf);
+		return -1;
+	}
+	char_to_tchar(FileBuf, MemFile, Len);
+	FileSize = Len;
+#else	// UNICODE
+	MemFile = (TCHAR *)FileBuf;
+#endif	// UNICODE
+
+	// 行数のカウント
+	for (LineCnt = 0, p = MemFile; *p != TEXT('\0'); p++) {
+		if (*p == TEXT('\n')) {
+			LineCnt++;
+		}
+	}
+	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = LineCnt;
+	tpMailBox->tpMailItem = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
+	if (tpMailBox->tpMailItem == NULL) {
+		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
+		mem_free(&FileBuf);
+		mem_free(&AllocBuf);
+		return -1;
+	}
+	i = 0;
+	p = MemFile;
+	while (FileSize > p - MemFile && *p != TEXT('\0')) {
+		tpMailItem = *(tpMailBox->tpMailItem + i) = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+
+		// メールアドレス
+		for (r = p; *r != TEXT('\0') && *r != TEXT('\t') && *r != TEXT('\r') && *r != TEXT('\n'); r++);
+		if (tpMailItem != NULL) {
+			tpMailItem->To = (TCHAR *)mem_alloc(sizeof(TCHAR) * (r - p + 1));
+			if (tpMailItem->To != NULL) {
+				for (s = tpMailItem->To; p < r; p++, s++) {
+					*s = *p;
+				}
+				*s = '\0';
+			}
+		}
+		if (*r == TEXT('\t')) r++;
+
+		// コメント
+		for (p = r; *r != TEXT('\0') && *r != TEXT('\t') && *r != TEXT('\r') && *r != TEXT('\n'); r++);
+		if (tpMailItem != NULL) {
+			tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (r - p + 1));
+			if (tpMailItem->Subject != NULL) {
+				for (s = tpMailItem->Subject; p < r; p++, s++) {
+					*s = *p;
+				}
+				*s = '\0';
+			}
+		}
+		for (; *p != TEXT('\0') && *p != TEXT('\r') && *p != TEXT('\n'); p++);
+		for (; *p == TEXT('\r') || *p == TEXT('\n'); p++);
+		i++;
+	}
+	mem_free(&FileBuf);
+	mem_free(&AllocBuf);
+	return 1;
+}
+
+/*
+ * file_write - マルチバイトに変換して保存
+ */
+BOOL file_write(HANDLE hFile, char *buf, int len)
+{
+	DWORD ret;
+
+	if (len == 0) return TRUE;
+	return WriteFile(hFile, buf, len, &ret, NULL);
+}
+
+/*
+ * file_write_ascii - マルチバイトに変換して保存
+ */
+BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len)
+{
+	DWORD ret;
+#ifdef UNICODE
+	char *str;
+	int clen;
+
+	if (len == 0) return TRUE;
+
+	clen = tchar_to_char_size(buf);
+	str = (char *)mem_alloc(clen + 1);
+	if (str == NULL) {
+		return FALSE;
+	}
+	tchar_to_char(buf, str, clen);
+	if (WriteFile(hFile, str, clen - 1, &ret, NULL) == FALSE) {
+		mem_free(&str);
+		return FALSE;
+	}
+	mem_free(&str);
+	return TRUE;
+
+#else
+	if (len == 0) return TRUE;
+	return WriteFile(hFile, buf, len, &ret, NULL);
+#endif
+}
+
+/*
+ * file_save - ファイルの保存
+ */
+BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -305,7 +671,7 @@ BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len)
 	} else {
 		lstrcpy(path, FileName);
 	}
-	if (GetFileName(hWnd, path, Ext, NULL, FALSE) == FALSE) {
+	if (filename_select(hWnd, path, Ext, NULL, FALSE) == FALSE) {
 		return TRUE;
 	}
 
@@ -326,9 +692,9 @@ BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len)
 }
 
 /*
- * SaveFileExec - ファイルを保存して実行
+ * file_save_exec - ファイルを保存して実行
  */
-BOOL SaveFileExec(HWND hWnd, TCHAR *FileName, char *buf, int len)
+BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 {
 	WIN32_FIND_DATA FindData;
 	SHELLEXECUTEINFO sei;
@@ -409,109 +775,20 @@ BOOL SaveFileExec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 }
 
 /*
- * GetSaveHeaderStringSize - 保存するヘッダのサイズ
+ * file_save_mailbox - メールボックス内のメールを保存
  */
-int GetSaveHeaderStringSize(TCHAR *Head, TCHAR *buf)
-{
-	if (buf == NULL) {
-		return 0;
-	}
-	return lstrlen(Head) + 1 + lstrlen(buf) + 2;
-}
-
-/*
- * SaveHeaderString - ヘッダを保存する文字列の作成
- */
-TCHAR *SaveHeaderString(TCHAR *Head, TCHAR *buf, TCHAR *ret)
-{
-	if (buf == NULL) {
-		return ret;
-	}
-	return str_join(ret, Head, TEXT(" "), buf, TEXT("\r\n"), (TCHAR *)-1);
-}
-
-/*
- * WriteAsciiFile - マルチバイトに変換して保存
- */
-BOOL WriteAsciiFile(HANDLE hFile, TCHAR *buf, int len)
-{
-	DWORD ret;
-#ifdef UNICODE
-	char *str;
-	int clen;
-
-	if (len == 0) return TRUE;
-
-	clen = tchar_to_char_size(buf);
-	str = (char *)mem_alloc(clen + 1);
-	if (str == NULL) {
-		return FALSE;
-	}
-	tchar_to_char(buf, str, clen);
-	if (WriteFile(hFile, str, clen - 1, &ret, NULL) == FALSE) {
-		mem_free(&str);
-		return FALSE;
-	}
-	mem_free(&str);
-	return TRUE;
-
-#else
-	if (len == 0) return TRUE;
-	return WriteFile(hFile, buf, len, &ret, NULL);
-#endif
-}
-
-/*
- * ConvFilename - ファイル名にできない文字を _ に変換する
- */
-void ConvFilename(TCHAR *buf)
-{
-	TCHAR *p = buf, *r;
-
-	while (*p != TEXT('\0')) {
-#ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
-			// 2バイトコード
-			p += 2;
-			continue;
-		}
-#endif
-		// 空白の除去
-		if (*p == TEXT(' ') || *p == TEXT('\t')) {
-			r = p + 1;
-			for (; *r == TEXT(' ') || *r == TEXT('\t'); r++);
-			if (p + 1 != r) {
-				lstrcpy(p + 1, r);
-			}
-		}
-		// ファイル名にできない文字は指定の文字に変換
-		switch (*p) {
-		case TEXT('\\'): case TEXT('/'): case TEXT(':'):
-		case TEXT(','): case TEXT(';'): case TEXT('*'):
-		case TEXT('?'): case TEXT('\"'): case TEXT('<'):
-		case TEXT('>'): case TEXT('|'):
-			*p = TEXT('_');
-			break;
-		}
-		p++;
-	}
-}
-
-/*
- * SaveMail - メールボックス内のメールを保存
- */
-BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
+BOOL file_save_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
-	TCHAR *tmp, *p;
+	char *tmp, *p;
 	int len = 0;
 	int i;
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
 #endif	// _WIN32_WCE
-	str_join(path, DataDir, FileName, (TCHAR *)-1);
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
 	if (SaveFlag == 0) {
 		// 保存しない場合は削除
@@ -525,18 +802,18 @@ BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len += Item_GetStringSize(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		len += item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
 	}
-	p = tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (tmp == NULL) {
 		return FALSE;
 	}
-	*p = TEXT('\0');
+	*p = '\0';
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		p = Item_GetString(p, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		p = item_to_string(p, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
 	}
 #endif	// DIV_SAVE
 
@@ -549,7 +826,7 @@ BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 		return FALSE;
 	}
 #ifndef DIV_SAVE
-	if (WriteAsciiFile(hFile, tmp, len) == FALSE) {
+	if (file_write(hFile, tmp, len) == FALSE) {
 		mem_free(&tmp);
 		return FALSE;
 	}
@@ -559,15 +836,15 @@ BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len = Item_GetStringSize(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		len = item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
 
-		p = tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 		if (tmp == NULL) {
 			CloseHandle(hFile);
 			return FALSE;
 		}
-		Item_GetString(tmp, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
-		if (WriteAsciiFile(hFile, tmp, len) == FALSE) {
+		item_to_string(tmp, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		if (file_write(hFile, tmp, len) == FALSE) {
 			mem_free(&tmp);
 			CloseHandle(hFile);
 			return FALSE;
@@ -580,229 +857,9 @@ BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 }
 
 /*
- * GetFileSerchSize - ファイルのサイズを取得する
+ * file_save_address_item - アドレス帳を1件保存
  */
-long GetFileSerchSize(TCHAR *FileName)
-{
-	WIN32_FIND_DATA FindData;
-	HANDLE hFindFile;
-
-	if ((hFindFile = FindFirstFile(FileName, &FindData)) == INVALID_HANDLE_VALUE) {
-		return -1;
-	}
-	FindClose(hFindFile);
-
-	if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-		// ディレクトリではない場合はサイズを返す
-		return (long)FindData.nFileSizeLow;
-	}
-	return -1;
-}
-
-/*
- * GetMailCnt - メール一覧の文字列からメールの数を取得
- */
-static int GetMailCnt(TCHAR *buf, long Size)
-{
-	TCHAR *p, *r, *t;
-	int ret = 0;
-
-	p = buf;
-	while (Size > p - buf && *p != TEXT('\0')) {
-		for (t = r = p; Size > r - buf && *r != TEXT('\0'); r++) {
-			if (*r == TEXT('\r') && *(r + 1) == TEXT('\n')) {
-				if (*t == TEXT('.') && (r - t) == 1) {
-					break;
-				}
-				t = r + 2;
-			}
-		}
-		p = r;
-		if (Size > p - buf && *p != TEXT('\0')) {
-			p += 2;
-		}
-		ret++;
-	}
-	return ret;
-}
-
-/*
- * ReadItemList - ファイルからメールアイテムの作成
- */
-BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox)
-{
-	MAILITEM *tpMailItem;
-#ifndef _NOFILEMAP
-	HANDLE hFile;
-	HANDLE hMapFile;
-#endif
-	TCHAR path[BUF_SIZE];
-	TCHAR *MemFile, *AllocBuf = NULL;
-	TCHAR *p, *r, *s, *t;
-	char *FileBuf;
-	long FileSize;
-#ifdef UNICODE
-	long Len;
-#endif
-	int i;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
-	str_join(path, DataDir, FileName, (TCHAR *)-1);
-
-	FileSize = GetFileSerchSize(path);
-	if (FileSize <= 0) {
-		return TRUE;
-	}
-#ifdef _NOFILEMAP
-	FileBuf = ReadFileBuf(path, FileSize);
-	if (FileBuf == NULL) {
-		return FALSE;
-	}
-#else	// _NOFILEMAP
-	// ファイルを開く
-#ifdef _WIN32_WCE
-	hFile = CreateFileForMapping(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-#else	// _WIN32_WCE
-	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-#endif	// _WIN32_WCE
-	if (hFile == NULL) {
-		return FALSE;
-	}
-
-	hMapFile = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-	if (hMapFile == NULL) {
-#ifndef _WCE_OLD
-		CloseHandle(hFile);
-#endif	// _WCE_OLD
-		return FALSE;
-	}
-	FileBuf = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
-	if (FileBuf == NULL) {
-		CloseHandle(hMapFile);
-#ifndef _WCE_OLD
-		CloseHandle(hFile);
-#endif	// _WCE_OLD
-		return FALSE;
-	}
-#endif	// _NOFILEMAP
-
-#ifdef UNICODE
-	// UNICODEに変換
-	if (FileSize > 2 && *(FileBuf + 1) != '\0') {
-		Len = char_to_tchar_size(FileBuf);
-		MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
-		if (MemFile == NULL) {
-#ifdef _NOFILEMAP
-			mem_free(&FileBuf);
-#else	// _NOFILEMAP
-			UnmapViewOfFile(FileBuf);
-			CloseHandle(hMapFile);
-#ifndef _WCE_OLD
-			CloseHandle(hFile);
-#endif	// _WCE_OLD
-#endif	// _NOFILEMAP
-			return FALSE;
-		}
-		char_to_tchar(FileBuf, MemFile, Len);
-		FileSize = Len;
-	} else {
-		MemFile = (TCHAR *)FileBuf;
-		FileSize /= sizeof(TCHAR);
-	}
-#else	// UNICODE
-	MemFile = (TCHAR *)FileBuf;
-#endif	// UNICODE
-
-	// メール数分のメモリを確保
-	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = GetMailCnt(MemFile, FileSize);
-	tpMailBox->tpMailItem = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
-	if (tpMailBox->tpMailItem == NULL) {
-		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
-#ifdef _NOFILEMAP
-		mem_free(&FileBuf);
-#else	// _NOFILEMAP
-		UnmapViewOfFile(FileBuf);
-		CloseHandle(hMapFile);
-#ifndef _WCE_OLD
-		CloseHandle(hFile);
-#endif	// _WCE_OLD
-#endif	// _NOFILEMAP
-		mem_free(&AllocBuf);
-		return FALSE;
-	}
-
-	i = 0;
-	p = MemFile;
-	while (FileSize > p - MemFile && *p != TEXT('\0')) {
-		// ヘッダからメールアイテムを作成
-		tpMailItem = *(tpMailBox->tpMailItem + i) = Item_StringToItem(tpMailBox, p);
-
-		// Body位置の取得
-		p = GetBodyPointaT(p);
-		if (p == NULL) {
-			break;
-		}
-		// メールの終わりの位置を取得
-		for (t = r = p; *r != TEXT('\0'); r++) {
-			if (*r == TEXT('\r') && *(r + 1) == TEXT('\n')) {
-				if (*t == TEXT('.') && (r - t) == 1) {
-					t -= 2;
-					for (; FileSize > r - MemFile && (*r == TEXT('\r') || *r == TEXT('\n')); r++);
-					break;
-				}
-				t = r + 2;
-			}
-		}
-		if (tpMailItem != NULL) {
-			// Bodyをコピー
-			if ((t - p) > 0) {
-				tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (t - p + 1));
-				if (tpMailItem->Body != NULL) {
-					for (s = tpMailItem->Body; p < t; p++, s++) {
-						*s = *p;
-					}
-					*s = TEXT('\0');
-				}
-			}
-			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENDMAIL) {
-				if (tpMailItem->Download == TRUE) {
-					tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR));
-					if (tpMailItem->Body != NULL) {
-						*tpMailItem->Body = TEXT('\0');
-					}
-				} else {
-					tpMailItem->MailStatus = ICON_NON;
-					if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL && tpMailItem->Status != ICON_SEND) {
-						tpMailItem->Status = ICON_NON;
-					}
-					tpMailItem->Download = FALSE;
-				}
-			}
-		}
-		p = r;
-		i++;
-	}
-
-#ifdef _NOFILEMAP
-	mem_free(&FileBuf);
-#else	// _NOFILEMAP
-	UnmapViewOfFile(FileBuf);
-	CloseHandle(hMapFile);
-#ifndef _WCE_OLD
-	CloseHandle(hFile);
-#endif	// _WCE_OLD
-#endif	// _NOFILEMAP
-	mem_free(&AllocBuf);
-	return TRUE;
-}
-
-/*
- * SaveAddressString - アドレス帳を１件保存
- */
-static BOOL SaveAddressString(HANDLE hFile, MAILITEM *tpMailItem)
+static BOOL file_save_address_item(HANDLE hFile, MAILITEM *tpMailItem)
 {
 	TCHAR *tmp;
 	int len = 0;
@@ -821,12 +878,12 @@ static BOOL SaveAddressString(HANDLE hFile, MAILITEM *tpMailItem)
 		return FALSE;
 	}
 	if (tpMailItem->Subject != NULL && *tpMailItem->Subject != TEXT('\0')) {
-		str_join(tmp, tpMailItem->To, TEXT("\t"), tpMailItem->Subject, TEXT("\r\n"), (TCHAR *)-1);
+		str_join_t(tmp, tpMailItem->To, TEXT("\t"), tpMailItem->Subject, TEXT("\r\n"), (TCHAR *)-1);
 	} else {
-		str_join(tmp, tpMailItem->To, TEXT("\r\n"), (TCHAR *)-1);
+		str_join_t(tmp, tpMailItem->To, TEXT("\r\n"), (TCHAR *)-1);
 	}
 
-	if (WriteAsciiFile(hFile, tmp, len) == FALSE) {
+	if (file_write_ascii(hFile, tmp, len) == FALSE) {
 		mem_free(&tmp);
 		return FALSE;
 	}
@@ -835,9 +892,9 @@ static BOOL SaveAddressString(HANDLE hFile, MAILITEM *tpMailItem)
 }
 
 /*
- * SaveAddressBook - アドレス帳をファイルに保存
+ * file_save_address_book - アドレス帳をファイルに保存
  */
-BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
+BOOL file_save_address_book(TCHAR *FileName, MAILBOX *tpMailBox)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -847,7 +904,7 @@ BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
 	SetCurrentDirectory(AppDir);
 #endif
 
-	str_join(path, DataDir, FileName, (TCHAR *)-1);
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
 	// 保存するファイルを開く
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -860,113 +917,12 @@ BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		if (SaveAddressString(hFile, *(tpMailBox->tpMailItem + i)) == FALSE) {
+		if (file_save_address_item(hFile, *(tpMailBox->tpMailItem + i)) == FALSE) {
 			CloseHandle(hFile);
 			return FALSE;
 		}
 	}
 	CloseHandle(hFile);
 	return TRUE;
-}
-
-/*
- * ReadAddressBook - ファイルからアドレス帳を読み込む
- */
-int ReadAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
-{
-	MAILITEM *tpMailItem;
-	TCHAR path[BUF_SIZE];
-	TCHAR *MemFile, *AllocBuf = NULL;
-	TCHAR *p, *r, *s;
-	char *FileBuf;
-	long FileSize;
-#ifdef UNICODE
-	long Len;
-#endif
-	int LineCnt = 0;
-	int i;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
-	str_join(path, DataDir, FileName, (TCHAR *)-1);
-
-	FileSize = GetFileSerchSize(path);
-	if (FileSize < 0) {
-		return 0;
-	}
-	if (FileSize == 0) {
-		return 1;
-	}
-	FileBuf = ReadFileBuf(path, FileSize);
-	if (FileBuf == NULL) {
-		return -1;
-	}
-
-#ifdef UNICODE
-	// UNICODEに変換
-	Len = char_to_tchar_size(FileBuf);
-	MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
-	if (MemFile == NULL) {
-		mem_free(&FileBuf);
-		return -1;
-	}
-	char_to_tchar(FileBuf, MemFile, Len);
-	FileSize = Len;
-#else	// UNICODE
-	MemFile = (TCHAR *)FileBuf;
-#endif	// UNICODE
-
-	// 行数のカウント
-	for (LineCnt = 0, p = MemFile; *p != TEXT('\0'); p++) {
-		if (*p == TEXT('\n')) {
-			LineCnt++;
-		}
-	}
-	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = LineCnt;
-	tpMailBox->tpMailItem = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
-	if (tpMailBox->tpMailItem == NULL) {
-		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
-		mem_free(&FileBuf);
-		mem_free(&AllocBuf);
-		return -1;
-	}
-	i = 0;
-	p = MemFile;
-	while (FileSize > p - MemFile && *p != TEXT('\0')) {
-		tpMailItem = *(tpMailBox->tpMailItem + i) = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
-
-		// メールアドレス
-		for (r = p; *r != TEXT('\0') && *r != TEXT('\t') && *r != TEXT('\r') && *r != TEXT('\n'); r++);
-		if (tpMailItem != NULL) {
-			tpMailItem->To = (TCHAR *)mem_alloc(sizeof(TCHAR) * (r - p + 1));
-			if (tpMailItem->To != NULL) {
-				for (s = tpMailItem->To; p < r; p++, s++) {
-					*s = *p;
-				}
-				*s = '\0';
-			}
-		}
-		if (*r == TEXT('\t')) r++;
-
-		// コメント
-		for (p = r; *r != TEXT('\0') && *r != TEXT('\t') && *r != TEXT('\r') && *r != TEXT('\n'); r++);
-		if (tpMailItem != NULL) {
-			tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (r - p + 1));
-			if (tpMailItem->Subject != NULL) {
-				for (s = tpMailItem->Subject; p < r; p++, s++) {
-					*s = *p;
-				}
-				*s = '\0';
-			}
-		}
-		for (; *p != TEXT('\0') && *p != TEXT('\r') && *p != TEXT('\n'); p++);
-		for (; *p == TEXT('\r') || *p == TEXT('\n'); p++);
-		i++;
-	}
-	mem_free(&FileBuf);
-	mem_free(&AllocBuf);
-	return 1;
 }
 /* End of source */
