@@ -121,7 +121,7 @@ static void SetEditMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc);
 static MAILITEM *View_NextMail(HWND hWnd, BOOL St);
 static void View_PrevMail(HWND hWnd);
-static void View_NextUnreadMail(HWND hWnd);
+static MAILITEM *View_NextUnreadMail(HWND hWnd);
 static void View_NextScroll(HWND hEditWnd);
 static BOOL ShellOpen(TCHAR *FileName);
 static void OpenURL(HWND hWnd);
@@ -1271,7 +1271,7 @@ static void View_PrevMail(HWND hWnd)
 /*
  * View_NextUnreadMail - 次の未開封メールを表示
  */
-static void View_NextUnreadMail(HWND hWnd)
+static MAILITEM *View_NextUnreadMail(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
@@ -1279,7 +1279,7 @@ static void View_NextUnreadMail(HWND hWnd)
 	int i, j;
 
 	if (SelBox == MAILBOX_SEND) {
-		return;
+		return NULL;
 	}
 	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	Index = ListView_GetMemToItem(hListView,
@@ -1293,7 +1293,7 @@ static void View_NextUnreadMail(HWND hWnd)
 	}
 	if (j == -1) {
 		if (op.MoveAllMailBox == 0) {
-			return;
+			return NULL;
 		}
 
 		// 次の未開封があるメールボックスのインデックスを取得
@@ -1304,7 +1304,7 @@ static void View_NextUnreadMail(HWND hWnd)
 		}
 		if (i == -1) {
 			SwitchCursor(TRUE);
-			return;
+			return NULL;
 		}
 		// メールボックスの選択
 		mailbox_select(MainWnd, i);
@@ -1321,6 +1321,7 @@ static void View_NextUnreadMail(HWND hWnd)
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 	ModifyWindow(hWnd, tpMailItem, FALSE);
 	SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
+	return tpMailItem;
 }
 
 /*
@@ -2190,14 +2191,9 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
  */
 static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 	HWND hListView = NULL;
-	TCHAR buf[BUF_SIZE];
 	int i;
 
-	wsprintf(buf, STR_Q_DELLISTMAIL, 1, (vSelBox != MAILBOX_SEND && ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE))
-		? STR_Q_DELLISTMAIL_NOSERVER : TEXT(""));
-	if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
-		return FALSE;
-	}
+	// delete item from listview
 	if (SelBox == vSelBox) {
 		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		i = -1;
@@ -2209,6 +2205,7 @@ static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 			}
 		}
 	}
+	// free item memory in mailbox
 	for (i = 0; i < (MailBox + vSelBox)->MailItemCnt; i++) {
 		if (*((MailBox + vSelBox)->tpMailItem + i) == delItem) {
 			item_free(((MailBox + vSelBox)->tpMailItem + i), 1);
@@ -2459,6 +2456,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			SetMark(hWnd, tpMailItem, ICON_DEL);
 			GetMarkStatus(hWnd, tpMailItem);
+			if (op.ViewNextAfterDel == 1) {
+				View_NextMail(hWnd, FALSE);
+			} else if (op.ViewNextAfterDel == 2) {
+				View_NextUnreadMail(hWnd);
+			}
 			break;
 
 		case ID_MENUITEM_UNREADMARK:
@@ -2691,6 +2693,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
 						SwitchCursor(TRUE);
 						SetItemCntStatusText(MainWnd, NULL, FALSE);
+					}
+					if (mark_del) {
+						if ((op.ViewNextAfterDel == 1 && (View_NextMail(hWnd, FALSE) != NULL))
+							|| (op.ViewNextAfterDel == 2 && (View_NextUnreadMail(hWnd) != NULL)) ) {
+								close_win = FALSE;
+						}
 					}
 					if (close_win == TRUE) {
 						SendMessage(hWnd, WM_CLOSE, 0, 0);

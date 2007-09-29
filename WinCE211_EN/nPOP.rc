@@ -1137,6 +1137,7 @@ BEGIN
         MENUITEM "&Address book...",            ID_MENUITEM_ADDRESS
         MENUITEM "Global &Options...",          ID_MENUITEM_OPTION
         MENUITEM "&Save All",                   ID_MENUITEM_SAVEALL
+        MENUITEM "&Backup files",               ID_MENUITEM_BACKUP
         MENUITEM SEPARATOR
         MENUITEM "Dial-up &Connect",            ID_MENUITEM_RAS_CONNECT
         MENUITEM "Dial-up &Disconnect",         ID_MENUITEM_RAS_DISCONNECT
@@ -1262,6 +1263,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
         MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM SEPARATOR
+        POPUP "Copy to"
+        BEGIN
+            MENUITEM "(New)"                    ID_MENUITEM_COPY2NEW
+        END
+        POPUP "Move to"
+        BEGIN
+            MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
+        END
     END
 END
 

@@ -240,10 +240,6 @@
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
 #define ID_MENUITEM_MOVESAVE            1209
-#define ID_MENUITEM_COPY2MBOX           2000 // leave MAX_MAILBOX_CNT IDs free for copy
-#define ID_MENUITEM_COPY2NEW            2999
-#define ID_MENUITEM_MOVE2MBOX           3000 // leave MAX_MAILBOX_CNT IDs free for move
-#define ID_MENUITEM_MOVE2NEW            3999
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002

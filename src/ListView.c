@@ -322,8 +322,9 @@ int ListView_GetNextMailItem(HWND hListView, int Index)
 	ItemCnt = ListView_GetItemCount(hListView);
 	for (i = Index + 1; i < ItemCnt; i++) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
-		if (tpMailItem == NULL || tpMailItem->Body == NULL) {
-			continue;
+		if (tpMailItem == NULL || tpMailItem->Body == NULL
+			|| (tpMailItem->Mark == ICON_DEL && op.ViewSkipDeleted == 1)) {
+				continue;
 		}
 		return i;
 	}
@@ -343,7 +344,8 @@ int ListView_GetPrevMailItem(HWND hListView, int Index)
 	}
 	for (i = Index - 1; i >= 0; i--) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
-		if (tpMailItem == NULL || tpMailItem->Body == NULL) {
+		if (tpMailItem == NULL || tpMailItem->Body == NULL
+			|| (tpMailItem->Mark == ICON_DEL && op.ViewSkipDeleted == 1)) {
 			continue;
 		}
 		return i;
@@ -362,8 +364,9 @@ int ListView_GetNextUnreadItem(HWND hListView, int Index, int endindex)
 	ItemCnt = ListView_GetItemCount(hListView);
 	for (i = ((Index <= -1) ? 0 : Index); i < endindex; i++) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
-		if (tpMailItem == NULL || tpMailItem->Body == NULL) {
-			continue;
+		if (tpMailItem == NULL || tpMailItem->Body == NULL
+			|| (tpMailItem->Mark == ICON_DEL && op.ViewSkipDeleted != 0)) {
+				continue;
 		}
 		if (tpMailItem->MailStatus == ICON_MAIL) {
 			return i;
