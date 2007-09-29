@@ -32,6 +32,7 @@
 #define BUF_SIZE				256
 
 /* Global Variables */
+extern HINSTANCE hInst;  // Local copy of hInstance
 extern OPTION op;
 static TCHAR path[BUF_SIZE];
 static TCHAR filename[BUF_SIZE];
@@ -421,6 +422,43 @@ static BOOL CmboBox_GetPath(HWND hCombo, int sel, TCHAR *fpath)
 	return TRUE;
 }
 
+static BOOL CALLBACK NewDirProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	TCHAR buf[BUF_SIZE];
+	TCHAR *newdirname;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+		case IDOK:
+			AllocGetText(GetDlgItem(hDlg, IDC_NEWDIRNAME), &newdirname);
+			wsprintf(buf, TEXT("%s\\%s"), path, newdirname);
+			if (CreateDirectory(buf, NULL) != 0) {
+				lstrcpy(path, buf);
+				EndDialog(hDlg, TRUE);
+			}
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
 /*
  * SelectFileDlgProc - ファイル選択プロシージャ
  */
@@ -450,6 +488,9 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_COMBO_PATH, CB_SETEXTENDEDUI, TRUE, 0);
 		if (g_action == FILE_SAVE_MULTI) { // GJC
 			SetDlgItemText(hDlg, IDCANCEL, TEXT("Skip"));
+		}
+		if (g_action == FILE_OPEN_MULTI || g_action == FILE_OPEN_SINGLE) {
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_NEW), SW_HIDE);
 		}
 
 		lvc.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH;
@@ -606,6 +647,13 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				*p = TEXT('\0');
 			}
 			SendMessage(hDlg, WM_SHOWFILELIST, 0, 0);
+			break;
+
+		case IDC_BUTTON_NEW:
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_NEWDIR), NULL, 
+				NewDirProc, (LPARAM)0) == TRUE) {
+					SendMessage(hDlg, WM_SHOWFILELIST, 0, 0);
+			}
 			break;
 
 		case IDCANCEL:

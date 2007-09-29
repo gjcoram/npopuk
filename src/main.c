@@ -248,6 +248,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 #ifdef _WIN32_WCE
 				WIN32_FIND_DATA FindData;
 				HANDLE hFindFile;
+				TCHAR *q, *s;
 #else
 				DWORD ret;
 #endif
@@ -255,13 +256,27 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 				int len;
 
 				len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
-				str_cpy_n_t(name, p, len);
 #ifdef _WIN32_WCE
+				if (*p != TEXT('\\') && *p != TEXT('/')) {
+					GetModuleFileName(hinst, name, BUF_SIZE - 1);
+					for (q = s = name; *q != TEXT('\0'); q++) {
+						if (*q == TEXT('\\') || *q == TEXT('/')) {
+							s = q + 1;
+						}
+					}
+					if ((len + (s - name)) > BUF_SIZE) {
+						len = BUF_SIZE + (s - name);
+					}
+				} else {
+					s = name;
+				}
+				str_cpy_n_t(s, p, len);
 				if ((hFindFile = FindFirstFile(name, &FindData)) == INVALID_HANDLE_VALUE) {
 					Found = FALSE;
 				}
 				FindClose(hFindFile);
 #else
+				str_cpy_n_t(name, p, len);
 				if ((ret = GetFullPathName(name, BUF_SIZE, name, NULL)) == 0) {
 					Found = FALSE;
 				}
