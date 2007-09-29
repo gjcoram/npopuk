@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -14,7 +17,7 @@
 #include "String.h"
 
 /* Define */
-#define ICONCOUNT			9
+#define ICONCOUNT			12
 
 /* Global Variables */
 // 外部参照
@@ -22,6 +25,7 @@ extern OPTION op;
 
 extern HINSTANCE hInst;
 extern int SelBox;
+extern MAILBOX *MailBox;
 
 /* Local Function Prototypes */
 static int ImageListIconAdd(HIMAGELIST IconList, int Index);
@@ -29,7 +33,7 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem);
 static int GetIconSortStatus(MAILITEM *tpMailItem);
 
 /*
- * ImageListIconAdd - イメージリストにアイコンを追加
+ * ImageListIconAdd - of the item information which In image list adding idea contest
  */
 static int ImageListIconAdd(HIMAGELIST IconList, int Index)
 {
@@ -39,7 +43,7 @@ static int ImageListIconAdd(HIMAGELIST IconList, int Index)
 	hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(Index), IMAGE_ICON,
 		SICONSIZE, SICONSIZE, 0);
 
-	// イメージリストにアイコンを追加
+	//In image list idea contest additional
 	ret = ImageList_AddIcon(IconList, hIcon);
 
 	DestroyIcon(hIcon);
@@ -47,7 +51,7 @@ static int ImageListIconAdd(HIMAGELIST IconList, int Index)
 }
 
 /*
- * ListView_SetColumn - リストビューにカラムを追加
+ * ListView_SetColumn - In list view adding column
  */
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem)
 {
@@ -68,8 +72,6 @@ void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubIte
 HWND CreateListView(HWND hWnd, int Top, int bottom)
 {
 	HIMAGELIST IconList;
-	HIMAGELIST TmpIconList;
-	HICON TmpIcon;
 	RECT rcClient;
 	HWND hListView;
 
@@ -97,7 +99,7 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 		return NULL;
 	}
 
-	// 拡張スタイル
+	//Extended style
 #ifdef _WIN32_WCE_PPC
 	ListView_SetExtendedListViewStyle(hListView, op.LvStyleEx | LVS_EX_ONECLICKACTIVATE);
 #else
@@ -110,32 +112,44 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 	ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 2), STR_LIST_LVHEAD_DATE, 2);
 	ListView_AddColumn(hListView, LVCFMT_RIGHT, *(op.LvColSize + 3), STR_LIST_LVHEAD_SIZE, 3);
 
-	// イメージリストの設定
+	//of header Setting
 	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, ICONCOUNT, ICONCOUNT);
 	ImageListIconAdd(IconList, IDI_ICON_NON);
 	ImageListIconAdd(IconList, IDI_ICON_MAIN);
 	ImageListIconAdd(IconList, IDI_ICON_READ);
 	ImageListIconAdd(IconList, IDI_ICON_DOWN);
 	ImageListIconAdd(IconList, IDI_ICON_DEL);
-	ImageListIconAdd(IconList, IDI_ICON_SENDMAIL);
+	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL);
 	ImageListIconAdd(IconList, IDI_ICON_SEND);
+	ImageListIconAdd(IconList, IDI_ICON_ERROR);
 
-	// 送信エラーのメールを作成 (送信済みメールと削除マークの合成)
-	TmpIconList = ImageList_Merge(IconList, ICON_SENDMAIL, IconList, ICON_DEL, 0, 0);
-	TmpIcon = ImageList_GetIcon(TmpIconList, 0, ILD_NORMAL);
-	ImageList_AddIcon(IconList, TmpIcon);
-	DestroyIcon(TmpIcon);
-	ImageList_Destroy((void *)TmpIconList);
-
-	// オーバーレイ
+	//Overlay
 	ImageListIconAdd(IconList, IDI_ICON_NEW);
-	ImageList_SetOverlayImage(IconList, ICON_NEW, 1);
+	ImageList_SetOverlayImage(IconList, 8, ICON_NEW_MASK);
+
+	// GJC overlays for replied, forwarded
+	ImageListIconAdd(IconList, IDI_ICON_REPL);
+	ImageList_SetOverlayImage(IconList, 9, ICON_REPL_MASK);
+	ImageListIconAdd(IconList, IDI_ICON_FWD);
+	ImageList_SetOverlayImage(IconList, 10, ICON_FWD_MASK);
+	// could do this with ImageList_Merge
+	ImageListIconAdd(IconList, IDI_ICON_REPLFWD);
+	ImageList_SetOverlayImage(IconList, 11, (ICON_REPL_MASK | ICON_FWD_MASK));
 
 	ListView_SetImageList(hListView, IconList, LVSIL_SMALL);
 
-	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, 1, 1);
-	// 添付ファイル用ステータスアイコン
-	ImageListIconAdd(IconList, IDI_ICON_CLIP);
+	// State icons
+	// state = (multipart*3) + priority(0=normal,1=high,2=low)
+	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, 8, 8);
+	ImageListIconAdd(IconList, IDI_ICON_HIGH);      // 1
+	ImageListIconAdd(IconList, IDI_ICON_LOW);       // 2
+	ImageListIconAdd(IconList, IDI_ICON_HTML);      // 3
+	ImageListIconAdd(IconList, IDI_ICON_HTML_HIGH); // 4
+	ImageListIconAdd(IconList, IDI_ICON_HTML_LOW);  // 5
+	ImageListIconAdd(IconList, IDI_ICON_CLIP);      // 6
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_HIGH); // 7
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_LOW);  // 8
+	
 	ListView_SetImageList(hListView, IconList, LVSIL_STATE);
 
 	return hListView;
@@ -148,12 +162,12 @@ void ListView_SetRedraw(HWND hListView, BOOL DrawFlag)
 {
 	switch (DrawFlag) {
 	case FALSE:
-		// 描画しない
+		//for attachment file It does not draw the
 		SendMessage(hListView, WM_SETREDRAW, (WPARAM)FALSE, 0);
 		break;
 
 	case TRUE:
-		// 描画する
+		//It draws the
 		SendMessage(hListView, WM_SETREDRAW, (WPARAM)TRUE, 0);
 		UpdateWindow(hListView);
 		break;
@@ -161,7 +175,7 @@ void ListView_SetRedraw(HWND hListView, BOOL DrawFlag)
 }
 
 /*
- * ListView_InsertItemEx - リストビューにアイテムを追加する
+ * ListView_InsertItemEx - of list view The item is added to list view
  */
 int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem)
 {
@@ -175,12 +189,12 @@ int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp,
 	lvi.iImage = Img;
 	lvi.lParam = lp;
 
-	// リストビューにアイテムを追加する
+	//The item is added to list view the
 	return ListView_InsertItem(hListView, &lvi);
 }
 
 /*
- * ListView_MoveItem - リストビューのアイテムを移動
+ * ListView_MoveItem - Movement item of list view
  */
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt)
 {
@@ -205,7 +219,7 @@ void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt)
 }
 
 /*
- * ListView_GetSelStringList - 選択アイテムのタイトルリストを作成
+ * ListView_GetSelStringList - Compilation title list of selective item
  */
 TCHAR *ListView_GetSelStringList(HWND hListView)
 {
@@ -241,7 +255,7 @@ TCHAR *ListView_GetSelStringList(HWND hListView)
 }
 
 /*
- * ListView_GetlParam - アイテムのLPARAMを取得
+ * ListView_GetlParam - Acquisition LPARAM of item
  */
 long ListView_GetlParam(HWND hListView, int i)
 {
@@ -256,7 +270,7 @@ long ListView_GetlParam(HWND hListView, int i)
 }
 
 /*
- * ListView_GetMemToItem - メールアイテムからリストビューのインデックスを取得
+ * ListView_GetMemToItem - From mail item acquisition index of list view
  */
 int ListView_GetMemToItem(HWND hListView, MAILITEM *tpMemMailItem)
 {
@@ -277,7 +291,7 @@ int ListView_GetMemToItem(HWND hListView, MAILITEM *tpMemMailItem)
 }
 
 /*
- * ListView_GetNextDeleteItem - 削除マークのアイテムのインデックスを取得
+ * ListView_GetNextDeleteItem - Acquisition index of item of deletion mark
  */
 int ListView_GetNextDeleteItem(HWND hListView, int Index)
 {
@@ -290,7 +304,7 @@ int ListView_GetNextDeleteItem(HWND hListView, int Index)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Status == ICON_DEL) {
+		if (tpMailItem->Mark == ICON_DEL) {
 			return i;
 		}
 	}
@@ -298,7 +312,7 @@ int ListView_GetNextDeleteItem(HWND hListView, int Index)
 }
 
 /*
- * ListView_GetNextMailItem - 指定インデックスより後ろの本文を持つメールアイテムのインデックスを取得
+ * ListView_GetNextMailItem - From the designated index acquisition the index of the mail item which has the text of rear
  */
 int ListView_GetNextMailItem(HWND hListView, int Index)
 {
@@ -338,9 +352,9 @@ int ListView_GetPrevMailItem(HWND hListView, int Index)
 }
 
 /*
- * ListView_GetNextNoReadItem - 未開封のメールアイテムのインデックスを取得
+ * ListView_GetNextUnreadItem - 未開封のメールアイテムのインデックスを取得
  */
-int ListView_GetNextNoReadItem(HWND hListView, int Index, int endindex)
+int ListView_GetNextUnreadItem(HWND hListView, int Index, int endindex)
 {
 	MAILITEM *tpMailItem;
 	int i, ItemCnt;
@@ -381,20 +395,29 @@ int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox)
 /*
  * ListView_ShowItem - リストビューにアイテムを表示する
  */
-BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
+BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 {
 	MAILITEM *tpMailItem;
 	LV_ITEM lvi;
-	int i, j;
-	int index = -1;
+	int i, j, state;
+	int start_index, index = -1;
 
 	ListView_SetRedraw(hListView, FALSE);
-	// すべてのアイテムを削除
-	ListView_DeleteAllItems(hListView);
+
+	// GJC
+	if (AddLast == TRUE) {
+		// just inserting the last item
+		start_index = tpMailBox->MailItemCnt - 1;
+	} else {
+		// delete all and build from scratch
+		ListView_DeleteAllItems(hListView);
+		start_index = 0;
+	}
+	// end GJC
 
 	ListView_SetItemCount(hListView, tpMailBox->MailItemCnt);
 
-	// アイテムの追加
+	//Additional
 	lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 	lvi.iSubItem = 0;
 	lvi.stateMask = LVIS_OVERLAYMASK | LVIS_STATEIMAGEMASK | LVIS_CUT;
@@ -402,20 +425,42 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
 	lvi.cchTextMax = 0;
 	lvi.iImage = I_IMAGECALLBACK;
 
-	for (i = 0, j = -1; i < tpMailBox->MailItemCnt; i++) {
+	for (i = start_index, j = i-1; i < tpMailBox->MailItemCnt; i++) {
 		if ((tpMailItem = (*(tpMailBox->tpMailItem + i))) == NULL) {
 			continue;
 		}
-		lvi.state = (tpMailItem->New == TRUE) ? INDEXTOOVERLAYMASK(1) : 0;
-		lvi.state |= ((tpMailItem->Multipart == TRUE) ? INDEXTOSTATEIMAGEMASK(1) : 0);
-		if (tpMailItem->Download == FALSE && tpMailItem->Status != ICON_DOWN &&
-			tpMailItem->Status != ICON_DEL && MAILBOX_SEND != SelBox) {
+		if (tpMailItem->New == TRUE) {
+			lvi.state = INDEXTOOVERLAYMASK(ICON_NEW_MASK);
+		} else {
+			lvi.state = INDEXTOOVERLAYMASK(tpMailItem->ReFwd); // GJC
+		}
+		switch (tpMailItem->Priority)
+		{
+			case 5:  // LOW
+			case 4:
+				state = 2 + 3*tpMailItem->Multipart;
+				break;
+
+			case 1:  // HIGH
+			case 2:
+				state = 1 + 3*tpMailItem->Multipart;
+				break;
+
+			case 3:  // NORMAL
+			default:
+				state = 0 + 3*tpMailItem->Multipart;
+				break;
+		}
+		lvi.state |= INDEXTOSTATEIMAGEMASK(state);
+
+		if (tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN &&
+			tpMailItem->Mark != ICON_DEL && MAILBOX_SEND != SelBox) {
 			lvi.state |= LVIS_CUT;
 		}
 		lvi.iItem = j + 1;
 		lvi.lParam = (LPARAM)tpMailItem;
 
-		// リストビューにアイテムを追加する
+		//of item The item is added to list view the
 		j = ListView_InsertItem(hListView, &lvi);
 		if (j == -1) {
 			ListView_SetRedraw(hListView, TRUE);
@@ -427,24 +472,24 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
 		// スレッド表示
 		item_create_thread(tpMailBox);
 		ListView_SortItems(hListView, CompareFunc, SORT_THREAD + 1);
-	} else if ((SelBox == MAILBOX_SAVE && op.LvAutoSort == 1) || op.LvAutoSort == 2) {
-		// 自動ソート
+	} else if (((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE && op.LvAutoSort == 1) || op.LvAutoSort == 2) {
+		//Automatic sort
 		ListView_SortItems(hListView, CompareFunc, op.LvSortItem);
 	}
 	ListView_SetRedraw(hListView, FALSE);
 
-	// アイテムを選択状態にする
+	//The item is put in selective state the
 	if ((j = ListView_GetItemCount(hListView)) > 0) {
 		ListView_EnsureVisible(hListView, j - 1, TRUE);
-		// 未開封位置の取得
-		i = ListView_GetNextNoReadItem(hListView, -1, ListView_GetItemCount(hListView));
+		//Acquisition
+		i = ListView_GetNextUnreadItem(hListView, -1, ListView_GetItemCount(hListView));
 		if (SelBox < MAILBOX_USER || i == -1) {
-			// 最後のメールを選択する
+			//of not yet opening position The last mail is selected the
 			index = (op.LvDefSelectPos == 0) ? 0 : j - 1;
 			ListView_SetItemState(hListView, index,
 				LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 		} else {
-			// 未開封メールを選択する
+			//The not yet opening mail is selected the
 			ListView_SetItemState(hListView, i,
 				LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			index = (i <= 0) ? 0 : (i - 1);
@@ -471,12 +516,12 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 		return;
 	}
 
-	// アイコン
+	//Idea contest
 	if (hLVItem->mask & LVIF_IMAGE) {
-		hLVItem->iImage = tpMailItem->Status;
+		hLVItem->iImage = tpMailItem->Mark;
 	}
 
-	// テキスト
+	//Text
 	if (hLVItem->mask & LVIF_TEXT) {
 		switch (hLVItem->iSubItem) {
 		// 件名
@@ -486,15 +531,15 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 
 			if (op.LvThreadView == 1 && tpMailItem->Indent != 0) {
 				r = hLVItem->pszText;
-				// インデントから追加する空白の数を計算する
+				//The number of blanks which are added from the indent is calculated the
 				j = ((tpMailItem->Indent * 4) > (hLVItem->cchTextMax - 1)) ?
 					((hLVItem->cchTextMax - 1) / 4) : tpMailItem->Indent;
 				j = (j - 1) * 4;
-				// 空白の追加
+				//Additional
 				for (i = 1; i < j; i++) {
 					*(r++) = TEXT(' ');
 				}
-				// 枝の追加
+				//of blank Additional
 				r = str_cpy_t(r, STR_LIST_THREADSTR);
 				// 件名の追加
 				str_cpy_n_t(r, p, BUF_SIZE - (r - hLVItem->pszText) - 1);
@@ -502,17 +547,17 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 			}
 			break;
 
-		// 差出人 (送信箱の場合は受取人)
+		//of subject When the sender (transmission box it is, addressee)
 		case 1:
 			p = (MAILBOX_SEND == SelBox) ? tpMailItem->To : tpMailItem->From;
 			break;
 
-		// 日付
+		//Date
 		case 2:
-			p = tpMailItem->Date;
+			p = tpMailItem->FmtDate;
 			break;
 
-		// サイズ
+		//Size
 		case 3:
 			p = tpMailItem->Size;
 			break;
@@ -529,17 +574,22 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
  */
 static int GetIconSortStatus(MAILITEM *tpMailItem)
 {
-	switch (tpMailItem->Status) {
-	case ICON_MAIL:		return (tpMailItem->Download == TRUE) ? 1 : 2;
-	case ICON_READ:		return (tpMailItem->Download == TRUE) ? 3 : 4;
-	case ICON_SENDMAIL:	return 5;
-	case ICON_ERROR:	return 6;
-	case ICON_DOWN:		return 7;
-	case ICON_DEL:		return 8;
-	case ICON_SEND:		return 9;
-	case ICON_NON:		return 10;
+	int retval = 0;
+	switch (tpMailItem->Mark) {
+		case ICON_MAIL:     retval = 100; break;
+		case ICON_READ:     retval = 200; break;
+		case ICON_SENTMAIL:	retval = 300; break;
+		case ICON_ERROR:	retval = 400; break;
+		case ICON_DOWN:		retval = 500; break;
+		case ICON_DEL:		retval = 600; break;
+		case ICON_SEND:		retval = 700; break;
+		case ICON_NON:		retval = 800; break;
+		default:            retval = 0; break;
 	}
-	return 0;
+	retval += tpMailItem->Priority * 1000;
+	retval += tpMailItem->Download * 10;
+	retval += tpMailItem->ReFwd;
+	return retval;
 }
 
 /*
@@ -556,8 +606,8 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 	int len1 = 0, len2 = 0;
 	BOOL NumFlag = FALSE;
 
-	sfg = (lParamSort < 0) ? 1 : 0;	// 昇順／降順
-	ghed = ABS(lParamSort) - 1;		// ソートを行うヘッダ
+	sfg = (lParamSort < 0) ? 1 : 0;	//Ascending order / descending order
+	ghed = ABS(lParamSort) - 1;		//Sorts the header
 
 	if (lParam1 == 0 || lParam2 == 0) {
 		return 0;
@@ -575,7 +625,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 			wbuf2 = ((MAILITEM *)lParam2)->Subject;
 		break;
 
-	// 差出人 (送信箱の場合は受取人)
+	//When the sender (transmission box it is, addressee)
 	case 1:
 		if (MAILBOX_SEND == SelBox) {
 			if (((MAILITEM *)lParam1)->To != NULL)
@@ -590,49 +640,39 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		}
 		break;
 
-	// 日付
+	//Date
 	case 2:
-		if (((MAILITEM *)lParam1)->Date != NULL)
+		if (((MAILITEM *)lParam1)->Date != NULL) {
 			wbuf1 = ((MAILITEM *)lParam1)->Date;
-		if (((MAILITEM *)lParam2)->Date != NULL)
-			wbuf2 = ((MAILITEM *)lParam2)->Date;
-		if (MAILBOX_SEND == SelBox) {
-			char dbuf[BUF_SIZE];
 #ifdef UNICODE
 			tchar_to_char(wbuf1, tmp1, BUF_SIZE);
-			DateConv(tmp1, tmp2);
-			SortDateConv(tmp2, dbuf);
-			char_to_tchar(dbuf, tbuf1, BUF_SIZE);
-
-			tchar_to_char(wbuf2, tmp1, BUF_SIZE);
-			DateConv(tmp1, tmp2);
-			SortDateConv(tmp2, dbuf);
-			char_to_tchar(dbuf, tbuf2, BUF_SIZE);
-#else
-			DateConv(wbuf1, dbuf);
-			SortDateConv(dbuf, tbuf1);
-			DateConv(wbuf2, dbuf);
-			SortDateConv(dbuf, tbuf2);
-#endif
-		} else {
-#ifdef UNICODE
-			tchar_to_char(wbuf1, tmp1, BUF_SIZE);
-			SortDateConv(tmp1, tmp2);
+			DateConv(tmp1, tmp2, TRUE);
 			char_to_tchar(tmp2, tbuf1, BUF_SIZE);
-
+#else
+			DateConv(wbuf1, tbuf1, TRUE);
+#endif
+		} else if (MAILBOX_SEND == SelBox) {
+			// unsent mail sorts last
+			wsprintf(tbuf1, TEXT("99999999 9999"));
+		}
+		if (((MAILITEM *)lParam2)->Date != NULL) {
+			wbuf2 = ((MAILITEM *)lParam2)->Date;
+#ifdef UNICODE
 			tchar_to_char(wbuf2, tmp1, BUF_SIZE);
-			SortDateConv(tmp1, tmp2);
+			DateConv(tmp1, tmp2, TRUE);
 			char_to_tchar(tmp2, tbuf2, BUF_SIZE);
 #else
-			SortDateConv(wbuf1, tbuf1);
-			SortDateConv(wbuf2, tbuf2);
+			DateConv(wbuf2, tbuf2, TRUE);
 #endif
+		} else if (MAILBOX_SEND == SelBox) {
+			// unsent mail sorts last
+			wsprintf(tbuf2, TEXT("99999999 9999"));
 		}
 		wbuf1 = tbuf1;
 		wbuf2 = tbuf2;
 		break;
 
-	// サイズ
+	//Size
 	case 3:
 		if (((MAILITEM *)lParam1)->Size != NULL)
 			len1 = _ttoi(((MAILITEM *)lParam1)->Size);
@@ -641,21 +681,21 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		NumFlag = TRUE;
 		break;
 
-	// 番号
+	//Number
 	case SORT_NO:
 		len1 = ((MAILITEM *)lParam1)->No;
 		len2 = ((MAILITEM *)lParam2)->No;
 		NumFlag = TRUE;
 		break;
 
-	// アイコン
-	case SORT_IOCN:
+	//Idea contest
+	case SORT_ICON:
 		len1 = GetIconSortStatus((MAILITEM *)lParam1);
 		len2 = GetIconSortStatus((MAILITEM *)lParam2);
 		NumFlag = TRUE;
 		break;
 
-	// スレッド
+	//Thread
 	case SORT_THREAD:
 		len1 = ((MAILITEM *)lParam1)->PrevNo;
 		len2 = ((MAILITEM *)lParam2)->PrevNo;
@@ -679,6 +719,11 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 	case LVN_GETDISPINFO:		// 表示アイテムの要求
 		ListView_GetDispItem(&(plv->item));
 		return TRUE;
+	case LVN_COLUMNCLICK: // bj: reload if date column
+		if (plv->item.iItem == 2)
+			return TRUE;
+		else
+			return FALSE;
 
 #ifdef _WIN32_WCE_LAGENDA
 	case LVN_BEGINLABELEDIT:
@@ -691,7 +736,7 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	case LVN_BEGINDRAG:
-		// ドラッグで選択範囲の拡張
+		//of selective state of item With drag extended
 		return LVBD_DRAGSELECT;
 #endif
 	}

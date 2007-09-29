@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -400,12 +403,43 @@ int str_cmp_ni_t(const TCHAR *buf1, const TCHAR *buf2, int len)
 }
 
 /*
+ * str_cmp_n_t - case-sensitive TCHAR compare (GJC)
+ */
+int str_cmp_n_t(const TCHAR *buf1, const TCHAR *buf2, int len)
+{
+	while (*buf1 == *buf2) {
+		len--;
+		if (len <= 0 || *buf1 == TEXT('\0')) {
+			return 0;
+		}
+		buf1++;
+		buf2++;
+	}
+	return 1;
+}
+
+#ifdef UNICODE
+/*
  * str_cmp_ni - •¶Žš—ñ‚Ì‘å•¶Žš¬•¶Žš‚ð‹æ•Ê‚µ‚È‚¢”äŠr‚ðs‚¤
  */
-#ifdef UNICODE
 int str_cmp_ni(const char *buf1, const char *buf2, int len)
 {
 	while (to_lower(*buf1) == to_lower(*buf2)) {
+		len--;
+		if (len <= 0 || *buf1 == '\0') {
+			return 0;
+		}
+		buf1++;
+		buf2++;
+	}
+	return 1;
+}
+/*
+ * str_cmp_n_t - case-sensitive char compare
+ */
+int str_cmp_n(const char *buf1, const char *buf2, int len)
+{
+	while (*buf1 == *buf2) {
 		len--;
 		if (len <= 0 || *buf1 == '\0') {
 			return 0;

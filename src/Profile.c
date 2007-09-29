@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -274,7 +277,7 @@ static int key_find(const SECTION_INFO *si, const TCHAR *key_name)
 /*
  * profile_initialize - 初期化
  */
-BOOL profile_initialize(const TCHAR *file_path, const BOOL read_flag)
+BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 {
 	HANDLE hFile;
 	TCHAR *buf, *p, *r, *s;
@@ -282,15 +285,11 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL read_flag)
 	char *cbuf;
 	DWORD size_low, size_high;
 	DWORD ret;
+	BOOL Done = FALSE;
 	long file_size;
 #ifdef UNICODE
 	long len;
 #endif
-
-	if (read_flag == FALSE) {
-		section_info = NULL;
-		return TRUE;
-	}
 
 	// ファイルを開く
 	hFile = CreateFile(file_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -343,7 +342,7 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL read_flag)
 	section_size = ALLOC_SIZE;
 
 	p = buf;
-	while ((file_size > (p - buf)) && *p != TEXT('\0')) {
+	while ((file_size > (p - buf)) && *p != TEXT('\0') && Done == FALSE) {
 		for (r = p; (file_size > (r - buf)) && (*r != TEXT('\r') && *r != TEXT('\n')); r++)
 			;
 
@@ -354,7 +353,11 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL read_flag)
 				break;
 			}
 			*(r - 1) = TEXT('\0');
-			section_add(p + 1);
+			if (pw_only && section_count > 1) {
+				Done = TRUE;
+			} else {
+				section_add(p + 1);
+			}
 			break;
 
 		case TEXT('\r'):
@@ -765,11 +768,59 @@ BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const i
 {
 	TCHAR ret[BUF_SIZE];
 
-#ifndef _itot
 	wsprintf(ret, TEXT("%d"), num);
-#else
-	_itot(num, ret, 10);
-#endif
 	return profile_write_data(section_name, key_name, ret, file_path);
 }
+
+/*
+ * profile_delete_key - delete items from profile (GJC)
+ */
+BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name)
+{
+	int section_index;
+	int key_index;
+
+	if ((section_index = section_find(section_name)) == -1) {
+		return FALSE;
+	}
+	if ((key_index = key_find((section_info + section_index), key_name)) == -1) {
+		return FALSE;
+	}
+	if (((section_info + section_index)->key_info + key_index)->string != NULL) {
+		mem_free(&((section_info + section_index)->key_info + key_index)->string);
+	}
+	*((section_info + section_index)->key_info + key_index)->key_name = TEXT('\0');
+	((section_info + section_index)->key_info + key_index)->string = NULL;
+	return TRUE;
+}
+
+/*
+ * profile_clear_section - delete items from profile (GJC)
+ */
+BOOL profile_clear_section(const TCHAR *section_name)
+{
+	SECTION_INFO *section_to_del;
+	int j;
+	int section_index = section_find(section_name);
+	if (section_index == -1) {
+		return FALSE;
+	}
+	section_to_del = (section_info + section_index);
+	if (section_to_del->key_info == NULL) {
+		return FALSE;
+	}
+
+	for (j = 0; j < section_to_del->key_count; j++) {
+		if ((section_to_del->key_info + j)->string != NULL) {
+			mem_free(&(section_to_del->key_info + j)->string);
+		}
+	}
+	mem_free(&section_to_del->key_info);
+	section_to_del->key_info = NULL;
+	section_to_del->key_count = 0;
+	section_to_del->key_size = 0;
+
+	return TRUE;
+}
+
 /* End of source */

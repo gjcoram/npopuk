@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 #ifndef _INC_STR_TBL_H
@@ -27,7 +30,8 @@
 #define STR_DEFAULT_BODY_CHARSET	TEXT("")
 #define STR_DEFAULT_BODY_ENCODE		0		// 0-7bit 1-8bit 2-base64 3-quoted-printable
 
-#define STR_DEFAULT_DATEFORMAT		TEXT("MM/dd/yyyy")
+#define STR_DEFAULT_TIMEZONE		TEXT("")
+#define STR_DEFAULT_DATEFORMAT		TEXT("dd/MM/yyyy")
 #define STR_DEFAULT_TIMEFORMAT		TEXT("HH:mm")
 
 #define STR_FILE_FILTER				TEXT("All Files (*.*)\0*.*\0\0")
@@ -36,12 +40,16 @@
 
 // Error
 #define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
-#define STR_ERR_INIT				TEXT("Initialization error")
+#define STR_ERR_INIT				TEXT("Initialisation error")
+#define STR_ERR_READONLY			TEXT("Application directory is read-only")
+#define STR_ERR_NODATADIR			TEXT("DataFileDir is not a directory")
+#define STR_ERR_DATAREADONLY		TEXT("DataFileDir is read-only")
 #define STR_ERR_OPEN				TEXT("Open File error")
 #define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
 #define STR_ERR_ADD					TEXT("Address not added")
 #define STR_ERR_VIEW				TEXT("Display failed")
+#define STR_ERR_TOOMANYFILES		TEXT("Too many files selected; try again.")
 #define STR_ERR_SELECTMAILBOX		TEXT("No account specified")
 #define STR_ERR_SELECTMAILADDR		TEXT("No address selected")
 #define STR_ERR_SETMAILADDR			TEXT("No mail address set")
@@ -49,9 +57,12 @@
 #define STR_ERR_CREATECOPY			TEXT("Copy failed")
 #define STR_ERR_SAVECOPY			TEXT("Copy to Savebox failed")
 #define STR_ERR_NOITEM1				TEXT("Item 1 not set")
+#define STR_ERR_NOSAVEBOX			TEXT("No Savebox selected")
+#define STR_ERR_NOSAVEBOXES			TEXT("No Savebox account found")
 #define STR_ERR_INPUTFINDSTRING		TEXT("No 'Find' string entered")
 #define STR_ERR_NOMAIL				TEXT("No Mail in the list")
 #define STR_ERR_SENDLOCK			TEXT("Sending barred! Transmission in progress")
+#define STR_ERR_FILTBOX				TEXT("A filter for %s has been disabled because it refers to an invalid SaveBox")
 
 // Socket error
 #define STR_ERR_SOCK_SELECT			TEXT("Selection error")
@@ -79,7 +90,7 @@
 #define STR_ERR_SOCK_RETR			TEXT("RETR failed\n\n")
 #define STR_ERR_SOCK_DELE			TEXT("Deletion failed\n\n")
 #define STR_ERR_SOCK_NOATTACH		TEXT("Attached file was not found")
-#define STR_ERR_SOCK_BADFROM		TEXT("Address format error")
+#define STR_ERR_SOCK_BADFROM		TEXT("Address error: Check SMTP account settings")
 #define STR_ERR_SOCK_HELO 			TEXT("HELO failed\n")\
 									TEXT("Please check address format\n\n")
 #define STR_ERR_SOCK_SMTPAUTH		TEXT("Login to SMTP server failed\n\n")
@@ -91,9 +102,9 @@
 									TEXT("Please check destination address\n\n")
 #define STR_ERR_SOCK_DATA			TEXT("DATA failed\n\n")
 #define STR_ERR_SOCK_MAILSEND		TEXT("Mail not sent\n\n")
-#define STR_ERR_SOCK_SSL_INIT		TEXT("Initialization failed of SSL\n%s")
-#define STR_ERR_SOCK_SSL_VERIFY		TEXT("Verify failed of SSL\n%s")
-#define STR_ERR_SOCK_NOSSL			TEXT("Initialization failure of 'npopssl.dll'")
+#define STR_ERR_SOCK_SSL_INIT		TEXT("Initialisation of SSL failed\n%s")
+#define STR_ERR_SOCK_SSL_VERIFY		TEXT("Verify of SSL failed\n%s")
+#define STR_ERR_SOCK_NOSSL			TEXT("Initialisation failure of 'npopssl.dll'")
 	
 // Ras error
 #define STR_ERR_RAS_NOSET			TEXT("No dial-up setting available")
@@ -105,16 +116,21 @@
 #define STR_Q_DELSERVERMAIL			TEXT("Warning!  This will delete mail from the server")
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
-#define STR_Q_DELMAILBOX			TEXT("Delete account?")
+#define STR_Q_DELMAILBOX			TEXT("Delete mailbox?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
-#define STR_Q_COPY					TEXT("Copy %d mail to the Savebox?")
+#define STR_Q_OVERWRITE				TEXT("\"%s\" \nMessage already in Savebox\nOverwrite?")
+#define STR_Q_COPY					TEXT("Copy %d mail to %s?")
+#define STR_Q_MOVE					TEXT("Move %d mail to %s?")
 #define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
 #define STR_Q_ADDADDRESS			TEXT("Add %d mail addresses to the address book?")
 #define STR_Q_NEXTFIND				TEXT("Search completed!\nRedo from the start?")
-#define STR_Q_EDITCANSEL			TEXT("Cancel the edit?")
+#define STR_Q_EDITCANCEL			TEXT("Cancel the edit?")
 #define STR_Q_SENDMAIL				TEXT("Send it?")
 #define STR_Q_ATTACH				TEXT("Open this file?")
+#define STR_Q_FORWARDMAIL			TEXT("The message you are forwarding may be incomplete.\nProceed to forward anyway?")
+#define STR_Q_RASDISCON				TEXT("Disconnect dial-up connection?")
+#define STR_Q_UPGRADE				TEXT("Import settings from nPOP to nPOPuk?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
@@ -122,24 +138,27 @@
 									TEXT("Mark it and update server to download body")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
+#define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.")
 
 // Window title
-#define STR_TITLE_NOREADMAILBOX		TEXT("%s - [Accounts with Unread mail: %d]")
+#define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
 #define STR_TITLE_MAILEDIT			TEXT("Mail Edit")
+#define STR_TITLE_MAILSENT			TEXT("Sent Mail")
 #define STR_TITLE_MAILVIEW			TEXT("Mail View")
 #define STR_TITLE_MAILVIEW_COUNT	TEXT(" - [No.%d]")
 
 // Message title
-#define STR_TITLE_EXEC				TEXT("Update marked items")
+#define STR_TITLE_EXEC				TEXT("Update account")
 #define STR_TITLE_ALLEXEC			TEXT("Update all accounts")
 #define STR_TITLE_SEND				TEXT("Send now")
 #define STR_TITLE_OPEN				TEXT("Open")
 #define STR_TITLE_SAVE				TEXT("Save")
 #define STR_TITLE_COPY				TEXT("Copy")
+#define STR_TITLE_MOVE				TEXT("Move")
 #define STR_TITLE_DELETE			TEXT("Delete")
 #define STR_TITLE_ERROR				TEXT("Error")
 #define STR_TITLE_SETMAILBOX		TEXT("Account Settings")
-#define STR_TITLE_OPTION			TEXT("Options")
+#define STR_TITLE_OPTION			TEXT("Global Options")
 #ifndef _WIN32_WCE
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")
@@ -147,9 +166,13 @@
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ALLFIND			TEXT("Look up \"%s\"")
 #define STR_TITLE_ATTACH_MSG		TEXT("Open")
+#define STR_TITLE_COPY2				TEXT("Copy to:")
+#define STR_TITLE_MOVE2				TEXT("Move to:")
+#define STR_TITLE_RENAMESBOX		TEXT("Rename SaveBox")
+#define STR_TITLE_ADDSBOX			TEXT("Add SaveBox")
 
 // Window status
-#define STR_STATUS_VIEWINFO			TEXT("View %d")
+#define STR_STATUS_VIEWINFO			TEXT("View %d  ")
 #define STR_STATUS_MAILBOXINFO		TEXT("View %d/ Server %d")
 #define STR_STATUS_MAILINFO			TEXT("New %d, Unread %d")
 
@@ -173,13 +196,14 @@
 #define STR_STATUS_RAS_CONNECT		TEXT("Dial-up connected")
 #define STR_STATUS_RAS_DISCONNECT	TEXT("Dial-up disconnected")
 
-// Initialize status
+//Initialise status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")
 #define STR_STATUS_INIT_MAILSIZE_B	TEXT("%s bytes")
 #define STR_STATUS_INIT_MAILSIZE_KB	TEXT("%s KB")
 
 // Mail list
 #define STR_SAVEBOX_NAME			TEXT("[Savebox]")
+#define STR_SAVEBOX_NONAME			TEXT("Savebox-%d")
 #define STR_SENDBOX_NAME			TEXT("[Outbox]")
 #define STR_MAILBOX_NONAME			TEXT("Untitled")
 #define STR_LIST_LVHEAD_SUBJECT		TEXT("Subject")
@@ -191,32 +215,41 @@
 #define STR_LIST_THREADSTR			TEXT("  + ")
 
 #define STR_LIST_MENU_SENDINFO		TEXT("&Property...")
-#define STR_LIST_MENU_REPLY			TEXT("&Reply...")
-#define STR_LIST_MENU_SENDMARK		TEXT("&Mark for send\tCtrl+D")
+#define STR_LIST_MENU_REPLY		TEXT("&Reply...\tCtrl+R")
+#define STR_LIST_MENU_REPLYALL		TEXT("Repl&y to all...\tCtrl+Alt+R")
+#define STR_LIST_MENU_FORWARD		TEXT("&Forward...\tCtrl+O")
+#define STR_LIST_MENU_SENDMARK		TEXT("&Mark for sending\tCtrl+D")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark for download\tCtrl+D")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
+#define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
 
 // Mail view
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")
 #define STR_VIEW_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 #define STR_VIEW_HEAD_DATE			TEXT("\r\nDate: ")
 
-#define STR_VIEW_MENU_ATTACH		TEXT("&Show attach")
+#define STR_VIEW_MENU_ATTACH		TEXT("&View text")
 #define STR_VIEW_MENU_SOURCE		TEXT("&View source")
+#define STR_VIEW_MENU_SAVEATTACH	TEXT("&Save attach")
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
+
+#define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk]\r\n")
 
 // Mail edit
 #define STR_EDIT_HEAD_MAILBOX		TEXT("Account: ")
 #define STR_EDIT_HEAD_TO			TEXT("\r\nTo: ")
 #define STR_EDIT_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 
-// SSL
+// SSL, SMTP-AUTH
 #define STR_SSL_AUTO				TEXT("Auto")
 #define STR_SSL_TLS10				TEXT("TLS 1.0")
 #define STR_SSL_SSL30				TEXT("SSL 3.0")
 #define STR_SSL_SSL20				TEXT("SSL 2.0")
 #define STR_SSL_STARTTLS			TEXT("STARTTLS")
+#define STR_SMTPAUTH_CRAM_MD5		TEXT("CRAM-MD5")
+#define STR_SMTPAUTH_LOGIN			TEXT("LOGIN")
+#define STR_SMTPAUTH_PLAIN			TEXT("PLAIN")
 
 // Filter
 #define STR_FILTER_USE				TEXT("Use")
@@ -228,12 +261,13 @@
 #define STR_FILTER_ITEM2			TEXT("Item 2")
 #define STR_FILTER_CONTENT2			TEXT("Content 2")
 
-#define STR_FILTER_UNRECV			TEXT("Not download")
-#define STR_FILTER_RECV				TEXT("Download")
+#define STR_FILTER_UNRECV			TEXT("Reject")
+#define STR_FILTER_RECV				TEXT("Accept")
 #define STR_FILTER_DOWNLOADMARK		TEXT("Mark for download")
-#define STR_FILTER_DELETEMARK		TEXT("Mark for delete")
+#define STR_FILTER_DELETEMARK		TEXT("Mark for deletion")
 #define STR_FILTER_READICON			TEXT("Mark as read")
-#define STR_FILTER_SAVE				TEXT("Copy to Savebox")
+#define STR_FILTER_COPY				TEXT("Copy to:")
+#define STR_FILTER_MOVE				TEXT("Move to:")
 
 // Cc list
 #define STR_CCLIST_TYPE				TEXT("Type")
@@ -243,7 +277,8 @@
 #define STR_SETSEND_BTN_CC			TEXT("Cc, Bcc")
 #define STR_SETSEND_BTN_ATTACH		TEXT("Attach")
 #define STR_SETSEND_BTN_ETC			TEXT("Other")
-
+#define STR_FWDATT_PREFIX			TEXT("Fwd:")
+#define STR_OMIT_REPLYTO			TEXT("(Omit)")
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
 #define STR_MAILPROP_MAILADDRESS	TEXT("Mail address")
@@ -251,12 +286,24 @@
 // Address list
 #define STR_ADDRESSLIST_MAILADDRESS	TEXT("Mail address")
 #define STR_ADDRESSLIST_COMMENT		TEXT("Comment")
+#ifdef _WIN32_WCE
+#define STR_ADDRESSLIST_GROUP		TEXT("Categories")
+#define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
+#define STR_ADDRESSLIST_NOGROUP		TEXT("[No cat.]")
+#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Add category")
+#else
+#define STR_ADDRESSLIST_GROUP		TEXT("Group")
+#define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
+#define STR_ADDRESSLIST_NOGROUP		TEXT("[No group]")
+#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Add group")
+#endif
+#define STR_MULTIPLE_ADDRESSES		TEXT("[Multiple addresses]")
 
 // WindowsCE
 #ifdef _WIN32_WCE
-#define STR_CMDBAR_RECV				TEXT("Check for new mail")
+#define STR_CMDBAR_RECV				TEXT("Check account")
 #define STR_CMDBAR_ALLCHECK			TEXT("Check all accounts")
-#define STR_CMDBAR_EXEC				TEXT("Update marked items")
+#define STR_CMDBAR_EXEC				TEXT("Update account")
 #define STR_CMDBAR_ALLEXEC			TEXT("Update all accounts")
 #define STR_CMDBAR_STOP				TEXT("Stop")
 #define STR_CMDBAR_NEWMAIL			TEXT("New message")
@@ -265,32 +312,34 @@
 
 #define STR_CMDBAR_PREVMAIL			TEXT("Prev mail")
 #define STR_CMDBAR_NEXTMAIL			TEXT("Next mail")
-#define STR_CMDBAR_NEXTNOREAD		TEXT("Next unread mail")
+#define STR_CMDBAR_NEXTUNREAD		TEXT("Next unread mail")
 #define STR_CMDBAR_REMESSEGE		TEXT("Reply")
 #define STR_CMDBAR_ALLREMESSEGE		TEXT("Reply to all")
 #define STR_CMDBAR_DOWNMARK			TEXT("Mark for download")
 #define STR_CMDBAR_DELMARK			TEXT("Mark for delete")
+#define STR_CMDBAR_UNREADMARK		TEXT("Mark as unread")
+#define STR_CMDBAR_FORWARD			TEXT("Forward")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")
+#define STR_CMDBAR_SBOXMARK			TEXT("Save and Mark")
 #define STR_CMDBAR_SENDBOX			TEXT("Save to Outbox")
 #define STR_CMDBAR_SENDINFO			TEXT("Property")
 
 #define STR_LIST_PPCMENU_SENDINFO	TEXT("&Property")
 #define STR_LIST_PPCMENU_REPLY		TEXT("&Reply")
+#define STR_LIST_PPCMENU_REPLYALL		TEXT("Repl&y to all")
+#define STR_LIST_PPCMENU_FORWARD		TEXT("&Forward")
 #define STR_LIST_PPCMENU_SENDMARK	TEXT("&Mark for send")
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark for download")
 #define STR_LIST_PPCMENU_SAVEBOXCOPY	TEXT("Copy to &Savebox")
-
-#define STR_VIEW_PPCMENU_ATTACH		TEXT("&Show attach")
-#define STR_VIEW_PPCMENU_SOURCE		TEXT("&View source")
-#define STR_VIEW_PPCMENU_DELATTACH	TEXT("&Delete attach")
+#define STR_LIST_PPCMENU_SAVEBOXMOVE	TEXT("Move to &Savebox")
 
 #ifdef _WIN32_WCE_PPC
 #define STR_TITLE_SMTPAUTH			TEXT("SMTP-AUTH")
 #define STR_TITLE_SETSSL			TEXT("Set SSL")
 #define STR_TITLE_FILTER			TEXT("Set filter")
-#define STR_TITLE_INITMAILBOX		TEXT("Initialize")
+#define STR_TITLE_INITMAILBOX		TEXT("Initialise")
 #define STR_TITLE_CCBCC				TEXT("Cc, Bcc")
 #define STR_TITLE_ATTACH			TEXT("Attach files")
 #define STR_TITLE_ETCHEADER			TEXT("Other headers")
@@ -300,6 +349,7 @@
 #define STR_TITLE_ADDRESSLIST		TEXT("Address book")
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ENCODE			TEXT("Encoding")
+#define STR_TITLE_NEWMBOX			TEXT("Create mailbox")
 
 #define STR_SF_TITLE				TEXT("Select file")
 #define STR_SF_LV_NAME				TEXT("Name")
@@ -315,6 +365,11 @@
 #define STR_MENU_EDIT				TEXT("Edit")
 #endif	//_WIN32_WCE_LAGENDA
 #endif	//_WIN32_WCE
+
+///////////// MRP /////////////////////
+#define STR_TITLE_ABOUT				TEXT("About")
+#define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
+///////////// --- /////////////////////
 
 #endif	//_INC_STR_TBL_H
 /* End of source */

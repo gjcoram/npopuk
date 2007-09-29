@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
@@ -13,9 +16,11 @@
 #include <Commctrl.h>
 #include <aygshell.h>
 
+#include "General.h"
 #include "Memory.h"
-#include <Strtbl.h>
-#include <resource.h>
+#include "Strtbl.h"
+#include "resource.h"
+#include "String.h"
 
 /* Define */
 #define WM_SHOWFILELIST			(WM_USER + 1)
@@ -27,9 +32,10 @@
 #define BUF_SIZE				256
 
 /* Global Variables */
+extern OPTION op;
 static TCHAR path[BUF_SIZE];
 static TCHAR filename[BUF_SIZE];
-static BOOL g_mode_open;
+static BOOL g_mode_open, g_action;
 
 typedef struct _FILELIST {
 	int att;
@@ -46,9 +52,9 @@ static int FileListCnt;
 /* Local Function Prototypes */
 
 /*
- * CretaeList - ファイル一覧の作成
+ * CreateList - ファイル一覧の作成
  */
-static BOOL CretaeList(HWND hDlg, HWND hListView)
+static BOOL CreateList(HWND hDlg, HWND hListView)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
@@ -442,6 +448,9 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, lParam);
 		}
 		SendDlgItemMessage(hDlg, IDC_COMBO_PATH, CB_SETEXTENDEDUI, TRUE, 0);
+		if (g_action == FILE_SAVE_MULTI) { // GJC
+			SetDlgItemText(hDlg, IDCANCEL, TEXT("Skip"));
+		}
 
 		lvc.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH;
 
@@ -484,7 +493,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SetCursor(LoadCursor(NULL, IDC_WAIT));
 		SendMessage(GetDlgItem(hDlg, IDC_LIST_FILE), WM_SETREDRAW, (WPARAM)FALSE, 0);
 
-		CretaeList(hDlg, GetDlgItem(hDlg, IDC_LIST_FILE));
+		CreateList(hDlg, GetDlgItem(hDlg, IDC_LIST_FILE));
 		ListView_SortItems(GetDlgItem(hDlg, IDC_LIST_FILE), CompareFunc, 1);
 
 		CmboBox_AddPath(GetDlgItem(hDlg, IDC_COMBO_PATH), path);
@@ -521,6 +530,36 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		ListView_GetItemText(GetDlgItem(hDlg, IDC_LIST_FILE), i, 0, buf, BUF_SIZE - 1);
 		if (CheckDir(buf) == TRUE) {
 			break;
+		}
+		// GJC - allow multiple selection with CTRL
+		if (g_action == FILE_OPEN_MULTI && GetKeyState(VK_CONTROL) < 0) {
+			TCHAR list[BUF_SIZE], add[BUF_SIZE];
+			lstrcpy(add, buf);
+			SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)list);
+			if (lstrcmp(list, TEXT("*.*")) == 0) {
+				;
+			} else if (list[0] == TEXT('\"')) {
+				TCHAR *p;
+				BOOL found = FALSE;
+				p = list+1;
+				while (*p != TEXT('\0')) {
+					p = str_cpy_f_t(buf, p, TEXT('\"'));
+					if (lstrcmp(buf, add) == 0) {
+						found = TRUE;
+						break;
+					}
+					if (*p == TEXT(' ') || *(p+1) == TEXT('\"')) {
+						p += 2;
+					}
+				}
+				if (found == FALSE) {
+					wsprintf(buf, TEXT("\"%s\" %s"), add, list);
+				} else {
+					lstrcpy(buf, list);
+				}
+			} else if (lstrcmp(add, list) != 0) {
+				wsprintf(buf, TEXT("\"%s\" \"%s\""), add, list);
+			}
 		}
 		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)buf);
 		break;
@@ -599,7 +638,9 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				SendMessage(hDlg, WM_SHOWFILELIST, 0, 0);
 				break;
 			}
-			if (g_mode_open == TRUE && CheckFile(filename) == FALSE) {
+			if (g_action == FILE_OPEN_MULTI && filename[0] == TEXT('\"')) {
+				; // don't check filename
+			} else if (g_mode_open == TRUE && CheckFile(filename) == FALSE) {
 				break;
 			}
 			if (g_mode_open == FALSE && CheckFile(filename) == TRUE &&
@@ -621,14 +662,39 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 /*
  * SelectFile - ファイル選択
  */
-BOOL SelectFile(HWND hDlg, HINSTANCE hInst, BOOL mode_open, TCHAR *fname, TCHAR *ret)
+BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret)
 {
 	BOOL rc;
 
-	g_mode_open = mode_open;
+	g_mode_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) ? TRUE : FALSE;
+	g_action = Action;
+	if (op.RememberOSD == 1) { // GJC
+		lstrcpy(path, op.OpenSaveDir);
+	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)fname);
 	if (rc == TRUE) {
-		wsprintf(ret, TEXT("%s\\%s"), path, filename);
+		if (Action == FILE_OPEN_MULTI && filename[0] == TEXT('\"')) {
+			// GJC - format multiple selected files as done by OFN_MULTISELECT for Win32
+			TCHAR *p;
+			unsigned i;
+			p = str_cpy_t(ret, path);
+			p++;
+			for (i = 1; i < lstrlen(filename); p++, i++) {
+				if (filename[i] == TEXT('\"')) {
+					*p = TEXT('\0');
+					i+=2;
+				} else {
+					*p = filename[i];
+				}
+			}
+			*p = TEXT('\0');
+		} else {
+			wsprintf(ret, TEXT("%s\\%s"), path, filename);
+		}
+		if (op.RememberOSD == 1 && lstrcmp(path, op.OpenSaveDir) != 0) { // GJC
+			mem_free(&op.OpenSaveDir);
+			op.OpenSaveDir = alloc_copy_t(path);
+		}
 	}
 	if (FileList != NULL) {
 		mem_free(&FileList);
