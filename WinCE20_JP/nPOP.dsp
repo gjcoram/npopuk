@@ -49,7 +49,7 @@ CFG=nPOP - Win32 Debug
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gr /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "WSAASYNC" /YX /FD /c
+# ADD CPP /nologo /Gr /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\JP" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "WSAASYNC" /YX /FD /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
@@ -78,7 +78,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "." /I "..\JP" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
@@ -107,7 +107,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /O2 /D "WIN32" /D "_WIN32" /D "NDEBUG" /D "_WINDOWS" /D "STRICT" /D "_WIN32_WCE" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "UNICODE" /D "_UNICODE" /D "_X86_" /YX /c
-# ADD CPP /nologo /MD /W3 /D "WIN32" /D "_WIN32" /D "NDEBUG" /D "_WINDOWS" /D "STRICT" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "_UNICODE" /D "_X86_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
+# ADD CPP /nologo /MD /W3 /I "." /I "..\JP" /D "WIN32" /D "_WIN32" /D "NDEBUG" /D "_WINDOWS" /D "STRICT" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "_UNICODE" /D "_X86_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /d "_WIN32_WCE" /d "UNDER_NT" /d "_WIN32_WCE_EMULATION" /d "UNICODE" /d "NDEBUG"
 # ADD RSC /l 0x411 /d "_WIN32_WCE" /d "UNDER_NT" /d "_WIN32_WCE_EMULATION" /d "UNICODE" /d "NDEBUG" /d "_WIN32_WCE_MONO"
@@ -136,7 +136,7 @@ EMPFILE=empfile.exe
 # PROP Target_Dir ""
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Gm /Zi /Od /D "WIN32" /D "_WIN32" /D "_DEBUG" /D "_WINDOWS" /D "STRICT" /D "_WIN32_WCE" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "UNICODE" /D "_UNICODE" /D "_X86_" /YX /c
-# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /D "WIN32" /D "_WIN32" /D "_DEBUG" /D "_WINDOWS" /D "STRICT" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "_UNICODE" /D "_X86_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
+# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "." /I "..\JP" /D "WIN32" /D "_WIN32" /D "_DEBUG" /D "_WINDOWS" /D "STRICT" /D "UNDER_NT" /D "_WIN32_WCE_EMULATION" /D "_UNICODE" /D "_X86_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /d "_WIN32_WCE" /d "UNDER_NT" /d "_WIN32_WCE_EMULATION" /d "UNICODE" /d "_DEBUG"
 # ADD RSC /l 0x411 /d "_WIN32_WCE" /d "UNDER_NT" /d "_WIN32_WCE_EMULATION" /d "UNICODE" /d "_DEBUG" /d "_WIN32_WCE_MONO"
@@ -166,7 +166,7 @@ EMPFILE=empfile.exe
 # PROP Target_Dir ""
 CPP=clmips.exe
 # ADD BASE CPP /nologo /ML /W3 /O2 /D "NDEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /YX /QMRWCE /c
-# ADD CPP /nologo /ML /W3 /Ox /Og /Os /Ob0 /Gf /Gy /D "NDEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /QMRWCE /c
+# ADD CPP /nologo /ML /W3 /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\JP" /D "NDEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /QMRWCE /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /r /d "MIPS" /d "_MIPS_" /d "_WIN32_WCE" /d "UNICODE" /d "NDEBUG"
 # ADD RSC /l 0x411 /r /d "MIPS" /d "_MIPS_" /d "_WIN32_WCE" /d "UNICODE" /d "NDEBUG" /d "_WIN32_WCE_MONO"
@@ -197,7 +197,7 @@ PFILE=pfile.exe
 # PROP Target_Dir ""
 CPP=clmips.exe
 # ADD BASE CPP /nologo /MLd /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /YX /QMRWCE /c
-# ADD CPP /nologo /MLd /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /QMRWCE /c
+# ADD CPP /nologo /MLd /W3 /Zi /Od /I "." /I "..\JP" /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /QMRWCE /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /r /d "MIPS" /d "_MIPS_" /d "_WIN32_WCE" /d "UNICODE" /d "DEBUG"
 # ADD RSC /l 0x411 /r /d "MIPS" /d "_MIPS_" /d "_WIN32_WCE" /d "UNICODE" /d "DEBUG" /d "_WIN32_WCE_MONO"
@@ -228,7 +228,7 @@ PFILE=pfile.exe
 # PROP Target_Dir ""
 CPP=shcl.exe
 # ADD BASE CPP /nologo /ML /W3 /O2 /D "NDEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /YX /c
-# ADD CPP /nologo /ML /W3 /Ox /Og /Os /Gf /Gy /D "NDEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
+# ADD CPP /nologo /ML /W3 /Ox /Og /Os /Gf /Gy /I "." /I "..\JP" /D "NDEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /r /d "SH3" /d "_SH3_" /d "_WIN32_WCE" /d "UNICODE" /d "NDEBUG"
 # ADD RSC /l 0x411 /r /d "SH3" /d "_SH3_" /d "_WIN32_WCE" /d "UNICODE" /d "NDEBUG" /d "_WIN32_WCE_MONO"
@@ -259,7 +259,7 @@ PFILE=pfile.exe
 # PROP Target_Dir ""
 CPP=shcl.exe
 # ADD BASE CPP /nologo /MLd /W3 /Zi /Od /D "DEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /YX /c
-# ADD CPP /nologo /MLd /W3 /Zi /Od /D "DEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
+# ADD CPP /nologo /MLd /W3 /Zi /Od /I "." /I "..\JP" /D "DEBUG" /D "SH3" /D "_SH3_" /D "_WIN32_WCE" /D "UNICODE" /D "_NOFILEMAP" /U "_WIN32_WCE" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x411 /r /d "SH3" /d "_SH3_" /d "_WIN32_WCE" /d "UNICODE" /d "DEBUG"
 # ADD RSC /l 0x411 /r /d "SH3" /d "_SH3_" /d "_WIN32_WCE" /d "UNICODE" /d "DEBUG" /d "_WIN32_WCE_MONO"
@@ -292,7 +292,7 @@ PFILE=pfile.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
-SOURCE=.\Code.c
+SOURCE=..\src\Code.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -303,17 +303,21 @@ SOURCE=.\Code.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
@@ -321,9 +325,11 @@ DEP_CPP_CODE_=\
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
@@ -333,7 +339,7 @@ DEP_CPP_CODE_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Edit.c
+SOURCE=..\src\Edit.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -342,43 +348,43 @@ SOURCE=.\Edit.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -386,7 +392,7 @@ DEP_CPP_EDIT_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\File.c
+SOURCE=..\src\File.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -395,43 +401,46 @@ SOURCE=.\File.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -439,7 +448,7 @@ DEP_CPP_FILE_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Font.c
+SOURCE=..\src\Font.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -448,43 +457,43 @@ SOURCE=.\Font.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -492,7 +501,7 @@ DEP_CPP_FONT_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ini.c
+SOURCE=..\src\Ini.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -501,46 +510,46 @@ SOURCE=.\Ini.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -548,7 +557,7 @@ DEP_CPP_INI_C=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Item.c
+SOURCE=..\src\Item.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -557,43 +566,49 @@ SOURCE=.\Item.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -601,7 +616,301 @@ DEP_CPP_ITEM_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.c
+SOURCE=..\src\jp.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_JP_Cc=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_JP_Cc=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_JP_Cc=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\kr.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_KR_Ce=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_KR_Ce=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_KR_Ce=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\ListView.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+DEP_CPP_LISTV=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_LISTV=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_LISTV=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_LISTV=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_LISTV=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+DEP_CPP_LISTV=\
+	"..\src\General.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\MailBox.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+DEP_CPP_MAILB=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MAILB=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_MAILB=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_MAILB=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_MAILB=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+DEP_CPP_MAILB=\
+	"..\src\General.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\main.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+DEP_CPP_MAIN_=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_MAIN_=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\src\General.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_MAIN_=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\src\General.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\md5c.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Memory.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -624,242 +933,7 @@ SOURCE=.\jp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.c
-
-!IF  "$(CFG)" == "nPOP - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\ListView.c
-
-!IF  "$(CFG)" == "nPOP - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\MailBox.c
-
-!IF  "$(CFG)" == "nPOP - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\main.c
-
-!IF  "$(CFG)" == "nPOP - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\md5c.c
-
-!IF  "$(CFG)" == "nPOP - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
-	
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\MultiPart.c
+SOURCE=..\src\MultiPart.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -870,17 +944,17 @@ SOURCE=.\MultiPart.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
@@ -888,9 +962,9 @@ DEP_CPP_MULTI=\
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
@@ -923,7 +997,7 @@ SOURCE=.\nPOP.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\Option.c
+SOURCE=..\src\Option.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -932,43 +1006,43 @@ SOURCE=.\Option.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_OPTIO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -976,7 +1050,7 @@ DEP_CPP_OPTIO=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Pop3.c
+SOURCE=..\src\Pop3.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -985,55 +1059,55 @@ SOURCE=.\Pop3.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ENDIF 
@@ -1041,7 +1115,7 @@ DEP_CPP_POP3_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.c
+SOURCE=..\src\Profile.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1052,19 +1126,13 @@ SOURCE=.\Profile.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
+	"..\src\Profile.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
+	"..\src\Profile.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
@@ -1072,10 +1140,7 @@ DEP_CPP_PROFI=\
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\stdafx.h"\
-	".\strtbl.h"\
+	"..\src\Profile.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
@@ -1085,7 +1150,7 @@ DEP_CPP_PROFI=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ras.c
+SOURCE=..\src\Ras.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1094,43 +1159,43 @@ SOURCE=.\Ras.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_RAS_C=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -1138,7 +1203,7 @@ DEP_CPP_RAS_C=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Smtp.c
+SOURCE=..\src\Smtp.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1147,49 +1212,49 @@ SOURCE=.\Smtp.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_SMTP_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -1197,7 +1262,7 @@ DEP_CPP_SMTP_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\String.c
+SOURCE=..\src\String.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1206,55 +1271,55 @@ SOURCE=.\String.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ENDIF 
@@ -1262,7 +1327,7 @@ DEP_CPP_STRIN=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\View.c
+SOURCE=..\src\View.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1271,43 +1336,49 @@ SOURCE=.\View.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_VIEW_=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -1315,7 +1386,7 @@ DEP_CPP_VIEW_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\WinSock.c
+SOURCE=..\src\WinSock.c
 
 !IF  "$(CFG)" == "nPOP - Win32 Release"
 
@@ -1324,43 +1395,43 @@ SOURCE=.\WinSock.c
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
 DEP_CPP_WINSO=\
-	".\General.h"\
+	"..\src\General.h"\
 	
 
 !ENDIF 
@@ -1372,31 +1443,35 @@ DEP_CPP_WINSO=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
-SOURCE=.\General.h
+SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\global.h
+SOURCE=..\src\global.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.h
+SOURCE=..\src\jp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.h
+SOURCE=..\src\kr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\md5.h
+SOURCE=..\src\md5.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.h
+SOURCE=..\src\Memory.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\strtbl.h
+SOURCE=..\src\Profile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\JP\strtbl.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -1404,119 +1479,119 @@ SOURCE=.\strtbl.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\bitmap.bmp
+SOURCE=..\res\bitmap.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\bmp00001.bmp
+SOURCE=..\res\bmp00001.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\bmp00002.bmp
+SOURCE=..\res\bmp00002.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\bmp00003.bmp
+SOURCE=..\res\bmp00003.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00001.ico
+SOURCE=..\res\ico00001.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00002.ico
+SOURCE=..\res\ico00002.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00003.ico
+SOURCE=..\res\ico00003.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00004.ico
+SOURCE=..\res\ico00004.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00005.ico
+SOURCE=..\res\ico00005.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00006.ico
+SOURCE=..\res\ico00006.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00007.ico
+SOURCE=..\res\ico00007.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00008.ico
+SOURCE=..\res\ico00008.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00009.ico
+SOURCE=..\res\ico00009.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00010.ico
+SOURCE=..\res\ico00010.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00011.ico
+SOURCE=..\res\ico00011.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00012.ico
+SOURCE=..\res\ico00012.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon.ico
+SOURCE=..\res\icon.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon1.ico
+SOURCE=..\res\icon1.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_che.ico
+SOURCE=..\res\icon_che.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_cli.ico
+SOURCE=..\res\icon_cli.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_del.ico
+SOURCE=..\res\icon_del.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_dow.ico
+SOURCE=..\res\icon_dow.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_new.ico
+SOURCE=..\res\icon_new.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_non.ico
+SOURCE=..\res\icon_non.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_rea.ico
+SOURCE=..\res\icon_rea.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_sen.ico
+SOURCE=..\res\icon_sen.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\manifest.xml
+SOURCE=..\res\manifest.xml
 # End Source File
 # Begin Source File
 
-SOURCE=.\toolbar.bmp
+SOURCE=..\res\toolbar.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\toolbar_.bmp
+SOURCE=..\res\toolbar_.bmp
 # End Source File
 # End Group
 # End Target

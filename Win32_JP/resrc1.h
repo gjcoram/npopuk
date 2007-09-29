@@ -56,8 +56,10 @@
 #define IDR_MENU_EDIT_HPC               181
 #define IDR_MENU_VIEW_HPC               182
 #define IDD_DIALOG_SETSMTPAUTH          183
+#define IDD_DIALOG_ATTACH_NOTICE        184
 #define IDD_DIALOG_POP_HPC              186
 #define IDD_DIALOG_OPTION_RECV_HPC      187
+#define IDD_DIALOG_SETSSL               189
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_TITLE                  1003
@@ -69,6 +71,7 @@
 #define IDC_EDIT_READLINE               1009
 #define IDC_CHECK_CYCLIC                1009
 #define IDC_RADIO_NOSAVE                1010
+#define IDC_CHECK_SSL                   1010
 #define IDC_RADIO_HEADSAVE              1011
 #define IDC_RADIO_ALLSAVE               1012
 #define IDC_EDIT_TO                     1012
@@ -78,6 +81,7 @@
 #define IDC_EDIT_QUOTCHAR               1016
 #define IDC_CHECK_LISTDOWNLOAD          1016
 #define IDC_EDIT_REHEAD                 1017
+#define IDC_CHECK_NORETR                1017
 #define IDC_CHECK_QBREAK                1018
 #define IDC_CHECK_AUTOQUOT              1019
 #define IDC_EDIT_BREAKCNT               1020
@@ -158,11 +162,19 @@
 #define IDC_CHECK_POP                   1084
 #define IDC_CHECK_TMPPASS               1085
 #define IDC_EDIT_SOUND                  1087
+#define IDC_RADIO_OPEN                  1087
 #define IDC_BUTTON_SOUND_BROWS          1088
+#define IDC_RADIO_SAVE                  1088
 #define IDC_BUTTON_SOUND_PLAY           1089
 #define IDC_STATIC_MAILCNT              1089
+#define IDC_STATIC_FILENAME             1089
 #define IDC_EDIT_EXECSOUND              1090
 #define IDC_STATIC_MAILSIZE             1090
+#define IDC_BUTTON_SETSSL               1090
+#define IDC_STATIC_TYPE                 1090
+#define IDC_COMBO_SSLTYPE               1091
+#define IDC_STATIC_FROM                 1091
+#define IDC_CHECK_VERIFY                1092
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
@@ -230,6 +242,9 @@
 #define ID_MENUITEM_NEXTFIND            40090
 #define ID_MENUITEM_VIEW                40091
 #define ID_MENUITEM_LAN                 40092
+#define ID_MENUITEM_ATTACH              40094
+#define ID_MENUITEM_FORWARD             40095
+#define ID_MENUITEM40095                40095
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -237,9 +252,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        189
-#define _APS_NEXT_COMMAND_VALUE         40093
-#define _APS_NEXT_CONTROL_VALUE         1090
+#define _APS_NEXT_RESOURCE_VALUE        191
+#define _APS_NEXT_COMMAND_VALUE         40096
+#define _APS_NEXT_CONTROL_VALUE         1093
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

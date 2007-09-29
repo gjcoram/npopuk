@@ -1,125 +1,98 @@
-/**************************************************************************
+/*
+ * nPOP
+ *
+ * Item.c
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
-	nPOP
-
-	Item.c
-
-	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
-
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
+/* Include Files */
 #include "General.h"
+#include "Memory.h"
 
+#include "global.h"
+#include "md5.h"
 
-/**************************************************************************
-	Global Variables
-**************************************************************************/
+/* Define */
 
-extern int ListGetLine;
-extern int ShowHeader;
+/* Global Variables */
+extern OPTION op;
 extern BOOL KeyShowHeader;
 
-extern struct TPMAILBOX *MailBox;
-extern struct TPMAILBOX *AddressBox;
+extern MAILBOX *MailBox;
+extern MAILBOX *AddressBox;
 
-
-/**************************************************************************
-	Local Function Prototypes
-**************************************************************************/
-
+/* Local Function Prototypes */
 static void Item_GetContentT(TCHAR *buf, TCHAR *str, TCHAR **ret);
 static int Item_GetContentInt(TCHAR *buf, TCHAR *str, int DefaultRet);
 static int Item_GetMultiContent(char *buf, char *str, char **ret);
 static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag);
-static void Item_SetMailBody(struct TPMAILITEM *tpMailItem, char *buf);
+static void Item_SetMailBody(MAILITEM *tpMailItem, char *buf, BOOL download);
 static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent);
-static BOOL FilterCheck(struct TPMAILBOX *tpMailBox, char *buf);
+static BOOL FilterCheck(MAILBOX *tpMailBox, char *buf);
 
-
-/******************************************************************************
-
-	Item_SetItemCnt
-
-	アイテム数分のメモリを確保
-
-******************************************************************************/
-
-BOOL Item_SetItemCnt(struct TPMAILBOX *tpMailBox, int i)
+/*
+ * Item_SetItemCnt - アイテム数分のメモリを確保
+ */
+BOOL Item_SetItemCnt(MAILBOX *tpMailBox, int i)
 {
-	struct TPMAILITEM **tpMailList;
+	MAILITEM **tpMailList;
 
-	if(i <= tpMailBox->MailItemCnt){
+	if (i <= tpMailBox->MailItemCnt) {
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt;
 		return TRUE;
 	}
-	tpMailList = (struct TPMAILITEM **)LocalAlloc(LPTR, sizeof(struct TPMAILITEM *) * i);
-	if(tpMailList == NULL){
+	tpMailList = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * i);
+	if (tpMailList == NULL) {
 		return FALSE;
 	}
-	if(tpMailBox->tpMailItem != NULL){
-		tCopyMemory(tpMailList, tpMailBox->tpMailItem,
-			sizeof(struct TPMAILITEM *) * tpMailBox->MailItemCnt);
+	if (tpMailBox->tpMailItem != NULL) {
+		CopyMemory(tpMailList, tpMailBox->tpMailItem,
+			sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
 	}
 
-	NULLCHECK_FREE(tpMailBox->tpMailItem);
+	mem_free((void **)&tpMailBox->tpMailItem);
 	tpMailBox->tpMailItem = tpMailList;
 	tpMailBox->AllocCnt = i;
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	Item_Add
-
-	アイテムの追加
-
-******************************************************************************/
-
-BOOL Item_Add(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpNewMailItem)
+/*
+ * Item_Add - アイテムの追加
+ */
+BOOL Item_Add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 {
-	struct TPMAILITEM **tpMailList = tpMailBox->tpMailItem;
+	MAILITEM **tpMailList = tpMailBox->tpMailItem;
 
-	if(tpMailBox->AllocCnt <= tpMailBox->MailItemCnt){
-		tpMailList = (struct TPMAILITEM **)LocalAlloc(LMEM_FIXED,
-			sizeof(struct TPMAILITEM *) * (tpMailBox->MailItemCnt + 1));
-		if(tpMailList == NULL){
+	if (tpMailBox->AllocCnt <= tpMailBox->MailItemCnt) {
+		tpMailList = (MAILITEM **)mem_alloc(sizeof(MAILITEM *) * (tpMailBox->MailItemCnt + 1));
+		if (tpMailList == NULL) {
 			return FALSE;
 		}
-		if(tpMailBox->tpMailItem != NULL){
-			tCopyMemory(tpMailList, tpMailBox->tpMailItem,
-				sizeof(struct TPMAILITEM *) * tpMailBox->MailItemCnt);
-			LocalFree(tpMailBox->tpMailItem);
+		if (tpMailBox->tpMailItem != NULL) {
+			CopyMemory(tpMailList, tpMailBox->tpMailItem,
+				sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
+			mem_free((void **)&tpMailBox->tpMailItem);
 		}
 		tpMailBox->tpMailItem = tpMailList;
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt + 1;
 	}
 	*(tpMailList + tpMailBox->MailItemCnt) = tpNewMailItem;
 	tpMailBox->MailItemCnt++;
-	if(*tpMailBox->tpMailItem != NULL){
+	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	CopyItem
-
-	アイテムのコピー
-
-******************************************************************************/
-
-void CopyItem(struct TPMAILITEM *tpFromNewMailItem, struct TPMAILITEM *tpToMailItem)
+/*
+ * CopyItem - アイテムのコピー
+ */
+void CopyItem(MAILITEM *tpFromNewMailItem, MAILITEM *tpToMailItem)
 {
-	tCopyMemory(tpToMailItem, tpFromNewMailItem, sizeof(struct TPMAILITEM));
+	CopyMemory(tpToMailItem, tpFromNewMailItem, sizeof(MAILITEM));
 	tpToMailItem->Status = tpToMailItem->MailStatus;
 	tpToMailItem->New = FALSE;
 	tpToMailItem->No = 0;
@@ -143,194 +116,163 @@ void CopyItem(struct TPMAILITEM *tpFromNewMailItem, struct TPMAILITEM *tpToMailI
 	tpToMailItem->Attach = AllocCopy(tpFromNewMailItem->Attach);
 }
 
-
-/******************************************************************************
-
-	Item_CopyMailBox
-
-	アイテムをメールボックスに追加
-
-******************************************************************************/
-
-struct TPMAILITEM *Item_CopyMailBox(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpNewMailItem,
+/*
+ * Item_CopyMailBox - アイテムをメールボックスに追加
+ */
+MAILITEM *Item_CopyMailBox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem,
 			   TCHAR *MailBoxName, BOOL SendClear)
 {
-	struct TPMAILITEM **tpMailList;
+	MAILITEM **tpMailList;
 	int i = 0;
 
-	tpMailList = (struct TPMAILITEM **)LocalAlloc(LPTR,
-		sizeof(struct TPMAILITEM *) * (tpMailBox->MailItemCnt + 1));
-	if(tpMailList == NULL){
+	tpMailList = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * (tpMailBox->MailItemCnt + 1));
+	if (tpMailList == NULL) {
 		return NULL;
 	}
-	if(tpMailBox->tpMailItem != NULL){
-		for(i = 0; i < tpMailBox->MailItemCnt; i++){
+	if (tpMailBox->tpMailItem != NULL) {
+		for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 			*(tpMailList + i) = *(tpMailBox->tpMailItem + i);
 		}
 	}
 
-	*(tpMailList + i) = (struct TPMAILITEM *)LocalAlloc(LPTR, sizeof(struct TPMAILITEM));
-	if(*(tpMailList + i) == NULL){
-		LocalFree(tpMailList);
+	*(tpMailList + i) = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+	if (*(tpMailList + i) == NULL) {
+		mem_free((void **)&tpMailList);
 		return NULL;
 	}
 	CopyItem(tpNewMailItem, *(tpMailList + i));
-	if((*(tpMailList + i))->MailBox == NULL){
+	if ((*(tpMailList + i))->MailBox == NULL) {
 		(*(tpMailList + i))->MailBox = AllocCopy(MailBoxName);
 	}
-	if(SendClear == TRUE){
+	if (SendClear == TRUE) {
 		(*(tpMailList + i))->MailStatus = (*(tpMailList + i))->Status = ICON_NON;
-		NULLCHECK_FREE((*(tpMailList + i))->Date);
+		mem_free(&(*(tpMailList + i))->Date);
 		(*(tpMailList + i))->Date = NULL;
-		NULLCHECK_FREE((*(tpMailList + i))->MessageID);
+		mem_free(&(*(tpMailList + i))->MessageID);
 		(*(tpMailList + i))->MessageID = NULL;
 		(*(tpMailList + i))->hEditWnd = NULL;
 	}
 
-	NULLCHECK_FREE(tpMailBox->tpMailItem);
+	mem_free((void **)&tpMailBox->tpMailItem);
 	tpMailBox->tpMailItem = tpMailList;
 	tpMailBox->MailItemCnt++;
 	tpMailBox->AllocCnt = tpMailBox->MailItemCnt;
-	if(*tpMailBox->tpMailItem != NULL){
+	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
 	return *(tpMailList + i);
 }
 
-
-/******************************************************************************
-
-	Item_Resize
-
-	アイテム情報の整理
-
-******************************************************************************/
-
-BOOL Item_Resize(struct TPMAILBOX *tpMailBox)
+/*
+ * Item_Resize - アイテム情報の整理
+ */
+BOOL Item_Resize(MAILBOX *tpMailBox)
 {
-	struct TPMAILITEM **tpMailList;
+	MAILITEM **tpMailList;
 	int i, cnt = 0;
 
-	if(tpMailBox->tpMailItem == NULL){
+	if (tpMailBox->tpMailItem == NULL) {
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 		return FALSE;
 	}
 
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if(*(tpMailBox->tpMailItem + i) == NULL){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
 		cnt++;
 	}
 
-	tpMailList = (struct TPMAILITEM **)LocalAlloc(LPTR, sizeof(struct TPMAILITEM *) * cnt);
-	if(tpMailList == NULL){
-		NULLCHECK_FREE(tpMailBox->tpMailItem);
+	tpMailList = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * cnt);
+	if (tpMailList == NULL) {
+		mem_free((void **)&tpMailBox->tpMailItem);
 		tpMailBox->tpMailItem = NULL;
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 		return FALSE;
 	}
 	cnt = 0;
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if(*(tpMailBox->tpMailItem + i) == NULL){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
 		*(tpMailList + cnt) = *(tpMailBox->tpMailItem + i);
 		cnt++;
 	}
 
-	NULLCHECK_FREE(tpMailBox->tpMailItem);
+	mem_free((void **)&tpMailBox->tpMailItem);
 	tpMailBox->tpMailItem = tpMailList;
 	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = cnt;
-	if(cnt != 0 && *tpMailBox->tpMailItem != NULL){
+	if (cnt != 0 && *tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	FreeMailItem
-
-	メールアイテムの解放
-
-******************************************************************************/
-
-void FreeMailItem(struct TPMAILITEM **tpFreeMailItem, int Cnt)
+/*
+ * FreeMailItem - メールアイテムの解放
+ */
+void FreeMailItem(MAILITEM **tpMailItem, int Cnt)
 {
 	int i;
 
-	for(i = 0; i < Cnt; i++){
-		if(*(tpFreeMailItem + i) == NULL){
+	for (i = 0; i < Cnt; i++) {
+		if (*(tpMailItem + i) == NULL) {
 			continue;
 		}
-		if((*(tpFreeMailItem + i))->hEditWnd != NULL){
-			(*(tpFreeMailItem + i)) = NULL;
+		if ((*(tpMailItem + i))->hEditWnd != NULL) {
+			(*(tpMailItem + i)) = NULL;
 			continue;
 		}
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->From);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->To);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Cc);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Bcc);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Date);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Size);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Subject);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->ReplyTo);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->ContentType);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Encoding);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->MessageID);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->UIDL);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->InReplyTo);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->References);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Body);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->MailBox);
-		NULLCHECK_FREE((*(tpFreeMailItem + i))->Attach);
+		mem_free(&(*(tpMailItem + i))->From);
+		mem_free(&(*(tpMailItem + i))->To);
+		mem_free(&(*(tpMailItem + i))->Cc);
+		mem_free(&(*(tpMailItem + i))->Bcc);
+		mem_free(&(*(tpMailItem + i))->Date);
+		mem_free(&(*(tpMailItem + i))->Size);
+		mem_free(&(*(tpMailItem + i))->Subject);
+		mem_free(&(*(tpMailItem + i))->ReplyTo);
+		mem_free(&(*(tpMailItem + i))->ContentType);
+		mem_free(&(*(tpMailItem + i))->Encoding);
+		mem_free(&(*(tpMailItem + i))->MessageID);
+		mem_free(&(*(tpMailItem + i))->UIDL);
+		mem_free(&(*(tpMailItem + i))->InReplyTo);
+		mem_free(&(*(tpMailItem + i))->References);
+		mem_free(&(*(tpMailItem + i))->Body);
+		mem_free(&(*(tpMailItem + i))->MailBox);
+		mem_free(&(*(tpMailItem + i))->Attach);
 
-		LocalFree(*(tpFreeMailItem + i));
-		(*(tpFreeMailItem + i)) = NULL;
+		mem_free(&*(tpMailItem + i));
+		(*(tpMailItem + i)) = NULL;
 	}
 }
 
-
-/******************************************************************************
-
-	Item_GetContent
-
-	コンテンツの取得
-
-******************************************************************************/
-
+/*
+ * Item_GetContent - コンテンツの取得
+ */
 int Item_GetContent(char *buf, char *str, char **ret)
 {
 	char *p;
 	int len;
 
-	//位置の取得
+	// 位置の取得
 	p = GetHeaderStringPoint(buf, str);
-	if(p == NULL){
+	if (p == NULL) {
 		*ret = NULL;
 		return 0;
 	}
-	//サイズの取得
+	// サイズの取得
 	len = GetHeaderStringSize(p, FALSE);
-	*ret = (char *)LocalAlloc(LMEM_FIXED, len + 1);
-	if(*ret == NULL){
+	*ret = (char *)mem_alloc(len + 1);
+	if (*ret == NULL) {
 		return 0;
 	}
 	GetHeaderString(p, *ret, FALSE);
 	return len;
 }
 
-
-/******************************************************************************
-
-	Item_GetMultiContent
-
-	複数ある場合は一つにまとめてコンテンツの取得
-
-******************************************************************************/
-
+/*
+ * Item_GetMultiContent - 複数ある場合は一つにまとめてコンテンツの取得
+ */
 static int Item_GetMultiContent(char *buf, char *str, char **ret)
 {
 	char *tmp;
@@ -340,27 +282,27 @@ static int Item_GetMultiContent(char *buf, char *str, char **ret)
 
 	*ret = NULL;
 	p = buf;
-	while(1){
-		//位置の取得
+	while (1) {
+		// 位置の取得
 		p = GetHeaderStringPoint(p, str);
-		if(p == NULL){
+		if (p == NULL) {
 			return rLen;
 		}
-		//サイズの取得
+		// サイズの取得
 		len = GetHeaderStringSize(p, FALSE);
-		if(*ret != NULL){
-			r = tmp = (char *)LocalAlloc(LMEM_FIXED, rLen + len + 2);
-			if(tmp == NULL){
+		if (*ret != NULL) {
+			r = tmp = (char *)mem_alloc(rLen + len + 2);
+			if (tmp == NULL) {
 				return rLen;
 			}
 			r = StrCpy(r, *ret);
 			r = StrCpy(r, ",");
-			LocalFree(*ret);
+			mem_free(&*ret);
 			*ret = tmp;
 			rLen += (len + 1);
-		}else{
-			r = *ret = (char *)LocalAlloc(LMEM_FIXED, len + 1);
-			if(*ret == NULL){
+		} else {
+			r = *ret = (char *)mem_alloc(len + 1);
+			if (*ret == NULL) {
 				return rLen;
 			}
 			rLen = len;
@@ -370,64 +312,49 @@ static int Item_GetMultiContent(char *buf, char *str, char **ret)
 	}
 }
 
-
-/******************************************************************************
-
-	GetMessageId
-
-	メッセージIDの取得
-
-******************************************************************************/
-
+/*
+ * GetMessageId - メッセージIDの取得
+ */
 char *Item_GetMessageId(char *buf)
 {
 	char *Content;
-	char *p, *p1, *p2;
-	int len1, len2;
+	MD5_CTX context;
+	unsigned char digest[16];
 
+	// Message-Id取得
 	Content = NULL;
 	Item_GetContent(buf, HEAD_MESSAGEID, &Content);
 	TrimMessageId(Content);
-	if(Content != NULL && *Content != '\0'){
+	if (Content != NULL && *Content != '\0') {
 		return Content;
 	}
-	NULLCHECK_FREE(Content);
-	//Message-Idを取得できなかったらUIDLを持ってくる
-	Item_GetContent(buf, HEAD_X_UIDL, &Content);
-	if(Content != NULL && *Content != '\0'){
-		return Content;
-	}
-
-	NULLCHECK_FREE(Content);
+	mem_free(&Content);
 	Content = NULL;
 
-	len1 = Item_GetContent(buf, HEAD_DATE, &p1);
-	len2 = Item_GetContent(buf, HEAD_FROM, &p2);
-	Content = (char *)LocalAlloc(LMEM_FIXED, len1 + len2 + 2);
-	if(Content != NULL){
-		p = Content;
-		if(p1 != NULL){
-			p = StrCpy(p, p1);
-		}
-		p = StrCpy(p, ".");
-		if(p2 != NULL){
-			p = StrCpy(p, p2);
-		}
+	// UIDLを取得
+	Item_GetContent(buf, HEAD_X_UIDL, &Content);
+	if (Content != NULL && *Content != '\0') {
+		return Content;
 	}
-	NULLCHECK_FREE(p1);
-	NULLCHECK_FREE(p2);
+	mem_free(&Content);
+	Content = NULL;
+
+	// メッセージのハッシュ
+	MD5Init(&context);
+	MD5Update(&context, buf, tstrlen(buf));
+	MD5Final(digest, &context);
+
+	Content = (char *)mem_alloc(16 * 2 + 1);
+	if (Content == NULL) {
+		return NULL;
+	}
+	Base64Encode(digest, Content, 16);
 	return Content;
 }
 
-
-/******************************************************************************
-
-	GetMimeContent
-
-	ヘッダのコンテンツを取得してMIMEデコードを行う
-
-******************************************************************************/
-
+/*
+ * GetMimeContent - ヘッダのコンテンツを取得してMIMEデコードを行う
+ */
 static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
 {
 	char *Content;
@@ -436,83 +363,79 @@ static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
 	*ret = NULL;
 
 	len = ((MultiFlag == TRUE) ? Item_GetMultiContent : Item_GetContent)(buf, Head, &Content);
-	if(Content != NULL){
+	if (Content != NULL) {
 #ifdef UNICODE
 		char *dcode;
 
-		dcode = (char *)LocalAlloc(LMEM_FIXED, len + 1);
-		if(dcode != NULL){
+		dcode = (char *)mem_alloc(len + 1);
+		if (dcode != NULL) {
 			MIMEdecode(Content, dcode);
 			*ret = AllocCharToTchar(dcode);
-			LocalFree(dcode);
+			mem_free(&dcode);
 		}
 #else
-		*ret = (char *)LocalAlloc(LMEM_FIXED, len + 1);
-		if(*ret != NULL){
+		*ret = (char *)mem_alloc(len + 1);
+		if (*ret != NULL) {
 			MIMEdecode(Content, *ret);
 		}
 #endif
-		LocalFree(Content);
+		mem_free(&Content);
 	}
 }
 
-
-/******************************************************************************
-
-	Item_SetMailBody
-
-	アイテムに本文を設定
-
-******************************************************************************/
-
-static void Item_SetMailBody(struct TPMAILITEM *tpMailItem, char *buf)
+/*
+ * Item_SetMailBody - アイテムに本文を設定
+ */
+static void Item_SetMailBody(MAILITEM *tpMailItem, char *buf, BOOL download)
 {
 	char *p, *r;
 	int Len;
 	int HdSize;
 
 	p = GetBodyPointa(buf);
-	if(p != NULL && *p != '\0'){
-		//デコード
+	if (p != NULL && *p != '\0') {
+		// デコード
 		r = DecodeBodyTransfer(tpMailItem, p);
-		if(r == NULL){
+		if (r == NULL) {
 			return;
 		}
 		Len = CharToTcharSize(r);
 
-		//ヘッダを表示する設定の場合
-		HdSize = (ShowHeader == 1 || KeyShowHeader == TRUE) ? (p - buf) : 0;
+		// ヘッダを表示する設定の場合
+		HdSize = (op.ShowHeader == 1 || KeyShowHeader == TRUE) ? (p - buf) : 0;
 
-		NULLCHECK_FREE(tpMailItem->Body);
-		tpMailItem->Body = (TCHAR *)LocalAlloc(LMEM_FIXED, sizeof(TCHAR) * (Len + HdSize + 1));
-		if(tpMailItem->Body != NULL){
-			if(ShowHeader == 1 || KeyShowHeader == TRUE){
-				//ヘッダ
+		mem_free(&tpMailItem->Body);
+		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + HdSize + 1));
+		if (tpMailItem->Body != NULL) {
+			if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
+				// ヘッダ
 				CharToTchar(buf, tpMailItem->Body, HdSize + 1);
 			}
-			//本文
+			// 本文
 			CharToTchar(r, tpMailItem->Body + HdSize, Len);
 		}
-		LocalFree(r);
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_MAIL;
+		mem_free(&r);
 
-	}else if(ShowHeader == 1 || KeyShowHeader == TRUE){
-		//本文が存在しない場合はヘッダのみ設定
-		NULLCHECK_FREE(tpMailItem->Body);
+	} else if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
+		// 本文が存在しない場合はヘッダのみ設定
+		mem_free(&tpMailItem->Body);
 		tpMailItem->Body = AllocCharToTchar(buf);
+
+	} else if (download == TRUE) {
+		mem_free(&tpMailItem->Body);
+		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR));
+		if (tpMailItem->Body != NULL) {
+			*tpMailItem->Body = TEXT('\0');
+		}
+	}
+	if (tpMailItem->Body != NULL) {
 		tpMailItem->Status = tpMailItem->MailStatus = ICON_MAIL;
 	}
 }
 
-
-/******************************************************************************
-
-	FilterCheckItem
-
-	文字列のチェック
-
-******************************************************************************/
-
+/*
+ * FilterCheckItem - 文字列のチェック
+ */
 static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 {
 	TCHAR *Content;
@@ -521,100 +444,93 @@ static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 	char *head;
 #endif
 
-	if(Fcontent == NULL || *Fcontent == TEXT('\0')){
+	if (Fcontent == NULL || *Fcontent == TEXT('\0')) {
 		return TRUE;
 	}
 
 #ifdef UNICODE
 	head = AllocTcharToChar(FHead);
-	if(head == NULL){
+	if (head == NULL) {
 		return FALSE;
 	}
-	//コンテンツの取得
+	// コンテンツの取得
 	GetMimeContent(buf, head, &Content, TRUE);
-	LocalFree(head);
+	mem_free(&head);
 #else
-	//コンテンツの取得
+	// コンテンツの取得
 	GetMimeContent(buf, FHead, &Content, TRUE);
 #endif
-	if(Content == NULL){
+	if (Content == NULL) {
 		return StrMatch(Fcontent, TEXT(""));
 	}
 
-	//比較
+	// 比較
 	ret = StrMatch(Fcontent, Content);
-	LocalFree(Content);
+	mem_free(&Content);
 	return ret;
 }
 
+/*
+ * FilterCheck - フィルタ文字列のチェック
+ *	(*(tpMailBox->tpFilter + i))->Flag = 0 // and
+ *	(*(tpMailBox->tpFilter + i))->Flag = 1 // not
+ */
 
-/******************************************************************************
-
-	FilterCheck
-
-	フィルタ文字列のチェック
-
-	(*(tpMailBox->tpFilter + i))->Flag = 0 //and
-	(*(tpMailBox->tpFilter + i))->Flag = 1 //not
-
-******************************************************************************/
-
-static int FilterCheck(struct TPMAILBOX *tpMailBox, char *buf)
+static int FilterCheck(MAILBOX *tpMailBox, char *buf)
 {
 	int RetFlag = 0;
 	int fret;
 	int i, j;
 
-	if(tpMailBox->FilterEnable == 0 || tpMailBox->tpFilter == NULL ||
-		buf == NULL || *buf == '\0'){
+	if (tpMailBox->FilterEnable == 0 || tpMailBox->tpFilter == NULL ||
+		buf == NULL || *buf == '\0') {
 		return FILTER_RECV;
 	}
 
-	for(i = 0; i < tpMailBox->FilterCnt; i++){
-		if(*(tpMailBox->tpFilter + i) == NULL ||
-			(*(tpMailBox->tpFilter + i))->Enable == 0){
+	for (i = 0; i < tpMailBox->FilterCnt; i++) {
+		if (*(tpMailBox->tpFilter + i) == NULL ||
+			(*(tpMailBox->tpFilter + i))->Enable == 0) {
 			continue;
 		}
 
-		//項目１のチェック
-		if((*(tpMailBox->tpFilter + i))->Header1 == NULL ||
-			*(*(tpMailBox->tpFilter + i))->Header1 == TEXT('\0')){
+		// 項目１のチェック
+		if ((*(tpMailBox->tpFilter + i))->Header1 == NULL ||
+			*(*(tpMailBox->tpFilter + i))->Header1 == TEXT('\0')) {
 			continue;
 		}
-		if(FilterCheckItem(buf, (*(tpMailBox->tpFilter + i))->Header1,
-			(*(tpMailBox->tpFilter + i))->Content1) == FALSE){
+		if (FilterCheckItem(buf, (*(tpMailBox->tpFilter + i))->Header1,
+			(*(tpMailBox->tpFilter + i))->Content1) == FALSE) {
 			continue;
 		}
 
-		if((*(tpMailBox->tpFilter + i))->Header2 == NULL ||
+		if ((*(tpMailBox->tpFilter + i))->Header2 == NULL ||
 			*(*(tpMailBox->tpFilter + i))->Header2 == TEXT('\0') ||
 			FilterCheckItem(buf, (*(tpMailBox->tpFilter + i))->Header2,
-			(*(tpMailBox->tpFilter + i))->Content2) == TRUE){
+			(*(tpMailBox->tpFilter + i))->Content2) == TRUE) {
 
 			j = (*(tpMailBox->tpFilter + i))->Action;
-			for(fret = 1; j > 0; j--){
+			for (fret = 1; j > 0; j--) {
 				fret *= 2;
 			}
-			switch(fret)
-			{
+			switch (fret) {
 			case FILTER_UNRECV:
 			case FILTER_RECV:
-				//受信フラグ
-				if(!(RetFlag & FILTER_RECV) && !(RetFlag & FILTER_UNRECV)){
+				// 受信フラグ
+				if (!(RetFlag & FILTER_RECV) && !(RetFlag & FILTER_UNRECV)) {
 					RetFlag |= fret;
 				}
 				break;
 
 			case FILTER_DOWNLOADMARK:
 			case FILTER_DELETEMARK:
-				//マークフラグ
-				if(!(RetFlag & FILTER_RECV) && !(RetFlag & FILTER_DOWNLOADMARK) && !(RetFlag & FILTER_DELETEMARK)){
+				// マークフラグ
+				if (!(RetFlag & FILTER_RECV) && !(RetFlag & FILTER_DOWNLOADMARK) && !(RetFlag & FILTER_DELETEMARK)) {
 					RetFlag |= fret;
 				}
 				break;
 
 			default:
-				if(!(RetFlag & FILTER_RECV)){
+				if (!(RetFlag & FILTER_RECV)) {
 					RetFlag |= fret;
 				}
 				break;
@@ -624,16 +540,10 @@ static int FilterCheck(struct TPMAILBOX *tpMailBox, char *buf)
 	return ((RetFlag == 0) ? FILTER_RECV : RetFlag);
 }
 
-
-/******************************************************************************
-
-	Item_SetMailItem
-
-	アイテムにヘッダと本文を設定
-
-******************************************************************************/
-
-BOOL Item_SetMailItem(struct TPMAILITEM *tpMailItem, char *buf, char *Size)
+/*
+ * Item_SetMailItem - アイテムにヘッダと本文を設定
+ */
+BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download)
 {
 	TCHAR *msgid1 = NULL, *msgid2 = NULL, *t = NULL;
 	char *Content;
@@ -641,268 +551,257 @@ BOOL Item_SetMailItem(struct TPMAILITEM *tpMailItem, char *buf, char *Size)
 	char *dcode;
 #endif
 
-	//Subject
+	if (download == TRUE) {
+		// 既存の情報を解放
+		mem_free(&tpMailItem->Subject);
+		mem_free(&tpMailItem->From);
+		mem_free(&tpMailItem->To);
+		mem_free(&tpMailItem->Cc);
+		mem_free(&tpMailItem->ReplyTo);
+		mem_free(&tpMailItem->ContentType);
+		mem_free(&tpMailItem->Encoding);
+		mem_free(&tpMailItem->Date);
+		if (Size != NULL) {
+			mem_free(&tpMailItem->Size);
+		}
+		mem_free(&tpMailItem->MessageID);
+		mem_free(&tpMailItem->InReplyTo);
+		mem_free(&tpMailItem->References);
+	}
+	// Subject
 	GetMimeContent(buf, HEAD_SUBJECT, &tpMailItem->Subject, FALSE);
-	//From
+	// From
 	GetMimeContent(buf, HEAD_FROM, &tpMailItem->From, FALSE);
-	//To
+	// To
 	GetMimeContent(buf, HEAD_TO, &tpMailItem->To, TRUE);
-	//Cc
+	// Cc
 	GetMimeContent(buf, HEAD_CC, &tpMailItem->Cc, TRUE);
-	//Reply-To
+	// Reply-To
 	GetMimeContent(buf, HEAD_REPLYTO, &tpMailItem->ReplyTo, FALSE);
-
-	//Content-Type
+	// Content-Type
 	GetMimeContent(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType, FALSE);
-	if(tpMailItem->ContentType != NULL &&
-		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0){
+	if (tpMailItem->ContentType != NULL &&
+		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		tpMailItem->Multipart = TRUE;
-	}else{
-		//Content-Transfer-Encoding
+	} else {
+		// Content-Transfer-Encoding
 #ifdef UNICODE
 		Item_GetContent(buf, HEAD_ENCODING, &Content);
-		if(Content != NULL){
+		if (Content != NULL) {
 			tpMailItem->Encoding = AllocCharToTchar(Content);
-			LocalFree(Content);
+			mem_free(&Content);
 		}
 #else
 		Item_GetContent(buf, HEAD_ENCODING, &tpMailItem->Encoding);
 #endif
 	}
 
-	//Date
+	// Date
 	Item_GetContent(buf, HEAD_DATE, &Content);
-	if(Content != NULL){
+	if (Content != NULL) {
 #ifdef UNICODE
-		dcode = (char *)LocalAlloc(LMEM_FIXED, BUF_SIZE);
-		if(dcode != NULL){
+		dcode = (char *)mem_alloc(BUF_SIZE);
+		if (dcode != NULL) {
 			DateConv(Content, dcode);
 			tpMailItem->Date = AllocCharToTchar(dcode);
-			LocalFree(dcode);
+			mem_free(&dcode);
 		}
 #else
-		tpMailItem->Date = (char *)LocalAlloc(LMEM_FIXED, BUF_SIZE);
-		if(tpMailItem->Date != NULL){
+		tpMailItem->Date = (char *)mem_alloc(BUF_SIZE);
+		if (tpMailItem->Date != NULL) {
 			DateConv(Content, tpMailItem->Date);
 		}
 #endif
-		LocalFree(Content);
+		mem_free(&Content);
 	}
 
-	//Size
-	if(Size != NULL){
+	// Size
+	if (Size != NULL) {
 		tpMailItem->Size = AllocCharToTchar(Size);
 	}
 
-	//Message-Id
+	// Message-Id
 #ifdef UNICODE
 	Content = Item_GetMessageId(buf);
-	if(Content != NULL){
+	if (Content != NULL) {
 		tpMailItem->MessageID = AllocCharToTchar(Content);
-		LocalFree(Content);
+		mem_free(&Content);
 	}
 #else
 	tpMailItem->MessageID = Item_GetMessageId(buf);
 #endif
 
-	//UIDL
-#ifdef UNICODE
+	// UIDL
 	Item_GetContent(buf, HEAD_X_UIDL, &Content);
-	if(Content != NULL){
+	if (Content != NULL) {
+		mem_free(&tpMailItem->UIDL);
 		tpMailItem->UIDL = AllocCharToTchar(Content);
-		LocalFree(Content);
+		mem_free(&Content);
 	}
-#else
-	Item_GetContent(buf, HEAD_X_UIDL, &tpMailItem->UIDL);
-#endif
 
-	//In-Reply-To
+	// In-Reply-To
 #ifdef UNICODE
 	Item_GetContent(buf, HEAD_INREPLYTO, &Content);
 	TrimMessageId(Content);
-	if(Content != NULL){
+	if (Content != NULL) {
 		tpMailItem->InReplyTo = AllocCharToTchar(Content);
-		LocalFree(Content);
+		mem_free(&Content);
 	}
 #else
 	Item_GetContent(buf, HEAD_INREPLYTO, &tpMailItem->InReplyTo);
 	TrimMessageId(tpMailItem->InReplyTo);
 #endif
 
-	//References
+	// References
 	Item_GetContent(buf, HEAD_REFERENCES, &Content);
-	if(Content != NULL){
+	if (Content != NULL) {
 #ifdef UNICODE
-		dcode = (char *)LocalAlloc(LMEM_FIXED, GetReferencesSize(Content, TRUE) + 1);
-		if(dcode != NULL){
+		dcode = (char *)mem_alloc(GetReferencesSize(Content, TRUE) + 1);
+		if (dcode != NULL) {
 			ConvReferences(Content, dcode, FALSE);
 			msgid1 = AllocCharToTchar(dcode);
 
 			ConvReferences(Content, dcode, TRUE);
 			msgid2 = AllocCharToTchar(dcode);
-			LocalFree(dcode);
+			mem_free(&dcode);
 		}
 #else
-		msgid1 = (char *)LocalAlloc(LMEM_FIXED, GetReferencesSize(Content, FALSE) + 1);
-		if(msgid1 != NULL){
+		msgid1 = (char *)mem_alloc(GetReferencesSize(Content, FALSE) + 1);
+		if (msgid1 != NULL) {
 			ConvReferences(Content, msgid1, FALSE);
 		}
 
-		msgid2 = (char *)LocalAlloc(LMEM_FIXED, GetReferencesSize(Content, TRUE) + 1);
-		if(msgid2 != NULL){
+		msgid2 = (char *)mem_alloc(GetReferencesSize(Content, TRUE) + 1);
+		if (msgid2 != NULL) {
 			ConvReferences(Content, msgid2, TRUE);
 		}
 #endif
-		if(msgid1 != NULL && msgid2 != NULL && TStrCmp(msgid1, msgid2) == 0){
-			LocalFree(msgid2);
+		if (msgid1 != NULL && msgid2 != NULL && TStrCmp(msgid1, msgid2) == 0) {
+			mem_free(&msgid2);
 			msgid2 = NULL;
 		}
-		LocalFree(Content);
+		mem_free(&Content);
 	}
 
-	if(tpMailItem->InReplyTo == NULL || *tpMailItem->InReplyTo == TEXT('\0')){
-		NULLCHECK_FREE(tpMailItem->InReplyTo);
+	if (tpMailItem->InReplyTo == NULL || *tpMailItem->InReplyTo == TEXT('\0')) {
+		mem_free(&tpMailItem->InReplyTo);
 		tpMailItem->InReplyTo = AllocCopy(msgid1);
 		t = msgid2;
-	}else{
+	} else {
 		t = (msgid1 != NULL && TStrCmp(tpMailItem->InReplyTo, msgid1) != 0) ? msgid1 : msgid2;
 	}
 	tpMailItem->References = AllocCopy(t);
-	NULLCHECK_FREE(msgid1);
-	NULLCHECK_FREE(msgid2);
+	mem_free(&msgid1);
+	mem_free(&msgid2);
 
-	//Body
-	Item_SetMailBody(tpMailItem, buf);
+	// Body
+	Item_SetMailBody(tpMailItem, buf, download);
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	Item_HeadToItem
-
-	メールヘッダからアイテムを作成する
-
-******************************************************************************/
-
-struct TPMAILITEM *Item_HeadToItem(struct TPMAILBOX *tpMailBox, char *buf, char *Size)
+/*
+ * Item_HeadToItem - メールヘッダからアイテムを作成する
+ */
+MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, char *Size)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int fret;
 
-	//フィルタをチェック
+	// フィルタをチェック
 	fret = FilterCheck(tpMailBox, buf);
-	if(fret == FILTER_UNRECV){
-		return (struct TPMAILITEM *)-1;
+	if (fret == FILTER_UNRECV) {
+		return (MAILITEM *)-1;
 	}
 
-	//メール情報の確保
-	tpMailItem = (struct TPMAILITEM *)LocalAlloc(LPTR, sizeof(struct TPMAILITEM));
-	if(tpMailItem == NULL){
+	// メール情報の確保
+	tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+	if (tpMailItem == NULL) {
 		return NULL;
 	}
-	//ヘッダと本文を設定
-	Item_SetMailItem(tpMailItem, buf, Size);
+	// ヘッダと本文を設定
+	Item_SetMailItem(tpMailItem, buf, Size, FALSE);
 
-	//メール情報のリストに追加
-	if(!(fret & FILTER_UNRECV) && Item_Add(tpMailBox, tpMailItem) == -1){
+	// メール情報のリストに追加
+	if (!(fret & FILTER_UNRECV) && Item_Add(tpMailBox, tpMailItem) == -1) {
 		FreeMailItem(&tpMailItem, 1);
 		return NULL;
 	}
 
-	//フィルタ動作設定
-	//開封済み設定
-	if(fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON){
+	// フィルタ動作設定
+	// 開封済み設定
+	if (fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
 		tpMailItem->Status = tpMailItem->MailStatus = ICON_READ;
 	}
-	//マーク設定
-	if(fret & FILTER_DOWNLOADMARK){
+	// マーク設定
+	if (fret & FILTER_DOWNLOADMARK) {
 		tpMailItem->Status = ICON_DOWN;
-	}else if(fret & FILTER_DELETEMARK){
+	} else if (fret & FILTER_DELETEMARK) {
 		tpMailItem->Status = ICON_DEL;
 	}
-	//保存箱へコピー
-	if(fret & FILTER_SAVE &&
+	// 保存箱へコピー
+	if (fret & FILTER_SAVE &&
 		tpMailItem->MailStatus != ICON_NON &&
-		Item_FindThread(MailBox + MAILBOX_SAVE, tpMailItem->MessageID, (MailBox + MAILBOX_SAVE)->MailItemCnt) == -1){
+		Item_FindThread(MailBox + MAILBOX_SAVE, tpMailItem->MessageID, (MailBox + MAILBOX_SAVE)->MailItemCnt) == -1) {
 		Item_CopyMailBox(MailBox + MAILBOX_SAVE, tpMailItem, tpMailBox->Name, FALSE);
 	}
-	if(fret & FILTER_UNRECV){
-		//受信しないフラグが有効の場合は解放する
+	if (fret & FILTER_UNRECV) {
+		// 受信しないフラグが有効の場合は解放する
 		FreeMailItem(&tpMailItem, 1);
-		return (struct TPMAILITEM *)-1;
+		return (MAILITEM *)-1;
 	}
 	return tpMailItem;
 }
 
-
-/******************************************************************************
-
-	Item_GetContentT
-
-	コンテンツの取得
-
-******************************************************************************/
-
+/*
+ * Item_GetContentT - コンテンツの取得
+ */
 static void Item_GetContentT(TCHAR *buf, TCHAR *str, TCHAR **ret)
 {
 	TCHAR *p;
 	int len;
 
-	//位置の取得
+	// 位置の取得
 	p = GetHeaderStringPointT(buf, str);
-	if(p == NULL){
+	if (p == NULL) {
 		*ret = NULL;
 		return;
 	}
-	//サイズの取得
+	// サイズの取得
 	len = GetHeaderStringSizeT(p, TRUE);
-	*ret = (TCHAR *)LocalAlloc(LMEM_FIXED, sizeof(TCHAR) * (len + 1));
-	if(*ret == NULL){
+	*ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	if (*ret == NULL) {
 		return;
 	}
 	GetHeaderStringT(p, *ret, TRUE);
 }
 
-
-/******************************************************************************
-
-	Item_GetContentT
-
-	コンテンツの取得
-
-******************************************************************************/
-
+/*
+ * Item_GetContentT - コンテンツの取得
+ */
 static int Item_GetContentInt(TCHAR *buf, TCHAR *str, int DefaultRet)
 {
 	TCHAR *Content;
 	int ret;
 
 	Item_GetContentT(buf, str, &Content);
-	if(Content == NULL){
+	if (Content == NULL) {
 		return DefaultRet;
 	}
 	ret = _ttoi(Content);
-	LocalFree(Content);
+	mem_free(&Content);
 	return ret;
 }
 
-
-/******************************************************************************
-
-	Item_StringToItem
-
-	文字列からアイテムを作成する
-
-******************************************************************************/
-
-struct TPMAILITEM *Item_StringToItem(struct TPMAILBOX *tpMailBox, TCHAR *buf)
+/*
+ * Item_StringToItem - 文字列からアイテムを作成する
+ */
+MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int i;
 
-	tpMailItem = (struct TPMAILITEM *)LocalAlloc(LPTR, sizeof(struct TPMAILITEM));
-	if(tpMailItem == NULL){
+	tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+	if (tpMailItem == NULL) {
 		return NULL;
 	}
 
@@ -922,52 +821,64 @@ struct TPMAILITEM *Item_StringToItem(struct TPMAILBOX *tpMailBox, TCHAR *buf)
 	Item_GetContentT(buf, TEXT(HEAD_X_UIDL), &tpMailItem->UIDL);
 	Item_GetContentT(buf, TEXT(HEAD_X_MAILBOX), &tpMailItem->MailBox);
 	Item_GetContentT(buf, TEXT(HEAD_X_ATTACH), &tpMailItem->Attach);
+	if (tpMailItem->Attach == NULL) {
+		Item_GetContentT(buf, TEXT(HEAD_X_ATTACH_OLD), &tpMailItem->Attach);
+		if (tpMailItem->Attach != NULL) {
+			TCHAR *p;
+			for (p = tpMailItem->Attach; *p != TEXT('\0'); p++) {
+				if (*p == TEXT(',')) {
+					*p = ATTACH_SEP;
+				}
+			}
+		}
+	}
 
-	//No
+	// No
 	tpMailItem->No = Item_GetContentInt(buf, TEXT(HEAD_X_NO), -1);
-	if(tpMailItem->No == -1){
+	if (tpMailItem->No == -1) {
 		tpMailItem->No = Item_GetContentInt(buf, TEXT(HEAD_X_NO_OLD), 0);
 	}
-	//MailStatus
+	// MailStatus
 	tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_MSTATUS), -1);
-	if(tpMailItem->MailStatus == -1){
+	if (tpMailItem->MailStatus == -1) {
 		tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_MSTATUS_OLD), 0);
 	}
-	//MarkStatus
+	// MarkStatus
 	i = Item_GetContentInt(buf, TEXT(HEAD_X_STATUS), -1);
 	tpMailItem->Status = (i != -1) ? i : tpMailItem->MailStatus;
-	//Download
+	// Download
 	tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNFLAG), -1);
-	if(tpMailItem->Download == -1){
+	if (tpMailItem->Download == -1) {
 		tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNFLAG_OLD), 0);
 	}
 
-	//Multipart
-	if(tpMailItem->Attach != NULL || (tpMailItem->ContentType != NULL &&
-		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)){
+	// Multipart
+	if (tpMailItem->Attach != NULL || (tpMailItem->ContentType != NULL &&
+		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)) {
 		tpMailItem->Multipart = TRUE;
 	}
 	return tpMailItem;
 }
 
-
-/******************************************************************************
-
-	Item_GetStringSize
-
-	メールの保存文字列のサイズ取得
-
-******************************************************************************/
-
-int Item_GetStringSize(struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
+/*
+ * Item_GetStringSize - メールの保存文字列のサイズ取得
+ */
+int Item_GetStringSize(MAILITEM *tpMailItem, BOOL BodyFlag)
 {
 	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
 	int len = 0;
 
+#ifndef _itot
+	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
+	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
+	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
+	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+#else
 	_itot(tpMailItem->No, X_No, 10);
 	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
 	_itot(tpMailItem->Status, X_Status, 10);
 	_itot(tpMailItem->Download, X_Downflag, 10);
+#endif
 
 	len += GetSaveHeaderStringSize(TEXT(HEAD_FROM), tpMailItem->From);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_TO), tpMailItem->To);
@@ -987,37 +898,38 @@ int Item_GetStringSize(struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_ATTACH), tpMailItem->Attach);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_NO), X_No);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_MSTATUS), X_Mstatus);
-	if(tpMailItem->MailStatus != tpMailItem->Status){
+	if (tpMailItem->MailStatus != tpMailItem->Status) {
 		len += GetSaveHeaderStringSize(TEXT(HEAD_X_STATUS), X_Status);
 	}
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_DOWNFLAG), X_Downflag);
 	len += 2;
 
-	if(BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')){
+	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')) {
 		len += lstrlen(tpMailItem->Body);
 	}
 	len += 5;
 	return len;
 }
 
-
-/******************************************************************************
-
-	Item_GetString
-
-	メールの保存文字列の取得
-
-******************************************************************************/
-
-TCHAR *Item_GetString(TCHAR *buf, struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
+/*
+ * Item_GetString - メールの保存文字列の取得
+ */
+TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag)
 {
 	TCHAR *p = buf;
 	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
 
+#ifndef _itot
+	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
+	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
+	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
+	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+#else
 	_itot(tpMailItem->No, X_No, 10);
 	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
 	_itot(tpMailItem->Status, X_Status, 10);
 	_itot(tpMailItem->Download, X_Downflag, 10);
+#endif
 
 	p = SaveHeaderString(TEXT(HEAD_FROM), tpMailItem->From, p);
 	p = SaveHeaderString(TEXT(HEAD_TO), tpMailItem->To, p);
@@ -1037,40 +949,34 @@ TCHAR *Item_GetString(TCHAR *buf, struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
 	p = SaveHeaderString(TEXT(HEAD_X_ATTACH), tpMailItem->Attach, p);
 	p = SaveHeaderString(TEXT(HEAD_X_NO), X_No, p);
 	p = SaveHeaderString(TEXT(HEAD_X_MSTATUS), X_Mstatus, p);
-	if(tpMailItem->MailStatus != tpMailItem->Status){
+	if (tpMailItem->MailStatus != tpMailItem->Status) {
 		p = SaveHeaderString(TEXT(HEAD_X_STATUS), X_Status, p);
 	}
 	p = SaveHeaderString(TEXT(HEAD_X_DOWNFLAG), X_Downflag, p);
 	p = TStrCpy(p, TEXT("\r\n"));
 
-	if(BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')){
+	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')) {
 		p = TStrCpy(p, tpMailItem->Body);
 	}
 	p = TStrCpy(p, TEXT("\r\n.\r\n"));
 	return p;
 }
 
-
-/******************************************************************************
-
-	Item_GetNextDonloadItem
-
-	ダウンロードマークのアイテムのインデックスを取得
-
-******************************************************************************/
-
-int Item_GetNextDonloadItem(struct TPMAILBOX *tpMailBox, int Index, int *No)
+/*
+ * Item_GetNextDonloadItem - ダウンロードマークのアイテムのインデックスを取得
+ */
+int Item_GetNextDonloadItem(MAILBOX *tpMailBox, int Index, int *No)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int i;
 
-	for(i = Index + 1; i < tpMailBox->MailItemCnt; i++){
+	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if(tpMailItem == NULL){
+		if (tpMailItem == NULL) {
 			continue;
 		}
-		if(tpMailItem->Status == ICON_DOWN){
-			if(No != NULL){
+		if (tpMailItem->Status == ICON_DOWN) {
+			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
 			return i;
@@ -1079,100 +985,82 @@ int Item_GetNextDonloadItem(struct TPMAILBOX *tpMailBox, int Index, int *No)
 	return -1;
 }
 
-
-/******************************************************************************
-
-	Item_GetNextSendItem
-
-	送信マークの付いたアイテムのインデックスを取得
-
-******************************************************************************/
-
-int Item_GetNextSendItem(struct TPMAILBOX *tpMailBox, int Index, int *MailBoxIndex)
+/*
+ * Item_GetNextSendItem - 送信マークの付いたアイテムのインデックスを取得
+ */
+int Item_GetNextSendItem(MAILBOX *tpMailBox, int Index, int *MailBoxIndex)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int BoxIndex;
 	int i;
 	int wkIndex = -1;
 	int wkBoxIndex = -1;
 
-	for(i = Index + 1; i < tpMailBox->MailItemCnt; i++){
+	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if(tpMailItem == NULL || tpMailItem->Status != ICON_SEND){
+		if (tpMailItem == NULL || tpMailItem->Status != ICON_SEND) {
 			continue;
 		}
-		if(MailBoxIndex == NULL){
+		if (MailBoxIndex == NULL) {
 			return i;
 		}
 		BoxIndex = GetNameToMailBox(tpMailItem->MailBox);
-		if(*MailBoxIndex == -1 || *MailBoxIndex == BoxIndex){
+		if (*MailBoxIndex == -1 || *MailBoxIndex == BoxIndex) {
 			wkIndex = i;
 			wkBoxIndex = BoxIndex;
 			break;
 		}
-		if(wkIndex == -1){
+		if (wkIndex == -1) {
 			wkIndex = i;
 			wkBoxIndex = BoxIndex;
 		}
 	}
-	if(MailBoxIndex != NULL){
+	if (MailBoxIndex != NULL) {
 		*MailBoxIndex = wkBoxIndex;
 	}
 	return wkIndex;
 }
 
-
-/******************************************************************************
-
-	Item_GetNextMailBoxSendItem
-
-	指定のメールボックスの送信マークの付いたアイテムのインデックスを取得
-
-******************************************************************************/
-
-int Item_GetNextMailBoxSendItem(struct TPMAILBOX *tpMailBox, int Index, int MailBoxIndex)
+/*
+ * Item_GetNextMailBoxSendItem - 指定のメールボックスの送信マークの付いたアイテムのインデックスを取得
+ */
+int Item_GetNextMailBoxSendItem(MAILBOX *tpMailBox, int Index, int MailBoxIndex)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int BoxIndex;
 	int i;
 
-	if(MailBoxIndex == -1){
+	if (MailBoxIndex == -1) {
 		return -1;
 	}
-	for(i = Index + 1; i < tpMailBox->MailItemCnt; i++){
+	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if(tpMailItem == NULL || tpMailItem->Status != ICON_SEND){
+		if (tpMailItem == NULL || tpMailItem->Status != ICON_SEND) {
 			continue;
 		}
 		BoxIndex = GetNameToMailBox(tpMailItem->MailBox);
-		if(MailBoxIndex == BoxIndex){
+		if (MailBoxIndex == BoxIndex) {
 			return i;
 		}
 	}
 	return -1;
 }
 
-
-/******************************************************************************
-
-	Item_GetNextDeleteItem
-
-	削除マークのアイテムのインデックスを取得
-
-******************************************************************************/
-
-int Item_GetNextDeleteItem(struct TPMAILBOX *tpMailBox, int Index, int *No)
+/*
+ * Item_GetNextDeleteItem - 削除マークのアイテムのインデックスを取得
+ */
+int Item_GetNextDeleteItem(MAILBOX *tpMailBox, int Index, int *No)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int i;
 
-	for(i = Index + 1; i < tpMailBox->MailItemCnt; i++){
+	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if(tpMailItem == NULL){
+		if (tpMailItem == NULL) {
 			continue;
 		}
-		if(tpMailItem->Status == ICON_DEL){
-			if(No != NULL){
+		if (tpMailItem->Status == ICON_DEL) {
+			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
 			return i;
@@ -1181,127 +1069,103 @@ int Item_GetNextDeleteItem(struct TPMAILBOX *tpMailBox, int Index, int *No)
 	return -1;
 }
 
-
-/******************************************************************************
-
-	Item_GetMailNoToItemIndex
-
-	メール番号からアイテムのインデックスを取得
-
-******************************************************************************/
-
-int Item_GetMailNoToItemIndex(struct TPMAILBOX *tpMailBox, int No)
+/*
+ * Item_GetMailNoToItemIndex - メール番号からアイテムのインデックスを取得
+ */
+int Item_GetMailNoToItemIndex(MAILBOX *tpMailBox, int No)
 {
 	int i;
 
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if(*(tpMailBox->tpMailItem + i) == NULL){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		if((*(tpMailBox->tpMailItem + i))->No == No){
+		if ((*(tpMailBox->tpMailItem + i))->No == No) {
 			return i;
 		}
 	}
 	return -1;
 }
 
-
-/******************************************************************************
-
-	Item_IsMailBox
-
-	メールボックス内のメールリストに指定のメールが存在するか調べる
-
-******************************************************************************/
-
-BOOL Item_IsMailBox(struct TPMAILBOX *tpMailBox, struct TPMAILITEM *tpMailItem)
+/*
+ * Item_IsMailBox - メールボックス内のメールリストに指定のメールが存在するか調べる
+ */
+BOOL Item_IsMailBox(MAILBOX *tpMailBox, MAILITEM *tpMailItem)
 {
 	int i;
 
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if(*(tpMailBox->tpMailItem + i) == tpMailItem){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (*(tpMailBox->tpMailItem + i) == tpMailItem) {
 			return TRUE;
 		}
 	}
 	return FALSE;
 }
 
-
-/******************************************************************************
-
-	Item_FindThread
-
-	メッセージIDを検索する
-
-******************************************************************************/
-
-int Item_FindThread(struct TPMAILBOX *tpMailBox, TCHAR *p, int Index)
+/*
+ * Item_FindThread - メッセージIDを検索する
+ */
+int Item_FindThread(MAILBOX *tpMailBox, TCHAR *p, int Index)
 {
-	struct TPMAILITEM *tpMailItem;
+	MAILITEM *tpMailItem;
 	int j;
 
-	if(p == NULL){
+	if (p == NULL) {
 		return -1;
 	}
-	for(j = Index - 1; j >= 0; j--){
-		if((tpMailItem = (*(tpMailBox->tpMailItem + j))) == NULL ||
-			tpMailItem->MessageID == NULL){
+	for (j = Index - 1; j >= 0; j--) {
+		if ((tpMailItem = (*(tpMailBox->tpMailItem + j))) == NULL ||
+			tpMailItem->MessageID == NULL) {
 			continue;
 		}
-		if(TStrCmp(tpMailItem->MessageID, p) == 0){
+		if (TStrCmp(tpMailItem->MessageID, p) == 0) {
 			return j;
 		}
 	}
 	return -1;
 }
 
-
-/******************************************************************************
-
-	Item_SetThread
-
-	スレッドを構築する
-
-******************************************************************************/
-
-void Item_SetThread(struct TPMAILBOX *tpMailBox)
+/*
+ * Item_SetThread - スレッドを構築する
+ */
+void Item_SetThread(MAILBOX *tpMailBox)
 {
-	struct TPMAILITEM *tpMailItem;
-	struct TPMAILITEM *tpNextMailItem;
+	MAILITEM *tpMailItem;
+	MAILITEM *tpNextMailItem;
 	int i, no = 0, n;
 	int parent;
 
-	if(tpMailBox->MailItemCnt == 0 ||
-		(*tpMailBox->tpMailItem != NULL && (*tpMailBox->tpMailItem)->NextNo != 0)){
+	if (tpMailBox->MailItemCnt == 0 ||
+		(*tpMailBox->tpMailItem != NULL && (*tpMailBox->tpMailItem)->NextNo != 0)) {
 		return;
 	}
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if((tpMailItem = *(tpMailBox->tpMailItem + i)) == NULL){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if ((tpMailItem = *(tpMailBox->tpMailItem + i)) == NULL) {
 			continue;
 		}
 		tpMailItem->NextNo = tpMailItem->PrevNo = tpMailItem->Indent = 0;
-		//元メールの検索
+		// 元メールの検索
 		parent = Item_FindThread(tpMailBox, tpMailItem->InReplyTo, i);
-		if(parent == -1){
+		if (parent == -1) {
 			parent = Item_FindThread(tpMailBox, tpMailItem->References, i);
 		}
-		//元メールなし
-		if(parent == -1){
+		// 元メールなし
+		if (parent == -1) {
 			(*(tpMailBox->tpMailItem + no))->NextNo = i;
 			tpMailItem->PrevNo = no;
 			no = i;
 			continue;
 		}
-		//インデントを設定する
+		// インデントを設定する
 		tpMailItem->Indent = (*(tpMailBox->tpMailItem + parent))->Indent + 1;
 		n = (*(tpMailBox->tpMailItem + parent))->NextNo;
-		while(n != 0){
-			if((tpNextMailItem = (*(tpMailBox->tpMailItem + n))) == NULL){
+		while (n != 0) {
+			if ((tpNextMailItem = (*(tpMailBox->tpMailItem + n))) == NULL) {
 				n = 0;
 				break;
 			}
-			//インデントからメールの追加位置を取得する
-			if(tpNextMailItem->Indent < tpMailItem->Indent){
+			// インデントからメールの追加位置を取得する
+			if (tpNextMailItem->Indent < tpMailItem->Indent) {
 				tpMailItem->PrevNo = tpNextMailItem->PrevNo;
 				tpMailItem->NextNo = n;
 
@@ -1311,16 +1175,16 @@ void Item_SetThread(struct TPMAILBOX *tpMailBox)
 			}
 			n = tpNextMailItem->NextNo;
 		}
-		if(n == 0){
+		if (n == 0) {
 			(*(tpMailBox->tpMailItem + no))->NextNo = i;
 			tpMailItem->PrevNo = no;
 			no = i;
 		}
 	}
-	//ソート数値を設定する
+	// ソート数値を設定する
 	no = 0;
-	for(i = 0; i < tpMailBox->MailItemCnt; i++){
-		if(*(tpMailBox->tpMailItem + no) == NULL){
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (*(tpMailBox->tpMailItem + no) == NULL) {
 			break;
 		}
 		(*(tpMailBox->tpMailItem + no))->PrevNo = i;

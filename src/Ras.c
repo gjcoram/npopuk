@@ -1,27 +1,21 @@
-/**************************************************************************
+/*
+ * nPOP
+ *
+ * Ras.c
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
-	nPOP
-
-	Ras.c
-
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
-
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
-#include "General.h"
+/* Include Files */
+#include <windows.h>
 #include <Ras.h>
 
+#include "General.h"
+#include "Memory.h"
 
-/**************************************************************************
-	Define
-**************************************************************************/
-
+/* Define */
 #ifdef _WIN32_WCE
 #define RASDLL						TEXT("COREDLL.dll")
 
@@ -60,11 +54,7 @@
 #define RAS_ENTRY_CNT				100
 #define RAS_CONN_CNT				30
 
-
-/**************************************************************************
-	Global Variables
-**************************************************************************/
-
+/* Global Variables */
 BOOL RasLoop = FALSE;
 
 UINT WM_RASEVENT = 0;
@@ -78,141 +68,105 @@ static HRASCONN hRasCon = NULL;
 static BOOL g_Ret;
 static int gRasIndex = -1;
 
-//外部参照
+// 外部参照
+extern OPTION op;
+
 extern HINSTANCE hInst;  // Local copy of hInstance
 
-extern struct TPRASINFO **RasInfo;
-extern int RasInfoCnt;
-
-extern int SocIgnoreError;
-
 extern SOCKET g_soc;
-extern struct TPMAILBOX *MailBox;
+extern MAILBOX *MailBox;
 extern BOOL AutoCheckFlag;
-extern int RasNoCheck;
-extern int RasWaitSec;
 
-extern int EnableLAN;
-
-
-/**************************************************************************
-	Local Function Prototypes
-**************************************************************************/
-
+/* Local Function Prototypes */
 static BOOL RasConnectStart(HWND hWnd, int BoxIndex);
 
-
-/******************************************************************************
-
-	GetRasInfo
-
-	RAS情報のインデックスを取得
-
-******************************************************************************/
-
+/*
+ * GetRasInfo - RAS情報のインデックスを取得
+ */
 int GetRasInfo(TCHAR *Entry)
 {
 	int i;
 
-	if(Entry == NULL || *Entry == TEXT('\0')){
+	if (Entry == NULL || *Entry == TEXT('\0')) {
 		return -1;
 	}
-	for(i = 0; i < RasInfoCnt; i++){
-		if(*(RasInfo + i) == NULL || (*(RasInfo + i))->RasEntry == NULL){
+	for (i = 0; i < op.RasInfoCnt; i++) {
+		if (*(op.RasInfo + i) == NULL || (*(op.RasInfo + i))->RasEntry == NULL) {
 			continue;
 		}
-		if(lstrcmp(Entry, (*(RasInfo + i))->RasEntry) == 0){
+		if (lstrcmp(Entry, (*(op.RasInfo + i))->RasEntry) == 0) {
 			return i;
 		}
 	}
 	return -1;
 }
 
-
-/******************************************************************************
-
-	SetRasInfo
-
-	RAS情報に追加
-
-******************************************************************************/
-
+/*
+ * SetRasInfo - RAS情報に追加
+ */
 BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass)
 {
-	struct TPRASINFO **TmpRasInfo;
+	RASINFO **TmpRasInfo;
 	int i;
 
-	if(*Entry == TEXT('\0')){
+	if (*Entry == TEXT('\0')) {
 		return TRUE;
 	}
-	if((i = GetRasInfo(Entry)) != -1){
-		NULLCHECK_FREE((*(RasInfo + i))->RasUser);
-		NULLCHECK_FREE((*(RasInfo + i))->RasPass);
-		(*(RasInfo + i))->RasUser = AllocCopy(User);
-		(*(RasInfo + i))->RasPass = AllocCopy(Pass);
+	if ((i = GetRasInfo(Entry)) != -1) {
+		mem_free(&(*(op.RasInfo + i))->RasUser);
+		mem_free(&(*(op.RasInfo + i))->RasPass);
+		(*(op.RasInfo + i))->RasUser = AllocCopy(User);
+		(*(op.RasInfo + i))->RasPass = AllocCopy(Pass);
 		return TRUE;
 	}
 
-	TmpRasInfo = (struct TPRASINFO **)LocalAlloc(LMEM_FIXED,
-		sizeof(struct TPRASINFO *) * (RasInfoCnt + 1));
-	if(TmpRasInfo == NULL){
+	TmpRasInfo = (RASINFO **)mem_alloc(sizeof(RASINFO *) * (op.RasInfoCnt + 1));
+	if (TmpRasInfo == NULL) {
 		return FALSE;
 	}
-	if(RasInfo != NULL){
-		tCopyMemory(TmpRasInfo, RasInfo,
-			sizeof(struct TPRASINFO *) * RasInfoCnt);
+	if (op.RasInfo != NULL) {
+		CopyMemory(TmpRasInfo, op.RasInfo,
+			sizeof(RASINFO *) * op.RasInfoCnt);
 	}
-	*(TmpRasInfo + RasInfoCnt) = (struct TPRASINFO *)LocalAlloc(LPTR, sizeof(struct TPRASINFO));
-	if(*(TmpRasInfo + RasInfoCnt) == NULL){
+	*(TmpRasInfo + op.RasInfoCnt) = (RASINFO *)mem_calloc(sizeof(RASINFO));
+	if (*(TmpRasInfo + op.RasInfoCnt) == NULL) {
 		return FALSE;
 	}
-	(*(TmpRasInfo + RasInfoCnt))->RasEntry = AllocCopy(Entry);
-	(*(TmpRasInfo + RasInfoCnt))->RasUser = AllocCopy(User);
-	(*(TmpRasInfo + RasInfoCnt))->RasPass = AllocCopy(Pass);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasEntry = AllocCopy(Entry);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasUser = AllocCopy(User);
+	(*(TmpRasInfo + op.RasInfoCnt))->RasPass = AllocCopy(Pass);
 
-	NULLCHECK_FREE(RasInfo);
-	RasInfo = TmpRasInfo;
-	RasInfoCnt++;
+	mem_free((void **)&op.RasInfo);
+	op.RasInfo = TmpRasInfo;
+	op.RasInfoCnt++;
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	FreeRasInfo
-
-	RAS情報の解放
-
-******************************************************************************/
-
+/*
+ * FreeRasInfo - RAS情報の解放
+ */
 void FreeRasInfo(void)
 {
 	int i;
 
-	//RAS情報の解放
-	for(i = 0; i < RasInfoCnt; i++){
-		if(*(RasInfo + i) == NULL){
+	// RAS情報の解放
+	for (i = 0; i < op.RasInfoCnt; i++) {
+		if (*(op.RasInfo + i) == NULL) {
 			continue;
 		}
-		NULLCHECK_FREE((*(RasInfo + i))->RasEntry);
-		NULLCHECK_FREE((*(RasInfo + i))->RasUser);
-		NULLCHECK_FREE((*(RasInfo + i))->RasPass);
+		mem_free(&(*(op.RasInfo + i))->RasEntry);
+		mem_free(&(*(op.RasInfo + i))->RasUser);
+		mem_free(&(*(op.RasInfo + i))->RasPass);
 
-		LocalFree(*(RasInfo + i));
+		mem_free(&*(op.RasInfo + i));
 	}
-	NULLCHECK_FREE(RasInfo);
-	RasInfo = NULL;
+	mem_free((void **)&op.RasInfo);
+	op.RasInfo = NULL;
 }
 
-
-/******************************************************************************
-
-	initRas
-
-	RASの初期化
-
-******************************************************************************/
-
+/*
+ * initRas - RASの初期化
+ */
 void initRas(void)
 {
 #ifndef _WIN32_WCE_LAGENDA
@@ -222,40 +176,28 @@ void initRas(void)
 	WM_RASEVENT = WM_RASDIALEVENT;
 #else
 	WM_RASEVENT = RegisterWindowMessage(TEXT(RASDIALEVENT));
-	if(WM_RASEVENT == 0){
+	if (WM_RASEVENT == 0) {
 		WM_RASEVENT = WM_RASDIALEVENT;
 	}
 #endif
 #endif
 }
 
-
-/******************************************************************************
-
-	FreeRas
-
-	RASの解放
-
-******************************************************************************/
-
+/*
+ * FreeRas - RASの解放
+ */
 void FreeRas(void)
 {
 #ifndef _WIN32_WCE_LAGENDA
-	if(hrasapi != NULL){
+	if (hrasapi != NULL) {
 		FreeLibrary(hrasapi);
 	}
 #endif
 }
 
-
-/******************************************************************************
-
-	GetRasEntries
-
-	ComboBoxにRASのエントリーを設定する
-
-******************************************************************************/
-
+/*
+ * GetRasEntries - ComboBoxにRASのエントリーを設定する
+ */
 BOOL GetRasEntries(HWND hCmboWnd)
 {
 #ifndef _WIN32_WCE_LAGENDA
@@ -265,17 +207,17 @@ BOOL GetRasEntries(HWND hCmboWnd)
 	int sz;
 	int i;
 
-	if(hrasapi == NULL){
+	if (hrasapi == NULL) {
 		return FALSE;
 	}
 	rent[0].dwSize = sizeof(rent[0]);
 	sz = sizeof(rent);
 	wRasEnumEntries = GetProcAddress((HMODULE)hrasapi, NAME_RasEnumEntries);
-	if(wRasEnumEntries == NULL){
+	if (wRasEnumEntries == NULL) {
 		return FALSE;
 	}
-	if(wRasEnumEntries(NULL, NULL, rent, (LPDWORD)&sz, (LPDWORD)&ret) == 0){
-		for(i = 0; i < ret; i++){
+	if (wRasEnumEntries(NULL, NULL, rent, (LPDWORD)&sz, (LPDWORD)&ret) == 0) {
+		for (i = 0; i < ret; i++) {
 			ComboBox_AddString(hCmboWnd, rent[i].szEntryName);
 		}
 	}
@@ -288,26 +230,20 @@ BOOL GetRasEntries(HWND hCmboWnd)
 
 	size = sizeof(csi);
 	cnt = 0;
-	if(COMMSet_UIDList(csi, &size, &cnt) != 0){
+	if (COMMSet_UIDList(csi, &size, &cnt) != 0) {
 		return FALSE;
 	}
 
-	for(i = 0; i < cnt; i++){
+	for (i = 0; i < cnt; i++) {
 		ComboBox_AddString(hCmboWnd, csi[i].EntryName);
 	}
 	return TRUE;
 #endif
 }
 
-
-/******************************************************************************
-
-	GetRasStatus
-
-	RASの状態を取得する
-
-******************************************************************************/
-
+/*
+ * GetRasStatus - RASの状態を取得する
+ */
 BOOL GetRasStatus(void)
 {
 #ifndef _WIN32_WCE_LAGENDA
@@ -319,34 +255,34 @@ BOOL GetRasStatus(void)
 	int ccnt;
 	int sz;
 
-	if(hrasapi == NULL){
+	if (hrasapi == NULL) {
 		return TRUE;
 	}
 	rcon[0].dwSize = sizeof(rcon[0]);
 	sz = sizeof(rcon);
 	wRasEnumConnections = GetProcAddress((HMODULE)hrasapi, NAME_RasEnumConnections);
-	if(wRasEnumConnections == NULL){
+	if (wRasEnumConnections == NULL) {
 		return TRUE;
 	}
-	if(wRasEnumConnections((LPRASCONN)rcon, (LPDWORD)&sz, (LPDWORD)&ccnt) != 0){
+	if (wRasEnumConnections((LPRASCONN)rcon, (LPDWORD)&sz, (LPDWORD)&ccnt) != 0) {
 		return TRUE;
 	}
-	if(ccnt <= 0){
+	if (ccnt <= 0) {
 		gRasIndex = -1;
 		hRasCon = NULL;
 		return FALSE;
 	}
 	ccnt = (ccnt > RAS_CONN_CNT) ? RAS_CONN_CNT : ccnt;
 	wRasGetConnectStatus = GetProcAddress((HMODULE)hrasapi, NAME_RasGetConnectStatus);
-	if(wRasGetConnectStatus == NULL){
+	if (wRasGetConnectStatus == NULL) {
 		return TRUE;
 	}
 	rasconsts.dwSize = sizeof(rasconsts);
-	for(i = 0; i < ccnt; i++){
-		if(wRasGetConnectStatus(rcon[i].hrasconn, (LPRASCONNSTATUS)&rasconsts) != 0){
+	for (i = 0; i < ccnt; i++) {
+		if (wRasGetConnectStatus(rcon[i].hrasconn, (LPRASCONNSTATUS)&rasconsts) != 0) {
 			continue;
 		}
-		if(rasconsts.rasconnstate == RASCS_Connected){
+		if (rasconsts.rasconnstate == RASCS_Connected) {
 			return TRUE;
 		}
 	}
@@ -360,12 +296,12 @@ BOOL GetRasStatus(void)
 
 	size = sizeof(csi);
 	cnt = 0;
-	if(DIALUP_ConnectUID_Get(csi, &size, &cnt) != 0){
+	if (DIALUP_ConnectUID_Get(csi, &size, &cnt) != 0) {
 		gRasIndex = -1;
 		hRasCon = 0;
 		return FALSE;
 	}
-	if(cnt > 0){
+	if (cnt > 0) {
 		return TRUE;
 	}
 	gRasIndex = -1;
@@ -374,15 +310,9 @@ BOOL GetRasStatus(void)
 #endif
 }
 
-
-/******************************************************************************
-
-	RasDisconnect
-
-	RASの切断処理を行う
-
-******************************************************************************/
-
+/*
+ * RasDisconnect - RASの切断処理を行う
+ */
 void RasDisconnect(void)
 {
 #ifndef _WIN32_WCE_LAGENDA
@@ -391,25 +321,25 @@ void RasDisconnect(void)
 	gRasIndex = -1;
 	RasLoop = FALSE;
 
-	if(hrasapi == NULL || hRasCon == NULL){
+	if (hrasapi == NULL || hRasCon == NULL) {
 		return;
 	}
 	wRasHangUp = GetProcAddress((HMODULE)hrasapi, NAME_RasHangUp);
-	if(wRasHangUp == NULL){
+	if (wRasHangUp == NULL) {
 		return;
 	}
 	wRasHangUp(hRasCon);
 	hRasCon = NULL;
 
 	g_Ret = FALSE;
-	if(hEvent != NULL){
+	if (hEvent != NULL) {
 		SetEvent(hEvent);
 	}
 #else
 	gRasIndex = -1;
 	RasLoop = FALSE;
 
-	if(hRasCon == 0){
+	if (hRasCon == 0) {
 		return;
 	}
 	DIALUP_Disconnect(&hRasCon, DISCONNECT_NODROP);
@@ -418,27 +348,21 @@ void RasDisconnect(void)
 #endif
 }
 
-
-/******************************************************************************
-
-	RasErr
-
-	RASのエラー文字列を取得する
-
-******************************************************************************/
-
+/*
+ * RasErr - RASのエラー文字列を取得する
+ */
 static void RasErr(int ErrorCode, TCHAR *ErrStr)
 {
 #ifndef _WIN32_WCE_LAGENDA
 	FARPROC wRasGetErrorString;
 
-	if(hrasapi == NULL){
+	if (hrasapi == NULL) {
 		lstrcpy(ErrStr, STR_ERR_RAS_CONNECT);
-	}else{
+	} else {
 		wRasGetErrorString = GetProcAddress((HMODULE)hrasapi, NAME_RasGetErrorString);
-		if(wRasGetErrorString == NULL){
+		if (wRasGetErrorString == NULL) {
 			lstrcpy(ErrStr,STR_ERR_RAS_DISCONNECT);
-		}else{
+		} else {
 			wRasGetErrorString((unsigned int)ErrorCode, ErrStr, BUF_SIZE - 1);
 		}
 	}
@@ -449,15 +373,9 @@ static void RasErr(int ErrorCode, TCHAR *ErrStr)
 #endif
 }
 
-
-/******************************************************************************
-
-	RasConnect
-
-	RASの接続を行う
-
-******************************************************************************/
-
+/*
+ * RasConnect - RASの接続を行う
+ */
 static BOOL RasConnect(HWND hWnd, TCHAR *strEntry, TCHAR *strUser, TCHAR *strPass,
 					   TCHAR *ErrStr)
 {
@@ -466,7 +384,7 @@ static BOOL RasConnect(HWND hWnd, TCHAR *strEntry, TCHAR *strUser, TCHAR *strPas
 	RASDIALPARAMS rdp;
 	DWORD ret;
 
-	if(hrasapi == NULL){
+	if (hrasapi == NULL) {
 		lstrcpy(ErrStr, STR_ERR_RAS_CONNECT);
 		return FALSE;
 	}
@@ -479,12 +397,12 @@ static BOOL RasConnect(HWND hWnd, TCHAR *strEntry, TCHAR *strUser, TCHAR *strPas
 	*rdp.szDomain = TEXT('\0');
 
 	wRasDial = GetProcAddress((HMODULE)hrasapi, NAME_RasDial);
-	if(wRasDial == NULL){
+	if (wRasDial == NULL) {
 		return FALSE;
 	}
 	hRasCon = NULL;
 	ret = wRasDial(NULL, NULL, &rdp, 0xFFFFFFFF, (LPVOID)hWnd, (LPHRASCONN)&hRasCon);
-	if(ret != 0){
+	if (ret != 0) {
 		RasErr(ret, ErrStr);
 		return FALSE;
 	}
@@ -497,20 +415,20 @@ static BOOL RasConnect(HWND hWnd, TCHAR *strEntry, TCHAR *strUser, TCHAR *strPas
 
 	size = sizeof(csi);
 	cnt = 0;
-	if(COMMSet_UIDList(csi, &size, &cnt) != 0){
+	if (COMMSet_UIDList(csi, &size, &cnt) != 0) {
 		return FALSE;
 	}
-	for(i = 0; i < cnt; i++){
-		if(lstrcmp(strEntry, csi[i].EntryName) == 0){
+	for (i = 0; i < cnt; i++) {
+		if (lstrcmp(strEntry, csi[i].EntryName) == 0) {
 			break;
 		}
 	}
-	if(i >= cnt){
+	if (i >= cnt) {
 		RasErr(0, ErrStr);
 		return FALSE;
 	}
 	hRasCon = csi[i].CommSetUID;
-	if(DIALUP_Connect(&hRasCon, NO_CONNECT_DSP) != 0){
+	if (DIALUP_Connect(&hRasCon, NO_CONNECT_DSP) != 0) {
 		hRasCon = 0;
 		RasErr(0, ErrStr);
 		return FALSE;
@@ -519,36 +437,29 @@ static BOOL RasConnect(HWND hWnd, TCHAR *strEntry, TCHAR *strUser, TCHAR *strPas
 #endif
 }
 
-
-/******************************************************************************
-
-	RasStatusProc
-
-	RASの状況表示ダイアログのプロシージャ
-
-******************************************************************************/
-
+/*
+ * RasStatusProc - RASの状況表示ダイアログのプロシージャ
+ */
 BOOL RasStatusProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #ifndef _WIN32_WCE_LAGENDA
 	TCHAR ErrStr[BUF_SIZE];
 	BOOL ShowError;
 
-	if(hRasCon == NULL){
+	if (hRasCon == NULL) {
 		gRasIndex = -1;
 		return TRUE;
 	}
-	if(lParam != 0){
+	if (lParam != 0) {
 		ShowError = RasLoop;
 		RasErr(lParam, ErrStr);
 		SetStatusTextT(hWnd, ErrStr, 1);
-		if(SocIgnoreError != 1 && ShowError == TRUE){
+		if (op.SocIgnoreError != 1 && ShowError == TRUE) {
 			ErrorMessage(hWnd, ErrStr);
 		}
 		return TRUE;
 	}
-	switch(wParam)
-	{
+	switch (wParam) {
 	case RASCS_OpenPort:
 		SetStatusTextT(hWnd, STR_STATUS_RAS_PORTOPEN, 1);
 		break;
@@ -565,7 +476,7 @@ BOOL RasStatusProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetStatusTextT(hWnd, STR_STATUS_RAS_CONNECT, 1);
 
 		g_Ret = TRUE;
-		if(hEvent != NULL){
+		if (hEvent != NULL) {
 			SetEvent(hEvent);
 		}
 		break;
@@ -574,7 +485,7 @@ BOOL RasStatusProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ShowError = RasLoop;
 		RasDisconnect();
 		SetStatusTextT(hWnd, STR_STATUS_RAS_DISCONNECT, 1);
-		if(SocIgnoreError != 1 && ShowError == TRUE){
+		if (op.SocIgnoreError != 1 && ShowError == TRUE) {
 			ErrorMessage(hWnd, STR_STATUS_RAS_DISCONNECT);
 		}
 		break;
@@ -583,15 +494,9 @@ BOOL RasStatusProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	RasConnectStart
-
-	RASの接続を開始する
-
-******************************************************************************/
-
+/*
+ * RasConnectStart - RASの接続を開始する
+ */
 static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
 {
 #ifndef _WIN32_WCE_LAGENDA
@@ -600,82 +505,82 @@ static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
 	int i;
 	BOOL Stats;
 
-	if(hrasapi == NULL || (MailBox + BoxIndex)->RasMode == 0 ||
+	if (hrasapi == NULL || (MailBox + BoxIndex)->RasMode == 0 ||
 		((Stats = GetRasStatus()) == TRUE &&
-		(hRasCon == NULL || (MailBox + BoxIndex)->RasReCon == 0))){
+		(hRasCon == NULL || (MailBox + BoxIndex)->RasReCon == 0))) {
 		return TRUE;
 	}
-	if((MailBox + BoxIndex)->RasEntry == NULL || *(MailBox + BoxIndex)->RasEntry == TEXT('\0')){
-		if(AutoCheckFlag == TRUE && RasNoCheck == 1 && Stats == FALSE){
+	if ((MailBox + BoxIndex)->RasEntry == NULL || *(MailBox + BoxIndex)->RasEntry == TEXT('\0')) {
+		if (AutoCheckFlag == TRUE && op.RasNoCheck == 1 && Stats == FALSE) {
 			return FALSE;
-		}else{
+		} else {
 			return TRUE;
 		}
 	}
-	//RAS情報のIndexを取得する
-	if((i = GetRasInfo((MailBox + BoxIndex)->RasEntry)) == -1){
-		if(SocIgnoreError != 1){
+	// RAS情報のIndexを取得する
+	if ((i = GetRasInfo((MailBox + BoxIndex)->RasEntry)) == -1) {
+		if (op.SocIgnoreError != 1) {
 			ErrorMessage(hWnd, STR_ERR_RAS_NOSET);
 		}
 		return FALSE;
 	}
-	//既に同一のエントリで接続している場合はTRUEを返す
-	if(Stats == TRUE && i == gRasIndex){
+	// 既に同一のエントリで接続している場合はTRUEを返す
+	if (Stats == TRUE && i == gRasIndex) {
 		return TRUE;
 	}
-	//自動チェックで未接続時はチェックしない設定の場合
-	if(AutoCheckFlag == TRUE && RasNoCheck == 1){
+	// 自動チェックで未接続時はチェックしない設定の場合
+	if (AutoCheckFlag == TRUE && op.RasNoCheck == 1) {
 		return FALSE;
 	}
-	if(hRasCon != NULL){
-		//ダイヤルアップ切断
+	if (hRasCon != NULL) {
+		// ダイヤルアップ切断
 		RasDisconnect();
 
-		//次のダイヤルまでにラグを付ける
-		SetTimer(hWnd, ID_RASWAIT_TIMER, RasWaitSec * 1000, NULL);
+		// 次のダイヤルまでにラグを付ける
+		SetTimer(hWnd, ID_RASWAIT_TIMER, op.RasWaitSec * 1000, NULL);
 
 		hEvent = CreateEvent(NULL, TRUE, FALSE, RAS_WAIT_EVENT);
-		if(hEvent == NULL){
-			if(SocIgnoreError != 1){
+		if (hEvent == NULL) {
+			if (op.SocIgnoreError != 1) {
 				ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
 			}
 			return FALSE;
 		}
 		RasLoop = TRUE;
 		ResetEvent(hEvent);
-		while(WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT){
-			if(GetMessage(&msg, NULL, 0, 0) == FALSE){
+		while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
+			if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
 				break;
 			}
 			MessageFunc(hWnd, &msg);
-			if(RasLoop == FALSE){
+			if (RasLoop == FALSE) {
 				break;
 			}
 		}
 		CloseHandle(hEvent);
 		hEvent = NULL;
-		if(RasLoop == FALSE){
+		if (RasLoop == FALSE) {
 			return FALSE;
 		}
 		RasLoop = FALSE;
 	}
 
-	//ダイヤルアップ接続開始
+	// ダイヤルアップ接続開始
 	SetStatusTextT(hWnd, STR_STATUS_RAS_START, 1);
 
-	if(RasConnect(hWnd, (*(RasInfo + i))->RasEntry,
-		(*(RasInfo + i))->RasUser, (*(RasInfo + i))->RasPass, ErrStr) == FALSE){
+	if (RasConnect(hWnd, (*(op.RasInfo + i))->RasEntry,
+		(*(op.RasInfo + i))->RasUser, (*(op.RasInfo + i))->RasPass, ErrStr) == FALSE) {
 		SetStatusTextT(hWnd, ErrStr, 1);
-		if(SocIgnoreError != 1){
+		if (op.SocIgnoreError != 1) {
 			ErrorMessage(hWnd, ErrStr);
 		}
 		return FALSE;
 	}
 
-	//RASの接続処理
+	// RASの接続処理
 	hEvent = CreateEvent(NULL, TRUE, FALSE, RAS_EVENT);
-	if(hEvent == NULL){
-		if(SocIgnoreError != 1){
+	if (hEvent == NULL) {
+		if (op.SocIgnoreError != 1) {
 			ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
 		}
 		return FALSE;
@@ -683,22 +588,22 @@ static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
 	RasLoop = TRUE;
 	ResetEvent(hEvent);
 	g_Ret = FALSE;
-	while(WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT){
-		if(GetMessage(&msg, NULL, 0, 0) == FALSE){
+	while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
+		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
 			break;
 		}
 		MessageFunc(hWnd, &msg);
-		if(RasLoop == FALSE){
+		if (RasLoop == FALSE) {
 			break;
 		}
 	}
 	CloseHandle(hEvent);
 	hEvent = NULL;
-	if(RasLoop == FALSE){
+	if (RasLoop == FALSE) {
 		return FALSE;
 	}
 	RasLoop = FALSE;
-	if(g_Ret == TRUE){
+	if (g_Ret == TRUE) {
 		gRasIndex = i;
 	}
 	return g_Ret;
@@ -709,96 +614,96 @@ static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
 	int i, j;
 	BOOL Stats;
 
-	if((MailBox + BoxIndex)->RasMode == 0 ||
+	if ((MailBox + BoxIndex)->RasMode == 0 ||
 		((Stats = GetRasStatus()) == TRUE &&
-		(hRasCon == 0 || (MailBox + BoxIndex)->RasReCon == 0))){
+		(hRasCon == 0 || (MailBox + BoxIndex)->RasReCon == 0))) {
 		return TRUE;
 	}
-	if((MailBox + BoxIndex)->RasEntry == NULL || *(MailBox + BoxIndex)->RasEntry == TEXT('\0')){
-		if(AutoCheckFlag == TRUE && RasNoCheck == 1 && Stats == FALSE){
+	if ((MailBox + BoxIndex)->RasEntry == NULL || *(MailBox + BoxIndex)->RasEntry == TEXT('\0')) {
+		if (AutoCheckFlag == TRUE && op.RasNoCheck == 1 && Stats == FALSE) {
 			return FALSE;
-		}else{
+		} else {
 			return TRUE;
 		}
 	}
-	//RAS情報のIndexを取得する
-	if((i = GetRasInfo((MailBox + BoxIndex)->RasEntry)) == -1){
-		if(SocIgnoreError != 1){
+	// RAS情報のIndexを取得する
+	if ((i = GetRasInfo((MailBox + BoxIndex)->RasEntry)) == -1) {
+		if (op.SocIgnoreError != 1) {
 			ErrorMessage(hWnd, STR_ERR_RAS_NOSET);
 		}
 		return FALSE;
 	}
-	//既に同一のエントリで接続している場合はTRUEを返す
-	if(Stats == TRUE && i == gRasIndex){
+	// 既に同一のエントリで接続している場合はTRUEを返す
+	if (Stats == TRUE && i == gRasIndex) {
 		return TRUE;
 	}
-	//自動チェックで未接続時はチェックしない設定の場合
-	if(AutoCheckFlag == TRUE && RasNoCheck == 1){
+	// 自動チェックで未接続時はチェックしない設定の場合
+	if (AutoCheckFlag == TRUE && op.RasNoCheck == 1) {
 		return FALSE;
 	}
-	if(hRasCon != 0){
-		//ダイヤルアップ切断
+	if (hRasCon != 0) {
+		// ダイヤルアップ切断
 		RasDisconnect();
 
-		//次のダイヤルまでにラグを付ける
-		SetTimer(hWnd, ID_RASWAIT_TIMER, RasWaitSec * 1000, NULL);
+		// 次のダイヤルまでにラグを付ける
+		SetTimer(hWnd, ID_RASWAIT_TIMER, op.RasWaitSec * 1000, NULL);
 
 		hEvent = CreateEvent(NULL, TRUE, FALSE, RAS_WAIT_EVENT);
-		if(hEvent == NULL){
-			if(SocIgnoreError != 1){
+		if (hEvent == NULL) {
+			if (op.SocIgnoreError != 1) {
 				ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
 			}
 			return FALSE;
 		}
 		RasLoop = TRUE;
 		ResetEvent(hEvent);
-		while(WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT){
-			if(GetMessage(&msg, NULL, 0, 0) == FALSE){
+		while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
+			if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
 				break;
 			}
 			MessageFunc(hWnd, &msg);
-			if(RasLoop == FALSE){
+			if (RasLoop == FALSE) {
 				break;
 			}
 		}
 		CloseHandle(hEvent);
 		hEvent = NULL;
-		if(RasLoop == FALSE){
+		if (RasLoop == FALSE) {
 			return FALSE;
 		}
 		RasLoop = FALSE;
 	}
 
-	//ダイヤルアップ接続開始
-	if(RasConnect(hWnd, (*(RasInfo + i))->RasEntry,
-		(*(RasInfo + i))->RasUser, (*(RasInfo + i))->RasPass, ErrStr) == FALSE){
+	// ダイヤルアップ接続開始
+	if (RasConnect(hWnd, (*(op.RasInfo + i))->RasEntry,
+		(*(op.RasInfo + i))->RasUser, (*(op.RasInfo + i))->RasPass, ErrStr) == FALSE) {
 		SetStatusTextT(hWnd, ErrStr, 1);
-		if(SocIgnoreError != 1){
+		if (op.SocIgnoreError != 1) {
 			ErrorMessage(hWnd, ErrStr);
 		}
 		return FALSE;
 	}
 
 	RasLoop = TRUE;
-	for(j = 0; j < 10; j++){
-		if(DIALUP_ConnectState_Get(&hRasCon, &ConnStatus) == 0){
+	for (j = 0; j < 10; j++) {
+		if (DIALUP_ConnectState_Get(&hRasCon, &ConnStatus) == 0) {
 			break;
 		}
 		Sleep(100);
 	}
-	while(1){
-		if(DIALUP_ConnectState_Get(&hRasCon, &ConnStatus) != 0){
+	while (1) {
+		if (DIALUP_ConnectState_Get(&hRasCon, &ConnStatus) != 0) {
 			return FALSE;
 		}
-		if(ConnStatus == CMS_DIALUP_CONNECT){
+		if (ConnStatus == CMS_DIALUP_CONNECT) {
 			break;
 		}
 
-		if(GetMessage(&msg, NULL, 0, 0) == FALSE){
+		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
 			break;
 		}
 		MessageFunc(hWnd, &msg);
-		if(RasLoop == FALSE){
+		if (RasLoop == FALSE) {
 			return FALSE;
 		}
 	}
@@ -808,21 +713,15 @@ static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
 #endif
 }
 
-
-/******************************************************************************
-
-	RasMailBoxStart
-
-	アカウント毎のRASの接続を開始する
-
-******************************************************************************/
-
+/*
+ * RasMailBoxStart - アカウント毎のRASの接続を開始する
+ */
 BOOL RasMailBoxStart(HWND hWnd, int BoxIndex)
 {
 	BOOL ret;
 
-	if(EnableLAN == 1){
-		//LAN接続オプションが有効
+	if (op.EnableLAN == 1) {
+		// LAN接続オプションが有効
 		return TRUE;
 	}
 

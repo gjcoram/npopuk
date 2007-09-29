@@ -1,35 +1,25 @@
-/**************************************************************************
+/*
+ * nPOP
+ *
+ * MailBox.c
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
-	nPOP
-
-	MailBox.c
-
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
-
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
+/* Include Files */
 #include "General.h"
+#include "Memory.h"
 
-
-/**************************************************************************
-	Define
-**************************************************************************/
-
+/* Define */
 #define IDC_CB				2000
 
 #define POP_PORT			110
 #define SMTP_PORT			25
 
-
-/**************************************************************************
-	Global Variables
-**************************************************************************/
+/* Global Variables */
+extern OPTION op;
 
 #ifdef _WIN32_WCE_LAGENDA
 extern HMENU hMainMenu;
@@ -38,52 +28,41 @@ extern HMENU hMainMenu;
 extern int MailMenuPos;
 extern HWND hMainToolBar;
 
-extern struct TPMAILBOX *MailBox;
+extern MAILBOX *MailBox;
 extern int MailBoxCnt;
-
-extern struct TPMAILBOX *AddressBox;
+extern MAILBOX *AddressBox;
 
 extern int SelBox;
 extern int LvSortFlag;
 extern BOOL EndThreadSortFlag;
 extern BOOL PPCFlag;
 
+/* Local Function Prototypes */
 
-/******************************************************************************
-
-	InitMailBox
-
-	メールボックスの初期化
-
-******************************************************************************/
-
+/*
+ * InitMailBox - メールボックスの初期化
+ */
 BOOL InitMailBox(void)
 {
 
 	//メールボックスのリストの確保
 	MailBoxCnt = 2;
-	MailBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX) * MailBoxCnt);
+	MailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(MailBox == NULL){
 		return FALSE;
 	}
 	//アドレス帳の確保
-	AddressBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX));
+	AddressBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX));
 	if(AddressBox == NULL){
 		return FALSE;
 	}
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	FreeFilterInfo
-
-	フィルタ情報の解放
-
-******************************************************************************/
-
-void FreeFilterInfo(struct TPMAILBOX *tpMailBox)
+/*
+ * FreeFilterInfo - フィルタ情報の解放
+ */
+void FreeFilterInfo(MAILBOX *tpMailBox)
 {
 	int i;
 
@@ -92,49 +71,51 @@ void FreeFilterInfo(struct TPMAILBOX *tpMailBox)
 		if(*(tpMailBox->tpFilter + i) == NULL){
 			continue;
 		}
-		NULLCHECK_FREE((*(tpMailBox->tpFilter + i))->Header1);
-		NULLCHECK_FREE((*(tpMailBox->tpFilter + i))->Content1);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Header1);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Content1);
 
-		NULLCHECK_FREE((*(tpMailBox->tpFilter + i))->Header2);
-		NULLCHECK_FREE((*(tpMailBox->tpFilter + i))->Content2);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Header2);
+		mem_free(&(*(tpMailBox->tpFilter + i))->Content2);
 
-		LocalFree(*(tpMailBox->tpFilter + i));
+		mem_free(&*(tpMailBox->tpFilter + i));
 	}
-	NULLCHECK_FREE(tpMailBox->tpFilter);
+	mem_free((void **)&tpMailBox->tpFilter);
 	tpMailBox->tpFilter = NULL;
 }
 
-
-/******************************************************************************
-
-	FreeMailBox
-
-	メールボックスの解放
-
-******************************************************************************/
-
-void FreeMailBox(struct TPMAILBOX *tpMailBox)
+/*
+ * FreeMailBox - メールボックスの解放
+ */
+void FreeMailBox(MAILBOX *tpMailBox)
 {
 	if(tpMailBox == NULL){
 		return;
 	}
 	//アカウント情報の解放
-	NULLCHECK_FREE(tpMailBox->Name);
-	NULLCHECK_FREE(tpMailBox->Server);
-	NULLCHECK_FREE(tpMailBox->User);
-	NULLCHECK_FREE(tpMailBox->Pass);
-	NULLCHECK_FREE(tpMailBox->TmpPass);
-	NULLCHECK_FREE(tpMailBox->LastMessageId);
-	NULLCHECK_FREE(tpMailBox->SmtpServer);
-	NULLCHECK_FREE(tpMailBox->UserName);
-	NULLCHECK_FREE(tpMailBox->MailAddress);
-	NULLCHECK_FREE(tpMailBox->Signature);
-	NULLCHECK_FREE(tpMailBox->ReplyTo);
-	NULLCHECK_FREE(tpMailBox->BccAddr);
-	NULLCHECK_FREE(tpMailBox->SmtpUser);
-	NULLCHECK_FREE(tpMailBox->SmtpPass);
-	NULLCHECK_FREE(tpMailBox->SmtpTmpPass);
-	NULLCHECK_FREE(tpMailBox->RasEntry);
+	mem_free(&tpMailBox->Name);
+	mem_free(&tpMailBox->Server);
+	mem_free(&tpMailBox->User);
+	mem_free(&tpMailBox->Pass);
+	mem_free(&tpMailBox->TmpPass);
+	mem_free(&tpMailBox->PopSSLInfo.Cert);
+	mem_free(&tpMailBox->PopSSLInfo.Pkey);
+	mem_free(&tpMailBox->PopSSLInfo.Pass);
+
+	mem_free(&tpMailBox->LastMessageId);
+	mem_free(&tpMailBox->SmtpServer);
+	mem_free(&tpMailBox->UserName);
+	mem_free(&tpMailBox->MailAddress);
+	mem_free(&tpMailBox->Signature);
+	mem_free(&tpMailBox->ReplyTo);
+	mem_free(&tpMailBox->BccAddr);
+	mem_free(&tpMailBox->SmtpUser);
+	mem_free(&tpMailBox->SmtpPass);
+	mem_free(&tpMailBox->SmtpTmpPass);
+	mem_free(&tpMailBox->SmtpSSLInfo.Cert);
+	mem_free(&tpMailBox->SmtpSSLInfo.Pkey);
+	mem_free(&tpMailBox->SmtpSSLInfo.Pass);
+
+	mem_free(&tpMailBox->RasEntry);
 
 	//フィルタ情報の解放
 	FreeFilterInfo(tpMailBox);
@@ -142,21 +123,15 @@ void FreeMailBox(struct TPMAILBOX *tpMailBox)
 	//メール情報の解放
 	if(tpMailBox->tpMailItem != NULL){
 		FreeMailItem(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
-		LocalFree(tpMailBox->tpMailItem);
+		mem_free((void **)&tpMailBox->tpMailItem);
 	}
 	tpMailBox->tpMailItem = NULL;
 	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 }
 
-
-/******************************************************************************
-
-	ReadMailBox
-
-	固定メールボックスの読み込み
-
-******************************************************************************/
-
+/*
+ * ReadMailBox - 固定メールボックスの読み込み
+ */
 BOOL ReadMailBox(void)
 {
 	//保存箱
@@ -180,34 +155,33 @@ BOOL ReadMailBox(void)
 	return TRUE;
 }
 
-
-/******************************************************************************
-
-	CreateMailBox
-
-	メールボックスの追加
-
-******************************************************************************/
-
+/*
+ * CreateMailBox - メールボックスの追加
+ */
 int CreateMailBox(HWND hWnd, BOOL ShowFlag)
 {
-	struct TPMAILBOX *TmpMailBox;
+	MAILBOX *TmpMailBox;
 	int cnt, index;
 
 	//メールボックスのリストに追加
 	index = MailBoxCnt;
 	cnt = MailBoxCnt + 1;
 
-	TmpMailBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX) * cnt);
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
 	if(TmpMailBox == NULL){
 		return -1;
 	}
-	tCopyMemory(TmpMailBox, MailBox, sizeof(struct TPMAILBOX) * MailBoxCnt);
+	CopyMemory(TmpMailBox, MailBox, sizeof(MAILBOX) * MailBoxCnt);
 
 	(TmpMailBox + index)->Port = POP_PORT;
 	(TmpMailBox + index)->SmtpPort = SMTP_PORT;
 
-	LocalFree(MailBox);
+	(TmpMailBox + index)->PopSSLInfo.Verify = 1;
+	(TmpMailBox + index)->PopSSLInfo.Depth = -1;
+	(TmpMailBox + index)->SmtpSSLInfo.Verify = 1;
+	(TmpMailBox + index)->SmtpSSLInfo.Depth = -1;
+
+	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 	MailBoxCnt++;
 
@@ -226,24 +200,18 @@ int CreateMailBox(HWND hWnd, BOOL ShowFlag)
 	return index;
 }
 
-
-/******************************************************************************
-
-	DeleteMailBox
-
-	メールボックスの削除
-
-******************************************************************************/
-
+/*
+ * DeleteMailBox - メールボックスの削除
+ */
 int DeleteMailBox(HWND hWnd, int DelIndex)
 {
-	struct TPMAILBOX *TmpMailBox;
+	MAILBOX *TmpMailBox;
 	int cnt;
 	int i, j;
 
 	//メールボックスのリストから削除
 	cnt = MailBoxCnt - 1;
-	TmpMailBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX) * cnt);
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
 	if(TmpMailBox == NULL){
 		return -1;
 	}
@@ -253,10 +221,10 @@ int DeleteMailBox(HWND hWnd, int DelIndex)
 			FreeMailBox(MailBox + i);
 			continue;
 		}
-		tCopyMemory((TmpMailBox + j), (MailBox + i), sizeof(struct TPMAILBOX));
+		CopyMemory((TmpMailBox + j), (MailBox + i), sizeof(MAILBOX));
 		j++;
 	}
-	LocalFree(MailBox);
+	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 	MailBoxCnt = cnt;
 
@@ -266,18 +234,12 @@ int DeleteMailBox(HWND hWnd, int DelIndex)
 	return DelIndex - 1;
 }
 
-
-/******************************************************************************
-
-	MoveUpMailBox
-
-	メールボックスの位置を上に移動する
-
-******************************************************************************/
-
+/*
+ * MoveUpMailBox - メールボックスの位置を上に移動する
+ */
 void MoveUpMailBox(HWND hWnd)
 {
-	struct TPMAILBOX *TmpMailBox;
+	MAILBOX *TmpMailBox;
 	int i;
 
 	if(SelBox <= MAILBOX_USER || MailBoxCnt <= MAILBOX_USER + 1){
@@ -285,21 +247,21 @@ void MoveUpMailBox(HWND hWnd)
 	}
 
 	//メモリの位置を移動
-	TmpMailBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX) * MailBoxCnt);
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(TmpMailBox == NULL){
 		return;
 	}
 
 	for(i = 0; i < MailBoxCnt; i++){
 		if(SelBox == i + 1){
-			tCopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(struct TPMAILBOX));
-			tCopyMemory((TmpMailBox + i + 1), (MailBox + i), sizeof(struct TPMAILBOX));
+			CopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(MAILBOX));
+			CopyMemory((TmpMailBox + i + 1), (MailBox + i), sizeof(MAILBOX));
 			i++;
 		}else{
-			tCopyMemory((TmpMailBox + i), (MailBox + i), sizeof(struct TPMAILBOX));
+			CopyMemory((TmpMailBox + i), (MailBox + i), sizeof(MAILBOX));
 		}
 	}
-	LocalFree(MailBox);
+	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
 	//コンボボックスに表示されている位置を移動
@@ -311,18 +273,12 @@ void MoveUpMailBox(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 }
 
-
-/******************************************************************************
-
-	MoveDownMailBox
-
-	メールボックスの位置を下に移動する
-
-******************************************************************************/
-
+/*
+ * MoveDownMailBox - メールボックスの位置を下に移動する
+ */
 void MoveDownMailBox(HWND hWnd)
 {
-	struct TPMAILBOX *TmpMailBox;
+	MAILBOX *TmpMailBox;
 	int i;
 
 	if(SelBox < MAILBOX_USER || SelBox >= MailBoxCnt - 1 || MailBoxCnt <= MAILBOX_USER + 1){
@@ -330,21 +286,21 @@ void MoveDownMailBox(HWND hWnd)
 	}
 
 	//メモリの位置を移動
-	TmpMailBox = (struct TPMAILBOX *)LocalAlloc(LPTR, sizeof(struct TPMAILBOX) * MailBoxCnt);
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(TmpMailBox == NULL){
 		return;
 	}
 
 	for(i = 0; i < MailBoxCnt; i++){
 		if(SelBox == i){
-			tCopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(struct TPMAILBOX));
-			tCopyMemory((TmpMailBox + i + 1), (MailBox + i), sizeof(struct TPMAILBOX));
+			CopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(MAILBOX));
+			CopyMemory((TmpMailBox + i + 1), (MailBox + i), sizeof(MAILBOX));
 			i++;
 		}else{
-			tCopyMemory((TmpMailBox + i), (MailBox + i), sizeof(struct TPMAILBOX));
+			CopyMemory((TmpMailBox + i), (MailBox + i), sizeof(MAILBOX));
 		}
 	}
-	LocalFree(MailBox);
+	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
 	//コンボボックスに表示されている位置を移動
@@ -356,15 +312,9 @@ void MoveDownMailBox(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 }
 
-
-/******************************************************************************
-
-	CheckNoReadMailBox
-
-	メールボックスに未開封メールが存在するか調べる
-
-******************************************************************************/
-
+/*
+ * CheckNoReadMailBox - メールボックスに未開封メールが存在するか調べる
+ */
 BOOL CheckNoReadMailBox(int index, BOOL NewFlag)
 {
 	int i;
@@ -381,15 +331,9 @@ BOOL CheckNoReadMailBox(int index, BOOL NewFlag)
 	return FALSE;
 }
 
-
-/******************************************************************************
-
-	NextNoReadMailBox
-
-	未開封メールが存在するメールボックスのインデックスを取得
-
-******************************************************************************/
-
+/*
+ * NextNoReadMailBox - 未開封メールが存在するメールボックスのインデックスを取得
+ */
 int NextNoReadMailBox(int index, int endindex)
 {
 	int j;
@@ -405,15 +349,9 @@ int NextNoReadMailBox(int index, int endindex)
 	return -1;
 }
 
-
-/******************************************************************************
-
-	SetNoReadCntTitle
-
-	未読メールボックスの数をタイトルバーに表示
-
-******************************************************************************/
-
+/*
+ * SetNoReadCntTitle - 未読メールボックスの数をタイトルバーに表示
+ */
 void SetNoReadCntTitle(HWND hWnd)
 {
 	TCHAR wbuf[BUF_SIZE];
@@ -435,15 +373,9 @@ void SetNoReadCntTitle(HWND hWnd)
 	}
 }
 
-
-/******************************************************************************
-
-	SelectMailBox
-
-	メールボックスの選択
-
-******************************************************************************/
-
+/*
+ * SelectMailBox - メールボックスの選択
+ */
 void SelectMailBox(HWND hWnd, int Sel)
 {
 	HMENU hMenu;
@@ -543,15 +475,9 @@ void SelectMailBox(HWND hWnd, int Sel)
 	SetNoReadCntTitle(hWnd);
 }
 
-
-/******************************************************************************
-
-	GetNameToMailBox
-
-	メールボックスの名前からメールボックスのインデックスを取得する
-
-******************************************************************************/
-
+/*
+ * GetNameToMailBox - メールボックスの名前からメールボックスのインデックスを取得する
+ */
 int GetNameToMailBox(TCHAR *Name)
 {
 	int i;

@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /Gr /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\JP" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib /nologo /subsystem:windows /machine:I386 /opt:nowin98
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib /nologo /subsystem:windows /machine:I386 /libpath:"G:\openssl\slib" /opt:nowin98
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\JP" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
@@ -93,55 +93,59 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\Code.c
+SOURCE=..\src\Code.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Edit.c
+SOURCE=..\src\Edit.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\File.c
+SOURCE=..\src\File.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Font.c
+SOURCE=..\src\Font.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ini.c
+SOURCE=..\src\Ini.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Item.c
+SOURCE=..\src\Item.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.c
+SOURCE=..\src\jp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.c
+SOURCE=..\src\kr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\ListView.c
+SOURCE=..\src\ListView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\MailBox.c
+SOURCE=..\src\MailBox.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.c
+SOURCE=..\src\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\md5c.c
+SOURCE=..\src\md5c.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\MultiPart.c
+SOURCE=..\src\Memory.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\MultiPart.c
 # End Source File
 # Begin Source File
 
@@ -149,35 +153,35 @@ SOURCE=.\nPOP.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\Option.c
+SOURCE=..\src\Option.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Pop3.c
+SOURCE=..\src\Pop3.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.c
+SOURCE=..\src\Profile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ras.c
+SOURCE=..\src\Ras.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Smtp.c
+SOURCE=..\src\Smtp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\String.c
+SOURCE=..\src\String.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\View.c
+SOURCE=..\src\View.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\WinSock.c
+SOURCE=..\src\WinSock.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -185,27 +189,31 @@ SOURCE=.\WinSock.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\General.h
+SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\global.h
+SOURCE=..\src\global.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.h
+SOURCE=..\src\jp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.h
+SOURCE=..\src\kr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\md5.h
+SOURCE=..\src\md5.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.h
+SOURCE=..\src\Memory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Profile.h
 # End Source File
 # Begin Source File
 
@@ -217,7 +225,7 @@ SOURCE=.\resrc1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Strtbl.h
+SOURCE=..\JP\Strtbl.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -225,115 +233,123 @@ SOURCE=.\Strtbl.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\bin1.bin
+SOURCE=..\res\bitmap.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\bitmap.bmp
+SOURCE=..\res\bmp00001.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\bmp00003.bmp
+SOURCE=..\res\bmp00003.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00001.ico
+SOURCE=..\res\bmp00004.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00002.ico
+SOURCE=..\res\ico00001.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00003.ico
+SOURCE=..\res\ico00002.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00004.ico
+SOURCE=..\res\ico00003.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00005.ico
+SOURCE=..\res\ico00004.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00006.ico
+SOURCE=..\res\ico00005.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00007.ico
+SOURCE=..\res\ico00006.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00008.ico
+SOURCE=..\res\ico00007.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00009.ico
+SOURCE=..\res\ico00008.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00010.ico
+SOURCE=..\res\ico00009.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00011.ico
+SOURCE=..\res\ico00010.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00012.ico
+SOURCE=..\res\ico00011.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon.ico
+SOURCE=..\res\ico00012.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon1.ico
+SOURCE=..\res\icon.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_che.ico
+SOURCE=..\res\icon1.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_cli.ico
+SOURCE=..\res\icon_che.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_del.ico
+SOURCE=..\res\icon_cli.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_dow.ico
+SOURCE=..\res\icon_del.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_new.ico
+SOURCE=..\res\icon_dow.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_non.ico
+SOURCE=..\res\icon_new.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_rea.ico
+SOURCE=..\res\icon_non.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\icon_sen.ico
+SOURCE=..\res\icon_rea.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\manifest.xml
+SOURCE=..\res\icon_sen.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\toolbar.bmp
+SOURCE=..\res\manifest.xml
 # End Source File
 # Begin Source File
 
-SOURCE=.\toolbar_.bmp
+SOURCE=..\res\toolbar.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\toolbar_.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\toolbar_win32.bmp
 # End Source File
 # End Group
 # End Target

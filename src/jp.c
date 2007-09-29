@@ -1,56 +1,33 @@
-/**************************************************************************
+/*
+ * nPOP
+ *
+ * jp.c (Japanese encode)
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
-	nPOP
-
-	jp.c (Japanese encode)
-
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
-
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
+/* Include Files */
 #include "General.h"
 
-
-/**************************************************************************
-	Define
-**************************************************************************/
-
+/* Define */
 #define ESC						0x1B
 
 #define	IsKanji(c)				(((unsigned char)c >= (unsigned char)0x81 && (unsigned char)c <= (unsigned char)0x9F) || \
 									((unsigned char)c >= (unsigned char)0xE0 && (unsigned char)c <= (unsigned char)0xFC))
 #define	IsHankaku(c)			((unsigned char)c >= (unsigned char)0xa0 && (unsigned char)c <= (unsigned char)0xdf)
 
+/* Global Variables */
 
-/**************************************************************************
-	Global Variables
-**************************************************************************/
-
-
-
-/**************************************************************************
-	Local Function Prototypes
-**************************************************************************/
-
+/* Local Function Prototypes */
 static int HanToZen(unsigned int *zenkaku, unsigned char *str);
 static void JisShift(int *ph,int *pl);
 static void SjisShift(int *ph, int *pl);
 
-
-/******************************************************************************
-
-	HanToZen
-
-	半角カナを全角カナに変換
-
-******************************************************************************/
-
+/*
+ * HanToZen - 半角カナを全角カナに変換
+ */
 static int HanToZen(unsigned int *zenkaku, unsigned char *str)
 {
 	const unsigned int z[64] = {
@@ -78,15 +55,15 @@ static int HanToZen(unsigned int *zenkaku, unsigned char *str)
 		{0xce,0x255d},{0,0}};
 	int i;
 
-	if(*(str+1) == 0xde){           /* 濁音符 */
-		for(i = 0; (daku + i)->zen != 0; i++)
-			if(*str == (daku + i)->han){
+	if (*(str+1) == 0xde) {           /* 濁音符 */
+		for (i = 0; (daku + i)->zen != 0; i++)
+			if (*str == (daku + i)->han) {
 			*zenkaku = (daku + i)->zen;
 			return 2;
 		}
-	}else if(*(str+1) == 0xdf){    /* 半濁音符 */
-	for(i = 0; (handaku + i)->zen != 0; i++)
-		if(*str == (handaku + i)->han){
+	} else if (*(str+1) == 0xdf) {    /* 半濁音符 */
+	for (i = 0; (handaku + i)->zen != 0; i++)
+		if (*str == (handaku + i)->han) {
 			*zenkaku = (handaku + i)->zen;
 			return 2;
 		}
@@ -95,52 +72,40 @@ static int HanToZen(unsigned int *zenkaku, unsigned char *str)
 	return 1;
 }
 
-
-/******************************************************************************
-
-	JisShift
-
-	SJISの2バイトをJISに変換
-
-******************************************************************************/
-
+/*
+ * JisShift - SJISの2バイトをJISに変換
+ */
 static void JisShift(int *ph,int *pl)
 {
 	*ph = *ph & 0xff;
 	*pl = *pl & 0xff;
 
-	if(*ph <= 0x9F){
-		if(*pl < 0x9F){
+	if (*ph <= 0x9F) {
+		if (*pl < 0x9F) {
 			*ph = (*ph << 1) - 0xE1;
-		}else{
+		} else {
 			*ph = (*ph << 1) - 0xE0;
 		}
-	}else{
-		if(*pl < 0x9F){
+	} else {
+		if (*pl < 0x9F) {
 			*ph = (*ph << 1) - 0x161;
-		}else{
+		} else {
 			*ph = (*ph << 1) - 0x160;
 		}
 	}
 
-	if(*pl < 0x7F){
+	if (*pl < 0x7F) {
 		*pl -= 0x1F;
-	}else if(*pl < 0x9F){
+	} else if (*pl < 0x9F) {
 		*pl -= 0x20;
-	}else{
+	} else {
 		*pl -= 0x7E;
 	}
 }
 
-
-/******************************************************************************
-
-	sjis_iso2022jp
-
-	SJISをISO-2022-JP(JIS)に変換 (RFC 1468)
-
-******************************************************************************/
-
+/*
+ * sjis_iso2022jp - SJISをISO-2022-JP(JIS)に変換 (RFC 1468)
+ */
 void sjis_iso2022jp(unsigned char *buf,unsigned char *ret)
 {
 	unsigned char *p,*r;
@@ -154,23 +119,22 @@ void sjis_iso2022jp(unsigned char *buf,unsigned char *ret)
 	r = ret;
 	knaji = 0;
 
-	while((c = *(p++)) != '\0'){
-		switch(knaji)
-		{
+	while ((c = *(p++)) != '\0') {
+		switch (knaji) {
 		case 0:
-			if(IsKanji(c) == TRUE || IsHankaku(c) == TRUE){
+			if (IsKanji(c) == TRUE || IsHankaku(c) == TRUE) {
 				*(r++) = ESC;
 				*(r++) = '$';
 				*(r++) = 'B';
 
-				if(IsKanji(c) == TRUE){
+				if (IsKanji(c) == TRUE) {
 					d = *(p++);
 					JisShift(&c,&d);
 					*(r++) = c;
 					*(r++) = d;
-				}else{
+				} else {
 					rc = HanToZen(&e,p - 1);
-					if(rc != 1){
+					if (rc != 1) {
 						p++;
 					}
 					hib = (e >> 8) & 0xff;
@@ -179,26 +143,26 @@ void sjis_iso2022jp(unsigned char *buf,unsigned char *ret)
 					*(r++) = lob;
 				}
 				knaji = 1;
-			}else{
+			} else {
 				*(r++) = c;
 			}
 			break;
 		case 1:
-			if(IsKanji(c) == FALSE && IsHankaku(c) == FALSE){
+			if (IsKanji(c) == FALSE && IsHankaku(c) == FALSE) {
 				*(r++) = ESC;
 				*(r++) = '(';
 				*(r++) = 'B';
 				*(r++) = c;
 				knaji = 0;
-			}else{
-				if(IsKanji(c) == TRUE){
+			} else {
+				if (IsKanji(c) == TRUE) {
 					d = *(p++);
 					JisShift(&c,&d);
 					*(r++) = c;
 					*(r++) = d;
-				}else{
+				} else {
 					rc = HanToZen(&e,p - 1);
-					if(rc != 1){
+					if (rc != 1) {
 						p++;
 					}
 					hib = (e >> 8) & 0xff;
@@ -210,7 +174,7 @@ void sjis_iso2022jp(unsigned char *buf,unsigned char *ret)
 			break;
 		}
 	}
-	if(knaji == 1){
+	if (knaji == 1) {
 		*(r++) = ESC;
 		*(r++) = '(';
 		*(r++) = 'B';
@@ -218,42 +182,30 @@ void sjis_iso2022jp(unsigned char *buf,unsigned char *ret)
 	*r = '\0';
 }
 
-
-/******************************************************************************
-
-	SjisShift
-
-	JISの2バイトをSJISに変換
-
-******************************************************************************/
-
+/*
+ * SjisShift - JISの2バイトをSJISに変換
+ */
 static void SjisShift(int *ph, int *pl)
 {
-	if(*ph & 1){
-		if(*pl < 0x60){
+	if (*ph & 1) {
+		if (*pl < 0x60) {
 			*pl+=0x1F;
-		}else{
+		} else {
 			*pl+=0x20;
 		}
-	}else{
+	} else {
 		*pl+=0x7E;
 	}
-	if(*ph < 0x5F){
+	if (*ph < 0x5F) {
 		*ph = (*ph + 0xE1) >> 1;
-	}else{
+	} else {
 		*ph = (*ph + 0x161) >> 1;
 	}
 }
 
-
-/******************************************************************************
-
-	iso2022jp_sjis
-
-	ISO-2022-JP(JIS)をSJISに変換 (RFC 1468)
-
-******************************************************************************/
-
+/*
+ * iso2022jp_sjis - ISO-2022-JP(JIS)をSJISに変換 (RFC 1468)
+ */
 char *iso2022jp_sjis(char *buf, char *ret)
 {
 	unsigned int c, d, j;
@@ -267,88 +219,88 @@ char *iso2022jp_sjis(char *buf, char *ret)
 	j = 0;
 	jiskanji = FALSE;
 	hankaku = FALSE;
-	while(*p != '\0'){
+	while (*p != '\0') {
 		j++;
 		c = *(p++);
-		if(c == ESC){
-			if(*p == '\0'){
+		if (c == ESC) {
+			if (*p == '\0') {
 				break;
 			}
-			if((c = *(p++)) == '$'){
-				if((c = *(p++)) == '@' || c == 'B'){
+			if ((c = *(p++)) == '$') {
+				if ((c = *(p++)) == '@' || c == 'B') {
 					jiskanji = TRUE;
-				}else{
+				} else {
 					*(r++) = ESC;
 					*(r++) = '$';
-					if(c != '\0'){
+					if (c != '\0') {
 						*(r++) = c;
 					}
 				}
-			}else if(c == '('){
-				if((c = *(p++)) == 'H' || c == 'J' || c == 'B'){
+			} else if (c == '(') {
+				if ((c = *(p++)) == 'H' || c == 'J' || c == 'B') {
 					jiskanji = FALSE;
-				}else{
+				} else {
 					jiskanji = FALSE;
 					*(r++) = ESC;
 					*(r++) = '(';
-					if(c != '\0'){
+					if (c != '\0') {
 						*(r++) = c;
 					}
 				}
-			}else if(c == '*'){
-				if((c = *(p++)) == 'B'){
+			} else if (c == '*') {
+				if ((c = *(p++)) == 'B') {
 					hankaku = FALSE;
-				}else if(c == 'I'){
+				} else if (c == 'I') {
 					hankaku = TRUE;
 				}
-			}else if(hankaku == TRUE && c == 'N'){
+			} else if (hankaku == TRUE && c == 'N') {
 				c = *(p++);
 				*(r++) = c + 0x80;
-			}else if(c == 'K'){
+			} else if (c == 'K') {
 				jiskanji = TRUE;
-			}else if(c == 'H'){
+			} else if (c == 'H') {
 				jiskanji = FALSE;
-			}else{
+			} else {
 				*(r++) = ESC;
-				if(c != '\0'){
+				if (c != '\0') {
 					*(r++) = c;
 				}
 			}
-		}else if(jiskanji && (c == '\r' || c == '\n')){
+		} else if (jiskanji && (c == '\r' || c == '\n')) {
 			jiskanji = FALSE;
 			*(r++) = c;
-		}else if(jiskanji && c >= 0x21 && c <= 0x7E){
-			if(*p == '\0'){
+		} else if (jiskanji && c >= 0x21 && c <= 0x7E) {
+			if (*p == '\0') {
 				break;
 			}
-			if((d = *(p++)) >= 0x21 && d <= 0x7E){
+			if ((d = *(p++)) >= 0x21 && d <= 0x7E) {
 				SjisShift((int *)&c, (int *)&d);
 			}
 			*(r++) = c;
-			if(d != '\0'){
+			if (d != '\0') {
 				*(r++) = d;
 			}
-		}else if(c >= 0xA1 && c <= 0xFE){
-			if(*p == '\0'){
+		} else if (c >= 0xA1 && c <= 0xFE) {
+			if (*p == '\0') {
 				break;
 			}
-			if((d = *(p++)) >= 0xA1 && d <= 0xFE){
+			if ((d = *(p++)) >= 0xA1 && d <= 0xFE) {
 				d &= 0x7E;
 				c &= 0x7E;
 				SjisShift((int *)&c, (int *)&d);
 			}
 			*(r++) = c;
-			if(d != '\0'){
+			if (d != '\0') {
 				*(r++) = d;
 			}
-		}else if(c == 0x0E){
-			while(*p != '\0' && *p != 0x0F && *p != '\r' && *p != '\n' && *p != ESC){
+		} else if (c == 0x0E) {
+			while (*p != '\0' && *p != 0x0F && *p != '\r' && *p != '\n' && *p != ESC) {
 				*(r++) = *(p++) + 0x80;
 			}
-			if(*p == 0x0F){
+			if (*p == 0x0F) {
 				p++;
 			}
-		}else{
+		} else {
 			*(r++) = c;
 		}
 	}

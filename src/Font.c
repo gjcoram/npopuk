@@ -1,36 +1,31 @@
-/**************************************************************************
+/*
+ * nPOP
+ *
+ * Font.c
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
-	nPOP
-
-	Font.c
-
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
-
-/**************************************************************************
-	Include Files
-**************************************************************************/
-
+/* Include Files */
 #include "General.h"
 
+/* Define */
 
-/******************************************************************************
+/* Global Variables */
 
-	CreateEditFont
+/* Local Function Prototypes */
 
-	フォントを作成する
-
-******************************************************************************/
-
+/*
+ * CreateEditFont - フォントを作成する
+ */
 HFONT CreateEditFont(HWND hWnd, TCHAR *FontName, int FontSize, int Charset)
 {
 	LOGFONT lf;
 	HDC hdc;
 
-	tZeroMemory(&lf, sizeof(LOGFONT));
+	ZeroMemory(&lf, sizeof(LOGFONT));
 
 	hdc = GetDC(hWnd);
 	lf.lfHeight = -(int)((FontSize * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);

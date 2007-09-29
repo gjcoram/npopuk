@@ -1,63 +1,33 @@
-/**************************************************************************
-
-	nPOP
-
-	Profile.h
-
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
-		http://www.nakka.com/
-		nakka@nakka.com
-
-**************************************************************************/
+/*
+ * nPOP
+ *
+ * Profile.h
+ *
+ * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ *		http://www.nakka.com/
+ *		nakka@nakka.com
+ */
 
 #ifndef _INC_PROFILE_H
 #define _INC_PROFILE_H
 
-/**************************************************************************
-	Include Files
-**************************************************************************/
+/* Include Files */
 
-/**************************************************************************
-	Define
-**************************************************************************/
+/* Define */
 
-#define BUFSIZE						256					// バッファサイズ
+/* Struct */
 
+/* Function Prototypes */
+BOOL profile_initialize(const TCHAR *file_path, const BOOL read_flag);
+BOOL profile_flush(const TCHAR *file_path);
+void profile_free(void);
+long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, TCHAR *ret, const long size, const TCHAR *file_path);
+TCHAR *profile_alloc_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, const TCHAR *file_path);
+void profile_free_string(TCHAR *buf);
+int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int default_str, const TCHAR *file_path);
+BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path);
+BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const int num, const TCHAR *file_path);
 
-/**************************************************************************
-	Global Variables
-**************************************************************************/
-
-/**************************************************************************
-	Struct
-**************************************************************************/
-
-struct TPKEY {
-	TCHAR KeyName[BUFSIZE];
-	int hash;
-	TCHAR *String;
-	BOOL CommentFlag;
-};
-
-struct TPSECTION {
-	TCHAR SectionName[BUFSIZE];
-	int hash;
-	struct TPKEY *tpKey;
-	int KeyCnt;
-	int KeyAllocCnt;
-};
-
-/**************************************************************************
-	Function Prototypes
-**************************************************************************/
-
-BOOL Profile_Initialize(TCHAR *path, BOOL ReadFlag);
-BOOL Profile_Flush(TCHAR *path);
-void Profile_Free(void);
-long Profile_GetString(TCHAR *Section, TCHAR *Key, TCHAR *Default, TCHAR *ret, long size, TCHAR *File);
-int Profile_GetInt(TCHAR *Section, TCHAR *Key, int Default, TCHAR *File);
-void Profile_WriteString(TCHAR *Section, TCHAR *Key, TCHAR *str, TCHAR *File);
-void Profile_WriteInt(TCHAR *Section, TCHAR *Key, int num, TCHAR *File);
 
 #endif
 /* End of source */

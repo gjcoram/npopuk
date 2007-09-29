@@ -3,7 +3,7 @@ Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
 
 ###############################################################################
 
-Project: "nPOP"=".\nPOP.vcp" - Package Owner=<4>
+Project: "nPOP_WCE_JP"=".\nPOP_WCE_JP.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{

@@ -1,36 +1,39 @@
-# Microsoft eMbedded Visual Tools Project File - Name="nPOP" - Package Owner=<4>
+# Microsoft eMbedded Visual Tools Project File - Name="nPOP_WCE_EN" - Package Owner=<4>
 # Microsoft eMbedded Visual Tools Generated Build File, Format Version 6.02
 # ** DO NOT EDIT **
 
+# TARGTYPE "Win32 (WCE x86) Application" 0x8301
 # TARGTYPE "Win32 (WCE ARM) Application" 0x8501
 # TARGTYPE "Win32 (WCE x86em) Application" 0x7f01
 # TARGTYPE "Win32 (WCE SH3) Application" 0x8101
 # TARGTYPE "Win32 (WCE SH4) Application" 0x8601
 # TARGTYPE "Win32 (WCE MIPS) Application" 0x8201
 
-CFG=nPOP - Win32 (WCE MIPS) Debug
+CFG=nPOP_WCE_EN - Win32 (WCE MIPS) Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "nPOP.vcn".
+!MESSAGE NMAKE /f "nPOP_WCE_EN.vcn".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "nPOP.vcn" CFG="nPOP - Win32 (WCE MIPS) Debug"
+!MESSAGE NMAKE /f "nPOP_WCE_EN.vcn" CFG="nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "nPOP - Win32 (WCE MIPS) Release" (based on "Win32 (WCE MIPS) Application")
-!MESSAGE "nPOP - Win32 (WCE MIPS) Debug" (based on "Win32 (WCE MIPS) Application")
-!MESSAGE "nPOP - Win32 (WCE SH4) Release" (based on "Win32 (WCE SH4) Application")
-!MESSAGE "nPOP - Win32 (WCE SH4) Debug" (based on "Win32 (WCE SH4) Application")
-!MESSAGE "nPOP - Win32 (WCE SH3) Release" (based on "Win32 (WCE SH3) Application")
-!MESSAGE "nPOP - Win32 (WCE SH3) Debug" (based on "Win32 (WCE SH3) Application")
-!MESSAGE "nPOP - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Application")
-!MESSAGE "nPOP - Win32 (WCE ARM) Debug" (based on "Win32 (WCE ARM) Application")
-!MESSAGE "nPOP - Win32 (WCE x86em) Release" (based on "Win32 (WCE x86em) Application")
-!MESSAGE "nPOP - Win32 (WCE x86em) Debug" (based on "Win32 (WCE x86em) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE MIPS) Release" (based on "Win32 (WCE MIPS) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE MIPS) Debug" (based on "Win32 (WCE MIPS) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE SH4) Release" (based on "Win32 (WCE SH4) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE SH4) Debug" (based on "Win32 (WCE SH4) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE SH3) Release" (based on "Win32 (WCE SH3) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE SH3) Debug" (based on "Win32 (WCE SH3) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE ARM) Debug" (based on "Win32 (WCE ARM) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE x86) Release" (based on "Win32 (WCE x86) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE x86) Debug" (based on "Win32 (WCE x86) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE x86em) Release" (based on "Win32 (WCE x86em) Application")
+!MESSAGE "nPOP_WCE_EN - Win32 (WCE x86em) Debug" (based on "Win32 (WCE x86em) Application")
 !MESSAGE 
 
 # Begin Project
@@ -39,7 +42,7 @@ CFG=nPOP - Win32 (WCE MIPS) Debug
 # PROP Scc_LocalPath ""
 # PROP ATL_Project 2
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -61,7 +64,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
 CPP=clmips.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /Ox /Og /Os /Ob0 /Gf /Gy /D "MIPS" /D "_MIPS_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "MIPS" /D "_MIPS_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -70,9 +73,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -94,7 +97,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
 CPP=clmips.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -103,9 +106,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -127,7 +130,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
 CPP=shcl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Qsh4 /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /Ox /Og /Os /Ob0 /Gf /Gy /D "SHx" /D "SH4" /D "_SH4_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Qsh4 /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "SHx" /D "SH4" /D "_SH4_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Qsh4 /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -136,9 +139,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -160,7 +163,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
 CPP=shcl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /Qsh4 /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Qsh4 /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Qsh4 /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -169,9 +172,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -193,7 +196,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
 CPP=shcl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /Ox /Og /Os /Ob0 /Gf /Gy /D "SHx" /D "SH3" /D "_SH3_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "SHx" /D "SH3" /D "_SH3_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -202,9 +205,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -226,7 +229,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
 CPP=shcl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -235,9 +238,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Dbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -259,7 +262,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /Ox /Og /Os /Ob0 /Gf /Gy /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -268,9 +271,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOP.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -292,7 +295,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -301,9 +304,75 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOP.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "X86Rel"
+# PROP BASE Intermediate_Dir "X86Rel"
+# PROP BASE CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "X86Rel"
+# PROP Intermediate_Dir "X86Rel"
+# PROP CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /Oxs /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /Oxs /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "X86Dbg"
+# PROP BASE Intermediate_Dir "X86Dbg"
+# PROP BASE CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "X86Dbg"
+# PROP Intermediate_Dir "X86Dbg"
+# PROP CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOP.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -325,7 +394,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gz /Oxs /c
-# ADD CPP /nologo /W3 /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gz /Oxs /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gz /Oxs /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -334,9 +403,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMRel/nPOP.exe" /windowsce:emulation /MACHINE:IX86
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -358,7 +427,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "i486" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "i486" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gz /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -367,112 +436,149 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMDbg/nPOP.exe" /windowsce:emulation /MACHINE:IX86
 
 !ENDIF 
 
 # Begin Target
 
-# Name "nPOP - Win32 (WCE MIPS) Release"
-# Name "nPOP - Win32 (WCE MIPS) Debug"
-# Name "nPOP - Win32 (WCE SH4) Release"
-# Name "nPOP - Win32 (WCE SH4) Debug"
-# Name "nPOP - Win32 (WCE SH3) Release"
-# Name "nPOP - Win32 (WCE SH3) Debug"
-# Name "nPOP - Win32 (WCE ARM) Release"
-# Name "nPOP - Win32 (WCE ARM) Debug"
-# Name "nPOP - Win32 (WCE x86em) Release"
-# Name "nPOP - Win32 (WCE x86em) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE SH4) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE SH3) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE x86) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+# Name "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+# Name "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\Code.c
+SOURCE=..\src\Code.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_CODE_=\
-	".\General.h"\
-	".\kr.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_CODE_=\
-	".\General.h"\
-	".\kr.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_CODE_=\
-	".\General.h"\
-	".\kr.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_CODE_=\
-	".\General.h"\
-	".\kr.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_CODE_=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_CODE_=\
-	".\General.h"\
-	".\kr.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_CODE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\kr.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -480,81 +586,102 @@ DEP_CPP_CODE_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Edit.c
+SOURCE=..\src\Edit.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_EDIT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
-
-DEP_CPP_EDIT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_EDIT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_EDIT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_EDIT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_EDIT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_EDIT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -562,81 +689,114 @@ DEP_CPP_EDIT_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\File.c
+SOURCE=..\src\File.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
-	".\Strtbl.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_FILE_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_FILE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_FILE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\SelectFile.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -644,81 +804,102 @@ DEP_CPP_FILE_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Font.c
+SOURCE=..\src\Font.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_FONT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_FONT_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_FONT_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_FONT_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -726,86 +907,114 @@ DEP_CPP_FONT_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ini.c
+SOURCE=..\src\Ini.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_INI_C=\
-	".\General.h"\
-	".\Profile.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -813,81 +1022,126 @@ DEP_CPP_INI_C=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Item.c
+SOURCE=..\src\Item.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_ITEM_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_ITEM_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_ITEM_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -895,86 +1149,102 @@ DEP_CPP_ITEM_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.c
+SOURCE=..\src\jp.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_JP_Cc=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_JP_Cc=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_JP_Cc=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -982,86 +1252,102 @@ DEP_CPP_JP_Cc=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.c
+SOURCE=..\src\kr.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_KR_Ce=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_KR_Ce=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_KR_Ce=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1069,81 +1355,102 @@ DEP_CPP_KR_Ce=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\ListView.c
+SOURCE=..\src\ListView.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_LISTV=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_LISTV=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_LISTV=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_LISTV=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_LISTV=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_LISTV=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_LISTV=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1151,81 +1458,102 @@ DEP_CPP_LISTV=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\MailBox.c
+SOURCE=..\src\MailBox.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_MAILB=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_MAILB=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_MAILB=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_MAILB=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_MAILB=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MAILB=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MAILB=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1233,81 +1561,102 @@ DEP_CPP_MAILB=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.c
+SOURCE=..\src\main.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_MAIN_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MAIN_=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MAIN_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1315,76 +1664,90 @@ DEP_CPP_MAIN_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\md5c.c
+SOURCE=..\src\md5c.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_MD5C_=\
-	".\global.h"\
-	".\md5.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MD5C_=\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	
 
 !ENDIF 
@@ -1392,81 +1755,133 @@ DEP_CPP_MD5C_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\MultiPart.c
+SOURCE=..\src\Memory.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\MultiPart.c
+
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
 DEP_CPP_MULTI=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_MULTI=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_MULTI=\
-	".\General.h"\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MULTI=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1476,208 +1891,131 @@ DEP_CPP_MULTI=\
 
 SOURCE=.\nPOP.rc
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
-!ENDIF 
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
 
-# End Source File
-# Begin Source File
-
-SOURCE=.\Option.c
-
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_OPTIO=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
-	
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
 
 !ENDIF 
 
 # End Source File
 # Begin Source File
 
-SOURCE=.\Pop3.c
+SOURCE=..\src\Option.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_POP3_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_OPTIO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1685,91 +2023,126 @@ DEP_CPP_POP3_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.c
+SOURCE=..\src\Pop3.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_PROFI=\
-	".\General.h"\
-	".\Profile.h"\
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1777,81 +2150,78 @@ DEP_CPP_PROFI=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Ras.c
+SOURCE=..\src\Profile.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
 
-DEP_CPP_RAS_C=\
-	".\General.h"\
-	".\stdafx.h"\
-	".\Strtbl.h"\
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_PROFI=\
+	"..\src\Profile.h"\
 	
 
 !ENDIF 
@@ -1859,101 +2229,102 @@ DEP_CPP_RAS_C=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\Smtp.c
+SOURCE=..\src\Ras.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_SMTP_=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_RAS_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -1961,101 +2332,126 @@ DEP_CPP_SMTP_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\String.c
+SOURCE=..\src\Smtp.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_STRIN=\
-	".\General.h"\
-	".\global.h"\
-	".\md5.h"\
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -2063,81 +2459,126 @@ DEP_CPP_STRIN=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\View.c
+SOURCE=..\src\String.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_VIEW_=\
-	".\General.h"\
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_VIEW_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_VIEW_=\
-	".\General.h"\
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_VIEW_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_VIEW_=\
-	".\General.h"\
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_VIEW_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_VIEW_=\
-	".\General.h"\
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_VIEW_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_VIEW_=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_VIEW_=\
-	".\General.h"\
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_STRIN=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -2145,81 +2586,229 @@ DEP_CPP_VIEW_=\
 # End Source File
 # Begin Source File
 
-SOURCE=.\WinSock.c
+SOURCE=..\src\View.c
 
-!IF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
 
-DEP_CPP_WINSO=\
-	".\General.h"\
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
 
-DEP_CPP_WINSO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Release"
-
-DEP_CPP_WINSO=\
-	".\General.h"\
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH4) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
 
-DEP_CPP_WINSO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Release"
-
-DEP_CPP_WINSO=\
-	".\General.h"\
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH3) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
 
-DEP_CPP_WINSO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Release"
-
-DEP_CPP_WINSO=\
-	".\General.h"\
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE ARM) Debug"
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
 
-DEP_CPP_WINSO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
-
-DEP_CPP_WINSO=\
-	".\General.h"\
-	".\Strtbl.h"\
-	
-
-!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
-
-DEP_CPP_WINSO=\
-	".\General.h"\
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\WinSock.c
+
+!IF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH4) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_WINSO=\
+	"..\EN\Strtbl.h"\
+	"..\src\General.h"\
+	".\stdafx.h"\
 	
 
 !ENDIF 
@@ -2231,27 +2820,31 @@ DEP_CPP_WINSO=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\General.h
+SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\global.h
+SOURCE=..\src\global.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\jp.h
+SOURCE=..\src\jp.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\kr.h
+SOURCE=..\src\kr.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\md5.h
+SOURCE=..\src\md5.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Profile.h
+SOURCE=..\src\Memory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Profile.h
 # End Source File
 # Begin Source File
 
@@ -2263,112 +2856,12 @@ SOURCE=.\resrc1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Strtbl.h
+SOURCE=..\EN\Strtbl.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# Begin Source File
-
-SOURCE=.\bmp00001.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\bmp00002.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00001.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00002.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00003.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00004.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00005.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00006.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00007.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00008.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00009.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00010.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00011.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico00012.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon1.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_che.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_cli.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_del.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_dow.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_new.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_non.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_rea.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icon_sen.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\toolbar.bmp
-# End Source File
 # End Group
 # End Target
 # End Project
