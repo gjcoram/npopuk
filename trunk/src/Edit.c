@@ -271,20 +271,24 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (tpReMailItem->Multipart != MULTIPART_NONE) {
+		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
 			MULTIPART **tpMultiPart = NULL;
-			TCHAR *p, *mBody;
 			char *fname;
-			int i, j, cnt, len, text;
+			int i, j, cnt, len;
+#ifdef UNICODE
+			char *ContentType;
 
-			mBody = MIME_body_decode(tpReMailItem, FALSE, &tpMultiPart, &cnt, &text);
-			mem_free(&mBody);
+			ContentType = alloc_tchar_to_char(tpReMailItem->ContentType);
+			cnt = multipart_parse(ContentType, tpReMailItem->Body, FALSE, &tpMultiPart, 0);
+			mem_free(&ContentType);
+#else
+			cnt = multipart_parse(tpReMailItem->ContentType, tpReMailItem->Body, FALSE, &tpMultiPart, 0);
+#endif
 			len = 0;
 			for (i = 0, j = 0; i < cnt; i++) {
 				fname = (*(tpMultiPart + i))->Filename;
-				if (i != text && (*(tpMultiPart + i))->Forwardable &&
-					fname != NULL && *fname != '\0') {
+				if ((*(tpMultiPart + i))->Forwardable && fname != NULL && *fname != '\0') {
 					len += tstrlen(fname) + 1;
 					j++;
 				}
@@ -298,8 +302,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 			if (p != NULL) {
 				for (i = 0, j = 0; i < cnt; i++) {
 					fname = (*(tpMultiPart + i))->Filename;
-					if (i != text && (*(tpMultiPart + i))->Forwardable &&
-						fname != NULL && *fname != '\0') {
+					if ((*(tpMultiPart + i))->Forwardable && fname != NULL && *fname != '\0') {
 #ifdef UNICODE
 						TCHAR *fn_t;
 #endif
@@ -387,8 +390,8 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag, TCHAR *seltext)
 {
 	MULTIPART **tpMultiPart = NULL;
-	TCHAR *p, *mBody, *mBodya, *body, *sig;
-	TCHAR *quotchar = NULL, *qBody = NULL;
+	TCHAR *p, *mBody, *body, *sig;
+	TCHAR *quotchar = NULL;
 	int len, cnt, i, TextIndex;
 	int qlen = 0;
 	BOOL do_sig, do_sig_above;
@@ -397,27 +400,18 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	if ( (tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
 		|| (tpMailItem->Mark == 2 && seltext != NULL) ) {
 		if (tpMailItem->Mark == 2 && seltext != NULL) {
-			mBodya = seltext;
-			mBody = qBody = NULL;
+			mBody = alloc_copy_t(seltext);
 		} else {
-			mBody = MIME_body_decode(tpReMailItem, FALSE, &tpMultiPart, &cnt, &TextIndex);
-			mBodya = mBody;
-
-			// GJC don't include headers
-			if (tpReMailItem->HasHeader && tpReMailItem->Multipart == MULTIPART_NONE) {
-				if ((p = GetBodyPointaT(mBodya)) != NULL) {
-					mBodya = p;
-				}
-			}
+			mBody = MIME_body_decode(tpReMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
 
 			if (op.StripHtmlTags == 1 &&
 				((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
 				|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
 				str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-				p = strip_html_tags(mBodya, FALSE);
+				p = strip_html_tags(mBody, FALSE);
 				if (p != NULL) {
 					mem_free(&mBody);
-					mBody = mBodya = p;
+					mBody = p;
 				}
 			}
 
@@ -434,14 +428,15 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			len = CreateHeaderStringSize(op.ReHeader, tpReMailItem, NULL) + 2;
 		}
 		if (op.QuotationBreak == FALSE) {
-			qBody = (TCHAR *)mem_alloc(sizeof(TCHAR) * 
-				(WordBreakStringSize(mBodya, NULL, op.WordBreakSize - qlen, TRUE) + 1));
+			TCHAR *qBody = (TCHAR *)mem_alloc(sizeof(TCHAR) * 
+				(WordBreakStringSize(mBody, NULL, op.WordBreakSize - qlen, TRUE) + 1));
 			if (qBody != NULL) {
-				WordBreakString(mBodya, qBody, NULL, op.WordBreakSize - qlen, TRUE);
-				mBodya = qBody;
+				WordBreakString(mBody, qBody, NULL, op.WordBreakSize - qlen, TRUE);
+				mem_free(&mBody);
+				mBody = qBody;
 			}
 		}
-		len += GetReplyBodySize(mBodya, quotchar);
+		len += GetReplyBodySize(mBody, quotchar);
 
 		i = mailbox_name_to_index(tpMailItem->MailBox);
 		if (i!= -1) {
@@ -470,15 +465,14 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 				p = CreateHeaderString(op.ReHeader, p, tpReMailItem, NULL);
 			}
 			p = str_cpy_t(p, TEXT("\r\n"));
-			if (mBodya != NULL) {
-				p = SetReplyBody(mBodya, p, quotchar);
+			if (mBody != NULL) {
+				p = SetReplyBody(mBody, p, quotchar);
 			}
 			if (do_sig && !do_sig_above) {
 				str_join_t(p, TEXT("\r\n"), sig, (TCHAR *)-1);
 			}
 		}
 		mem_free(&mBody);
-		mem_free(&qBody);
 
 		if (tpMailItem->BodyCharset == NULL &&
 			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
@@ -637,6 +631,10 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 	case WM_PASTE:
 	case EM_UNDO:
 		return 0;
+	case WM_KEYDOWN:
+		if (LOWORD(wParam) == VK_DELETE) {
+			return 0;
+		}
 #ifndef _WIN32_WCE
 	case WM_COMMAND:
 		switch(GET_WM_COMMAND_ID(wParam,lParam)) {
@@ -1152,7 +1150,7 @@ BOOL EndEditWindow(HWND hWnd, BOOL sent)
 			ReadEditMail(hWnd, (long)hWnd, tpMailItem, FALSE);
 			tpMailItem->hProcess = NULL;
 		}
-		if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
+		if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == -1) {
 			item_free(&tpMailItem, 1);
 		}
 	}
@@ -1333,7 +1331,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 	} else {
 		tpMailItem->Mark = ICON_NON;
 	}
-	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
+	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == -1) {
 
 		if (item_add(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
 			return FALSE;

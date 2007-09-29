@@ -1846,6 +1846,7 @@ BOOL SetMailBoxOption(HWND hWnd)
  */
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	int newlsm = 0;
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* ÉRÉìÉgÉçÅ[ÉãÇÃèâä˙âª */
@@ -1893,11 +1894,20 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.ShowHeader = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_GETCHECK, 0, 0);
 
 			if (SendDlgItemMessage(hDlg, IDC_RADIO_NOSAVE, BM_GETCHECK, 0, 0) == 1) {
-				op.ListSaveMode = 0;
+				newlsm = 0;
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_HEADSAVE, BM_GETCHECK, 0, 0) == 1) {
-				op.ListSaveMode = 1;
+				newlsm = 1;
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_GETCHECK, 0, 0) == 1) {
-				op.ListSaveMode = 2;
+				newlsm = 2;
+			}
+			if (op.ListSaveMode != newlsm) {
+				int i;
+				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+						(MailBox + i)->NeedsSave |= MAILITEMS_CHANGED;
+					}
+				}
+				op.ListSaveMode = newlsm;
 			}
 			break;
 		}
@@ -3448,7 +3458,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	MULTIPART **tpMultiPart = NULL;
 	TCHAR fpath[MULTI_BUF_SIZE], buf[BUF_SIZE];
 	TCHAR *f, *f1, *f2;
-	int i, j, len, cnt, cnt1, cnt2, mpcnt;
+	int i, j, len, cnt, cnt1, cnt2, mpcnt = 0;
 	unsigned len1, len2;
 	long FileSize;
 	MEMORYSTATUS memInfo;
@@ -3648,7 +3658,9 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			if (cnt2 > 0) {
 				MAILITEM *tpFwdMailItem = NULL;
-				TCHAR *body;
+#ifdef UNICODE
+				char *ContentType;
+#endif
 				i = mailbox_name_to_index(tpMailItem->MailBox);
 				if (i != -1) {
 					j = item_find_thread(MailBox + i, tpMailItem->References, (MailBox+i)->MailItemCnt);
@@ -3668,11 +3680,14 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					EndDialog(hDlg, FALSE);
 					break;
 				}
-				body = MIME_body_decode(tpFwdMailItem, FALSE, &tpMultiPart, &mpcnt, &i);
-				mem_free(&body);
+#ifdef UNICODE
+				ContentType = alloc_tchar_to_char(tpFwdMailItem->ContentType);
+				mpcnt = multipart_parse(ContentType, tpFwdMailItem->Body, FALSE, &tpMultiPart, 0);
+				mem_free(&ContentType);
+#else
+				mpcnt = multipart_parse(tpFwdMailItem->ContentType, tpFwdMailItem->Body, FALSE, &tpMultiPart, 0);
+#endif
 			}
-			memInfo.dwLength = sizeof(memInfo);
-			GlobalMemoryStatus(&memInfo); 
 			cnt1 = cnt2 = 0;
 			for (i = 0; i < cnt; i++) {
 				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)fpath);
@@ -3720,6 +3735,8 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					cnt2++;
 				}
 			}
+			memInfo.dwLength = sizeof(memInfo);
+			GlobalMemoryStatus(&memInfo); 
 			if (tpMailItem->AttachSize*2 > (long)memInfo.dwAvailPhys
 				|| tpMailItem->AttachSize*2 > (long)memInfo.dwAvailVirtual) {
 				MessageBox(hDlg, STR_WARN_ATTACH_MEM, WINDOW_TITLE, MB_OK);

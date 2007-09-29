@@ -93,8 +93,9 @@ void encatt_free(char ***EncAtt, int cnt)
 static char *get_next_part(char *buf, char *Boundary)
 {
 	char *p = buf;
+	int len = tstrlen(Boundary);
 
-	if (*p == '-' && *(p + 1) == '-' && str_cmp_n(p + 2, Boundary, tstrlen(Boundary)) == 0) {
+	if (*p == '-' && *(p + 1) == '-' && str_cmp_n(p + 2, Boundary, len) == 0) {
 		return p;
 	}
 	while (1) {
@@ -106,7 +107,7 @@ static char *get_next_part(char *buf, char *Boundary)
 		if (!(*p == '-' && *(p + 1) == '-')) {
 			continue;
 		}
-		if (str_cmp_n(p + 2, Boundary, tstrlen(Boundary)) != 0) {
+		if (str_cmp_n(p + 2, Boundary, len) != 0) {
 			continue;
 		}
 		break;
@@ -339,9 +340,11 @@ char *multipart_get_filename(char *buf, char *Attribute)
 
 /*
  * multipart_scan - quick check if mail has real attachments (GJC)
+ *       OBSOLETE: now, multipart/alternative <==> MULTIPART_HTML
  */
+#ifdef DO_MULTIPART_SCAN
 int multipart_scan(char *ContentType, char *buf) {
-	char *Boundary, *Content, *p;
+	char *Boundary, *Content = NULL, *p;
 
 	// Content-Type: multipart was found before calling this function,
 	// so default return value is MULTIPART_ATTACH
@@ -355,7 +358,7 @@ int multipart_scan(char *ContentType, char *buf) {
 		return retval;
 	}
 	if (get_content_value(ContentType, "boundary", Boundary) == TRUE) {
-		int cnt = 0, htmlpart = -1;
+		int cnt = 0;
 		p = get_next_part(buf, Boundary);
 		while (p != '\0' && tstrlen(p) > 2 + tstrlen(Boundary)) {
 			p += (2 + tstrlen(Boundary));
@@ -406,11 +409,12 @@ int multipart_scan(char *ContentType, char *buf) {
 	mem_free(&Boundary);
 	return retval;
 }
+#endif
 
 /*
  * multipart_parse - Part‚ð‰ðÍ‚·‚é (RFC 2046)
  */
-int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int cnt)
+int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART ***tpMultiPart, int cnt)
 {
 	MULTIPART *tpMultiPartItem;
 	char *Boundary;
@@ -449,7 +453,7 @@ int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int 
 			str_cmp_ni(Content, "multipart", tstrlen("multipart")) == 0) {
 			// ŠK‘w‚É‚È‚Á‚Ä‚¢‚éê‡‚ÍÄ‹A‚·‚é
 			sPos = GetBodyPointa(p);
-			cnt = multipart_parse(Content, sPos, tpMultiPart, cnt);
+			cnt = multipart_parse(Content, sPos, StopAtTextPart, tpMultiPart, cnt);
 			mem_free(&Content);
 			p = get_next_part(sPos, Boundary);
 			continue;
@@ -488,6 +492,10 @@ int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int 
 				str_cmp_i(tpMultiPartItem->Encoding, "base64") == 0))) {
 				tpMultiPartItem->Forwardable = TRUE;
 			}
+		}
+		if (StopAtTextPart == TRUE && tpMultiPartItem->ContentType != NULL
+			&& str_cmp_ni(tpMultiPartItem->ContentType, "text", tstrlen("text")) == 0) {
+			break;
 		}
 	}
 	mem_free(&Boundary);
@@ -824,8 +832,10 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 	// GJC forwarding attachments
 	if (FwdAttach != NULL && *FwdAttach != TEXT('\0') && tpFwdMailItem != NULL) {
 		MULTIPART **tpMultiPart = NULL;
-		TCHAR *mBody;
-		int cnt, text;
+#ifdef UNICODE
+		char *ContentType;
+#endif
+		int cnt;
 		int status = MP_ATTACH;
 
 		fpath = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FwdAttach) + 1));
@@ -837,14 +847,21 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			mem_free(&ret);
 			return MP_ERROR_ALLOC;
 		}
-		mBody = MIME_body_decode(tpFwdMailItem, FALSE, &tpMultiPart, &cnt, &text);
-		mem_free(&mBody);
+
+#ifdef UNICODE
+		ContentType = alloc_tchar_to_char(tpFwdMailItem->ContentType);
+		cnt = multipart_parse(ContentType, tpFwdMailItem->Body, FALSE, &tpMultiPart, 0);
+		mem_free(&ContentType);
+#else
+		cnt = multipart_parse(tpFwdMailItem->ContentType, tpFwdMailItem->Body, FALSE, &tpMultiPart, 0);
+#endif
+
 		f = FwdAttach;
 		while (*f != TEXT('\0') && status == MP_ATTACH) {
 			BOOL found = FALSE;
 			f = str_cpy_f_t(fpath, f, ATTACH_SEP);
 			tmp = NULL;
-			for (i = 0; i < cnt; i++) {
+			for (i = 0; i < cnt && status == MP_ATTACH; i++) {
 #ifdef UNICODE
 				fname = alloc_char_to_tchar((*(tpMultiPart + i))->Filename);
 #else
@@ -875,12 +892,17 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 						break;
 					}
 					str_join(tmp, prev, "--", Boundary, buf, "\r\n\r\n", (char *)-1);
+					mem_free(&buf);
 #ifndef WSAASYNC
 					if (op.SendAttachIndividually != 0) {
 						*(tpEncAtt+attnum) = tmp;
 						attnum++;
-					}
+					} else
 #endif
+					{
+						mem_free(&ret);
+						ret = tmp;
+					}
 #ifdef UNICODE
 					mem_free(&fname);
 #endif
@@ -890,9 +912,6 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				mem_free(&fname);
 #endif
 			}
-			mem_free(&buf);
-			mem_free(&ret);
-			ret = tmp;
 			if (!found) {
 				status = MP_ERROR_FILE;
 			}
@@ -905,6 +924,8 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 #endif
 			mem_free(&Boundary);
 			mem_free(&ret);
+			mem_free(&tmp);
+			mem_free(&buf);
 			return status;
 		}
 	}

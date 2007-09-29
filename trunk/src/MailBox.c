@@ -156,6 +156,10 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		return -1;
 	}
 
+	if (DelIndex == vSelBox && hViewWnd != NULL) {
+		SendMessage(hViewWnd, WM_CLOSE, 0, 0);
+	}
+
 	j = 0;
 	for(i = 0; i < MailBoxCnt; i++){
 		if(i == DelIndex){

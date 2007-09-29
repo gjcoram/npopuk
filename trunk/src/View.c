@@ -720,7 +720,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
 
-	if (tpMailItem == NULL || tpMailItem->Body == NULL) {
+	if (tpMailItem == NULL) { // || tpMailItem->Body == NULL) {
 		return FALSE;
 	}
 
@@ -1012,6 +1012,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	int i, ret = -1, cnt = 0;
 	int mFlag;
 	BOOL AppendFlag = FALSE;
+	BOOL startbody = FALSE;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -1027,14 +1028,25 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	// メニューを初期化する
 	while (DeleteMenu(hMenu, MENU_ATTACH_POS, MF_BYPOSITION) == TRUE);
 
-	if (MultiPartCnt == 1 &&
-		(*tpMultiPart)->sPos == tpMailItem->Body && (*tpMultiPart)->ePos == NULL &&
+	if ((*tpMultiPart)->sPos == tpMailItem->Body) {
+		startbody = TRUE;
+	} else if (tpMailItem->HasHeader) {
+		char *p = GetBodyPointa(tpMailItem->Body);
+		if (p == (*tpMultiPart)->sPos) {
+			startbody = TRUE;
+		}
+	}
+	if (MultiPartCnt == 1 && startbody && (*tpMultiPart)->ePos == NULL &&
 		(*tpMultiPart)->ContentType != NULL &&
 		str_cmp_ni((*tpMultiPart)->ContentType, "text", tstrlen("text")) == 0) {
 
-		if (tpMailItem->HasHeader || (op.StripHtmlTags == 1 &&
-			str_cmp_ni((*tpMultiPart)->ContentType, "text/html", tstrlen("text/html")) == 0)) {
+		BOOL htmlonly = (str_cmp_ni((*tpMultiPart)->ContentType, "text/html", tstrlen("text/html")) == 0) ? TRUE : FALSE;
+		if (tpMailItem->HasHeader || (op.StripHtmlTags == 1 && htmlonly == TRUE)) {
 			AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
+		}
+		if (htmlonly == TRUE) {
+			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+			AppendMenu(hMenu, MF_STRING, ID_ATTACH, TEXT("text/html"));
 		}
 		return 0;
 	}
@@ -1056,6 +1068,8 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 			if (AppendFlag == FALSE) {
 				if (MultiPartCnt > 1 || (MultiPartCnt == 1 && part_is_text == FALSE)) {
 					AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
+				}
+				if (MultiPartCnt > 1) {
 					AppendMenu(hMenu, MF_STRING, ID_VIEW_DELETE_ATTACH, STR_VIEW_MENU_DELATTACH);
 				}
 				// 区切りの追加
@@ -1064,6 +1078,9 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 			}
 			// 途中で切れているデータの場合はメニューを非活性にする
 			mFlag = ((*(tpMultiPart + i))->ePos == NULL) ? MF_GRAYED : MF_ENABLED;
+			if (MultiPartCnt == 1 && tpMailItem->Download == TRUE) {
+				mFlag = MF_ENABLED;
+			}
 
 			// ファイル名をメニューに追加する
 			str = alloc_char_to_tchar((*(tpMultiPart + i))->ContentType);
@@ -1089,7 +1106,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 			mem_free(&str);
 		}
 	}
-	if (cnt > 0) {
+	if (cnt > 0 && MultiPartCnt > 1) {
 		InsertMenu(hMenu, ID_VIEW_DELETE_ATTACH, MF_BYCOMMAND | MF_STRING, ID_VIEW_SAVE_ATTACH, STR_VIEW_MENU_SAVEATTACH);
 	}
 	return ret;
@@ -1100,7 +1117,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
  */
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 {
-	TCHAR *buf, *mbuf, *p;
+	TCHAR *buf, *p;
 	int LvFocus, TextIndex = -1;
 	BOOL redraw = FALSE;
 #ifndef _WIN32_WCE
@@ -1108,7 +1125,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 #endif
 	HWND hListView;
 
-	if (tpMailItem == NULL || tpMailItem->Body == NULL) {
+	if (tpMailItem == NULL) { // || tpMailItem->Body == NULL) {
 		return;
 	}
 
@@ -1156,31 +1173,28 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	multipart_free(&tpMultiPart, MultiPartCnt);
 	tpMultiPart = NULL;
 	MultiPartCnt = 0;
-	// マルチパートの展開
-	buf = MIME_body_decode(tpMailItem, ViewSrc, &tpMultiPart, &MultiPartCnt, &TextIndex);
-	mbuf = buf; // may advance buf to skip headers, need to keep mbuf for mem_free
 
-	// GJC don't show headers unless ViewSrc
-	if (ViewSrc == FALSE && tpMailItem->HasHeader && tpMailItem->Multipart == MULTIPART_NONE) {
-		if ((buf = GetBodyPointaT(mbuf)) == NULL) {
-			buf = mbuf;
+	if (tpMailItem->Body == NULL) {
+		buf = NULL;
+	} else {
+		// マルチパートの展開
+		buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &tpMultiPart, &MultiPartCnt, &TextIndex);
+
+		// GJC remove HTML tags
+		if (ViewSrc == FALSE && op.StripHtmlTags == 1 &&
+			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
+			|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
+			str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
+			p = strip_html_tags(buf, TRUE);
+			if (p != NULL) {
+				mem_free(&buf);
+				buf = p;
+			}
 		}
-	}
 
-	// GJC remove HTML tags
-	if (ViewSrc == FALSE && op.StripHtmlTags == 1 &&
-		((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-		|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
-		str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-		p = strip_html_tags(buf, TRUE);
-		if (p != NULL) {
-			mem_free(&mbuf);
-			mbuf = buf = p;
-		}
+		// 表示するpartの選択と添付メニューの設定
+		MultiPartTextIndex = SetAttachMenu(hWnd, tpMailItem, ViewSrc);
 	}
-
-	// 表示するpartの選択と添付メニューの設定
-	MultiPartTextIndex = SetAttachMenu(hWnd, tpMailItem, ViewSrc);
 
 	// 検索位置の初期化
 	FindPos = 0;
@@ -1201,7 +1215,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 		}
 #endif
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
-		mem_free(&mbuf);
+		mem_free(&buf);
 	} else {
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)TEXT(""));
 	}
@@ -1539,35 +1553,23 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			}
 		} else if (FindMailItem != NULL && FindNext == 0) {
 			BOOL Found = FALSE;
-			TCHAR *s, *sbody, *mbody;
+			TCHAR *s, *sbody;
 
 			if (FindBox == MAILBOX_SEND) {
-				char *p;
-				p = FindMailItem->Body;
-				if (FindMailItem->HasHeader && p != NULL) {
-					char *r = GetBodyPointa(p);
-					if (r != NULL) {
-						p = r;
-					}
-				}
 #ifdef UNICODE
-				sbody = alloc_char_to_tchar(p);
+				sbody = alloc_char_to_tchar(FindMailItem->Body);
 #else
-				sbody = p;
+				sbody = FindMailItem->Body;
 #endif
-			} else {
-				MULTIPART **findMultiPart;
-				int MultiPartCnt, TextIndex;
+			} else if (FindMailItem->Body != NULL) {
+				MULTIPART **findMultiPart = NULL;
+				int cnt, TextIndex;
 				BOOL ViewSrc = FALSE; // GJC: TRUE if searching headers?
 
-				sbody = MIME_body_decode(FindMailItem, ViewSrc, &findMultiPart, &MultiPartCnt, &TextIndex);
+				sbody = MIME_body_decode(FindMailItem, ViewSrc, TRUE, &findMultiPart, &cnt, &TextIndex);
 				multipart_free(&findMultiPart, MultiPartCnt);
-				mbody = sbody;
-				if (ViewSrc == FALSE && FindMailItem->HasHeader && FindMailItem->Multipart == MULTIPART_NONE) {
-					if ((sbody = GetBodyPointaT(mbody)) == NULL) {
-						sbody = mbody;
-					}
-				}
+			} else {
+				sbody = NULL;
 			}
 
 			if (sbody != NULL) {
@@ -1581,13 +1583,13 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					Found = TRUE;
 				}
 			}
-			if (FindBox == MAILBOX_SEND) {
 #ifdef UNICODE
+			mem_free(&sbody);
+#else
+			if (FindBox != MAILBOX_SEND) {
 				mem_free(&sbody);
-#endif
-			} else {
-				mem_free(&mbody);
 			}
+#endif
 			if (Found == TRUE) {
 				int idx;
 				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
@@ -1913,7 +1915,7 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 	int ret;
 
 	if (item_is_mailbox(MailBox + vSelBox,
-		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
+		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == -1) {
 		ErrorMessage(hWnd, STR_ERR_NOMAIL);
 		return;
 	}
@@ -2111,10 +2113,10 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 	// マルチパートの解析
 #ifdef UNICODE
 	ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
-	cnt = multipart_parse(ContentType, tpMailItem->Body, &tpPart, 0);
+	cnt = multipart_parse(ContentType, tpMailItem->Body, TRUE, &tpPart, 0);
 	mem_free(&ContentType);
 #else
-	cnt = multipart_parse(tpMailItem->ContentType, tpMailItem->Body, &tpPart, 0);
+	cnt = multipart_parse(tpMailItem->ContentType, tpMailItem->Body, TRUE, &tpPart, 0);
 #endif
 	if (cnt == 0) {
 		return FALSE;
@@ -2122,8 +2124,8 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 
 	// テキストのパートを検索
 	for (i = 0; i < cnt; i++) {
-		if ((*tpPart + i)->ContentType == NULL ||
-			str_cmp_ni((*tpPart + i)->ContentType, "text", tstrlen("text")) == 0) {
+		if ((*(tpPart + i))->ContentType == NULL ||
+			str_cmp_ni((*(tpPart + i))->ContentType, "text", tstrlen("text")) == 0) {
 			TextIndex = i;
 			break;
 		}
@@ -2167,8 +2169,12 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 	}
 	mem_free(&tpMailItem->Attach);
 	tpMailItem->Attach = alloc_copy_t(TEXT("_"));
+	tpMailItem->Download = FALSE;
+	tpMailItem->HasHeader = FALSE; // GJC: would like to preserve them ...
 
-	if (hWnd != NULL) {
+	if (hWnd == MainWnd) {
+		(MailBox + SelBox)->NeedsSave |= MAILITEMS_CHANGED;
+	} else {
 		(MailBox + vSelBox)->NeedsSave |= MAILITEMS_CHANGED;
 	}
 
@@ -2184,7 +2190,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 	MULTIPART **tpPart = NULL;
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
-	TCHAR *buf, *mbuf;
+	TCHAR *buf;
 	TCHAR *tmp;
 	int len = 0, cnt = 0, idx;
 	
@@ -2201,7 +2207,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_SINGLE) == FALSE) {
 			return TRUE;
 		}
-		if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == FALSE) {
+		if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {
 			return FALSE;
 		}
 		fname = path;
@@ -2239,7 +2245,6 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 #else
 		buf = cbuf;
 #endif
-		mbuf = buf;
 	} else {
 		// ヘッダの保存
 		len = CreateHeaderStringSize(head, tpMailItem, NULL);
@@ -2258,15 +2263,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 		}
 		mem_free(&tmp);
 
-		buf = MIME_body_decode(tpMailItem, ViewSrc, &tpPart, &cnt, &idx);
-		mbuf = buf; // may advance buf to skip headers, need to keep mbuf for mem_free
-
-		// GJC don't show headers unless ViewSrc
-		if (ViewSrc == FALSE && tpMailItem->HasHeader && tpMailItem->Multipart == MULTIPART_NONE) {
-			if ((buf = GetBodyPointaT(mbuf)) == NULL) {
-				buf = mbuf;
-			}
-		}
+		buf = MIME_body_decode(tpMailItem, ViewSrc, TRUE, &tpPart, &cnt, &idx);
 
 		// GJC remove HTML tags
 		if (ViewSrc == FALSE && op.StripHtmlTags == 1 && lstrcmp(op.ViewFileSuffix, TEXT("txt")) == 0 &&
@@ -2285,11 +2282,11 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 	// 本文の保存
 	if (buf != NULL && file_write_ascii(hFile, buf, lstrlen(buf)) == FALSE) {
 		CloseHandle(hFile);
-		mem_free(&mbuf);
+		mem_free(&buf);
 		return FALSE;
 	}
 	CloseHandle(hFile);
-	mem_free(&mbuf);
+	mem_free(&buf);
 	return TRUE;
 }
 
@@ -2378,6 +2375,8 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 		tpMailItem->Mark = tpMailItem->MailStatus;
 	} else if (tpMailItem->Mark == mark) {
 		tpMailItem->Mark = tpMailItem->MailStatus;
+	} else if (tpMailItem->MailStatus == ICON_NON) {
+		tpMailItem->Mark = (tpMailItem->Mark == ICON_NON) ? mark : ICON_NON;
 	} else {
 		tpMailItem->Mark = mark;
 		cut = 0;
@@ -2422,12 +2421,21 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	enable = !(vSelBox == RecvBox && ExecFlag == TRUE);
 	if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
 		enable = 0;
+		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND); // may have been there already
+		DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_DELMARK, MF_BYCOMMAND);
+#ifndef _WIN32_WCE
+		hMenu = GetSubMenu(hMenu, 0);
+#endif
+		InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
+			STR_LIST_MENU_DELLIST);
+	} else {
+		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
+		CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Mark == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Mark == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);
+		EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !enable);
+		EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !enable);
 	}
-
-	CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Mark == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Mark == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);
-	EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !enable);
-	EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !enable);
 
 #if !defined(_WIN32_WCE) || (defined(_WIN32_WCE) && !defined(_WIN32_WCE_LAGENDA))
 #if defined(_WIN32_WCE_PPC)
@@ -2511,7 +2519,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_CHANGE_MARK:
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-		if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+		if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 			break;
 		}
 		GetMarkStatus(hWnd, tpMailItem);
@@ -2703,7 +2711,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		// 受信用にマーク
 		case ID_MENUITEM_DOWNMARK:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2717,7 +2725,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		// 削除用にマーク
 		case ID_MENUITEM_DELMARK:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2740,7 +2748,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_UNREADMARK:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2752,9 +2760,25 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
+		case ID_MENUITEM_DELETE:
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
+				ErrorMessage(hWnd, STR_ERR_NOMAIL);
+				break;
+			}
+			{
+				TCHAR buf[BUF_SIZE];
+				wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));
+				if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDYES) {
+					ViewDeleteItem(hWnd, tpMailItem);
+					SendMessage(hWnd, WM_CLOSE, 0, 0);
+				}
+			}
+			break;
+
 		case ID_MENUITEM_READMAIL:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2770,7 +2794,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_UNREADMAIL:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2786,7 +2810,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_SAVE:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2797,7 +2821,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_PROP:
 			if (item_is_mailbox(MailBox + vSelBox, 
-				(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
+				(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2859,7 +2883,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				// Editウィンドウのフォントを設定
 				EnumWindows((WNDENUMPROC)enum_windows_proc, 0);
 				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-				if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == TRUE) {
+				if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 					ModifyWindow(hWnd, tpMailItem, FALSE);
 				}
 			}
@@ -2870,7 +2894,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			op.ViewShowDate = (op.ViewShowDate == 1) ? 0 : 1;
 			SetHeaderSize(hWnd);
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == TRUE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) >= 0) {
 				SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 			}
 			break;
@@ -2878,7 +2902,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_VIEW_SOURCE:
 		case ID_VIEW_PART:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2889,7 +2913,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_VIEW_SAVE_ATTACH:
 			// GJC save all attachments
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2910,7 +2934,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2920,7 +2944,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_VIEW:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == FALSE) {
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
@@ -2936,7 +2960,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		default:
 			if (command_id >= ID_ATTACH && command_id <= ID_ATTACH + 100) {
 				if (item_is_mailbox(MailBox + vSelBox,
-					(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
+					(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == -1) {
 					ErrorMessage(hWnd, STR_ERR_NOMAIL);
 					break;
 				}

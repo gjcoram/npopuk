@@ -20,7 +20,7 @@
 #ifdef _DEBUG
 static long all_alloc_size = 0;
 
-#define MEM_CHECK
+//#define MEM_CHECK
 #ifdef MEM_CHECK
 #define ADDRESS_CNT		100000
 #define DEBUG_ADDRESS	0
