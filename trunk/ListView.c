@@ -123,9 +123,13 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 	hListView = CreateWindowEx(WS_EX_STYLE, WC_LISTVIEW, TEXT(""),
 #ifdef _WIN32_WCE_LAGENDA
 		WS_BORDER | WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_EDITLABELS | LvStyle,
-#else
+#else	//_WIN32_WCE_LAGENDA
+#ifdef _WIN32_WCE
 		WS_BORDER | WS_VISIBLE | WS_CHILD | WS_TABSTOP | LvStyle,
-#endif
+#else	//_WIN32_WCE
+		WS_VISIBLE | WS_CHILD | WS_TABSTOP | LvStyle,
+#endif	//_WIN32_WCE
+#endif	//_WIN32_WCE_LAGENDA
 		0, Top,
 		rcClient.right, rcClient.bottom - Top - bottom, hWnd,
 		(HMENU)IDC_LISTVIEW, hInst, NULL);

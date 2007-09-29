@@ -1,4 +1,4 @@
-nPOP Ver 1.0.1
+nPOP Ver 1.0.2
 --
 
 ■ はじめに
@@ -403,6 +403,7 @@ Win32版の場合は添付ファイル一覧のウィンドウにファイルをドラッグ＆ドロップする
 	%i - Message-Id
 	%s - Subject
 	%t - To
+	%c - Cc
 	%% - %
 が使用できます。
 
@@ -782,6 +783,12 @@ npop_ini.txt を参照してください。
 
 ■ 更新履歴
 
+・Ver 1.0.1 -> Ver 1.0.2
+	・受信メールの途中にヌル文字('\0')が含まれると受信処理が進まなくなるの
+	  を修正した。
+	・アドレス帳のリストビューのカラム幅を記憶するようにした。
+	・ウィンドウ表示時のパスワード認証が効かない場合があったのを修正した。
+
 ・Ver 1.0.0 -> Ver 1.0.1
 	・WindowsXP SP1でクリッカブルURLが機能していなかったのを修正した。
 	・iniファイルで「送信時に自分宛にコピーを送信」の宛先を設定できるよう
@@ -858,6 +865,7 @@ Special thanks:
   Marlof Bregonje
   Takehiko Hanada
   Antoine
+  Greg Chapman
 
 --
 
@@ -890,7 +898,7 @@ documentation and/or software.
 
 バグ、要望、質問は nakka@nakka.com までお願いします。
 
-Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
+Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-2002/10/29
+2005/02/11
