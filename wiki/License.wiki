@@ -1,5 +1,5 @@
 #labels Featured
-#nPOPuk is open source freeware
+nPOPuk is open source freeware
 
 = Open Source =
 
