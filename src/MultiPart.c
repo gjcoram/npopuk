@@ -9,8 +9,6 @@
  */
 
 /* Include Files */
-#include <stdio.h>
-
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
@@ -421,6 +419,8 @@ int multipart_create(TCHAR *Filename, char *ContentType, char *Encoding, char **
 	int i, len;
 #ifdef UNICODE
 	TCHAR *wtmp;
+	TCHAR dtmp[3];
+	char ctmp[3];
 #endif
 
 	if (Filename == NULL || *Filename == TEXT('\0')) {
@@ -449,11 +449,13 @@ int multipart_create(TCHAR *Filename, char *ContentType, char *Encoding, char **
 	p = str_cpy(Boundary, "-----_MULTIPART_");
 	for (i = 0; i < 16; i++) {
 #ifdef UNICODE
-		sprintf(p, "%02X", digest[i]);
+		wsprintf(dtmp, TEXT("%02X"), digest[i]);
+		tchar_to_char(dtmp, ctmp, 3);
+		p = str_join(p, ctmp, (char *)-1);
 #else
 		wsprintf(p, "%02X", digest[i]);
-#endif
 		p += 2;
+#endif
 	}
 	tstrcpy(p, "_");
 

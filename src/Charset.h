@@ -11,6 +11,9 @@
 #ifndef INC_CHARSET_H
 #define INC_CHARSET_H
 
+/* charset functions not supported on WinCE 2.0 */
+#ifndef _WCE_OLD
+
 /* Include Files */
 
 /* Define */
@@ -26,5 +29,6 @@ WCHAR *charset_decode(WCHAR *charset, char *buf, UINT len);
 HRESULT charset_enum(HWND hWnd);
 void set_default_encode(const UINT cp, TCHAR **HeadCharset, TCHAR **BodyCharset);
 
+#endif // _WCE_OLD
 #endif
 /* End of source */

@@ -23,13 +23,13 @@
 #define WM_FINDMAILBOX			(WM_APP + 101)
 #define WM_RAS_START			(WM_APP + 400)
 
-#define ID_MENU					(WM_APP + 102)		// コントロールID
+#define ID_MENU					(WM_APP + 102)		//Control ID
 #define IDC_CB					2000
 #define IDC_TB					2001
 
-#define ID_MAILITEM_OPEN		(WM_APP + 300)		// メールOpen用ID
+#define ID_MAILITEM_OPEN		(WM_APP + 300)		//ID
 
-#define ID_RECV_TIMER			1					// タイマーID
+#define ID_RECV_TIMER			1					//for mail Open Timer ID
 #define ID_SMTP_TIMER			2
 #define ID_SMTP_ONE_TIMER		3
 #define ID_CHECK_TIMER			4
@@ -38,7 +38,7 @@
 #define ID_TIMEOUT_TIMER		7
 #define ID_NEWMAIL_TIMER		8
 
-#define RECVTIME				1					// タイマーインターバル
+#define RECVTIME				1					//Timer interval
 #define SMTPTIME				100
 #define CHECKTIME				100
 #define AUTOCHECKTIME			60000
@@ -48,14 +48,18 @@
 
 #define CMD_RSET				"RSET"
 #define CMD_QUIT				"QUIT"
+ 
+// Notification Message to external clients
+UINT nBroadcastMsg = 0;
+#define BROADCAST_STRING		TEXT("NPOP_MESSAGE")
 
 /* Global Variables */
 HINSTANCE hInst;							// Local copy of hInstance
-TCHAR *AppDir;								// アプリケーションパス
-TCHAR *DataDir;								// データ保存先のパス
-TCHAR *g_Pass;								// 一時パスワード
+TCHAR *AppDir = NULL;						// アプリケーションパス
+TCHAR *DataDir = NULL;						// データ保存先のパス
+TCHAR *g_Pass = NULL;						// 一時パスワード
 int gPassSt;								// 一時パスワード保存フラグ
-static TCHAR *CmdLine;						// コマンドライン
+static TCHAR *CmdLine = NULL;				// コマンドライン
 BOOL first_start;							// 初回起動フラグ
 BOOL PPCFlag;								// PsPCフラグ
 #ifndef _WIN32_WCE
@@ -91,9 +95,10 @@ BOOL EndThreadSortFlag;						// 通信終了時の自動ソートフラグ(スレッド表示用)
 static BOOL SelMode;						// 選択モード (PocketPC, l'agenda)
 #endif
 
-MAILBOX *MailBox;							// メールボックス
-MAILBOX *AddressBox;						// アドレス帳
-int MailBoxCnt = 2;							// メールボックス数
+MAILBOX *MailBox = NULL;					//which Mailbox
+MAILBOX *AddressBox = NULL;					//Address register
+int MailBoxCnt = 2;							//Mailbox several
+
 int SelBox;									// 選択中のメールボックス
 int RecvBox;								// 送受信中のメールボックス
 static int CheckBox;						// チェック中のメールボックス
@@ -103,27 +108,31 @@ BOOL gSockFlag;								// 通信中フラグ
 BOOL GetHostFlag;							// ホスト名解決中フラグ
 int NewMailCnt;								// 新着メール数
 BOOL ShowMsgFlag;							// 新着有りのメッセージ表示中
-static BOOL ShowError;						// エラーメッセージ表示中
-BOOL AutoCheckFlag;							// 自動チェック
-BOOL PopBeforeSmtpFlag;						// POP before SMTP
-BOOL KeyShowHeader;							// キーによる一時的なヘッダ表示フラグ
-static BOOL AllCheck;						// 巡回中
-BOOL ExecFlag;								// 実行中
-static BOOL ExecCheckFlag;					// 実行後チェックのチェック判定
-static int AutoCheckCnt;					// 自動チェック開始までの分数カウント
-static int SmtpWait;						// POP before SMTP で認証後の待ち時間 (ミリ秒)
-static MAILITEM *wkSendMailItem;			// 送信用メールアイテム
+static BOOL ShowError = FALSE;				//During error message indicating
+BOOL AutoCheckFlag = FALSE;					//Automatic check
+BOOL PopBeforeSmtpFlag = FALSE;				//POP before SMTP
+BOOL KeyShowHeader;							//Is by the key the transitory header indicatory flag
+static BOOL AllCheck = FALSE;				//which While going around
+BOOL ExecFlag = FALSE;				//While executing
+static BOOL ExecCheckFlag = FALSE;			//Check decision
+static int AutoCheckCnt = 0;				//of check after the executing With fraction count
+static int SmtpWait = 0;					//pop before SMTP to start of automatic operation check waiting after the certifying (milli-second)
+static MAILITEM *wkSendMailItem;			//Mail item
+
 
 typedef BOOL (*PPROC)(HWND, SOCKET, char*, int, TCHAR*, MAILBOX*, BOOL);
 static PPROC command_proc;					// 送受信プロシージャ
 int command_status;							// 送受信コマンドステータス (POP_, SMTP_)
 
+HWND g_hwndTimedOwner;
+BOOL g_bTimedOut;
+
 // 外部参照
 extern OPTION op;
 
-extern TCHAR *FindStr;						// 検索文字列
-extern HWND hViewWnd;						// 表示ウィンドウ
-extern HWND MsgWnd;							// メール到着メッセージウィンドウ
+extern TCHAR *FindStr;						//Searching character string
+extern HWND hViewWnd;						//Indicatory window
+extern HWND MsgWnd;							//Mail arrival message
 
 // RAS
 extern UINT WM_RASEVENT;
@@ -157,20 +166,22 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag);
 static BOOL MailMarkCheck(HWND hWnd, BOOL DelMsg, BOOL NoMsg);
 static BOOL ExecItem(HWND hWnd, int BoxIndex);
 static void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
-static void ReMessageItem(HWND hWnd);
+static void ReMessageItem(HWND hWnd, int ReplyFlag);
 static void ItemToSaveBox(HWND hWnd);
 static void ListDeleteItem(HWND hWnd);
 static void SetDownloadMark(HWND hWnd, BOOL Flag);
 static void SetDeleteMark(HWND hWnd);
 static void UnMark(HWND hWnd);
 static void SetMailStats(HWND hWnd, int St);
-static void EndSocketFunc(HWND hWnd);
+static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
 static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag);
 static void Init_NewMailFlag(void);
-static void NewMail_Massage(HWND hWnd, int cnt);
+static void NewMail_Message(HWND hWnd, int cnt);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
 static HWND InitInstance(HINSTANCE hInstance, int CmdShow);
+void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
+static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout);
 
 /*
  * GetAppPath - ユーザディレクトリの作成
@@ -206,11 +217,11 @@ static BOOL GetAppPath(HINSTANCE hinst)
 		return FALSE;
 	}
 
-	// アプリケーションのパスを取得
+	//Pass of application acquisition
 	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
 	for (p = r = AppDir; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			continue;
 		}
@@ -226,14 +237,33 @@ static BOOL GetAppPath(HINSTANCE hinst)
 	return TRUE;
 }
 
+
+/******************************************************************************
+
+	CommandLine
+
+	The command line is processed the
+
+******************************************************************************/
 /*
- * CommandLine - コマンドラインを処理する
+	// Check for commandline options - Added PHH 27-Sep-2003
+	if (*lpCmdLine == '-') {
+
+		// -to option, for when called from Contacts
+		if (*(lpCmdLine+1) == 't' && *(lpCmdLine+2) == 'o' && *(lpCmdLine+3) == ' ') {
+			// Need to strip option and double quotes from email address
+			lpCmdLine += 5;
+			for(i = 0; *(lpCmdLine+i) != '\0' && *(lpCmdLine+i) != '"'; i++);
+			*(lpCmdLine+i) = '\0';
+		}
+	}	// end PHH addition
+
  */
 static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 {
 	TCHAR name[BUF_SIZE];
 	TCHAR *p, *r;
-	int i;
+	int i, len;
 
 	if (buf == NULL || *buf == TEXT('\0')) {
 		return FALSE;
@@ -241,26 +271,35 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 	for (p = buf; *p == TEXT(' '); p++);
 	if (*p == TEXT('\0')) return FALSE;
 	if (*p != TEXT('/')) return TRUE;
+	// The commandline has a '/'
 	p++;
+	// After the '/' there is *not* 'a:'
 	if (str_cmp_ni_t(p, TEXT("a:"), 2) != 0) {
+		// Collect up everything else, skipping blanks
 		for (; *p != TEXT('\0') && *p != TEXT(' '); p++);
 		for (; *p == TEXT(' '); p++);
 		lstrcpy(buf, p);
 		return ((*buf == TEXT('\0')) ? FALSE : TRUE);
 	}
+	// If there was 'a:'
 	p += 2;
 
-	// メールボックスの取得
+	// Collect everything between double quotes if there
 	if (*p == TEXT('\"')) {
 		p++;
 		for (r = p; *r != TEXT('\0') && *r != TEXT('\"'); r++);
+		// otherwise collect up to the end of the word
 	} else {
 		for (r = p; *r != TEXT('\0') && *r != TEXT(' '); r++);
 	}
-	str_cpy_n_t(name, p, r - p + 1);
+	len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
+	str_cpy_n_t(name, p, len);
+	// Try and match it to the mailbox name (e.g. [Outbox], AccountName)
 	i = mailbox_name_to_index(name);
+	// Switch to that mailbox
 	mailbox_select(hWnd, i);
 
+	//Then collect up everything else, skipping blanks, and return it
 	for (p = r; *p != TEXT('\0') && *p != TEXT(' '); p++);
 	for (; *p == TEXT(' '); p++);
 	lstrcpy(buf, p);
@@ -274,7 +313,7 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 static BOOL ConfirmPass(HWND hWnd, TCHAR *ps)
 {
 	while (1) {
-		// 起動パスワード
+		//of mailbox Starting password
 		gPassSt = 0;
 		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INPUTPASS), NULL, InputPassProc,
 			(LPARAM)STR_TITLE_SHOWPASSWORD) == FALSE) {
@@ -317,7 +356,7 @@ static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf)
 		return;
 	}
 	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon, buf) == FALSE) {
-		// 変更できなかった場合は追加を行う
+		//When it cannot modify, it adds the
 		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon, buf);
 	}
 }
@@ -383,6 +422,15 @@ BOOL _SetForegroundWindow(const HWND hWnd)
  */
 void SetStatusTextT(HWND hWnd, TCHAR *buf, int Part)
 {
+	if (Part == 0) {
+		int Width[2];
+		int len = lstrlen(buf) * op.StatusBarCharWidth; // approx pixel count
+		if (len > 220) len = 220;
+		Width[0] = len;
+		Width[1] = -1;
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
+			(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
+	}
 #ifdef _WIN32_WCE_PPC
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)Part | SBT_NOBORDERS, (LPARAM)buf);
 #else
@@ -440,7 +488,7 @@ void SetSocStatusText(HWND hWnd, char *buf)
 /*
  * SetItemCntStatusText - アイテム数の表示
  */
-void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox)
+void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 {
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
@@ -486,6 +534,17 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox)
 	}
 	wsprintf(wbuf, STR_STATUS_MAILINFO, NewCnt, NoReadCnt);
 	SetStatusTextT(hWnd, wbuf, 1);
+
+	// Notify programs of new count
+	if (bNotify)
+	{
+#ifdef _WIN32_WCE_PPC
+		HWND hPlugin;
+		if (hPlugin = findTodayPlugin(TEXT("phoneAlarmMaxCls")))
+			PostMessage(hPlugin, nBroadcastMsg, (WPARAM)NoReadCnt, (LPARAM)NewCnt);
+#endif
+		PostMessage(HWND_BROADCAST, nBroadcastMsg, (WPARAM)NoReadCnt, (LPARAM)NewCnt);
+	}
 }
 
 /*
@@ -525,7 +584,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 	SwitchCursor(TRUE);
 
 	if (hWnd != NULL) {
-		// ステータスバーにエラーの情報を表示
+		//In status bar information of error indicatory
 		SetStatusTextT(hWnd, buf, 1);
 		if (op.SocLog == 1) log_save(AppDir, LOG_FILE, buf);
 	}
@@ -553,7 +612,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 		Title = NULL;
 	}
 	ShowError = TRUE;
-	// エラーメッセージの表示
+	//of title of account name attachment Indicatory
 	MessageBox(hWnd, buf, p, MB_OK | MB_ICONERROR);
 	ShowError = FALSE;
 	mem_free(&Title);
@@ -564,7 +623,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
  */
 void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 {
-	// ソケットを閉じる
+	//of error message The socket is closed the
 	if (g_soc != -1 && GetHostFlag == FALSE) {
 		socket_close(hWnd, g_soc);
 	}
@@ -578,19 +637,19 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 	KillTimer(hWnd, ID_RECV_TIMER);
 #endif
 	if (AllCheck == FALSE) {
-		EndSocketFunc(hWnd);
+		EndSocketFunc(hWnd, FALSE);
 		return;
 	}
 
 	if (op.SocIgnoreError == 1 && BoxIndex >= MAILBOX_USER) {
-		// 受信エラーを無視する設定の場合
+		//In case of the setting which ignores reception error the
 		return;
 	}
 	if (op.SendIgnoreError == 1 && BoxIndex == MAILBOX_SEND) {
-		// 送信エラーを無視する設定の場合
+		//In case of the setting which ignores transmission error the
 		return;
 	}
-	// 巡回の停止
+	//Stop
 	KillTimer(hWnd, ID_SMTP_TIMER);
 	KillTimer(hWnd, ID_SMTP_ONE_TIMER);
 	KillTimer(hWnd, ID_CHECK_TIMER);
@@ -600,7 +659,7 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 	AllCheck = FALSE;
 	ExecFlag = FALSE;
 	KeyShowHeader = FALSE;
-	EndSocketFunc(hWnd);
+	EndSocketFunc(hWnd, FALSE);
 }
 
 /*
@@ -626,7 +685,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #endif
 	switch (PosFlag) {
 	case 0:
-		// マウス位置の取得
+		//of round Acquisition
 #ifdef _WIN32_WCE
 		ret = GetMessagePos();
 		x = LOWORD(ret);
@@ -639,7 +698,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 		break;
 
 	case 1:
-		// アイテム位置の取得
+		//of mouse position Acquisition
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
 		GetWindowRect(hListView, &WndRect);
@@ -762,6 +821,8 @@ void SetMailMenu(HWND hWnd)
 #endif
 	EnableMenuItem(hMenu, ID_MENUITEM_OPEN, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_REMESSEGE, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_ALLREMESSEGE, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_FORWARD, !SelFlag);
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RECV, !(SocFlag & SaveBoxFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_ALLCHECK, !SocFlag);
@@ -799,7 +860,7 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_READMAIL, !(SelFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_NOREADMAIL, !(SelFlag & SendBoxFlag));
 
-	EnableMenuItem(hMenu, ID_MENUITE_SAVECOPY, !(SelFlag & SaveBoxFlag));
+	EnableMenuItem(hMenu, ID_MENUITEM_SAVECOPY, !(SelFlag & SaveBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_DELETE, !SelFlag);
 }
 
@@ -810,11 +871,11 @@ static void FreeAllMailBox(void)
 {
 	int i;
 
-	// アドレス帳の解放
+	//of item position Release
 	mailbox_free(AddressBox);
 	mem_free(&AddressBox);
 
-	// すべてのメールボックスの解放
+	//of address register Release
 	for (i = 0; i < MailBoxCnt; i++) {
 		mailbox_free((MailBox + i));
 	}
@@ -827,11 +888,11 @@ static void FreeAllMailBox(void)
 static void CloseViewWindow(int Flag)
 {
 	HWND fWnd;
-	// メール表示ウィンドウを閉じる
+	//of all mailboxes The mail indicatory window is closed the
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_ENDCLOSE, 0, 0);
 	}
-	// メール編集ウィンドウを閉じる
+	//The mail compilation window is closed the
 	while ((fWnd = FindWindow(EDIT_WND_CLASS, NULL)) != NULL) {
 		SendMessage(fWnd, WM_ENDCLOSE, Flag, 0);
 	}
@@ -852,7 +913,7 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 	switch (msg) {
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	case WM_LBUTTONDOWN:
-		// マウスの下のアイテムを取得
+		//Item under mouse acquisition
 		apos.x = LOWORD(lParam);
 		apos.y = HIWORD(lParam);
 
@@ -862,7 +923,7 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 		i = ListView_HitTest(hWnd, &lvht);
 
 		if (SelMode == TRUE && GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_SHIFT) >= 0) {
-			// 選択モード
+			//Selective mode
 			if (i != -1) {
 				ListView_SetItemState(hWnd, i,
 					LVIS_FOCUSED | (ListView_GetItemState(hWnd, i, LVIS_SELECTED) ^ LVIS_SELECTED),
@@ -883,7 +944,7 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 			SwitchCursor(TRUE);
 			return 0;
 		}
-		// メールボックスの選択
+		//Space
 		mailbox_select(GetParent(hWnd), i);
 		SwitchCursor(TRUE);
 		return 0;
@@ -902,7 +963,7 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 
 #ifndef _WCE_OLD
 	case WM_IME_CHAR:
-		// 2バイトのスペース
+		//2 byte of mailbox Setting
 #ifdef UNICODE
 		if (wParam == 0x3000 &&
 #else
@@ -964,7 +1025,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam)
 #endif
 		// ソートの設定
 		LvSortFlag = (ABS(LvSortFlag) == (phd->iItem + 1)) ? (LvSortFlag * -1) : (phd->iItem + 1);
-		// ソート
+		//of sort Sort
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		SwitchCursor(FALSE);
 		ListView_SortItems(hListView, CompareFunc, LvSortFlag);
@@ -1006,7 +1067,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (CForm->hwndFrom == GetDlgItem(hWnd, IDC_LISTVIEW)) {
 #ifdef _WIN32_WCE_PPC
 		if (CForm->code == GN_CONTEXTMENU) {
-			// ポップアップメニュー表示
+			//Pop rise menu indicatory
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 			return TRUE;
 		}
@@ -1244,7 +1305,7 @@ static BOOL InitWindow(HWND hWnd)
 	if (op.lv_font.name != NULL && *op.lv_font.name != TEXT('\0')) {
 		hListFont = font_create(hWnd, &op.lv_font);
 	}
-	// Viewフォント
+	//View of font and font
 	if (op.view_font.name != NULL && *op.view_font.name != TEXT('\0')) {
 		hViewFont = font_create(hWnd, &op.view_font);
 	}
@@ -1263,7 +1324,6 @@ static BOOL InitWindow(HWND hWnd)
 	if (hViewFont != NULL) {
 		SelectObject(hdc, hFont);
 	}
-	ReleaseDC(hWnd, hdc);
 
 	// コンボボックス
 	if ((j = CreateComboBox(hWnd, Height)) == -1) {
@@ -1271,7 +1331,7 @@ static BOOL InitWindow(HWND hWnd)
 	}
 	Height += j;
 
-	// ステータスバー
+	//Status bar
 	CreateWindowEx(0, STATUSCLASSNAME, TEXT(""),
 		WS_VISIBLE | WS_CHILD | i,
 		0, 0, 0, 0, hWnd, (HMENU)IDC_STATUS, hInst, NULL);
@@ -1289,20 +1349,20 @@ static BOOL InitWindow(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
 		(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
 
-	// リストビュー
+	//List view
 	if (CreateListView(hWnd, Height, StatusRect.bottom - StatusRect.top) == NULL) {
 		return FALSE;
 	}
 	SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 	if (hListFont != NULL) {
-		// リストビューのフォントを設定
+		//Font of list view setting
 		SendMessage(GetDlgItem(hWnd, IDC_LISTVIEW), WM_SETFONT, (WPARAM)hListFont, MAKELPARAM(TRUE, 0));
 	}
-	// リストビューをサブクラス化する
+	//List view to subclass is converted the
 	SetListViewSubClass(GetDlgItem(hWnd, IDC_LISTVIEW));
 
 #ifdef _WIN32_WCE
-	// ウィンドウのアイコンを設定
+	//Idea contest of window setting
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN), IMAGE_ICON, SICONSIZE, SICONSIZE, 0));
 #endif
@@ -1312,10 +1372,33 @@ static BOOL InitWindow(HWND hWnd)
 /*
  * SetWindowSize - ウィンドウのサイズ変更
  */
+#ifdef _WIN32_WCE
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-#ifdef _WIN32_WCE
-#ifdef _WIN32_WCE_LAGENDA
+	RECT rcClient, StatusRect, comboRect;
+	int Height = 0;
+
+	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, 0, 0);
+
+	GetClientRect(hWnd, &rcClient);
+	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
+	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
+
+#ifndef _WIN32_WCE_PPC
+	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
+#endif
+	MoveWindow(GetDlgItem(hWnd, IDC_COMBO), 0, Height,
+		rcClient.right, comboRect.bottom - comboRect.top, TRUE);
+
+	Height += (comboRect.bottom - comboRect.top);
+	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
+		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
+	return TRUE;
+}
+#elif defined _WIN32_WCE_LAGENDA
+static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
 	COSIPINFO CoSipInfo;
 	SIPINFO SipInfo;
 	RECT rcClient, StatusRect, comboRect;
@@ -1351,29 +1434,10 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
 		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 	return ret;
-#else	//_WIN32_WCE_LAGENDA
-	RECT rcClient, StatusRect, comboRect;
-	int Height = 0;
-
-	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, 0, 0);
-
-	GetClientRect(hWnd, &rcClient);
-	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
-
-#ifndef _WIN32_WCE_PPC
-	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
-#endif	//_WIN32_WCE_PPC
-	MoveWindow(GetDlgItem(hWnd, IDC_COMBO), 0, Height,
-		rcClient.right, comboRect.bottom - comboRect.top, TRUE);
-
-	Height += (comboRect.bottom - comboRect.top);
-	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
-		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
-	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
-	return TRUE;
-#endif	//_WIN32_WCE_LAGENDA
-#else	//_WIN32_WCE
+}
+#else
+static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
 	RECT rcClient, StatusRect, ToolbarRect, comboRect;
 	int Height = 0;
 
@@ -1399,8 +1463,8 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	return TRUE;
-#endif	//_WIN32_WCE
 }
+#endif
 
 /*
  * SaveWindow - ウィンドウの保存処理
@@ -1412,7 +1476,7 @@ static BOOL SaveWindow(HWND hWnd)
 
 	SwitchCursor(FALSE);
 
-	// 通信中の場合は切断を行う
+	//When it is in the midst of communicating, it cuts off the
 	if (g_soc != -1 && GetHostFlag == FALSE) {
 #ifndef WSAASYNC
 		KillTimer(hWnd, ID_RECV_TIMER);
@@ -1435,19 +1499,19 @@ static BOOL SaveWindow(HWND hWnd)
 			RasDisconnect();
 		}
 	}
-	// ダイヤルアップの切断
+	//Cutting
 	if (RasLoop == TRUE || op.RasEndDisCon == 1) {
 		RasDisconnect();
 	}
 
-	// 表示、編集ウィンドウを閉じる
+	//of dial rise The indicatory and compilation window is closed the
 	CloseViewWindow(1);
 
-	// アドレス帳、保存箱、送信箱を保存
+	//Address register, retention box and transmission box retention
 	ret = !file_save_address_book(ADDRESS_FILE, AddressBox);
 	ret |= !file_save_mailbox(SAVEBOX_FILE, MailBox + MAILBOX_SAVE, 2);
 	ret |= !file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
-	if (ret == TRUE) {
+	if (ret != FALSE) {
 		SwitchCursor(TRUE);
 		if (MessageBox(hWnd, STR_ERR_SAVEEND,
 			STR_TITLE_ERROR, MB_ICONERROR | MB_YESNO) == IDNO) {
@@ -1455,7 +1519,7 @@ static BOOL SaveWindow(HWND hWnd)
 		}
 	}
 
-	// アカウント毎の設定の保存
+	//Retention
 	for (i = 0; i < LV_COL_CNT; i++) {
 		op.LvColSize[i] = ListView_GetColumnWidth(GetDlgItem(hWnd, IDC_LISTVIEW), i);
 	}
@@ -1482,7 +1546,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	ListView_DeleteAllItems(GetDlgItem(hWnd, IDC_LISTVIEW));
 
-	// メッセージウィンドウを閉じる
+	//of setting every of account The message window is closed the
 	if (MsgWnd != NULL) {
 		SendMessage(MsgWnd, WM_ENDDIALOG, 0, 0);
 	}
@@ -1508,7 +1572,7 @@ static BOOL EndWindow(HWND hWnd)
 	mem_free(&FindStr);
 	FindStr = NULL;
 
-	// すべてのメールボックスの解放
+	//in searching character string Release
 	FreeAllMailBox();
 	mem_free(&g_Pass);
 
@@ -1520,21 +1584,21 @@ static BOOL EndWindow(HWND hWnd)
 	op.ShowTrayIcon = 0;
 	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, NULL);
 
-	// アイコンの破棄
+	//of idea contest of task tray Cancellation
 	DestroyIcon(TrayIcon_Main);
 	DestroyIcon(TrayIcon_Check);
 	DestroyIcon(TrayIcon_Mail);
 
-	// リストビューのサブクラス化の解除
+	//of idea contest Cancellation
 	DelListViewSubClass(GetDlgItem(hWnd, IDC_LISTVIEW));
 
-	// イメージリストの破棄
+	//of subclass conversion of list view Cancellation
 	hImgList = ListView_SetImageList(GetDlgItem(hWnd, IDC_LISTVIEW), NULL, LVSIL_SMALL);
 	ImageList_Destroy((void *)hImgList);
 	hImgList = ListView_SetImageList(GetDlgItem(hWnd, IDC_LISTVIEW), NULL, LVSIL_STATE);
 	ImageList_Destroy((void *)hImgList);
 
-	// ウィンドウの破棄
+	//of image list Cancellation
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
     DestroyWindow(hMainToolBar);
@@ -1551,7 +1615,7 @@ static BOOL EndWindow(HWND hWnd)
 	DestroyWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	DestroyWindow(GetDlgItem(hWnd, IDC_STATUS));
 
-	// フォントの破棄
+	//of window Cancellation
 	if (hListFont != NULL) {
 		DeleteObject(hListFont);
 	}
@@ -1581,7 +1645,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	}
 	tpMailBox = MailBox + BoxIndex;
 
-	// ダイヤルアップ開始
+	//of font Dial rise start
 	if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, BoxIndex, 0) == FALSE) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
 		SetMailMenu(hWnd);
@@ -1592,7 +1656,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 
 	// SMTP Authentication
 	if (tpMailBox->SmtpAuth == 1) {
-		// パスワードが設定されていない場合はパスワードの入力を促す
+		//When the password is not set, input of the password is urged the
 		if (g_Pass != NULL) {
 			mem_free(&g_Pass);
 			g_Pass = NULL;
@@ -1619,7 +1683,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 				return FALSE;
 			}
 			if (gPassSt == 1) {
-				// 一時パスワードの設定
+				//Temporarily the setting
 				if (tpMailBox->AuthUserPass == 1) {
 					tpMailBox->SmtpTmpPass = alloc_copy_t(g_Pass);
 				} else {
@@ -1671,10 +1735,10 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 
 	tpMailBox = MailBox + BoxIndex;
 
-	// 新着フラグの初期化
+	//of the password Initialization
 	tpMailBox->NewMail = FALSE;
 
-	// パスワードが設定されていない場合はパスワードの入力を促す
+	//of new arrival flag When the password is not set, input of the password is urged the
 	if (g_Pass != NULL) {
 		mem_free(&g_Pass);
 		g_Pass = NULL;
@@ -1689,7 +1753,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 			return FALSE;
 		}
 		if (gPassSt == 1) {
-			// 一時パスワードの設定
+			//Temporarily the setting
 			tpMailBox->TmpPass = alloc_copy_t(g_Pass);
 		}
 	}
@@ -1698,7 +1762,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 
 	RecvBox = BoxIndex;
 
-	// ホスト名からIPアドレスを取得 (取得したIPは保存する)
+	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
 	if (tpMailBox->PopIP == 0 || op.IPCache == 0) {
 		GetHostFlag = TRUE;
@@ -1714,7 +1778,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
-	// 接続開始
+	//Connected start
 	command_proc = pop3_list_proc;
 	command_status = POP_START;
 	PopBeforeSmtpFlag = SmtpFlag;
@@ -1756,7 +1820,7 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL DelMsg, BOOL NoMsg)
 		}
 		ret = TRUE;
 		if (DelMsg == TRUE && item_get_next_delete_mark((MailBox + i), -1, NULL) != -1) {
-			if (MessageBox(hWnd, STR_Q_DELSERVERMAIL,
+			if (ParanoidMessageBox(hWnd, STR_Q_DELSERVERMAIL,
 				(MailBox + i)->Name, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 				mailbox_select(hWnd, i);
 				hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -1771,10 +1835,11 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL DelMsg, BOOL NoMsg)
 			break;
 		}
 	}
-	if (item_get_next_send_mark((MailBox + MAILBOX_SEND), -1, NULL) != -1) {
+	if (NoMsg == TRUE  && op.CheckAfterUpdate == 1) {
 		ret = TRUE;
-	}
-	if (NoMsg == TRUE && ret == FALSE) {
+	} else if (ret == FALSE && item_get_next_send_mark((MailBox + MAILBOX_SEND), -1, NULL) != -1) {
+		ret = TRUE;
+	} else if (NoMsg == TRUE && ret == FALSE) {
 		MessageBox(hWnd,
 			STR_MSG_NOMARK, STR_TITLE_ALLEXEC, MB_ICONEXCLAMATION | MB_OK);
 	}
@@ -1795,7 +1860,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 
 	tpMailBox = MailBox + BoxIndex;
 
-	// 送信箱の場合は送信を行う
+	//When it is the transmission box, it transmits the
 	if (BoxIndex == MAILBOX_SEND) {
 		if (item_get_next_send_mark(tpMailBox, -1, NULL) == -1) {
 			return FALSE;
@@ -1827,7 +1892,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 			return FALSE;
 		}
 		if (gPassSt == 1) {
-			// 一時パスワードの設定
+			//Temporarily the setting
 			tpMailBox->TmpPass = alloc_copy_t(g_Pass);
 		}
 	}
@@ -1836,7 +1901,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 
 	RecvBox = BoxIndex;
 
-	// ホスト名からIPアドレスを取得 (取得したIPは保存する)
+	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
 	if (tpMailBox->PopIP == 0 || op.IPCache == 0) {
 		GetHostFlag = TRUE;
@@ -1852,7 +1917,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
-	// 接続開始
+	//Connected start
 	command_proc = pop3_exec_proc;
 	command_status = POP_START;
 	g_soc = connect_server(hWnd,
@@ -1897,23 +1962,25 @@ static void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 		return;
 	}
 	if (SelBox == MAILBOX_SEND) {
-		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, 0) == EDIT_INSIDEEDIT) {
+		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL) == EDIT_INSIDEEDIT) {
+			// GJC: don't edit sent mail
+			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
 #ifdef _WIN32_WCE
 			ShowWindow(hWnd, SW_HIDE);
 #endif
 		}
 		return;
 	}
-	if (tpMailItem->Body == NULL && SelBox != MAILBOX_SAVE) {
+	if (tpMailItem->Body == NULL && (SelBox != MAILBOX_SAVE && SelBox != MAILBOX_SEND)) {
 		if (MsgFlag == TRUE) {
 			MessageBox(hWnd, STR_MSG_NOBODY, STR_TITLE_OPEN, MB_ICONEXCLAMATION | MB_OK);
 			return;
 		}
-		if (tpMailItem->Status == ICON_DOWN) {
-			tpMailItem->Status = ICON_NON;
+		if (tpMailItem->Mark == ICON_DOWN) {
+			tpMailItem->Mark = ICON_NON;
 			ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 		} else {
-			tpMailItem->Status = ICON_DOWN;
+			tpMailItem->Mark = ICON_DOWN;
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 		}
 		ListView_RedrawItems(hListView, i, i);
@@ -1931,24 +1998,35 @@ static void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 /*
  * ReMessageItem - 返信の作成
  */
-static void ReMessageItem(HWND hWnd)
+static void ReMessageItem(HWND hWnd, int ReplyFlag)
 {
 	HWND hListView;
 	int i;
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
-	if (i == -1) {
+	if (i < 0)
 		return;
-	}
-	if (SelBox == MAILBOX_SEND) {
+
+	if (SelBox == MAILBOX_SEND && ReplyFlag == EDIT_REPLY) {
+#ifdef _WIN32_WCE
+		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+				(LPARAM)ListView_GetlParam(hListView, i));
+		} else {
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)ListView_GetlParam(hListView, i));
+		}
+#else
 		DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 			(LPARAM)ListView_GetlParam(hListView, i));
+#endif
+		// Refresh the screen with any changes
 		ListView_RedrawItems(hListView, i, i);
 		UpdateWindow(hListView);
 	} else {
 		if (Edit_InitInstance(hInst, hWnd, SelBox,
-			(MAILITEM *)ListView_GetlParam(hListView, i), EDIT_REPLY, 0) == EDIT_INSIDEEDIT) {
+			(MAILITEM *)ListView_GetlParam(hListView, i), ReplyFlag, NULL) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 			ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -1978,7 +2056,7 @@ static void ItemToSaveBox(HWND hWnd)
 	} else {
 		if (op.SaveMsg == 1) {
 			wsprintf(msgbuf, STR_Q_COPY, i);
-			if (MessageBox(hWnd, msgbuf, STR_TITLE_COPY, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+			if (ParanoidMessageBox(hWnd, msgbuf, STR_TITLE_COPY, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				return;
 			}
 		}
@@ -1994,7 +2072,7 @@ static void ItemToSaveBox(HWND hWnd)
 		}
 
 		if (SelBox == MAILBOX_SEND) {
-			// 送信箱にコピーを作成する
+			//The copy is drawn up in the transmission box the
 			if ((tpTmpMailItem = item_to_mailbox(tpMailBox, tpMailItem, NULL, TRUE)) == NULL) {
 				SwitchCursor(TRUE);
 				ErrorMessage(hWnd, STR_ERR_CREATECOPY);
@@ -2003,24 +2081,61 @@ static void ItemToSaveBox(HWND hWnd)
 			j = ListView_InsertItemEx(hListView,
 				(TCHAR *)LPSTR_TEXTCALLBACK, 0, I_IMAGECALLBACK, (long)tpTmpMailItem,
 				ListView_GetItemCount(hListView));
-			if (tpTmpMailItem->Multipart == TRUE) {
+
+		/////////////// MRP //////////////////
+				switch (tpTmpMailItem->Priority)
+				{
+					case 4:  // LOW
+					case 5:
+						if(tpTmpMailItem->Multipart == TRUE)
+						{
+							ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(3), LVIS_STATEIMAGEMASK)
+						}
+						else
+						{
+							ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(5), LVIS_STATEIMAGEMASK)
+						}
+
+						break;
+
+					case 1:  // HIGH
+					case 2:
+						if(tpTmpMailItem->Multipart == TRUE)
+						{
+							ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK)
+						}
+						else
+						{
+							ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(4), LVIS_STATEIMAGEMASK)
+						}
+
+						break;
+
+					case 3:  // NORMAL
+					default:
+						if(tpTmpMailItem->Multipart == TRUE)
+						{
 				ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK)
+						}
+						break;
+
+				}
 				ListView_RedrawItems(hListView, j, j);
 				UpdateWindow(hListView);
-			}
+		/////////////// --- ////////////////////
 			if (SelPoint == -1) {
 				SelPoint = j;
 			}
 		} else {
-			// 既に存在していないか調べる
+			//Whether already it does not exist, you inspect the
 			j = item_find_thread(tpMailBox, tpMailItem->MessageID, tpMailBox->MailItemCnt);
 			if (j != -1) {
-				// コピー元がダウンロード済みかコピー先が未ダウンロードのものの場合は確認を行わない
+				//Whether the copy origin to be completed download, when the tip of the copy is something of not yet download, you do not verify the
 				if (tpMailItem->Download == TRUE
 					|| (*(tpMailBox->tpMailItem + j))->Download == FALSE) {
 					item_free((tpMailBox->tpMailItem + j), 1);
 				} else {
-					// 上書きの確認
+					// Verification
 					buf = (TCHAR *)mem_alloc(
 						sizeof(TCHAR) * (lstrlen(tpMailItem->Subject) + lstrlen(STR_Q_COPY) + 1));
 					if (buf != NULL) {
@@ -2044,9 +2159,9 @@ static void ItemToSaveBox(HWND hWnd)
 		}
 	}
 	item_resize_mailbox(tpMailBox);
-	SetItemCntStatusText(hWnd, NULL);
+	SetItemCntStatusText(hWnd, NULL, FALSE);
 	if (SelPoint != -1) {
-		// 追加されたアイテムを選択する
+		//of mail item The item which is added is selected the
 		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
 		ListView_SetItemState(hListView, SelPoint,
 			LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
@@ -2072,7 +2187,7 @@ static void ListDeleteItem(HWND hWnd)
 	}
 	wsprintf(buf, STR_Q_DELLISTMAIL, i, (SelBox >= MAILBOX_USER)
 		? STR_Q_DELLISTMAIL_NOSERVER : TEXT(""));
-	if (MessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+	if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 		return;
 	}
 
@@ -2081,14 +2196,14 @@ static void ListDeleteItem(HWND hWnd)
 	while ((i = ListView_GetNextItem(hListView, -1, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		if (tpMailItem != NULL) {
-			tpMailItem->Status = -1;
+			tpMailItem->Mark = -1;
 		}
 		ListView_DeleteItem(hListView, i);
 	}
-	// メモリはNULLに設定
+	//As for memory in NULL setting
 	for (i = 0; i < (MailBox + SelBox)->MailItemCnt; i++) {
 		if (*((MailBox + SelBox)->tpMailItem + i) == NULL ||
-			(*((MailBox + SelBox)->tpMailItem + i))->Status != -1) {
+			(*((MailBox + SelBox)->tpMailItem + i))->Mark != -1) {
 			continue;
 		}
 		item_free(((MailBox + SelBox)->tpMailItem + i), 1);
@@ -2096,7 +2211,7 @@ static void ListDeleteItem(HWND hWnd)
 	item_resize_mailbox(MailBox + SelBox);
 
 	ListView_SetRedraw(hListView, TRUE);
-	SetItemCntStatusText(hWnd, NULL);
+	SetItemCntStatusText(hWnd, NULL, FALSE);
 	SwitchCursor(TRUE);
 }
 
@@ -2120,13 +2235,13 @@ static void SetDownloadMark(HWND hWnd, BOOL Flag)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Status == DOWN_ICON && Flag == TRUE) {
-			tpMailItem->Status = tpMailItem->MailStatus;
+		if (tpMailItem->Mark == DOWN_ICON && Flag == TRUE) {
+			tpMailItem->Mark = tpMailItem->MailStatus;
 			if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
 				ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 			}
 		} else {
-			tpMailItem->Status = DOWN_ICON;
+			tpMailItem->Mark = DOWN_ICON;
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 		}
 		ListView_RedrawItems(hListView, i, i);
@@ -2157,7 +2272,7 @@ static void SetDeleteMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		tpMailItem->Status = ICON_DEL;
+		tpMailItem->Mark = ICON_DEL;
 		ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 		ListView_RedrawItems(hListView, i, i);
 	}
@@ -2187,10 +2302,53 @@ static void UnMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		tpMailItem->Status = tpMailItem->MailStatus;
+		tpMailItem->Mark = tpMailItem->MailStatus;
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
 			ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 		}
+		ListView_RedrawItems(hListView, i, i);
+	}
+	UpdateWindow(hListView);
+
+	if (hViewWnd != NULL) {
+		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
+	}
+}
+
+/*
+ * SetReplyFwdMark - adds state, redraws window
+ */
+void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark)
+{
+	MAILITEM *tpMailItem;
+	HWND hListView;
+	int i;
+	BOOL found = FALSE;
+
+	tpReMailItem->ReFwd |= Mark;
+	tpReMailItem->New = FALSE;
+	
+	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+	if (hListView == NULL) {
+		return;
+	}
+
+	i = -1;
+	while (!found && (i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		if (tpMailItem != NULL && tpMailItem == tpReMailItem) {
+			found = TRUE;
+		}
+	}
+	if (!found) i = -1;
+	while (!found && (i = ListView_GetNextItem(hListView, i, 0)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		if (tpMailItem != NULL && tpMailItem == tpReMailItem) {
+			found = TRUE;
+		}
+	}
+	if (found == TRUE) {
+		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
@@ -2217,29 +2375,37 @@ static void SetMailStats(HWND hWnd, int St)
 	while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		if (tpMailItem == NULL ||
-			tpMailItem->MailStatus == ICON_NON || tpMailItem->MailStatus >= ICON_SENDMAIL) {
+			tpMailItem->MailStatus == ICON_NON || tpMailItem->MailStatus >= ICON_SENTMAIL) {
 			continue;
 		}
 		tpMailItem->MailStatus = St;
-		if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL) {
-			tpMailItem->Status = St;
+		if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL) {
+			tpMailItem->Mark = St;
+		}
+		if (St == ICON_READ) {
+			tpMailItem->New = FALSE;
+			ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
 		}
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
-	SetItemCntStatusText(hWnd, NULL);
+	SetItemCntStatusText(hWnd, NULL, FALSE);
 }
 
 /*
  * EndSocketFunc - 通信終了時の処理
  */
-static void EndSocketFunc(HWND hWnd)
+static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 {
 	HWND hListView;
 	int i;
 
 	if (op.RasCheckEndDisCon == 1) {
-		RasDisconnect();
+		if (DoTimer == FALSE ||
+			op.RasCheckEndDisConTimeout==0 ||
+			TimedMessageBox(hWnd, STR_Q_RASDISCON, WINDOW_TITLE, MB_YESNO, op.RasCheckEndDisConTimeout) != IDNO) {
+			RasDisconnect();
+		}
 	}
 	SetMailMenu(hWnd);
 
@@ -2256,7 +2422,7 @@ static void EndSocketFunc(HWND hWnd)
 	}
 
 	if (EndThreadSortFlag == TRUE) {
-		// ソート
+		//Sort
 		SwitchCursor(FALSE);
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		if (op.LvThreadView == 1) {
@@ -2267,7 +2433,7 @@ static void EndSocketFunc(HWND hWnd)
 
 			i = ListView_GetNextNoReadItem(hListView, -1, ListView_GetItemCount(hListView));
 			if (i != -1) {
-				// 未開封メールを選択する
+				//The not yet opening mail is selected the
 				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				ListView_SetItemState(hListView, i,
 					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
@@ -2307,7 +2473,7 @@ static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag)
 	}
 
 	if (AllFlag == TRUE) {
-		// 巡回実行
+		//The loop of check and execution is avoided by the fact that it makes the round execution
 		ShowError = TRUE;
 		if (MailMarkCheck(hWnd, ((op.CheckEndExecNoDelMsg == 1) ? TRUE : FALSE), FALSE) == FALSE) {
 			ShowError = FALSE;
@@ -2389,9 +2555,9 @@ void SetNoReadCntTitle(HWND hWnd)
 }
 
 /*
- * NewMail_Massage - 新着メールチェック結果のメッセージ
+ * NewMail_Message - 新着メールチェック結果のメッセージ
  */
-static void NewMail_Massage(HWND hWnd, int cnt)
+static void NewMail_Message(HWND hWnd, int cnt)
 {
 	TCHAR *p;
 	int i, j;
@@ -2418,7 +2584,7 @@ static void NewMail_Massage(HWND hWnd, int cnt)
 		NewMail_Flag = TRUE;
 	}
 
-	// コンボボックスに新着ありを示す "*" を付加する
+	//of message box There is a new arrival in the ??????? and shows " * " it adds the
 	j = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0);
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if (SelBox == i || (MailBox + i)->NewMail == FALSE ||
@@ -2445,7 +2611,7 @@ static void NewMail_Massage(HWND hWnd, int cnt)
 
 	SetNoReadCntTitle(hWnd);
 
-	// 新着のメールボックスのインデックスを取得
+	//Index of mailbox of new arrival acquisition
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox + i)->NewMail == TRUE) {
 			break;
@@ -2463,10 +2629,10 @@ static void NewMail_Massage(HWND hWnd, int cnt)
 		}
 	}
 
-	// メッセージボックスの表示
+	//Indicatory
 #ifdef _WCE_OLD
-	// メッセージを表示しない設定か現在表示されているメールボックスの場合はメッセージボックスを出さない
-	if (ShowError == TRUE || op.ShowNewMailMessgae == 0 ||
+	//of message box The setting which does not indicate message in case of the mailbox which presently is indicated the message box is not produced the
+	if (ShowError == TRUE || op.ShowNewMailMessage == 0 ||
 		(AutoCheckFlag == FALSE && hWnd == GetForegroundWindow() && i == SelBox)) {
 		return;
 	}
@@ -2478,7 +2644,7 @@ static void NewMail_Massage(HWND hWnd, int cnt)
 	}
 #else
 	// メッセージを表示しない設定か現在表示されているメールボックスの場合はメッセージボックスを出さない
-	if (ShowError == TRUE || op.ShowNewMailMessgae == 0 || ShowMsgFlag == TRUE ||
+	if (ShowError == TRUE || op.ShowNewMailMessage == 0 || ShowMsgFlag == TRUE ||
 		(AutoCheckFlag == FALSE && hWnd == GetForegroundWindow() && i == SelBox)) {
 		return;
 	}
@@ -2530,7 +2696,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetWindowPos(hWnd, 0, op.MainRect.left, op.MainRect.top, op.MainRect.right, op.MainRect.bottom,
 			SWP_NOZORDER | SWP_HIDEWINDOW);
 #endif
-		// ウィンドウ内のコントロールの作成
+
+		//of initialization
 		if (InitWindow(hWnd) == FALSE) {
 			SwitchCursor(TRUE);
 			ErrorMessage(NULL, STR_ERR_INIT);
@@ -2543,7 +2710,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (op.SocLog == 1) log_clear(AppDir, LOG_FILE);
 		SwitchCursor(TRUE);
 
-		// タスクトレイの設定
+		//of control inside window Setting
 		TrayIcon_Main = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_NOCHECK),
 			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
 		TrayIcon_Check = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_CHECK),
@@ -2559,7 +2726,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetTimer(hWnd, ID_AUTOCHECK_TIMER, AUTOCHECKTIME, NULL);
 		}
 
-		// 初回起動時
+		//of timer for automatic operation check At the time of the first starting
 		if (first_start == TRUE) {
 			ShowWindow(hWnd, SW_SHOW);
 			SetMailBoxOption(hWnd);
@@ -2572,7 +2739,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
 		}
 
-		// コマンドラインのメールアドレスからメールの編集
+		//of check The compilation
 		if (CmdLine != NULL) {
 			SetTimer(hWnd, ID_NEWMAIL_TIMER, 1, NULL);
 		}
@@ -2604,7 +2771,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef _WIN32_WCE_LAGENDA
 	case COSH_EXECUTEAPP:
-		// 2重起動処理
+		//2 of the mail it is heavy from mail address of the command line the starting processing
 		{
 			TCHAR buf[BUF_SIZE];
 
@@ -2654,7 +2821,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (wParam == SIZE_MINIMIZED) {
 			confirm_flag = 1;
 		} 
-#endif	//_WIN32_WCE
+#endif
 		if (wParam == SIZE_MINIMIZED && op.ShowTrayIcon == 1 && op.MinsizeHide == 1) {
 			ShowWindow(hWnd, SW_HIDE);
 			return 0;
@@ -2666,15 +2833,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ShowWindow(hWnd, SW_MINIMIZE);
 			return 0;
 		}
-#endif	//_WIN32_WCE
-#ifndef _WIN32_WCE_LAGENDA
+#endif
 		SetWindowSize(hWnd, wParam, lParam);
-#endif	//_WIN32_WCE_LAGENDA
 #ifndef _WIN32_WCE
 		if (wParam != SIZE_MINIMIZED) {
 			confirm_flag = 0;
 		} 
-#endif	//_WIN32_WCE
+#endif
 		break;
 
 #ifndef _WIN32_WCE
@@ -2760,7 +2925,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (AllCheck == FALSE) {
 					if (op.CheckEndExec == 1 &&
 						CheckEndAutoExec(hWnd, RecvBox, NewMailCnt, FALSE) == TRUE) {
-						// チェック後実行
+						//After the checking execution
 						break;
 					}
 					if (ExecFlag == TRUE && op.CheckAfterUpdate == 1 && RecvBox != MAILBOX_SEND) {
@@ -2770,8 +2935,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						break;
 					}
 					RecvBox = -1;
-					EndSocketFunc(hWnd);
-					NewMail_Massage(hWnd, NewMailCnt);
+					EndSocketFunc(hWnd, TRUE);
+					NewMail_Message(hWnd, NewMailCnt);
 				} else {
 					RecvBox = -1;
 					SetMailMenu(hWnd);
@@ -2779,19 +2944,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			switch (recv_select(hWnd, g_soc)) {
-			// メモリエラー
+			//Memory error
 			case SELECT_MEM_ERROR:
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_MEMALLOC, RecvBox);
 				break;
 
-			// selectエラー
+			//select error
 			case SELECT_SOC_ERROR:
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_SOCK_SELECT, RecvBox);
 				break;
 
-			// 切断
+			//Cutting
 			case SELECT_SOC_CLOSE:
 				if (command_status != POP_QUIT) {
 					ErrorSocketEnd(hWnd, RecvBox);
@@ -2800,18 +2965,18 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					socket_close(hWnd, g_soc);
 					g_soc = -1;
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
-					SetItemCntStatusText(hWnd, NULL);
+					SetItemCntStatusText(hWnd, NULL, FALSE);
 				}
 				break;
 
-			// 受信データ有り
+			//There is a reception data, the
 			case SELECT_SOC_SUCCEED:
 				SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 				break;
 			}
 			break;
 #endif
-		// 1件送信
+		//1 case transmission
 		case ID_SMTP_ONE_TIMER:
 			if (g_soc != -1) {
 				break;
@@ -2828,12 +2993,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			KeyShowHeader = FALSE;
 			gSockFlag = FALSE;
 
-			// メールの送信
+			//Transmission
 			SendMail(hWnd, (MAILITEM *)wkSendMailItem, SMTP_SENDEND);
 			wkSendMailItem = NULL;
 			break;
 
-		// 送信
+		//of mail Transmission main.
 		case ID_SMTP_TIMER:
 			if (g_soc != -1) {
 				break;
@@ -2854,8 +3019,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (CheckBox >= MailBoxCnt) {
 				KillTimer(hWnd, wParam);
 				gSockFlag = FALSE;
-				EndSocketFunc(hWnd);
-				NewMail_Massage(hWnd, NewMailCnt);
+				EndSocketFunc(hWnd, TRUE);
+				NewMail_Message(hWnd, NewMailCnt);
 				break;
 			}
 			if ((MailBox + CheckBox)->PopBeforeSmtp != 0 &&
@@ -2872,7 +3037,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// 巡回チェック
+		//of mail Round check
 		case ID_CHECK_TIMER:
 			if (g_soc != -1) {
 				break;
@@ -2880,34 +3045,34 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 			CheckBox++;
 			if (CheckBox >= MailBoxCnt) {
-				// すべてのメールボックスのチェック完了
+				//Check completion
 				KillTimer(hWnd, wParam);
 				gSockFlag = FALSE;
 				if (op.CheckEndExec == 1 &&
 					CheckEndAutoExec(hWnd, 0, NewMailCnt, TRUE) == TRUE) {
-					// チェック後実行
+					//of all mailboxes After the checking execution
 					break;
 				}
-				EndSocketFunc(hWnd);
-				NewMail_Massage(hWnd, NewMailCnt);
+				EndSocketFunc(hWnd, TRUE);
+				NewMail_Message(hWnd, NewMailCnt);
 				AutoCheckFlag = FALSE;
 				break;
 			}
-			// 巡回しない設定のメールボックス
+			//It does not go around the mailbox
 			if ((MailBox + CheckBox)->CyclicFlag == 1) {
 				break;
 			}
-			// ダイヤルアップ開始
+			//of the setting which Dial rise start
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
 				SetMailMenu(hWnd);
 				break;
 			}
-			// メール受信開始
+			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
 			break;
 
-		// 巡回実行
+		//Round execution
 		case ID_EXEC_TIMER:
 			if (g_soc != -1) {
 				break;
@@ -2918,7 +3083,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 &&
 				item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox) != -1) {
-				// 送信メールの実行 (POP before SMTP)
+				//Execution of transmission mail (POP before SMTP)
 				SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +
 					item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox)), SMTP_NEXTSEND);
 				break;
@@ -2940,13 +3105,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					ExecItem(hWnd, MAILBOX_SEND);
 					break;
 				}
-				// 巡回実行終了
+				//Round execution end
 				gSockFlag = FALSE;
-				EndSocketFunc(hWnd);
-				NewMail_Massage(hWnd, NewMailCnt);
+				EndSocketFunc(hWnd, TRUE);
+				NewMail_Message(hWnd, NewMailCnt);
 				break;
 			}
-			// 巡回しない設定のメールボックス
+			//It does not go around the mailbox
 			if ((MailBox + CheckBox)->CyclicFlag == 1) {
 				break;
 			}
@@ -2960,7 +3125,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 			}
-			// マークを実行
+			//Mark execution
 			i = ExecItem(hWnd, CheckBox);
 			if ((MailBox + CheckBox)->PopBeforeSmtp != 0 &&
 				item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox) != -1) {
@@ -2973,7 +3138,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// 自動チェック
+		//Automatic check
 		case ID_AUTOCHECK_TIMER:
 			if (op.AutoCheck == 0) {
 				KillTimer(hWnd, wParam);
@@ -3001,7 +3166,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetTimer(hWnd, ID_CHECK_TIMER, CHECKTIME, NULL);
 			break;
 
-		// タイムアウト
+		//Timeout
 		case ID_TIMEOUT_TIMER:
 			if (g_soc == -1) {
 				KillTimer(hWnd, wParam);
@@ -3011,7 +3176,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SocketErrorMessage(hWnd, STR_ERR_SOCK_TIMEOUT, RecvBox);
 			break;
 
-		// 起動時メッセージ作成
+		//When starting waiting
 		case ID_NEWMAIL_TIMER:
 			KillTimer(hWnd, wParam);
 			if (CmdLine != NULL) {
@@ -3021,11 +3186,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 				}
 				mem_free(&CmdLine);
+				CmdLine = NULL;
 				break;
 			}
 			break;
 
-		// RASの待機
+		//ras Change
 		case ID_RASWAIT_TIMER:
 			KillTimer(hWnd, wParam);
 			if (hEvent != NULL) {
@@ -3037,7 +3203,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
-		// 表示アカウントの切り替え
+		//of message compilation
 		case IDC_COMBO:
 			if (HIWORD(wParam) == CBN_CLOSEUP) {
 				if (SelBox == SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0)) {
@@ -3049,7 +3215,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// 上のアカウントに移動
+		//of indicatory account In account above portable
 		case ID_KEY_ALTUP:
 			if (SelBox == 0) {
 				break;
@@ -3057,7 +3223,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, SelBox - 1);
 			break;
 
-		// 下のアカウントに移動
+		//In account under portable
 		case ID_KEY_ALTDOWN:
 			if (SelBox + 1 >= MailBoxCnt) {
 				break;
@@ -3065,19 +3231,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, SelBox + 1);
 			break;
 
-		// コンボボックスとリストビューのフォーカスを切り替える
+		//Focusing the ??????? and the list view is changed the
 		case ID_KEY_TAB:
 			if (GetFocus() == GetDlgItem(hWnd, IDC_LISTVIEW)) {
 				SetFocus(GetDlgItem(hWnd, IDC_COMBO));
 			} else {
 				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-				if (SelBox != SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0)) {
-					mailbox_select(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
-				}
+				// GJC: change mailbox when leaving account list (IDC_COMBO)
+				mailbox_select(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
+				SwitchCursor(TRUE);
 			}
 			break;
 
-		// 選択アイテムの位置にポップアップメニューを表示
+		//In position of selective item pop rise menu indicatory
 		case ID_KEY_SHOWMENU:
 		case ID_KEY_ESC:
 			if (IsWindowVisible(hWnd) == 0 ||
@@ -3109,7 +3275,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 			break;
 
-		// マウスの位置にポップアップメニューを表示
+		//In position of mouse pop rise menu indicatory
 		case ID_MENU:
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -3124,8 +3290,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 			break;
 
-		// ====== ファイル =========
-		// メッセージの作成
+		//====== file =========
+		//Compilation
 		case ID_MENUITEM_NEWMAIL:
 #ifndef _WIN32_WCE
 			if (op.ShowPass == 1 &&
@@ -3135,7 +3301,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
-			if (Edit_InitInstance(hInst, hWnd, -1, NULL, EDIT_NEW, 0) == EDIT_INSIDEEDIT) {
+			if (Edit_InitInstance(hInst, hWnd, -1, NULL, EDIT_NEW, NULL) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 				ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -3148,7 +3314,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				hWnd, AddressListProc, 0);
 			break;
 
-		// オプション
+		//Option
 		case ID_MENUITEM_OPTION:
 			SetOption(hWnd);
 
@@ -3172,7 +3338,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SwitchCursor(TRUE);
 			break;
 
-		// ダイヤルアップ接続
+		//of idea contest of task tray Dial rise connected
 		case ID_MENUITEM_RAS_CONNECT:
 			if (g_soc != -1) {
 				break;
@@ -3180,12 +3346,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SendMessage(hWnd, WM_RAS_START, SelBox, 0);
 			break;
 
-		// ダイヤルアップ切断
+		//During dial rise cutting
 		case ID_MENUITEM_RAS_DISCONNECT:
 			RasDisconnect();
 			break;
 
-		// LAN接続中
+		//lan connecting
 		case ID_MENUITEM_LAN:
 			op.EnableLAN = (op.EnableLAN == 1) ? 0 : 1;
 #ifdef _WIN32_WCE
@@ -3202,20 +3368,21 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetMailMenu(hWnd);
 			break;
 
-		// バージョン情報
+		//Version information
 		case ID_MENUITEM_ABOUT:
-			MessageBox(hWnd,
-				APP_NAME
-#ifdef UNICODE
-				TEXT(" (UNICODE)")
-#endif
-				TEXT("\nCopyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.\n\n")
-				TEXT("WEB SITE: http://www.nakka.com/\nE-MAIL: nakka@nakka.com"),
-				TEXT("About"), MB_OK | MB_ICONINFORMATION);
+	///////////// MRP /////////////////////
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), NULL, AboutBoxProc, 0);
+	///////////// --- /////////////////////
 			break;
 
-		// 終了
-		case ID_MENUITE_QUIT:
+	///////////// MRP /////////////////////
+		case ID_MENUITEM_SAVEALL:
+			SaveWindow(hWnd);
+			break;
+	///////////// --- /////////////////////
+
+		//End
+		case ID_MENUITEM_QUIT:
 			if (SaveWindow(hWnd) == FALSE) {
 				break;
 			}
@@ -3256,7 +3423,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// アカウントの削除
+		//of account Deletion
 		case ID_MENUITEM_DELETEMAILBOX:
 			if (SelBox == MAILBOX_SAVE || SelBox == MAILBOX_SEND || SelBox == RecvBox) {
 				break;
@@ -3270,17 +3437,33 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, mailbox_delete(hWnd, SelBox));
 			break;
 
-		// アカウントを上に移動
+		case ID_MENUITEM_PREVMAILBOX:
+			i = SelBox - 1;
+			if (i < MAILBOX_SAVE) {
+				i = MailBoxCnt-1;
+			}
+			mailbox_select(hWnd, i);
+			break;
+
+		case ID_MENUITEM_NEXTMAILBOX:
+			i = SelBox + 1;
+			if (i >= MailBoxCnt) {
+				i = MAILBOX_SAVE;
+			}
+			mailbox_select(hWnd, i);
+			break;
+
+		//of account Account on portable
 		case ID_MENUITEM_MOVEUPMAILBOX:
 			mailbox_move_up(hWnd);
 			break;
 
-		// アカウントを下に移動
+		//Account under portable
 		case ID_MENUITEM_MOVEDOWNMAILBOX:
 			mailbox_move_down(hWnd);
 			break;
 
-		// アイコン順にソート
+		//In idea contest order sort
 		case ID_MENUITEM_ICONSORT:
 			op.LvThreadView = 0;
 #ifdef _WIN32_WCE
@@ -3294,8 +3477,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #else
 			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_THREADVIEW, MF_UNCHECKED);
 #endif
-			LvSortFlag = (ABS(LvSortFlag) == (SORT_IOCN + 1)) ? (LvSortFlag * -1) : (SORT_IOCN + 1);
-			// ソート
+			LvSortFlag = (ABS(LvSortFlag) == (SORT_ICON + 1)) ? (LvSortFlag * -1) : (SORT_ICON + 1);
+			//Sort
 			SwitchCursor(FALSE);
 			ListView_SortItems(GetDlgItem(hWnd, IDC_LISTVIEW), CompareFunc, LvSortFlag);
 			SwitchCursor(TRUE);
@@ -3308,7 +3491,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// スレッド表示
+		//Thread indicatory
 		case ID_MENUITEM_THREADVIEW:
 			SwitchCursor(FALSE);
 			if (op.LvThreadView == 1) {
@@ -3337,7 +3520,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				ListView_GetNextItem(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVNI_FOCUSED), TRUE);
 			break;
 
-		// 新着取得位置の初期化
+		//Initialization
 		case ID_MENUITEM_LISTINIT:
 			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INITMAILBOX),
 				hWnd, InitMailBoxProc, (LPARAM)(MailBox + SelBox)) == FALSE) {
@@ -3347,8 +3530,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			(MailBox + SelBox)->LastMessageId = NULL;
 			break;
 
-		// ====== 送受信 =========
-		// 新着チェック
+		//of new arrival acquisition position ====== sending and receiving =========
+		//New arrival check
 		case ID_MENUITEM_RECV:
 			if (g_soc != -1) {
 				break;
@@ -3365,11 +3548,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			NewMailCnt = 0;
 			Init_NewMailFlag();
 
-			// メール受信開始
+			//Mail reception start
 			RecvMailList(hWnd, i, FALSE);
 			break;
 
-		// 巡回チェック
+		//Round check
 		case ID_MENUITEM_ALLCHECK:
 			if (g_soc != -1 || ShowError == TRUE) {
 				break;
@@ -3387,7 +3570,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SendMessage(hWnd, WM_TIMER, ID_CHECK_TIMER, 0);
 			break;
 
-		// マークしたものを実行
+		//Those which it marks the execution
 		case ID_MENUITEM_EXEC:
 			if (g_soc != -1) {
 				break;
@@ -3402,7 +3585,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (item_get_next_delete_mark((MailBox + SelBox), -1, NULL) != -1) {
-				if (MessageBox(hWnd, STR_Q_DELSERVERMAIL,
+				if (ParanoidMessageBox(hWnd, STR_Q_DELSERVERMAIL,
 					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 					ShowError = FALSE;
 					break;
@@ -3421,11 +3604,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				NewMailCnt = 0;
 				Init_NewMailFlag();
 			}
-			// マークを実行
+			//Mark execution
 			ExecItem(hWnd, i);
 			break;
 
-		// 巡回実行
+		//Round execution
 		case ID_MENUITEM_ALLEXEC:
 			if (g_soc != -1) {
 				break;
@@ -3451,7 +3634,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SendMessage(hWnd, WM_TIMER, ID_EXEC_TIMER, 0);
 			break;
 
-		// 中止
+		//Discontinuance
 		case ID_MENUITEM_STOP:
 			KillTimer(hWnd, ID_SMTP_TIMER);
 			KillTimer(hWnd, ID_SMTP_ONE_TIMER);
@@ -3471,15 +3654,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc == -1 || GetHostFlag == TRUE) {
 				g_soc = -1;
 				RecvBox = -1;
-				EndSocketFunc(hWnd);
+				EndSocketFunc(hWnd, FALSE);
 				break;
 			}
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				RecvBox = -1;
-				SetItemCntStatusText(hWnd, NULL);
-				EndSocketFunc(hWnd);
+				SetItemCntStatusText(hWnd, NULL, FALSE);
+				EndSocketFunc(hWnd, FALSE);
 				break;
 			}
 			command_status = POP_QUIT;
@@ -3489,8 +3672,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			send_buf(g_soc, CMD_QUIT"\r\n");
 			break;
 
-		// ====== メール =========
-		// 開く
+		//====== mail =========
+		//You open the
 		case ID_KEY_ENTER:
 			if (GetFocus() == GetDlgItem(hWnd, IDC_COMBO)) {
 				SendDlgItemMessage(hWnd, IDC_COMBO, CB_SHOWDROPDOWN,
@@ -3505,12 +3688,23 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			OpenItem(hWnd, TRUE, FALSE);
 			break;
 
-		// 返信
+		//Reply
+		// (for SENDBOX, this menuitem ID is associated with "Property")
 		case ID_MENUITEM_REMESSEGE:
-			ReMessageItem(hWnd);
+			ReMessageItem(hWnd, EDIT_REPLY);
 			break;
 
-		// 受信用マークの切り替え
+		//ReplyAll
+		case ID_MENUITEM_ALLREMESSEGE:
+			ReMessageItem(hWnd, EDIT_REPLYALL);
+			break;
+
+		//Forward
+		case ID_MENUITEM_FORWARD:
+			ReMessageItem(hWnd, EDIT_FORWARD);
+			break;
+
+		//Change
 		case ID_KEY_CTRLENTER:
 			if (SelBox == MAILBOX_SAVE || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
@@ -3518,7 +3712,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetDownloadMark(hWnd, TRUE);
 			break;
 
-		// 受信用にマーク
+		//of mark for reception In one for reception mark
 		case ID_MENUITEM_DOWNMARK:
 			if (SelBox == MAILBOX_SAVE || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
@@ -3526,7 +3720,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetDownloadMark(hWnd, FALSE);
 			break;
 
-		// 削除用にマーク
+		//In one for deletion mark
 		case ID_MENUITEM_DELMARK:
 			if (SelBox == MAILBOX_SAVE || SelBox == MAILBOX_SEND || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
@@ -3534,7 +3728,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetDeleteMark(hWnd);
 			break;
 
-		// マーク解除
+		//Mark cancellation
 		case ID_MENUITEM_UNMARK:
 			if (SelBox == RecvBox && ExecFlag == TRUE) {
 				break;
@@ -3542,7 +3736,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			UnMark(hWnd);
 			break;
 
-		// 開封済みにする
+		//It makes the opening being completed the
 		case ID_MENUITEM_READMAIL:
 			if (SelBox == MAILBOX_SEND) {
 				break;
@@ -3550,7 +3744,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetMailStats(hWnd, ICON_READ);
 			break;
 
-		// 未開封にする
+		//Not yet you open the
 		case ID_MENUITEM_NOREADMAIL:
 			if (SelBox == MAILBOX_SEND) {
 				break;
@@ -3558,8 +3752,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetMailStats(hWnd, ICON_MAIL);
 			break;
 
-		// 保存箱へコピー
-		case ID_MENUITE_SAVECOPY:
+		//To retention box copy
+		case ID_MENUITEM_SAVECOPY:
 			ItemToSaveBox(hWnd);
 			if (op.AutoSave == 1) {
 				// 保存箱の保存
@@ -3567,38 +3761,38 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// 一覧から削除
+		//of retention box From summary deletion
 		case ID_MENUITEM_DELETE:
 			ListDeleteItem(hWnd);
 			break;
 
-		// すべて選択
+		//Entirely the selective
 		case ID_MENUITEM_ALLSELECT:
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 			ListView_SetItemState(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
 			break;
 
-		// アカウントの切り替え
+		//Change
 		case ID_MENUITEM_CHANGEMAILBOX:
 			SetFocus(GetDlgItem(hWnd, IDC_COMBO));
 			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SHOWDROPDOWN, TRUE, 0);
 			break;
 
 #ifdef _WIN32_WCE_PPC
-		// 選択モード
+		//of account Selective mode
 		case ID_MENUITEM_SELMODE:
 			SelMode = !SelMode;
 			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), ID_MENUITEM_SELMODE, (SelMode == TRUE) ? MF_CHECKED : MF_UNCHECKED);
 			break;
 #elif defined(_WIN32_WCE_LAGENDA)
-		// 選択モード
+		//Selective mode
 		case ID_MENUITEM_SELMODE:
 			SelMode = !SelMode;
 			CheckMenuItem(GetSubMenu(hMainMenu, 1), ID_MENUITEM_SELMODE, (SelMode == TRUE) ? MF_CHECKED : MF_UNCHECKED);
 			break;
 #endif
 
-		// 一覧画面の表示
+		//Indicatory
 		case ID_MENUITEM_RESTORE:
 #ifdef _WIN32_WCE
 			CloseViewWindow(1);
@@ -3619,12 +3813,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			_SetForegroundWindow(hWnd);
 			break;
 
-		// ウィンドウの表示
+		//of summary picture Indicatory
 		case ID_MENUITEM_SHOWLASTWINDOW:
 			SendMessage(hWnd, WM_SHOWLASTWINDOW, 0, 0);
 			break;
 
-		// 検索
+		//of window Searching
 		case ID_MENUITEM_FIND:
 			if (SelBox == MAILBOX_SEND) {
 				break;
@@ -3635,7 +3829,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		// 次を検索
+		//The next searching
 		case ID_MENUITEM_NEXTFIND:
 			if (SelBox == MAILBOX_SEND) {
 				break;
@@ -3648,7 +3842,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		break;
 
-	// ダイヤルアップの開始
+	//Start
 	case WM_RAS_START:
 		return RasMailBoxStart(hWnd, wParam);
 
@@ -3664,7 +3858,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		return DefWindowProc(hWnd, msg, wParam, lParam);
 #endif
 
-	// タスクトレイメッセージ
+	//of dial rise Task tray message
 	case WM_TRAY_NOTIFY:
 #ifdef _WIN32_WCE_LAGENDA
 		EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
@@ -3721,11 +3915,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		}
-		/* 処理すべきソケットか判定 */
+		// It should process the socket or decision
 		if (g_soc != (int)wParam) {
 			break;
 		}
-		/* ソケットイベント毎の処理を行う */
+		// which It processes every socket event the
 		switch (WSAGETSELECTEVENT(lParam)) {
 		case FD_CONNECT:					/* サーバへの接続が完了した事を示すイベント */
 			{
@@ -3771,11 +3965,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
-				SetItemCntStatusText(hWnd, NULL);
+				SetItemCntStatusText(hWnd, NULL, FALSE);
 				if (AllCheck == FALSE) {
 					if (op.CheckEndExec == 1 &&
 						CheckEndAutoExec(hWnd, RecvBox, NewMailCnt, FALSE) == TRUE) {
-						// チェック後実行
+						//After the checking execution
 						break;
 					}
 					if (ExecFlag == TRUE && op.CheckAfterUpdate == 1 && RecvBox != MAILBOX_SEND) {
@@ -3785,8 +3979,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						break;
 					}
 					RecvBox = -1;
-					EndSocketFunc(hWnd);
-					NewMail_Massage(hWnd, NewMailCnt);
+					EndSocketFunc(hWnd, TRUE);
+					NewMail_Message(hWnd, NewMailCnt);
 				} else {
 					RecvBox = -1;
 					SetMailMenu(hWnd);
@@ -3797,7 +3991,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		break;
 #endif
 
-	// ソケットの受信メッセージ
+	//Reception message
 	case WM_SOCK_RECV:
 		{
 			TCHAR ErrStr[BUF_SIZE];
@@ -3817,7 +4011,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		return TRUE;
 
-	// メール送信
+	//of socket Mail transmission
 	case WM_SMTP_SENDMAIL:
 		if (g_soc != -1 || lParam == 0) {
 			break;
@@ -3843,7 +4037,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetTimer(hWnd, ID_SMTP_ONE_TIMER, SMTPTIME, NULL);
 		break;
 
-	// リストビューのイベント
+	//Event
 	case WM_LV_EVENT:
 		switch (wParam) {
 		case LVN_ITEMCHANGED:
@@ -3894,12 +4088,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		break;
 
-	// ステータスバーに文字列を表示
+	//of list view In status bar character string indicatory
 	case WM_STATUSTEXT:
 		SetStatusTextT(hWnd, (TCHAR *)lParam, 1);
 		break;
 
-	// ウィンドウの表示
+	//Indicatory
 	case WM_SHOWLASTWINDOW:
 #ifdef _WIN32_WCE
 		if (IsWindow(FocusWnd) == 0) {
@@ -4024,22 +4218,22 @@ BOOL MessageFunc(HWND hWnd, MSG *msg)
 	fWnd = GetForegroundWindow();
 	if (fWnd == NULL) {
 
-	// メインウィンドウのアクセラレータ
+	//of window Accelerator
 	} else if (fWnd == hWnd &&
 		TranslateAccelerator(fWnd, hAccel, msg) == TRUE) {
 		return TRUE;
 
-	// メール表示ウィンドウのアクセラレータ
+	//of main window Accelerator
 	} else if (fWnd == hViewWnd &&
 		TranslateAccelerator(fWnd, hViewAccel, msg) == TRUE) {
 		return TRUE;
 
-	// メール到着通知ウィンドウ
+	//of mail indicatory window Mail arrival notification window
 	} else if (fWnd == MsgWnd &&
 		IsDialogMessage(fWnd, msg) != 0) {
 		return TRUE;
 
-	// メール編集ウィンドウのアクセラレータ
+	//Accelerator
 	} else if (TranslateAccelerator(fWnd, hEditAccel, msg) == TRUE) {
 		return TRUE;
 	}
@@ -4047,6 +4241,19 @@ BOOL MessageFunc(HWND hWnd, MSG *msg)
 	DispatchMessage(msg);
 	return TRUE;
 }
+
+
+// Dummy function for debugging
+void testFunction()
+{
+	TCHAR szText[] = {TEXT("This is some long test text to debug where line breaks are")}; 
+	TCHAR szText2[] = {TEXT("This is some long test,   text,   to,   debug,   where,   line,   breaks,   are")}; 
+	TCHAR szBuffer[1000];
+
+	WordBreakString(szText, szBuffer, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
+	WordBreakString(szText2, szBuffer, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
+}
+
 
 /*
  * WinMain - メイン
@@ -4066,7 +4273,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 #ifndef _DEBUG
 #ifdef _WCE_OLD
-	// ２重起動起動防止
+	//of mail compilation window Double starting starting prevention
 	if ((hWnd = FindWindow(MAIN_WND_CLASS, NULL)) != NULL) {
 		if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
 			COPYDATASTRUCT cpdata;
@@ -4080,7 +4287,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 #else	// _WCE_OLD
-	// ２重起動起動防止
+	//Double starting starting prevention
 	hMutex = CreateMutex(NULL, TRUE, STR_MUTEX);
 	if (GetLastError() == ERROR_ALREADY_EXISTS) {
 		hWnd = FindWindow(MAIN_WND_CLASS, NULL);
@@ -4113,7 +4320,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif	// _WCE_OLD
 #endif	// _DEBUG
 
-	// アプリケーションの作業パスの取得
+	//Acquisition
 	if (GetAppPath(hInstance) == FALSE) {
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
@@ -4125,7 +4332,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #ifndef _WIN32_WCE
 	{
 		int TmpCmdShow;
-		// 起動パスワードのチェック
+		//of job pass of application Check
 		TmpCmdShow = CmdShow;
 		if (ini_start_auth_check() == FALSE) {
 			mem_free(&AppDir);
@@ -4141,7 +4348,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 #endif
 
-	// 初期化
+	//of starting password Initialization
 	if (WSAStartup(0x101, &WsaData) != 0) {
 		mem_free(&AppDir);
 		if (hMutex != NULL) {
@@ -4150,7 +4357,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
 	}
+#ifndef _WCE_OLD
 	charset_init();
+#endif
 	InitCommonControls();
 	initRas();
 
@@ -4158,13 +4367,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SipShowIM(SIPF_OFF);
 #endif
 	
-	// ウィンドウクラス登録
+	//Window class register
 	if (!InitApplication(hInstance) || !View_InitApplication(hInstance)
 		|| !Edit_InitApplication(hInstance)) {
 		mem_free(&AppDir);
 		WSACleanup();
 		FreeRas();
+#ifndef _WCE_OLD
 		charset_uninit();
+#endif
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -4197,7 +4408,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		mem_free(&AppDir);
 		WSACleanup();
 		FreeRas();
+#ifndef _WCE_OLD
 		charset_uninit();
+#endif
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -4205,15 +4418,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 
-	// リソースからポップアップメニューをロード
+	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
 
-	// リソースからアクセラレータをロード
+	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
 	hViewAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR_VIEW));
 	hEditAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR_EDIT));
 
-	// メッセージループ
+	nBroadcastMsg = RegisterWindowMessage(BROADCAST_STRING);
+
+#ifdef _DEBUG
+	testFunction();
+#endif
+
+	//Message loop
 	while (GetMessage(&msg, NULL, 0, 0) == TRUE) {
 		MessageFunc(hWnd, &msg);
 	}
@@ -4226,7 +4445,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	free_ssl();
 	WSACleanup();
 	FreeRas();
+#ifndef _WCE_OLD
 	charset_uninit();
+#endif
 	if (hMutex != NULL) {
 		CloseHandle(hMutex);
 	}
@@ -4235,6 +4456,66 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	return 0;
 }
+
+
+/********
+ * Paranoid Messagebox
+ * Added PHH 4-Oct-2003
+ */
+
+int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle)
+{
+   if (op.ExpertMode == 1)
+	{
+		return IDYES;
+	}
+	else
+	{
+      return MessageBox(hWnd, strMsg, strTitle, nStyle);
+	}
+}
+
+/* MessageBoxTimer - callback for TimedMessageBox
+ */
+void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime)
+{
+	g_bTimedOut = TRUE;
+	if (g_hwndTimedOwner)
+		EnableWindow(g_hwndTimedOwner, TRUE);
+	PostQuitMessage(0);
+}
+
+/* TimedMessageBox - message box that auto-answers after a delay
+ */
+static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout)
+{
+	UINT idTimer;
+	int iResult;
+
+	g_hwndTimedOwner = NULL;
+	g_bTimedOut = FALSE;
+
+	if (hWnd && IsWindowEnabled(hWnd))
+		g_hwndTimedOwner = hWnd;
+
+	idTimer = SetTimer(NULL, 0, dwTimeout*1000, (TIMERPROC)MessageBoxTimer);
+
+	iResult = MessageBox(hWnd, strMsg, strTitle, nStyle);
+
+	KillTimer(NULL, idTimer);
+
+	if (g_bTimedOut) {
+		MSG msg;
+		PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
+		iResult = -1;
+	}
+
+	return iResult;
+}
+
+/***
+ * Console startup
+ */
 
 #ifndef _WIN32_WCE
 #ifndef UNICODE
@@ -4245,7 +4526,7 @@ void __cdecl WinMainCRTStartup(void)
 	char *cmdline;
 	int ret;
 
-	// コマンドラインの作成
+	//Compilation
 	cmdline = GetCommandLine();
     if (*cmdline == '"') {
 		for (cmdline++; *cmdline != '\0' && *cmdline != '"'; cmdline++);
@@ -4255,15 +4536,18 @@ void __cdecl WinMainCRTStartup(void)
 	}
 	for (; *cmdline == ' '; cmdline++);
 
-	// 起動時の情報の取得
+	//of command line Call
 	stinfo.cb = sizeof(STARTUPINFO);
 	stinfo.dwFlags = STARTF_USESHOWWINDOW;
 	GetStartupInfo(&stinfo);
 
-	// WinMainの呼び出し
+	//WinMain of information when starting End
 	ret = WinMain(GetModuleHandle(NULL), NULL, cmdline, stinfo.wShowWindow);
-	// プロセスの終了
+	//of acquisition
 	ExitProcess(ret);
+}
+int main(void) {
+	return 0;
 }
 #endif
 #endif

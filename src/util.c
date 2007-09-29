@@ -29,13 +29,8 @@
 #define MAILADDR_END		3
 #define COMMENT_END			4
 
-#define DEF_TIME_ZONE		900
-
 #define NULLCHECK_STRLEN(m)	((m != NULL) ? lstrlen(m) : 0)
-#define is_alnum_wrap(c)		((c >= TEXT('a') && c <= TEXT('z')) || \
-								(c >= TEXT('A') && c <= TEXT('Z')) || \
-								c == TEXT('\'') || \
-								(c >= TEXT('0') && c <= TEXT('9')))
+#define is_white(c)	(c == TEXT(' ') || c == TEXT('\r') || c == TEXT('\t') || c == TEXT('\0'))
 
 /* Global Variables */
 extern OPTION op;
@@ -443,11 +438,10 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
 	int f = 1;
 
 	if (sTime == NULL || tmz == -1) {
-		// タイムゾーンの取得
-		tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-		tmz = tmz * 60 / 100;
-
-		if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
+		if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+			tmz = _ttoi(op.TimeZone);
+			tmz = (tmz / 100) * 60 + tmz - (tmz / 100) * 100;
+		} else {
 			ret = GetTimeZoneInformation(&tmzi);
 			if (ret != 0xFFFFFFFF) {
 				switch (ret) {
@@ -662,7 +656,7 @@ static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 /*
  * DateConv - 日付形式の変換を行う (RFC 822, RFC 2822)
  */
-int DateConv(char *buf, char *ret)
+int DateConv(char *buf, char *ret, BOOL for_sort)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -689,15 +683,26 @@ int DateConv(char *buf, char *ret)
 		return -1;
 	}
 
-	fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
-	if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
-	}
-	fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
-	if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
+	if (for_sort) {
+		if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+	} else {
+		fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
+		if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
+		if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
 	}
 
 #ifdef UNICODE
@@ -710,9 +715,9 @@ int DateConv(char *buf, char *ret)
 }
 
 /*
- * SortDateConv - ソート用の日付形式変換を行う
+ * DateUnConv - ソート用の日付形式変換を行う
  */
-int SortDateConv(char *buf, char *ret)
+int DateUnConv(char *buf, char *ret)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -820,12 +825,15 @@ int SortDateConv(char *buf, char *ret)
 		tstrcpy(ret, buf);
 		return -1;
 	}
+	if (gTime.wYear < 70) {
+		gTime.wYear += 2000;
+	}
 
-	if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+	if (GetDateFormat(0, 0, &gTime, TEXT("ddd, dd MMM yyyy "), fDay, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
-	if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+	if (GetTimeFormat(0, 0, &gTime, TEXT("HH:mm:ss"), fTime, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
@@ -861,14 +869,15 @@ void GetTimeString(TCHAR *buf)
 
 	GetLocalTime(&st);
 
-	tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-	if (tmz < 0) {
-		tmz *= -1;
-		c = TEXT('-');
+	if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+		tmz = _ttoi(op.TimeZone);
+		if (tmz < 0) {
+			tmz *= -1;
+			c = TEXT('-');
+		} else {
+			c = TEXT('+');
+		}
 	} else {
-		c = TEXT('+');
-	}
-	if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
 		ret = GetTimeZoneInformation(&tmzi);
 		if (ret != 0xFFFFFFFF) {
 			switch (ret) {
@@ -890,7 +899,7 @@ void GetTimeString(TCHAR *buf)
 			}
 			tmz = (tmzi.Bias / 60) * 100 + tmzi.Bias % 60;
 		}
-	}
+	} 
 	wsprintf(buf, TEXT("%s, %d %s %d %02d:%02d:%02d %c%04d"), Week[st.wDayOfWeek],
 		st.wDay, Month[st.wMonth - 1], st.wYear, st.wHour, st.wMinute, st.wSecond, c, tmz);
 }
@@ -1043,7 +1052,7 @@ void EncodeCtrlChar(TCHAR *buf, TCHAR *ret)
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1085,7 +1094,7 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1145,22 +1154,27 @@ TCHAR *CreateMessageId(long id, TCHAR *MailAddress)
 /*
  * CreateHeaderStringSize - ヘッダ文字列を作成したときのサイズ
  */
-int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
+int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
 	TCHAR *p;
 	int ret = 0;
+	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
 
 	if (buf == NULL) {
 		return 0;
 	}
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			ret += 2;
 			continue;
 		}
 #endif
+		if (quotlen > 0 && *p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+			p++;
+			ret += 2 + quotlen;
+		}
 		if (*p != TEXT('%')) {
 			ret++;
 			continue;
@@ -1175,8 +1189,12 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 			ret += NULLCHECK_STRLEN(tpMailItem->MessageID);
 			break;
 
-		case TEXT('D'): case TEXT('d'):
+		case TEXT('D'):
 			ret += NULLCHECK_STRLEN(tpMailItem->Date);
+			break;
+		
+		case TEXT('d'):
+			ret += NULLCHECK_STRLEN(tpMailItem->FmtDate);
 			break;
 
 		case TEXT('S'): case TEXT('s'):
@@ -1209,21 +1227,31 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 /*
  * CreateHeaderString - ヘッダ文字列の作成
  */
-TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
+TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
 	TCHAR *p, *r, *t;
+	int i;
+	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
 
 	if (buf == NULL) {
 		return ret;
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
 		}
 #endif
+		if (quotlen > 0 && *p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+			*(r++) = *(p++); 
+			*(r++) = *p;
+			for (i=0; i<quotlen; i++) {
+				*(r++) = quotstr[i];
+			}
+			continue;
+		}
 		if (*p != TEXT('%')) {
 			*(r++) = *p;
 			continue;
@@ -1243,8 +1271,11 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
 			break;
 
 		// Date:
-		case TEXT('D'): case TEXT('d'):
+		case TEXT('D'):
 			t = tpMailItem->Date;
+			break;
+		case TEXT('d'):
+			t = tpMailItem->FmtDate;
 			break;
 
 		// Subject:
@@ -1343,24 +1374,16 @@ TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr)
 
 /*
  * SetDotSize - ピリオドから始まる行の先頭にピリオドを付加するためのサイズの取得
- *	(行頭の "From:" は ">From:" に変換)
  */
 
 int SetDotSize(TCHAR *buf)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p;
 	int len = 0;
 
 	p = buf;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
-		len++;
-	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
-			len++;
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
 			len++;
 		}
 		len++;
@@ -1370,28 +1393,17 @@ int SetDotSize(TCHAR *buf)
 
 /*
  * SetDot - ピリオドから始まる行の先頭にピリオドを付加する
- *	(行頭の "From:" は ">From:" に変換)
  */
 
 void SetDot(TCHAR *buf, TCHAR *ret)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p, *r;
 
 	p = buf;
 	r = ret;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
-		*(r++) = TEXT('>');
-	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			*(r++) = TEXT('.');
-
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
-			*(r++) = *(p++);
-			*(r++) = *(p++);
-			*(r++) = TEXT('>');
 		}
 		*(r++) = *p;
 	}
@@ -1439,30 +1451,6 @@ static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag)
 	}
 }
 
-/*
- * sReturnCheck - 半角文字の禁則チェック
- */
-static void sReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag)
-{
-	TCHAR *t;
-
-	if (op.sOida != NULL) {
-		for (t = op.sOida; *t != TEXT('\0'); t++) {
-			if (*p == *t) {
-				*TopFlag = TRUE;
-				return;
-			}
-		}
-	}
-	if (op.sBura != NULL) {
-		for (t = op.sBura; *t != TEXT('\0'); t++) {
-			if (*p == *t) {
-				*EndFlag = TRUE;
-				return;
-			}
-		}
-	}
-}
 
 /*
  * WordBreakStringSize - 文字列を指定の長さで折り返したときのサイズ
@@ -1472,6 +1460,8 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 	TCHAR *p, *s;
 	int cnt = 0;
 	int ret = 0;
+	int quotlen = (str == NULL) ? 0 : lstrlen(str);
+	BOOL Quoting = FALSE;
 	BOOL Flag = FALSE;
 	BOOL TopFlag;
 	BOOL EndFlag;
@@ -1482,14 +1472,15 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 
 	p = buf;
 
-	if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+	if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 		Flag = BreakFlag;
+		Quoting = TRUE;
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 #endif
 			TopFlag = FALSE;
 			EndFlag = FALSE;
@@ -1501,6 +1492,10 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 				((cnt + 2) == BreakCnt && TopFlag == TRUE))) {
 				cnt = 0;
 				ret += 2;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			cnt += 2;
 			p += CSTEP;
@@ -1510,10 +1505,12 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 			cnt = 0;
 			p += 2;
 			ret += 2;
-			if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
+				Quoting = TRUE;
 			} else {
 				Flag = FALSE;
+				Quoting = FALSE;
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -1521,44 +1518,38 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 			if (Flag == FALSE && cnt > BreakCnt) {
 				cnt = (TABSTOPLEN - (cnt % TABSTOPLEN));
 				ret += 2;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			p++;
 			ret++;
 
-		} else if (is_alnum_wrap(*p)) {
-			for (s = p; is_alnum_wrap(*p); p++) {
-				cnt++;
-			}
-			if (*p == TEXT(' ')) {
-				cnt++;
+		} else if (*p == TEXT(' ')) {
+			if (cnt == 0 || (Quoting == TRUE && cnt == quotlen)) {
+				// remove spaces at start of line
+				p++;
+			} else {
+				if (Flag == TRUE || cnt < BreakCnt) {
+					cnt++;
+					ret++;
+				}
 				p++;
 			}
+		} else {
+			for (s = p; !(is_white(*p)); p++) {
+				cnt++;
+			}
 			if (Flag == FALSE && cnt > BreakCnt) {
-				if (cnt != p - s) {
-					ret += 2;
-				}
+				ret += 2;
 				cnt = p - s;
+				if (Quoting == TRUE) {
+					ret += quotlen;
+					cnt += quotlen;
+				}
 			}
 			ret += p - s;
-
-		} else {
-			TopFlag = FALSE;
-			EndFlag = FALSE;
-			if (Flag == FALSE && (cnt + 1) >= BreakCnt) {
-				sReturnCheck(p, &TopFlag, &EndFlag);
-			}
-
-			if (Flag == FALSE && (((cnt + 1) > BreakCnt && EndFlag == FALSE) ||
-				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
-				cnt = 0;
-				ret += 2;
-				while (*p == TEXT(' ')) {
-					p++;
-				}
-			}
-			cnt++;
-			p++;
-			ret++;
 		}
 	}
 	return ret;
@@ -1570,7 +1561,9 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 {
 	TCHAR *p, *r, *s;
-	int cnt = 0;
+	int i, cnt = 0;
+	int quotlen = (str == NULL) ? 0 : lstrlen(str);
+	BOOL Quoting = FALSE;
 	BOOL Flag = FALSE;
 	BOOL TopFlag;
 	BOOL EndFlag;
@@ -1583,14 +1576,15 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 	p = buf;
 	r = ret;
 
-	if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+	if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 		Flag = BreakFlag;
+		Quoting = TRUE;
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 #endif
 			// 2バイトコード
 			TopFlag = FALSE;
@@ -1604,6 +1598,12 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 				cnt = 0;
 				*(r++) = TEXT('\r');
 				*(r++) = TEXT('\n');
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			cnt += 2;
 			*(r++) = *(p++);
@@ -1616,10 +1616,13 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 			cnt = 0;
 			*(r++) = *(p++);
 			*(r++) = *(p++);
-			if (str != NULL && str_cmp_ni_t(p, str, lstrlen(str)) == 0) {
+			cnt = 0;
+			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
+				Quoting = TRUE;
 			} else {
 				Flag = FALSE;
+				Quoting = FALSE;
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -1629,47 +1632,46 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 				cnt = (TABSTOPLEN - (cnt % TABSTOPLEN));
 				*(r++) = TEXT('\r');
 				*(r++) = TEXT('\n');
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			*(r++) = *(p++);
 
-		} else if (is_alnum_wrap(*p)) {
-			// 英数字は途中改行しない
-			for (s = p; is_alnum_wrap(*p); p++) {
-				cnt++;
-			}
-			if (*p == TEXT(' ')) {
-				cnt++;
+		} else if (*p == TEXT(' ')) {
+			if (cnt == 0 || (Quoting == TRUE && cnt == quotlen)) {
+				// remove spaces at start of line
 				p++;
+			} else {
+				if (Flag == TRUE || cnt < BreakCnt) {
+					*(r++) = *(p++);
+					cnt++;
+				} else {
+					p++;
+				}
+			}
+
+		} else {
+			for (s = p; !(is_white(*p)); p++) {
+				cnt++;
 			}
 			if (Flag == FALSE && cnt > BreakCnt) {
-				if (cnt != p - s) {
-					*(r++) = TEXT('\r');
-					*(r++) = TEXT('\n');
-				}
+				*(r++) = TEXT('\r');
+				*(r++) = TEXT('\n');
 				cnt = p - s;
+				if (Quoting == TRUE) {
+					cnt += quotlen;
+					for (i=0; i<quotlen; i++) {
+						*(r++) = str[i];
+					}
+				}
 			}
 			for (; s != p; s++) {
 				*(r++) = *s;
 			}
-
-		} else {
-			TopFlag = FALSE;
-			EndFlag = FALSE;
-			if (Flag == FALSE && (cnt + 1) >= BreakCnt) {
-				sReturnCheck(p, &TopFlag, &EndFlag);
-			}
-
-			if (Flag == FALSE && (((cnt + 1) > BreakCnt && EndFlag == FALSE) ||
-				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
-				cnt = 0;
-				*(r++) = TEXT('\r');
-				*(r++) = TEXT('\n');
-				while (*p == TEXT(' ')) { // GJC strip leading spaces
-					p++;
-				}
-			}
-			cnt++;
-			*(r++) = *(p++);
 		}
 	}
 	*r = TEXT('\0');
@@ -1775,7 +1777,7 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			continue;
 		}
@@ -1812,7 +1814,7 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1893,7 +1895,7 @@ TCHAR *GetMailString(TCHAR *buf, TCHAR *ret)
 	for (p = buf; *p == TEXT(' '); p++);
 	for (r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1950,7 +1952,7 @@ void SetUserName(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -2031,7 +2033,7 @@ TCHAR *GetFileNameString(TCHAR *p)
 
 	for (fname = p; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			continue;
 		}
@@ -2162,7 +2164,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
 		// ファイル名から Content type を取得
 		for (r = p = Filename; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 				p++;
 				continue;
 			}
@@ -2193,7 +2195,7 @@ static int GetCommandLineSize(TCHAR *buf, TCHAR *filename)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			ret += 2;
 			continue;
@@ -2250,7 +2252,7 @@ TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;

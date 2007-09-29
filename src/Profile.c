@@ -772,4 +772,27 @@ BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const i
 #endif
 	return profile_write_data(section_name, key_name, ret, file_path);
 }
+
+/*
+ * profile_delete_key - delete items from profile
+ */
+BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name)
+{
+	int section_index;
+	int key_index;
+
+	if ((section_index = section_find(section_name)) == -1) {
+		return FALSE;
+	}
+	if ((key_index = key_find((section_info + section_index), key_name)) == -1) {
+		return FALSE;
+	}
+	if (((section_info + section_index)->key_info + key_index)->string != NULL) {
+		mem_free(&((section_info + section_index)->key_info + key_index)->string);
+	}
+	*((section_info + section_index)->key_info + key_index)->key_name = TEXT('\0');
+	((section_info + section_index)->key_info + key_index)->string = NULL;
+	return TRUE;
+}
+
 /* End of source */

@@ -19,9 +19,9 @@
 #define OK_LEN					3			// "+OK" のバイト数
 
 #ifdef _WIN32_WCE
-#define MAIL_BUF_SIZE			4096		// メール受信用バッファの初期サイズ
+#define MAIL_BUF_SIZE			4096		//Early size
 #else
-#define MAIL_BUF_SIZE			32768		// メール受信用バッファの初期サイズ
+#define MAIL_BUF_SIZE			32768		//of buffer for mail reception Early size
 #endif
 #define DOWNLOAD_SIZE			65535		// RETR未使用時の全文受信サイズ
 
@@ -82,6 +82,7 @@ extern BOOL EndThreadSortFlag;
 
 extern int PopBeforeSmtpFlag;
 extern int ssl_type;
+extern UINT nBroadcastMsg;
 
 /* Local Function Prototypes */
 static BOOL mail_buf_init(int size);
@@ -92,6 +93,7 @@ static BOOL uidl_set(char *buf, int len);
 static TCHAR *uidl_get(int get_no);
 static int uidl_check(TCHAR *buf);
 static void uidl_free(void);
+static BOOL newline_count(char *buf, BOOL headers, int maxcount);
 static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
 static char *skip_response(char *p);
 static BOOL check_response(char *buf);
@@ -113,6 +115,38 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+
+
+#ifdef _WIN32_WCE_PPC
+//================================================
+// findTodayPlugin: ...
+//================================================
+HWND findTodayPlugin(WCHAR *wTodayItem)
+{
+	BOOL bFound = FALSE;
+	HWND hWnd1, hWnd2, hWnd3, hPlugin = NULL;
+
+	if ((hWnd1 = GetDesktopWindow()) && (hWnd2 = GetWindow(hWnd1, GW_CHILD)) &&
+		(hWnd3 = GetWindow(hWnd2, GW_CHILD)))
+	{
+		if ((hPlugin = GetWindow(hWnd3, GW_CHILD)) || ((hPlugin = GetWindow(hWnd3, GW_HWNDNEXT)) && (hPlugin = GetWindow(hPlugin, GW_CHILD))))
+		{
+			WCHAR className[MAX_PATH];
+			do
+			{
+				GetClassName(hPlugin, className, MAX_PATH);
+				if (wcscmp(className, wTodayItem) == 0)
+				{
+					bFound = TRUE;
+					break;
+				}
+			} while (hPlugin = GetWindow(hPlugin, GW_HWNDNEXT));
+		}
+	}
+	return (bFound?hPlugin:NULL);
+}
+#endif
+
 
 /*
  * mail_buf_init - メールバッファを初期化
@@ -257,6 +291,42 @@ static void uidl_free(void)
 	mem_free(&ui);
 	ui = NULL;
 	ui_size = 0;
+}
+
+/*
+ * newline_count - are there fewer than maxcount newlines? (if so, message was completely downloaded)
+ */
+static BOOL newline_count(char *buf, BOOL headers, int maxcount)
+{
+	BOOL counting = FALSE;
+	int cnt = 0;
+
+	if (buf == NULL) {
+		return FALSE;
+	}
+	if (headers == TRUE) {
+		while (*buf != '\0') {
+			if (*buf == '\r' && *(buf+1) == '\n' && *(buf+2) == '\r' && *(buf+3) == '\n') {
+				counting = TRUE;
+				buf += 4;
+				break;
+			}
+			buf++;
+		}
+		if (counting == FALSE) {
+			return FALSE;
+		}
+	}
+	while (*buf != '\0' && cnt < maxcount) {
+		if (*buf == '\r') {
+			cnt++;
+		}
+		buf++;
+	}
+	if (cnt < maxcount)
+		return TRUE;
+	else 
+		return FALSE;
 }
 
 /*
@@ -423,7 +493,7 @@ static TCHAR *create_apop(char *buf, TCHAR *ErrStr, MAILBOX *tpMailBox, TCHAR *s
 	int len;
 	int i;
 
-	// < から > までを抽出
+	//< Empty > to extraction
 	for (hidx = NULL, p = buf; *p != '\0';p++) {
 		if (*p == '<') {
 			hidx = p;
@@ -458,7 +528,7 @@ static TCHAR *create_apop(char *buf, TCHAR *ErrStr, MAILBOX *tpMailBox, TCHAR *s
 	tstrcat(p, pass);
 	mem_free(&pass);
 
-	// digest 値を取る
+	//Digest value is taken the
 	MD5Init(&context);
 	MD5Update(&context, p, tstrlen(p));
 	MD5Final(digest, &context);
@@ -658,11 +728,11 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		// メールボックスの初期化
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 		if (tpMailBox->MailCnt == 0) {
-			SetItemCntStatusText(hWnd, tpMailBox);
+			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 			return POP_QUIT;
 		}
 	}
-	SetItemCntStatusText(hWnd, tpMailBox);
+	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 
 	init_recv = FALSE;
 	mail_received = FALSE;
@@ -834,7 +904,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		ListView_SetRedraw(hListView, TRUE);
 	}
 	SwitchCursor(TRUE);
-	SetItemCntStatusText(hWnd, tpMailBox);
+	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 
 	// 最後に受信したメールのメッセージIDを保存する
 	mem_free(&tpMailBox->LastMessageId);
@@ -973,7 +1043,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	LV_ITEM lvi;
 	HWND hListView;
 	TCHAR *p;
-	int i;
+	int i, nOldMailCnt = NewMailCnt;
 	int st;
 
 	// TOPレスポンスの1行目
@@ -1045,13 +1115,13 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		tpMailItem->Body = (char *)mem_alloc(sizeof(char));
 		if (tpMailItem->Body != NULL) {
 			*tpMailItem->Body = '\0';
-			tpMailItem->Status = tpMailItem->MailStatus = ICON_MAIL;
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
 		}
 	}
 
 	if ((int)tpMailItem != -1) {
 		// 新着フラグの除去
-		if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE) {
+		if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE && op.ClearNewOverlay == 1) {
 			for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 				if (*(tpMailBox->tpMailItem + i) == NULL) {
 					continue;
@@ -1059,24 +1129,70 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 				(*(tpMailBox->tpMailItem + i))->New = FALSE;
 			}
 		}
+		tpMailItem->ReFwd = ICON_NON;
 		tpMailItem->New = TRUE;
-		tpMailItem->Download = disable_top;
+		if (disable_top == TRUE || newline_count(tpMailItem->Body, tpMailItem->HasHeader, op.ListGetLine) == TRUE) {
+			tpMailItem->Download = TRUE;
+		} else {
+			tpMailItem->Download = FALSE;
+		}
 		tpMailItem->No = list_get_no;
 
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			// 新着のオーバレイマスク
-			st = INDEXTOOVERLAYMASK(1);
-			st |= ((tpMailItem->Multipart == TRUE) ? INDEXTOSTATEIMAGEMASK(1) : 0);
+			st = INDEXTOOVERLAYMASK(ICON_NEW_MASK);	   
+
+			/////////////// MRP //////////////////
+				switch (tpMailItem->Priority)
+				{
+					case 4:  // LOW
+					case 5:
+						if(tpMailItem->Multipart == TRUE){
+							st |= INDEXTOSTATEIMAGEMASK(3);
+						}
+						else
+						{
+							st |= INDEXTOSTATEIMAGEMASK(5);
+						}
+						break;
+
+					case 1:  // HIGH
+					case 2:
+						if(tpMailItem->Multipart == TRUE){
+							st |= INDEXTOSTATEIMAGEMASK(2);
+						}
+						else
+						{
+							st |= INDEXTOSTATEIMAGEMASK(4);
+						}
+						break;
+
+					case 3:  // NORMAL
+					default:
+						if(tpMailItem->Multipart == TRUE){
+							st |= INDEXTOSTATEIMAGEMASK(1);
+						}
+						else
+						{
+							st |= 0;
+						}
+						break;
+
+				}
+				/////////////// --- ////////////////////
+
 			if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE) {
-				// 全アイテムの新着のオーバーレイマスクを解除
-				ListView_SetItemState(hListView, -1, 0, LVIS_OVERLAYMASK);
-				ListView_RedrawItems(hListView, 0, ListView_GetItemCount(hListView));
+				if (op.ClearNewOverlay == 1) {
+					// clear new overlay from existing messages when new(er) mail received
+					ListView_SetItemState(hListView, -1, 0, INDEXTOOVERLAYMASK(ICON_NEW_MASK));
+					ListView_RedrawItems(hListView, 0, ListView_GetItemCount(hListView));
+				}
 				// 新着位置の選択
 				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				st |= (LVIS_FOCUSED | LVIS_SELECTED);
 			}
-			st |= ((tpMailItem->Download == FALSE && tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL)
+			st |= ((tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL)
 				? LVIS_CUT : 0);
 			lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 			lvi.iItem = ListView_GetItemCount(hListView);
@@ -1087,7 +1203,8 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			lvi.cchTextMax = 0;
 			lvi.iImage = I_IMAGECALLBACK;
 			lvi.lParam = (long)tpMailItem;
-			// リストビューにアイテムを追加
+
+			//of new arrival position The item is added to list view the
 			i = ListView_InsertItem(hListView, &lvi);
 			if (mail_received == FALSE) {
 				ListView_EnsureVisible(hListView, i, TRUE);
@@ -1096,7 +1213,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			if (op.RecvScroll == 1) {
 				SendMessage(hListView, WM_VSCROLL, SB_LINEDOWN, 0);
 			}
-			SetItemCntStatusText(hWnd, tpMailBox);
+			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 			EndThreadSortFlag = TRUE;
 		}
 		mail_received = TRUE;
@@ -1104,6 +1221,16 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		// 新着カウント
 		NewMailCnt++;
 		tpMailBox->NewMail = TRUE;
+	}
+	 
+	if (nOldMailCnt != NewMailCnt)
+	{
+#ifdef _WIN32_WCE_PPC
+		HWND hPlugin;
+		if (hPlugin = findTodayPlugin(TEXT("phoneAlarmMaxCls")))
+			PostMessage(hPlugin, nBroadcastMsg, (WPARAM)NewMailCnt, (LPARAM)0xFFFF);
+#endif
+		PostMessage(HWND_BROADCAST, nBroadcastMsg, (WPARAM)NewMailCnt, (LPARAM)0xFFFF);
 	}
 
 	// 最後に受信したメールの番号とメッセージIDを保存する
@@ -1277,6 +1404,10 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	// 本文を取得
 	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE);
+	if (tpMailItem == NULL) {
+		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+		return POP_ERR;
+	}
 	tpMailItem->Download = TRUE;
 
 	if (ShowFlag == TRUE) {
@@ -1287,7 +1418,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 			ListView_RedrawItems(hListView, i, i);
 			UpdateWindow(hListView);
-			SetItemCntStatusText(hWnd, tpMailBox);
+			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 		}
 	}
 	if (hViewWnd != NULL) {
@@ -1481,7 +1612,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	// メールアイテムの解放
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL || tpMailItem->Status != ICON_DEL) {
+		if (tpMailItem == NULL || tpMailItem->Mark != ICON_DEL) {
 			continue;
 		}
 		item_free((tpMailBox->tpMailItem + i), 1);
@@ -1489,10 +1620,9 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		// 削除したメールより後ろのメールの番号を減らす
 		for (j = i + 1; j < tpMailBox->MailItemCnt; j++) {
 			tpMailItem = *(tpMailBox->tpMailItem + j);
-			if (tpMailItem == NULL) {
-				continue;
+			if (tpMailItem != NULL) {
+				tpMailItem->No--;
 			}
-			tpMailItem->No--;
 		}
 		tpMailBox->MailCnt--;
 		tpMailBox->LastNo--;
@@ -1515,7 +1645,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 	item_resize_mailbox(tpMailBox);
-	SetItemCntStatusText(hWnd, tpMailBox);
+	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 	return POP_QUIT;
 }
 

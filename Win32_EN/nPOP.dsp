@@ -1,32 +1,33 @@
 # Microsoft Developer Studio Project File - Name="nPOP" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** 編集しないでください **
+# ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
 CFG=nPOP - Win32 Debug_Unicode
-!MESSAGE これは有効なﾒｲｸﾌｧｲﾙではありません。 このﾌﾟﾛｼﾞｪｸﾄをﾋﾞﾙﾄﾞするためには NMAKE を使用してください。
-!MESSAGE [ﾒｲｸﾌｧｲﾙのｴｸｽﾎﾟｰﾄ] ｺﾏﾝﾄﾞを使用して実行してください
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
 !MESSAGE 
 !MESSAGE NMAKE /f "nPOP.mak".
 !MESSAGE 
-!MESSAGE NMAKE の実行時に構成を指定できます
-!MESSAGE ｺﾏﾝﾄﾞ ﾗｲﾝ上でﾏｸﾛの設定を定義します。例:
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
 !MESSAGE NMAKE /f "nPOP.mak" CFG="nPOP - Win32 Debug_Unicode"
 !MESSAGE 
-!MESSAGE 選択可能なﾋﾞﾙﾄﾞ ﾓｰﾄﾞ:
+!MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "nPOP - Win32 Release" ("Win32 (x86) Application" 用)
-!MESSAGE "nPOP - Win32 Debug" ("Win32 (x86) Application" 用)
-!MESSAGE "nPOP - Win32 Release_Unicode" ("Win32 (x86) Application" 用)
-!MESSAGE "nPOP - Win32 Debug_Unicode" ("Win32 (x86) Application" 用)
+!MESSAGE "nPOP - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "nPOP - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "nPOP - Win32 Release_Unicode" (based on "Win32 (x86) Application")
+!MESSAGE "nPOP - Win32 Debug_Unicode" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_LocalPath "Desktop"
+# PROP WCE_FormatVersion ""
 CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
@@ -321,79 +322,51 @@ SOURCE=..\EN\Strtbl.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=..\res\bitmap.bmp
+SOURCE=..\Res\Ico_clhi.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\bmp00001.bmp
+SOURCE=..\Res\Ico_cllo.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\bmp00002.bmp
+SOURCE=..\Res\Ico_down.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\bmp00003.bmp
+SOURCE=..\Res\Ico_high.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00001.ico
+SOURCE=..\Res\Ico_main.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00002.ico
+SOURCE=..\Res\Ico_nchk.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00003.ico
+SOURCE=..\Res\Ico_none.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00004.ico
+SOURCE=..\Res\Ico_read.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00005.ico
+SOURCE=..\Res\Ico_repl.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00006.ico
+SOURCE=..\Res\Ico_send.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00007.ico
+SOURCE=..\Res\Ico_sent.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00008.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\ico00009.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\ico00010.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\ico00011.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\ico00012.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\icon.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\icon1.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\icon_che.ico
+SOURCE=..\Res\Icon_chk.ico
 # End Source File
 # Begin Source File
 
@@ -405,7 +378,11 @@ SOURCE=..\res\icon_del.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_dow.ico
+SOURCE=..\Res\Icon_fwd.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\Res\Icon_low.ico
 # End Source File
 # Begin Source File
 
@@ -413,31 +390,15 @@ SOURCE=..\res\icon_new.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_non.ico
+SOURCE=..\Res\tbar_edit.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_rea.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\icon_sen.ico
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\manifest.xml
+SOURCE=..\Res\tbar_view.bmp
 # End Source File
 # Begin Source File
 
 SOURCE=..\res\toolbar.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\toolbar_.bmp
-# End Source File
-# Begin Source File
-
-SOURCE=..\res\toolbar_win32.bmp
 # End Source File
 # End Group
 # End Target
