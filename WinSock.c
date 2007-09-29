@@ -4,7 +4,7 @@
 
 	WinSock.c
 
-	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
+	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -37,7 +37,6 @@
 
 char *RecvBuf = NULL;				//内部受信バッファ
 char *RemainderBuf = NULL;			//内部受信未処理バッファ
-int RemainderBufLen = 0;
 
 //外部参照
 extern char *MailSize;				//メールサイズ
@@ -166,7 +165,6 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 	char *p, *r;
 	int buf_len;
 	int len;
-	int i;
 
 	//受信用バッファの確保
 	if(RecvBuf == NULL){
@@ -190,13 +188,13 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 
 	if(RemainderBuf != NULL && *RemainderBuf != '\0'){
 		//前回の未処理分のバッファと今回のバッファを結合する
-		p = rbuf = (char *)LocalAlloc(LMEM_FIXED, RemainderBufLen + buf_len + 1);
+		buf_len += tstrlen(RemainderBuf);
+		p = rbuf = (char *)LocalAlloc(LMEM_FIXED, buf_len + 1);
 		if(rbuf == NULL){
 			return SELECT_MEM_ERROR;
 		}
-		CopyMemory(rbuf, RemainderBuf, RemainderBufLen);
-		CopyMemory(rbuf + RemainderBufLen, RecvBuf, buf_len);
-		buf_len += RemainderBufLen;
+		r = StrCpy(rbuf, RemainderBuf);
+		r = StrCpy(r, RecvBuf);
 	}
 	buf = (char *)LocalAlloc(LMEM_FIXED, buf_len + 1);
 	if(buf == NULL){
@@ -204,25 +202,19 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 		return SELECT_MEM_ERROR;
 	}
 
-	i = 0;
 	while(1){
 		//CR LF までの文字列を抽出
-		for(r = buf, len = 0; i < buf_len; p++, r++, len++, i++){
-			if(*p == '\0'){
-				len--;
-				continue;
-			}
+		for(r = buf, len = 0; *p != '\0'; p++, r++, len++){
 			if(*p == '\r' && *(p + 1) == '\n'){
 				break;
 			}
 			*r = *p;
 		}
 		*r = '\0';
-		if(i >= buf_len){
+		if(*p == '\0'){
 			break;
 		}
 		p += CRLF_LEN;
-		i += CRLF_LEN;
 		//ウィンドウに処理すべき文字列を渡す
 		if(SendMessage(hWnd, WM_SOCK_RECV, len, (LPARAM)buf) == FALSE){
 			NULLCHECK_FREE(rbuf);
@@ -233,7 +225,6 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 	//未処理の文字列を待避
 	NULLCHECK_FREE(RemainderBuf);
 	RemainderBuf = buf;
-	RemainderBufLen = tstrlen(buf);
 	NULLCHECK_FREE(rbuf);
 	return SELECT_SOC_SUCCEED;
 }
@@ -396,7 +387,6 @@ void SocketClose(HWND hWnd, SOCKET soc)
 	RecvBuf = NULL;
 	NULLCHECK_FREE(RemainderBuf);
 	RemainderBuf = NULL;
-	RemainderBufLen = 0;
 	NULLCHECK_FREE(MailSize);
 	MailSize = NULL;
 }

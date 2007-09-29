@@ -4,7 +4,7 @@
 
 	main.c
 
-	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
+	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -85,9 +85,6 @@ int LvSortFlag = 0;							//ListViewのソートフラグ
 BOOL EndThreadSortFlag = FALSE;				//通信終了時の自動ソートフラグ(スレッド用)
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 static BOOL SelMode = FALSE;				//選択モード (PocketPC, l'agenda)
-#endif
-#ifndef _WIN32_WCE
-static int confirm_flag;					//認証フラグ
 #endif
 
 SOCKET g_soc = -1;							//ソケット
@@ -387,7 +384,6 @@ static BOOL ConfirmPass(HWND hWnd, TCHAR *ps)
 		}
 		break;
 	}
-	confirm_flag = 2;
 	return TRUE;
 }
 #endif
@@ -2783,7 +2779,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = FALSE;
 #endif
-	static BOOL save_flag = FALSE;
 	int i;
 
 	switch(msg)
@@ -2943,26 +2938,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 
 	case WM_SIZE:
-#ifndef _WIN32_WCE
-		if(wParam == SIZE_MINIMIZED) {
-			confirm_flag = 1;
-		} 
-#endif
 		if(wParam == SIZE_MINIMIZED && ShowTrayIcon == 1 && MinsizeHide == 1){
 			ShowWindow(hWnd, SW_HIDE);
 			return 0;
 		}
 #ifndef _WIN32_WCE
-		if(ShowPass == 1 &&
-			(wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) &&
-			Password != NULL && *Password != TEXT('\0') && confirm_flag == 1) {
-			ShowWindow(hWnd, SW_MINIMIZE);
-			return 0;
-		}
 		SetWindowSize(hWnd, wParam, lParam);
-		if(wParam != SIZE_MINIMIZED) {
-			confirm_flag = 0;
-		} 
 #endif
 		break;
 
@@ -2980,7 +2961,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if(SaveWindow(hWnd) == FALSE){
 			return FALSE;
 		}
-		save_flag = TRUE;
 		return TRUE;
 
 	case WM_ENDSESSION:
@@ -3010,14 +2990,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if(SaveWindow(hWnd) == FALSE){
 			break;
 		}
-		save_flag = TRUE;
 		EndWindow(hWnd);
 		break;
 
 	case WM_DESTROY:
-		if (save_flag == FALSE) {
-			SaveWindow(hWnd);
-		}
 		PostQuitMessage(0);
 		break;
 
@@ -3492,7 +3468,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_ABOUT:
 			MessageBox(hWnd,
 				APP_NAME
-				TEXT("\nCopyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.\n\n")
+				TEXT("\nCopyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.\n\n")
 				TEXT("WEB SITE: http://www.nakka.com/\nE-MAIL: nakka@nakka.com"),
 				TEXT("About"), MB_OK | MB_ICONINFORMATION);
 			break;
@@ -3502,7 +3478,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if(SaveWindow(hWnd) == FALSE){
 				break;
 			}
-			save_flag = TRUE;
 			EndWindow(hWnd);
 			break;
 
@@ -4444,7 +4419,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #ifdef _WIN32_WCE_LAGENDA
 	SipShowIM(SIPF_OFF);
 #endif
-	
+
 	//ウィンドウクラス登録
 	if(!InitApplication(hInstance) || !View_InitApplication(hInstance)
 		|| !Edit_InitApplication(hInstance)){

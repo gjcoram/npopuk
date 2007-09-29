@@ -4,7 +4,7 @@
 
 	Strtbl.h
 
-	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
+	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -19,6 +19,7 @@
 #else
 #define STR_DEFAULT_FONT			TEXT("")
 #endif
+#define STR_DEFAULT_FONTCHARSET		DEFAULT_CHARSET
 
 #define STR_DEFAULT_BURA			TEXT("")
 #define STR_DEFAULT_OIDA			TEXT("")
@@ -36,98 +37,98 @@
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")
 
 //Error
-#define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
-#define STR_ERR_INIT				TEXT("Initialisation error")
-#define STR_ERR_OPEN				TEXT("Open File error")
-#define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
-#define STR_ERR_SAVE				TEXT("Save File error")
-#define STR_ERR_ADD					TEXT("Address not added")
-#define STR_ERR_VIEW				TEXT("Display failed")
-#define STR_ERR_SELECTMAILBOX		TEXT("No account specified")
-#define STR_ERR_SELECTMAILADDR		TEXT("No address selected")
-#define STR_ERR_SETMAILADDR			TEXT("No mail address set")
-#define STR_ERR_INPUTMAILADDR		TEXT("No mail address entered")
-#define STR_ERR_CREATECOPY			TEXT("Copy failed")
-#define STR_ERR_SAVECOPY			TEXT("Copy to Savebox failed")
-#define STR_ERR_NOITEM1				TEXT("Item 1 not set")
-#define STR_ERR_INPUTFINDSTRING		TEXT("No 'Find' string entered")
-#define STR_ERR_NOMAIL				TEXT("No Mail in the list")
-#define STR_ERR_SENDLOCK			TEXT("Sending barred!  Transmission in progress")
+#define STR_ERR_MEMALLOC			TEXT("Failed in the memory allocating")
+#define STR_ERR_INIT				TEXT("Failed in initialization")
+#define STR_ERR_OPEN				TEXT("Failed in the file opening")
+#define STR_ERR_SAVEEND				TEXT("failed in preservation\nIs the termination continued?")
+#define STR_ERR_SAVE				TEXT("Failed in preservation")
+#define STR_ERR_ADD					TEXT("Failed in the addition")
+#define STR_ERR_VIEW				TEXT("Failed in the display")
+#define STR_ERR_SELECTMAILBOX		TEXT("The account is not specified")
+#define STR_ERR_SELECTMAILADDR		TEXT("The mail address has not been selected")
+#define STR_ERR_SETMAILADDR			TEXT("The mail address is not set")
+#define STR_ERR_INPUTMAILADDR		TEXT("The mail address is not input")
+#define STR_ERR_CREATECOPY			TEXT("Failed in the copy making")
+#define STR_ERR_SAVECOPY			TEXT("Failed in the copy to the Savebox")
+#define STR_ERR_NOITEM1				TEXT("Item1 is not set")
+#define STR_ERR_INPUTFINDSTRING		TEXT("The retrieval character string is not input")
+#define STR_ERR_NOMAIL				TEXT("Mail is not found from the list")
+#define STR_ERR_SENDLOCK			TEXT("When the and others is transmitted and received, it is not possible to transmit")
 
 //Socket error
-#define STR_ERR_SOCK_SELECT			TEXT("Selection error")
-#define STR_ERR_SOCK_DISCONNECT		TEXT("Server disconnected")
-#define STR_ERR_SOCK_CONNECT		TEXT("Connection failed")
-#define STR_ERR_SOCK_SENDRECV		TEXT("Send/Recv error")
-#define STR_ERR_SOCK_EVENT			TEXT("Event setting error")
-#define STR_ERR_SOCK_NOSERVER		TEXT("Server name not set")
-#define STR_ERR_SOCK_GETIPADDR		TEXT("Unable to find email server")
-#define STR_ERR_SOCK_CREATESOCKET	TEXT("Socket creation error")
-#define STR_ERR_SOCK_TIMEOUT		TEXT("Connection timed-out")
-#define STR_ERR_SOCK_SEND			TEXT("Send error")
-#define STR_ERR_SOCK_RESPONSE		TEXT("Response not analysed\n\n")
-#define STR_ERR_SOCK_GETITEMINFO	TEXT("Item information not acquired")
-#define STR_ERR_SOCK_MAILSYNC 		TEXT("Mail numbers not synchronised\n\n")\
-									TEXT("New and existing numbers must agree")
-#define STR_ERR_SOCK_NOMESSAGEID	TEXT("Message-Id not acquired")
-#define STR_ERR_SOCK_NOUSERID		TEXT("No username set")
-#define STR_ERR_SOCK_NOPASSWORD		TEXT("No password set")
-#define STR_ERR_SOCK_BADPASSWORD	TEXT("Username or password error\n\n")
-#define STR_ERR_SOCK_ACCOUNT		TEXT("Account was not accepted\n\n")
-#define STR_ERR_SOCK_NOAPOP			TEXT("Server does not accept APOP")
+#define STR_ERR_SOCK_SELECT			TEXT("Failed in select")
+#define STR_ERR_SOCK_DISCONNECT		TEXT("Disconnected from the server")
+#define STR_ERR_SOCK_CONNECT		TEXT("Failed in the server connection")
+#define STR_ERR_SOCK_SENDRECV		TEXT("The error occurred when transmitting and receiving")
+#define STR_ERR_SOCK_EVENT			TEXT("Failed in the event setting")
+#define STR_ERR_SOCK_NOSERVER		TEXT("The server name is not set")
+#define STR_ERR_SOCK_GETIPADDR		TEXT("Failed in the IP address acquisition")
+#define STR_ERR_SOCK_CREATESOCKET	TEXT("Failed in the socket making")
+#define STR_ERR_SOCK_TIMEOUT		TEXT("Connection is timeout")
+#define STR_ERR_SOCK_SEND			TEXT("Failed in the transmission")
+#define STR_ERR_SOCK_RESPONSE		TEXT("The response was not able to be analyzed\n\n")
+#define STR_ERR_SOCK_GETITEMINFO	TEXT("Item information was not able to be acquired")
+#define STR_ERR_SOCK_MAILSYNC 		TEXT("The synchronization of the mail number was not able to be taken\n\n")\
+									TEXT("Must newly arrived check and the mail number must be synchronized")
+#define STR_ERR_SOCK_NOMESSAGEID	TEXT("Message-Id was not able to be acquired")
+#define STR_ERR_SOCK_NOUSERID		TEXT("Username is not set")
+#define STR_ERR_SOCK_NOPASSWORD		TEXT("The password is not set")
+#define STR_ERR_SOCK_BADPASSWORD	TEXT("The username or password is wrong\n\n")
+#define STR_ERR_SOCK_ACCOUNT		TEXT("The account was not accepted\n\n")
+#define STR_ERR_SOCK_NOAPOP			TEXT("It is a server which does not correspond to APOP")
 #define STR_ERR_SOCK_STAT			TEXT("STAT was not accepted\n\n")
 #define STR_ERR_SOCK_RETR			TEXT("RETR was not accepted\n\n")
-#define STR_ERR_SOCK_DELE			TEXT("Deletion failed\n\n")
-#define STR_ERR_SOCK_NOATTACH		TEXT("Attached file was not found")
-#define STR_ERR_SOCK_BADFROM		TEXT("Address format error")
-#define STR_ERR_SOCK_HELO 			TEXT("HELO failed\n")\
-									TEXT("Please check address format\n\n")
-#define STR_ERR_SOCK_SMTPAUTH		TEXT("Login to SMTP server failed\n\n")
-#define STR_ERR_SOCK_RSET			TEXT("RSET failed\n\n")
-#define STR_ERR_SOCK_MAILFROM		TEXT("MAIL FROM failed\n")\
-									TEXT("Please check address format\n\n")
-#define STR_ERR_SOCK_NOTO			TEXT("Destination not set")
-#define STR_ERR_SOCK_RCPTTO			TEXT("RCPT TO failed\n")\
-									TEXT("Please check destination address\n\n")
-#define STR_ERR_SOCK_DATA			TEXT("DATA failed\n\n")
-#define STR_ERR_SOCK_MAILSEND		TEXT("Mail not sent\n\n")
+#define STR_ERR_SOCK_DELE			TEXT("failed in the deletion\n\n")
+#define STR_ERR_SOCK_NOATTACH		TEXT("The attached file was not found")
+#define STR_ERR_SOCK_BADFROM		TEXT("The transmission former mail address is not correctly set")
+#define STR_ERR_SOCK_HELO 			TEXT("Failed in HELO\n")\
+									TEXT("Please confirm whether the transmission former mail address is correctly set\n\n")
+#define STR_ERR_SOCK_SMTPAUTH		TEXT("Failed in the login of the SMTP server\n\n")
+#define STR_ERR_SOCK_RSET			TEXT("Failed in RSET\n\n")
+#define STR_ERR_SOCK_MAILFROM		TEXT("Failed in MAIL FROM\n")\
+									TEXT("Please confirm whether the transmission former mail address is correctly set\n\n")
+#define STR_ERR_SOCK_NOTO			TEXT("The destination is not set")
+#define STR_ERR_SOCK_RCPTTO			TEXT("Failed in RCPT TO\n")\
+									TEXT("Please confirm whether the destination mail address is correctly set\n\n")
+#define STR_ERR_SOCK_DATA			TEXT("Failed in DATA\n\n")
+#define STR_ERR_SOCK_MAILSEND		TEXT("Failed in Mail Sending\n\n")
 
 //Ras error
-#define STR_ERR_RAS_NOSET			TEXT("No dial-up setting available")
-#define STR_ERR_RAS_CONNECT			TEXT("Dial-up connection failed")
-#define STR_ERR_RAS_DISCONNECT		TEXT("Dial-up was cut or line dropped")
+#define STR_ERR_RAS_NOSET			TEXT("A dial-up setting is not done")
+#define STR_ERR_RAS_CONNECT			TEXT("Failed in a dial-up connection")
+#define STR_ERR_RAS_DISCONNECT		TEXT("Dial-up was cut or failed in the connection")
 
 //Question
 #define STR_Q_DELETE				TEXT("Delete it?")
-#define STR_Q_DELSERVERMAIL			TEXT("Warning!  This will delete mail from the server")
+#define STR_Q_DELSERVERMAIL			TEXT("Do you update it though are the mail deleted from the server?")
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
 #define STR_Q_DELMAILBOX			TEXT("Delete account?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
-#define STR_Q_OVERWRITE				TEXT("\"%s\" \n\nalready has received something\nOverwrite?")
+#define STR_Q_OVERWRITE				TEXT("\"%s\" \n\nalready has received something\nDo you overwrite?")
 #define STR_Q_COPY					TEXT("Copy %d mail to the Savebox?")
-#define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
+#define STR_Q_DEPENDENCE			TEXT("Is it all right although there is a character depending on the model?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
 #define STR_Q_ADDADDRESS			TEXT("Add %d mail addresses to the address book?")
-#define STR_Q_NEXTFIND				TEXT("Search completed!\nRedo from the start?")
+#define STR_Q_NEXTFIND				TEXT("retrieved it to the last minute\nDo you retrieve it again at the time of beginning?")
 #define STR_Q_EDITCANSEL			TEXT("Cancel the edit?")
 #define STR_Q_SENDMAIL				TEXT("Send it?")
 
 //Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
-#define STR_MSG_NOBODY				TEXT("Message body not downloaded. Cannot be opened\n\n")\
-									TEXT("Mark it and update server to download body")
-#define STR_MSG_NONEWMAIL			TEXT("No new mail!")
-#define STR_MSG_NOFIND				TEXT("\"%s\" not found")
+#define STR_MSG_NOBODY				TEXT("Because the text is not acquired, it is not possible to open\n\n")\
+									TEXT("'Mark for receive' is attached, 'Update to marked' is performed and the text is acquired.")
+#define STR_MSG_NONEWMAIL			TEXT("There is no newly arrived mail")
+#define STR_MSG_NOFIND				TEXT("\"%s\" is not found")
 
 //Window title
-#define STR_TITLE_NOREADMAILBOX		TEXT("%s - [Accounts with Unread mail: %d]")
-#define STR_TITLE_MAILEDIT			TEXT("Mail Edit")
-#define STR_TITLE_MAILVIEW			TEXT("Mail View")
+#define STR_TITLE_NOREADMAILBOX		TEXT("%s - [Unread account: %d]")
+#define STR_TITLE_MAILEDIT			TEXT("Mail edit")
+#define STR_TITLE_MAILVIEW			TEXT("Mail view")
 #define STR_TITLE_MAILVIEW_COUNT	TEXT(" - [No.%d]")
 
 //Message title
-#define STR_TITLE_EXEC				TEXT("Update account")
+#define STR_TITLE_EXEC				TEXT("Update to marked")
 #define STR_TITLE_ALLEXEC			TEXT("Update all accounts")
 #define STR_TITLE_SEND				TEXT("Send now")
 #define STR_TITLE_OPEN				TEXT("Open")
@@ -135,8 +136,8 @@
 #define STR_TITLE_COPY				TEXT("Copy")
 #define STR_TITLE_DELETE			TEXT("Delete")
 #define STR_TITLE_ERROR				TEXT("Error")
-#define STR_TITLE_SETMAILBOX		TEXT("Account Settings")
-#define STR_TITLE_OPTION			TEXT("Global Options")
+#define STR_TITLE_SETMAILBOX		TEXT("Set account")
+#define STR_TITLE_OPTION			TEXT("Option")
 #ifndef _WIN32_WCE
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")
@@ -150,21 +151,21 @@
 #define STR_STATUS_MAILINFO			TEXT("New %d, Unread %d")
 
 //Socket status
-#define STR_STATUS_GETHOSTBYNAME	TEXT("Finding Host...")
-#define STR_STATUS_CONNECT			TEXT("Connecting...")
-#define STR_STATUS_RECV				TEXT("Receiving...")
-#define STR_STATUS_SENDBODY			TEXT("Sending body...")
+#define STR_STATUS_GETHOSTBYNAME	TEXT("gethostbyname...")
+#define STR_STATUS_CONNECT			TEXT("connect...")
+#define STR_STATUS_RECV				TEXT("receive...")
+#define STR_STATUS_SENDBODY			TEXT("send body...")
 #define STR_STATUS_SOCKINFO			TEXT("%d byte %s")
-#define STR_STATUS_SOCKINFO_RECV	TEXT("Recv")
-#define STR_STATUS_SOCKINFO_SEND	TEXT("Send")
+#define STR_STATUS_SOCKINFO_RECV	TEXT("recv")
+#define STR_STATUS_SOCKINFO_SEND	TEXT("send")
 
 //Ras status
-#define STR_STATUS_RAS_START		TEXT("Starting Dial-up")
-#define STR_STATUS_RAS_PORTOPEN		TEXT("Opening port...")
+#define STR_STATUS_RAS_START		TEXT("Dial-up beginning")
+#define STR_STATUS_RAS_PORTOPEN		TEXT("Open port...")
 #define STR_STATUS_RAS_DEVICE		TEXT("Connecting device...")
-#define STR_STATUS_RAS_AUTH			TEXT("Verifying user...")
-#define STR_STATUS_RAS_CONNECT		TEXT("Dial-up connected")
-#define STR_STATUS_RAS_DISCONNECT	TEXT("Dial-up disconnected")
+#define STR_STATUS_RAS_AUTH			TEXT("User attestation...")
+#define STR_STATUS_RAS_CONNECT		TEXT("Dial-up was connected")
+#define STR_STATUS_RAS_DISCONNECT	TEXT("Dial-up was disconnect")
 
 //Initialize status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")
@@ -209,15 +210,15 @@
 #define STR_FILTER_NOUSE			TEXT("Unused")
 #define STR_FILTER_STATUS			TEXT("Status")
 #define STR_FILTER_ACTION			TEXT("Action")
-#define STR_FILTER_ITEM1			TEXT("Item 1")
-#define STR_FILTER_CONTENT1			TEXT("Content 1")
-#define STR_FILTER_ITEM2			TEXT("Item 2")
-#define STR_FILTER_CONTENT2			TEXT("Content 2")
+#define STR_FILTER_ITEM1			TEXT("Item1")
+#define STR_FILTER_CONTENT1			TEXT("Content1")
+#define STR_FILTER_ITEM2			TEXT("Item2")
+#define STR_FILTER_CONTENT2			TEXT("Content2")
 
-#define STR_FILTER_UNRECV			TEXT("Not download")
-#define STR_FILTER_RECV				TEXT("Download")
-#define STR_FILTER_DOWNLOADMARK		TEXT("Mark for download")
-#define STR_FILTER_DELETEMARK		TEXT("Mark for deletion")
+#define STR_FILTER_UNRECV			TEXT("Not Receive")
+#define STR_FILTER_RECV				TEXT("Receive")
+#define STR_FILTER_DOWNLOADMARK		TEXT("Mark for receive")
+#define STR_FILTER_DELETEMARK		TEXT("Mark for delete")
 #define STR_FILTER_READICON			TEXT("Mark as read")
 #define STR_FILTER_SAVE				TEXT("Copy to Savebox")
 

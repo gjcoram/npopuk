@@ -69,7 +69,6 @@ int RecvScroll;
 int SaveMsg;
 int AutoSave;
 int LvColSize[LV_COL_CNT];
-int AddColSize[AD_COL_CNT];
 
 int ListGetLine;
 int ListDownload;
@@ -295,7 +294,6 @@ BOOL CheckStartPass(void)
 BOOL GetINI(HWND hWnd)
 {
 	struct TPFILTER *tpFilter;
-	HDC hdc;
 	TCHAR app_path[BUF_SIZE];
 	TCHAR buf[BUF_SIZE];
 	TCHAR key_buf[BUF_SIZE];
@@ -303,14 +301,9 @@ BOOL GetINI(HWND hWnd)
 	TCHAR ret[BUF_SIZE];
 	TCHAR tmp[BUF_SIZE];
 	TCHAR *p, *r;
-	UINT char_set;
 	int i, j, t, cnt;
 	int len;
 	int fDef;
-
-	hdc = GetDC(hWnd);
-	char_set = GetTextCharset(hdc);
-	ReleaseDC(hWnd, hdc);
 
 	TStrJoin(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	Profile_Initialize(app_path, TRUE);
@@ -340,10 +333,10 @@ BOOL GetINI(HWND hWnd)
 
 	FontName = GetAllocIniString(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT, app_path);
 	FontSize = Profile_GetInt(GENERAL, TEXT("FontSize"), 9, app_path);
-	FontCharset = Profile_GetInt(GENERAL, TEXT("FontCharset"), char_set, app_path);
+	FontCharset = Profile_GetInt(GENERAL, TEXT("FontCharset"), STR_DEFAULT_FONTCHARSET, app_path);
 	LvFontName = GetAllocIniString(GENERAL, TEXT("LvFontName"), TEXT(""), app_path);
 	LvFontSize = Profile_GetInt(GENERAL, TEXT("LvFontSize"), 9, app_path);
-	LvFontCharset = Profile_GetInt(GENERAL, TEXT("LvFontCharset"), char_set, app_path);
+	LvFontCharset = Profile_GetInt(GENERAL, TEXT("LvFontCharset"), STR_DEFAULT_FONTCHARSET, app_path);
 	HeadCharset = GetAllocIniString(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET, app_path);
 	HeadEncoding = Profile_GetInt(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE, app_path);
 	BodyCharset = GetAllocIniString(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET, app_path);
@@ -387,14 +380,6 @@ BOOL GetINI(HWND hWnd)
 	LvColSize[1] = Profile_GetInt(GENERAL, TEXT("LvColSize-1"), 100, app_path);
 	LvColSize[2] = Profile_GetInt(GENERAL, TEXT("LvColSize-2"), 110, app_path);
 	LvColSize[3] = Profile_GetInt(GENERAL, TEXT("LvColSize-3"), 50, app_path);
-
-#ifdef _WIN32_WCE
-	AddColSize[0] = Profile_GetInt(GENERAL, TEXT("AddColSize-0"), 100, app_path);
-	AddColSize[1] = Profile_GetInt(GENERAL, TEXT("AddColSize-1"), 100, app_path);
-#else
-	AddColSize[0] = Profile_GetInt(GENERAL, TEXT("AddColSize-0"), 250, app_path);
-	AddColSize[1] = Profile_GetInt(GENERAL, TEXT("AddColSize-1"), 190, app_path);
-#endif
 
 #ifndef _WIN32_WCE
 	ViewRect.left = Profile_GetInt(GENERAL, TEXT("viewleft"), 0, app_path);
@@ -745,9 +730,6 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 	Profile_WriteInt(GENERAL, TEXT("LvColSize-1"), LvColSize[1], app_path);
 	Profile_WriteInt(GENERAL, TEXT("LvColSize-2"), LvColSize[2], app_path);
 	Profile_WriteInt(GENERAL, TEXT("LvColSize-3"), LvColSize[3], app_path);
-
-	Profile_WriteInt(GENERAL, TEXT("AddColSize-0"), AddColSize[0], app_path);
-	Profile_WriteInt(GENERAL, TEXT("AddColSize-1"), AddColSize[1], app_path);
 
 #ifndef _WIN32_WCE
 	Profile_WriteInt(GENERAL, TEXT("viewleft"), ViewRect.left, app_path);

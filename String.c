@@ -1040,16 +1040,6 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
 		if(StrCmpI(tz, "GMT") == 0 || StrCmpI(tz, "UT") == 0){
 			//ïWèÄéûä‘
 			itz = 0;
-		}else if(StrCmpI(tz, "EDT") == 0){
-			itz = -4;
-		}else if(StrCmpI(tz, "EST") == 0 || StrCmpI(tz, "CDT") == 0){
-			itz = -5;
-		}else if(StrCmpI(tz, "CST") == 0 || StrCmpI(tz, "MDT") == 0){
-			itz = -6;
-		}else if(StrCmpI(tz, "MST") == 0 || StrCmpI(tz, "PDT") == 0){
-			itz = -7;
-		}else if(StrCmpI(tz, "PST") == 0){
-			itz = -8;
 		}else{
 			return;
 		}
