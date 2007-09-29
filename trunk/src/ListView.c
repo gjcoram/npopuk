@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 /* Define */
 #define ICONCOUNT			9
@@ -494,9 +495,9 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 					*(r++) = TEXT(' ');
 				}
 				// Ž}‚Ì’Ç‰Á
-				r = TStrCpy(r, STR_LIST_THREADSTR);
+				r = str_cpy_t(r, STR_LIST_THREADSTR);
 				// Œ–¼‚Ì’Ç‰Á
-				TStrCpyN(r, p, BUF_SIZE - (r - hLVItem->pszText) - 1);
+				str_cpy_n_t(r, p, BUF_SIZE - (r - hLVItem->pszText) - 1);
 				return;
 			}
 			break;
@@ -519,7 +520,7 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 		default:
 			return;
 		}
-		TStrCpyN(hLVItem->pszText, (p != NULL) ? p : TEXT("\0"), BUF_SIZE - 1);
+		str_cpy_n_t(hLVItem->pszText, (p != NULL) ? p : TEXT("\0"), BUF_SIZE - 1);
 	}
 }
 
@@ -598,15 +599,15 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		if (MAILBOX_SEND == SelBox) {
 			char dbuf[BUF_SIZE];
 #ifdef UNICODE
-			TcharToChar(wbuf1, tmp1, BUF_SIZE);
+			tchar_to_char(wbuf1, tmp1, BUF_SIZE);
 			DateConv(tmp1, tmp2);
 			SortDateConv(tmp2, dbuf);
-			CharToTchar(dbuf, tbuf1, BUF_SIZE);
+			char_to_tchar(dbuf, tbuf1, BUF_SIZE);
 
-			TcharToChar(wbuf2, tmp1, BUF_SIZE);
+			tchar_to_char(wbuf2, tmp1, BUF_SIZE);
 			DateConv(tmp1, tmp2);
 			SortDateConv(tmp2, dbuf);
-			CharToTchar(dbuf, tbuf2, BUF_SIZE);
+			char_to_tchar(dbuf, tbuf2, BUF_SIZE);
 #else
 			DateConv(wbuf1, dbuf);
 			SortDateConv(dbuf, tbuf1);
@@ -615,13 +616,13 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 #endif
 		} else {
 #ifdef UNICODE
-			TcharToChar(wbuf1, tmp1, BUF_SIZE);
+			tchar_to_char(wbuf1, tmp1, BUF_SIZE);
 			SortDateConv(tmp1, tmp2);
-			CharToTchar(tmp2, tbuf1, BUF_SIZE);
+			char_to_tchar(tmp2, tbuf1, BUF_SIZE);
 
-			TcharToChar(wbuf2, tmp1, BUF_SIZE);
+			tchar_to_char(wbuf2, tmp1, BUF_SIZE);
 			SortDateConv(tmp1, tmp2);
-			CharToTchar(tmp2, tbuf2, BUF_SIZE);
+			char_to_tchar(tmp2, tbuf2, BUF_SIZE);
 #else
 			SortDateConv(wbuf1, tbuf1);
 			SortDateConv(wbuf2, tbuf2);
@@ -662,7 +663,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		break;
 	}
 
-	ret = (NumFlag == FALSE) ? TStrCmpI(wbuf1, wbuf2) : (len1 - len2);
+	ret = (NumFlag == FALSE) ? lstrcmpi(wbuf1, wbuf2) : (len1 - len2);
 	return (((ret < 0 && sfg == 1) || (ret > 0 && sfg == 0)) ? 1 : -1);
 }
 

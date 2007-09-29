@@ -11,6 +11,8 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
+#include "Font.h"
 
 /* Define */
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ
@@ -47,9 +49,15 @@
 HINSTANCE hInst;							// Local copy of hInstance
 TCHAR *AppDir;								// アプリケーションパス
 TCHAR *DataDir;								// データ保存先のパス
-TCHAR *g_Pass = NULL;						// 一時パスワード
+TCHAR *g_Pass;								// 一時パスワード
 int gPassSt;								// 一時パスワード保存フラグ
-static TCHAR *CmdLine = NULL;				// コマンドライン
+static TCHAR *CmdLine;						// コマンドライン
+BOOL first_start;							// 初回起動フラグ
+BOOL PPCFlag;								// PsPCフラグ
+#ifndef _WIN32_WCE
+static int confirm_flag;					// 認証フラグ
+#endif
+
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HFONT hListFont;							// ListViewのフォント
@@ -57,7 +65,7 @@ HFONT hEditFont;							// 表示、編集のフォント
 static HICON TrayIcon_Main;					// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
-BOOL NewMail_Flag = FALSE;					// タスクトレイアイコン用新着フラグ
+BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hPOPUP;						// タスクトレイアイコン用のポップアップメニュー
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
@@ -69,58 +77,48 @@ static RECT wnd_size;						// 初期ウィンドウサイズ (l'agenda)
 static int g_menu_height;					// メニューの高さ (l'agenda)
 HMENU hMainMenu;							// ウィンドウメニューのハンドル (l'agenda)
 #endif
-
-BOOL first_start;							// 初回起動フラグ
-BOOL PPCFlag = FALSE;						// PsPCフラグ
 int MailMenuPos;							// メニュー位置
-int LvSortFlag = 0;							// ListViewのソートフラグ
-BOOL EndThreadSortFlag = FALSE;				// 通信終了時の自動ソートフラグ(スレッド用)
+
+static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
+int LvSortFlag;								// ListViewのソートフラグ
+BOOL EndThreadSortFlag;						// 通信終了時の自動ソートフラグ(スレッド表示用)
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-static BOOL SelMode = FALSE;				// 選択モード (PocketPC, l'agenda)
-#endif
-#ifndef _WIN32_WCE
-static int confirm_flag;					// 認証フラグ
+static BOOL SelMode;						// 選択モード (PocketPC, l'agenda)
 #endif
 
-SOCKET g_soc = -1;							// ソケット
-BOOL gSockFlag = FALSE;						// 通信中フラグ
-BOOL GetHostFlag = FALSE;					// ホスト名解決中フラグ
-int MailFlag = 0;							// 送受信用コマンドフラグ (POP_, SMTP_)
-int NewMailCnt = 0;							// 新着メール数
-BOOL ShowMsgFlag = FALSE;					// 新着有りのメッセージ表示中
-static BOOL ShowError = FALSE;				// エラーメッセージ表示中
-BOOL AutoCheckFlag = FALSE;					// 自動チェック
-BOOL PopBeforeSmtpFlag = FALSE;				// POP before SMTP
-BOOL KeyShowHeader;							// キーによる一時的なヘッダ表示フラグ
-static BOOL AllCheck = FALSE;				// 巡回中
-BOOL ExecFlag = FALSE;						// 実行中
-static BOOL ExecCheckFlag = FALSE;			// 実行後チェックのチェック判定
-static int AutoCheckCnt = 0;				// 自動チェック開始までの分数カウント
-static int SmtpWait = 0;					// POP before SMTP で認証後の待ち時間 (ミリ秒)
-static MAILITEM *wkSendMailItem;			// 送信用メールアイテム
-
+MAILBOX *MailBox;							// メールボックス
+MAILBOX *AddressBox;						// アドレス帳
+int MailBoxCnt = 2;							// メールボックス数
 int SelBox;									// 選択中のメールボックス
 int RecvBox;								// 送受信中のメールボックス
 static int CheckBox;						// チェック中のメールボックス
 
-MAILBOX *MailBox = NULL;					// メールボックス
-MAILBOX *AddressBox = NULL;					// アドレス帳
-int MailBoxCnt = 2;							// メールボックス数
-
-static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
+SOCKET g_soc = -1;							// ソケット
+BOOL gSockFlag;								// 通信中フラグ
+BOOL GetHostFlag;							// ホスト名解決中フラグ
+int NewMailCnt;								// 新着メール数
+BOOL ShowMsgFlag;							// 新着有りのメッセージ表示中
+static BOOL ShowError;						// エラーメッセージ表示中
+BOOL AutoCheckFlag;							// 自動チェック
+BOOL PopBeforeSmtpFlag;						// POP before SMTP
+BOOL KeyShowHeader;							// キーによる一時的なヘッダ表示フラグ
+static BOOL AllCheck;						// 巡回中
+BOOL ExecFlag;								// 実行中
+static BOOL ExecCheckFlag;					// 実行後チェックのチェック判定
+static int AutoCheckCnt;					// 自動チェック開始までの分数カウント
+static int SmtpWait;						// POP before SMTP で認証後の待ち時間 (ミリ秒)
+static MAILITEM *wkSendMailItem;			// 送信用メールアイテム
 
 typedef BOOL (*PPROC)(HWND, SOCKET, char*, int, TCHAR*, MAILBOX*, BOOL);
-static PPROC RecvProc;						// 送受信プロシージャ
-
+static PPROC command_proc;					// 送受信プロシージャ
+int command_status;							// 送受信コマンドステータス (POP_, SMTP_)
 
 // 外部参照
 extern OPTION op;
 
-extern char *recv_buf;						// 内部受信バッファ
-extern char *remainder_buf;					// 内部受信未処理バッファ
 extern TCHAR *FindStr;						// 検索文字列
 extern HWND hViewWnd;						// 表示ウィンドウ
-extern HWND MsgWnd;							// メール到着メッセージ
+extern HWND MsgWnd;							// メール到着メッセージウィンドウ
 
 // RAS
 extern UINT WM_RASEVENT;
@@ -179,7 +177,7 @@ static BOOL GetAppPath(HINSTANCE hinst)
 {
 #ifdef _WCE_OLD
 #define SAVEPATH	TEXT("\\My Documents\\")
-	AppDir = AllocCopy(SAVEPATH);
+	AppDir = alloc_copy(SAVEPATH);
 	if (AppDir == NULL) {
 		return FALSE;
 	}
@@ -189,7 +187,7 @@ static BOOL GetAppPath(HINSTANCE hinst)
 	GetUserDiskName(hinst, buf, BUF_SIZE - 1);
 	lstrcat(buf, TEXT("\\nPOP\\"));
 
-	AppDir = AllocCopy(buf);
+	AppDir = alloc_copy(buf);
 	if (AppDir == NULL) {
 		return FALSE;
 	}
@@ -238,7 +236,7 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 	if (*p == TEXT('\0')) return FALSE;
 	if (*p != TEXT('/')) return TRUE;
 	p++;
-	if (TStrCmpNI(p, TEXT("a:"), 2) != 0) {
+	if (str_cmp_ni_t(p, TEXT("a:"), 2) != 0) {
 		for (; *p != TEXT('\0') && *p != TEXT(' '); p++);
 		for (; *p == TEXT(' '); p++);
 		lstrcpy(buf, p);
@@ -253,7 +251,7 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
 	} else {
 		for (r = p; *r != TEXT('\0') && *r != TEXT(' '); r++);
 	}
-	TStrCpyN(name, p, r - p + 1);
+	str_cpy_n_t(name, p, r - p + 1);
 	i = GetNameToMailBox(name);
 	SelectMailBox(hWnd, i);
 
@@ -391,22 +389,21 @@ void SetStatusTextT(HWND hWnd, TCHAR *buf, int Part)
  */
 void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 {
-	TCHAR *SetBuf;
+	TCHAR *st_buf;
 
 	if (PPCFlag == FALSE && RecvBox >= MAILBOX_USER && (MailBox + RecvBox)->Name != NULL) {
-		SetBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + RecvBox)->Name) + lstrlen(buf) + 4));
-		if (SetBuf == NULL) {
+		st_buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + RecvBox)->Name) + lstrlen(buf) + 4));
+		if (st_buf == NULL) {
 			return;
 		}
-		TStrJoin(SetBuf, TEXT("["), (MailBox + RecvBox)->Name, TEXT("] "), buf, (TCHAR *)-1);
+		str_join(st_buf, TEXT("["), (MailBox + RecvBox)->Name, TEXT("] "), buf, (TCHAR *)-1);
 #ifdef _WIN32_WCE_PPC
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1 | SBT_NOBORDERS, (LPARAM)SetBuf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1 | SBT_NOBORDERS, (LPARAM)st_buf);
 #else
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)SetBuf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)st_buf);
 #endif
-		if (op.SocLog == 1) SaveLog(AppDir, LOG_FILE, SetBuf);
-
-		mem_free(&SetBuf);
+		if (op.SocLog == 1) SaveLog(AppDir, LOG_FILE, st_buf);
+		mem_free(&st_buf);
 	} else {
 #ifdef _WIN32_WCE_PPC
 		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1 | SBT_NOBORDERS, (LPARAM)buf);
@@ -425,7 +422,7 @@ void SetSocStatusText(HWND hWnd, char *buf)
 {
 	TCHAR *wbuf;
 
-	wbuf = AllocCharToTchar(buf);
+	wbuf = alloc_char_to_tchar(buf);
 	if (wbuf == NULL) {
 		return;
 	}
@@ -543,7 +540,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 			p = tpMailBox->Name;
 			Title = NULL;
 		} else {
-			TStrJoin(Title, STR_TITLE_ERROR TEXT(" - "), tpMailBox->Name, (TCHAR *)-1);
+			str_join(Title, STR_TITLE_ERROR TEXT(" - "), tpMailBox->Name, (TCHAR *)-1);
 		}
 	} else {
 		p = STR_TITLE_ERROR;
@@ -565,8 +562,8 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 	if (g_soc != -1 && GetHostFlag == FALSE) {
 		socket_close(hWnd, g_soc);
 	}
-	KillTimer(hWnd, ID_TIMEOUT_TIMER);
 	g_soc = -1;
+	KillTimer(hWnd, ID_TIMEOUT_TIMER);
 	if (BoxIndex == MAILBOX_SEND) {
 		smtp_set_error(hWnd);
 	}
@@ -1237,10 +1234,10 @@ static BOOL InitWindow(HWND hWnd)
 
 	// フォントの作成
 	if (op.LvFontName != NULL && *op.LvFontName != TEXT('\0')) {
-		hListFont = CreateEditFont(hWnd, op.LvFontName, op.LvFontSize, op.LvFontCharset);
+		hListFont = create_font(hWnd, op.LvFontName, op.LvFontSize, op.LvFontCharset);
 	}
 	// ViewとEditのフォント
-	hEditFont = CreateEditFont(hWnd, op.FontName, op.FontSize, op.FontCharset);
+	hEditFont = create_font(hWnd, op.FontName, op.FontSize, op.FontCharset);
 
 	// コンボボックス
 	if ((j = CreateComboBox(hWnd, Height)) == -1) {
@@ -1407,16 +1404,15 @@ static BOOL SaveWindow(HWND hWnd)
 		gSockFlag = FALSE;
 		ExecFlag = FALSE;
 		NewMailCnt = -1;
-		MailFlag = POP_QUIT;
+		command_status = POP_QUIT;
 		send_buf(g_soc, CMD_RSET"\r\n");
 		send_buf(g_soc, CMD_QUIT"\r\n");
 		socket_close(hWnd, g_soc);
+		g_soc = -1;
 		if (op.RasCheckEndDisCon == 1) {
 			RasDisconnect();
 		}
 	}
-	socket_free();
-
 	// ダイヤルアップの切断
 	if (RasLoop == TRUE || op.RasEndDisCon == 1) {
 		RasDisconnect();
@@ -1470,19 +1466,20 @@ static BOOL EndWindow(HWND hWnd)
 	}
 
 	// 外部アプリ用ファイルの削除
-	TStrJoin(path, DataDir, VIEW_FILE, TEXT("."), op.ViewFileSuffix, (TCHAR *)-1);
+	str_join(path, DataDir, VIEW_FILE, TEXT("."), op.ViewFileSuffix, (TCHAR *)-1);
 	DeleteFile(path);
 #ifdef _WIN32_WCE
-	TStrJoin(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
+	str_join(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 	DeleteFile(path);
 #endif
 
 	// 添付ファイルの削除
-	if (op.AttachDelete == 1) {
+	if (op.AttachDelete != 0) {
 		TCHAR file[BUF_SIZE];
 		wsprintf(path, TEXT("%s%s\\"), DataDir, op.AttachPath);
 		wsprintf(file, TEXT("%s*"), ATTACH_FILE);
 		DeleteDir(path, file);
+		RemoveDirectory(path);
 	}
 
 	// 検索文字列の解放
@@ -1601,9 +1598,9 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 			if (gPassSt == 1) {
 				// 一時パスワードの設定
 				if (tpMailBox->AuthUserPass == 1) {
-					tpMailBox->SmtpTmpPass = AllocCopy(g_Pass);
+					tpMailBox->SmtpTmpPass = alloc_copy(g_Pass);
 				} else {
-					tpMailBox->TmpPass = AllocCopy(g_Pass);
+					tpMailBox->TmpPass = alloc_copy(g_Pass);
 				}
 			}
 		}
@@ -1614,8 +1611,8 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	SwitchCursor(FALSE);
-	RecvProc = smtp_proc;
-	MailFlag = SMTP_START;
+	command_proc = smtp_proc;
+	command_status = SMTP_START;
 	ExecFlag = TRUE;
 
 	*ErrStr = TEXT('\0');
@@ -1670,7 +1667,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 		}
 		if (gPassSt == 1) {
 			// 一時パスワードの設定
-			tpMailBox->TmpPass = AllocCopy(g_Pass);
+			tpMailBox->TmpPass = alloc_copy(g_Pass);
 		}
 	}
 
@@ -1695,8 +1692,8 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	// 接続開始
-	RecvProc = pop3_list_proc;
-	MailFlag = POP_START;
+	command_proc = pop3_list_proc;
+	command_status = POP_START;
 	PopBeforeSmtpFlag = SmtpFlag;
 	g_soc = connect_server(hWnd,
 		tpMailBox->PopIP, (unsigned short)tpMailBox->Port,
@@ -1808,7 +1805,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 		}
 		if (gPassSt == 1) {
 			// 一時パスワードの設定
-			tpMailBox->TmpPass = AllocCopy(g_Pass);
+			tpMailBox->TmpPass = alloc_copy(g_Pass);
 		}
 	}
 
@@ -1833,8 +1830,8 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	// 接続開始
-	RecvProc = pop3_exec_proc;
-	MailFlag = POP_START;
+	command_proc = pop3_exec_proc;
+	command_status = POP_START;
 	g_soc = connect_server(hWnd,
 		tpMailBox->PopIP, (unsigned short)tpMailBox->Port,
 		(tpMailBox->PopSSL == 0 || tpMailBox->PopSSLInfo.Type == 4) ? -1 : tpMailBox->PopSSLInfo.Type,
@@ -2391,7 +2388,7 @@ static void NewMail_Massage(HWND hWnd, int cnt)
 		} else {
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + i)->Name) + 3));
 			if (p != NULL) {
-				TStrJoin(p, (MailBox + i)->Name, TEXT(" *"), (TCHAR *)-1);
+				str_join(p, (MailBox + i)->Name, TEXT(" *"), (TCHAR *)-1);
 				SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i, (LPARAM)p);
 				mem_free(&p);
 			}
@@ -2747,13 +2744,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 			// 切断
 			case SELECT_SOC_CLOSE:
-				if (MailFlag != POP_QUIT) {
+				if (command_status != POP_QUIT) {
 					ErrorSocketEnd(hWnd, RecvBox);
 					SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 				} else {
 					socket_close(hWnd, g_soc);
-					KillTimer(hWnd, ID_TIMEOUT_TIMER);
 					g_soc = -1;
+					KillTimer(hWnd, ID_TIMEOUT_TIMER);
 					SetItemCntStatusText(hWnd, NULL);
 				}
 				break;
@@ -2765,7 +2762,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 #endif
-		// １件送信
+		// 1件送信
 		case ID_SMTP_ONE_TIMER:
 			if (g_soc != -1) {
 				break;
@@ -3419,7 +3416,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				EndSocketFunc(hWnd);
 				break;
 			}
-			if (MailFlag == POP_QUIT || MailFlag == POP_START) {
+			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				RecvBox = -1;
@@ -3427,7 +3424,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				EndSocketFunc(hWnd);
 				break;
 			}
-			MailFlag = POP_QUIT;
+			command_status = POP_QUIT;
 			SetSocStatusTextT(hWnd, TEXT(CMD_RSET));
 			send_buf(g_soc, CMD_RSET"\r\n");
 			SetSocStatusTextT(hWnd, TEXT(CMD_QUIT));
@@ -3709,13 +3706,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case FD_CLOSE:						/* サーバへの接続が終了した事を示すイベント */
 			/* 接続を終了する */
-			if (MailFlag != POP_QUIT) {
+			if (command_status != POP_QUIT) {
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 			} else {
 				socket_close(hWnd, g_soc);
-				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				g_soc = -1;
+				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				SetItemCntStatusText(hWnd, NULL);
 				if (AllCheck == FALSE) {
 					if (op.CheckEndExec == 1 &&
@@ -3748,7 +3745,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TCHAR ErrStr[BUF_SIZE];
 
 			*ErrStr = TEXT('\0');
-			if (RecvProc(hWnd, g_soc, (char *)lParam, wParam, ErrStr,
+			if (command_proc(hWnd, g_soc, (char *)lParam, wParam, ErrStr,
 				(MailBox + RecvBox), RecvBox == SelBox) == FALSE) {
 				ErrorSocketEnd(hWnd, RecvBox);
 				if (*ErrStr != TEXT('\0')) {
@@ -4103,7 +4100,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}
 
 	if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
-		CmdLine = AllocCopy(lpCmdLine);
+		CmdLine = alloc_copy(lpCmdLine);
 	}
 
 #ifndef _WCE_OLD

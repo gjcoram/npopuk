@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 /* Define */
 #define ID_MENU				(WM_APP + 102)
@@ -100,8 +101,8 @@ static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress)
 	}
 	while (*To != TEXT('\0')) {
 		GetMailAddress(To, p, FALSE);
-		if ((MyMailAddress != NULL && TStrCmpI(MyMailAddress, p) == 0) ||
-			(ToMailAddress != NULL && TStrCmpI(ToMailAddress, p) == 0)) {
+		if ((MyMailAddress != NULL && lstrcmpi(MyMailAddress, p) == 0) ||
+			(ToMailAddress != NULL && lstrcmpi(ToMailAddress, p) == 0)) {
 			// 自分のアドレスか To に設定されたアドレスの場合はカウントしない
 			To = GetMailString(To, p);
 		} else {
@@ -136,17 +137,17 @@ static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, T
 	}
 	while (*To != TEXT('\0')) {
 		GetMailAddress(To, p, FALSE);
-		if ((MyMailAddress != NULL && TStrCmpI(MyMailAddress, p) == 0) ||
-			(ToMailAddress != NULL && TStrCmpI(ToMailAddress, p) == 0)) {
+		if ((MyMailAddress != NULL && lstrcmpi(MyMailAddress, p) == 0) ||
+			(ToMailAddress != NULL && lstrcmpi(ToMailAddress, p) == 0)) {
 			// 自分のアドレスか To に設定されたアドレスの場合は追加しない
 			To = GetMailString(To, p);
 		} else {
 			To = GetMailString(To, p);
 			if (ret != r) {
 				// 区切りの追加
-				r = TStrCpy(r, TEXT(",\r\n "));
+				r = str_cpy_t(r, TEXT(",\r\n "));
 			}
-			r = TStrCpy(r, p);
+			r = str_cpy_t(r, p);
 		}
 		To = (*To != TEXT('\0')) ? To + 1 : To;
 	}
@@ -204,14 +205,14 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 	*tpMailItem->Cc = TEXT('\0');
 	r = SetCcList(tpReMailItem->To, MyMailAddress, ToMailAddress, tpMailItem->Cc);
 	if (CcSize > 0 && *tpMailItem->Cc != TEXT('\0')) {
-		r = TStrCpy(r, TEXT(",\r\n "));
+		r = str_cpy_t(r, TEXT(",\r\n "));
 	}
 	// Cc を Cc のリストに追加する
 	r = SetCcList(tpReMailItem->Cc, MyMailAddress, ToMailAddress, r);
 	// From を Cc のリストに追加する
 	if (FromSize > 0) {
 		if (*tpMailItem->Cc != TEXT('\0')) {
-			r = TStrCpy(r, TEXT(",\r\n "));
+			r = str_cpy_t(r, TEXT(",\r\n "));
 		}
 		SetCcList(tpReMailItem->From, MyMailAddress, ToMailAddress, r);
 	}
@@ -229,16 +230,16 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 	// 返信のMailBoxの設定
 	if (rebox >= MAILBOX_USER) {
-		tpMailItem->MailBox = AllocCopy((MailBox + rebox)->Name);
+		tpMailItem->MailBox = alloc_copy((MailBox + rebox)->Name);
 	} else if (tpReMailItem->MailBox != NULL) {
-		tpMailItem->MailBox = AllocCopy(tpReMailItem->MailBox);
+		tpMailItem->MailBox = alloc_copy(tpReMailItem->MailBox);
 	}
 
 	// 返信の宛先の設定
 	if (tpReMailItem->ReplyTo != NULL) {
-		tpMailItem->To = AllocCopy(tpReMailItem->ReplyTo);
+		tpMailItem->To = alloc_copy(tpReMailItem->ReplyTo);
 	} else if (tpReMailItem->From != NULL) {
-		tpMailItem->To = AllocCopy(tpReMailItem->From);
+		tpMailItem->To = alloc_copy(tpReMailItem->From);
 	}
 
 	// 全員に返信の場合は Cc を設定
@@ -248,31 +249,31 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 	if (tpReMailItem->MessageID != NULL && *tpReMailItem->MessageID == TEXT('<')) {
 		// 返信のIn-Reply-Toの設定
-		tpMailItem->InReplyTo = AllocCopy(tpReMailItem->MessageID);
+		tpMailItem->InReplyTo = alloc_copy(tpReMailItem->MessageID);
 
 		// 返信のReferencesの設定
 		if (tpReMailItem->InReplyTo != NULL && *tpReMailItem->InReplyTo == TEXT('<')) {
 			tpMailItem->References = (TCHAR *)mem_alloc(
 				sizeof(TCHAR) * (lstrlen(tpReMailItem->InReplyTo) + lstrlen(tpReMailItem->MessageID) + 2));
 			if (tpMailItem->References != NULL) {
-				TStrJoin(tpMailItem->References, tpReMailItem->InReplyTo, TEXT(" "), tpReMailItem->MessageID, (TCHAR *)-1);
+				str_join(tpMailItem->References, tpReMailItem->InReplyTo, TEXT(" "), tpReMailItem->MessageID, (TCHAR *)-1);
 			}
 		} else {
-			tpMailItem->References = AllocCopy(tpReMailItem->MessageID);
+			tpMailItem->References = alloc_copy(tpReMailItem->MessageID);
 		}
 	}
 
 	// 返信の件名を設定
 	subject = (tpReMailItem->Subject != NULL) ? tpReMailItem->Subject : TEXT("");
-	if (TStrCmpNI(subject, op.ReSubject, lstrlen(op.ReSubject)) == 0) {
+	if (str_cmp_ni_t(subject, op.ReSubject, lstrlen(op.ReSubject)) == 0) {
 		subject += lstrlen(op.ReSubject);
-	} else if (TStrCmpNI(subject, REPLY_SUBJECT, lstrlen(REPLY_SUBJECT)) == 0) {
+	} else if (str_cmp_ni_t(subject, REPLY_SUBJECT, lstrlen(REPLY_SUBJECT)) == 0) {
 		subject += lstrlen(REPLY_SUBJECT);
 	}
 	for (; *subject == TEXT(' '); subject++);
 	p = tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(subject) + lstrlen(op.ReSubject) + 1));
 	if (tpMailItem->Subject != NULL) {
-		TStrJoin(p, op.ReSubject, subject, (TCHAR *)-1);
+		str_join(p, op.ReSubject, subject, (TCHAR *)-1);
 	}
 }
 
@@ -302,12 +303,12 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (tpMailItem->Body != NULL) {
 			p = CreateHeaderString(op.ReHeader, tpMailItem->Body, tpReMailItem);
-			p = TStrCpy(p, TEXT("\r\n"));
+			p = str_cpy_t(p, TEXT("\r\n"));
 			if (mBody != NULL) {
 				p = SetReplyBody(mBody, p, op.QuotationChar);
 			}
 			if (i != -1 && (MailBox + i)->Signature != NULL && *(MailBox + i)->Signature != TEXT('\0')) {
-				TStrJoin(p, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
+				str_join(p, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 			}
 		}
 		mem_free(&mBody);
@@ -320,7 +321,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 		len = lstrlen((MailBox + i)->Signature);
 		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
 		if (tpMailItem->Body != NULL) {
-			TStrJoin(tpMailItem->Body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
+			str_join(tpMailItem->Body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 		}
 	}
 }
@@ -342,7 +343,7 @@ static void SetWindowString(HWND hWnd, TCHAR *Subject)
 		SetWindowText(hWnd, STR_TITLE_MAILEDIT);
 		return;
 	}
-	TStrJoin(buf, STR_TITLE_MAILEDIT TEXT(" - ["), Subject, TEXT("]"), (TCHAR *)-1);
+	str_join(buf, STR_TITLE_MAILEDIT TEXT(" - ["), Subject, TEXT("]"), (TCHAR *)-1);
 	if (lstrlen(buf) > BUF_SIZE) {
 		*(buf + BUF_SIZE) = TEXT('\0');
 	}
@@ -378,10 +379,10 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		return;
 	}
 
-	p = TStrJoin(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, tpMailItem->To, (TCHAR *)-1);
+	p = str_join(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, tpMailItem->To, (TCHAR *)-1);
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
-	p = TStrJoin(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
+	p = str_join(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
 	SetAttachList(tpMailItem->Attach, p);
 
 	SetWindowText(hHeader, buf);
@@ -939,8 +940,8 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 	// サイズを設定
 	mem_free(&tpMailItem->Size);
 	wsprintf(numbuf, TEXT("%d"), (tpMailItem->Body != NULL)
-		? TcharToCharSize(tpMailItem->Body) - 1 : 0);
-	tpMailItem->Size = AllocCopy(numbuf);
+		? tchar_to_char_size(tpMailItem->Body) - 1 : 0);
+	tpMailItem->Size = alloc_copy(numbuf);
 
 	if (Item_IsMailBox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
 		if (Item_Add(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
@@ -1059,7 +1060,7 @@ static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
 #endif
 
 #ifdef _WIN32_WCE
-	TStrJoin(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
+	str_join(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 #else
 	wsprintf(path, TEXT("%s%ld.%s"), DataDir, id, op.EditFileSuffix);
 #endif
@@ -1082,7 +1083,7 @@ static BOOL AppEditMail(HWND hWnd, long id, TCHAR *buf, MAILITEM *tpMailItem)
 		PROCESS_INFORMATION ProcInfo;
 		TCHAR param[BUF_SIZE];
 
-		TStrJoin(param, TEXT(" "), path, (TCHAR *)-1);
+		str_join(param, TEXT(" "), path, (TCHAR *)-1);
 		p = CreateCommandLine(op.EditAppCmdLine, path, TRUE);
 
 		// 起動
@@ -1146,7 +1147,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 #endif
 
 #ifdef _WIN32_WCE
-	TStrJoin(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
+	str_join(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 #else
 	wsprintf(path, TEXT("%s%ld.%s"), DataDir, id, op.EditFileSuffix);
 #endif
@@ -1160,7 +1161,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 	fbuf = ReadFileBuf(path, len);
 #ifdef UNICODE
 	// UNICODEに変換
-	tmp = AllocCharToTchar(fbuf);
+	tmp = alloc_char_to_tchar(fbuf);
 	mem_free(&fbuf);
 	p = tmp;
 #else
@@ -1267,7 +1268,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 				}
 				DragQueryFile((HANDLE)wParam, i, fpath, BUF_SIZE - 1);
 				if (CheckDir(fpath) == FALSE) {
-					p = TStrCpy(p, fpath);
+					p = str_cpy_t(p, fpath);
 				}
 			}
 			DragFinish((HANDLE)wParam);
@@ -1736,15 +1737,13 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		op.EditRect.bottom,
 		NULL, NULL, hInstance, (LPVOID)tpMailItem);
 #endif
-
-	if (!hEditWnd) {
+	if (hEditWnd == NULL) {
 		if (OpenFlag != EDIT_OPEN) {
 			FreeMailItem(&tpMailItem, 1);
 		}
 		ErrorMessage(hWnd, STR_ERR_INIT);
 		return EDIT_NONEDIT;
 	}
-
 	if ((op.DefEditApp == 1 && key >= 0) || (op.DefEditApp == 0 && key < 0)) {
 		ShowWindow(hEditWnd, SW_HIDE);
 		SetTimer(hEditWnd, ID_APP_TIMER, 1, NULL);

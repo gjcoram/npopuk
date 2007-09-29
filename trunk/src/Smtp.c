@@ -11,11 +11,13 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
+
 #include "global.h"
 #include "md5.h"
 
 /* Define */
-#define SEND_BUFSIZE			4096			// 送信時の分割サイズ
+#define SEND_SIZE				4096			// 送信時の分割サイズ
 #define SMTP_ERRORSTATUS		400				// SMTPエラーレスポンス
 #define MIME_VERSION			"1.0"			// MIMEバージョン
 
@@ -43,7 +45,7 @@ static MAILBOX *send_mail_box;					// 送信中のメールボックス
 static MAILITEM *send_mail_item;				// 送信メール
 static BOOL auth_flag;							// SMTP-AUTH
 static BOOL starttls_flag;						// STARTTLS
-static TCHAR *body, *send_pt;					// 送信用本文
+static TCHAR *send_body, *send_pt;				// 送信用本文
 static int send_len;							// 送信長
 static int send_end_cmd;						// メール送信完了時のコマンド
 
@@ -57,7 +59,7 @@ extern int SelBox;
 extern BOOL GetHostFlag;
 extern int ssl_type;
 
-extern int MailFlag;
+extern int command_status;
 extern TCHAR *g_Pass;
 
 /* Local Function Prototypes */
@@ -129,7 +131,7 @@ static int check_response(char *buf)
 	}
 
 	// ステータスコードを取得
-	StrCpyN(stat, buf, 4);
+	str_cpy_n(stat, buf, 4);
 	ret = a2i(stat);
 	if (ret <= 0) {
 		ret = SMTP_ERRORSTATUS;
@@ -150,7 +152,7 @@ static BOOL check_starttls(char *buf)
 		return FALSE;
 	}
 	// STARTTLS
-	if (StrCmpNI(p, CMD_STARTTLS, tstrlen(CMD_STARTTLS)) == 0) {
+	if (str_cmp_ni(p, CMD_STARTTLS, tstrlen(CMD_STARTTLS)) == 0) {
 		return TRUE;
 	}
 	return FALSE;
@@ -169,7 +171,7 @@ static BOOL auth_get_type(char *buf, int *type)
 		return FALSE;
 	}
 	// AUTH
-	if (StrCmpNI(p, CMD_AUTH, tstrlen(CMD_AUTH)) != 0) {
+	if (str_cmp_ni(p, CMD_AUTH, tstrlen(CMD_AUTH)) != 0) {
 		return FALSE;
 	}
 	for (; *p != '\0' && *p != ' ' && *p != '='; p++);
@@ -181,7 +183,7 @@ static BOOL auth_get_type(char *buf, int *type)
 	// CRAM-MD5
 	r = p;
 	while (*r != '\0') {
-		if (StrCmpNI(r, CMD_AUTH_CRAM_MD5, tstrlen(CMD_AUTH_CRAM_MD5)) == 0) {
+		if (str_cmp_ni(r, CMD_AUTH_CRAM_MD5, tstrlen(CMD_AUTH_CRAM_MD5)) == 0) {
 			*type = AUTH_CRAM_MD5;
 			break;
 		}
@@ -195,7 +197,7 @@ static BOOL auth_get_type(char *buf, int *type)
 	// LOGIN
 	r = p;
 	while (*r != '\0') {
-		if (StrCmpNI(r, CMD_AUTH_LOGIN, tstrlen(CMD_AUTH_LOGIN)) == 0) {
+		if (str_cmp_ni(r, CMD_AUTH_LOGIN, tstrlen(CMD_AUTH_LOGIN)) == 0) {
 			*type = AUTH_LOGIN;
 			break;
 		}
@@ -209,7 +211,7 @@ static BOOL auth_get_type(char *buf, int *type)
 	// PLAIN
 	r = p;
 	while (*r != '\0') {
-		if (StrCmpNI(r, CMD_AUTH_PLAIN, tstrlen(CMD_AUTH_PLAIN)) == 0) {
+		if (str_cmp_ni(r, CMD_AUTH_PLAIN, tstrlen(CMD_AUTH_PLAIN)) == 0) {
 			*type = AUTH_PLAIN;
 			break;
 		}
@@ -235,7 +237,7 @@ static TCHAR *auth_create_cram_md5(char *buf, TCHAR *user, TCHAR *pass, TCHAR *E
 	int i;
 
 #ifdef UNICODE
-	key = AllocTcharToChar(pass);
+	key = alloc_tchar_to_char(pass);
 	if (key == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return NULL;
@@ -289,12 +291,12 @@ static TCHAR *auth_create_plain(TCHAR *user, TCHAR *pass, TCHAR *ErrStr)
 	int len;
 
 #ifdef UNICODE
-	c_user = AllocTcharToChar(user);
+	c_user = alloc_tchar_to_char(user);
 	if (c_user == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return NULL;
 	}
-	c_pass = AllocTcharToChar(pass);
+	c_pass = alloc_tchar_to_char(pass);
 	if (c_pass == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return NULL;
@@ -332,7 +334,7 @@ static TCHAR *auth_create_plain(TCHAR *user, TCHAR *pass, TCHAR *ErrStr)
 	Base64Encode(tmp, buf, len);
 	mem_free(&tmp);
 #ifdef UNICODE
-	ret = AllocCharToTchar(buf);
+	ret = alloc_char_to_tchar(buf);
 	mem_free(&buf);
 	return ret;
 #else
@@ -380,7 +382,7 @@ static BOOL send_address(HWND hWnd, SOCKET soc, TCHAR *command, TCHAR *address, 
 		return FALSE;
 	}
 	// command:<address>\r\n
-	TStrJoin(wbuf, command, TEXT(":<"), address, TEXT(">\r\n"), (TCHAR *)-1);
+	str_join(wbuf, command, TEXT(":<"), address, TEXT(">\r\n"), (TCHAR *)-1);
 
 	SetSocStatusTextT(hWnd, wbuf);
 	if (send_buf_t(soc, wbuf) == -1) {
@@ -431,7 +433,7 @@ static BOOL send_header(SOCKET soc, TCHAR *header, TCHAR *content, TCHAR *ErrStr
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return FALSE;
 	}
-	TStrJoin(buf, header, TEXT(" "), content, TEXT("\r\n"), (TCHAR *)-1);
+	str_join(buf, header, TEXT(" "), content, TEXT("\r\n"), (TCHAR *)-1);
 	if (send_buf_t(soc, buf) == -1) {
 		mem_free(&buf);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -495,10 +497,10 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		if (tpMailItem->From != NULL) {
 			r = tpMailItem->From;
 			if (p != NULL && *p != TEXT('\0')) {
-				r = TStrJoin(r, p, TEXT(" "), (TCHAR *)-1);
+				r = str_join(r, p, TEXT(" "), (TCHAR *)-1);
 			}
 
-			TStrJoin(r, TEXT("<"), send_mail_box->MailAddress, TEXT(">"), (TCHAR *)-1);
+			str_join(r, TEXT("<"), send_mail_box->MailAddress, TEXT(">"), (TCHAR *)-1);
 			if (send_mime_header(soc, TEXT(HEAD_FROM), tpMailItem->From, TRUE, ErrStr) == FALSE) {
 				return FALSE;
 			}
@@ -523,12 +525,12 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	{
 		char *cbuf, *dbuf;
 
-		cbuf = AllocTcharToChar(buf);
+		cbuf = alloc_tchar_to_char(buf);
 		if (cbuf != NULL) {
 			dbuf = (char *)mem_alloc(BUF_SIZE);
 			if (dbuf != NULL) {
 				DateConv(cbuf, dbuf);
-				tpMailItem->Date = AllocCharToTchar(dbuf);
+				tpMailItem->Date = alloc_char_to_tchar(dbuf);
 				mem_free(&dbuf);
 			}
 			mem_free(&cbuf);
@@ -581,46 +583,46 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 	// 本文のエンコード
-	body = BodyEncode(tpMailItem->Body, buf, enc_buf, ErrStr);
-	if (body == NULL) {
+	send_body = BodyEncode(tpMailItem->Body, buf, enc_buf, ErrStr);
+	if (send_body == NULL) {
 		return FALSE;
 	}
 	// 添付ファイルがある場合はマルチパートで送信する
-	switch (CreateMultipart(tpMailItem->Attach, buf, enc_buf, &mctypr, body, &mbody)) {
+	switch (CreateMultipart(tpMailItem->Attach, buf, enc_buf, &mctypr, send_body, &mbody)) {
 	case MP_ERROR_FILE:
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
 		return FALSE;
 
 	case MP_ERROR_ALLOC:
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return FALSE;
 
 	case MP_NO_ATTACH:
 		// Content-Type
 		if (send_header(soc, TEXT(HEAD_CONTENTTYPE), buf, ErrStr) == FALSE) {
-			mem_free(&body);
-			body = NULL;
+			mem_free(&send_body);
+			send_body = NULL;
 			return FALSE;
 		}
 		// Content-Transfer-Encoding
 		if (send_header(soc, TEXT(HEAD_ENCODING), enc_buf, ErrStr) == FALSE) {
-			mem_free(&body);
-			body = NULL;
+			mem_free(&send_body);
+			send_body = NULL;
 			return FALSE;
 		}
 		break;
 
 	case MP_ATTACH:
-		mem_free(&body);
-		body = mbody;
+		mem_free(&send_body);
+		send_body = mbody;
 		// Content-Type
 		if (send_header(soc, TEXT(HEAD_CONTENTTYPE), mctypr, ErrStr) == FALSE) {
-			mem_free(&body);
-			body = NULL;
+			mem_free(&send_body);
+			send_body = NULL;
 			mem_free(&mctypr);
 			return FALSE;
 		}
@@ -629,38 +631,38 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	}
 	// X-Mailer
 	if (send_header(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		return FALSE;
 	}
 	// ヘッダと本文の区切り
 	if (send_buf(soc, "\r\n") == -1) {
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
-	send_pt = body;
-	send_len = 0;
 
 #ifdef WSAASYNC
+	send_pt = send_body;
+	send_len = lstrlen(send_body);
 	// 送信のイベントを作成
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}
 #else
 	// 本文送信
-	if (body != NULL && send_buf_t(soc, body) == -1) {
-		mem_free(&body);
-		body = NULL;
+	if (send_body != NULL && send_buf_t(soc, send_body) == -1) {
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
-	mem_free(&body);
-	body = NULL;
+	mem_free(&send_body);
+	send_body = NULL;
 
 	if (send_buf(soc, CMD_DATA_END) == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -687,10 +689,10 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 
 	if (buf != NULL) {
 		SetSocStatusText(hWnd, buf);
-		if (auth_flag == TRUE && MailFlag == SMTP_EHLO) {
+		if (auth_flag == TRUE && command_status == SMTP_EHLO) {
 			auth_get_type(buf, &auth_type);
 		}
-		if (MailFlag == SMTP_EHLO) {
+		if (command_status == SMTP_EHLO) {
 			if (check_starttls(buf) == TRUE) {
 				starttls_flag = TRUE;
 			}
@@ -699,12 +701,12 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return TRUE;
 		}
 	}
-	switch (MailFlag) {
+	switch (command_status) {
 	case SMTP_START:
 	case SMTP_STARTTLS:
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_RESPONSE);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		// メールアドレスのチェック
@@ -726,7 +728,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			p = op.SendHelo;
 		}
 		// STARTTLS
-		if (MailFlag == SMTP_STARTTLS) {
+		if (command_status == SMTP_STARTTLS) {
 			ssl_type = 1;
 			if (init_ssl(hWnd, soc, ErrStr) == -1) {
 				return FALSE;
@@ -734,23 +736,23 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		// HELO ドメイン\r\n
 		r = TEXT(CMD_HELO)TEXT(" ");
-		MailFlag = SMTP_HELO;
+		command_status = SMTP_HELO;
 		if (send_mail_box->SmtpSSL == 1 && send_mail_box->SmtpSSLInfo.Type == 4) {
 			r = TEXT(CMD_EHLO)TEXT(" ");
-			MailFlag = SMTP_EHLO;
+			command_status = SMTP_EHLO;
 		}
 		if (auth_flag == FALSE && send_mail_box->SmtpAuth == 1) {
 			// SMTP認証
 			auth_flag = TRUE;
 			auth_type = AUTH_NON;
 			r = TEXT(CMD_EHLO)TEXT(" ");
-			MailFlag = SMTP_EHLO;
+			command_status = SMTP_EHLO;
 		} else {
 			auth_flag = FALSE;
 			if (op.ESMTP != 0) {
 				// ESMTP
 				r = TEXT(CMD_EHLO)TEXT(" ");
-				MailFlag = SMTP_EHLO;
+				command_status = SMTP_EHLO;
 			}
 		}
 		wbuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(r) + lstrlen(p) + lstrlen(TEXT("\r\n")) + 1));
@@ -758,7 +760,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;
 		}
-		TStrJoin(wbuf, r, p, TEXT("\r\n"), (TCHAR *)-1);
+		str_join(wbuf, r, p, TEXT("\r\n"), (TCHAR *)-1);
 		SetSocStatusTextT(hWnd, wbuf);
 		if (send_buf_t(soc, wbuf) == -1) {
 			mem_free(&wbuf);
@@ -771,7 +773,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 	case SMTP_EHLO:
 		if (status >= SMTP_ERRORSTATUS) {
 			// EHLO に失敗した場合は HELO を送信し直す
-			MailFlag = SMTP_START;
+			command_status = SMTP_START;
 			return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
 		}
 		if (starttls_flag == TRUE && send_mail_box->SmtpSSL == 1 && send_mail_box->SmtpSSLInfo.Type == 4) {
@@ -783,7 +785,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			}
 			auth_flag = FALSE;
 			starttls_flag = FALSE;
-			MailFlag = SMTP_STARTTLS;
+			command_status = SMTP_STARTTLS;
 			break;
 		}
 		if (send_mail_box->SmtpAuth == 0) {
@@ -793,7 +795,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return FALSE;
 			}
-			MailFlag = SMTP_RSET;
+			command_status = SMTP_RSET;
 			break;
 		}
 		
@@ -812,7 +814,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return FALSE;
 			}
-			MailFlag = SMTP_AUTH_CRAM_MD5;
+			command_status = SMTP_AUTH_CRAM_MD5;
 			break;
 
 		case AUTH_LOGIN:
@@ -822,7 +824,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return FALSE;
 			}
-			MailFlag = SMTP_AUTH_LOGIN;
+			command_status = SMTP_AUTH_LOGIN;
 			break;
 
 		case AUTH_PLAIN:
@@ -845,7 +847,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				return FALSE;
 			}
 			// AUTH PLAIN Base64(<NULL>User<NULL>Pass)[CRLF] を送信する
-			TStrJoin(wbuf, TEXT(CMD_AUTH)TEXT(" ")TEXT(CMD_AUTH_PLAIN)TEXT(" "), p, TEXT("\r\n"), (TCHAR *)-1);
+			str_join(wbuf, TEXT(CMD_AUTH)TEXT(" ")TEXT(CMD_AUTH_PLAIN)TEXT(" "), p, TEXT("\r\n"), (TCHAR *)-1);
 			SetSocStatusTextT(hWnd, TEXT(CMD_AUTH)TEXT(" ")TEXT(CMD_AUTH_PLAIN)TEXT(" ****"));
 			if (send_buf_t(soc, wbuf) == -1) {
 				mem_free(&p);
@@ -855,7 +857,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			}
 			mem_free(&p);
 			mem_free(&wbuf);
-			MailFlag = SMTP_HELO;
+			command_status = SMTP_HELO;
 			break;
 		}
 		break;
@@ -864,7 +866,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (status >= SMTP_ERRORSTATUS) {
 			auth_flag = FALSE;
 			lstrcpy(ErrStr, STR_ERR_SOCK_SMTPAUTH);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		// AUTH CRAM-MD5のパスワードを作成
@@ -878,12 +880,41 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (wbuf == NULL) {
 			return FALSE;
 		}
+		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(wbuf) * 2 + 4));
+		if (p == NULL) {
+			mem_free(&wbuf);
+			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+			return FALSE;
+		}
+		//Base64エンコード
+		TBase64Encode(wbuf, p, 0);
+		mem_free(&wbuf);
+
+		// パスワード送信
+		wbuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(TEXT("\r\n")) + lstrlen(p) + 1));
+		if (wbuf == NULL) {
+			mem_free(&p);
+			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+			return FALSE;
+		}
+		str_join(wbuf, p, TEXT("\r\n"), (TCHAR *)-1);
+		SetSocStatusTextT(hWnd, STR_STATUS_SEND_PASS);
+		if (send_buf_t(soc, wbuf) == -1) {
+			mem_free(&p);
+			mem_free(&wbuf);
+			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+			return FALSE;
+		}
+		mem_free(&p);
+		mem_free(&wbuf);
+		command_status = SMTP_HELO;
+		break;
 
 	case SMTP_AUTH_LOGIN:
 		if (status >= SMTP_ERRORSTATUS) {
 			auth_flag = FALSE;
 			lstrcpy(ErrStr, STR_ERR_SOCK_SMTPAUTH);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		user = (send_mail_box->AuthUserPass == 1) ? send_mail_box->SmtpUser : send_mail_box->User;
@@ -901,8 +932,8 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;
 		}
-		TStrJoin(wbuf, p, TEXT("\r\n"), (TCHAR *)-1);
-		SetSocStatusTextT(hWnd, TEXT("Send user"));
+		str_join(wbuf, p, TEXT("\r\n"), (TCHAR *)-1);
+		SetSocStatusTextT(hWnd, STR_STATUS_SEND_USER);
 		if (send_buf_t(soc, wbuf) == -1) {
 			mem_free(&p);
 			mem_free(&wbuf);
@@ -911,14 +942,14 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		mem_free(&p);
 		mem_free(&wbuf);
-		MailFlag = SMTP_AUTH_LOGIN_PASS;
+		command_status = SMTP_AUTH_LOGIN_PASS;
 		break;
 
 	case SMTP_AUTH_LOGIN_PASS:
 		if (status >= SMTP_ERRORSTATUS) {
 			auth_flag = FALSE;
 			lstrcpy(ErrStr, STR_ERR_SOCK_SMTPAUTH);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		pass = auth_get_password(send_mail_box);
@@ -940,8 +971,8 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;
 		}
-		TStrJoin(wbuf, p, TEXT("\r\n"), (TCHAR *)-1);
-		SetSocStatusTextT(hWnd, TEXT("Send password"));
+		str_join(wbuf, p, TEXT("\r\n"), (TCHAR *)-1);
+		SetSocStatusTextT(hWnd, STR_STATUS_SEND_PASS);
 		if (send_buf_t(soc, wbuf) == -1) {
 			mem_free(&p);
 			mem_free(&wbuf);
@@ -950,7 +981,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		mem_free(&p);
 		mem_free(&wbuf);
-		MailFlag = SMTP_HELO;
+		command_status = SMTP_HELO;
 		break;
 
 	case SMTP_HELO:
@@ -961,7 +992,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				auth_flag = FALSE;
 				lstrcpy(ErrStr, STR_ERR_SOCK_SMTPAUTH);
 			}
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		// 初期化
@@ -970,26 +1001,26 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		MailFlag = SMTP_RSET;
+		command_status = SMTP_RSET;
 		break;
 
 	case SMTP_RSET:
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_RSET);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		// 返信先メールアドレスの送信
 		if (send_address(hWnd, soc, TEXT(CMD_MAIL_FROM), send_mail_box->MailAddress, ErrStr) == FALSE) {
 			return FALSE;
 		}
-		MailFlag = SMTP_MAILFROM;
+		command_status = SMTP_MAILFROM;
 		break;
 
 	case SMTP_MAILFROM:
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_MAILFROM);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		if (tpMailItem->To == NULL) {
@@ -1007,13 +1038,13 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			MyBcc = (send_mail_box->BccAddr != NULL && *send_mail_box->BccAddr != TEXT('\0')) ?
 				send_mail_box->BccAddr : send_mail_box->MailAddress;
 		}
-		MailFlag = SMTP_RCPTTO;
+		command_status = SMTP_RCPTTO;
 		return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
 
 	case SMTP_RCPTTO:
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_RCPTTO);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 
@@ -1022,7 +1053,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			if ((To = send_rcpt_to(hWnd, soc, To, ErrStr)) == (TCHAR *)-1) {
 				return FALSE;
 			}
-			MailFlag = SMTP_RCPTTO;
+			command_status = SMTP_RCPTTO;
 			break;
 		}
 		// Cc に指定されたメールアドレスの送信
@@ -1030,7 +1061,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			if ((Cc = send_rcpt_to(hWnd, soc, Cc, ErrStr)) == (TCHAR *)-1) {
 				return FALSE;
 			}
-			MailFlag = SMTP_RCPTTO;
+			command_status = SMTP_RCPTTO;
 			break;
 		}
 		// Bcc に指定されたメールアドレスの送信
@@ -1038,7 +1069,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			if ((Bcc = send_rcpt_to(hWnd, soc, Bcc, ErrStr)) == (TCHAR *)-1) {
 				return FALSE;
 			}
-			MailFlag = SMTP_RCPTTO;
+			command_status = SMTP_RCPTTO;
 			break;
 		}
 		// 自分宛て
@@ -1046,7 +1077,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			if ((MyBcc = send_rcpt_to(hWnd, soc, MyBcc, ErrStr)) == (TCHAR *)-1) {
 				return FALSE;
 			}
-			MailFlag = SMTP_RCPTTO;
+			command_status = SMTP_RCPTTO;
 			break;
 		}
 		// DATA送信
@@ -1055,13 +1086,13 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		MailFlag = SMTP_DATA;
+		command_status = SMTP_DATA;
 		break;
 
 	case SMTP_DATA:
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_DATA);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		// メールデータの送信
@@ -1073,13 +1104,13 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		SwitchCursor(TRUE);
 #ifdef WSAASYNC
-		MailFlag = SMTP_SENDBODY;
+		command_status = SMTP_SENDBODY;
 		break;
 
 	case SMTP_SENDBODY:
 		break;
 #else
-		MailFlag = send_end_cmd;
+		command_status = send_end_cmd;
 		break;
 #endif
 
@@ -1087,7 +1118,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		// 次の送信メール
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_MAILSEND);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		tpMailItem->Status = tpMailItem->MailStatus = ICON_SENDMAIL;
@@ -1113,7 +1144,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return FALSE;
 			}
-			MailFlag = SMTP_QUIT;
+			command_status = SMTP_QUIT;
 			break;
 		}
 		if (send_mail_item == *((MailBox + MAILBOX_SEND)->tpMailItem + i)) {
@@ -1133,14 +1164,14 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		MailFlag = SMTP_RSET;
+		command_status = SMTP_RSET;
 		break;
 
 	case SMTP_SENDEND:
 		// 送信終了
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_MAILSEND);
-			StrCatN(ErrStr, buf, BUF_SIZE - 1);
+			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
 		SetSocStatusTextT(hWnd, TEXT(CMD_QUIT));
@@ -1161,7 +1192,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			// 送信箱をファイルに保存
 			SaveMail(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
 		}
-		MailFlag = SMTP_QUIT;
+		command_status = SMTP_QUIT;
 		break;
 
 	case SMTP_QUIT:
@@ -1176,51 +1207,48 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 #ifdef WSAASYNC
 BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox)
 {
-	TCHAR buf[SEND_BUFSIZE];
 	int len;
 
-	if (body == NULL && send_pt != NULL) {
+	if (send_body == NULL && send_pt != NULL) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
 	// 送信終了
-	if (body == NULL || *send_pt == TEXT('\0')) {
-		if (send_data(soc, TEXT(CMD_DATA_END)) == -1) {
+	if (send_body == NULL || *send_pt == TEXT('\0')) {
+		if (send_data(soc, TEXT(CMD_DATA_END), lstrlen(TEXT(CMD_DATA_END))) == -1) {
 			if (WSAGetLastError() == WSAEWOULDBLOCK) {
 				return TRUE;
 			}
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		mem_free(&body);
-		body = NULL;
-		MailFlag = send_end_cmd;
+		mem_free(&send_body);
+		send_body = NULL;
+		command_status = send_end_cmd;
 		if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_CLOSE) == SOCKET_ERROR) {
-			mem_free(&body);
-			body = NULL;
+			mem_free(&send_body);
+			send_body = NULL;
 			lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 			return FALSE;
 		}
 		return TRUE;
 	}
-
 	// 分割して送信
-	TStrCpyN(buf, send_pt, SEND_BUFSIZE - 1);
-	if ((len = send_data(soc, buf)) == -1) {
+	len = (send_len - (send_pt - send_body) < SEND_SIZE) ? send_len - (send_pt - send_body) : SEND_SIZE;
+	if ((len = send_data(soc, send_pt, len)) == -1) {
 		if (WSAGetLastError() == WSAEWOULDBLOCK) {
 			return TRUE;
 		}
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
 	send_pt += len;
-	send_len += len;
-	SetStatusRecvLen(hWnd, send_len, STR_STATUS_SOCKINFO_SEND);
+	SetStatusRecvLen(hWnd, send_pt - send_body, STR_STATUS_SOCKINFO_SEND);
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
-		mem_free(&body);
-		body = NULL;
+		mem_free(&send_body);
+		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}
@@ -1295,10 +1323,7 @@ void smtp_set_error(HWND hWnd)
 	HWND hListView;
 	int i;
 
-	mem_free(&body);
-	body = NULL;
-	auth_flag = FALSE;
-	starttls_flag = FALSE;
+	smtp_free();
 
 	if (send_mail_item == NULL) {
 		return;
@@ -1314,5 +1339,14 @@ void smtp_set_error(HWND hWnd)
 		}
 	}
 	send_mail_item = NULL;
+}
+
+/*
+ * smtp_free - SMTP情報の解放
+ */
+void smtp_free(void)
+{
+	mem_free(&send_body);
+	send_body = NULL;
 }
 /* End of source */

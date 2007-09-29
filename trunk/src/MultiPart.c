@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 /* Define */
 
@@ -78,7 +79,7 @@ static BOOL GetContentValue(TCHAR *Content, TCHAR *Attribute, TCHAR *ret)
 
 	while (*p != TEXT('\0')) {
 		// attributeをチェック
-		if (TStrCmpNI(p, Attribute, lstrlen(Attribute)) != 0) {
+		if (str_cmp_ni_t(p, Attribute, lstrlen(Attribute)) != 0) {
 			// 次のparameterに移動
 			for (; *p != TEXT('\0') && *p != TEXT(';'); p++);
 			if (*p == TEXT(';')) p++;
@@ -111,7 +112,7 @@ static TCHAR *NextPartPos(TCHAR *buf, TCHAR *Boundary)
 {
 	TCHAR *p = buf;
 
-	if (*p == TEXT('-') && *(p + 1) == TEXT('-') && TStrCmpNI(p + 2, Boundary, lstrlen(Boundary)) == 0) {
+	if (*p == TEXT('-') && *(p + 1) == TEXT('-') && str_cmp_ni_t(p + 2, Boundary, lstrlen(Boundary)) == 0) {
 		return p;
 	}
 	while (1) {
@@ -123,7 +124,7 @@ static TCHAR *NextPartPos(TCHAR *buf, TCHAR *Boundary)
 		if (!(*p == TEXT('-') && *(p + 1) == TEXT('-'))) {
 			continue;
 		}
-		if (TStrCmpNI(p + 2, Boundary, lstrlen(Boundary)) != 0) {
+		if (str_cmp_ni_t(p + 2, Boundary, lstrlen(Boundary)) != 0) {
 			continue;
 		}
 		break;
@@ -174,7 +175,7 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 
 	while (*p != TEXT('\0')) {
 		// attributeをチェック
-		if (TStrCmpNI(p, TEXT("filename*"), lstrlen(TEXT("filename*"))) != 0) {
+		if (str_cmp_ni_t(p, TEXT("filename*"), lstrlen(TEXT("filename*"))) != 0) {
 			// 次のparameterに移動
 			for (; *p != TEXT('\0') && *p != TEXT(';'); p++);
 			if (*p == TEXT(';')) p++;
@@ -215,7 +216,7 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 		if (tmp == NULL) {
 			break;
 		}
-		TStrCpyN(tmp, r, p - r + 1);
+		str_cpy_n_t(tmp, r, p - r + 1);
 
 		*(Names + No) = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + 1));
 		if (*(Names + No) == NULL) {
@@ -241,7 +242,7 @@ static TCHAR *GetFilenameEx(TCHAR *buf)
 		// ファイル名を連結
 		for (No = 0, r = ret; No < AllocNo; No++) {
 			if (*(Names + No) != NULL) {
-				r = TStrCpy(r, *(Names + No));
+				r = str_cpy_t(r, *(Names + No));
 			}
 		}
 		// デコード
@@ -290,7 +291,7 @@ TCHAR *GetFilename(TCHAR *buf, TCHAR *Attribute)
 
 #ifdef UNICODE
 	// TCHAR から char に変換
-	cfname = AllocTcharToChar(fname);
+	cfname = alloc_tchar_to_char(fname);
 	mem_free(&fname);
 	if (cfname == NULL) {
 		return NULL;
@@ -302,7 +303,7 @@ TCHAR *GetFilename(TCHAR *buf, TCHAR *Attribute)
 	MIMEdecode(cfname, cdname);
 	mem_free(&cfname);
 	// char から TCHAR に変換
-	dname = AllocCharToTchar(cdname);
+	dname = alloc_char_to_tchar(cdname);
 	mem_free(&cdname);
 #else
 	dname = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 1));
@@ -355,7 +356,7 @@ int MultiPart_Parse(TCHAR *ContentType, TCHAR *buf, MULTIPART ***tpMultiPart, in
 
 		GetContent(p, TEXT(HEAD_CONTENTTYPE), &Content);
 		if (Content != NULL &&
-			TStrCmpNI(Content, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
+			str_cmp_ni_t(Content, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 			// 階層になっている場合は再帰する
 			sPos = GetBodyPointaT(p);
 			cnt = MultiPart_Parse(Content, sPos, tpMultiPart, cnt);
@@ -430,8 +431,8 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
 #ifdef UNICODE
-	cp = AllocTcharToChar(Filename);
-	cr = AllocTcharToChar(date);
+	cp = alloc_tchar_to_char(Filename);
+	cr = alloc_tchar_to_char(date);
 	HMAC_MD5(cp, tstrlen(cp), cr, tstrlen(cr), digest);
 	mem_free(&cp);
 	mem_free(&cr);
@@ -443,12 +444,12 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 	if (Boundary == NULL) {
 		return MP_ERROR_ALLOC;
 	}
-	p = TStrCpy(Boundary, TEXT("-----_MULTIPART_"));
+	p = str_cpy_t(Boundary, TEXT("-----_MULTIPART_"));
 	for (i = 0; i < 16; i++) {
 		wsprintf(p, TEXT("%02X"), digest[i]);
 		p += 2;
 	}
-	TStrCpy(p, TEXT("_"));
+	str_cpy_t(p, TEXT("_"));
 
 	// マルチパートの作成
 	len = 2 + lstrlen(Boundary) + 2 +
@@ -460,7 +461,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		mem_free(&Boundary);
 		return MP_ERROR_ALLOC;
 	}
-	TStrJoin(ret, TEXT("--"), Boundary, TEXT("\r\n"),
+	str_join(ret, TEXT("--"), Boundary, TEXT("\r\n"),
 		TEXT(HEAD_CONTENTTYPE), TEXT(" "), ContentType, TEXT("\r\n"),
 		TEXT(HEAD_ENCODING), TEXT(" "), Encoding, TEXT("\r\n\r\n"),
 		body, TEXT("\r\n\r\n"), (TCHAR *)-1);
@@ -474,7 +475,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 
 	f = Filename;
 	while (*f != TEXT('\0')) {
-		f = TStrCpyF(fpath, f, ATTACH_SEP);
+		f = str_cpy_f(fpath, f, ATTACH_SEP);
 		fname = GetFileNameString(fpath);
 
 		// ファイルを読み込む
@@ -519,7 +520,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		mem_free(&b64str);
 
 #ifdef UNICODE
-		buf = AllocCharToTchar(cBuf);
+		buf = alloc_char_to_tchar(cBuf);
 		mem_free(&cBuf);
 		if (buf == NULL) {
 			mem_free(&Boundary);
@@ -589,13 +590,13 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 			return MP_ERROR_ALLOC;
 		}
 		if (op.EncodeType == 1) {
-			TStrJoin(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
+			str_join(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
 				TEXT(HEAD_CONTENTTYPE), TEXT(" "), ctype, CONTENT_TYPE_NAME, fname, TEXT("\"\r\n"),
 				CONTENT_DIPPOS, ef, TEXT("\r\n"),
 				ENCODING_BASE64, TEXT("\r\n\r\n"),
 				buf, TEXT("\r\n\r\n"), (TCHAR *)-1);
 		} else {
-			TStrJoin(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
+			str_join(tmp, ret, TEXT("--"), Boundary, TEXT("\r\n"),
 				TEXT(HEAD_CONTENTTYPE), TEXT(" "), ctype, TEXT("\r\n"),
 				CONTENT_DIPPOS, ef, TEXT("\r\n"),
 				ENCODING_BASE64, TEXT("\r\n\r\n"),
@@ -619,7 +620,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		mem_free(&ret);
 		return MP_ERROR_ALLOC;
 	}
-	TStrJoin(*RetBody, ret, TEXT("--"), Boundary, TEXT("--\r\n"), (TCHAR *)-1);
+	str_join(*RetBody, ret, TEXT("--"), Boundary, TEXT("--\r\n"), (TCHAR *)-1);
 	mem_free(&ret);
 
 	// Content typeの生成
@@ -630,7 +631,7 @@ int CreateMultipart(TCHAR *Filename, TCHAR *ContentType, TCHAR *Encoding, TCHAR 
 		mem_free(&*RetBody);
 		return MP_ERROR_ALLOC;
 	}
-	TStrJoin(*RetContentType, CTYPE_MULTIPART, Boundary, TEXT("\""), (TCHAR *)-1);
+	str_join(*RetContentType, CTYPE_MULTIPART, Boundary, TEXT("\""), (TCHAR *)-1);
 	mem_free(&Boundary);
 	return MP_ATTACH;
 }

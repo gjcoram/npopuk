@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 #ifdef _WIN32_WCE_PPC
 #include "SelectFile.h"
 #endif
@@ -83,7 +84,7 @@ BOOL SaveLogSep(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
 	if (p == NULL) {
 		return FALSE;
 	}
-	TStrJoin(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
+	str_join(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
 	ret = SaveLog(fpath, fname, p);
 	mem_free(&p);
 	return ret;
@@ -275,7 +276,7 @@ BOOL OpenFileBuf(HWND hWnd, TCHAR **buf)
 
 #ifdef UNICODE
 	// UNICODEに変換
-	*buf = AllocCharToTchar(cBuf);
+	*buf = alloc_char_to_tchar(cBuf);
 	if (*buf == NULL) {
 		mem_free(&cBuf);
 		SwitchCursor(TRUE);
@@ -325,20 +326,22 @@ BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len)
 }
 
 /*
- * SaveExecFile - ファイルを保存して実行
+ * SaveFileExec - ファイルを保存して実行
  */
-BOOL SaveExecFile(HWND hWnd, TCHAR *FileName, char *buf, int len)
+BOOL SaveFileExec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 {
 	WIN32_FIND_DATA FindData;
 	SHELLEXECUTEINFO sei;
 	HANDLE hFindFile;
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
+	TCHAR tmp_path[BUF_SIZE];
 	DWORD ret;
 
 	if (FileName == NULL) {
 		return FALSE;
 	}
+	SwitchCursor(FALSE);
 
 	// ディレクトリの検索
 	wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
@@ -348,22 +351,47 @@ BOOL SaveExecFile(HWND hWnd, TCHAR *FileName, char *buf, int len)
 		CreateDirectory(path, NULL);
 	}
 
-	// ファイルに保存
 	wsprintf(path, TEXT("%s%s\\%s"), DataDir, op.AttachPath, FileName);
-
-	// 保存するファイルを開く
-	hFile = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == NULL || hFile == (HANDLE)-1) {
-		return FALSE;
-	}
-	SwitchCursor(FALSE);
-	if (WriteFile(hFile, buf, len, &ret, NULL) == FALSE) {
+	if (op.AttachDelete == 0) {
+		// 一時ファイルに保存
+		wsprintf(tmp_path, TEXT("%s_%lX.tmp"), DataDir, (long)buf);
+		hFile = CreateFile(tmp_path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == NULL || hFile == (HANDLE)-1) {
+			SwitchCursor(TRUE);
+			return FALSE;
+		}
+		if (WriteFile(hFile, buf, len, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			DeleteFile(tmp_path);
+			SwitchCursor(TRUE);
+			return FALSE;
+		}
+		FlushFileBuffers(hFile);
 		CloseHandle(hFile);
-		SwitchCursor(TRUE);
-		return FALSE;
+
+		// ファイルの移動
+		if (CopyFile(tmp_path, path, FALSE) == FALSE) {
+			DeleteFile(tmp_path);
+			SwitchCursor(TRUE);
+			return FALSE;
+		}
+		DeleteFile(tmp_path);
+	} else {
+		// ファイルに保存
+		hFile = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == NULL || hFile == (HANDLE)-1) {
+			SwitchCursor(TRUE);
+			return FALSE;
+		}
+		if (WriteFile(hFile, buf, len, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			SwitchCursor(TRUE);
+			return FALSE;
+		}
+		FlushFileBuffers(hFile);
+		CloseHandle(hFile);
 	}
 	SwitchCursor(TRUE);
-	CloseHandle(hFile);
 
 	// 実行
 	ZeroMemory(&sei, sizeof(SHELLEXECUTEINFO));
@@ -376,7 +404,8 @@ BOOL SaveExecFile(HWND hWnd, TCHAR *FileName, char *buf, int len)
 	sei.lpDirectory = NULL;
 	sei.nShow = SW_SHOWNORMAL;
 	sei.hInstApp = hInst;
-	return ShellExecuteEx(&sei);
+	ShellExecuteEx(&sei);
+	return TRUE;
 }
 
 /*
@@ -398,7 +427,7 @@ TCHAR *SaveHeaderString(TCHAR *Head, TCHAR *buf, TCHAR *ret)
 	if (buf == NULL) {
 		return ret;
 	}
-	return TStrJoin(ret, Head, TEXT(" "), buf, TEXT("\r\n"), (TCHAR *)-1);
+	return str_join(ret, Head, TEXT(" "), buf, TEXT("\r\n"), (TCHAR *)-1);
 }
 
 /*
@@ -413,12 +442,12 @@ BOOL WriteAsciiFile(HANDLE hFile, TCHAR *buf, int len)
 
 	if (len == 0) return TRUE;
 
-	clen = TcharToCharSize(buf);
+	clen = tchar_to_char_size(buf);
 	str = (char *)mem_alloc(clen + 1);
 	if (str == NULL) {
 		return FALSE;
 	}
-	TcharToChar(buf, str, clen);
+	tchar_to_char(buf, str, clen);
 	if (WriteFile(hFile, str, clen - 1, &ret, NULL) == FALSE) {
 		mem_free(&str);
 		return FALSE;
@@ -482,7 +511,7 @@ BOOL SaveMail(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
 #endif	// _WIN32_WCE
-	TStrJoin(path, DataDir, FileName, (TCHAR *)-1);
+	str_join(path, DataDir, FileName, (TCHAR *)-1);
 
 	if (SaveFlag == 0) {
 		// 保存しない場合は削除
@@ -621,7 +650,7 @@ BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox)
 	SetCurrentDirectory(AppDir);
 #endif
 
-	TStrJoin(path, DataDir, FileName, (TCHAR *)-1);
+	str_join(path, DataDir, FileName, (TCHAR *)-1);
 
 	FileSize = GetFileSerchSize(path);
 	if (FileSize <= 0) {
@@ -663,7 +692,7 @@ BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox)
 #ifdef UNICODE
 	// UNICODEに変換
 	if (FileSize > 2 && *(FileBuf + 1) != '\0') {
-		Len = CharToTcharSize(FileBuf);
+		Len = char_to_tchar_size(FileBuf);
 		MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
 		if (MemFile == NULL) {
 #ifdef _NOFILEMAP
@@ -677,7 +706,7 @@ BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox)
 #endif	// _NOFILEMAP
 			return FALSE;
 		}
-		CharToTchar(FileBuf, MemFile, Len);
+		char_to_tchar(FileBuf, MemFile, Len);
 		FileSize = Len;
 	} else {
 		MemFile = (TCHAR *)FileBuf;
@@ -792,9 +821,9 @@ static BOOL SaveAddressString(HANDLE hFile, MAILITEM *tpMailItem)
 		return FALSE;
 	}
 	if (tpMailItem->Subject != NULL && *tpMailItem->Subject != TEXT('\0')) {
-		TStrJoin(tmp, tpMailItem->To, TEXT("\t"), tpMailItem->Subject, TEXT("\r\n"), (TCHAR *)-1);
+		str_join(tmp, tpMailItem->To, TEXT("\t"), tpMailItem->Subject, TEXT("\r\n"), (TCHAR *)-1);
 	} else {
-		TStrJoin(tmp, tpMailItem->To, TEXT("\r\n"), (TCHAR *)-1);
+		str_join(tmp, tpMailItem->To, TEXT("\r\n"), (TCHAR *)-1);
 	}
 
 	if (WriteAsciiFile(hFile, tmp, len) == FALSE) {
@@ -818,7 +847,7 @@ BOOL SaveAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
 	SetCurrentDirectory(AppDir);
 #endif
 
-	TStrJoin(path, DataDir, FileName, (TCHAR *)-1);
+	str_join(path, DataDir, FileName, (TCHAR *)-1);
 
 	// 保存するファイルを開く
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -861,7 +890,7 @@ int ReadAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
 	SetCurrentDirectory(AppDir);
 #endif
 
-	TStrJoin(path, DataDir, FileName, (TCHAR *)-1);
+	str_join(path, DataDir, FileName, (TCHAR *)-1);
 
 	FileSize = GetFileSerchSize(path);
 	if (FileSize < 0) {
@@ -877,13 +906,13 @@ int ReadAddressBook(TCHAR *FileName, MAILBOX *tpMailBox)
 
 #ifdef UNICODE
 	// UNICODEに変換
-	Len = CharToTcharSize(FileBuf);
+	Len = char_to_tchar_size(FileBuf);
 	MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
 	if (MemFile == NULL) {
 		mem_free(&FileBuf);
 		return -1;
 	}
-	CharToTchar(FileBuf, MemFile, Len);
+	char_to_tchar(FileBuf, MemFile, Len);
 	FileSize = Len;
 #else	// UNICODE
 	MemFile = (TCHAR *)FileBuf;

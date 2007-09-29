@@ -2603,6 +2603,133 @@ DEP_CPP_STRIN=\
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\util.c
+
+!IF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE SH4) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE SH4) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE SH3) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE SH3) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE ARM) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE ARM) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE x86) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE x86) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE x86em) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\View.c
 
 !IF  "$(CFG)" == "nPOP_WCE_JP - Win32 (WCE MIPS) Release"
@@ -2839,6 +2966,10 @@ DEP_CPP_WINSO=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\src\Font.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
@@ -2872,6 +3003,10 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=.\resrc1.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\String.h
 # End Source File
 # Begin Source File
 

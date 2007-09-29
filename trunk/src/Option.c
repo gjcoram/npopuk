@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 /* Define */
 #ifndef _WIN32_WCE
@@ -269,7 +270,7 @@ static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col)
 
 	*buf = TEXT('\0');
 	ListView_GetItemText(hListView, Index, Col, buf, BUF_SIZE - 1);
-	return AllocCopy(buf);
+	return alloc_copy(buf);
 }
 
 /*
@@ -743,7 +744,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 0, buf, BUF_SIZE - 1);
-		if (TStrCmp(buf, STR_FILTER_USE) == 0) {
+		if (lstrcmp(buf, STR_FILTER_USE) == 0) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_FLAG, BM_SETCHECK, 1, 0);
 		} else {
 			EnableFilterEditButton(hDlg, FALSE);
@@ -1059,7 +1060,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				hListView = GetDlgItem(hDlg, IDC_LIST_FILTER);
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 0, buf, BUF_SIZE - 1);
-				(*(tpOptionMailBox->tpFilter + i))->Enable = (TStrCmp(buf, STR_FILTER_USE) == 0) ? 1 : 0;
+				(*(tpOptionMailBox->tpFilter + i))->Enable = (lstrcmp(buf, STR_FILTER_USE) == 0) ? 1 : 0;
 
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 1, buf, BUF_SIZE - 1);
@@ -1783,7 +1784,7 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		buf = (TCHAR *)mem_alloc(
 			sizeof(TCHAR) * (lstrlen(WINDOW_TITLE TEXT(" - [")) + lstrlen((TCHAR *)lParam) + 2));
 		if (buf != NULL) {
-			TStrJoin(buf, WINDOW_TITLE TEXT(" - ["), (TCHAR *)lParam, TEXT("]"), (TCHAR *)-1);
+			str_join(buf, WINDOW_TITLE TEXT(" - ["), (TCHAR *)lParam, TEXT("]"), (TCHAR *)-1);
 			SetWindowText(hDlg, buf);
 			mem_free(&buf);
 		}
@@ -2042,7 +2043,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			}
 			*buf = TEXT('\0');
 			ListView_GetItemText(GetDlgItem(hDlg, IDC_LIST_CC), SelectItem, 0, buf, BUF_SIZE - 1);
-			if (TStrCmpI(buf, LV_TITLE_BCC) == 0) {
+			if (lstrcmpi(buf, LV_TITLE_BCC) == 0) {
 				SendDlgItemMessage(hDlg, IDC_RADIO_CC, BM_SETCHECK, 0, 0);
 				SendDlgItemMessage(hDlg, IDC_RADIO_BCC, BM_SETCHECK, 1, 0);
 			} else {
@@ -2124,7 +2125,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				ListView_GetItemText(hListView, i, 1, buf2, BUF_SIZE - 1);
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 0, buf, BUF_SIZE - 1);
-				if (TStrCmpI(buf, LV_TITLE_BCC) == 0) {
+				if (lstrcmpi(buf, LV_TITLE_BCC) == 0) {
 					BccLen += lstrlen(buf2) + 4;
 				} else {
 					CcLen += lstrlen(buf2) + 4;
@@ -2149,7 +2150,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				ListView_GetItemText(hListView, i, 1, buf2, BUF_SIZE - 1);
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 0, buf, BUF_SIZE - 1);
-				if (TStrCmpI(buf, LV_TITLE_BCC) == 0) {
+				if (lstrcmpi(buf, LV_TITLE_BCC) == 0) {
 					if (tpMailItem->Bcc == NULL) continue;
 					if (*tpMailItem->Bcc != TEXT('\0')) {
 						lstrcat(tpMailItem->Bcc, TEXT(",\r\n "));
@@ -2209,14 +2210,14 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (tpMailItem->Attach != NULL) {
 			f = tpMailItem->Attach;
 			while (*f != TEXT('\0')) {
-				f = TStrCpyF(fpath, f, ATTACH_SEP);
+				f = str_cpy_f(fpath, f, ATTACH_SEP);
 				SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)fpath);
 			}
 		}
 		if (tmp_attach != NULL) {
 			f = tmp_attach;
 			while (*f != TEXT('\0')) {
-				f = TStrCpyF(fpath, f, ATTACH_SEP);
+				f = str_cpy_f(fpath, f, ATTACH_SEP);
 				SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)fpath);
 			}
 		}
@@ -2258,7 +2259,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			for (i = 0; i < SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0); i++) {
 				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)buf);
-				if (TStrCmp((TCHAR *)lParam, buf) == 0) {
+				if (lstrcmp((TCHAR *)lParam, buf) == 0) {
 					SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, i, 0);
 					break;
 				}
@@ -2313,7 +2314,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					*(f++) = ATTACH_SEP;
 				}
 				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)fpath);
-				f = TStrCpy(f, fpath);
+				f = str_cpy_t(f, fpath);
 			}
 			EndDialog(hDlg, TRUE);
 			break;
@@ -2374,7 +2375,7 @@ static BOOL CALLBACK EtcHeaderProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				EndDialog(hDlg, FALSE);
 			}
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_REPLYTO), &tpMailItem->ReplyTo);
-			DelCtrlChar(tpMailItem->ReplyTo);
+			delete_ctrl_char(tpMailItem->ReplyTo);
 
 			EndDialog(hDlg, TRUE);
 			break;
@@ -2531,10 +2532,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, FALSE);
 			break;
 		}
-		tpTmpMailItem->Cc = AllocCopy(tpMailItem->Cc);
-		tpTmpMailItem->Bcc = AllocCopy(tpMailItem->Bcc);
-		tpTmpMailItem->Attach = AllocCopy(tpMailItem->Attach);
-		tpTmpMailItem->ReplyTo = AllocCopy(tpMailItem->ReplyTo);
+		tpTmpMailItem->Cc = alloc_copy(tpMailItem->Cc);
+		tpTmpMailItem->Bcc = alloc_copy(tpMailItem->Bcc);
+		tpTmpMailItem->Attach = alloc_copy(tpMailItem->Attach);
+		tpTmpMailItem->ReplyTo = alloc_copy(tpMailItem->ReplyTo);
 		break;
 
 	case WM_CLOSE:
@@ -2640,7 +2641,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
 			if (i != CB_ERR && (MailBox + i)->Name != NULL) {
 				i += MAILBOX_USER;
-				tpMailItem->MailBox = AllocCopy((MailBox + i)->Name);
+				tpMailItem->MailBox = alloc_copy((MailBox + i)->Name);
 
 				mem_free(&tpMailItem->From);
 				tpMailItem->From = NULL;
@@ -2654,21 +2655,21 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (tpMailItem->From != NULL) {
 						p = tpMailItem->From;
 						if ((MailBox + i)->UserName != NULL && *(MailBox + i)->UserName != TEXT('\0')) {
-							p = TStrJoin(p, (MailBox + i)->UserName, TEXT(" "), (TCHAR *)-1);
+							p = str_join(p, (MailBox + i)->UserName, TEXT(" "), (TCHAR *)-1);
 						}
-						TStrJoin(p, TEXT("<"), (MailBox + i)->MailAddress, TEXT(">"), (TCHAR *)-1);
+						str_join(p, TEXT("<"), (MailBox + i)->MailAddress, TEXT(">"), (TCHAR *)-1);
 					}
 				}
 			}
 			// 宛先
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TO), &tpMailItem->To);
 			if (tpMailItem->To != NULL) {
-				DelCtrlChar(tpMailItem->To);
+				delete_ctrl_char(tpMailItem->To);
 			}
 			// 件名
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TITLE), &tpMailItem->Subject);
 			if (tpMailItem->Subject != NULL) {
-				DelCtrlChar(tpMailItem->Subject);
+				delete_ctrl_char(tpMailItem->Subject);
 			}
 			if (tpTmpMailItem != NULL) {
 				mem_free(&tpMailItem->Cc);
@@ -2677,11 +2678,11 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				mem_free(&tpMailItem->ReplyTo);
 
 				// Cc
-				tpMailItem->Cc = AllocCopy(tpTmpMailItem->Cc);
+				tpMailItem->Cc = alloc_copy(tpTmpMailItem->Cc);
 				// Bcc
-				tpMailItem->Bcc = AllocCopy(tpTmpMailItem->Bcc);
+				tpMailItem->Bcc = alloc_copy(tpTmpMailItem->Bcc);
 				// Attach
-				tpMailItem->Attach = AllocCopy(tpTmpMailItem->Attach);
+				tpMailItem->Attach = alloc_copy(tpTmpMailItem->Attach);
 				if (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) {
 					tpMailItem->Multipart = TRUE;
 					st = INDEXTOSTATEIMAGEMASK(1);
@@ -2698,7 +2699,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 				}
 				// ReplyTo
-				tpMailItem->ReplyTo = AllocCopy(tpTmpMailItem->ReplyTo);
+				tpMailItem->ReplyTo = alloc_copy(tpTmpMailItem->ReplyTo);
 				FreeMailItem(&tpTmpMailItem, 1);
 			}
 			// 引用
@@ -2948,7 +2949,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ErrorMessage(hDlg, STR_ERR_ADD);
 					return FALSE;
 				}
-				DelCtrlChar(tpMailItem->To);
+				delete_ctrl_char(tpMailItem->To);
 				// アドレス帳にメールアドレスを追加
 				if (Item_Add(AddressBox, tpMailItem) == FALSE) {
 					mem_free(&tpMailItem->To);
@@ -3052,7 +3053,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				ErrorMessage(hDlg, STR_ERR_INPUTMAILADDR);
 				break;
 			}
-			DelCtrlChar(buf);
+			delete_ctrl_char(buf);
 			if (i == -1) {
 				i = ListView_AddOptionItem(GetDlgItem(GetParent(hDlg), IDC_LIST_ADDRESS), buf);
 			} else {
@@ -3061,7 +3062,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			// コメント
 			*buf = TEXT('\0');
 			SendDlgItemMessage(hDlg, IDC_EDIT_COMMENT, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-			DelCtrlChar(buf);
+			delete_ctrl_char(buf);
 			ListView_SetItemText(GetDlgItem(GetParent(hDlg), IDC_LIST_ADDRESS), i, 1, buf);
 
 			// 設定したアイテムを選択状態にする

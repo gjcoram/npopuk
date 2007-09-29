@@ -26,8 +26,8 @@
 #define MAX_DEPTH			9
 
 /* Global Variables */
-static HMODULE crypt32_lib;
-static FARPROC _CertOpenSystemStore;
+static HINSTANCE crypt32_lib;
+static FARPROC _CertOpenStore;
 static FARPROC _CertFindCertificateInStore;
 static FARPROC _CertCloseStore;
 
@@ -60,15 +60,11 @@ int WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 
 		if ((crypt32_lib = LoadLibrary(TEXT("crypt32.dll"))) != NULL) {
 #ifdef _WIN32_WCE
-			_CertOpenSystemStore = GetProcAddress(crypt32_lib, TEXT("CertOpenSystemStoreW"));
+			_CertOpenStore = GetProcAddress(crypt32_lib, TEXT("CertOpenStore"));
 			_CertFindCertificateInStore = GetProcAddress(crypt32_lib, TEXT("CertFindCertificateInStore"));
 			_CertCloseStore = GetProcAddress(crypt32_lib, TEXT("CertCloseStore"));
 #else
-#ifdef UNICODE
-			_CertOpenSystemStore = GetProcAddress(crypt32_lib, "CertOpenSystemStoreW");
-#else
-			_CertOpenSystemStore = GetProcAddress(crypt32_lib, "CertOpenSystemStoreA");
-#endif
+			_CertOpenStore = GetProcAddress(crypt32_lib, "CertOpenStore");
 			_CertFindCertificateInStore = GetProcAddress(crypt32_lib, "CertFindCertificateInStore");
 			_CertCloseStore = GetProcAddress(crypt32_lib, "CertCloseStore");
 #endif
@@ -205,7 +201,7 @@ static int load_system_verify(SSL_CTX *ssl_ctx)
     X509 *cert;
     const CERT_CONTEXT *cert_context = NULL;
 
-	if (_CertOpenSystemStore == NULL ||
+	if (_CertOpenStore == NULL ||
 		_CertFindCertificateInStore == NULL ||
 		_CertCloseStore == NULL) {
 		return 0;
@@ -213,7 +209,7 @@ static int load_system_verify(SSL_CTX *ssl_ctx)
 
 	root_certs = X509_STORE_new();
 	// 証明書ストアのハンドル取得
-	cs = (HCERTSTORE)_CertOpenSystemStore(0, TEXT("ROOT"));
+	cs = (HCERTSTORE)_CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, 0, CERT_SYSTEM_STORE_CURRENT_USER, L"ROOT");
 
 	// 証明書の検索
 	while (cert_context = (CERT_CONTEXT *)_CertFindCertificateInStore(cs,

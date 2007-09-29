@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 #include "global.h"
 #include "md5.h"
@@ -98,22 +99,22 @@ void CopyItem(MAILITEM *tpFromNewMailItem, MAILITEM *tpToMailItem)
 	tpToMailItem->No = 0;
 	tpToMailItem->UIDL = NULL;
 
-	tpToMailItem->From = AllocCopy(tpFromNewMailItem->From);
-	tpToMailItem->To = AllocCopy(tpFromNewMailItem->To);
-	tpToMailItem->Cc = AllocCopy(tpFromNewMailItem->Cc);
-	tpToMailItem->Bcc = AllocCopy(tpFromNewMailItem->Bcc);
-	tpToMailItem->Subject = AllocCopy(tpFromNewMailItem->Subject);
-	tpToMailItem->Date = AllocCopy(tpFromNewMailItem->Date);
-	tpToMailItem->Size = AllocCopy(tpFromNewMailItem->Size);
-	tpToMailItem->ReplyTo = AllocCopy(tpFromNewMailItem->ReplyTo);
-	tpToMailItem->ContentType = AllocCopy(tpFromNewMailItem->ContentType);
-	tpToMailItem->Encoding = AllocCopy(tpFromNewMailItem->Encoding);
-	tpToMailItem->MessageID = AllocCopy(tpFromNewMailItem->MessageID);
-	tpToMailItem->InReplyTo = AllocCopy(tpFromNewMailItem->InReplyTo);
-	tpToMailItem->References = AllocCopy(tpFromNewMailItem->References);
-	tpToMailItem->Body = AllocCopy(tpFromNewMailItem->Body);
-	tpToMailItem->MailBox = AllocCopy(tpFromNewMailItem->MailBox);
-	tpToMailItem->Attach = AllocCopy(tpFromNewMailItem->Attach);
+	tpToMailItem->From = alloc_copy(tpFromNewMailItem->From);
+	tpToMailItem->To = alloc_copy(tpFromNewMailItem->To);
+	tpToMailItem->Cc = alloc_copy(tpFromNewMailItem->Cc);
+	tpToMailItem->Bcc = alloc_copy(tpFromNewMailItem->Bcc);
+	tpToMailItem->Subject = alloc_copy(tpFromNewMailItem->Subject);
+	tpToMailItem->Date = alloc_copy(tpFromNewMailItem->Date);
+	tpToMailItem->Size = alloc_copy(tpFromNewMailItem->Size);
+	tpToMailItem->ReplyTo = alloc_copy(tpFromNewMailItem->ReplyTo);
+	tpToMailItem->ContentType = alloc_copy(tpFromNewMailItem->ContentType);
+	tpToMailItem->Encoding = alloc_copy(tpFromNewMailItem->Encoding);
+	tpToMailItem->MessageID = alloc_copy(tpFromNewMailItem->MessageID);
+	tpToMailItem->InReplyTo = alloc_copy(tpFromNewMailItem->InReplyTo);
+	tpToMailItem->References = alloc_copy(tpFromNewMailItem->References);
+	tpToMailItem->Body = alloc_copy(tpFromNewMailItem->Body);
+	tpToMailItem->MailBox = alloc_copy(tpFromNewMailItem->MailBox);
+	tpToMailItem->Attach = alloc_copy(tpFromNewMailItem->Attach);
 }
 
 /*
@@ -142,7 +143,7 @@ MAILITEM *Item_CopyMailBox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem,
 	}
 	CopyItem(tpNewMailItem, *(tpMailList + i));
 	if ((*(tpMailList + i))->MailBox == NULL) {
-		(*(tpMailList + i))->MailBox = AllocCopy(MailBoxName);
+		(*(tpMailList + i))->MailBox = alloc_copy(MailBoxName);
 	}
 	if (SendClear == TRUE) {
 		(*(tpMailList + i))->MailStatus = (*(tpMailList + i))->Status = ICON_NON;
@@ -295,8 +296,8 @@ static int Item_GetMultiContent(char *buf, char *str, char **ret)
 			if (tmp == NULL) {
 				return rLen;
 			}
-			r = StrCpy(r, *ret);
-			r = StrCpy(r, ",");
+			r = str_cpy(r, *ret);
+			r = str_cpy(r, ",");
 			mem_free(&*ret);
 			*ret = tmp;
 			rLen += (len + 1);
@@ -384,7 +385,7 @@ static int GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
 		dcode = (char *)mem_alloc(len + 1);
 		if (dcode != NULL) {
 			MIMEdecode(Content, dcode);
-			*ret = AllocCharToTchar(dcode);
+			*ret = alloc_char_to_tchar(dcode);
 			mem_free(&dcode);
 		}
 #else
@@ -414,7 +415,7 @@ static void Item_SetMailBody(MAILITEM *tpMailItem, char *buf, BOOL download)
 		if (r == NULL) {
 			return;
 		}
-		Len = CharToTcharSize(r);
+		Len = char_to_tchar_size(r);
 
 		// ヘッダを表示する設定の場合
 		HdSize = (op.ShowHeader == 1 || KeyShowHeader == TRUE) ? (p - buf) : 0;
@@ -424,17 +425,17 @@ static void Item_SetMailBody(MAILITEM *tpMailItem, char *buf, BOOL download)
 		if (tpMailItem->Body != NULL) {
 			if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
 				// ヘッダ
-				CharToTchar(buf, tpMailItem->Body, HdSize + 1);
+				char_to_tchar(buf, tpMailItem->Body, HdSize + 1);
 			}
 			// 本文
-			CharToTchar(r, tpMailItem->Body + HdSize, Len);
+			char_to_tchar(r, tpMailItem->Body + HdSize, Len);
 		}
 		mem_free(&r);
 
 	} else if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
 		// 本文が存在しない場合はヘッダのみ設定
 		mem_free(&tpMailItem->Body);
-		tpMailItem->Body = AllocCharToTchar(buf);
+		tpMailItem->Body = alloc_char_to_tchar(buf);
 
 	} else if (download == TRUE) {
 		mem_free(&tpMailItem->Body);
@@ -456,30 +457,48 @@ static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 	TCHAR *Content;
 	BOOL ret;
 	int len;
-#ifdef UNICODE
-	char *head;
-#endif
+	char *cbuf;
 
 	if (Fcontent == NULL || *Fcontent == TEXT('\0')) {
 		return TRUE;
 	}
+	if (lstrcmpi(FHead, TEXT("body")) == 0) {
+		char *p;
 #ifdef UNICODE
-	head = AllocTcharToChar(FHead);
-	if (head == NULL) {
+		cbuf = alloc_tchar_to_char(Fcontent);
+#else
+		cbuf = Fcontent;
+#endif
+		// 本文の位置取得
+		p = GetBodyPointa(buf);
+		if (p == NULL) {
+			ret = str_match(cbuf, "");
+		} else {
+			// 比較
+			ret = str_match(cbuf, p);
+		}
+#ifdef UNICODE
+		mem_free(&cbuf);
+#endif
+		return ret;
+	}
+#ifdef UNICODE
+	cbuf = alloc_tchar_to_char(FHead);
+	if (cbuf == NULL) {
 		return FALSE;
 	}
 	// コンテンツの取得
-	len = GetMimeContent(buf, head, &Content, TRUE);
-	mem_free(&head);
+	len = GetMimeContent(buf, cbuf, &Content, TRUE);
+	mem_free(&cbuf);
 #else
 	// コンテンツの取得
 	len = GetMimeContent(buf, FHead, &Content, TRUE);
 #endif
 	if (Content == NULL) {
-		return StrMatch(Fcontent, TEXT(""));
+		return str_match_t(Fcontent, TEXT(""));
 	}
 	// 比較
-	ret = StrMatch(Fcontent, Content);
+	ret = str_match_t(Fcontent, Content);
 	mem_free(&Content);
 	return ret;
 }
@@ -551,7 +570,7 @@ static int FilterCheck(MAILBOX *tpMailBox, char *buf)
 /*
  * Item_SetMailItem - アイテムにヘッダと本文を設定
  */
-BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download)
+BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 {
 	TCHAR *msgid1 = NULL, *msgid2 = NULL, *t = NULL;
 	char *Content;
@@ -569,7 +588,7 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 		mem_free(&tpMailItem->ContentType);
 		mem_free(&tpMailItem->Encoding);
 		mem_free(&tpMailItem->Date);
-		if (Size != NULL) {
+		if (Size >= 0) {
 			mem_free(&tpMailItem->Size);
 		}
 		mem_free(&tpMailItem->MessageID);
@@ -589,14 +608,14 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 	// Content-Type
 	GetMimeContent(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType, FALSE);
 	if (tpMailItem->ContentType != NULL &&
-		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		tpMailItem->Multipart = TRUE;
 	} else {
 		// Content-Transfer-Encoding
 #ifdef UNICODE
 		Item_GetContent(buf, HEAD_ENCODING, &Content);
 		if (Content != NULL) {
-			tpMailItem->Encoding = AllocCharToTchar(Content);
+			tpMailItem->Encoding = alloc_char_to_tchar(Content);
 			mem_free(&Content);
 		}
 #else
@@ -611,7 +630,7 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 		dcode = (char *)mem_alloc(BUF_SIZE);
 		if (dcode != NULL) {
 			DateConv(Content, dcode);
-			tpMailItem->Date = AllocCharToTchar(dcode);
+			tpMailItem->Date = alloc_char_to_tchar(dcode);
 			mem_free(&dcode);
 		}
 #else
@@ -624,15 +643,21 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 	}
 
 	// Size
-	if (Size != NULL) {
-		tpMailItem->Size = AllocCharToTchar(Size);
+	if (Size >= 0) {
+		TCHAR num[BUF_SIZE];
+#ifndef _itot
+		wsprintf(num, TEXT("%d"), Size);
+#else
+		_itot(Size, num, 10);
+#endif
+		tpMailItem->Size = alloc_copy(num);
 	}
 
 	// Message-Id
 #ifdef UNICODE
 	Content = Item_GetMessageId(buf);
 	if (Content != NULL) {
-		tpMailItem->MessageID = AllocCharToTchar(Content);
+		tpMailItem->MessageID = alloc_char_to_tchar(Content);
 		mem_free(&Content);
 	}
 #else
@@ -644,7 +669,7 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 	Item_GetContent(buf, HEAD_INREPLYTO, &Content);
 	TrimMessageId(Content);
 	if (Content != NULL) {
-		tpMailItem->InReplyTo = AllocCharToTchar(Content);
+		tpMailItem->InReplyTo = alloc_char_to_tchar(Content);
 		mem_free(&Content);
 	}
 #else
@@ -659,10 +684,10 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 		dcode = (char *)mem_alloc(GetReferencesSize(Content, TRUE) + 1);
 		if (dcode != NULL) {
 			ConvReferences(Content, dcode, FALSE);
-			msgid1 = AllocCharToTchar(dcode);
+			msgid1 = alloc_char_to_tchar(dcode);
 
 			ConvReferences(Content, dcode, TRUE);
-			msgid2 = AllocCharToTchar(dcode);
+			msgid2 = alloc_char_to_tchar(dcode);
 			mem_free(&dcode);
 		}
 #else
@@ -676,7 +701,7 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 			ConvReferences(Content, msgid2, TRUE);
 		}
 #endif
-		if (msgid1 != NULL && msgid2 != NULL && TStrCmp(msgid1, msgid2) == 0) {
+		if (msgid1 != NULL && msgid2 != NULL && lstrcmp(msgid1, msgid2) == 0) {
 			mem_free(&msgid2);
 			msgid2 = NULL;
 		}
@@ -685,12 +710,12 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 
 	if (tpMailItem->InReplyTo == NULL || *tpMailItem->InReplyTo == TEXT('\0')) {
 		mem_free(&tpMailItem->InReplyTo);
-		tpMailItem->InReplyTo = AllocCopy(msgid1);
+		tpMailItem->InReplyTo = alloc_copy(msgid1);
 		t = msgid2;
 	} else {
-		t = (msgid1 != NULL && TStrCmp(tpMailItem->InReplyTo, msgid1) != 0) ? msgid1 : msgid2;
+		t = (msgid1 != NULL && lstrcmp(tpMailItem->InReplyTo, msgid1) != 0) ? msgid1 : msgid2;
 	}
-	tpMailItem->References = AllocCopy(t);
+	tpMailItem->References = alloc_copy(t);
 	mem_free(&msgid1);
 	mem_free(&msgid2);
 
@@ -702,7 +727,7 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 /*
  * Item_HeadToItem - メールヘッダからアイテムを作成する
  */
-MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, char *Size)
+MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, int Size)
 {
 	MAILITEM *tpMailItem;
 	int fret;
@@ -853,7 +878,7 @@ MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf)
 	}
 	// Multipart
 	if (tpMailItem->Attach != NULL || (tpMailItem->ContentType != NULL &&
-		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)) {
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)) {
 		tpMailItem->Multipart = TRUE;
 	}
 	return tpMailItem;
@@ -952,12 +977,12 @@ TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag)
 		p = SaveHeaderString(TEXT(HEAD_X_MARK), X_Status, p);
 	}
 	p = SaveHeaderString(TEXT(HEAD_X_DOWNLOAD), X_Downflag, p);
-	p = TStrCpy(p, TEXT("\r\n"));
+	p = str_cpy_t(p, TEXT("\r\n"));
 
 	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')) {
-		p = TStrCpy(p, tpMailItem->Body);
+		p = str_cpy_t(p, tpMailItem->Body);
 	}
-	p = TStrCpy(p, TEXT("\r\n.\r\n"));
+	p = str_cpy_t(p, TEXT("\r\n.\r\n"));
 	return p;
 }
 
@@ -1117,7 +1142,7 @@ int Item_FindThread(MAILBOX *tpMailBox, TCHAR *p, int Index)
 			tpMailItem->MessageID == NULL) {
 			continue;
 		}
-		if (TStrCmp(tpMailItem->MessageID, p) == 0) {
+		if (lstrcmp(tpMailItem->MessageID, p) == 0) {
 			return j;
 		}
 	}

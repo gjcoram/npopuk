@@ -12,8 +12,21 @@
 #define _INC_MEMORY_H
 
 /* Include Files */
+#include <windows.h>
 
 /* Define */
+#ifndef CopyMemory
+#define CopyMemory					memcpy
+#endif
+#ifndef MoveMemory
+#define MoveMemory					memmove
+#endif
+#ifndef ZeroMemory
+#define ZeroMemory(p, len)			(memset(p, 0, len))
+#endif
+#ifndef FillMemory
+#define FillMemory(p, len, fill)	(memset(p, fill, len))
+#endif
 
 /* Struct */
 

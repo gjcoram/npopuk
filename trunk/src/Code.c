@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 #include "jp.h"
 #include "kr.h"
 
@@ -89,7 +90,7 @@ int IsDependenceString(TCHAR *buf)
 	}
 
 #ifdef UNICODE
-	cBuf = AllocTcharToChar(buf);
+	cBuf = alloc_tchar_to_char(buf);
 	if (cBuf == NULL) {
 		return ret;
 	}
@@ -280,7 +281,7 @@ void TBase64Encode(TCHAR *buf, TCHAR *ret, int size)
 	int len;
 
 	// TCHAR から char に変換
-	b64str = AllocTcharToChar(buf);
+	b64str = alloc_tchar_to_char(buf);
 	if (b64str == NULL) {
 		*ret = TEXT('\0');
 		return;
@@ -296,8 +297,8 @@ void TBase64Encode(TCHAR *buf, TCHAR *ret, int size)
 	Base64Encode(b64str, cret, 0);
 	mem_free(&b64str);
 	// char から TCHAR に変換
-	len = CharToTcharSize(cret);
-	CharToTchar(cret, ret, len);
+	len = char_to_tchar_size(cret);
+	char_to_tchar(cret, ret, len);
 	mem_free(&cret);
 }
 #endif
@@ -437,7 +438,7 @@ TCHAR *AllocURLDecode(TCHAR *buf)
 	char *tmp;
 
 #ifdef UNICODE
-	cbuf = AllocTcharToChar(buf);
+	cbuf = alloc_tchar_to_char(buf);
 #else
 	cbuf = buf;
 #endif
@@ -454,7 +455,7 @@ TCHAR *AllocURLDecode(TCHAR *buf)
 	URLDecode(cbuf, tmp);
 #ifdef UNICODE
 	mem_free(&cbuf);
-	return AllocCharToTchar(tmp);
+	return alloc_char_to_tchar(tmp);
 #else
 	return tmp;
 #endif
@@ -545,24 +546,24 @@ static char *EncodeCharset(char *buf, TCHAR *charset)
 {
 	char *ret = NULL;
 
-	if (TStrCmpNI(charset, TEXT(CHARSET_ISO2022JP), lstrlen(TEXT(CHARSET_ISO2022JP))) == 0) {
+	if (str_cmp_ni_t(charset, TEXT(CHARSET_ISO2022JP), lstrlen(TEXT(CHARSET_ISO2022JP))) == 0) {
 		// SJIS to ISO-2022-JP
 		ret = (char *)mem_alloc(tstrlen(buf) * 4 + 1);
 		if (ret == NULL) {
 			return NULL;
 		}
 		sjis_iso2022jp(buf, ret);
-	} else if (TStrCmpNI(charset, TEXT(CHARSET_ISO2022KR), lstrlen(TEXT(CHARSET_ISO2022KR))) == 0) {
+	} else if (str_cmp_ni_t(charset, TEXT(CHARSET_ISO2022KR), lstrlen(TEXT(CHARSET_ISO2022KR))) == 0) {
 		// KS_C_5601 to ISO-2022-KR
 		ret = (char *)mem_alloc(ksc5601_iso2022kr_len(buf) + 1);
 		if (ret == NULL) {
 			return NULL;
 		}
 		ksc5601_iso2022kr(buf, ret);
-	} else if (TStrCmpNI(charset, TEXT(CHARSET_UTF7), lstrlen(TEXT(CHARSET_UTF7))) == 0) {
+	} else if (str_cmp_ni_t(charset, TEXT(CHARSET_UTF7), lstrlen(TEXT(CHARSET_UTF7))) == 0) {
 		// UTF-7
 		ret = MultiByteToUtf(buf, FALSE);
-	} else if (TStrCmpNI(charset, TEXT(CHARSET_UTF8), lstrlen(TEXT(CHARSET_UTF8))) == 0) {
+	} else if (str_cmp_ni_t(charset, TEXT(CHARSET_UTF8), lstrlen(TEXT(CHARSET_UTF8))) == 0) {
 		// UTF-8
 		ret = MultiByteToUtf(buf, TRUE);
 	}
@@ -576,24 +577,24 @@ static char *DecodeCharset(char *buf, char *charset)
 {
 	char *ret = NULL;
 
-	if (StrCmpNI(charset, CHARSET_ISO2022JP, tstrlen(CHARSET_ISO2022JP)) == 0) {
+	if (str_cmp_ni(charset, CHARSET_ISO2022JP, tstrlen(CHARSET_ISO2022JP)) == 0) {
 		// ISO-2022-JP to SJIS
 		ret = (char *)mem_alloc(tstrlen(buf) + 1);
 		if (ret == NULL) {
 			return NULL;
 		}
 		iso2022jp_sjis(buf, ret);
-	} else if (StrCmpNI(charset, CHARSET_ISO2022KR, tstrlen(CHARSET_ISO2022KR)) == 0) {
+	} else if (str_cmp_ni(charset, CHARSET_ISO2022KR, tstrlen(CHARSET_ISO2022KR)) == 0) {
 		// ISO-2022-KR to KS_C_5601
 		ret = (char *)mem_alloc(iso2022kr_ksc5601_len(buf) + 1);
 		if (ret == NULL) {
 			return NULL;
 		}
 		iso2022kr_ksc5601(buf, ret);
-	} else if (StrCmpNI(charset, CHARSET_UTF7, tstrlen(CHARSET_UTF7)) == 0) {
+	} else if (str_cmp_ni(charset, CHARSET_UTF7, tstrlen(CHARSET_UTF7)) == 0) {
 		// UTF-7
 		ret = UtfToMultiByte(buf, FALSE);
-	} else if (StrCmpNI(charset, CHARSET_UTF8, tstrlen(CHARSET_UTF8)) == 0) {
+	} else if (str_cmp_ni(charset, CHARSET_UTF8, tstrlen(CHARSET_UTF8)) == 0) {
 		// UTF-8
 		ret = UtfToMultiByte(buf, TRUE);
 	}
@@ -754,7 +755,7 @@ static ENCODE_INFO *CreateEncodeInfo(char *buf, TCHAR *charset, BOOL Address)
 			FreeEncodeInfo(top_eb.next);
 			return NULL;
 		}
-		StrCpyN(eb->buf, r, p - r + 1);
+		str_cpy_n(eb->buf, r, p - r + 1);
 	}
 
 	// マージ
@@ -768,8 +769,8 @@ static ENCODE_INFO *CreateEncodeInfo(char *buf, TCHAR *charset, BOOL Address)
 				FreeEncodeInfo(top_eb.next);
 				return NULL;
 			}
-			r = StrCpy(p, eb->buf);
-			r = StrCpy(r, tmp_eb->buf);
+			r = str_cpy(p, eb->buf);
+			r = str_cpy(r, tmp_eb->buf);
 			mem_free(&eb->buf);
 			eb->buf = p;
 			eb->next = tmp_eb->next;
@@ -809,14 +810,14 @@ static ENCODE_INFO *CreateEncodeInfo(char *buf, TCHAR *charset, BOOL Address)
 				FreeEncodeInfo(top_eb.next);
 				return NULL;
 			}
-			StrCpy(eb->next->buf, eb->buf + len);
+			str_cpy(eb->next->buf, eb->buf + len);
 
 			p = (char *)mem_alloc(len + 2);
 			if (p == NULL) {
 				FreeEncodeInfo(top_eb.next);
 				return NULL;
 			}
-			StrCpyN(p, eb->buf, len + 1);
+			str_cpy_n(p, eb->buf, len + 1);
 			mem_free(&eb->buf);
 			eb->buf = p;
 		}
@@ -1057,12 +1058,12 @@ TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address)
 
 #ifdef UNICODE
 	// char に変換
-	buf = AllocTcharToChar(wbuf);
+	buf = alloc_tchar_to_char(wbuf);
 	if (buf == NULL) {
 		return NULL;
 	}
 
-	cCharSet = AllocTcharToChar(op.HeadCharset);
+	cCharSet = alloc_tchar_to_char(op.HeadCharset);
 	if (cCharSet == NULL) {
 		mem_free(&buf);
 		return NULL;
@@ -1099,10 +1100,10 @@ TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address)
 
 	for (; eb != NULL; eb = eb->next) {
 		if (top_eb != eb) {
-			r = StrCpy(r, "\r\n ");
+			r = str_cpy(r, "\r\n ");
 		}
 		if (eb->encode == FALSE || op.HeadEncoding == ENC_TYPE_7BIT || op.HeadEncoding == ENC_TYPE_8BIT) {
-			r = StrCpy(r, eb->buf);
+			r = str_cpy(r, eb->buf);
 		} else {
 			switch (op.HeadEncoding)
 			{
@@ -1141,13 +1142,13 @@ TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address)
 				EncType = "Q";
 				break;
 			}
-			r = StrCpy(r, "=?");
-			r = StrCpy(r, cCharSet);
-			r = StrCpy(r, "?");
-			r = StrCpy(r, EncType);
-			r = StrCpy(r, "?");
-			r = StrCpy(r, eb->buf);
-			r = StrCpy(r, "?=");
+			r = str_cpy(r, "=?");
+			r = str_cpy(r, cCharSet);
+			r = str_cpy(r, "?");
+			r = str_cpy(r, EncType);
+			r = str_cpy(r, "?");
+			r = str_cpy(r, eb->buf);
+			r = str_cpy(r, "?=");
 		}
 	}
 	*r = '\0';
@@ -1158,7 +1159,7 @@ TCHAR *MIMEencode(TCHAR *wbuf, BOOL Address)
 	mem_free(&cCharSet);
 
 	// TCHAR に変換
-	ret = AllocCharToTchar(cret);
+	ret = alloc_char_to_tchar(cret);
 	if (ret == NULL) {
 		mem_free(&cret);
 		return NULL;
@@ -1189,14 +1190,14 @@ TCHAR *ExtendedDecode(TCHAR *buf)
 	if (CharSet == NULL) {
 		return NULL;
 	}
-	r = TStrCpyF(CharSet, buf, TEXT('\''));
+	r = str_cpy_f(CharSet, buf, TEXT('\''));
 	if (*r != TEXT('\0')) {
 		lang = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(r) + 1));
 		if (lang == NULL) {
 			mem_free(&CharSet);
 			return NULL;
 		}
-		r = TStrCpyF(lang, r, TEXT('\''));
+		r = str_cpy_f(lang, r, TEXT('\''));
 	}
 	if (*r == TEXT('\0')) {
 		r = buf;
@@ -1204,7 +1205,7 @@ TCHAR *ExtendedDecode(TCHAR *buf)
 	}
 
 #ifdef UNICODE
-	cCharSet = AllocTcharToChar(CharSet);
+	cCharSet = alloc_tchar_to_char(CharSet);
 	if (cCharSet == NULL) {
 		mem_free(&CharSet);
 		mem_free(&lang);
@@ -1216,9 +1217,9 @@ TCHAR *ExtendedDecode(TCHAR *buf)
 #endif
 
 #ifdef UNICODE
-	cbuf = AllocTcharToChar(r);
+	cbuf = alloc_tchar_to_char(r);
 #else
-	cbuf = AllocCopy(r);
+	cbuf = alloc_copy(r);
 #endif
 	if (cbuf == NULL) {
 		mem_free(&cCharSet);
@@ -1248,7 +1249,7 @@ TCHAR *ExtendedDecode(TCHAR *buf)
 	mem_free(&lang);
 
 #ifdef UNICODE
-	ret = AllocCharToTchar(cbuf);
+	ret = alloc_char_to_tchar(cbuf);
 	if (ret == NULL) {
 		mem_free(&cbuf);
 		return NULL;
@@ -1295,7 +1296,7 @@ TCHAR *ExtendedEncode(TCHAR *wbuf)
 
 #ifdef UNICODE
 	// char に変換
-	buf = AllocTcharToChar(wbuf);
+	buf = alloc_tchar_to_char(wbuf);
 	if (buf == NULL) {
 		return NULL;
 	}
@@ -1356,7 +1357,7 @@ TCHAR *ExtendedEncode(TCHAR *wbuf)
 
 #ifdef UNICODE
 		// TCHAR に変換
-		t = AllocCharToTchar(eb->buf);
+		t = alloc_char_to_tchar(eb->buf);
 		if (t == NULL) {
 			FreeEncodeInfo(top_eb);
 			return NULL;
@@ -1395,18 +1396,18 @@ char *DecodeBodyTransfer(MAILITEM *tpMailItem, char *body)
 	if (encBuf == NULL) {
 		return NULL;
 	}
-	StrCpy(encBuf, body);
+	tstrcpy(encBuf, body);
 
 	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL ||
-		TStrCmpNI(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
 		// テキストではない
 		return encBuf;
 	}
 
 	// デコード
-	if (TStrCmpNI(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
+	if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
 		EncodeFlag = ENC_TYPE_BASE64;
-	} else if (TStrCmpNI(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
+	} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
 		EncodeFlag = ENC_TYPE_Q_PRINT;
 	}
 	if (EncodeFlag != 0) {
@@ -1433,7 +1434,7 @@ static char *DecodeBodyCharset(char *buf, char *ContentType)
 	r = ContentType;
 	while (r != NULL && *r != '\0') {
 		for (; *r == ' '; r++);
-		if (StrCmpNI(r, "charset", tstrlen("charset")) == 0) {
+		if (str_cmp_ni(r, "charset", tstrlen("charset")) == 0) {
 			r += tstrlen("charset");
 			for (; *r == ' '; r++);
 			if (*r != '=') {
@@ -1488,12 +1489,12 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 	if (*cnt == 0 && AddMultiPartInfo(tpPart, 0) != NULL) {
 		// マルチパートではない or ソース表示
 		if (ViewSrc == FALSE) {
-			(**tpPart)->ContentType = AllocCopy(tpMailItem->ContentType);
-			(**tpPart)->Encoding = AllocCopy(tpMailItem->Encoding);
+			(**tpPart)->ContentType = alloc_copy(tpMailItem->ContentType);
+			(**tpPart)->Encoding = alloc_copy(tpMailItem->Encoding);
 		}
 		(**tpPart)->sPos = tpMailItem->Body;
 		if (ViewSrc == TRUE || (**tpPart)->ContentType == NULL ||
-			TStrCmpNI((**tpPart)->ContentType, TEXT("text"), lstrlen(TEXT("text"))) == 0) {
+			str_cmp_ni_t((**tpPart)->ContentType, TEXT("text"), lstrlen(TEXT("text"))) == 0) {
 			// テキスト
 			TextIndex = 0;
 		} else {
@@ -1505,7 +1506,7 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 		// テキストのパートを検索
 		for (i = 0; i < *cnt; i++) {
 			if ((*(*tpPart + i))->ContentType == NULL ||
-				TStrCmpNI((*(*tpPart + i))->ContentType, TEXT("text"), lstrlen(TEXT("text"))) == 0) {
+				str_cmp_ni_t((*(*tpPart + i))->ContentType, TEXT("text"), lstrlen(TEXT("text"))) == 0) {
 				TextIndex = i;
 				break;
 			}
@@ -1515,7 +1516,7 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 	if (*cnt > 0 && TextIndex != -1) {
 		// 本文の取得
 		if ((*(*tpPart + TextIndex))->ePos == NULL) {
-			mBody = AllocCopy((*(*tpPart + TextIndex))->sPos);
+			mBody = alloc_copy((*(*tpPart + TextIndex))->sPos);
 			if (mBody == NULL) {
 				return NULL;
 			}
@@ -1528,12 +1529,12 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 			if (i == 0) {
 				*mBody = TEXT('\0');
 			} else {
-				TStrCpyN(mBody, (*(*tpPart + TextIndex))->sPos, i - 1);
+				str_cpy_n_t(mBody, (*(*tpPart + TextIndex))->sPos, i - 1);
 			}
 		}
 
 #ifdef UNICODE
-		encBuf = AllocTcharToChar(mBody);
+		encBuf = alloc_tchar_to_char(mBody);
 		if (encBuf == NULL) {
 			mem_free(&mBody);
 			return NULL;
@@ -1544,9 +1545,9 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 #endif
 		// デコード
 		if ((*(*tpPart + TextIndex))->Encoding != NULL) {
-			if (TStrCmpI((*(*tpPart + TextIndex))->Encoding, TEXT(ENCODE_BASE64)) == 0) {
+			if (lstrcmpi((*(*tpPart + TextIndex))->Encoding, TEXT(ENCODE_BASE64)) == 0) {
 				EncodeFlag = ENC_TYPE_BASE64;
-			} else if (TStrCmpI((*(*tpPart + TextIndex))->Encoding, TEXT(ENCODE_Q_PRINT)) == 0) {
+			} else if (lstrcmpi((*(*tpPart + TextIndex))->Encoding, TEXT(ENCODE_Q_PRINT)) == 0) {
 				EncodeFlag = ENC_TYPE_Q_PRINT;
 			}
 		}
@@ -1561,7 +1562,7 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 
 		// キャラクタセットの変換
 #ifdef UNICODE
-		ct = AllocTcharToChar((*(*tpPart + TextIndex))->ContentType);
+		ct = alloc_tchar_to_char((*(*tpPart + TextIndex))->ContentType);
 		encRet = DecodeBodyCharset(encBuf, ct);
 		if (encRet != NULL) {
 			mem_free(&encBuf);
@@ -1579,7 +1580,7 @@ TCHAR *BodyDecode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *
 #endif
 
 #ifdef UNICODE
-		mBody = AllocCharToTchar(encBuf);
+		mBody = alloc_char_to_tchar(encBuf);
 		if (mBody == NULL) {
 			mem_free(&encBuf);
 			return NULL;
@@ -1617,9 +1618,9 @@ TCHAR *BodyEncode(TCHAR *body, TCHAR *content_type, TCHAR *encoding, TCHAR *ErrS
 	BOOL mByteFlag = FALSE;
 
 #ifdef UNICODE
-	cret = AllocTcharToChar((body != NULL) ? body : TEXT(""));
+	cret = alloc_tchar_to_char((body != NULL) ? body : TEXT(""));
 #else
-	cret = AllocCopy((body != NULL) ? body : TEXT(""));
+	cret = alloc_copy((body != NULL) ? body : TEXT(""));
 #endif
 	if (cret == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
@@ -1706,7 +1707,7 @@ TCHAR *BodyEncode(TCHAR *body, TCHAR *content_type, TCHAR *encoding, TCHAR *ErrS
 		}
 	}
 #ifdef UNICODE
-	ret = AllocCharToTchar(cret);
+	ret = alloc_char_to_tchar(cret);
 	if (ret == NULL) {
 		mem_free(&cret);
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);

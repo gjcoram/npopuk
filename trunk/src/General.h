@@ -32,7 +32,7 @@
 #include <Strtbl.h>
 
 /* Define */
-#define APP_NAME				TEXT("nPOP Ver 1.0.5")
+#define APP_NAME				TEXT("nPOP Ver 1.0.6")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
@@ -213,64 +213,6 @@
 
 #define ABS(n)					((n < 0) ? (n * -1) : n)				// â‘Î’l
 
-#ifdef UNICODE
-#define TcharToCharSize(wbuf) (WideCharToMultiByte(CP_ACP, 0, wbuf, -1, NULL, 0, NULL, NULL))
-#else
-#define TcharToCharSize(wbuf) (lstrlen(wbuf) + 1)
-#endif
-
-#ifdef UNICODE
-#define TcharToChar(wbuf, ret, len) (WideCharToMultiByte(CP_ACP, 0, wbuf, -1, ret, len, NULL, NULL))
-#else
-#define TcharToChar(wbuf, ret, len) (lstrcpyn(ret, wbuf, len))
-#endif
-
-#ifdef UNICODE
-#define CharToTcharSize(buf) (MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0))
-#else
-#define CharToTcharSize(buf) (lstrlen(buf) + 1)
-#endif
-
-#ifdef UNICODE
-#define CharToTchar(buf, wret, len) (MultiByteToWideChar(CP_ACP, 0, buf, -1, wret, len))
-#else
-#define CharToTchar(buf, wret, len) (lstrcpyn(wret, buf, len))
-#endif
-
-#ifdef UNICODE
-#define tstrcpy					strcpy
-#else
-#define tstrcpy					lstrcpy
-#endif
-
-#ifdef UNICODE
-#define tstrcat					strcat
-#else
-#define tstrcat					lstrcat
-#endif
-
-#ifdef UNICODE
-#define tstrcmp					strcmp
-#else
-#define tstrcmp					lstrcmp
-#endif
-
-#ifdef UNICODE
-#define tstrlen					strlen
-#else
-#define tstrlen					lstrlen
-#endif
-
-#ifndef CopyMemory
-#define CopyMemory				memcpy
-#endif
-#ifndef ZeroMemory
-#define ZeroMemory(p, len)		(memset(p, 0, len))
-#endif
-#ifndef FillMemory
-#define FillMemory(p, len, fill)	(memset(p, fill, len))
-#endif
-
 /* Struct */
 typedef struct _OPTION {
 	int StertPass;
@@ -388,6 +330,7 @@ typedef struct _OPTION {
 	TCHAR *EditFileSuffix;
 	int DefEditApp;
 	TCHAR *AttachPath;
+	int AttachWarning;
 	int AttachDelete;
 
 	TCHAR *URLApp;
@@ -425,6 +368,7 @@ typedef struct _MAILBOX {
 	int PopSSL;
 	SSL_INFO PopSSLInfo;
 	int NoRETR;
+	int NoUIDL;
 	unsigned long PopIP;
 
 	int MailCnt;
@@ -540,85 +484,81 @@ typedef struct _RASINFO {
 } RASINFO;
 
 /* Function Prototypes */
-// String
-#ifdef UNICODE
-char *AllocTcharToChar(TCHAR *str);
-TCHAR *AllocCharToTchar(char *str);
-#else
-#define AllocTcharToChar AllocCopy
-#define AllocCharToTchar AllocCopy
-#endif
+// Ras
+BOOL GetRasInfo(TCHAR *Entry);
+BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass);
+void FreeRasInfo(void);
+void initRas(void);
+void FreeRas(void);
+BOOL GetRasEntries(HWND hCmboWnd);
+BOOL GetRasStatus(void);
+void RasDisconnect(void);
+BOOL RasStatusProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL RasMailBoxStart(HWND hWnd, int BoxIndex);
 
-int a2i(const char *str);
-void DelCtrlChar(TCHAR *buf);
-
-TCHAR *AllocCopy(const TCHAR *buf);
-TCHAR * __cdecl TStrJoin(TCHAR *ret, ... );
-
-TCHAR *TStrCpy(TCHAR *ret, TCHAR *buf);
+// WinSock
+unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr);
+SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr);
+int recv_proc(HWND hWnd, SOCKET soc);
+#ifndef WSAASYNC
+int recv_select(HWND hWnd, SOCKET soc);
+#endif	//WSAASYNC
+int send_data(SOCKET soc, TCHAR *wbuf, int len);
+int send_buf(SOCKET soc, char *buf);
 #ifdef UNICODE
-char *StrCpy(char *ret, char *buf);
-#else
-#define StrCpy TStrCpy
-#endif
-#ifdef UNICODE
-void StrCpyN(char *ret, char *buf, int len);
-#else
-#define StrCpyN TStrCpyN
-#endif
-void TStrCpyN(TCHAR *ret, TCHAR *buf, int len);
-TCHAR *TStrCpyF(TCHAR *ret, TCHAR *buf, TCHAR c);
-void StrCatN(TCHAR *ret, char *buf, int len);
+int send_buf_t(SOCKET soc, TCHAR *wbuf);
+#else	//UNICODE
+#define send_buf_t	send_buf
+#endif	//UNICODE
+void socket_close(HWND hWnd, SOCKET soc);
+int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr);
+void free_ssl(void);
 
-int TStrCmp(const TCHAR *buf1, const TCHAR *buf2);
-int TStrCmpI(const TCHAR *buf1, const TCHAR *buf2);
-#ifdef UNICODE
-int StrCmpI(const char *buf1, const char *buf2);
-#else
-#define StrCmpI TStrCmpI
-#endif
-int TStrCmpNI(const TCHAR *buf1, const TCHAR *buf2, int len);
-#ifdef UNICODE
-int StrCmpNI(const char *buf1, const char *buf2, int len);
-#else
-#define StrCmpNI TStrCmpNI
-#endif
+// Pop3
+BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+void pop3_free(void);
 
-BOOL StrMatch(const TCHAR *ptn, const TCHAR *str);
-TCHAR *StrFind(TCHAR *ptn, TCHAR *str, int CaseFlag);
+// Smtp
+void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
+#ifdef WSAASYNC
+BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox);
+#endif
+BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
+void smtp_set_error(HWND hWnd);
+void smtp_free(void);
+
+// util
 TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str);
-int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag);
-BOOL GetHeaderStringT(TCHAR *buf, TCHAR *ret, BOOL CrLfFlag);
-
-
 #ifdef UNICODE
 char *GetHeaderStringPoint(char *buf, char *str);
 #else
 #define GetHeaderStringPoint GetHeaderStringPointT
 #endif
-
+int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag);
 #ifdef UNICODE
 int GetHeaderStringSize(char *buf, BOOL CrLfFlag);
 #else
 #define GetHeaderStringSize GetHeaderStringSizeT
 #endif
-
+BOOL GetHeaderStringT(TCHAR *buf, TCHAR *ret, BOOL CrLfFlag);
 #ifdef UNICODE
 BOOL GetHeaderString(char *buf, char *ret, BOOL CrLfFlag);
 #else
 #define GetHeaderString GetHeaderStringT
 #endif
 
-void TrimMessageId(char *buf);
-int GetReferencesSize(char *p, BOOL Flag);
-BOOL ConvReferences(char *p, char *r, BOOL Flag);
 TCHAR *GetBodyPointaT(TCHAR *buf);
-
 #ifdef UNICODE
 char *GetBodyPointa(char *buf);
 #else
 #define GetBodyPointa GetBodyPointaT
 #endif
+
+void TrimMessageId(char *buf);
+int GetReferencesSize(char *p, BOOL Flag);
+BOOL ConvReferences(char *p, char *r, BOOL Flag);
 
 void DateAdd(SYSTEMTIME *sTime, char *tz);
 int DateConv(char *buf, char *ret);
@@ -688,7 +628,7 @@ BOOL GetFileName(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, BOOL OpenS
 char *ReadFileBuf(TCHAR *path, long FileSize);
 BOOL OpenFileBuf(HWND hWnd, TCHAR **buf);
 BOOL SaveFile(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len);
-BOOL SaveExecFile(HWND hWnd, TCHAR *FileName, char *buf, int len);
+BOOL SaveFileExec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 int GetSaveHeaderStringSize(TCHAR *Head, TCHAR *buf);
 TCHAR *SaveHeaderString(TCHAR *Head, TCHAR *buf, TCHAR *ret);
 BOOL WriteAsciiFile(HANDLE hFile, TCHAR *buf, int len);
@@ -707,72 +647,6 @@ BOOL CheckStartPass(void);
 BOOL GetINI(HWND hWnd);
 BOOL PutINI(HWND hWnd, BOOL SaveMailFlag);
 
-// Font
-HFONT CreateEditFont(HWND hWnd, TCHAR *FontName, int FontSize, int Charset);
-
-// Ras
-BOOL GetRasInfo(TCHAR *Entry);
-BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass);
-void FreeRasInfo(void);
-void initRas(void);
-void FreeRas(void);
-BOOL GetRasEntries(HWND hCmboWnd);
-BOOL GetRasStatus(void);
-void RasDisconnect(void);
-BOOL RasStatusProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL RasMailBoxStart(HWND hWnd, int BoxIndex);
-
-// WinSock
-unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr);
-SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr);
-int recv_proc(HWND hWnd, SOCKET soc);
-#ifndef WSAASYNC
-int recv_select(HWND hWnd, SOCKET soc);
-#endif	//WSAASYNC
-int send_data(SOCKET soc, TCHAR *wbuf);
-int send_buf(SOCKET soc, char *buf);
-#ifdef UNICODE
-int send_buf_t(SOCKET soc, TCHAR *wbuf);
-#else	//UNICODE
-#define send_buf_t	send_buf
-#endif	//UNICODE
-void socket_close(HWND hWnd, SOCKET soc);
-void socket_free(void);
-int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr);
-void free_ssl(void);
-
-// Pop3
-BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
-BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
-void pop3_free(void);
-
-// Smtp
-void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
-#ifdef WSAASYNC
-BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox);
-#endif
-BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
-SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
-void smtp_set_error(HWND hWnd);
-
-// ListView
-void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
-HWND CreateListView(HWND hWnd, int Top, int bottom);
-void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
-int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem);
-void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);
-TCHAR *ListView_GetSelStringList(HWND hListView);
-long ListView_GetlParam(HWND hListView, int i);
-int ListView_GetMemToItem(HWND hListView, MAILITEM *tpMemMailItem);
-int ListView_GetNextDeleteItem(HWND hListView, int Index);
-int ListView_GetNextMailItem(HWND hListView, int Index);
-int ListView_GetPrevMailItem(HWND hListView, int Index);
-int ListView_GetNextNoReadItem(HWND hListView, int Index, int endindex);
-int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox);
-BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox);
-int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
-
 // Item
 BOOL Item_SetItemCnt(MAILBOX *tpMailBox, int i);
 BOOL Item_Add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
@@ -783,8 +657,8 @@ BOOL Item_Resize(MAILBOX *tpMailBox);
 void FreeMailItem(MAILITEM **tpFreeMailItem, int Cnt);
 int Item_GetContent(char *buf, char *str, char **ret);
 char *Item_GetMessageId(char *buf);
-BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download);
-MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, char *Size);
+BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, int Size, BOOL download);
+MAILITEM *Item_HeadToItem(MAILBOX *tpMailBox, char *buf, int Size);
 MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf);
 int Item_GetStringSize(MAILITEM *tpMailItem, BOOL BodyFlag);
 TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag);
@@ -843,6 +717,24 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+// ListView
+void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
+HWND CreateListView(HWND hWnd, int Top, int bottom);
+void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
+int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem);
+void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);
+TCHAR *ListView_GetSelStringList(HWND hListView);
+long ListView_GetlParam(HWND hListView, int i);
+int ListView_GetMemToItem(HWND hListView, MAILITEM *tpMemMailItem);
+int ListView_GetNextDeleteItem(HWND hListView, int Index);
+int ListView_GetNextMailItem(HWND hListView, int Index);
+int ListView_GetPrevMailItem(HWND hListView, int Index);
+int ListView_GetNextNoReadItem(HWND hListView, int Index, int endindex);
+int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox);
+BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox);
+int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
 
 // main
 void SwitchCursor(const BOOL Flag);

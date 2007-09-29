@@ -9,7 +9,9 @@
  */
 
 /* Include Files */
-#include "General.h"
+#include <windows.h>
+
+#include "Memory.h"
 
 /* Define */
 
@@ -18,9 +20,9 @@
 /* Local Function Prototypes */
 
 /*
- * CreateEditFont - フォントを作成する
+ * create_font - フォントを作成する
  */
-HFONT CreateEditFont(HWND hWnd, TCHAR *FontName, int FontSize, int Charset)
+HFONT create_font(HWND hWnd, TCHAR *FontName, int FontSize, int Charset)
 {
 	LOGFONT lf;
 	HDC hdc;
@@ -43,7 +45,7 @@ HFONT CreateEditFont(HWND hWnd, TCHAR *FontName, int FontSize, int Charset)
 	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	lf.lfQuality = DEFAULT_QUALITY;
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-	TStrCpy(lf.lfFaceName, FontName);
+	lstrcpy(lf.lfFaceName, FontName);
 	return CreateFontIndirect((CONST LOGFONT *)&lf);
 }
 /* End of source */

@@ -462,19 +462,7 @@ DEP_CPP_FONT_=\
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
-DEP_CPP_FONT_=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_FONT_=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
@@ -483,12 +471,6 @@ DEP_CPP_FONT_=\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_FONT_=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
@@ -667,29 +649,11 @@ SOURCE=..\src\kr.c
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
-DEP_CPP_KR_Ce=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_KR_Ce=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
-
-DEP_CPP_KR_Ce=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
 
@@ -820,6 +784,7 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\JP\strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -828,6 +793,7 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\JP\strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -842,6 +808,7 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\JP\strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1278,23 +1245,7 @@ DEP_CPP_STRIN=\
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
 
-DEP_CPP_STRIN=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
-
-DEP_CPP_STRIN=\
-	"..\JP\strtbl.h"\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
 
@@ -1306,7 +1257,52 @@ DEP_CPP_STRIN=\
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
 
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
+
 DEP_CPP_STRIN=\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\util.c
+
+!IF  "$(CFG)" == "nPOP - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE x86em) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE MIPS) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Release"
+
+DEP_CPP_UTIL_=\
 	"..\JP\strtbl.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
@@ -1315,12 +1311,6 @@ DEP_CPP_STRIN=\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP - Win32 (WCE SH) Debug"
-
-DEP_CPP_STRIN=\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	
 
 !ENDIF 
 
@@ -1443,6 +1433,10 @@ DEP_CPP_WINSO=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
+SOURCE=..\src\Font.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
@@ -1468,6 +1462,10 @@ SOURCE=..\src\Memory.h
 # Begin Source File
 
 SOURCE=..\src\Profile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\String.h
 # End Source File
 # Begin Source File
 
