@@ -1384,9 +1384,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 		break;
 #endif
 
+#ifndef _WIN32_WCE_LAGENDA
 	case WM_SIZE:
 		SetWindowSize(hWnd, wParam, lParam);
 		break;
+#endif
 
 	case WM_SETFOCUS:
 		SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));

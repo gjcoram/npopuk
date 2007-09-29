@@ -2340,6 +2340,8 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)fpath);
 			}
 		}
+		SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_SETHORIZONTALEXTENT,
+			MAX_PATH * 9 + GetSystemMetrics(SM_CXVSCROLL), 0);
 		break;
 
 	case WM_CLOSE:

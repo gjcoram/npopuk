@@ -28,7 +28,7 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size);
 #endif
 
 char *QuotedPrintable_decode(char *buf, char *ret);
-void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size);
+void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body);
 
 char *URL_decode(char *buf, char *ret);
 void URL_encode(unsigned char *buf, char *ret);
