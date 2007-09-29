@@ -41,6 +41,7 @@
 // Error
 #define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
 #define STR_ERR_INIT				TEXT("Initialisation error")
+#define STR_ERR_INIFILE				TEXT("Cannot find INI file: %s")
 #define STR_ERR_READONLY			TEXT("Application directory is read-only")
 #define STR_ERR_NODATADIR			TEXT("DataFileDir is not a directory")
 #define STR_ERR_DATAREADONLY		TEXT("DataFileDir is read-only")

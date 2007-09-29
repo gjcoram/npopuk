@@ -32,6 +32,7 @@ extern HINSTANCE hInst;
 extern TCHAR *g_Pass;
 extern int gPassSt;
 extern TCHAR *AppDir;
+extern TCHAR *IniFile;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -51,20 +52,29 @@ BOOL ini_start_auth_check(void)
 	TCHAR pass[BUF_SIZE];
 
 	ConvertFromNPOP = FALSE;
-	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-	if (file_get_size(app_path) == -1) {
-		DWORD DirInfo;
-		DirInfo = GetFileAttributes(AppDir);
-		if (DirInfo & (FILE_ATTRIBUTE_READONLY | FILE_READ_ONLY_VOLUME)) {
-			MessageBox(NULL, STR_ERR_READONLY, KEY_NAME, MB_OK | MB_ICONERROR);
+	if (IniFile != NULL) {
+		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
+		if (file_get_size(app_path) == -1) {
+			wsprintf(ret, STR_ERR_INIFILE, IniFile);
+			ErrorMessage(NULL, ret);
 			return FALSE;
 		}
-		// GJC - check if upgrading from original nPOP
-		str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
-		if (file_get_size(app_path_old) != -1) {
-			if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
-				ConvertFromNPOP = TRUE;
-				CopyFile(app_path_old, app_path, FALSE);
+	} else {
+		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		if (file_get_size(app_path) == -1) {
+			DWORD DirInfo;
+			DirInfo = GetFileAttributes(AppDir);
+			if (DirInfo & (FILE_ATTRIBUTE_READONLY | FILE_READ_ONLY_VOLUME)) {
+				ErrorMessage(NULL, STR_ERR_READONLY);
+				return FALSE;
+			}
+			// GJC - check if upgrading from original nPOP
+			str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
+			if (file_get_size(app_path_old) != -1) {
+				if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
+					ConvertFromNPOP = TRUE;
+					CopyFile(app_path_old, app_path, FALSE);
+				}
 			}
 		}
 	}
@@ -182,35 +192,37 @@ BOOL ini_read_setting(HWND hWnd)
 #endif
 	ReleaseDC(hWnd, hdc);
 
-	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-#ifdef _WIN32_WCE
-	if (file_get_size(app_path) == -1) {
-		DirInfo = GetFileAttributes(AppDir);
-		if (DirInfo & FILE_ATTRIBUTE_READONLY) {
-			MessageBox(NULL, STR_ERR_READONLY, KEY_NAME, MB_OK | MB_ICONERROR);
+	if (IniFile != NULL) {
+		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
+		if (file_get_size(app_path) == -1) {
+			ErrorMessage(NULL, STR_ERR_INIFILE);
 			return FALSE;
 		}
-		// GJC - check if upgrading from original nPOP
-		str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
-		if (file_get_size(app_path_old) != -1) {
-			if (MessageBox(hWnd, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
-				ConvertFromNPOP = TRUE;
-				CopyFile(app_path_old, app_path, FALSE);
+	} else {
+		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+#ifdef _WIN32_WCE
+		if (file_get_size(app_path) == -1) {
+			DirInfo = GetFileAttributes(AppDir);
+			if (DirInfo & FILE_ATTRIBUTE_READONLY) {
+				ErrorMessage(NULL, STR_ERR_READONLY);
+				return FALSE;
+			}
+			// GJC - check if upgrading from original nPOP
+			str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
+			if (file_get_size(app_path_old) != -1) {
+				if (MessageBox(hWnd, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
+					ConvertFromNPOP = TRUE;
+					CopyFile(app_path_old, app_path, FALSE);
+				}
 			}
 		}
-	}
 #endif
+	}
 	if (profile_initialize(app_path, FALSE) == FALSE) {
 		return FALSE;
 	}
 
-#ifdef _WIN32_WCE_PPC
-	///////////// MRP /////////////////////
-	len = profile_get_string(GENERAL, TEXT("DataFileDir"), AppDir, op.DataFileDir, BUF_SIZE - 1, app_path);
-	///////////// --- /////////////////////
-#else
 	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1, app_path);
-#endif
 
 	if (*op.DataFileDir == TEXT('\0')) {
 		DataDir = AppDir;
@@ -472,6 +484,7 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.TimeoutInterval <= 0) op.TimeoutInterval = 1;
 
 	op.ViewClose = profile_get_int(GENERAL, TEXT("ViewClose"), 1, app_path);
+	op.ViewCloseNoNext = profile_get_int(GENERAL, TEXT("ViewCloseNoNext"), 0, app_path);
 	op.ViewNextAfterDel = profile_get_int(GENERAL, TEXT("ViewNextAfterDel"), 0, app_path);
 	op.ViewSkipDeleted = profile_get_int(GENERAL, TEXT("ViewSkipDeleted"), 0, app_path);
 	op.ViewApp = profile_alloc_string(GENERAL, TEXT("ViewApp"), TEXT(""), app_path);
@@ -776,7 +789,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	BOOL found;
 
 	if (SaveDir == NULL) {
-		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		if (IniFile == NULL) {
+			str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		} else {
+			str_cpy_n_t(app_path, IniFile, BUF_SIZE);
+		}
 	} else {
 		str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	}
@@ -793,6 +810,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
 	///////////// --- /////////////////////
 
+	// if IniFile != NULL or SaveDir != NULL, this initializes from
+	// the previous backup, not from the ini file in use!
 	profile_initialize(app_path, FALSE);
 
 	if (SaveDir == NULL) {
@@ -946,6 +965,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	profile_write_int(GENERAL, TEXT("TimeoutInterval"), op.TimeoutInterval, app_path);
 
 	profile_write_int(GENERAL, TEXT("ViewClose"), op.ViewClose, app_path);
+	profile_write_int(GENERAL, TEXT("ViewCloseNoNext"), op.ViewCloseNoNext, app_path);
 	profile_write_int(GENERAL, TEXT("ViewNextAfterDel"), op.ViewNextAfterDel, app_path);
 	profile_write_int(GENERAL, TEXT("ViewSkipDeleted"), op.ViewSkipDeleted, app_path);
 	profile_write_string(GENERAL, TEXT("ViewApp"), op.ViewApp, app_path);

@@ -668,7 +668,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret)
 {
 	BOOL rc;
-	TCHAR *filepart;
+	TCHAR *filepart = fname;
 
 	g_mode_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) ? TRUE : FALSE;
 	g_action = Action;
@@ -689,7 +689,6 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		}
 	} else if (op.RememberOSD == 1) { // GJC
 		lstrcpy(path, op.OpenSaveDir);
-		filepart = fname;
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {

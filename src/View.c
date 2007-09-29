@@ -120,7 +120,7 @@ static void EndWindow(HWND hWnd);
 static void SetEditMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc);
 static MAILITEM *View_NextMail(HWND hWnd, BOOL St);
-static void View_PrevMail(HWND hWnd);
+static MAILITEM *View_PrevMail(HWND hWnd);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
 static void View_NextScroll(HWND hEditWnd);
 static BOOL ShellOpen(TCHAR *FileName);
@@ -1240,7 +1240,7 @@ static MAILITEM *View_NextMail(HWND hWnd, BOOL St)
 /*
  * View_PrevMail - ëOÇÃÉÅÅ[ÉãÇï\é¶
  */
-static void View_PrevMail(HWND hWnd)
+static MAILITEM *View_PrevMail(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
@@ -1248,7 +1248,7 @@ static void View_PrevMail(HWND hWnd)
 	int j;
 
 	if (SelBox == MAILBOX_SEND) {
-		return;
+		return NULL;
 	}
 	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	Index = ListView_GetMemToItem(hListView,
@@ -1256,7 +1256,7 @@ static void View_PrevMail(HWND hWnd)
 
 	j = ListView_GetPrevMailItem(hListView, Index);
 	if (j == -1) {
-		return;
+		return NULL;
 	}
 	ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
 	ListView_SetItemState(hListView,
@@ -1266,6 +1266,7 @@ static void View_PrevMail(HWND hWnd)
 	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 	ModifyWindow(hWnd, tpMailItem, FALSE);
+	return tpMailItem;
 }
 
 /*
@@ -2407,15 +2408,21 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_NEXTMAIL:
-			View_NextMail(hWnd, FALSE);
+			if (View_NextMail(hWnd, FALSE) == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
+			}
 			break;
 
 		case ID_MENUITEM_PREVMAIL:
-			View_PrevMail(hWnd);
+			if (View_PrevMail(hWnd) == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
+			}
 			break;
 
 		case ID_MENUITEM_NEXTUNREAD:
-			View_NextUnreadMail(hWnd);
+			if (View_NextUnreadMail(hWnd) == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
+			}
 			break;
 
 		case ID_MENUITEM_REMESSEGE:
@@ -2457,9 +2464,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SetMark(hWnd, tpMailItem, ICON_DEL);
 			GetMarkStatus(hWnd, tpMailItem);
 			if (op.ViewNextAfterDel == 1) {
-				View_NextMail(hWnd, FALSE);
+				tpMailItem = View_NextMail(hWnd, FALSE);
 			} else if (op.ViewNextAfterDel == 2) {
-				View_NextUnreadMail(hWnd);
+				tpMailItem = View_NextUnreadMail(hWnd);
+			}
+			if (tpMailItem == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
 			}
 			break;
 
@@ -2681,6 +2691,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						} else {
 							SetMark(hWnd, tpMailItem, ICON_DEL);
 							GetMarkStatus(hWnd, tpMailItem);
+							if (op.ViewCloseNoNext == 1) {
+								close_win = TRUE;
+							}
 						}
 					}
 					if (op.AutoSave == 1) {

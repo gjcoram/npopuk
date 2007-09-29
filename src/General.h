@@ -45,7 +45,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.02")
+#define APP_NAME				TEXT("nPOPuk Ver 2.03")
 #define APP_VERSION_NUM			2000
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -399,6 +399,7 @@ typedef struct _OPTION {
 	int TimeoutInterval;
 
 	int ViewClose;
+	int ViewCloseNoNext;
 	int ViewNextAfterDel;
 	int ViewSkipDeleted;
 	TCHAR *ViewApp;
