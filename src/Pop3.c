@@ -79,6 +79,7 @@ extern OPTION op;
 extern int command_status;
 extern int NewMailCnt;
 extern TCHAR *g_Pass;
+extern TCHAR *AppDir;
 extern HWND hViewWnd;						// 表示ウィンドウ
 
 extern BOOL ShowMsgFlag;
@@ -93,7 +94,6 @@ extern UINT nBroadcastMsg;
 /* Local Function Prototypes */
 static BOOL mail_buf_init(int size);
 static BOOL mail_buf_set(char *buf, int len);
-static void mail_buf_free(void);
 static BOOL uidl_init(int size);
 static BOOL uidl_set(char *buf, int len);
 static TCHAR *uidl_get(int get_no);
@@ -201,17 +201,6 @@ static BOOL mail_buf_set(char *buf, int len)
 		mail_buf_len += (len + 2);
 	}
 	return TRUE;
-}
-
-/*
- * mail_buf_free - メールバッファを解放
- */
-static void mail_buf_free(void)
-{
-	if (mail_buf != NULL) {
-		mem_free(&mail_buf);
-		mail_buf = NULL;
-	}
 }
 
 /*
@@ -407,9 +396,9 @@ static BOOL check_message_id(char *buf, MAILITEM *tpMailItem, TCHAR *ErrStr, MAI
 /*
  * check_last_mail - 最後に受信したメールのチェック
  */
-static int check_last_mail(HWND hWnd, SOCKET soc, BOOL chek_flag, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
+static int check_last_mail(HWND hWnd, SOCKET soc, BOOL check_flag, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
-	if (chek_flag != FALSE) {
+	if (check_flag != FALSE) {
 		// 前回最後に取得したメールではない
 		if (disable_uidl == FALSE) {
 			// UIDLで全メールの同期を取る
@@ -553,7 +542,7 @@ static int login_proc(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrSt
 	int ret = POP_ERR;
 	BOOL PopSTARTTLS = FALSE;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 
 	switch (command_status) {
 	case POP_STARTTLS:
@@ -689,7 +678,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	int get_no;
 	int ret;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_STAT;
@@ -956,7 +945,7 @@ static int list_proc_uidl_check(HWND hWnd, SOCKET soc, char *buf, int buflen, TC
 	int get_no;
 	int ret;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_UIDL_CHECK;
@@ -991,7 +980,7 @@ static int list_proc_uidl_check(HWND hWnd, SOCKET soc, char *buf, int buflen, TC
  */
 static int list_proc_uidl_set(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_UIDL;
@@ -1021,7 +1010,7 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	char *p, *r;
 	int len = 0;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_LIST;
@@ -1160,20 +1149,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
-			switch (tpMailItem->Priority) {
-				case 4:  // LOW
-				case 5:
-					st = 2 + 3*tpMailItem->Multipart;
-					break;
-				case 1:  // HIGH
-				case 2:
-					st = 1 + 3*tpMailItem->Multipart;
-					break;
-				case 3:  // NORMAL
-				default:
-					st = 0 + 3*tpMailItem->Multipart;
-					break;
-			}
+			st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 			st =  INDEXTOSTATEIMAGEMASK(st);
 			st |= INDEXTOOVERLAYMASK(ICON_NEW_MASK);	   
 
@@ -1238,6 +1214,8 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	if (new_message_id == NULL) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOMESSAGEID);
 		return POP_ERR;
+	} else if (tpMailBox->LastMessageId != new_message_id) {
+		mem_free(&new_message_id);
 	}
 
 	if ((int)tpMailItem != -1 && disable_uidl == FALSE) {
@@ -1319,6 +1297,8 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		} else if (op.SocLog > 2) {
+			log_save(AppDir, LOG_FILE, TEXT("exec_proc_init: ServerDelete is false"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1412,7 +1392,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 
 	// 本文を取得
-	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE);
+	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE, tpMailBox);
 	if (tpMailItem == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
@@ -1424,24 +1404,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		// リストビューの更新
 		i = ListView_GetMemToItem(hListView, tpMailItem);
 		if (i != -1) {
-			int state;
-			switch (tpMailItem->Priority)
-			{
-				case 5:  // LOW
-				case 4:
-					state = 2 + 3*tpMailItem->Multipart;
-					break;
-
-				case 1:  // HIGH
-				case 2:
-					state = 1 + 3*tpMailItem->Multipart;
-					break;
-
-				case 3:  // NORMAL
-				default:
-					state = 0 + 3*tpMailItem->Multipart;
-					break;
-			}
+			int state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 			ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(state),
 				LVIS_CUT | LVIS_STATEIMAGEMASK);
 			ListView_RedrawItems(hListView, i, i);
@@ -1457,6 +1420,8 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		} else if (op.SocLog > 2) {
+			log_save(AppDir, LOG_FILE, TEXT("exec_proc_retr: ServerDelete is false"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1496,7 +1461,7 @@ static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	TCHAR *UIDL = NULL;
 	int get_no;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_UIDL;
@@ -1606,7 +1571,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	int i, j;
 	int get_no;
 
-	if (op.SocLog == 1) SetSocStatusText(hWnd, buf);
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
 	if (*buf == '.' && *(buf + 1) == '\0') {
 		return POP_DELE;
@@ -1830,7 +1795,10 @@ char *claim_mail_buf(char *buf)
  */
 void pop3_free(void)
 {
-	mail_buf_free();
+	if (mail_buf != NULL) {
+		mem_free(&mail_buf);
+		mail_buf = NULL;
+	}
 	uidl_free();
 }
 /* End of source */

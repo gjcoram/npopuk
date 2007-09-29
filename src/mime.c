@@ -1278,7 +1278,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	*TextIndex = -1;
 
 	*cnt = 0;
-	if (tpMailItem->Multipart != MULTIPART_NONE && ViewSrc == FALSE) {
+	if (tpMailItem->Multipart > MULTIPART_ATTACH && ViewSrc == FALSE) {
 		// マルチパートを解析する
 #ifdef UNICODE
 		ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
@@ -1310,7 +1310,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 			(**tpPart)->Filename = multipart_get_filename(tpMailItem->ContentType, "name");
 #endif
 		}
-		if (tpMailItem->HasHeader && tpMailItem->Multipart == MULTIPART_NONE && (**tpPart)->sPos != NULL) {
+		if (tpMailItem->HasHeader && tpMailItem->Multipart <= MULTIPART_ATTACH && (**tpPart)->sPos != NULL) {
 			char *p = GetBodyPointa((**tpPart)->sPos);
 			if (p != NULL) {
 				(**tpPart)->sPos = p;

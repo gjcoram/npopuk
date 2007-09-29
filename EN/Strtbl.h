@@ -53,6 +53,7 @@
 #define STR_ERR_SAVE				TEXT("Save File error")
 #define STR_ERR_FILENAME_TOO_LONG	TEXT("Filename or path too long")
 #define STR_ERR_ADD					TEXT("Address not added")
+#define STR_ERR_POOM				TEXT("POOM failure; check \\Windows\\pimstore.dll")
 #define STR_ERR_VIEW				TEXT("Display failed")
 #define STR_ERR_TOOMANYFILES		TEXT("Too many files selected; try again.")
 #define STR_ERR_SELECTMAILBOX		TEXT("No account specified")
@@ -142,6 +143,9 @@
 #define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
 #define STR_Q_ADDADDRESS			TEXT("Add %d mail addresses to the address book?")
+#ifdef _WIN32_WCE
+#define STR_Q_ADDPOOM				TEXT("Add %d mail addresses to PocketContacts?")
+#endif
 #define STR_Q_NEXTFIND				TEXT("Search completed!\nRedo from the start?")
 #define STR_Q_EDITCANCEL			TEXT("Cancel the edit?")
 #define STR_Q_SENDMAIL				TEXT("Send it?")
@@ -268,6 +272,7 @@
 #define STR_VIEW_MENU_SOURCE		TEXT("&View source")
 #define STR_VIEW_MENU_SAVEATTACH	TEXT("&Save attach")
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
+#define STR_VIEW_RETURN				TEXT("&Return to message")
 
 #define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk]\r\n")
 #define STR_NPOPUK_FILES			TEXT("nPOPuk files")
@@ -317,10 +322,10 @@
 #define STR_CCLIST_MAILADDRESS		TEXT("Mail address")
 
 // Set send
-#define STR_SETSEND_BTN_CC			TEXT("Cc, Bcc")
-#define STR_SETSEND_BTN_ATTACH		TEXT("Attach")
-#define STR_SETSEND_BTN_ETC			TEXT("Other")
+#define STR_SETSEND_BTN_CC			TEXT("&Recipients")
+#define STR_SETSEND_BTN_ATTACH		TEXT("Attac&h")
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
+#define STR_FWD_ORIG_MSG			TEXT("Fwd: (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
@@ -328,19 +333,21 @@
 
 // Address list
 #define STR_ADDRESSLIST_MAILADDRESS	TEXT("Mail address")
+#define STR_ADDRESS_SELECT			TEXT("&Select")
 #define STR_ADDRESSLIST_COMMENT		TEXT("Comment")
 #ifdef _WIN32_WCE
 #define STR_ADDRESSLIST_GROUP		TEXT("Categories")
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
 #define STR_ADDRESSLIST_NOGROUP		TEXT("[No cat.]")
-#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Add category")
+#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Change category")
 #else
 #define STR_ADDRESSLIST_GROUP		TEXT("Group")
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
 #define STR_ADDRESSLIST_NOGROUP		TEXT("[No group]")
-#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Add group")
+#define STR_ADDRESSBOOK_ADDGROUP	TEXT("Change group")
 #endif
 #define STR_MULTIPLE_ADDRESSES		TEXT("[Multiple addresses]")
+#define STR_EXAMPLE_ADDRESS			TEXT("\"Name\" <username@domain.com>")
 
 // WindowsCE
 #ifdef _WIN32_WCE
@@ -411,7 +418,7 @@
 
 ///////////// MRP /////////////////////
 #define STR_TITLE_ABOUT				TEXT("About")
-#define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
+#define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
 
 #endif	//_INC_STR_TBL_H

@@ -23,7 +23,7 @@
 #include "md5.h"
 
 /* Define */
-#define MBOX_DELIMITER "\r\nFrom "
+#define MBOX_DELIMITER "From "
 #define NPOPUK_MBOX_DELIMITER "From NPOPUK\r\n"
 #define STATUS_REVISION_NUMBER 200000
 
@@ -36,6 +36,7 @@ extern BOOL ImportRead;
 extern BOOL ImportDown;
 
 extern MAILBOX *MailBox;
+extern MAILITEM *AttachMailItem;
 extern int SelBox;
 extern int MailBoxCnt;
 
@@ -49,6 +50,7 @@ static int item_save_header_size(TCHAR *header, TCHAR *buf);
 static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret);
 static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *filter_content);
 static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what);
+static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fret, int *do_what, BOOL refilter);
 
 /*
  * item_is_mailbox - メールボックス内のメールリストに指定のメールが存在するか調べる
@@ -56,6 +58,13 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what);
 int item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem)
 {
 	int i;
+
+	if (tpMailItem == NULL) {
+		return -1;
+	}
+	if (tpMailItem == AttachMailItem) {
+		return -2;
+	}
 
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == tpMailItem) {
@@ -195,6 +204,18 @@ MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *Ma
 		mem_free(&(*(tpMailList + i))->MessageID);
 		(*(tpMailList + i))->MessageID = NULL;
 		(*(tpMailList + i))->hEditWnd = NULL;
+#ifdef GJC_RECOMPUTE_SIZE
+	} else if (tpMailBox->Type == MAILBOX_TYPE_SAVE && tpNewMailItem->Download == FALSE) {
+		TCHAR num[20];
+		TCHAR *s;
+		int len = item_to_string_size(*(tpMailList+i), op.WriteMbox, TRUE, FALSE);
+		wsprintf(num, TEXT("%d"), len);
+		s = alloc_copy_t(num);
+		if (s != NULL) {
+			mem_free(&(*(tpMailList + i))->Size);
+			(*(tpMailList + i))->Size = s;
+		}
+#endif
 	}
 
 	mem_free((void **)&tpMailBox->tpMailItem);
@@ -597,37 +618,19 @@ int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No)
 /*
  * item_get_next_send_mark - 送信マークの付いたアイテムのインデックスを取得
  */
-int item_get_next_send_mark(MAILBOX *tpMailBox, int Index, int *MailBoxIndex)
+int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors)
 {
 	MAILITEM *tpMailItem;
-	int BoxIndex;
 	int i;
-	int wkIndex = -1;
-	int wkBoxIndex = -1;
 
-	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND) {
-			continue;
-		}
-		if (MailBoxIndex == NULL) {
+		if (tpMailItem != NULL && (tpMailItem->Mark == ICON_SEND
+				|| (CheckErrors == TRUE && tpMailItem->Mark == ICON_ERROR))) {
 			return i;
 		}
-		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox);
-		if (*MailBoxIndex == -1 || *MailBoxIndex == BoxIndex) {
-			wkIndex = i;
-			wkBoxIndex = BoxIndex;
-			break;
-		}
-		if (wkIndex == -1) {
-			wkIndex = i;
-			wkBoxIndex = BoxIndex;
-		}
 	}
-	if (MailBoxIndex != NULL) {
-		*MailBoxIndex = wkBoxIndex;
-	}
-	return wkIndex;
+	return -1;
 }
 
 /*
@@ -676,6 +679,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 
 		if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
 			header_size = remove_duplicate_headers(buf);
+			if (header_size <= 2) header_size = 0;
 		} else {
 			header_size = 0;
 		}
@@ -688,7 +692,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 		if (tpMailItem->Body == NULL && op.DecodeInPlace) {
 			// if it's incoming mail, try to take control of buf (=mail_buf)
 			tpMailItem->Body = claim_mail_buf(buf);
-			if (tpMailItem->Body != NULL && header_size > 0) {
+			if (tpMailItem->Body != NULL && header_size > 2) {
 				tpMailItem->HasHeader = 2;
 				// shift body backwards (after removing duplicate headers)
 				tstrcpy(tpMailItem->Body + header_size, r);
@@ -698,7 +702,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 		if (tpMailItem->Body == NULL) {
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 		} else {
-			if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
+			if (header_size > 2 && (op.ShowHeader == 1 || KeyShowHeader == TRUE)) {
 				// ヘッダ
 				str_cpy_n(tpMailItem->Body, buf, header_size + 1);
 				tpMailItem->HasHeader = 2;
@@ -731,7 +735,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 /*
  * item_mail_to_item - アイテムにヘッダと本文を設定
  */
-BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
+BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, MAILBOX *tpMailBox)
 {
 	TCHAR *msgid1 = NULL, *msgid2 = NULL, *t = NULL;
 	char *priority = NULL;
@@ -739,6 +743,9 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 #ifdef UNICODE
 	char *dcode;
 #endif
+	int fret;
+	int *do_what = NULL;
+	BOOL retval = TRUE;
 
 	if (download == TRUE) {
 		// 既存の情報を解放
@@ -760,7 +767,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 		mem_free(&tpMailItem->InReplyTo);
 		mem_free(&tpMailItem->References);
 		tpMailItem->Download = TRUE;
-	} else {
+	} else if (download == 0) {
 		// GJC - detect if fully downloaded
 		if (Size > 0 && (int)tstrlen(buf) >= Size) { 
 			// win32: tstrlen == Size+2
@@ -769,6 +776,8 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 		} else {
 			tpMailItem->Download = FALSE;
 		}
+	} else {
+		tpMailItem->Download = TRUE;
 	}
 	// Subject
 	item_get_mime_content(buf, HEAD_SUBJECT, &tpMailItem->Subject, FALSE);
@@ -787,7 +796,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 		tpMailItem->Multipart = MULTIPART_HTML;
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
-		tpMailItem->Multipart = MULTIPART_ATTACH;
+		tpMailItem->Multipart = MULTIPART_CONTENT;
 #ifdef DO_MULTIPART_SCAN
 		if (tpMailItem->Download) {
 			// if fully downloaded, check if it is text/plain and text/html with no real attachments
@@ -800,7 +809,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 #endif
 		} else {
 			// if not fully downloaded, may be attachments in remainder
-			tpMailItem->Multipart = MULTIPART_ATTACH;
+			tpMailItem->Multipart = MULTIPART_CONTENT;
 		}
 #endif
 	} else {
@@ -838,7 +847,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 
 	// Size
 	if (Size >= 0) {
-		TCHAR num[BUF_SIZE];
+		TCHAR num[20];
 		wsprintf(num, TEXT("%d"), Size);
 		tpMailItem->Size = alloc_copy_t(num);
 	}
@@ -916,8 +925,8 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 		} else if (str_cmp_ni(priority, "normal", 6) == 0) {
 			tpMailItem->Priority = 3;
 		}
-		mem_free(&priority);
 	}
+	mem_free(&priority);
 	if (tpMailItem->Priority == -1) {
 		tpMailItem->Priority = item_get_content_int(buf, HEAD_X_PRIORITY, -1);
 		if (tpMailItem->Priority == 2) {
@@ -935,8 +944,8 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 			} else if (str_cmp_ni(priority, "non-urgent", 10) == 0) {
 				tpMailItem->Priority = 5;
 			}
-			mem_free(&priority);
 		}
+		mem_free(&priority);
 	}
 
 	///////////// MRP /////////////////////
@@ -944,17 +953,20 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 	item_get_content(buf, HEAD_READ1, &Content);
 	if(Content != NULL) {
 		tpMailItem->ReadReceipt = 1;
+		mem_free(&Content);
 	}
 
 	item_get_content(buf, HEAD_READ2, &Content);
 	if(Content != NULL) {
 		tpMailItem->ReadReceipt = 1;
+		mem_free(&Content);
 	}
 
 	tpMailItem->DeliveryReceipt = 0;
 	item_get_content(buf, HEAD_DELIVERY, &Content);
 	if(Content != NULL) {
 		tpMailItem->DeliveryReceipt = 1;
+		mem_free(&Content);
 	}
 	////////////////// --- /////////////////////
 
@@ -969,9 +981,25 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 	mem_free(&msgid1);
 	mem_free(&msgid2);
 
+	if (tpMailBox != NULL && tpMailBox->FilterEnable == 2) {
+		//GJC refilter on full download
+		do_what = (int *)mem_calloc(sizeof(int) * tpMailBox->FilterCnt);
+
+		// フィルタをチェック
+		fret = item_filter_check(tpMailBox, buf, do_what);
+	}
+
 	// Body
 	item_set_body(tpMailItem, buf, download);
-	return TRUE;
+
+	if (tpMailBox != NULL && tpMailBox->FilterEnable == 2) {
+		if (fret > FILTER_RECV) {
+			retval = item_filter_execute(tpMailBox, tpMailItem, fret, do_what, TRUE);
+		}
+		mem_free(&do_what);
+	}
+
+	return retval;
 }
 
 /*
@@ -998,7 +1026,7 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size)
 		return NULL;
 	}
 	// ヘッダと本文を設定
-	item_mail_to_item(tpMailItem, buf, Size, FALSE);
+	item_mail_to_item(tpMailItem, buf, Size, FALSE, NULL);
 	tpMailItem->New = TRUE;
 
 	// Adding to list of mail information
@@ -1008,45 +1036,13 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size)
 		return NULL;
 	}
 
-	// Move or Copy to SaveBox
-	if ((fret & (FILTER_COPY | FILTER_MOVE)) && tpMailItem->MailStatus != ICON_NON) {
-		int i, sbox;
-		for (i = 0; i < tpMailBox->FilterCnt; i++) {
-			if (do_what[i] == FILTER_COPY || do_what[i] == FILTER_MOVE) {
-				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
-				if (sbox != -1) {
-					if (item_find_thread(MailBox + sbox, tpMailItem->MessageID, (MailBox + sbox)->MailItemCnt) == -1) {
-						item_to_mailbox(MailBox + sbox, tpMailItem, tpMailBox->Name, FALSE);
-						(MailBox + sbox)->NewMail = TRUE;
-						if (sbox == SelBox) {
-							ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + sbox), TRUE);
-						}
-					}
-					if (do_what[i] == FILTER_MOVE) {
-						tpMailItem->Mark = ICON_DEL;
-					}
-				}
-			} else if (do_what[i] == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
-			}
-		}
+	// handle copy/move and mark
+	if (item_filter_execute(tpMailBox, tpMailItem, fret, do_what, FALSE) == FALSE) {
+		item_free(&tpMailItem, 1);
+		mem_free(&do_what);
+		return NULL;
 	}
 	mem_free(&do_what);
-
-	//Filter operation setting
-	//Opening being completed setting
-	if (fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-		tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
-	}
-
-	//Macro description
-	if (fret & FILTER_DOWNLOADMARK) {
-		if (tpMailItem->Download == FALSE) {
-			tpMailItem->Mark = ICON_DOWN;
-		}
-	} else if (fret & FILTER_DELETEMARK) {
-		tpMailItem->Mark = ICON_DEL;
-	}
 
 	if (fret & FILTER_UNRECV) {
 		//When the flag which it does not receive is effective, it releases
@@ -1145,20 +1141,23 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	
 	tpMailItem->ReadReceipt = 0;
 	item_get_content_t(buf, HEAD_READ1, &Temp);
-	if (Temp != NULL)
+	if (Temp != NULL) {
 		tpMailItem->ReadReceipt = 1;
-	mem_free(&Temp);
+		mem_free(&Temp);
+	}
 
 	item_get_content_t(buf, HEAD_READ2, &Temp);
-	if(Temp != NULL)
+	if(Temp != NULL) {
 		tpMailItem->ReadReceipt = 1;
-	mem_free(&Temp);
+		mem_free(&Temp);
+	}
 
 	tpMailItem->DeliveryReceipt = 0;
 	item_get_content_t(buf, HEAD_DELIVERY, &Temp);
-	if(Temp != NULL)
+	if(Temp != NULL) {
 		tpMailItem->DeliveryReceipt = 1;
-	mem_free(&Temp);
+		mem_free(&Temp);
+	}
 	//////////////////--- /////////////////////
 
 	item_get_content_t(buf, HEAD_X_MAILBOX, &tpMailItem->MailBox);
@@ -1283,7 +1282,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		// multipart_scan *after* setting the body
-		tpMailItem->Multipart = MULTIPART_ATTACH;
+		tpMailItem->Multipart = MULTIPART_CONTENT;
 	//} else {
 	//	tpMailItem->Multipart = MULTIPART_NONE;
 	}
@@ -1338,7 +1337,7 @@ static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret)
 /*
  * item_to_string_size - メールの保存文字列のサイズ取得
  */
-int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
+int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag)
 {
 	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
 	int do_body, len = 0;
@@ -1350,7 +1349,7 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
 	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 
-	if (SepFlag && op.WriteMbox == 1) {
+	if (SepFlag && WriteMbox == 1) {
 		len = tstrlen(NPOPUK_MBOX_DELIMITER);
 	}
 	len += item_save_header_size(TEXT(HEAD_FROM), tpMailItem->From);
@@ -1400,16 +1399,19 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 
 	len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
 	len += item_save_header_size(TEXT(HEAD_X_STATUS), X_Mstatus);
-	if (do_body && (op.WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
+	if (do_body && (WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
 		len += 2;
 	}
 
 	if (do_body) {
-		if (op.WriteMbox == 1) {
-			char *r;
+		if (WriteMbox == 1) {
+			char *r = tpMailItem->Body;
 			int l = tstrlen(MBOX_DELIMITER);
-			for (r = tpMailItem->Body; *r != '\0'; r++, len++) {
-				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+			if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+				len++;
+			}
+			for ( /**/ ; *r != '\0'; r++, len++) {
+				if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
 					len++;
 				}
 			}
@@ -1417,7 +1419,7 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 			len += tstrlen(tpMailItem->Body);
 		}
 	}
-	if (op.WriteMbox == 1) {
+	if (WriteMbox != 0) {
 		len += 2; // \r\n
 	} else {
 		len += 5; // \r\n.\r\n
@@ -1428,7 +1430,7 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 /*
  * item_to_string - メールの保存文字列の取得
  */
-char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
+char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag)
 {
 	char *p = buf;
 	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
@@ -1449,7 +1451,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFla
 	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
 	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 
-	if (SepFlag && op.WriteMbox == 1) {
+	if (SepFlag && WriteMbox == 1) {
 		p = str_cpy(p, NPOPUK_MBOX_DELIMITER);
 	}
 	p = item_save_header(TEXT(HEAD_FROM), tpMailItem->From, p);
@@ -1502,29 +1504,31 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFla
 	p = item_save_header(TEXT(HEAD_X_NO), X_No, p);
 	// HEAD_X_STATUS should be the last header written by nPOPuk!
 	p = item_save_header(TEXT(HEAD_X_STATUS), X_Mstatus, p);
-	if (do_body && (op.WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
+	if (do_body && (WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
 		p = str_cpy(p, "\r\n");
 	}
 
 	if (do_body) {
-		if (op.WriteMbox == 1) {
-			char *r;
+		if (WriteMbox == 1) {
+			char *r = tpMailItem->Body;
 			int l = tstrlen(MBOX_DELIMITER);
-			for (r = tpMailItem->Body; *r != '\0'; r++, p++) {
-				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
-					r++;
-					*(p++) = '\r';
-					*(p++) = '\n';
-					*p = '>';
+			if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+				*(p++) = '>';
+			}
+			while (*r != '\0') {
+				if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+					*(p++) = *(r++);
+					*(p++) = *(r++);
+					*(p++) = '>';
 				} else {
-					*p = *r;
+					*(p++) = *(r++);
 				}
 			}
 		} else {
 			p = str_cpy(p, tpMailItem->Body);
 		}
 	}
-	if (op.WriteMbox == 1) {
+	if (WriteMbox != 0) {
 		p = str_cpy(p, "\r\n");
 	} else {
 		p = str_cpy(p, "\r\n.\r\n");
@@ -1670,6 +1674,71 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 		}
 	}
 	return ((RetFlag == 0) ? FILTER_RECV : RetFlag);
+}
+
+/*
+ * item_filter_check_execute - handle move/copy and mark
+ */
+static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fret, int *do_what, BOOL refilter)
+{
+	BOOL retval = TRUE;
+	// Move or Copy to SaveBox
+	if ((fret & (FILTER_COPY | FILTER_MOVE)) && tpMailItem->MailStatus != ICON_NON) {
+		int i, j, sbox;
+		for (i = 0; i < tpMailBox->FilterCnt; i++) {
+			if (do_what[i] == FILTER_COPY || do_what[i] == FILTER_MOVE) {
+				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
+				if (sbox != -1) {
+					if ((MailBox + sbox)->Loaded == FALSE) {
+						mailbox_load_now(NULL, sbox, FALSE, FALSE);
+					}
+					j = item_find_thread(MailBox + sbox, tpMailItem->MessageID, (MailBox + sbox)->MailItemCnt);
+					if (j == -1) {
+						item_to_mailbox(MailBox + sbox, tpMailItem, tpMailBox->Name, FALSE);
+						(MailBox + sbox)->NewMail = TRUE;
+						if (sbox == SelBox) {
+							ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + sbox), TRUE);
+						}
+					} else if (refilter == TRUE) {
+						MAILITEM *tpSboxItem = *((MailBox + sbox)->tpMailItem + j);
+						char *newbody = alloc_copy(tpMailItem->Body);
+						if (newbody != NULL) {
+							mem_free(&tpSboxItem->Body);
+							tpSboxItem->Body = newbody;
+							tpSboxItem->Download = TRUE;
+							if (sbox == SelBox) {
+								// GJC TODO: update icon
+							}
+						} else {
+							retval = FALSE;
+						}
+					}
+					if (do_what[i] == FILTER_MOVE) {
+						tpMailItem->Mark = ICON_DEL;
+					}
+				}
+			} else if (do_what[i] == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
+				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+			}
+		}
+	}
+
+	//Filter operation setting
+	//Opening being completed setting
+	if (fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+	}
+
+	//Macro description
+	if (fret & FILTER_DOWNLOADMARK) {
+		if (tpMailItem->Download == FALSE) {
+			tpMailItem->Mark = ICON_DOWN;
+		}
+	} else if (fret & FILTER_DELETEMARK) {
+		tpMailItem->Mark = ICON_DEL;
+	}
+
+	return retval;
 }
 
 /*

@@ -133,7 +133,7 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 		if (SelFlag == TRUE) {
 			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, i, 0);
 			index = i;
-			mailbox_menu_rebuild(hWnd);
+			mailbox_menu_rebuild(hWnd, FALSE);
 		}
 	}
 	//Only guaranty of memory
@@ -178,10 +178,10 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		filter_sbox_check(hWnd, NULL);
 	}
 
-	//Deleting from the ???????, it selects the mailbox of one ago the
+	//Deleting from the drop-down combo, it selects the mailbox of one ago the
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, DelIndex, 0);
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, DelIndex - 1, 0);
-	mailbox_menu_rebuild(hWnd);
+	mailbox_menu_rebuild(hWnd, FALSE);
 	return DelIndex - 1;
 }
 
@@ -234,8 +234,10 @@ int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes)
 		}
 		SwitchCursor(FALSE);
 		if (file_read_mailbox(Name, tpMailBox, FALSE) == FALSE) {
-			wsprintf(msg, STR_ERR_LOADMAILBOX, Name);
-			ErrorMessage(hWnd, msg);
+			if (hWnd != NULL) {
+				wsprintf(msg, STR_ERR_LOADMAILBOX, Name);
+				ErrorMessage(hWnd, msg);
+			}
 			return 0;
 		}
 	}
@@ -339,14 +341,14 @@ void mailbox_move_up(HWND hWnd)
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
-	//The position where it is indicated in the ??????? the portable
+	//Change the position where it is indicated in the drop-down combo
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
 	SelBox--;
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
 		(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
-	mailbox_menu_rebuild(hWnd);
+	mailbox_menu_rebuild(hWnd, FALSE);
 }
 
 /*
@@ -379,14 +381,14 @@ void mailbox_move_down(HWND hWnd)
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 
-	//The position where it is indicated in the ??????? the portable
+	//Change the position where it is indicated in the drop-down combo
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
 	SelBox++;
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
 		(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
-	mailbox_menu_rebuild(hWnd);
+	mailbox_menu_rebuild(hWnd, FALSE);
 }
 
 /*
@@ -441,26 +443,28 @@ int mailbox_next_unread(HWND hWnd, int index, int endindex)
 /*
  * mailbox_menu_rebuild
  */
-BOOL mailbox_menu_rebuild(HWND unused) {
+BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 	int i, this_id;
 	int last_copy_id, last_move_id, last_copy_idv, last_move_idv;
 	TCHAR *name;
-	HMENU hMenu, vMenu = NULL;
+	HMENU hMenu = NULL, vMenu = NULL;
 
 	last_copy_id = last_copy_idv = ID_MENUITEM_COPY2NEW;
 	last_move_id = last_move_idv = ID_MENUITEM_MOVE2NEW;
 
+	if (hWnd == MainWnd) {
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL);
+		hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL);
 #elif defined(_WIN32_WCE_LAGENDA)
-	hMenu = GetSubMenu(hMainMenu, MailMenuPos);
+		hMenu = GetSubMenu(hMainMenu, MailMenuPos);
 #else
-	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), MailMenuPos);
+		hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), MailMenuPos);
 #endif
 #else
-	hMenu = GetSubMenu(GetMenu(MainWnd), MailMenuPos);
+		hMenu = GetSubMenu(GetMenu(MainWnd), MailMenuPos);
 #endif
+	}
 
 	if (hViewWnd != NULL) {
 #ifdef _WIN32_WCE
@@ -480,8 +484,10 @@ BOOL mailbox_menu_rebuild(HWND unused) {
 	// build in reverse order because InsertMenu puts item above
 	for (i = MailBoxCnt; i >= 0; i--) {
 		// ModifyMenu not available for PPC2002, so delete all existing entries ...
-		DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
-		DeleteMenu(hMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+		if (hMenu != NULL) {
+			DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+		}
 		if (vMenu != NULL) {
 			DeleteMenu(vMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
 			DeleteMenu(vMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
@@ -494,28 +500,32 @@ BOOL mailbox_menu_rebuild(HWND unused) {
 				name = (MailBox+i)->Name;
 			}
 			this_id = ID_MENUITEM_COPY2MBOX+i;
-			if (InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+			if (hMenu != NULL && InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_copy_id = this_id;
 			}
 			if (vMenu != NULL && InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_copy_idv = this_id;
 			}
 			this_id = ID_MENUITEM_MOVE2MBOX+i;
-			if (InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+			if (hMenu != NULL && InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_move_id = this_id;
 			}
-			if (vMenu != NULL && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+			if (vMenu != NULL && IsAttach == FALSE && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_move_idv = this_id;
 			}
 		}
 	}
-	if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
-		EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, 1);
-		EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, 1);
+	if (hMenu != NULL && (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
+		EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, MF_GRAYED);
+		EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
 	}
-	if (vMenu != NULL && (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
-		EnableMenuItem(vMenu, ID_MENUITEM_COPY2MBOX + vSelBox, 1);
-		EnableMenuItem(vMenu, ID_MENUITEM_MOVE2MBOX + vSelBox, 1);
+	if (vMenu != NULL) {
+		if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE && IsAttach == FALSE) {
+			EnableMenuItem(vMenu, ID_MENUITEM_COPY2MBOX + vSelBox, MF_GRAYED);
+			EnableMenuItem(vMenu, ID_MENUITEM_MOVE2MBOX + vSelBox, MF_GRAYED);
+		} else if (IsAttach == TRUE) {
+			EnableMenuItem(vMenu, ID_MENUITEM_MOVE2NEW, MF_GRAYED);
+		}
 	}
 	return TRUE;
 }
@@ -562,7 +572,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_DELATTACH, MF_BYCOMMAND);
 
-	mailbox_menu_rebuild(MainWnd);
+	mailbox_menu_rebuild(MainWnd, FALSE);
 
 	if(SelBox == MAILBOX_SEND){
 		//Transmission box
@@ -751,6 +761,7 @@ ADDRESSBOOK *addressbook_copy(void)
 			newitem->MailAddress = alloc_copy_t(olditem->MailAddress);
 			newitem->Comment = alloc_copy_t(olditem->Comment);
 			newitem->Group = alloc_copy_t(olditem->Group);
+			newitem->Num = olditem->Num;
 		}
 	}
 	return tmpAddrBook;
@@ -781,19 +792,26 @@ BOOL addr_add(ADDRESSBOOK *tpAddrBook, ADDRESSITEM *tpNewAddrItem)
 /*
  * addr_move - move item in temp addressbook (GJC)
  */
-void addr_move(ADDRESSBOOK *tpAddrBook, int num, int dir)
+void addr_move(ADDRESSBOOK *tpAddrBook, int num, int step)
 {
-	int i = num;
 	ADDRESSITEM *HoldItem, *AddrItem; 
+	int dir, cnt = 0, i = num;
+	dir = (step > 0) ? 1 : -1;
+
 	HoldItem = *(tpAddrBook->tpAddrItem + num);
 	// move until we hit a visible item (or the end)
 	while((i > 0 && dir == -1) || ( i < tpAddrBook->ItemCnt -1 && dir == +1)) {
 		AddrItem = *(tpAddrBook->tpAddrItem + i) = *(tpAddrBook->tpAddrItem + i + dir);
 		i += dir;
-		if (AddrItem->displayed == TRUE) {
-			break;
+		AddrItem->Num -= dir;
+		if (AddrItem->Displayed == TRUE) {
+			cnt++;
+			if (cnt >= abs(step)) {
+				break;
+			}
 		}
 	}
+	HoldItem->Num += (dir * cnt);
 	*(tpAddrBook->tpAddrItem + i) = HoldItem;
 }
 
@@ -809,7 +827,8 @@ void addr_delete(ADDRESSBOOK *tpAddrBook, int num)
 	mem_free(&AddrItem->Group);
 	mem_free(&AddrItem);
 	for (i = num; i < tpAddrBook->ItemCnt-1; i++) {
-		*(tpAddrBook->tpAddrItem + i) = *(tpAddrBook->tpAddrItem + i + 1);
+		AddrItem = *(tpAddrBook->tpAddrItem + i) = *(tpAddrBook->tpAddrItem + i + 1);
+		AddrItem->Num--;
 	}
 	tpAddrBook->ItemCnt--;
 	// tpAddrBook->tpAddrItem could be resized, but why bother?

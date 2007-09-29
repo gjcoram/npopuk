@@ -84,16 +84,31 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		lstrcpy(fname, TEXT("*"));
 	}
 
-	wsprintf(sPath, TEXT("%s\\%s"), path, fname);
-	// ファイル数を取得
+	cnt = 0;
+	// count directories
+	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
 		return FALSE;
 	}
-	cnt = 0;
 	do{
-		cnt++;
+		if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			cnt++;
+		}
 	} while (FindNextFile(hFindFile, &FindData) == TRUE);
 	FindClose(hFindFile);
+	
+	wsprintf(sPath, TEXT("%s\\%s"), path, fname);
+	// count matching files
+	if ((hFindFile = FindFirstFile(sPath, &FindData)) != INVALID_HANDLE_VALUE) {
+		do{
+			if (!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				cnt++;
+			}
+		} while (FindNextFile(hFindFile, &FindData) == TRUE);
+		FindClose(hFindFile);
+	} else if (cnt == 0) {
+		return FALSE;
+	}
 
 	// 確保
 	FileList = (FILELIST *)mem_calloc(sizeof(FILELIST) * cnt);
@@ -102,22 +117,41 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	}
 	FileListCnt = cnt;
 
-	// ファイル情報を取得
+	i = 0;
+	// get directories
+	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
 		return FALSE;
 	}
-	i = 0;
 	do{
-		if (!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			(FileList + i)->att = 1;
+		if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			(FileList + i)->Icon = -1;
+			lstrcpy((FileList + i)->Name, FindData.cFileName);
+			(FileList + i)->Size = FindData.nFileSizeLow;
+			memcpy(&((FileList + i)->ftLastWriteTime), &FindData.ftLastWriteTime, sizeof(FILETIME));
+			i++;
 		}
-		(FileList + i)->Icon = -1;
-		lstrcpy((FileList + i)->Name, FindData.cFileName);
-		(FileList + i)->Size = FindData.nFileSizeLow;
-		memcpy(&((FileList + i)->ftLastWriteTime), &FindData.ftLastWriteTime, sizeof(FILETIME));
-		i++;
 	} while (FindNextFile(hFindFile, &FindData) == TRUE);
 	FindClose(hFindFile);
+
+	wsprintf(sPath, TEXT("%s\\%s"), path, fname);
+	// get matching files
+	if ((hFindFile = FindFirstFile(sPath, &FindData)) != INVALID_HANDLE_VALUE) {
+		do{
+			if (!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				(FileList + i)->att = 1;
+				(FileList + i)->Icon = -1;
+				lstrcpy((FileList + i)->Name, FindData.cFileName);
+				(FileList + i)->Size = FindData.nFileSizeLow;
+				memcpy(&((FileList + i)->ftLastWriteTime), &FindData.ftLastWriteTime, sizeof(FILETIME));
+				i++;
+			}
+		} while (FindNextFile(hFindFile, &FindData) == TRUE);
+		FindClose(hFindFile);
+	} else if (i == 0) {
+		// no directories either
+		return FALSE;
+	}
 
 	ListView_SetItemCount(hListView, FileListCnt);
 
@@ -439,11 +473,14 @@ static BOOL CALLBACK NewDirProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		switch(LOWORD(wParam)) {
 		case IDOK:
 			AllocGetText(GetDlgItem(hDlg, IDC_NEWDIRNAME), &newdirname);
-			wsprintf(buf, TEXT("%s\\%s"), path, newdirname);
-			if (CreateDirectory(buf, NULL) != 0) {
-				lstrcpy(path, buf);
-				EndDialog(hDlg, TRUE);
+			if (newdirname != NULL && *newdirname != TEXT('\0')) {
+				wsprintf(buf, TEXT("%s\\%s"), path, newdirname);
+				if (CreateDirectory(buf, NULL) != 0) {
+					lstrcpy(path, buf);
+					EndDialog(hDlg, TRUE);
+				}
 			}
+			mem_free(&newdirname);
 			break;
 
 		case IDCANCEL:
@@ -742,17 +779,23 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 	if (rc == TRUE) {
 		if (Action == FILE_OPEN_MULTI && filename[0] == TEXT('\"')) {
 			// GJC - format multiple selected files as done by OFN_MULTISELECT for Win32
-			TCHAR *p;
-			unsigned i;
+			TCHAR *p, *q;
+			unsigned i, maxlen;
 			p = str_cpy_t(ret, path);
+			maxlen = MULTI_BUF_SIZE - lstrlen(path) - 1;
 			p++;
-			for (i = 1; i < lstrlen(filename); p++, i++) {
+			for (i = 1; i < lstrlen(filename) && i < maxlen; p++, i++) {
 				if (filename[i] == TEXT('\"')) {
 					*p = TEXT('\0');
+					q = p;
 					i+=2;
 				} else {
 					*p = filename[i];
 				}
+			}
+			if (i >= maxlen) {
+				p = q + 1;
+				MessageBox(hDlg, STR_ERR_TOOMANYFILES, STR_TITLE_ERROR, MB_OK | MB_ICONERROR);
 			}
 			*p = TEXT('\0');
 		} else if (Action == FILE_CHOOSE_DIR) {

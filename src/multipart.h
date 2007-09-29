@@ -25,6 +25,7 @@ typedef struct _MULTIPART {
 	char *sPos;
 	char *ePos;
 	BOOL Forwardable;
+	BOOL IsDigestMsg;
 } MULTIPART;
 
 /* Function Prototypes */

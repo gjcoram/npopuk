@@ -15,8 +15,10 @@
 #define _INC_MAIL_GENERAL_H
 
 // hacks for old compilers (VC++6)
-//#define strcpy_s(dest,size,src) strcpy(dest,src)
-//#define strcat_s(dest,size,append) strcat(dest,append)
+#if defined( _MSC_VER) && (_MSC_VER <= 1200)
+#define strcpy_s(dest,size,src) strcpy(dest,src)
+#define strcat_s(dest,size,append) strcat(dest,append)
+#endif
 
 /* Include Files */
 #define _INC_OLE
@@ -42,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.07")
+#define APP_NAME				TEXT("nPOPuk Ver 2.08")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -70,13 +72,15 @@
 #if _WIN32_WCE <= 200
 #define _WCE_OLD				1
 #endif
+#if _WIN32_WCE >= 300
+#define _WCE_NEW				1
+#endif
 #endif
 
 #define MAIN_WND_CLASS			TEXT("nPOPMainWndClass")
 #define VIEW_WND_CLASS			TEXT("nPOPViewWndClass")
 #define EDIT_WND_CLASS			TEXT("nPOPEditWndClass")
 
-#define ADDRESS_FILE_OLD		TEXT("Address.dat")
 #define ADDRESS_FILE			TEXT("Address.lst")
 #define SAVEBOX_FILE			TEXT("SaveBox.dat")
 #define SENDBOX_FILE			TEXT("SendBox.dat")
@@ -211,8 +215,9 @@
 #define FILE_CHOOSE_DIR			4
 
 #define MULTIPART_NONE			0
-#define MULTIPART_HTML			1
-#define MULTIPART_ATTACH		2
+#define MULTIPART_ATTACH		1
+#define MULTIPART_CONTENT		2
+#define MULTIPART_HTML			3
 
 #define FILTER_UNRECV			1					//Filter type
 #define FILTER_RECV				2
@@ -261,6 +266,8 @@
 #define HEAD_READ1				"X-Confirm-Reading-To:"
 #define HEAD_READ2				"Disposition-Notification-To:"
 ////////////// --- ///////////////////////
+
+// note: don't fix "Encodeing" for backwards-compatibility; it's not transmitted anyway
 #define HEAD_X_HEADCHARSET		"X-Header-Charset:"
 #define HEAD_X_HEADENCODE		"X-Header-Encodeing:"
 #define HEAD_X_BODYCHARSET		"X-Body-Charset:"
@@ -336,6 +343,9 @@ typedef struct _OPTION {
 	int LazyLoadMailboxes;
 	int LvColSize[LV_COL_CNT];
 	int AddColSize[AD_COL_CNT];
+	int AddressSort;
+	int AddressJumpKey;
+	TCHAR *AddressShowGroup;
 
 	int ListGetLine;
 	int ListDownload;
@@ -355,7 +365,9 @@ typedef struct _OPTION {
 	int SendDate;
 	int SelectSendBox;
 	int ExpertMode;		// Added PHH 4-10-2003
+#ifdef _DEBUG
 	int GJCDebug;
+#endif
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
 
@@ -404,6 +416,7 @@ typedef struct _OPTION {
 	int CheckAfterUpdate;
 	int SocIgnoreError;
 	int SendIgnoreError;
+	int NoIgnoreErrorTimeout;
 	int DecodeInPlace;
 	int SendAttachIndividually;
 	int CheckEndExec;
@@ -421,6 +434,7 @@ typedef struct _OPTION {
 	int ViewAppClose;
 	int DefViewApp;
 	int ViewAppMsgSource;
+	int AutoOpenAttachMsg;
 	TCHAR *EditApp;
 	TCHAR *EditAppCmdLine;
 	TCHAR *EditFileSuffix;
@@ -446,11 +460,13 @@ typedef struct _OPTION {
 	int RasWaitSec;
 	struct _RASINFO **RasInfo;
 	int RasInfoCnt;
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 ///////////// MRP /////////////////////
 	int	UsePOOMAddressBook;
 ///////////// --- /////////////////////
 	int POOMNameIsComment;
+#endif
+#ifdef _WIN32_WCE_PPC
 	int UseBuiltinSSL;
 #endif
 } OPTION;
@@ -501,6 +517,7 @@ typedef struct _MAILBOX {
 	TCHAR *MailAddress;
 	TCHAR *Signature;
 	TCHAR *ReplyTo;
+	int UseReplyToForFrom;
 	int MyAddr2Bcc;
 	TCHAR *BccAddr;
 	int PopBeforeSmtp;
@@ -594,8 +611,8 @@ typedef struct _ADDRESSITEM {
 	TCHAR *MailAddress;
 	TCHAR *Comment;
 	TCHAR *Group;
-	int num;
-	BOOL displayed;
+	int Num;
+	BOOL Displayed;
 } ADDRESSITEM;
 
 typedef struct _FILTER {
@@ -730,13 +747,13 @@ int item_get_number_to_index(MAILBOX *tpMailBox, int No);
 int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No);
-int item_get_next_send_mark(MAILBOX *tpMailBox, int Index, int *MailBoxIndex);
+int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors);
 int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
-BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download);
+BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download, MAILBOX *tpMailBox);
 MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size);
 MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import);
-int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag);
-char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag);
+int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
+char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
 int item_find_thread(MAILBOX *tpMailBox, TCHAR *p, int Index);
 MAILITEM *item_find_thread_anywhere(TCHAR *p);
 void item_create_thread(MAILBOX *tpMailBox);
@@ -752,13 +769,13 @@ void mailbox_move_down(HWND hWnd);
 BOOL mailbox_unread_check(int index, BOOL NewFlag);
 int mailbox_next_unread(HWND hWnd, int index, int endindex);
 void mailbox_select(HWND hWnd, int Sel);
-BOOL mailbox_menu_rebuild(HWND hWnd);
+BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach);
 int mailbox_name_to_index(TCHAR *Name);
 void filter_sbox_check(HWND hWnd, TCHAR *ConvertName);
 void filter_free(MAILBOX *tpMailBox);
 ADDRESSBOOK *addressbook_copy(void);
 BOOL addr_add(ADDRESSBOOK *tpAddrBook, ADDRESSITEM *tpNewAddrItem);
-void addr_move(ADDRESSBOOK *tpAddrBook, int num, int dir);
+void addr_move(ADDRESSBOOK *tpAddrBook, int num, int step);
 void addr_delete(ADDRESSBOOK *tpAddrBook, int num);
 void addr_free(ADDRESSITEM **tpAddrItem, int cnt);
 void addressbook_free(ADDRESSBOOK *tpAddrBook);
@@ -813,7 +830,7 @@ void DelDot(TCHAR *buf, TCHAR *ret);
 int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem);
-TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote);
+TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, TCHAR *comment, BOOL quote);
 TCHAR *GetMailString(TCHAR *buf, TCHAR *ret);
 void SetUserName(TCHAR *buf, TCHAR *ret);
 int SetCcAddressSize(TCHAR *To);
@@ -863,13 +880,14 @@ BOOL SetOption(HWND hWnd);
 BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CheckDependence(HWND hWnd, int Ctl);
+BOOL CheckDependence(HWND hWnd, int Ctl, TCHAR **buf);
 BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK DigestReplyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // ListView
@@ -888,7 +906,9 @@ int ListView_GetNextUnreadItem(HWND hListView, int Index, int endindex);
 int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox);
 BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast);
 int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+int CALLBACK AddrCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
+int ListView_ComputeState(int Priority, int Multipart);
 
 // main
 void SwitchCursor(const BOOL Flag);

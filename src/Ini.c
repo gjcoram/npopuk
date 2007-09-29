@@ -50,6 +50,7 @@ BOOL ini_start_auth_check(void)
 	TCHAR app_path[BUF_SIZE], app_path_old[BUF_SIZE];
 	TCHAR ret[BUF_SIZE];
 	TCHAR pass[BUF_SIZE];
+	BOOL retval = FALSE;
 
 	ConvertFromNPOP = FALSE;
 	if (IniFile != NULL) {
@@ -77,6 +78,15 @@ BOOL ini_start_auth_check(void)
 			}
 		}
 	}
+	{
+		char *start = file_read(app_path, 10);
+		if (str_cmp_n(start, "AppDir=", strlen("AppDir=")) == 0) {
+			mem_free(&start);
+			MessageBox(NULL, TEXT("AppDir not supported in this version"), WINDOW_TITLE, MB_OK);
+			return FALSE;
+		}
+		mem_free(&start);
+	}
 	profile_initialize(app_path, TRUE);
 
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0, app_path);
@@ -90,14 +100,14 @@ BOOL ini_start_auth_check(void)
 		op.Password = alloc_copy_t(pass);
 		//Starting password
 		gPassSt = 0;
-		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INPUTPASS), NULL, InputPassProc,
-			(LPARAM)STR_TITLE_STARTPASSWORD) == FALSE) {
-			profile_free();
-			return FALSE;
-		}
+		retval = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INPUTPASS), NULL, InputPassProc,
+			(LPARAM)STR_TITLE_STARTPASSWORD);
+		mem_free(&op.Password);
+	} else {
+		retval = TRUE;
 	}
 	profile_free();
-	return TRUE;
+	return retval;
 }
 
 /*
@@ -353,6 +363,9 @@ BOOL ini_read_setting(HWND hWnd)
 			op.AddColSize[i] = 1000;
 		}
 	}
+	op.AddressSort = profile_get_int(GENERAL, TEXT("AddressSort"), 0, app_path);
+	op.AddressJumpKey = profile_get_int(GENERAL, TEXT("AddressJumpKey"), 0, app_path);
+	op.AddressShowGroup = profile_alloc_string(GENERAL, TEXT("AddressShowGroup"), TEXT(""), app_path);
 
 #ifndef _WIN32_WCE
 	op.ViewRect.left = profile_get_int(GENERAL, TEXT("viewleft"), 0, app_path);
@@ -400,8 +413,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SendDate = profile_get_int(GENERAL, TEXT("SendDate"), 1, app_path);
 	op.SelectSendBox = profile_get_int(GENERAL, TEXT("SelectSendBox"), 1, app_path);
 	op.ExpertMode = profile_get_int(GENERAL, TEXT("DisableWarning"), 0, app_path);		// Added PHH 4-Oct-2003
-	op.GJCDebug = profile_get_int(GENERAL, TEXT("GJCDebug"), 1, app_path);
 #ifdef _DEBUG
+	op.GJCDebug = profile_get_int(GENERAL, TEXT("GJCDebug"), 1, app_path);
 	op.GJCDebug = 1;
 #endif
 	op.PopBeforeSmtpIsLoginOnly = profile_get_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), 1, app_path);
@@ -427,7 +440,7 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.ReHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.ReHeader);
 	}
-	len = profile_get_string(GENERAL, TEXT("FwdHeader"), TEXT("\\n--------------------------------------------------\\nTo: %T\\nCC: %C\\nSubject: %S\\nDate: %D\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	len = profile_get_string(GENERAL, TEXT("FwdHeader"), TEXT("\\n--------------------------------------------------\\nFrom: %F\\nTo: %T\\n{CC: %C\\n}Subject: %S\\nDate: %D\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
 	op.FwdHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (op.FwdHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.FwdHeader);
@@ -452,11 +465,13 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
 	op.ClearNewOverlay = profile_get_int(GENERAL, TEXT("ClearNewOverlay"), 0, app_path);
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	///////////// MRP /////////////////////
 	op.UsePOOMAddressBook = profile_get_int(GENERAL, TEXT("UsePOOMAddressBook"), 0, app_path);
 	///////////// --- /////////////////////
 	op.POOMNameIsComment = profile_get_int(GENERAL, TEXT("POOMNameIsComment"), 0, app_path);
+#endif
+#ifdef _WIN32_WCE_PPC
 	op.UseBuiltinSSL = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 1, app_path);
 #endif
 
@@ -471,6 +486,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.CheckAfterUpdate = profile_get_int(GENERAL, TEXT("CheckAfterUpdate"), 0, app_path);
 	op.SocIgnoreError = profile_get_int(GENERAL, TEXT("SocIgnoreError"), 0, app_path);
 	op.SendIgnoreError = profile_get_int(GENERAL, TEXT("SendIgnoreError"), 0, app_path);
+	op.NoIgnoreErrorTimeout = profile_get_int(GENERAL, TEXT("NoIgnoreErrorTimeout"), 0, app_path);
 	op.DecodeInPlace = profile_get_int(GENERAL, TEXT("DecodeInPlace"), 1, app_path);
 	op.SendAttachIndividually = profile_get_int(GENERAL, TEXT("SendAttachIndividually"), 1, app_path);
 	op.CheckEndExec = profile_get_int(GENERAL, TEXT("CheckEndExec"), 0, app_path);
@@ -497,7 +513,7 @@ BOOL ini_read_setting(HWND hWnd)
 #else
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("txt"), app_path);
 	len = profile_get_string(GENERAL, TEXT("ViewFileHeader"),
-		TEXT("From: %f\\nTo: %t\\nCc: %c\\nSubject: %s\\nDate: %d\\n\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+		TEXT("From: %f\\nTo: %t\\n{Cc: %c\\n}Subject: %s\\nDate: %d\\n\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
 #endif
 	op.ViewFileHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (op.ViewFileHeader != NULL) {
@@ -506,6 +522,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewAppClose = profile_get_int(GENERAL, TEXT("ViewAppClose"), 0, app_path);
 	op.DefViewApp = profile_get_int(GENERAL, TEXT("DefViewApp"), 0, app_path);
 	op.ViewAppMsgSource = profile_get_int(GENERAL, TEXT("ViewAppMsgSource"), 0, app_path);
+	op.AutoOpenAttachMsg = profile_get_int(GENERAL, TEXT("AutoOpenAttachMsg"), 0, app_path);
 	op.EditApp = profile_alloc_string(GENERAL, TEXT("EditApp"), TEXT(""), app_path);
 	op.EditAppCmdLine = profile_alloc_string(GENERAL, TEXT("EditAppCmdLine"), TEXT(""), app_path);
 	op.EditFileSuffix = profile_alloc_string(GENERAL, TEXT("EditFileSuffix"), TEXT("txt"), app_path);
@@ -685,6 +702,8 @@ BOOL ini_read_setting(HWND hWnd)
 		}
 		// ReplyTo
 		(MailBox + num)->ReplyTo = profile_alloc_string(buf, TEXT("ReplyTo"), TEXT(""), app_path);
+		// UseReplyToForFrom
+		(MailBox + num)->UseReplyToForFrom = profile_get_int(buf, TEXT("UseReplyToForFrom"), 0, app_path);
 		// MyAddr2Bcc
 		(MailBox + num)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0, app_path);
 		// BccAddr
@@ -803,6 +822,21 @@ BOOL ini_read_setting(HWND hWnd)
 
 	// check that Saveboxes for filters are valid
 	filter_sbox_check(hWnd, ConvertName);
+
+	if (op.LazyLoadMailboxes != 0 && (op.AutoCheck == 1 || op.StartCheck == 1)) {
+		// need to load accounts + related saveboxes
+		BOOL err = FALSE;
+		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+			if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
+				if (mailbox_load_now(hWnd, i, FALSE, TRUE) != 1) {
+					err = TRUE;
+				}
+			}
+		}
+		if (err == FALSE) {
+			SaveBoxesLoaded = TRUE; // may become false if filter is added
+		}
+	}
 
 	profile_free();
 	return TRUE;
@@ -932,6 +966,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("AddColSize-0"), op.AddColSize[0], app_path);
 	profile_write_int(GENERAL, TEXT("AddColSize-1"), op.AddColSize[1], app_path);
 	profile_write_int(GENERAL, TEXT("AddColSize-2"), op.AddColSize[2], app_path);
+	profile_write_int(GENERAL, TEXT("AddressSort"), op.AddressSort, app_path);
+	profile_write_int(GENERAL, TEXT("AddressJumpKey"), op.AddressJumpKey, app_path);
+	profile_write_string(GENERAL, TEXT("AddressShowGroup"), op.AddressShowGroup, app_path);
 
 #ifndef _WIN32_WCE
 	profile_write_int(GENERAL, TEXT("viewleft"), op.ViewRect.left, app_path);
@@ -963,7 +1000,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("SendDate"), op.SendDate, app_path);
 	profile_write_int(GENERAL, TEXT("SelectSendBox"), op.SelectSendBox, app_path);
 	profile_write_int(GENERAL, TEXT("DisableWarning"), op.ExpertMode, app_path);	// Added PHH 4-Oct-2003
-	profile_write_int(GENERAL, TEXT("GJCDebug"), op.GJCDebug, app_path);
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), op.PopBeforeSmtpIsLoginOnly, app_path);
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpWait"), op.PopBeforeSmtpWait, app_path);
 
@@ -995,11 +1031,13 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
 	profile_write_int(GENERAL, TEXT("ClearNewOverlay"), op.ClearNewOverlay, app_path);
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	///////////// MRP /////////////////////
 	profile_write_int(GENERAL, TEXT("UsePOOMAddressBook"), op.UsePOOMAddressBook, app_path);
 	///////////// --- /////////////////////
 	profile_write_int(GENERAL, TEXT("POOMNameIsComment"), op.POOMNameIsComment, app_path);
+#endif
+#ifdef _WIN32_WCE_PPC
 	profile_write_int(GENERAL, TEXT("UseBuiltinSSL"), op.UseBuiltinSSL, app_path);
 #endif
 
@@ -1014,6 +1052,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("CheckAfterUpdate"), op.CheckAfterUpdate, app_path);
 	profile_write_int(GENERAL, TEXT("SocIgnoreError"), op.SocIgnoreError, app_path);
 	profile_write_int(GENERAL, TEXT("SendIgnoreError"), op.SendIgnoreError, app_path);
+	profile_write_int(GENERAL, TEXT("NoIgnoreErrorTimeout"), op.NoIgnoreErrorTimeout, app_path);
 	profile_write_int(GENERAL, TEXT("DecodeInPlace"), op.DecodeInPlace, app_path);
 	profile_write_int(GENERAL, TEXT("SendAttachIndividually"), op.SendAttachIndividually, app_path);
 	profile_write_int(GENERAL, TEXT("CheckEndExec"), op.CheckEndExec, app_path);
@@ -1032,6 +1071,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ViewAppClose"), op.ViewAppClose, app_path);
 	profile_write_int(GENERAL, TEXT("DefViewApp"), op.DefViewApp, app_path);
 	profile_write_int(GENERAL, TEXT("ViewAppMsgSource"), op.ViewAppMsgSource, app_path);
+	profile_write_int(GENERAL, TEXT("AutoOpenAttachMsg"), op.AutoOpenAttachMsg, app_path);
 	profile_write_string(GENERAL, TEXT("EditApp"), op.EditApp, app_path);
 	profile_write_string(GENERAL, TEXT("EditAppCmdLine"), op.EditAppCmdLine, app_path);
 	profile_write_string(GENERAL, TEXT("EditFileSuffix"), op.EditFileSuffix, app_path);
@@ -1187,6 +1227,10 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		}
 		// ReplyTo
 		profile_write_string(buf, TEXT("ReplyTo"), (MailBox + j)->ReplyTo, app_path);
+		// UseReplyToForFrom
+		if ((MailBox + j)->UseReplyToForFrom != 0) {
+			profile_write_int(buf, TEXT("UseReplyToForFrom"), (MailBox + j)->UseReplyToForFrom, app_path);
+		}
 		// MyAddr2Bcc
 		profile_write_int(buf, TEXT("MyAddr2Bcc"), (MailBox + j)->MyAddr2Bcc, app_path);
 		// BccAddr
@@ -1352,6 +1396,7 @@ void ini_free(void)
 {
 	mem_free(&op.BackupDir);
 	mem_free(&op.LvColumnOrder);
+	mem_free(&op.AddressShowGroup);
 	mem_free(&op.view_font.name);
 	mem_free(&op.lv_font.name);
 	mem_free(&op.SendHelo);

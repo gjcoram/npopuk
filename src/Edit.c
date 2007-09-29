@@ -127,7 +127,7 @@ static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress)
 		return cnt;
 	}
 	while (*To != TEXT('\0')) {
-		GetMailAddress(To, p, FALSE);
+		GetMailAddress(To, p, NULL, FALSE);
 		if ((MyMailAddress != NULL && lstrcmpi(MyMailAddress, p) == 0) ||
 			(ToMailAddress != NULL && lstrcmpi(ToMailAddress, p) == 0)) {
 			//In case of your own address or the address which is set to To it does not count
@@ -163,7 +163,7 @@ static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, T
 		return ret;
 	}
 	while (*To != TEXT('\0')) {
-		GetMailAddress(To, p, FALSE);
+		GetMailAddress(To, p, NULL, FALSE);
 		if ((MyMailAddress != NULL && lstrcmpi(MyMailAddress, p) == 0) ||
 			(ToMailAddress != NULL && lstrcmpi(ToMailAddress, p) == 0)) {
 			//In case of your own address or the address which is set to To it does not add
@@ -205,7 +205,7 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 	if (tpMailItem->To != NULL) {
 		ToMailAddress = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->To) + 1));
 		if (ToMailAddress != NULL) {
-			GetMailAddress(tpMailItem->To, ToMailAddress, FALSE);
+			GetMailAddress(tpMailItem->To, ToMailAddress, NULL, FALSE);
 		}
 	}
 
@@ -394,11 +394,18 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	TCHAR *quotchar = NULL;
 	int len, cnt, i, TextIndex;
 	int qlen = 0;
-	BOOL do_sig, do_sig_above;
+	BOOL fwd_as_att, do_sig, do_sig_above;
+
+	if (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD) {
+		fwd_as_att = TRUE;
+	} else {
+		fwd_as_att = FALSE;
+	}
 
 	//Setting
-	if ( (tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
-		|| (tpMailItem->Mark == 2 && seltext != NULL) ) {
+	if ( fwd_as_att == FALSE
+		&& ((tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
+		||  (tpMailItem->Mark == 2 && seltext != NULL)) ) {
 		if (tpMailItem->Mark == 2 && seltext != NULL) {
 			mBody = alloc_copy_t(seltext);
 		} else {
@@ -418,7 +425,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			multipart_free(&tpMultiPart, cnt);
 		}
 
-		if (op.FwdQuotation || ReplyFlag != EDIT_FORWARD) {
+		if (op.FwdQuotation == 1 || ReplyFlag != EDIT_FORWARD) {
 			quotchar = op.QuotationChar;
 			qlen = lstrlen(quotchar);
 		}
@@ -635,7 +642,7 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		if (LOWORD(wParam) == VK_DELETE) {
 			return 0;
 		}
-#ifndef _WIN32_WCE
+		break;
 	case WM_COMMAND:
 		switch(GET_WM_COMMAND_ID(wParam,lParam)) {
 		case ID_MENUITEM_FIND:
@@ -646,8 +653,9 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			View_FindMail(hWnd, FALSE);
 			return 0;
 
+		case ID_MENUITEM_PASTEQUOT:
+			return 0;
 		}
-#endif
 	}
 #ifdef _WIN32_WCE
 	return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
@@ -655,6 +663,7 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
 #endif
 }
+
 /*
  * SetSentSubClass - Subclass (callback) modification for sent mail
  */
@@ -1222,6 +1231,7 @@ static void SetEditMenu(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
 	EnableMenuItem(hMenu, ID_MENUITEM_CUT, (editable && (i < j)) ? MF_ENABLED : MF_GRAYED);
 	EnableMenuItem(hMenu, ID_MENUITEM_COPY, (i < j) ? MF_ENABLED : MF_GRAYED);
+	EnableMenuItem(hMenu, ID_MENUITEM_PASTEQUOT, (editable) ? MF_ENABLED : MF_GRAYED);
 }
 
 /*
@@ -1244,9 +1254,11 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 
 	if (BodyFlag == FALSE) {
 		//of selected position of editing box Check
-		if (EndFlag == 0 && CheckDependence(hWnd, IDC_EDIT_BODY) == FALSE) {
+		if (EndFlag == 0 && CheckDependence(hWnd, IDC_EDIT_BODY, &tmp) == FALSE) {
+			mem_free(&tmp);
 			return FALSE;
 		}
+		mem_free(&tmp);
 
 		//of type dependence letter When subject is not set, information of transmission is indicated
 		if (EndFlag == 0 && gSendAndQuit == FALSE 
@@ -1273,7 +1285,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 		mem_free(&tpMailItem->Body);
 		len = SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXTLENGTH, 0, 0) + 1;
 		buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-		if (buf != NULL) {
+		if (len > 0 && buf != NULL) {
 			*buf = TEXT('\0');
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
 
@@ -1313,6 +1325,14 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 			}
 #endif
 			mem_free(&tmp);
+		} else if (len == 0) {
+			*buf = TEXT('\0');
+#ifdef UNICODE
+			tpMailItem->Body = alloc_tchar_to_char(buf);
+			mem_free(&buf);
+#else
+			tpMailItem->Body = buf;
+#endif
 		}
 		SwitchCursor(TRUE);
 	}
@@ -1349,23 +1369,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 		if (SelBox == MAILBOX_SEND) {
 			i = ListView_GetMemToItem(hListView, tpMailItem);
 			if (i != -1) {
-				int state;
-				switch (tpMailItem->Priority) {
-					case 5:  // LOW
-					case 4:
-						state = 2 + 3*tpMailItem->Multipart;
-						break;
-
-					case 1:  // HIGH
-					case 2:
-						state = 1 + 3*tpMailItem->Multipart;
-						break;
-
-					case 3:  // NORMAL
-					default:
-						state = 0 + 3*tpMailItem->Multipart;
-						break;
-				}
+				int state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 				ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK);
 				ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
 				ListView_SetItemState(hListView, i,
@@ -1623,7 +1627,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 /*
  * EditProc - Mail indicatory procedure
  */
-static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam)
+static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	MAILITEM *tpMailItem;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -1918,10 +1922,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 				if ((tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) ||
 					(tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0'))) {
 					tpMailItem->Multipart = MULTIPART_ATTACH;
+					st = 3;
 				} else {
 					tpMailItem->Multipart = MULTIPART_NONE;
+					st = 0;
 				}
-				st = 3*tpMailItem->Multipart;
 				if (SelBox == MAILBOX_SEND) {
 					HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 					i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1934,7 +1939,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			}
 			break;
 
-#ifndef _WIN32_WCE
 		case ID_MENUITEM_FIND:
 			View_FindMail(hWnd, TRUE);
 			break;
@@ -1942,7 +1946,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 		case ID_MENUITEM_NEXTFIND:
 			View_FindMail(hWnd, FALSE);
 			break;
-#endif
 
 		case ID_MENUITEM_ENCODE:
 			// エンコード設定
@@ -1976,6 +1979,54 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 
 		case ID_MENUITEM_PASTE:
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_PASTE , 0, 0);
+			break;
+
+		case ID_MENUITEM_PASTEQUOT:
+		#ifdef UNICODE
+			if (IsClipboardFormatAvailable(CF_UNICODETEXT) != 0) {
+#else
+			if (IsClipboardFormatAvailable(CF_TEXT) != 0) {
+#endif
+				if (OpenClipboard(hWnd) != 0) {
+					HANDLE hclip;
+#if (!defined(_WIN32_WCE) || defined(_WCE_NEW))
+					TCHAR *p;
+#endif
+					TCHAR *clp, *buf, *qchar, dqch[3] = TEXT("> ");
+					int len;
+#ifdef UNICODE
+					hclip = GetClipboardData(CF_UNICODETEXT); 
+#else
+					hclip = GetClipboardData(CF_TEXT); 
+#endif
+					clp = NULL;
+#if (!defined(_WIN32_WCE) || defined(_WCE_NEW))
+					if ((p = GlobalLock(hclip)) != NULL) {
+						clp = alloc_copy_t(p);
+						GlobalUnlock(hclip);
+					}
+#else
+					// WCE 2.0 and 2.11 don't have GlobalLock?
+					// (at least not with VisualStudio 6)
+					clp = alloc_copy_t((TCHAR *)hclip);
+#endif
+					CloseClipboard();
+					if (clp != NULL) {
+						qchar = op.QuotationChar;
+						if (qchar == NULL || *qchar == TEXT('\0')) {
+							qchar = dqch;
+						}
+						len = GetReplyBodySize(clp, qchar) + 1;
+						buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						if (buf != NULL) {
+							SetReplyBody(clp, buf, qchar);
+							SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
+							mem_free(&buf);
+						}
+						mem_free(&clp);
+					}
+				}
+			}
 			break;
 
 		case ID_MENUITEM_ALLSELECT:
@@ -2110,9 +2161,10 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT);
-	SipShowIM((editable) ? SIPF_ON : SIPF_OFF);
+	SHSipPreference(thisEditWnd, (editable) ? SIP_UP : SIP_DOWN);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
+	SipShowIM((editable) ? SIPF_ON : SIPF_OFF);
 #else
 	hMenu = CommandBar_GetMenu(GetDlgItem(thisEditWnd, IDC_VCB), 0);
 #endif
