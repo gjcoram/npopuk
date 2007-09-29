@@ -291,6 +291,12 @@ TCHAR *str_cpy_f_t(TCHAR *ret, TCHAR *buf, TCHAR c)
 	TCHAR *p, *r;
 
 	for (p = buf, r = ret; *p != c && *p != TEXT('\0'); p++, r++) {
+#ifndef UNICODE
+		// 2バイトコードの場合は2バイト進める
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			*(r++) = *(p++);
+		}
+#endif
 		*r = *p;
 	}
 	*r = TEXT('\0');
@@ -516,7 +522,7 @@ TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag)
 	int len1, len2;
 
 	len1 = lstrlen(ptn);
-	for (p = str; *p != '\0'; p++) {
+	for (p = str; *p != TEXT('\0'); p++) {
 		len2 = str_len_n(p, len1);
 		if (CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
 			(case_flag) ? 0 : NORM_IGNORECASE, p, len2, ptn, len1) == 2) {
@@ -524,7 +530,7 @@ TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag)
 		}
 #ifndef UNICODE
 		// 2バイトコードの場合は2バイト進める
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 		}
 #endif

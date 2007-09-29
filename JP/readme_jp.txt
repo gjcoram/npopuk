@@ -1,4 +1,4 @@
-nPOP Ver 1.0.8
+nPOP Ver 1.0.9
 --
 
 ■ はじめに
@@ -799,6 +799,11 @@ npop_ini.txt を参照してください。
 
 ■ 更新履歴
 
+・Ver 1.0.8 -> Ver 1.0.9
+	・一部の文字を含むファイルを添付ファイルとして設定できなかったのを修正
+	　した。
+	・英文の折り返し処理を修正した。
+
 ・Ver 1.0.7 -> Ver 1.0.8
 	・Unicode版で起動時のコマンドラインが正常に処理されていないのを修正した。
 	・Unicode版でクリッカブルURLが機能しない場合があったのを修正した。
@@ -964,4 +969,4 @@ documentation and/or software.
 Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-2006/07/05
+2006/11/17

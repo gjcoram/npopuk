@@ -1043,7 +1043,7 @@ void EncodeCtrlChar(TCHAR *buf, TCHAR *ret)
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1085,7 +1085,7 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1155,7 +1155,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 	}
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 			ret += 2;
 			continue;
@@ -1218,7 +1218,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1343,24 +1343,24 @@ TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr)
 
 /*
  * SetDotSize - ピリオドから始まる行の先頭にピリオドを付加するためのサイズの取得
- *	(行頭の "From" は ">From" に変換)
+ *	(行頭の "From:" は ">From:" に変換)
  */
 
 int SetDotSize(TCHAR *buf)
 {
-#define FROM_LEN		4		// lstrlen(TEXT("from"))
-#define CRLF_FROM_LEN	6		// lstrlen(TEXT("\r\nfrom"))
+#define FROM_LEN		5		// lstrlen(TEXT("from:"))
+#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p;
 	int len = 0;
 
 	p = buf;
-	if (str_cmp_ni_t(p, TEXT("from"), FROM_LEN) == 0) {
+	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
 		len++;
 	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			len++;
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom"), CRLF_FROM_LEN) == 0) {
+		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
 			len++;
 		}
 		len++;
@@ -1370,25 +1370,25 @@ int SetDotSize(TCHAR *buf)
 
 /*
  * SetDot - ピリオドから始まる行の先頭にピリオドを付加する
- *	(行頭の "From" は ">From" に変換)
+ *	(行頭の "From:" は ">From:" に変換)
  */
 
 void SetDot(TCHAR *buf, TCHAR *ret)
 {
-#define FROM_LEN		4		// lstrlen(TEXT("from"))
-#define CRLF_FROM_LEN	6		// lstrlen(TEXT("\r\nfrom"))
+#define FROM_LEN		5		// lstrlen(TEXT("from:"))
+#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
 	TCHAR *p, *r;
 
 	p = buf;
 	r = ret;
-	if (str_cmp_ni_t(p, TEXT("from"), FROM_LEN) == 0) {
+	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
 		*(r++) = TEXT('>');
 	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			*(r++) = TEXT('.');
 
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom"), CRLF_FROM_LEN) == 0) {
+		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
 			*(r++) = *(p++);
 			*(r++) = *(p++);
 			*(r++) = TEXT('>');
@@ -1489,7 +1489,7 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 			TopFlag = FALSE;
 			EndFlag = FALSE;
@@ -1552,6 +1552,9 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
 				cnt = 0;
 				ret += 2;
+				while (*p == TEXT(' ')) {
+					p++;
+				}
 			}
 			cnt++;
 			p++;
@@ -1587,7 +1590,7 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 			// 2バイトコード
 			TopFlag = FALSE;
@@ -1661,6 +1664,9 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 				cnt = 0;
 				*(r++) = TEXT('\r');
 				*(r++) = TEXT('\n');
+				while (*p == TEXT(' ')) { // GJC strip leading spaces
+					p++;
+				}
 			}
 			cnt++;
 			*(r++) = *(p++);
@@ -1769,7 +1775,7 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 			continue;
 		}
@@ -1806,7 +1812,7 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1887,7 +1893,7 @@ TCHAR *GetMailString(TCHAR *buf, TCHAR *ret)
 	for (p = buf; *p == TEXT(' '); p++);
 	for (r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1944,7 +1950,7 @@ void SetUserName(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -2025,7 +2031,7 @@ TCHAR *GetFileNameString(TCHAR *p)
 
 	for (fname = p; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 			continue;
 		}
@@ -2156,7 +2162,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
 		// ファイル名から Content type を取得
 		for (r = p = Filename; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 				p++;
 				continue;
 			}
@@ -2187,7 +2193,7 @@ static int GetCommandLineSize(TCHAR *buf, TCHAR *filename)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 			ret += 2;
 			continue;
@@ -2244,7 +2250,7 @@ TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;

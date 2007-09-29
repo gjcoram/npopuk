@@ -210,7 +210,7 @@ static BOOL GetAppPath(HINSTANCE hinst)
 	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
 	for (p = r = AppDir; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 			continue;
 		}
@@ -3067,8 +3067,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// コンボボックスとリストビューのフォーカスを切り替える
 		case ID_KEY_TAB:
-			SetFocus(GetDlgItem(hWnd, (GetFocus() == GetDlgItem(hWnd, IDC_LISTVIEW))
-				? IDC_COMBO : IDC_LISTVIEW));
+			if (GetFocus() == GetDlgItem(hWnd, IDC_LISTVIEW)) {
+				SetFocus(GetDlgItem(hWnd, IDC_COMBO));
+			} else {
+				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+				if (SelBox != SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0)) {
+					mailbox_select(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
+				}
+			}
 			break;
 
 		// 選択アイテムの位置にポップアップメニューを表示
@@ -3200,6 +3206,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_ABOUT:
 			MessageBox(hWnd,
 				APP_NAME
+#ifdef UNICODE
+				TEXT(" (UNICODE)")
+#endif
 				TEXT("\nCopyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.\n\n")
 				TEXT("WEB SITE: http://www.nakka.com/\nE-MAIL: nakka@nakka.com"),
 				TEXT("About"), MB_OK | MB_ICONINFORMATION);
