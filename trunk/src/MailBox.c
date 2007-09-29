@@ -40,7 +40,7 @@ extern MAILBOX *MailBox;
 extern int MailBoxCnt;
 extern ADDRESSBOOK *AddressBook;
 
-extern int SelBox;
+extern int SelBox, vSelBox;
 extern int LvSortFlag;
 extern BOOL EndThreadSortFlag;
 extern BOOL PPCFlag;
@@ -324,6 +324,7 @@ BOOL mailbox_menu_rebuild(HWND unused) {
 #elif defined(_WIN32_WCE_LAGENDA)
 		vMenu = GetSubMenu(hViewMenu, 0);
 #else
+#define IDC_VCB 2000
 		vMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hViewWnd, IDC_VCB), 0), 0);
 #endif
 #else
@@ -362,6 +363,14 @@ BOOL mailbox_menu_rebuild(HWND unused) {
 				last_move_idv = this_id;
 			}
 		}
+	}
+	if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
+		EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, 1);
+		EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, 1);
+	}
+	if (vMenu != NULL && (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+		EnableMenuItem(vMenu, ID_MENUITEM_COPY2MBOX + vSelBox, 1);
+		EnableMenuItem(vMenu, ID_MENUITEM_MOVE2MBOX + vSelBox, 1);
 	}
 	return TRUE;
 }

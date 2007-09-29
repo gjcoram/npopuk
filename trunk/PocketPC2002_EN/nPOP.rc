@@ -868,7 +868,7 @@ BEGIN
     CONTROL         "Hang up and dial this &account's server",
                     IDC_CHECK_RASRECON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     6,82,149,10
-    LTEXT           "(Effective only when connected by nPOPuk)",IDC_STATIC,15,
+    LTEXT           "(Effective only if connected by nPOPuk)",IDC_STATIC,15,
                     92,140,9
 END
 

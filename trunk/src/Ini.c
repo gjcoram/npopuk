@@ -472,6 +472,8 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.TimeoutInterval <= 0) op.TimeoutInterval = 1;
 
 	op.ViewClose = profile_get_int(GENERAL, TEXT("ViewClose"), 1, app_path);
+	op.ViewNextAfterDel = profile_get_int(GENERAL, TEXT("ViewNextAfterDel"), 0, app_path);
+	op.ViewSkipDeleted = profile_get_int(GENERAL, TEXT("ViewSkipDeleted"), 0, app_path);
 	op.ViewApp = profile_alloc_string(GENERAL, TEXT("ViewApp"), TEXT(""), app_path);
 	op.ViewAppCmdLine = profile_alloc_string(GENERAL, TEXT("ViewAppCmdLine"), TEXT(""), app_path);
 #ifdef _WIN32_WCE_PPC
@@ -944,6 +946,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	profile_write_int(GENERAL, TEXT("TimeoutInterval"), op.TimeoutInterval, app_path);
 
 	profile_write_int(GENERAL, TEXT("ViewClose"), op.ViewClose, app_path);
+	profile_write_int(GENERAL, TEXT("ViewNextAfterDel"), op.ViewNextAfterDel, app_path);
+	profile_write_int(GENERAL, TEXT("ViewSkipDeleted"), op.ViewSkipDeleted, app_path);
 	profile_write_string(GENERAL, TEXT("ViewApp"), op.ViewApp, app_path);
 	profile_write_string(GENERAL, TEXT("ViewAppCmdLine"), op.ViewAppCmdLine, app_path);
 	profile_write_string(GENERAL, TEXT("ViewFileSuffix"), op.ViewFileSuffix, app_path);

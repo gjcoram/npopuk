@@ -170,7 +170,7 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL DelMsg, BOOL NoMsg);
 static BOOL ExecItem(HWND hWnd, int BoxIndex);
 static void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
 static void ReMessageItem(HWND hWnd, int ReplyFlag);
-static void ListDeleteItem(HWND hWnd);
+static void ListDeleteItem(HWND hWnd, BOOL Ask);
 static void SetDownloadMark(HWND hWnd, BOOL Flag);
 static void SetDeleteMark(HWND hWnd);
 static void UnMark(HWND hWnd);
@@ -879,7 +879,7 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_DELETE, !SelFlag);
 
 	for (i=0; i < MailBoxCnt; i++) {
-		if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
+		if (i != SelBox && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 			EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX+i, !SelFlag);
 			EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX+i, !SelFlag);
 		}
@@ -2217,21 +2217,23 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, B
 /*
  * ListDeleteItem - delete item from list view (not from server)
  */
-static void ListDeleteItem(HWND hWnd)
+static void ListDeleteItem(HWND hWnd, BOOL Ask)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
-	TCHAR buf[BUF_SIZE];
 	int i;
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	if ((i = ListView_GetSelectedCount(hListView)) <= 0) {
 		return;
 	}
-	wsprintf(buf, STR_Q_DELLISTMAIL, i, (SelBox != MAILBOX_SEND && ((MailBox + SelBox)->Type != MAILBOX_TYPE_SAVE))
-		? STR_Q_DELLISTMAIL_NOSERVER : TEXT(""));
-	if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
-		return;
+	if (Ask == TRUE) {
+		TCHAR buf[BUF_SIZE];
+		wsprintf(buf, STR_Q_DELLISTMAIL, i, (SelBox != MAILBOX_SEND && ((MailBox + SelBox)->Type != MAILBOX_TYPE_SAVE))
+			? STR_Q_DELLISTMAIL_NOSERVER : TEXT(""));
+		if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+			return;
+		}
 	}
 
 	SwitchCursor(FALSE);
@@ -3889,7 +3891,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (SelBox == MAILBOX_SEND) {
 				break;
 			}
-			mark_del = TRUE;
+			mark_del = TRUE; // and fall through to do the move
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
@@ -3916,7 +3918,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (Target != -1) {
 					if (ItemToSaveBox(hWnd, NULL, Target, (cnt<=1), mark_del) == TRUE && mark_del == TRUE) {
 						if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
-							ListDeleteItem(hWnd);
+							ListDeleteItem(hWnd, FALSE);
 						} else {
 							SetDeleteMark(hWnd);
 						}
@@ -3937,7 +3939,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//of retention box From summary deletion
 		case ID_MENUITEM_DELETE:
-			ListDeleteItem(hWnd);
+			ListDeleteItem(hWnd, TRUE);
 			break;
 
 		//Entirely the selective
@@ -4054,7 +4056,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					if (ItemToSaveBox(hWnd, NULL, mbox, TRUE, mark_del) == TRUE && mark_del == TRUE) {
 						// delete from list or mark for deletion
 						if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
-							ListDeleteItem(hWnd);
+							ListDeleteItem(hWnd, FALSE);
 						} else {
 							SetDeleteMark(hWnd);
 						}
