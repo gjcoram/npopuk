@@ -18,6 +18,8 @@
 #include "mime.h"
 #ifdef _WIN32_WCE_PPC
 #include "SelectFile.h"
+#endif
+#ifdef _WIN32_WCE
 ///////////// MRP /////////////////////
 #include "ppcpoom.h"
 ///////////// --- /////////////////////
@@ -227,8 +229,6 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	TCHAR path[MULTI_BUF_SIZE];
 	TCHAR *ph, *qh;
 
-	//Retention to file
-	lstrcpy(path, ret);
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
 	of.hInstance = hInst;
@@ -241,8 +241,10 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	of.nFilterIndex = 1;
 	if (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) {
 		of.lpstrTitle = STR_TITLE_OPEN;
+		*path = TEXT('\0');
 	} else {
 		of.lpstrTitle = STR_TITLE_SAVE;
+		lstrcpy(path, ret);
 	}
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
@@ -401,8 +403,12 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 
 	*buf = NULL;
 
-	//File Natori profit
+	//Select file to import
+#ifdef _WIN32_WCE
 	lstrcpy(path, TEXT("*.txt"));
+#else
+	*path = TEXT('\0');
+#endif
 	if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_OPEN_SINGLE) == FALSE) {
 		return TRUE;
 	}
@@ -555,6 +561,12 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 	tpMailBox->DiskSize = FileSize = file_get_size(path);
 	if (FileSize <= 0) {
 		tpMailBox->Loaded = TRUE;
+		if (op.SocLog > 1) {
+			int pos = lstrlen(path);
+			if (pos > 230) pos = 230;
+			wsprintf(path+pos, TEXT(" loaded but empty"));
+			log_save(AppDir, LOG_FILE, path);
+		}
 		return TRUE;
 	}
 #ifdef _NOFILEMAP
@@ -711,7 +723,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 					*s = '\0';
 // GJC: now, multipart/alternative <==> MULTIPART_HTML
 #ifdef DO_MULTIPART_SCAN
-					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->Download == TRUE
+					if (tpMailItem->Multipart == MULTIPART_CONTENT && tpMailItem->Download == TRUE
 						&& tpMailItem->Attach == NULL && tpMailItem->FwdAttach == NULL) {
 						// is it text/plain and text/html with no real attachments
 #ifdef UNICODE
@@ -759,8 +771,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 					}
 				}
 			}
-			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENTMAIL) {
-				if (tpMailItem->Download == TRUE) {
+			if (tpMailItem->Body == NULL && (tpMailItem->MailStatus < ICON_SENTMAIL || tpMailBox == MailBox + MAILBOX_SEND)) {
+				if (tpMailItem->Download == TRUE || tpMailBox == MailBox + MAILBOX_SEND) {
 					tpMailItem->Body = (char *)mem_alloc(sizeof(char));
 					if (tpMailItem->Body != NULL) {
 						*tpMailItem->Body = '\0';
@@ -787,6 +799,12 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 #endif	// _WCE_OLD
 #endif	// _NOFILEMAP
 	tpMailBox->Loaded = TRUE;
+	if (op.SocLog > 1) {
+		int pos = lstrlen(path);
+		if (pos > 240) pos = 240;
+		wsprintf(path+pos, TEXT(" was loaded"));
+		log_save(AppDir, LOG_FILE, path);
+	}
 	return TRUE;
 }
 
@@ -997,7 +1015,8 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len += item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+		len += item_to_string_size(*(tpMailBox->tpMailItem + i), 
+			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
 	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (tmp == NULL) {
@@ -1011,8 +1030,17 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		p = item_to_string(p, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+		p = item_to_string(p, *(tpMailBox->tpMailItem + i), 
+			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
+#ifdef _DEBUG
+i = tstrlen(tmp);
+if (op.GJCDebug && len != i) {
+	TCHAR msg[BUF_SIZE];
+	wsprintf(msg, TEXT("file_save_mismatch (%s): len1=%d != len2 = %d"), FileName, len, i);
+	ErrorMessage(NULL, msg);
+}
+#endif
 #endif	// DIV_SAVE
 
 	///////////// MRP /////////////////////
@@ -1052,14 +1080,16 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len = item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+		len = item_to_string_size(*(tpMailBox->tpMailItem + i), 
+			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 
 		p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 		if (tmp == NULL) {
 			CloseHandle(hFile);
 			return FALSE;
 		}
-		item_to_string(tmp, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+		item_to_string(tmp, *(tpMailBox->tpMailItem + i), 
+			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 		if (file_write(hFile, tmp, len) == FALSE) {
 			mem_free(&tmp);
 			CloseHandle(hFile);
@@ -1177,6 +1207,7 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 #endif
 	int LineCnt = 0;
 	int i;
+	int retcode = 0;
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
@@ -1184,21 +1215,24 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	///////////// MRP /////////////////////
-	if (op.UsePOOMAddressBook != 0)
-	{
-		UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
+	if (op.UsePOOMAddressBook != 0) {
+		retcode = UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
+		if (retcode < 0) {
+			// some kind of failure
+			retcode = -100;
+		}
 	}
 	///////////// --- /////////////////////
 #endif
 
 	FileSize = file_get_size(path);
 	if (FileSize < 0) {
-		return 0;
+		return 0 + retcode;
 	}
 	if (FileSize == 0) {
-		return 1;
+		return 1 + retcode;
 	}
 	FileBuf = file_read(path, FileSize);
 	if (FileBuf == NULL) {
@@ -1220,9 +1254,12 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 #endif	// UNICODE
 
 	//Count
-	for (LineCnt = 0, p = MemFile; *p != TEXT('\0'); p++) {
+	p = MemFile;
+	while(*p == TEXT('\n') || *p == TEXT('\r')) p++;
+	for (LineCnt = 0; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('\n')) {
 			LineCnt++;
+			while(*p == TEXT('\n') || *p == TEXT('\r')) p++;
 		}
 	}
 	tpAddrBook->ItemCnt = LineCnt;
@@ -1235,7 +1272,8 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	}
 	i = 0;
 	p = MemFile;
-	while (FileSize > p - MemFile && *p != TEXT('\0')) {
+	while(*p == TEXT('\n') || *p == TEXT('\r')) p++;
+	while (FileSize > p - MemFile && *p != TEXT('\0') && i < LineCnt) {
 		tpAddrItem = *(tpAddrBook->tpAddrItem + i) = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
 
 		//of the number of lines Mail address
@@ -1279,13 +1317,14 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 				*s = '\0';
 			}
 		}
-		for (; *p != TEXT('\0') && *p != TEXT('\r') && *p != TEXT('\n'); p++);
-		for (; *p == TEXT('\r') || *p == TEXT('\n'); p++);
+		while(*p != TEXT('\0') && *p != TEXT('\r') && *p != TEXT('\n')) p++;
+		while(*p == TEXT('\n') || *p == TEXT('\r')) p++;
+		tpAddrItem->Num = i;
 		i++;
 	}
 	mem_free(&FileBuf);
 	mem_free(&AllocBuf);
-	return 1;
+	return 1 + retcode;
 }
 
 /*

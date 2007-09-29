@@ -140,6 +140,12 @@
 #define IDC_RADIO_UAC_DELETE            263
 #define IDC_RADIO_UAC_KEEP              264
 #define IDC_RADIO_UAC_ASK               265
+#define IDD_DIALOG_DIGEST_REPLY         266
+#define IDC_RADIO_DIGEST_LIST           267
+#define IDC_RADIO_DIGEST_SENDER         268
+#define IDC_RADIO_DIGEST_ALL            269
+#define IDC_RADIO_GROUP_ADD             270
+#define IDC_RADIO_GROUP_DEL             271
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
@@ -172,10 +178,10 @@
 #define IDC_CHECK_AUTOQUOT              1019
 #define IDC_EDIT_BREAKCNT               1020
 #define IDC_LIST_CC                     1021
-#define IDC_RADIO_CC                    1023
-#define IDC_RADIO_BCC                   1024
+#define IDC_BUTTON_TO                   1022
+#define IDC_BUTTON_CC                   1023
+#define IDC_BUTTON_BCC                  1024
 #define IDC_BUTTON_ADD                  1025
-#define IDC_BUTTON_CC                   1026
 #define IDC_BUTTON_EDIT                 1026
 #define IDC_EDIT_REPLYTO                1027
 #define IDC_BUTTON_FLAG                 1027
@@ -192,9 +198,8 @@
 #define IDC_EDIT_AUTOCHECKTIME          1033
 #define IDC_BUTTON_UNINSTALL            1034
 #define IDC_LIST_ADDRESS                1035
-#define IDC_BUTTON_TO                   1037
-#define IDC_EDIT_COMMENT                1038
-#define IDC_STATIC_ICON                 1038
+#define IDC_EDIT_COMMENT                1036
+#define IDC_STATIC_ICON                 1037
 #define IDC_CHECK_SOUND                 1039
 #define IDC_EDIT_CONTENT2               1039
 #define IDC_CHECK_STARTCHECK            1040
@@ -209,12 +214,16 @@
 #define IDC_CHECK_STARTPASS             1047
 #define IDC_COMBO_ENTRY                 1048
 #define IDC_BUTTON_UPDATEOPTS           1049
-#define IDC_CHECK_CHENDDISCON           1052
+#define IDC_BUTTON_NUM                  1050
+#define IDC_CHECK_REFILTER              1051
+#define IDC_BUTTON_UP10                 1051
 #define IDC_BUTTON_UP                   1052
+#define IDC_CHECK_CHENDDISCON           1052
 #define IDC_CHECK_NORASNOCHECK          1053
 #define IDC_LIST_FILTER                 1053
 #define IDC_CHECK_ENDDISCON             1054
 #define IDC_BUTTON_DOWN                 1054
+#define IDC_BUTTON_DOWN10               1055
 #define IDC_CHECK_FILTER                1055
 #define IDC_BUTTON_ANDOR                1056
 #define IDC_CHECK_FLAG                  1057
@@ -229,7 +238,8 @@
 #define IDC_RADIO_SETGET                1066
 #define IDC_CHECK_QUOTATION             1066
 #define IDC_CHECK_QUOT_3ST              1067
-#define IDC_CHECK_SMTPAUTH              1068
+#define IDC_CHECK_ATT_MSG               1068
+#define IDC_CHECK_SMTPAUTH              1069
 #define IDC_RADIO_RASMODE_0             1070
 #define IDC_RADIO_RASMODE_1             1071
 #define IDC_CHECK_RASRECON              1072
@@ -272,7 +282,7 @@
 #define IDC_READ                        1103
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
-#define IDC_QUOTSTYLE_2                 1202 // placeholder for "fwd as attachment"
+#define IDC_QUOTSTYLE_2                 1202
 #define IDC_SIGNFWD                     1203
 #define IDC_SIGNFWD_ABOVE               1204
 #define IDC_SIGNRE_ABOVE                1205
@@ -324,6 +334,7 @@
 #define ID_KEY_RIGHT                    40042
 #define WM_NOMSG                        40043
 #define ID_MENUITEM_COPY                40044
+#define ID_MENUITEM_PASTEQUOT           40045
 #define ID_MENUITEM_CUT                 40046
 #define ID_MENUITEM_PASTE               40047
 #define ID_MENUITEM_SETMAILBOX          40048

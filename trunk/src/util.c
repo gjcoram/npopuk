@@ -1234,13 +1234,15 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
  */
 TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
-	TCHAR *p, *r, *t;
-	int i;
+	TCHAR *p, *r, *s, *t;
+	int i, Optional = 0;
 	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
+	BOOL Found = FALSE;
 
 	if (buf == NULL) {
 		return ret;
 	}
+	s = ret;
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
@@ -1256,6 +1258,40 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 				*(r++) = quotstr[i];
 			}
 			continue;
+		}
+		// Optional text: include only if header is non-null (GJC)
+		// {CC: %C\n} will be included only if CC is non-null
+		if (*p == TEXT('{')) {
+			if (*(p+1) == TEXT('{')) {
+				// {{ becomes {
+				*(r++) = *(p++);
+				continue;
+			} else {
+				// {Optional text}
+				if (Optional == 0) {
+					// presently don't handle nested {}
+					Found = FALSE;
+					s = r;
+				}
+				Optional++;
+			}
+		} else if (*p == TEXT('}')) {
+			if (*(p+1) == TEXT('}')) {
+				// }} becomes }
+				*(r++) = *(p++);
+				continue;
+			} else {
+				// {%C}
+				if (Optional > 0) {
+					Optional--;
+					if (Optional == 0 && Found == FALSE) {
+						r = s; // reset to before {
+					}
+				} else {
+					Optional = 0;
+				}
+				continue;
+			}
 		}
 		if (*p != TEXT('%')) {
 			*(r++) = *p;
@@ -1310,6 +1346,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 		}
 		if (t != NULL) {
 			r = str_cpy_t(r, t);
+			Found = TRUE;
 		}
 	}
 	*r = TEXT('\0');
@@ -1831,17 +1868,23 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr)
  *		MailAddress (Comment)
  */
 
-TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
+TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, TCHAR *comment, BOOL quote)
 {
 	BOOL kFlag = FALSE;
 	BOOL qFlag = FALSE;
-	TCHAR *p, *r, *t;
+	BOOL doing_comment = FALSE;
+	TCHAR *p, *r, *s, *t;
 
-	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
+	for (p = buf, r = ret, s = comment; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-			*(r++) = *(p++);
-			*(r++) = *p;
+			if (comment != NULL && doing_comment == TRUE) {
+				*(s++) = *(p++);
+				*(s++) = *p;
+			} else {
+				*(r++) = *(p++);
+				*(r++) = *p;
+			}
 			continue;
 		}
 #endif
@@ -1853,8 +1896,8 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 			break;
 
 		case TEXT('\"'):
+			t = GetNextQuote(p + 1, TEXT('\"'));
 			if (kFlag == TRUE || quote == TRUE) {
-				t = GetNextQuote(p + 1, TEXT('\"'));
 				for (; p < t; p++) {
 					*(r++) = *p;
 				}
@@ -1863,15 +1906,44 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 				}
 				break;
 			}
-			p = GetNextQuote(p + 1, TEXT('\"'));
+			if (comment != NULL) {
+				p++;
+				for (; p < t; p++) {
+					*(s++) = *p;
+				}
+				*s = TEXT('\0');
+				break;
+			}
+			p = t;
 			qFlag = TRUE;
 			break;
 
 		case TEXT('('):
-			p = GetNextQuote(p + 1, TEXT(')'));
+			t = GetNextQuote(p + 1, TEXT(')'));
+			if (comment != NULL) {
+				p++;
+				for (; p < t; p++) {
+					*(s++) = *p;
+				}
+				*s = TEXT('\0');
+				break;
+			}
+			p = t;
 			break;
 
 		case TEXT('<'):
+			if (comment != NULL) {
+				s = comment;
+				t = buf;
+				while (is_white(*t) || *t == TEXT('\"')) t++;
+				while (t < p) {
+					*(s++) = *(t++);
+				}
+				while (s > comment && (is_white(*(s-1)) || *(s-1) == TEXT('\"'))) {
+					s--;
+				}
+				*s = TEXT('\0');
+			}
 			r = ret;
 			kFlag = TRUE;
 			break;
@@ -1888,7 +1960,7 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 			*r = TEXT('\0');
 
 			if (quote == FALSE && kFlag == FALSE && qFlag == TRUE) {
-				return GetMailAddress(buf, ret, TRUE);
+				return GetMailAddress(buf, ret, NULL, TRUE);
 			}
 			return p;
 
@@ -1903,7 +1975,7 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 	*r = TEXT('\0');
 
 	if (quote == FALSE && kFlag == FALSE && qFlag == TRUE) {
-		return GetMailAddress(buf, ret, TRUE);
+		return GetMailAddress(buf, ret, NULL, TRUE);
 	}
 	return p;
 }
@@ -2013,7 +2085,7 @@ int SetCcAddressSize(TCHAR *To)
 	if (ToMailAddress != NULL) {
 		cnt += 5;
 		while (*To != TEXT('\0')) {
-			To = GetMailAddress(To, ToMailAddress, FALSE);
+			To = GetMailAddress(To, ToMailAddress, NULL, FALSE);
 			cnt += lstrlen(ToMailAddress) + 2;
 			To = (*To != TEXT('\0')) ? To + 1 : To;
 		}
@@ -2038,7 +2110,7 @@ TCHAR *SetCcAddress(TCHAR *Type, TCHAR *To, TCHAR *r)
 	if (ToMailAddress != NULL) {
 		r = str_join_t(r, TEXT(" ("), Type, (TCHAR *)-1);
 		while (*To != TEXT('\0')) {
-			To = GetMailAddress(To, ToMailAddress, FALSE);
+			To = GetMailAddress(To, ToMailAddress, NULL, FALSE);
 			r = str_join_t(r, sep, ToMailAddress, (TCHAR *)-1);
 			To = (*To != TEXT('\0')) ? To + 1 : To;
 			sep = TEXT(", ");

@@ -150,12 +150,13 @@ char *charset_encode(WCHAR *charset, WCHAR *buf, UINT len)
 	encoding = (mimeInfo.uiInternetEncoding == 0) ? mimeInfo.uiCodePage : mimeInfo.uiInternetEncoding;
 
 	ret_len = 0;
-	if (pMultiLanguage->ConvertStringFromUnicode(&mode, encoding, buf, &len, NULL, &ret_len) != S_OK) {
+	if (pMultiLanguage->ConvertStringFromUnicode(&mode, encoding, buf, &src_len, NULL, &ret_len) != S_OK) {
 		pMultiLanguage->Release();
 		return NULL;
 	}
 	ret = (char *)mem_alloc(sizeof(char) * (ret_len + 1));
-	if (pMultiLanguage->ConvertStringFromUnicode(&mode, encoding, buf, &len, ret, &ret_len) != S_OK) {
+	if (ret_len != 0 &&
+		pMultiLanguage->ConvertStringFromUnicode(&mode, encoding, buf, &src_len, ret, &ret_len) != S_OK) {
 		mem_free((void **)&ret);
 		pMultiLanguage->Release();
 		return NULL;

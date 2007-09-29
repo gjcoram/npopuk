@@ -7,10 +7,16 @@
 extern "C"{
 #endif 
 
-void UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComment);
+int UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComment);
+int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short *lname);
+void FormatOutputString(char *ret, WCHAR *name, WCHAR *email, WCHAR *ctgy, int fmt);
 
 #ifdef __cplusplus
 }
+#endif
+
+#if _WIN32_WCE <= 200
+#define _WCE_OLD				1
 #endif
 
 #define RELEASE_OBJ(s)  \

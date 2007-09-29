@@ -145,14 +145,14 @@ END
 IDR_ACCELERATOR_EDIT ACCELERATORS DISCARDABLE 
 BEGIN
     "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
-//  "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
-//  VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
 END
 
 IDR_ACCELERATOR_VIEW ACCELERATORS DISCARDABLE 
@@ -393,10 +393,11 @@ BEGIN
         MENUITEM "Cu&t",                        ID_MENUITEM_CUT
         MENUITEM "&Copy",                       ID_MENUITEM_COPY
         MENUITEM "&Paste",                      ID_MENUITEM_PASTE
+        MENUITEM "Paste as &quotation",         ID_MENUITEM_PASTEQUOT
         MENUITEM "Select &all",                 ID_MENUITEM_ALLSELECT
-//      MENUITEM SEPARATOR
-//      MENUITEM "&Find\tCtrl+F",               ID_MENUITEM_FIND
-//      MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Find\tCtrl+F",               ID_MENUITEM_FIND
+        MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
         MENUITEM SEPARATOR
         MENUITEM "Paste from &file",            ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
@@ -468,21 +469,23 @@ BEGIN
     EDITTEXT        IDC_EDIT_TO,40,25,245,12,ES_AUTOHSCROLL
     LTEXT           "&Subject:",IDC_STATIC,6,44,29,10
     EDITTEXT        IDC_EDIT_TITLE,40,42,245,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Cc, Bcc",IDC_BUTTON_CC,40,58,52,14
+    PUSHBUTTON      "&Recipients",IDC_BUTTON_CC,40,58,52,14
     PUSHBUTTON      "Attac&h",IDC_BUTTON_ATTACH,40,72,52,14
     LTEXT           "&Priority:",IDC_STATIC,5,88,26,8
     COMBOBOX        IDC_PRIORITY,40,86,52,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
+    CONTROL         "Del&ivery receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,60,70,10
+    CONTROL         "Rea&d receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,170,60,60,10
+    CONTROL         "Attach &message",IDC_CHECK_ATT_MSG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,98,74,70,10
     CONTROL         "&Quote text",IDC_CHECK_QUOTATION,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,98,60,54,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,98,88,54,10
     CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",
-                    BS_AUTO3STATE | WS_TABSTOP,98,60,54,10
-    CONTROL         "&Read Receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,98,75,60,10
-    CONTROL         "&Delivery Receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,98,88,70,10
+                    BS_AUTO3STATE | WS_TABSTOP,98,88,54,10
     DEFPUSHBUTTON   "&OK",IDOK,180,86,50,14
-    PUSHBUTTON      "Ca&ncel",IDCANCEL,235,86,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,235,86,50,14
 END
 
 IDD_DIALOG_SETSEND DIALOG DISCARDABLE  0, 0, 160, 144
@@ -501,21 +504,24 @@ BEGIN
     LTEXT           "&Subject:",IDC_STATIC,1,63,33,10
     EDITTEXT        IDC_EDIT_TITLE,35,60,120,22,ES_MULTILINE | 
                     ES_AUTOVSCROLL
-    PUSHBUTTON      "&Cc, Bcc",IDC_BUTTON_CC,0,85,45,14
+    PUSHBUTTON      "&Recipients",IDC_BUTTON_CC,0,85,45,14
     PUSHBUTTON      "Attac&h",IDC_BUTTON_ATTACH,50,85,45,14
     LTEXT           "&Priority:",IDC_STATIC,2,102,26,8
     COMBOBOX        IDC_PRIORITY,40,100,55,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
+    CONTROL         "Attach &msg",IDC_CHECK_ATT_MSG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,99,90,54,10
     CONTROL         "&Quote text",IDC_CHECK_QUOTATION,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,99,102,54,10
     CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",
                     BS_AUTO3STATE | WS_TABSTOP,99,102,54,10
-    CONTROL         "&Read Receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,99,115,58,10
-    CONTROL         "&Delivery Receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,2,115,71,10
-    DEFPUSHBUTTON   "&OK",IDOK,65,130,46,13
-    PUSHBUTTON      "Ca&ncel",IDCANCEL,112,130,45,14
+    LTEXT           "Receipts:",IDC_STATIC,2,115,36,8
+    CONTROL         "Del&ivery",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,115,40,10
+    CONTROL         "Rea&d",IDC_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,99,115,40,10
+    DEFPUSHBUTTON   "&OK",IDOK,65,130,46,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,112,130,45,14
 END
 
 IDD_DIALOG_POP DIALOG DISCARDABLE  0, 0, 160, 103
@@ -647,8 +653,10 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "Forward message:",IDC_STATIC,5,5,65,10
     CONTROL         "&Quoted",IDC_QUOTSTYLE_0,"Button",BS_AUTORADIOBUTTON,70,
-                    5,70,10
+                    5,35,10
     CONTROL         "&In-line",IDC_QUOTSTYLE_1,"Button",BS_AUTORADIOBUTTON,
+                    110,5,35,10
+    CONTROL         "As &Attachment",IDC_QUOTSTYLE_2,"Button",BS_AUTORADIOBUTTON,
                     70,15,70,10
     CONTROL         "Use &signature for forwarded mail",IDC_SIGNFWD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,25,125,10
@@ -661,20 +669,18 @@ END
 
 IDD_DIALOG_CC DIALOG DISCARDABLE  0, 0, 160, 116
 STYLE WS_POPUP | WS_CAPTION
-CAPTION "Cc, Bcc"
+CAPTION "Recipients"
 FONT 8, "Tahoma"
 BEGIN
     EDITTEXT        IDC_EDIT_MAILADDRESS,40,4,120,16,ES_AUTOHSCROLL
-    CONTROL         "&Cc",IDC_RADIO_CC,"Button",BS_AUTORADIOBUTTON,41,24,24,
-                    10
-    CONTROL         "&Bcc",IDC_RADIO_BCC,"Button",BS_AUTORADIOBUTTON,69,24,
-                    27,10
-    DEFPUSHBUTTON   "A&dd",IDC_BUTTON_ADD,99,22,27,15
+    PUSHBUTTON      "&To",IDC_BUTTON_TO,41,22,24,15
+    DEFPUSHBUTTON   "&Cc",IDC_BUTTON_CC,69,22,24,15
+    PUSHBUTTON      "&Bcc",IDC_BUTTON_BCC,97,22,27,15
     PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,130,22,27,15
     CONTROL         "List1",IDC_LIST_CC,"SysListView32",LVS_REPORT | 
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
                     WS_BORDER | WS_TABSTOP,0,40,160,76
-    PUSHBUTTON      "&Address:",IDC_BUTTON_TO,0,4,40,16
+    PUSHBUTTON      "&Address:",IDC_BUTTON_ADD,0,4,40,16
 END
 
 IDD_DIALOG_OPTION_CHECK DIALOG DISCARDABLE  0, 0, 159, 122
@@ -714,11 +720,12 @@ CAPTION "Address book"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | 
                     WS_TABSTOP,0,0,150,113
     LTEXT           "C&ategory:",IDC_STATIC,5,123,40,10
     COMBOBOX        IDC_ADDR_GRP_COMBOL,50,120,100,110,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "#",IDC_BUTTON_NUM,150,0,10,15
     PUSHBUTTON      "^",IDC_BUTTON_UP,150,25,10,20
     PUSHBUTTON      "v",IDC_BUTTON_DOWN,150,70,10,20
     PUSHBUTTON      "&New",IDC_BUTTON_ADD,0,140,30,14
@@ -734,11 +741,12 @@ CAPTION "Address book"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | 
                     WS_TABSTOP,0,0,310,153
     LTEXT           "Ca&tegory:",IDC_STATIC,20,163,40,10
     COMBOBOX        IDC_ADDR_GRP_COMBOL,60,160,133,110,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "#",IDC_BUTTON_NUM,310,0,10,15
     PUSHBUTTON      "^",IDC_BUTTON_UP,310,35,10,30
     PUSHBUTTON      "v",IDC_BUTTON_DOWN,310,90,10,30
     PUSHBUTTON      "&Add",IDC_BUTTON_ADD,20,180,30,14
@@ -757,9 +765,13 @@ BEGIN
     EDITTEXT        IDC_EDIT_MAILADDRESS,5,15,150,15,ES_AUTOHSCROLL
     LTEXT           "Commen&t:",IDC_STATIC,5,35,45,10
     EDITTEXT        IDC_EDIT_COMMENT,5,45,150,15,ES_AUTOHSCROLL
-    LTEXT           "C&ategories:",IDC_STATIC,5,65,50,10
+    LTEXT           "C&ategories:",IDC_STATIC,5,65,40,10
     COMBOBOX        IDC_ADDR_GRP_COMBO,5,75,100,110,CBS_DROPDOWN | 
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Add",IDC_RADIO_GROUP_ADD,"Button",BS_AUTORADIOBUTTON,
+                    50,65,30,10
+    CONTROL         "&Remove",IDC_RADIO_GROUP_DEL,"Button",BS_AUTORADIOBUTTON,
+                    82,65,40,10
     PUSHBUTTON      "Cancel",IDCANCEL,120,75,35,14
 END
 
@@ -890,7 +902,9 @@ CAPTION "Filter"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "Enable &filters",IDC_CHECK_FILTER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,66,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,56,10
+    CONTROL         "&Refilter on download",IDC_CHECK_REFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,65,2,80,10
     CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
                     WS_BORDER | WS_TABSTOP,0,15,150,72
@@ -938,7 +952,7 @@ BEGIN
     LTEXT           "When checking mail download:",IDC_STATIC,5,5,150,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
                     BS_AUTORADIOBUTTON,5,20,120,10
-    CONTROL         "&Initialize",IDC_RADIO_SETGET,"Button",
+    CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
                     BS_AUTORADIOBUTTON,5,35,40,10
     CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",
                     BS_AUTORADIOBUTTON,5,47,40,10
@@ -1157,6 +1171,22 @@ BEGIN
                     BS_AUTORADIOBUTTON,10,55,90,10
     DEFPUSHBUTTON   "&OK",IDOK,10,75,50,14
     PUSHBUTTON      "&Cancel",IDCANCEL,70,75,50,14
+END
+
+IDD_DIALOG_DIGEST_REPLY DIALOG  0, 0, 130, 80
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Digest Reply"
+FONT 8, "Tahoma"
+BEGIN
+    LTEXT           "Send reply to:",IDC_STATIC,10,10,48,10
+    CONTROL         "&List",IDC_RADIO_DIGEST_LIST,"Button",
+                    BS_AUTORADIOBUTTON,60,10,90,10
+    CONTROL         "&Sender",IDC_RADIO_DIGEST_SENDER,"Button",
+                    BS_AUTORADIOBUTTON,60,25,90,10
+    CONTROL         "&All",IDC_RADIO_DIGEST_ALL,"Button",
+                    BS_AUTORADIOBUTTON,60,40,90,10
+    DEFPUSHBUTTON   "&OK",IDOK,10,60,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,60,50,14
 END
 
 IDD_DIALOG_UPDATEOPTS DIALOG DISCARDABLE  0, 0, 130, 95
@@ -1426,6 +1456,14 @@ BEGIN
         RIGHTMARGIN, 120
         TOPMARGIN, 7
         BOTTOMMARGIN, 85
+    END
+
+    IDD_DIALOG_DIGEST_REPLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 70
     END
 
     IDD_DIALOG_UPDATEOPTS, DIALOG

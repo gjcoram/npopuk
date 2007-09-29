@@ -73,7 +73,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
 
@@ -106,7 +106,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
 
@@ -139,7 +139,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
 
@@ -172,7 +172,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Release"
 
@@ -205,7 +205,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Debug"
 
@@ -238,7 +238,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH3
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
@@ -271,7 +271,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
 
@@ -304,7 +304,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
@@ -337,7 +337,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -370,7 +370,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) oleaut32.lib commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
 
@@ -403,7 +403,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMRel/nPOPuk.exe" /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMRel/nPOPuk.exe" /windowsce:emulation /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Debug"
 
@@ -436,7 +436,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMDbg/nPOPuk.exe" /windowsce:emulation /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86EMDbg/nPOPuk.exe" /windowsce:emulation /MACHINE:IX86
 
 !ENDIF 
 
@@ -586,23 +586,7 @@ DEP_CPP_CODE_=\
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
-DEP_CPP_CODE_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\jp.h"\
-	"..\src\kr.h"\
-	".\stdafx.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
-
-DEP_CPP_CODE_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\jp.h"\
-	"..\src\kr.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
@@ -615,14 +599,6 @@ DEP_CPP_CODE_=\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
-
-DEP_CPP_CODE_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\jp.h"\
-	"..\src\kr.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
 
@@ -709,7 +685,12 @@ DEP_CPP_EDIT_=\
 
 DEP_CPP_EDIT_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -717,7 +698,12 @@ DEP_CPP_EDIT_=\
 
 DEP_CPP_EDIT_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -733,7 +719,12 @@ DEP_CPP_EDIT_=\
 
 DEP_CPP_EDIT_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -820,7 +811,11 @@ DEP_CPP_FILE_=\
 
 DEP_CPP_FILE_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
 	
@@ -829,7 +824,11 @@ DEP_CPP_FILE_=\
 
 DEP_CPP_FILE_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
 	
@@ -847,7 +846,11 @@ DEP_CPP_FILE_=\
 
 DEP_CPP_FILE_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
 	
@@ -924,17 +927,13 @@ DEP_CPP_FONT_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_FONT_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
+	"..\src\Font.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_FONT_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
+	"..\src\Font.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -948,9 +947,7 @@ DEP_CPP_FONT_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_FONT_=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
+	"..\src\Font.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
@@ -1036,6 +1033,8 @@ DEP_CPP_INI_C=\
 
 DEP_CPP_INI_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
@@ -1045,6 +1044,8 @@ DEP_CPP_INI_C=\
 
 DEP_CPP_INI_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
@@ -1063,6 +1064,8 @@ DEP_CPP_INI_C=\
 
 DEP_CPP_INI_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
@@ -1165,9 +1168,13 @@ DEP_CPP_ITEM_=\
 
 DEP_CPP_ITEM_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -1175,9 +1182,13 @@ DEP_CPP_ITEM_=\
 
 DEP_CPP_ITEM_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -1195,9 +1206,13 @@ DEP_CPP_ITEM_=\
 
 DEP_CPP_ITEM_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -1282,6 +1297,7 @@ DEP_CPP_JP_Ce=\
 
 DEP_CPP_JP_Ce=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1290,6 +1306,7 @@ DEP_CPP_JP_Ce=\
 
 DEP_CPP_JP_Ce=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1306,6 +1323,7 @@ DEP_CPP_JP_Ce=\
 
 DEP_CPP_JP_Ce=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1387,6 +1405,7 @@ DEP_CPP_LISTV=\
 
 DEP_CPP_LISTV=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1395,6 +1414,7 @@ DEP_CPP_LISTV=\
 
 DEP_CPP_LISTV=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1411,6 +1431,7 @@ DEP_CPP_LISTV=\
 
 DEP_CPP_LISTV=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1492,6 +1513,7 @@ DEP_CPP_MAILB=\
 
 DEP_CPP_MAILB=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1500,6 +1522,7 @@ DEP_CPP_MAILB=\
 
 DEP_CPP_MAILB=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1516,6 +1539,7 @@ DEP_CPP_MAILB=\
 
 DEP_CPP_MAILB=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -1599,7 +1623,10 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -1607,7 +1634,10 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -1623,7 +1653,10 @@ DEP_CPP_MAIN_=\
 
 DEP_CPP_MAIN_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -2007,7 +2040,11 @@ DEP_CPP_MULTI=\
 
 DEP_CPP_MULTI=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2015,7 +2052,11 @@ DEP_CPP_MULTI=\
 
 DEP_CPP_MULTI=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2031,7 +2072,11 @@ DEP_CPP_MULTI=\
 
 DEP_CPP_MULTI=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2147,7 +2192,12 @@ DEP_CPP_OPTIO=\
 
 DEP_CPP_OPTIO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2155,7 +2205,12 @@ DEP_CPP_OPTIO=\
 
 DEP_CPP_OPTIO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2171,7 +2226,12 @@ DEP_CPP_OPTIO=\
 
 DEP_CPP_OPTIO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2264,6 +2324,7 @@ DEP_CPP_POP3_=\
 
 DEP_CPP_POP3_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2274,6 +2335,7 @@ DEP_CPP_POP3_=\
 
 DEP_CPP_POP3_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2294,6 +2356,7 @@ DEP_CPP_POP3_=\
 
 DEP_CPP_POP3_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2318,6 +2381,97 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\ppcpoom.cpp
+
+!IF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Debug"
+
+DEP_CPP_PPCPO=\
+	"..\src\ppcpoom.h"\
+	".\pimstore.h"\
 	
 
 !ENDIF 
@@ -2460,6 +2614,7 @@ DEP_CPP_RAS_C=\
 
 DEP_CPP_RAS_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -2468,6 +2623,7 @@ DEP_CPP_RAS_C=\
 
 DEP_CPP_RAS_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -2484,6 +2640,7 @@ DEP_CPP_RAS_C=\
 
 DEP_CPP_RAS_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	
@@ -2583,9 +2740,13 @@ DEP_CPP_SMTP_=\
 
 DEP_CPP_SMTP_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2593,9 +2754,13 @@ DEP_CPP_SMTP_=\
 
 DEP_CPP_SMTP_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2613,9 +2778,13 @@ DEP_CPP_SMTP_=\
 
 DEP_CPP_SMTP_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	".\stdafx.h"\
 	
 
@@ -2692,23 +2861,7 @@ DEP_CPP_STRIN=\
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
-DEP_CPP_STRIN=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
-
-DEP_CPP_STRIN=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
@@ -2721,14 +2874,6 @@ DEP_CPP_STRIN=\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
-
-DEP_CPP_STRIN=\
-	"..\EN\Strtbl.h"\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
 
@@ -2825,6 +2970,8 @@ DEP_CPP_UTIL_=\
 
 DEP_CPP_UTIL_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2835,6 +2982,8 @@ DEP_CPP_UTIL_=\
 
 DEP_CPP_UTIL_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2855,6 +3004,8 @@ DEP_CPP_UTIL_=\
 
 DEP_CPP_UTIL_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
@@ -2960,9 +3111,14 @@ DEP_CPP_VIEW_=\
 
 DEP_CPP_VIEW_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -2970,9 +3126,14 @@ DEP_CPP_VIEW_=\
 
 DEP_CPP_VIEW_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -2990,9 +3151,14 @@ DEP_CPP_VIEW_=\
 
 DEP_CPP_VIEW_=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
 	".\stdafx.h"\
 	
 
@@ -3077,16 +3243,20 @@ DEP_CPP_WINSO=\
 
 DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
 
 DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -3101,8 +3271,10 @@ DEP_CPP_WINSO=\
 
 DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
@@ -3167,6 +3339,14 @@ SOURCE=..\src\mime.h
 # Begin Source File
 
 SOURCE=..\src\multipart.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pimstore.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\ppcpoom.h
 # End Source File
 # Begin Source File
 

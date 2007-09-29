@@ -58,6 +58,7 @@ static int send_end_cmd;						// メール送信完了時のコマンド
 // 外部参照
 extern OPTION op;
 extern BOOL gSendAndQuit;
+extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -419,7 +420,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return (TCHAR *)-1;
 	}
-	address = GetMailAddress(address, p, FALSE);
+	address = GetMailAddress(address, p, NULL, FALSE);
 
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
@@ -517,6 +518,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	TCHAR *body;
 	char *din, *dout;
 #endif
+	TCHAR *FromAddress = NULL;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
 	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
@@ -527,7 +529,13 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	// From
 	mem_free(&tpMailItem->From);
 	tpMailItem->From = NULL;
-	if (send_mail_box->MailAddress != NULL && *send_mail_box->MailAddress != TEXT('\0')) {
+	if (send_mail_box->UseReplyToForFrom == 1
+		&& tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
+		FromAddress = tpMailItem->ReplyTo;
+	} else {
+		FromAddress = send_mail_box->MailAddress;
+	}
+	if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
 		len = lstrlen(TEXT(" <>"));
 		p = NULL;
 		// ユーザ名の設定
@@ -538,7 +546,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 				len += lstrlen(p);
 			}
 		}
-		len += lstrlen(send_mail_box->MailAddress);
+		len += lstrlen(FromAddress);
 
 		// Fromの作成と送信
 		tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
@@ -548,7 +556,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 				r = str_join_t(r, p, TEXT(" "), (TCHAR *)-1);
 			}
 
-			str_join_t(r, TEXT("<"), send_mail_box->MailAddress, TEXT(">"), (TCHAR *)-1);
+			str_join_t(r, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
 			if (send_mime_header(soc, tpMailItem, TEXT(HEAD_FROM), tpMailItem->From, TRUE, ErrStr) == FALSE) {
 				return FALSE;
 			}
@@ -576,14 +584,10 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		return FALSE;
 	}
 	// Reply-To
-	if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
+	if (send_mail_box->UseReplyToForFrom == 0
+		&& tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
 		// メールに設定されている Reply-To
 		if (send_mime_header(soc, tpMailItem, TEXT(HEAD_REPLYTO), tpMailItem->ReplyTo, TRUE, ErrStr) == FALSE) {
-			return FALSE;
-		}
-	} else {
-		// メールボックスに設定されている Reply-To
-		if (send_mime_header(soc, tpMailItem, TEXT(HEAD_REPLYTO), send_mail_box->ReplyTo, TRUE, ErrStr) == FALSE) {
 			return FALSE;
 		}
 	}
@@ -613,7 +617,14 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	}
 	// 本文のエンコード
 	if (tpMailItem->BodyCharset != NULL) {
-		send_body = alloc_copy(tpMailItem->Body);
+		if (tpMailItem->Body == NULL) {
+			send_body = (char *)mem_alloc(sizeof(char));
+			if (send_body != NULL) {
+				*send_body = '\0';
+			}
+		} else {
+			send_body = alloc_copy(tpMailItem->Body);
+		}
 		MIME_create_encode_header(tpMailItem->BodyCharset, tpMailItem->BodyEncoding, ctype, enc_type);
 	} else {
 #ifdef UNICODE
@@ -805,7 +816,6 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
 		mem_free(&send_body);
 		send_body = NULL;
-		//encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}
@@ -849,17 +859,16 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 
 	// format the date only if we get this far 
+	mem_free(&tpMailItem->FmtDate);
 #ifdef UNICODE
 	din = alloc_tchar_to_char(tpMailItem->Date);
 	dout = (char *)mem_alloc(BUF_SIZE);
 	if (din != NULL && dout != NULL) {
 		DateConv(din, dout, FALSE);
 		tpMailItem->FmtDate = alloc_char_to_tchar(dout);
-		mem_free(&din);
-		mem_free(&dout);
-	} else {
-		tpMailItem->FmtDate = NULL;
 	}
+	mem_free(&din);
+	mem_free(&dout);
 #else
 	DateConv(tpMailItem->Date, buf, FALSE);
 	tpMailItem->FmtDate = alloc_copy(buf);
@@ -1471,6 +1480,11 @@ BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX
 	ret = send_mail_proc(hWnd, soc, buf, ErrStr, send_mail_item, ShowFlag);
 	if (ret == FALSE) {
 		send_buf(soc, CMD_QUIT"\r\n");
+		if (hWnd != NULL) {
+			//In status bar information of error indicatory
+			SetStatusTextT(hWnd, STR_ERR_SOCK_SEND, 1);
+		}
+		if (op.SocLog > 0) log_save(AppDir, LOG_FILE, STR_ERR_SOCK_SEND);
 		smtp_set_error(hWnd);
 	}
 	return ret;
@@ -1512,6 +1526,7 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 		&send_mail_box->SmtpSSLInfo,
 		ErrStr);
 	if (soc == -1) {
+		send_mail_box->SmtpIP = 0;
 		return -1;
 	}
 	return soc;
@@ -1531,6 +1546,7 @@ void smtp_set_error(HWND hWnd)
 		return;
 	}
 	send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
+	(MailBox + MAILBOX_SEND)->NeedsSave |= MARKS_CHANGED;
 
 	if (SelBox == MAILBOX_SEND) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);

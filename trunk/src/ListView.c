@@ -204,17 +204,32 @@ int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp,
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt)
 {
 	TCHAR buf[10][BUF_SIZE];
-	int i = 0;
+	int ItemCnt, i = 0;
+	long Lptr;
 
+	if (ColCnt > 9) {
+		ColCnt = 9;
+#ifdef _DEBUG
+		ErrorMessage(NULL, TEXT("Programming Error!"));
+#endif
+	}
+
+	ItemCnt = ListView_GetItemCount(hListView) - 1;
 	for (i = 0; i < ColCnt; i++) {
 		*(*(buf + i)) = TEXT('\0');
 		ListView_GetItemText(hListView, SelectItem, i, *(buf + i), BUF_SIZE - 1);
 	}
+	Lptr = ListView_GetlParam(hListView, SelectItem);
 	ListView_DeleteItem(hListView, SelectItem);
 
 	SelectItem = SelectItem + Move;
+	if (SelectItem < 0) {
+		SelectItem = 0;
+	} else if (SelectItem >= ItemCnt) {
+		SelectItem = ItemCnt;
+	}
 
-	ListView_InsertItemEx(hListView, *buf, BUF_SIZE, 0, 0, SelectItem);
+	ListView_InsertItemEx(hListView, *buf, BUF_SIZE, 0, Lptr, SelectItem);
 	for (i = 1; i < ColCnt; i++) {
 		ListView_SetItemText(hListView, SelectItem, i, *(buf + i));
 	}
@@ -237,7 +252,7 @@ TCHAR *ListView_GetSelStringList(HWND hListView)
 	len = 0;
 	while ((SelectItem = ListView_GetNextItem(hListView, SelectItem, LVNI_SELECTED)) != -1) {
 		*buf = TEXT('\0');
-		ListView_GetItemText(hListView, SelectItem, 0, buf, BUF_SIZE - 1);
+		ListView_GetItemText(hListView, SelectItem, 1, buf, BUF_SIZE - 1);
 		len += lstrlen(buf) + 2;
 	}
 
@@ -252,7 +267,7 @@ TCHAR *ListView_GetSelStringList(HWND hListView)
 			*(p++) = TEXT(',');
 			*(p++) = TEXT(' ');
 		}
-		ListView_GetItemText(hListView, SelectItem, 0, p, BUF_SIZE - 1);
+		ListView_GetItemText(hListView, SelectItem, 1, p, BUF_SIZE - 1);
 		p += lstrlen(p);
 	}
 	*p = TEXT('\0');
@@ -442,23 +457,7 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 		} else {
 			lvi.state = INDEXTOOVERLAYMASK(tpMailItem->ReFwd); // GJC
 		}
-		switch (tpMailItem->Priority)
-		{
-			case 5:  // LOW
-			case 4:
-				state = 2 + 3*tpMailItem->Multipart;
-				break;
-
-			case 1:  // HIGH
-			case 2:
-				state = 1 + 3*tpMailItem->Multipart;
-				break;
-
-			case 3:  // NORMAL
-			default:
-				state = 0 + 3*tpMailItem->Multipart;
-				break;
-		}
+		state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 		lvi.state |= INDEXTOSTATEIMAGEMASK(state);
 
 		if (tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN &&
@@ -720,6 +719,68 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*
+ * AddrCompareFunc - address list sort comparison
+ */
+int CALLBACK AddrCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	TCHAR *wbuf1, *wbuf2;
+	int ret, sfg, ghed;
+	int len1 = 0, len2 = 0;
+	BOOL NumFlag = FALSE;
+
+	sfg = (lParamSort < 0) ? 1 : 0;	//Ascending order / descending order
+	ghed = ABS(lParamSort);		//Sorts the header
+
+	if (lParam1 == 0 || lParam2 == 0) {
+		return 0;
+	}
+
+	wbuf1 = TEXT("\0");
+	wbuf2 = TEXT("\0");
+
+	switch (ghed) {
+	case 1:
+		if (((ADDRESSITEM *)lParam1)->MailAddress != NULL) {
+			wbuf1 = ((ADDRESSITEM *)lParam1)->MailAddress;
+			if ((*wbuf1 == TEXT('<') || *wbuf1 == TEXT('"')) && *(wbuf1+1) != TEXT('\0')) {
+				wbuf1++;
+			}
+		}
+		if (((ADDRESSITEM *)lParam2)->MailAddress != NULL) {
+			wbuf2 = ((ADDRESSITEM *)lParam2)->MailAddress;
+			if ((*wbuf2 == TEXT('<') || *wbuf2 == TEXT('"')) && *(wbuf2+1) != TEXT('\0')) {
+				wbuf2++;
+			}
+		}
+		break;
+
+	case 2:
+		if (((ADDRESSITEM *)lParam1)->Comment != NULL)
+			wbuf1 = ((ADDRESSITEM *)lParam1)->Comment;
+		if (((ADDRESSITEM *)lParam2)->Comment != NULL)
+			wbuf2 = ((ADDRESSITEM *)lParam2)->Comment;
+		break;
+
+	case 3:
+		if (((ADDRESSITEM *)lParam1)->Group != NULL)
+			wbuf1 = ((ADDRESSITEM *)lParam1)->Group;
+		if (((ADDRESSITEM *)lParam2)->Group != NULL)
+			wbuf2 = ((ADDRESSITEM *)lParam2)->Group;
+		break;
+
+	//Number
+	case 0:
+		len1 = ((ADDRESSITEM *)lParam1)->Num;
+		len2 = ((ADDRESSITEM *)lParam2)->Num;
+		NumFlag = TRUE;
+		break;
+	}
+
+	ret = (NumFlag == FALSE) ? lstrcmpi(wbuf1, wbuf2) : (len1 - len2);
+	return (((ret < 0 && sfg == 1) || (ret > 0 && sfg == 0)) ? 1 : -1);
+}
+
+/*
  * ListView_NotifyProc - リストビューイベント
  */
 LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
@@ -762,5 +823,30 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 		return SendMessage(hWnd, WM_LV_EVENT, CForm->code, lParam);
 	}
 	return FALSE;
+}
+
+int ListView_ComputeState(int Priority, int Multipart)
+{
+	int state;
+	switch (Priority) {
+		case 4:  // LOW
+		case 5:
+			state = 2;
+			break;
+		case 1:  // HIGH
+		case 2:
+			state = 1;
+			break;
+		case 3:  // NORMAL
+		default:
+			state = 0;
+			break;
+	}
+	if (Multipart == MULTIPART_HTML) {
+		state += 3;
+	} else if (Multipart != MULTIPART_NONE) {
+		state += 6;
+	}
+	return state;
 }
 /* End of source */
