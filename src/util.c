@@ -29,13 +29,8 @@
 #define MAILADDR_END		3
 #define COMMENT_END			4
 
-#define DEF_TIME_ZONE		900
-
 #define NULLCHECK_STRLEN(m)	((m != NULL) ? lstrlen(m) : 0)
-#define is_alnum_wrap(c)		((c >= TEXT('a') && c <= TEXT('z')) || \
-								(c >= TEXT('A') && c <= TEXT('Z')) || \
-								c == TEXT('\'') || \
-								(c >= TEXT('0') && c <= TEXT('9')))
+#define is_alnum_wrap(c)	(c >= TEXT('!') && c <= TEXT('~'))
 
 /* Global Variables */
 extern OPTION op;
@@ -443,11 +438,10 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
 	int f = 1;
 
 	if (sTime == NULL || tmz == -1) {
-		// タイムゾーンの取得
-		tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-		tmz = tmz * 60 / 100;
-
-		if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
+		if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+			tmz = _ttoi(op.TimeZone);
+			tmz = (tmz / 100) * 60 + tmz - (tmz / 100) * 100;
+		} else {
 			ret = GetTimeZoneInformation(&tmzi);
 			if (ret != 0xFFFFFFFF) {
 				switch (ret) {
@@ -662,7 +656,7 @@ static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 /*
  * DateConv - 日付形式の変換を行う (RFC 822, RFC 2822)
  */
-int DateConv(char *buf, char *ret)
+int DateConv(char *buf, char *ret, BOOL for_sort)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -689,15 +683,26 @@ int DateConv(char *buf, char *ret)
 		return -1;
 	}
 
-	fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
-	if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
-	}
-	fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
-	if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
-		tstrcpy(ret, buf);
-		return -1;
+	if (for_sort) {
+		if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+	} else {
+		fmt = (op.DateFormat != NULL && *op.DateFormat != TEXT('\0')) ? op.DateFormat : NULL;
+		if (GetDateFormat(0, 0, &gTime, fmt, fDay, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
+		fmt = (op.TimeFormat != NULL && *op.TimeFormat != TEXT('\0')) ? op.TimeFormat : NULL;
+		if (GetTimeFormat(0, 0, &gTime, fmt, fTime, BUF_SIZE - 1) == 0) {
+			tstrcpy(ret, buf);
+			return -1;
+		}
 	}
 
 #ifdef UNICODE
@@ -710,9 +715,9 @@ int DateConv(char *buf, char *ret)
 }
 
 /*
- * SortDateConv - ソート用の日付形式変換を行う
+ * DateUnConv - ソート用の日付形式変換を行う
  */
-int SortDateConv(char *buf, char *ret)
+int DateUnConv(char *buf, char *ret)
 {
 	SYSTEMTIME gTime;
 	TCHAR fDay[BUF_SIZE];
@@ -820,12 +825,15 @@ int SortDateConv(char *buf, char *ret)
 		tstrcpy(ret, buf);
 		return -1;
 	}
+	if (gTime.wYear < 70) {
+		gTime.wYear += 2000;
+	}
 
-	if (GetDateFormat(0, 0, &gTime, TEXT("yyyyMMdd"), fDay, BUF_SIZE - 1) == 0) {
+	if (GetDateFormat(0, 0, &gTime, TEXT("ddd, dd MMM yyyy "), fDay, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
-	if (GetTimeFormat(0, 0, &gTime, TEXT("HHmm"), fTime, BUF_SIZE - 1) == 0) {
+	if (GetTimeFormat(0, 0, &gTime, TEXT("HH:mm:ss"), fTime, BUF_SIZE - 1) == 0) {
 		tstrcpy(ret, buf);
 		return -1;
 	}
@@ -861,14 +869,15 @@ void GetTimeString(TCHAR *buf)
 
 	GetLocalTime(&st);
 
-	tmz = (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) ? _ttoi(op.TimeZone) : DEF_TIME_ZONE;
-	if (tmz < 0) {
-		tmz *= -1;
-		c = TEXT('-');
+	if (op.TimeZone != NULL && *op.TimeZone != TEXT('\0')) {
+		tmz = _ttoi(op.TimeZone);
+		if (tmz < 0) {
+			tmz *= -1;
+			c = TEXT('-');
+		} else {
+			c = TEXT('+');
+		}
 	} else {
-		c = TEXT('+');
-	}
-	if (op.TimeZone == NULL || *op.TimeZone == TEXT('\0')) {
 		ret = GetTimeZoneInformation(&tmzi);
 		if (ret != 0xFFFFFFFF) {
 			switch (ret) {
@@ -890,7 +899,7 @@ void GetTimeString(TCHAR *buf)
 			}
 			tmz = (tmzi.Bias / 60) * 100 + tmzi.Bias % 60;
 		}
-	}
+	} 
 	wsprintf(buf, TEXT("%s, %d %s %d %02d:%02d:%02d %c%04d"), Week[st.wDayOfWeek],
 		st.wDay, Month[st.wMonth - 1], st.wYear, st.wHour, st.wMinute, st.wSecond, c, tmz);
 }
@@ -1043,7 +1052,7 @@ void EncodeCtrlChar(TCHAR *buf, TCHAR *ret)
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1085,7 +1094,7 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1155,7 +1164,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem)
 	}
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			ret += 2;
 			continue;
@@ -1218,7 +1227,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem)
 	}
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1343,24 +1352,24 @@ TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr)
 
 /*
  * SetDotSize - ピリオドから始まる行の先頭にピリオドを付加するためのサイズの取得
- *	(行頭の "From:" は ">From:" に変換)
+ *	(行頭の "From" は ">From" に変換)
  */
 
 int SetDotSize(TCHAR *buf)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
+#define FROM_LEN		5		// lstrlen(TEXT("From "))
+#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nFrom "))
 	TCHAR *p;
 	int len = 0;
 
 	p = buf;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
+	if (str_cmp_n_t(p, TEXT("From "), FROM_LEN) == 0) {
 		len++;
 	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			len++;
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
+		} else if (str_cmp_n_t(p, TEXT("\r\nFrom "), CRLF_FROM_LEN) == 0) {
 			len++;
 		}
 		len++;
@@ -1370,25 +1379,25 @@ int SetDotSize(TCHAR *buf)
 
 /*
  * SetDot - ピリオドから始まる行の先頭にピリオドを付加する
- *	(行頭の "From:" は ">From:" に変換)
+ *	(行頭の "From" は ">From" に変換)
  */
 
 void SetDot(TCHAR *buf, TCHAR *ret)
 {
-#define FROM_LEN		5		// lstrlen(TEXT("from:"))
-#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nfrom:"))
+#define FROM_LEN		5		// lstrlen(TEXT("From "))
+#define CRLF_FROM_LEN	7		// lstrlen(TEXT("\r\nFrom "))
 	TCHAR *p, *r;
 
 	p = buf;
 	r = ret;
-	if (str_cmp_ni_t(p, TEXT("from:"), FROM_LEN) == 0) {
+	if (str_cmp_n_t(p, TEXT("From "), FROM_LEN) == 0) {
 		*(r++) = TEXT('>');
 	}
 	for (; *p != TEXT('\0'); p++) {
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			*(r++) = TEXT('.');
 
-		} else if (str_cmp_ni_t(p, TEXT("\r\nfrom:"), CRLF_FROM_LEN) == 0) {
+		} else if (str_cmp_n_t(p, TEXT("\r\nFrom "), CRLF_FROM_LEN) == 0) {
 			*(r++) = *(p++);
 			*(r++) = *(p++);
 			*(r++) = TEXT('>');
@@ -1489,7 +1498,7 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 #endif
 			TopFlag = FALSE;
 			EndFlag = FALSE;
@@ -1552,7 +1561,7 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 				((cnt + 1) == BreakCnt && TopFlag == TRUE))) {
 				cnt = 0;
 				ret += 2;
-				while (*p == TEXT(' ')) {
+				while (*p == TEXT(' ')) { // GJC strip leading spaces
 					p++;
 				}
 			}
@@ -1590,7 +1599,7 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 #endif
 			// 2バイトコード
 			TopFlag = FALSE;
@@ -1775,7 +1784,7 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			continue;
 		}
@@ -1812,7 +1821,7 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, BOOL quote)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1893,7 +1902,7 @@ TCHAR *GetMailString(TCHAR *buf, TCHAR *ret)
 	for (p = buf; *p == TEXT(' '); p++);
 	for (r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -1950,7 +1959,7 @@ void SetUserName(TCHAR *buf, TCHAR *ret)
 
 	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;
@@ -2031,7 +2040,7 @@ TCHAR *GetFileNameString(TCHAR *p)
 
 	for (fname = p; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			continue;
 		}
@@ -2162,7 +2171,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
 		// ファイル名から Content type を取得
 		for (r = p = Filename; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 				p++;
 				continue;
 			}
@@ -2193,7 +2202,7 @@ static int GetCommandLineSize(TCHAR *buf, TCHAR *filename)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			p++;
 			ret += 2;
 			continue;
@@ -2250,7 +2259,7 @@ TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag)
 
 	for (p = buf; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
 			*(r++) = *(p++);
 			*(r++) = *p;
 			continue;

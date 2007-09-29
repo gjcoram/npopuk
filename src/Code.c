@@ -19,7 +19,7 @@
 /* Local Function Prototypes */
 
 /*
- * base64_decode - BASE64‚ÌƒfƒR[ƒh (RFC 2045)
+ * base64_decode - BASE64 (RFC 2045)
  */
 char *base64_decode(char *buf, char *ret)
 {
@@ -93,7 +93,7 @@ char *base64_decode(char *buf, char *ret)
 }
 
 /*
- * base64_encode - BASE64‚ÌƒGƒ“ƒR[ƒh (RFC 2045)
+ * base64_encode - BASE64 (RFC 2045)
  */
 void base64_encode(char *buf, char *ret, int size)
 {
@@ -154,7 +154,7 @@ void base64_encode(char *buf, char *ret, int size)
 }
 
 /*
- * base64_encode_t - BASE64‚ÌƒGƒ“ƒR[ƒh (UNICODE)
+ * base64_encode_t - BASE64 (UNICODE)
  */
 #ifdef UNICODE
 void base64_encode_t(TCHAR *buf, TCHAR *ret, int size)
@@ -163,23 +163,25 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size)
 	char *cret;
 	int len;
 
-	// TCHAR ‚©‚ç char ‚É•ÏŠ·
+	//TCHAR conversion to char
 	b64str = alloc_tchar_to_char(buf);
 	if (b64str == NULL) {
 		*ret = TEXT('\0');
 		return;
 	}
-	// •ÏŠ·‚µ‚½•¶š—ñ‚ğŠi”[‚·‚éƒoƒbƒtƒ@
+
+	//From buffer
 	cret = (char *)mem_alloc(tstrlen(b64str) * 2 + 4);
 	if (cret == NULL) {
 		mem_free(&b64str);
 		*ret = TEXT('\0');
 		return;
 	}
-	// Base64ƒGƒ“ƒR[ƒh
+	//Base64 encoding
 	base64_encode(b64str, cret, 0);
 	mem_free(&b64str);
-	// char ‚©‚ç TCHAR ‚É•ÏŠ·
+
+	//char which houses the character string which it converts conversion to TCHAR
 	len = char_to_tchar_size(cret);
 	char_to_tchar(cret, ret, len);
 	mem_free(&cret);
@@ -187,7 +189,7 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size)
 #endif
 
 /*
- * hex_val - 16i•¶š—ñ‚ğ”’l‚É•ÏŠ·
+ * hex_val - 16
  */
 static int hex_val(int c)
 {
@@ -198,7 +200,7 @@ static int hex_val(int c)
 }
 
 /*
- * QuotedPrintable_decode - Quoted Printable‚ÌƒfƒR[ƒh (RFC 2045)
+ * QuotedPrintable_decode - Quoted Printable‚ (RFC 2045)
  */
 char *QuotedPrintable_decode(char *buf, char *ret)
 {
@@ -229,9 +231,10 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 }
 
 /*
- * QuotedPrintable_encode - Quoted Printable‚ÌƒGƒ“ƒR[ƒh (RFC 2045)
+ * QuotedPrintable_encode - Quoted Printable (RFC 2045)
  */
 static const char cHex[] = "0123456789ABCDEF";
+
 void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body)
 {
 	unsigned char *p;
@@ -283,7 +286,7 @@ void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const
 }
 
 /*
- * URL_decode - URL encoding ƒfƒR[ƒh (RFC 2396)
+ * URL_decode - URL encoding (RFC 2396)
  */
 char *URL_decode(char *buf, char *ret)
 {
@@ -308,7 +311,7 @@ char *URL_decode(char *buf, char *ret)
 }
 
 /*
- * URL_encode - URL encoding ƒGƒ“ƒR[ƒh (RFC 2396)
+ * URL_encode - URL encoding (RFC 2396)
  */
 void URL_encode(unsigned char *buf, char *ret)
 {

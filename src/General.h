@@ -35,7 +35,20 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOP Ver 1.0.9")
+#define APP_NAME_VERSION		TEXT("nPOP Ver 1.0.8 UK Fix-4")
+#define APP_NAME				TEXT("nPOP")
+////////////////////// MRP ////////////////////
+#define HIGH_PRIORITY			TEXT("High")
+#define NORMAL_PRIORITY			TEXT("Normal")
+#define LOW_PRIORITY			TEXT("Low")
+
+#define PRIORITY_NUMBER1		TEXT("1")
+#define PRIORITY_NUMBER2		TEXT("2")
+#define PRIORITY_NUMBER3		TEXT("3")
+#define PRIORITY_NUMBER4		TEXT("4")
+#define PRIORITY_NUMBER5		TEXT("5")
+////////////////////// --- ////////////////////
+
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
@@ -68,23 +81,23 @@
 #define RAS_WAIT_EVENT			TEXT("RAS_WAIT_EVENT")
 #define ID_RASWAIT_TIMER		10
 
-#define BUF_SIZE				256					// バッファサイズ
+#define BUF_SIZE				256					//of process Buffer size
 #define MAXSIZE					32768
 #define EDITMAXSIZE				30000
 
-#define SICONSIZE				16					// 小さいアイコンのサイズ
-#define TB_ICONSIZE				16					// ツールバーのボタンサイズ
+#define SICONSIZE				16					//Size
+#define TB_ICONSIZE				16					//of small idea contest Column several
 
 #define TABSTOPLEN				8					// TAB Stop
 
-#define LV_COL_CNT				4					// ListViewのカラム数
+#define LV_COL_CNT				4					//ListView of tool bar Fixed mailbox
 #define AD_COL_CNT				2					// ListView Addressbook
 
-#define MAILBOX_SAVE			0					// 固定メールボックス
+#define MAILBOX_SAVE			0					//of button size
 #define MAILBOX_SEND			1
 #define MAILBOX_USER			2
 
-#define IDC_COMBO				400					// コントロールID
+#define IDC_COMBO				400					//Control ID
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
 
@@ -92,39 +105,41 @@
 #define LVS_EX_INFOTIP			0x400
 #endif
 
-#define WM_SOCK_SELECT			(WM_APP + 1)		// ソケットイベント
-#define WM_SOCK_RECV			(WM_APP + 2)		// ソケット受信イベント
-#define WM_LV_EVENT				(WM_APP + 3)		// リストビューイベント
-#define WM_STATUSTEXT			(WM_APP + 4)		// ステータスバーへ文字列設定
-#define WM_SHOWLASTWINDOW		(WM_APP + 5)		// ウィンドウ表示
-#define WM_SMTP_SENDMAIL		(WM_APP + 6)		// メール送信
-#define WM_ENDCLOSE				(WM_APP + 7)		// ウィンドウの終了
-#define WM_INITTRAYICON			(WM_APP + 8)		// タスクトレイアイコンの初期化
+#define WM_SOCK_SELECT			(WM_APP + 1)		//Socket event
+#define WM_SOCK_RECV			(WM_APP + 2)		//Socket reception event
+#define WM_LV_EVENT				(WM_APP + 3)		//List view event
+#define WM_STATUSTEXT			(WM_APP + 4)		//To status bar character string setting
+#define WM_SHOWLASTWINDOW		(WM_APP + 5)		//Window indicatory
+#define WM_SMTP_SENDMAIL		(WM_APP + 6)		//Mail transmission
+#define WM_ENDCLOSE				(WM_APP + 7)		//End
+#define WM_INITTRAYICON			(WM_APP + 8)		//of window Initialization
 
-#define WM_SHOWDIALOG			(WM_APP + 9)		// メール到着メッセージ表示
-#define WM_ENDDIALOG			(WM_APP + 10)		// メール到着メッセージ終了
+#define WM_SHOWDIALOG			(WM_APP + 9)		//of task tray idea contest Mail arrival message indicatory
+#define WM_ENDDIALOG			(WM_APP + 10)		//Mail arrival message end
 
 #define WM_CHANGE_MARK			(WM_APP + 11)
 
-#define EDIT_OPEN				0					// 送信メール編集のタイプ
+#define EDIT_OPEN				0					//Type
 #define EDIT_NEW				1
 #define EDIT_REPLY				2
+#define EDIT_REPLYALL			3
+#define EDIT_FORWARD			4					// Added PHH 4-Oct-2003
 
-#define EDIT_NONEDIT			0					// 送信メール編集の戻り値
+#define EDIT_NONEDIT			0					//of transmission mail compilation Return value
 #define EDIT_INSIDEEDIT			1
 #define EDIT_OUTSIDEEDIT		2
 
-#define SELECT_MEM_ERROR		-2					// ソケット処理の戻り値
+#define SELECT_MEM_ERROR		-2					//of transmission mail compilation Return value
 #define SELECT_SOC_ERROR		-1
 #define SELECT_SOC_CLOSE		0
 #define SELECT_SOC_SUCCEED		1
 #define SELECT_SOC_NODATA		2
 
-#define SORT_NO					100					// ソートフラグ
+#define SORT_NO					100					//of socket processing Sort flag
 #define SORT_IOCN				101
 #define SORT_THREAD				102
 
-#define POP_ERR					-2					// POP3コマンドフラグ
+#define POP_ERR					-2					//pop3 command flag
 #define POP_QUIT				-1
 #define POP_START				0
 #define POP_STARTTLS			1
@@ -140,7 +155,7 @@
 #define POP_RETR				11
 #define POP_DELE				12
 
-#define SMTP_ERR				POP_ERR				// SMTPコマンドフラグ
+#define SMTP_ERR				POP_ERR				//smtp command flag
 #define SMTP_QUIT				POP_QUIT
 #define SMTP_START				POP_START
 #define SMTP_EHLO				1
@@ -157,7 +172,7 @@
 #define SMTP_NEXTSEND			12
 #define SMTP_SENDEND			13
 
-#define ICON_NON				0					// アイコン状態
+#define ICON_NON				0					//Idea contest state
 #define ICON_MAIL				1
 #define ICON_READ				2
 #define ICON_DOWN				3
@@ -167,14 +182,14 @@
 #define ICON_ERROR				7
 #define ICON_NEW				8
 
-#define FILTER_UNRECV			1					// フィルタタイプ
+#define FILTER_UNRECV			1					//Filter type
 #define FILTER_RECV				2
 #define FILTER_DOWNLOADMARK		4
 #define FILTER_DELETEMARK		8
 #define FILTER_READICON			16
 #define FILTER_SAVE				32
 
-#define MP_ERROR_FILE			-2					// マルチパート処理の戻り値
+#define MP_ERROR_FILE			-2					//Is not the return value
 #define MP_ERROR_ALLOC			-1
 #define MP_NO_ATTACH			0
 #define MP_ATTACH				1
@@ -202,6 +217,15 @@
 #define HEAD_X_DOWNLOAD			"X-Download:"
 #define HEAD_X_MAILBOX			"X-MailBox:"
 #define HEAD_X_ATTACH			"X-File:"
+#define HEAD_X_HASHEADER		"X-HasHeader:"
+////////////// MRP ///////////////////////
+#define HEAD_X_PRIORITY			"X-Priority:"
+#define HEAD_X_PRIORITY2		"Importance:"
+
+#define HEAD_DELIVERY			"Return-Receipt-To:"
+#define HEAD_READ1				"X-Confirm-Reading-To:"
+#define HEAD_READ2				"Disposition-Notification-To:"
+////////////// --- ///////////////////////
 #define HEAD_X_HEADCHARSET		"X-Header-Charset:"
 #define HEAD_X_HEADENCODE		"X-Header-Encodeing:"
 #define HEAD_X_BODYCHARSET		"X-Body-Charset:"
@@ -233,7 +257,7 @@
 
 /* Struct */
 typedef struct _OPTION {
-	int StertPass;
+	int StartPass;
 	int ShowPass;
 	TCHAR *Password;
 
@@ -276,7 +300,7 @@ typedef struct _OPTION {
 	int WordBreakFlag;
 	int EditWordBreakFlag;
 	int ViewShowDate;
-	int MstchCase;
+	int MatchCase;
 	int AllFind;
 	int SubjectFind;
 
@@ -285,6 +309,8 @@ typedef struct _OPTION {
 	int SendMessageId;
 	int SendDate;
 	int SelectSendBox;
+	int AutoMarkSend;	// Added PHH 4-10-2003
+	int ExpertMode;		// Added PHH 4-10-2003
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
 
@@ -297,11 +323,15 @@ typedef struct _OPTION {
 	int BodyEncoding;
 
 	int AutoQuotation;
+	int FwdQuotation;
+	int SignForward;
 	TCHAR *QuotationChar;
 	int WordBreakSize;
 	int QuotationBreak;
 	TCHAR *ReSubject;
+	TCHAR *FwdSubject;		// Added PHH 4-10-2003
 	TCHAR *ReHeader;
+	TCHAR *AltReplyTo;
 	TCHAR *Bura;
 	TCHAR *Oida;
 	TCHAR *sBura;
@@ -313,9 +343,9 @@ typedef struct _OPTION {
 	TCHAR *DateFormat;
 	TCHAR *TimeFormat;
 
-	int ShowNewMailMessgae;
+	int ShowNewMailMessage;
 	int ShowNoMailMessage;
-	int ActiveNewMailMessgae;
+	int ActiveNewMailMessage;
 
 	int NewMailSound;
 	TCHAR *NewMailSoundFile;
@@ -358,6 +388,11 @@ typedef struct _OPTION {
 	int RasWaitSec;
 	struct _RASINFO **RasInfo;
 	int RasInfoCnt;
+#ifdef _WIN32_WCE_PPC
+///////////// MRP /////////////////////
+int	UsePOOMAddressBook;
+///////////// --- /////////////////////
+#endif
 } OPTION;
 
 typedef struct _SSL_INFO {
@@ -442,6 +477,8 @@ typedef struct _MAILITEM {
 	BOOL New;
 	BOOL Download;
 	BOOL Multipart;
+	BOOL HasHeader;
+	BOOL DefReplyTo;
 	HWND hEditWnd;
 	HANDLE hProcess;
 
@@ -450,6 +487,7 @@ typedef struct _MAILITEM {
 	TCHAR *Cc;
 	TCHAR *Bcc;
 	TCHAR *Date;
+	TCHAR *FmtDate;
 	TCHAR *Size;
 	TCHAR *Subject;
 	TCHAR *ReplyTo;
@@ -463,10 +501,16 @@ typedef struct _MAILITEM {
 
 	TCHAR *MailBox;
 	TCHAR *Attach;
+	TCHAR *FwdAttach;
 	TCHAR *HeadCharset;
 	int HeadEncoding;
 	TCHAR *BodyCharset;
-	int BodyEncoding;
+	int BodyEncoding;	
+	///////////////// MRP ////////////////////
+	int Priority;
+	int ReadReceipt;
+	int DeliveryReceipt;
+	///////////////// --- ////////////////////
 } MAILITEM;
 
 typedef struct _FILTER {
@@ -528,6 +572,9 @@ void free_ssl(void);
 BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 void pop3_free(void);
+#ifdef _WIN32_WCE_PPC
+HWND findTodayPlugin(WCHAR *wTodayItem);
+#endif
 
 // Smtp
 void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
@@ -600,7 +647,7 @@ BOOL mailbox_unread_check(int index, BOOL NewFlag);
 int mailbox_next_unread(int index, int endindex);
 void mailbox_select(HWND hWnd, int Sel);
 int mailbox_name_to_index(TCHAR *Name);
-void filer_free(MAILBOX *tpMailBox);
+void filter_free(MAILBOX *tpMailBox);
 void mailbox_free(MAILBOX *tpMailBox);
 
 // util
@@ -635,8 +682,8 @@ int GetReferencesSize(char *p, BOOL Flag);
 BOOL ConvReferences(char *p, char *r, BOOL Flag);
 
 void DateAdd(SYSTEMTIME *sTime, char *tz);
-int DateConv(char *buf, char *ret);
-int SortDateConv(char *buf, char *ret);
+int DateConv(char *buf, char *ret, BOOL for_sort);
+int DateUnConv(char *buf, char *ret);
 void GetTimeString(TCHAR *buf);
 void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decode);
 void EncodeCtrlChar(TCHAR *buf, TCHAR *ret);
@@ -680,8 +727,9 @@ BOOL CALLBACK enum_windows_proc(const HWND hWnd, const LPARAM lParam);
 #endif
 BOOL Edit_InitApplication(HINSTANCE hInstance);
 int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
+void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
-					   MAILITEM *tpReMailItem, int OpenFlag, int ReplyFag);
+					   MAILITEM *tpReMailItem, int OpenFlag);
 
 // Option
 void AllocGetText(HWND hEdit, TCHAR **buf);
@@ -698,6 +746,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
@@ -731,7 +780,7 @@ void SetSocStatusText(HWND hWnd, char *buf);
 #else
 #define SetSocStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf)
 #endif
-void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox);
+void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify);
 void SetStatusRecvLen(HWND hWnd, int len, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
@@ -740,6 +789,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag);
 void SetMailMenu(HWND hWnd);
 void SetNoReadCntTitle(HWND hWnd);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
+int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
 
 #endif
 /* End of source */

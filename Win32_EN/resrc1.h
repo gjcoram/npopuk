@@ -61,6 +61,21 @@
 #define IDD_DIALOG_OPTION_RECV_HPC      187
 #define IDD_DIALOG_SETSSL               189
 #define IDD_DIALOG_ENCODE               191
+#define IDI_ICON_CLIP_LOW               192	 
+#define IDI_ICON_CLIP_HIGH              193
+#define IDI_ICON_LOW                    194
+#define IDI_ICON_HIGH                   195
+#define IDD_DIALOG_ABOUT                196
+#define IDC_CHECK_SORTORDER             197
+#define IDC_SORTITEM1                   198
+#define IDC_SORTITEM2                   199
+#define IDC_SORTITEM3                   200
+#define IDC_SORTITEM4                   201
+#define IDC_STATIC_SORT                 202
+#define IDC_AUTOSORT1                   203
+#define IDC_AUTOSORT2                   204
+#define IDC_AUTOSORT3                   205
+
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
 #define IDC_EDIT_TITLE                  1003
@@ -179,9 +194,20 @@
 #define IDC_BUTTON_ENCODE               1092
 #define IDC_COMBO_CHARSET_H             1093
 #define IDC_COMBO_ENCODE_H              1094
-#define IDC_COMBO_CHARSET               1097
-#define IDC_COMBO_ENCODE                1098
-#define LVS_NOSORTHEADER                0x8000
+#define IDC_COMBO_CHARSET               1095
+#define IDC_COMBO_ENCODE                1096
+#define IDC_PRIORITY                    1097
+#define IDC_APPNAME                     1098
+#define IDC_CHECK_USEPOOM               1098
+#define IDC_CHECK_AUTOMARKSEND          1099
+#define IDC_CHECK_PARANOID              1100
+#define IDC_ABOUT_TEXT                  1101
+#define IDC_DEL                         1102
+#define IDC_READ                        1103
+#define IDC_QUOTFWD                     1200
+#define IDC_SIGNFWD                     1201
+#define IDC_FWDHEAD                     1202
+#define IDC_COMBO_REPLYTO               1203
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITE_QUIT                 40002
 #define ID_KEY_ESC                      40004
@@ -251,6 +277,8 @@
 #define ID_MENUITEM_ATTACH              40093
 #define ID_MENUITEM_FONT                40094
 #define ID_MENUITEM_ENCODE              40095
+#define ID_MENUITEM_SAVEALL             40149
+#define ID_MENUITEM_FORWARD             40150
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
