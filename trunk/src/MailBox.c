@@ -46,20 +46,19 @@ extern BOOL EndThreadSortFlag;
 extern BOOL PPCFlag;
 
 /* Local Function Prototypes */
+void mailbox_swap_files(HWND hWnd, int i, int j);
 
 /*
  * mailbox_init - メールボックスの初期化
  */
 BOOL mailbox_init(void)
 {
-
-	//Guaranty
 	MailBoxCnt = 1;
 	MailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(MailBox == NULL){
 		return FALSE;
 	}
-	//アドレス帳の確保
+
 	AddressBook = (ADDRESSBOOK *)mem_calloc(sizeof(ADDRESSBOOK));
 	if(AddressBook == NULL){
 		return FALSE;
@@ -70,23 +69,25 @@ BOOL mailbox_init(void)
 /*
  * mailbox_create - メールボックスの追加
  */
-int mailbox_create(HWND hWnd, BOOL ShowFlag, BOOL SelFlag)
+int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 {
 	MAILBOX *TmpMailBox;
-	int cnt, index;
+	int count, index;
 
 	//It adds to the list of the mailbox
 	index = MailBoxCnt;
-	cnt = MailBoxCnt + 1;
+	count = MailBoxCnt + Add;
 
-	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * count);
 	if(TmpMailBox == NULL){
 		return -1;
 	}
 
 	CopyMemory(TmpMailBox, MailBox, sizeof(MAILBOX) * MailBoxCnt);
 
+	// initialize settings only for index
 	(TmpMailBox + index)->Type = 0;
+	(TmpMailBox + index)->Loaded = 1;
 	(TmpMailBox + index)->Port = POP_PORT;
 	(TmpMailBox + index)->SmtpPort = SMTP_PORT;
 
@@ -97,7 +98,29 @@ int mailbox_create(HWND hWnd, BOOL ShowFlag, BOOL SelFlag)
 
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
-	MailBoxCnt++;
+	MailBoxCnt = count;
+
+	{
+		// check if MailBox?.dat is Filename for another mailbox
+		TCHAR defname[BUF_SIZE];
+		BOOL found = FALSE;
+		int k;
+		wsprintf(defname, TEXT("MailBox%d.dat"), index - MAILBOX_USER);
+
+		k = MAILBOX_USER;
+		while(k < MailBoxCnt) {
+			if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
+				&& lstrcmp(defname, (MailBox+k)->Filename) == 0) {
+					found = TRUE;
+					wsprintf(defname, TEXT("MailBox%d.dat"), k - MAILBOX_USER);
+					k = 0; // start over, looking for this Filename
+			}
+			k++;
+		}
+		if (found) {
+			(MailBox+index)->Filename = alloc_copy_t(defname);
+		}
+	}
 
 	if (ShowFlag == TRUE) {
 		int i;
@@ -165,7 +188,7 @@ BOOL mailbox_read(void)
 {
 	//送信箱
 	(MailBox + MAILBOX_SEND)->Name = alloc_copy_t(STR_SENDBOX_NAME);
-	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND)) == FALSE){
+	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE) == FALSE){
 		return FALSE;
 	}
 
@@ -174,6 +197,112 @@ BOOL mailbox_read(void)
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/*
+ * mailbox_load_now - dynamic loading of mailbox
+ */
+int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes)
+{
+	TCHAR msg[BUF_SIZE];
+	MAILBOX *tpMailBox = MailBox + num;
+
+	if (tpMailBox->Loaded == FALSE) {
+		TCHAR Name[BUF_SIZE];
+		if (ask && op.LazyLoadMailboxes == 3) {
+			int retval;
+			wsprintf(msg, STR_Q_LOADMAILBOX, 
+				(tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
+				? STR_MAILBOX_NONAME : tpMailBox->Name);
+			SwitchCursor(TRUE);
+			retval = MessageBox(NULL, msg, WINDOW_TITLE, MB_YESNOCANCEL);
+			if (retval == IDNO) {
+				return 0;
+			} else if (retval == IDCANCEL) {
+				return -1;
+			}
+			SwitchCursor(FALSE);
+		}
+		if (tpMailBox->Filename == NULL) {
+			wsprintf(Name, TEXT("MailBox%d.dat"), num - MAILBOX_USER);
+		} else {
+			lstrcpy(Name, tpMailBox->Filename);
+		}
+		SwitchCursor(FALSE);
+		if (file_read_mailbox(Name, tpMailBox, FALSE) == FALSE) {
+			wsprintf(msg, STR_ERR_LOADMAILBOX, Name);
+			ErrorMessage(hWnd, msg);
+			return 0;
+		}
+	}
+
+	if (do_saveboxes && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+		FILTER *tpFilter;
+		int t, j;
+		for (t = 0; t < tpMailBox->FilterCnt; t++) {
+			tpFilter = *(tpMailBox->tpFilter + t);
+			if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
+				for (j = 0; j < MailBoxCnt; j++) {
+					if ((MailBox+j)->Loaded == FALSE && (MailBox+j)->Type == MAILBOX_TYPE_SAVE
+						&& (MailBox+j)->Name != NULL && lstrcmp(tpFilter->SaveboxName, (MailBox+j)->Name) == 0) {
+						if (mailbox_load_now(hWnd, j, FALSE, FALSE) != 1) {
+							wsprintf(msg, STR_ERR_LOADMAILBOX, (MailBox+j)->Name);
+							ErrorMessage(hWnd, msg);
+							return 0;
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+	SwitchCursor(TRUE);
+	return 1;
+}
+
+/*
+ * mailbox_swap_files - exchange mailbox files (if Filename==NULL)
+ */
+void mailbox_swap_files(HWND hWnd, int i, int j)
+{
+	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
+	if ((MailBox+i)->Filename != NULL && (MailBox+j)->Filename != NULL) {
+		return;
+	}
+	if ((MailBox+i)->Filename == NULL) {
+		wsprintf(name1, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
+		if ((MailBox+j)->Filename == NULL) {
+			TCHAR *tmp_name = TEXT("$npop_tmp_mailbox.dat");
+			wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
+			if (file_rename(hWnd, name1, tmp_name) == FALSE) {
+				// rename failed, so use the current names
+				// [MAILBOX-i] in INI file is now Mailboxj.dat
+				(MailBox+i)->Filename = alloc_copy_t(name1);
+				(MailBox+j)->Filename = alloc_copy_t(name2);
+			} else {
+				// these shouldn't fail if the first rename succeeded ...
+				file_rename(hWnd, name2, name1);
+				file_rename(hWnd, tmp_name, name2);
+			}
+		} else {
+			BOOL found = FALSE;
+			int k;
+			// MailBoxi becomes MailBoxj (unless MailBoxj.dat exists)
+			wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
+			for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
+				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
+					&& lstrcmp(name2, (MailBox+k)->Filename) == 0) {
+						found = TRUE;
+						break;
+				}
+			}
+			if (found || file_rename(hWnd, name1, name2) == FALSE) {
+				(MailBox+i)->Filename = alloc_copy_t(name1);
+			}
+		}
+	} else {
+		mailbox_swap_files(hWnd, j, i);
+	}
 }
 
 /*
@@ -193,7 +322,7 @@ void mailbox_move_up(HWND hWnd)
 	if(TmpMailBox == NULL){
 		return;
 	}
-
+	mailbox_swap_files(hWnd, SelBox, SelBox-1);
 	for(i = 0; i < MailBoxCnt; i++){
 		if(SelBox == i + 1){
 			CopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(MAILBOX));
@@ -233,7 +362,7 @@ void mailbox_move_down(HWND hWnd)
 	if(TmpMailBox == NULL){
 		return;
 	}
-
+	mailbox_swap_files(hWnd, SelBox, SelBox+1);
 	for(i = 0; i < MailBoxCnt; i++){
 		if(SelBox == i){
 			CopyMemory((TmpMailBox + i), (MailBox + i + 1), sizeof(MAILBOX));
@@ -278,7 +407,7 @@ BOOL mailbox_unread_check(int index, BOOL NewFlag)
 /*
  * mailbox_next_unread - 未開封メールが存在するメールボックスのインデックスを取得
  */
-int mailbox_next_unread(int index, int endindex)
+int mailbox_next_unread(HWND hWnd, int index, int endindex)
 {
 	int j;
 
@@ -286,7 +415,19 @@ int mailbox_next_unread(int index, int endindex)
 		return -1;
 	}
 	for(j = index; j < endindex; j++){
-		if(mailbox_unread_check(j, TRUE) == TRUE){
+		if ((MailBox+j)->Loaded == FALSE) {
+			if (op.LazyLoadMailboxes == 2) {
+				continue;
+			} else {
+				int load = mailbox_load_now(hWnd, j, TRUE, FALSE);
+				if (load == 0) {
+					continue;
+				} else if (load == -1) {
+					return -1;
+				}
+			}
+		}
+		if (mailbox_unread_check(j, TRUE) == TRUE) {
 			return j;
 		}
 	}
@@ -382,12 +523,20 @@ void mailbox_select(HWND hWnd, int Sel)
 {
 	HMENU hMenu;
 	LV_COLUMN lvc;
+	int colno;
 
 	if(Sel == -1){
 		return;
 	}
+
+	if ((MailBox+Sel)->Loaded == FALSE) {
+		if (mailbox_load_now(hWnd, Sel, FALSE, FALSE) == 0) {
+			return;
+		}
+	}
+
 	SelBox = Sel;
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 
 	//Acquisition
 #ifdef _WIN32_WCE
@@ -396,10 +545,10 @@ void mailbox_select(HWND hWnd, int Sel)
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hMainMenu, MailMenuPos);
 #else
-	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos);
+	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), MailMenuPos);
 #endif
 #else
-	hMenu = GetSubMenu(GetMenu(hWnd), MailMenuPos);
+	hMenu = GetSubMenu(GetMenu(MainWnd), MailMenuPos);
 #endif
 
 	//of menu Item of the mark is deleted to reply and one for reception the
@@ -407,8 +556,9 @@ void mailbox_select(HWND hWnd, int Sel)
 	DeleteMenu(hMenu, ID_MENUITEM_ALLREMESSEGE, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
+	DeleteMenu(hMenu, ID_MENUITEM_DELATTACH, MF_BYCOMMAND);
 
-	mailbox_menu_rebuild(hWnd);
+	mailbox_menu_rebuild(MainWnd);
 
 	if(SelBox == MAILBOX_SEND){
 		//Transmission box
@@ -451,25 +601,34 @@ void mailbox_select(HWND hWnd, int Sel)
 		InsertMenu(hMenu, ID_MENUITEM_DELMARK, MF_STRING,
 			ID_MENUITEM_DOWNMARK, STR_LIST_MENU_RECVMARK);
 #endif
+		InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_STRING,
+			ID_MENUITEM_DELATTACH, STR_LIST_MENU_DELATTACH);
 		lvc.pszText = STR_LIST_LVHEAD_FROM;
 	}
 
 	//Setting
 	lvc.mask = LVCF_TEXT;
 	lvc.cchTextMax = BUF_SIZE;
-	ListView_SetColumn(GetDlgItem(hWnd, IDC_LISTVIEW), 1, &lvc);
+	if (lstrcmpi(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+		colno = 0;
+	} else {
+		colno = 1;
+	}
+	ListView_SetColumn(GetDlgItem(MainWnd, IDC_LISTVIEW), colno, &lvc);
+	lvc.pszText = STR_LIST_LVHEAD_SUBJECT;
+	ListView_SetColumn(GetDlgItem(MainWnd, IDC_LISTVIEW), (1-colno), &lvc);
 
 	LvSortFlag = SORT_NO + 1;
 	EndThreadSortFlag = FALSE;
 
 	//of list view header The release
 	SwitchCursor(FALSE);
-	ListView_ShowItem(GetDlgItem(hWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
+	ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
 	SwitchCursor(TRUE);
 
-	SetMailMenu(hWnd);
-	SetItemCntStatusText(hWnd, NULL, FALSE);
-	SetUnreadCntTitle(hWnd, FALSE);
+	SetMailMenu(MainWnd);
+	SetItemCntStatusText(MainWnd, NULL, FALSE);
+	SetUnreadCntTitle(MainWnd, FALSE);
 }
 
 /*
@@ -701,6 +860,8 @@ void mailbox_free(MAILBOX *tpMailBox)
 	}
 	//アカウント情報の解放
 	mem_free(&tpMailBox->Name);
+	mem_free(&tpMailBox->Filename);
+	mem_free(&tpMailBox->DefAccount);
 	mem_free(&tpMailBox->Server);
 	mem_free(&tpMailBox->User);
 	mem_free(&tpMailBox->Pass);

@@ -1,4 +1,4 @@
-CHAR *q, *s;//{{NO_DEPENDENCIES}}
+//{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
 // Used by nPOP.rc
 //
@@ -42,10 +42,12 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDD_DIALOG_CC                   140
 #define IDD_DIALOG_ETCHEAD              141
 #define IDD_DIALOG_OPTION_CHECK         142
+#define IDD_DIALOG_ADDRESS_BIG          143
 #define IDD_DIALOG_ADDRESS              144
 #define IDD_DIALOG_ADDRESS_EDIT         145
 #define IDD_DIALOG_MSG                  146
-#define IDR_MENU_POPUP                  148
+#define IDR_MENU_POPUP                  147
+#define IDD_DIALOG_OPTION_VIEW          148
 #define IDD_DIALOG_OPTION_ETC           149
 #define IDD_DIALOG_OPTION_SORT          150
 #define IDC_SORT_SELECT_FIRST           151
@@ -92,14 +94,48 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDC_MBOX_NAME                   221
 #define IDC_RADIO_MBOXIN                222
 #define IDC_RADIO_MBOXSAVE              223
-#define IDD_DIALOG_SELSAVEBOX           224
-#define IDC_MOVECOPYTEXT                225
+#define IDC_RADIO_IMPORTSBOX            224
+#define IDD_DIALOG_SELSAVEBOX           225
 #define IDC_SAVEBOX_COMBO               226
 #define IDC_ADDR_GRP_COMBO              227
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
 #define ID_MENUITEM_BACKUP              230
-#define IDC_CHECK_REMEMBERDIR           231
+#define IDC_RADIO_FILLIN                231
+#define IDC_FILTER_AND                  232
+#define IDC_FILTER_OR                   233
+#define IDC_FILTER_UNLESS               234
+#define IDC_VIEWNEXTDEL_NEXT            235
+#define IDC_VIEWNEXTDEL_UNREAD          236
+#define IDC_VIEWSKIPDEL_NEVER           237
+#define IDC_VIEWSKIPDEL_ALWAYS          238
+#define IDC_VIEWSKIPDEL_UNREAD          239
+#define IDC_VIEWCLOSENONEXT             240
+#define IDC_VIEWAPP_MSGSRC              241
+#define IDC_BCCADDRESS                  242
+#define IDC_MSG_DIALOG_TXT              243
+#define IDC_FIND_NEXT_MESSAGE           244
+#define IDC_FIND_NEXT_MAILBOX           245
+#define IDC_FIND_ALLBOXES               246
+#define IDC_MOVECOPYTEXT                247
+#define IDD_DIALOG_IMPORTSBOX           248
+#define IDC_IMPORT_FILE                 249
+#define IDC_IMPORT_SBOXFILE             250
+#define IDC_IMPORT_SBOXNAME             251
+#define IDC_IMPORT_READ                 252
+#define IDC_IMPORT_DOWN                 253
+#define IDC_COL_SFDZ                    254
+#define IDC_COL_FSDZ                    255
+#define IDD_DIALOG_OPTION_ADV           256
+#define IDC_RADIO_FORMAT_NPOP           257
+#define IDC_RADIO_FORMAT_MBOX           258
+#define IDC_COMBO_LAZYLOAD              259
+#define IDC_CHECK_ATTACHSEP             260
+#define IDC_CHECK_REMEMBERDIR           261
+#define IDD_DIALOG_UPDATEOPTS           262
+#define IDC_RADIO_UAC_DELETE            263
+#define IDC_RADIO_UAC_KEEP              264
+#define IDC_RADIO_UAC_ASK               265
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
@@ -111,6 +147,7 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDC_EDIT_PORT                   1004
 #define IDC_EDIT_USER                   1005
 #define IDC_EDIT_PASS                   1006
+#define IDC_CHECK_DELATTACH             1007
 #define IDC_CHECK_APOP                  1008
 #define IDC_EDIT_READLINE               1009
 #define IDC_CHECK_CYCLIC                1009
@@ -163,8 +200,11 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDC_CHECK_EXECSOUND             1043
 #define IDC_CHECK_CHECKAFTERUPDATE      1043
 #define IDC_CHECK_CLOSEHIDE             1044
-#define IDC_CHECK_MOVEALLMAILBOX        1046
+#define IDC_CHECK_UPDATEAFTERCHECK      1045
+#define IDC_CHECK_SCANALLFORUNREAD      1046
+#define IDC_CHECK_STARTPASS             1047
 #define IDC_COMBO_ENTRY                 1048
+#define IDC_BUTTON_UPDATEOPTS           1049
 #define IDC_CHECK_CHENDDISCON           1052
 #define IDC_BUTTON_UP                   1052
 #define IDC_CHECK_NORASNOCHECK          1053
@@ -221,7 +261,7 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDC_PRIORITY                    1096
 #define IDC_APPNAME                     1097
 #define IDC_CHECK_USEPOOM               1098
-#define IDC_CHECK_AUTOMARKSEND          1099
+#define IDC_POOMNAMECOMMENT             1099
 #define IDC_CHECK_PARANOID              1100
 #define IDC_ABOUT_TEXT                  1101
 #define IDC_DEL							1102
@@ -236,8 +276,10 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
 #define ID_MENUITEM_MOVESAVE            1209
-#define IDD_DIALOG_NEWDIR               1210
-#define IDC_NEWDIRNAME                  1211
+#define IDC_RADIO_POOMLAST              1210
+#define IDC_RADIO_POOMFIRST             1211
+#define IDD_DIALOG_NEWDIR               1212
+#define IDC_NEWDIRNAME                  1213
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
@@ -264,6 +306,7 @@ CHAR *q, *s;//{{NO_DEPENDENCIES}}
 #define ID_MENUITEM_WORDBREAK           40026
 #define ID_MENUITEM_OPTION              40027
 #define ID_MENUITEM_REMESSEGE           40028
+#define ID_MENUITEM_DELATTACH           40029
 #define ID_KEY_TAB                      40030
 #define ID_MENUITEM_NEWMAIL             40031
 #define ID_MENUITEM_SEND                40032

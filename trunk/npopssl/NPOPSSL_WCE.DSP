@@ -66,7 +66,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_mips" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~2\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~2\libeay32.lib /nologo /base:"0x00100000" /dll /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_mips" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE MIPS) Debug"
 
@@ -95,7 +95,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_mips" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~2\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~2\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_mips" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE SH4) Release"
 
@@ -124,7 +124,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh4" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~4\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~4\libeay32.lib /nologo /base:"0x00100000" /dll /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh4" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE SH4) Debug"
 
@@ -153,7 +153,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh4" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~4\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~4\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh4" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE SH3) Release"
 
@@ -182,7 +182,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh3" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~3\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~3\libeay32.lib /nologo /base:"0x00100000" /dll /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh3" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE SH3) Debug"
 
@@ -211,7 +211,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /dll /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~1\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh3" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 wcecompat.lib wcecompatex.lib winsock.lib commctrl.lib coredll.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompat.lib C:\MYDOCU~1\VISUAL~1\WCECOM~1.2\lib\wcecompatex.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~3\ssleay32.lib C:\MYDOCU~1\VISUAL~1\OPENSS~1.8B\OUT32D~3\libeay32.lib /nologo /base:"0x00100000" /dll /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /libpath:"openssl\lib_sh3" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "npopssl - Win32 (WCE ARM) Release"
 

@@ -31,6 +31,7 @@
 #define ENC_TYPE_Q_PRINT		3
 
 /* Global Variables */
+extern OPTION op;
 extern int font_charset;
 
 // エンコード情報
@@ -556,7 +557,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding)
 #endif
 					return NULL;
 				}
-				base64_encode(eb->encode_buf, tmp, 0);
+				base64_encode(eb->encode_buf, tmp, 0, 0);
 				mem_free(&eb->encode_buf);
 				eb->encode_buf = tmp;
 				EncType = "B";
@@ -1100,7 +1101,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 				lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 				return FALSE;
 			}
-			base64_encode(cret, tmp, 0);
+			base64_encode(cret, tmp, 0, 0);
 			mem_free(&cret);
 
 			// 折り返し
@@ -1219,11 +1220,15 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 	char *enc_buf, *enc_ret = NULL;
 	int encode = 0;
 
-	enc_buf = (char *)mem_alloc(tstrlen(body) + 1);
-	if (enc_buf == NULL) {
-		return NULL;
+	if (op.DecodeInPlace) {
+		enc_buf = body;
+	} else {
+		enc_buf = (char *)mem_alloc(tstrlen(body) + 1);
+		if (enc_buf == NULL) {
+			return NULL;
+		}
+		tstrcpy(enc_buf, body);
 	}
-	tstrcpy(enc_buf, body);
 
 	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL ||
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
@@ -1238,11 +1243,17 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 		encode = ENC_TYPE_Q_PRINT;
 	}
 	if (encode != 0) {
-		enc_ret = (char *)mem_alloc(tstrlen(enc_buf) + 1);
+		if (op.DecodeInPlace) {
+			enc_ret = enc_buf;
+		} else {
+			enc_ret = (char *)mem_alloc(tstrlen(enc_buf) + 1);
+		}
 		if (enc_ret != NULL) {
 			((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(enc_buf, enc_ret);
-			mem_free(&enc_buf);
-			enc_buf = enc_ret;
+			if (!op.DecodeInPlace) {
+				mem_free(&enc_buf);
+				enc_buf = enc_ret;
+			}
 		}
 	}
 	mem_free(&tpMailItem->Encoding);
@@ -1361,6 +1372,8 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		} else {
 			mem_free(&body);
 		}
+	} else if (*TextIndex == -1) {
+		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
 	}
 
 	if (wenc_ret == NULL) {

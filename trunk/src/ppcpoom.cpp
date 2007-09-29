@@ -12,7 +12,7 @@
 #include "pimstore.h"
 #include "ppcpoom.h"
 
-void UpdateAddressBook(unsigned short * szFileName)
+void UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComment)
 {
 	IPOutlookApp	*pOutlook;
 
@@ -42,6 +42,10 @@ void UpdateAddressBook(unsigned short * szFileName)
 				if (pFolder->get_Items(&pContacts) == S_OK && pContacts)
 				{
 					int numItems,i;
+					if (NameOrder == 1) {
+						pContacts->Sort(L"[FirstName]", FALSE);
+					}
+					// else default order is by last name
 					pContacts->get_Count(&numItems);
 
 					HANDLE hFile = CreateFile((LPCWSTR)szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -66,26 +70,45 @@ void UpdateAddressBook(unsigned short * szFileName)
 
 								// Write data to file
 								int offset = 0;
-								sprintf(userName, "%S%s%S", bstrFname, SysStringLen(bstrFname)>0?" ":"", bstrLname);
+								if (NameOrder == 1) {
+									sprintf(userName, "%S%s%S", bstrFname, SysStringLen(bstrFname)>0?" ":"", bstrLname);
+								} else if (NameIsComment == 1) {
+									sprintf(userName, "%S%s%S", bstrLname, SysStringLen(bstrLname)>0?", ":"", bstrFname);
+								} else {
+									sprintf(userName, "\"%S%s%S\"", bstrLname, SysStringLen(bstrLname)>0?", ":"", bstrFname);
+								}
 								if (SysStringLen(bstrCategories)>0) {
-									sprintf(categories, "\x09\x09%S", bstrCategories);
+									if (NameIsComment == 1) {
+										sprintf(categories, "\x09%S", bstrCategories);
+									} else {
+										sprintf(categories, "\x09\x09%S", bstrCategories);
+									}
 								} else {
 									categories[0] = '\0';
 								}
 
-								if (SysStringLen(bstrEmail1) > 0)
-								{
-									sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail1, categories);
+								if (SysStringLen(bstrEmail1) > 0) {
+									if (NameIsComment == 1) {
+										sprintf(szOutputData, "%S\x09%s%s\x0d\x0a", bstrEmail1, userName, categories);
+									} else {
+										sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail1, categories);
+									}
 									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
 								}
-								if (SysStringLen(bstrEmail2) > 0)
-								{
-									sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail2, categories);
+								if (SysStringLen(bstrEmail2) > 0) {
+									if (NameIsComment == 1) {
+										sprintf(szOutputData, "%S\x09%s%s\x0d\x0a", bstrEmail2, userName, categories);
+									} else {
+										sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail2, categories);
+									}
 									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
 								}
-								if (SysStringLen(bstrEmail3) > 0)
-								{
-									sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail3, categories);
+								if (SysStringLen(bstrEmail3) > 0) {
+									if (NameIsComment == 1) {
+										sprintf(szOutputData, "%S\x09%s%s\x0d\x0a", bstrEmail3, userName, categories);
+									} else {
+										sprintf(szOutputData, "%s <%S>%s\x0d\x0a", userName, bstrEmail3, categories);
+									}
 									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
 								}
 

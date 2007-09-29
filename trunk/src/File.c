@@ -15,6 +15,7 @@
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
+#include "mime.h"
 #ifdef _WIN32_WCE_PPC
 #include "SelectFile.h"
 ///////////// MRP /////////////////////
@@ -23,6 +24,8 @@
 #endif
 
 /* Define */
+#define MBOX_DELIMITER		"\r\nFrom "
+#define ENCRYPT_PREAMBLE	TEXT("NPOPUK_ENCRYPT")
 
 /* Global Variables */
 extern OPTION op;
@@ -36,7 +39,7 @@ extern MAILBOX *MailBox;
 	Local Function Prototypes
 **************************************************************************/
 
-static int file_get_mail_count(char *buf, long Size);
+static int file_get_mail_count(char *buf, long Size, int MboxFormat);
 static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem);
 static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -246,7 +249,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	of.lpstrDefExt = DefExt;
 	of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 #ifndef _WIN32_WCE
-	// GJC
+	// GJC allow multiselect
 	if (Action == FILE_OPEN_MULTI) {
 		of.Flags |= OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 		of.lpstrFile = ret;
@@ -323,26 +326,37 @@ long file_get_size(TCHAR *FileName)
 /*
  * file_get_mail_count - メール一覧の文字列からメールの数を取得
  */
-static int file_get_mail_count(char *buf, long Size)
+static int file_get_mail_count(char *buf, long Size, int MboxFormat)
 {
 	char *p, *r, *t;
-	int ret = 0;
+	int ret = 0, len;
 
-	p = buf;
-	while (Size > p - buf && *p != '\0') {
-		for (t = r = p; Size > r - buf && *r != '\0'; r++) {
-			if (*r == '\r' && *(r + 1) == '\n') {
-				if (*t == '.' && (r - t) == 1) {
-					break;
-				}
-				t = r + 2;
+	if (MboxFormat) {
+		ret = 1;
+		len = tstrlen(MBOX_DELIMITER);
+		for (p = buf; Size > p - buf && *p != '\0'; p++) {
+			if (str_cmp_n(p, MBOX_DELIMITER, len) == 0) {
+				ret++;
+				p += len;
 			}
 		}
-		p = r;
-		if (Size > p - buf && *p != '\0') {
-			p += 2;
-		}
+	} else {
+		p = buf;
+		while (Size > p - buf && *p != '\0') {
+			for (t = r = p; Size > r - buf && *r != '\0'; r++) {
+				if (*r == '\r' && *(r + 1) == '\n') {
+					if (*t == '.' && (r - t) == 1) {
+						break;
+					}
+					t = r + 2;
+				}
+			}
+			p = r;
+			if (Size > p - buf && *p != '\0') {
+				p += 2;
+			}
 		ret++;
+		}
 	}
 	return ret;
 }
@@ -448,104 +462,58 @@ BOOL file_savebox_convert(TCHAR *NewFileName)
 	return ret;
 }
 
-#ifdef GJC_SPECIAL
 /*
- * file_import_mailbox - import Eudora mail (messages separated by "From ???@??? ")
+ * file_copy_to_datadir - copy file to datadir
  */
-#define EUDORA_SEPARATOR TEXT("\r\nFrom ???@??? ")
-BOOL file_import_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, HWND hWnd) {
-	MAILITEM *tpMailItem;
-	HANDLE hFile;
-	HANDLE hMapFile;
-	TCHAR path[BUF_SIZE], msg[BUF_SIZE];
-	BOOL ok = TRUE;
-	char *p, *sPos, *FileBuf, *buf;
-	long FileSize;
-	int i, len, buf_size;
+BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
+{
+	TCHAR path[BUF_SIZE];
+	TCHAR pathBackup[BUF_SIZE];
+	TCHAR msg[BUF_SIZE];
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
 #endif
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
-	FileSize = file_get_size(path);
-	if (FileSize <= 0) {
-		return FALSE;
-	}
-	wsprintf(msg, TEXT("Convert %s?"), FileName);
-	if (MessageBox(hWnd, msg, TEXT("Mailbox Import"), MB_YESNO) == IDNO) {
-		return FALSE;
-	}
-	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == NULL) {
-		return FALSE;
-	}
-	hMapFile = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-	if (hMapFile == NULL) {
-		CloseHandle(hFile);
-		return FALSE;
-	}
-	FileBuf = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
-	if (FileBuf == NULL) {
-		CloseHandle(hMapFile);
-		CloseHandle(hFile);
-		return FALSE;
-	}
 
-	i = 0;
-	p = FileBuf;
-	while (*p != '\0' && str_cmp_n_t(p, EUDORA_SEPARATOR, lstrlen(EUDORA_SEPARATOR)) != 0) {
-		p++;
-	}
-	p += 2;
-	sPos = p;
-	buf = NULL;
-	buf_size = 0;
-	while (ok && *sPos != '\0') {
-		while(*p != '\0' && str_cmp_n_t(p, EUDORA_SEPARATOR, lstrlen(EUDORA_SEPARATOR)) != 0) {
-			p++;
-		}
-		len = p - sPos;
-		if (len >= buf_size) {
-			mem_free(&buf);
-			buf_size = len + 1;
-			buf = (char *)mem_alloc(sizeof(char) * buf_size);
-			if (buf == NULL) {
-				return FALSE;
-			}
-		}
-		str_cpy_n(buf, sPos, len + 1);
-		tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
-		ok &= item_mail_to_item(tpMailItem, buf, len, FALSE);
-		// Eudora strips attachments
-		mem_free(&tpMailItem->ContentType);
-		tpMailItem->ContentType = alloc_copy_t(TEXT("text/plain"));
-		tpMailItem->Multipart = MULTIPART_NONE;
-		ok &= item_add(tpMailBox, tpMailItem);
-		i++;
-		if (p != '\0') {
-			p += 2;
-		}
-		sPos = p;
-	}
-	mem_free(&buf);
-	UnmapViewOfFile(FileBuf);
-	CloseHandle(hMapFile);
-	CloseHandle(hFile);
-
-	if (ok) {
-		wsprintf(msg, TEXT("Converted %d messages"), i);
-		MessageBox(hWnd, msg, TEXT("Mailbox Import"), MB_OK);
-	}
-
-	return ok;
-}
+#ifdef UNICODE
+   wcscpy(pathBackup, path);
+   wcscat(pathBackup, TEXT(".bak"));
+#else
+   strcpy_s(pathBackup, BUF_SIZE-5, path);
+   strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
+
+   // if backup exists, file_read_mailbox will replace the file with the backup!
+   if (file_get_size(pathBackup) != -1) {
+		wsprintf(msg, STR_Q_DELSBOXFILE, FileName, TEXT(".bak"));
+		if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+			return FALSE;
+		} else {
+			DeleteFile(pathBackup);
+		}
+	}
+
+	if (lstrcmp(Source, path) == 0) {
+		return TRUE;
+	}
+	if (file_get_size(path) != -1) {
+		wsprintf(msg, STR_Q_DELSBOXFILE, FileName, TEXT(""));
+		if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+			return FALSE;
+		} else {
+			DeleteFile(path);
+		}
+	}
+
+	return CopyFile(Source, path, TRUE);
+}
 
 /*
  * file_read_mailbox - ファイルからメールアイテムの作成
  */
-BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
+BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 {
 	MAILITEM *tpMailItem;
 #ifndef _NOFILEMAP
@@ -559,7 +527,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 	///////////// --- /////////////////////
 	char *FileBuf;
 	long FileSize;
-	int i;
+	int i, cnt, len = 7; // len = tstrlen(MBOX_DELIMITER);
+	int MboxFormat = 0;
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
@@ -583,8 +552,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 	}
 	///////////// --- /////////////////////
 
-	FileSize = file_get_size(path);
+	tpMailBox->DiskSize = FileSize = file_get_size(path);
 	if (FileSize <= 0) {
+		tpMailBox->Loaded = TRUE;
 		return TRUE;
 	}
 #ifdef _NOFILEMAP
@@ -620,9 +590,41 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 	}
 #endif	// _NOFILEMAP
 
+	if (str_cmp_n(FileBuf, "From NPOPUK", 11) == 0) {
+		MboxFormat = 2;
+	} else if (str_cmp_n(FileBuf, "From ", 5) == 0) {
+		MboxFormat = 1;
+	}
+	tpMailBox->WasMbox = (MboxFormat == 0) ? FALSE : TRUE;
+	cnt = file_get_mail_count(FileBuf, FileSize, MboxFormat);
+	// check for confused file format: mbox-format mailbox was opened&saved by
+	// previous version of npop/npopuk
+	if (cnt == 1 && MboxFormat == 0) {
+		int cnt2 = file_get_mail_count(FileBuf, FileSize, 1);
+		if (cnt2 > 1) {
+			TCHAR *temp;
+			item_get_content_t(FileBuf, HEAD_X_STATUS, &temp);
+			if (temp != NULL) {
+				int rev = _ttoi(temp)/100000;
+				if (rev == 1) {
+					TCHAR *title, msg[BUF_SIZE];
+					title = tpMailBox->Name;
+					if (title == NULL || *title == TEXT('\0')) {
+						title = STR_MAILBOX_NONAME;
+					}
+					wsprintf(msg, STR_Q_LOADASMBOX, FileName, cnt2);
+					if (MessageBox(NULL, msg, title, MB_YESNO) == IDYES) {
+						cnt = cnt2;
+						MboxFormat = 1;
+					}
+				}
+				mem_free(&temp);
+			}
+		}
+	}
 
 	//Guaranty memory of mail several parts
-	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = file_get_mail_count(FileBuf, FileSize);
+	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = cnt;
 	tpMailBox->tpMailItem = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * tpMailBox->MailItemCnt);
 	if (tpMailBox->tpMailItem == NULL) {
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
@@ -642,22 +644,58 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 	p = FileBuf;
 	while (FileSize > p - FileBuf && *p != '\0') {
 		// From header mail item acquisition
-		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, p);
+		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, p, Import);
 
 		// Body position Position of end of mail acquisition
-		p = GetBodyPointa(p);
-		if (p == NULL) {
-			break;
-		}
-		// メールの終わりの位置を取得
-		for (t = r = p; *r != '\0'; r++) {
-			if (*r == '\r' && *(r + 1) == '\n') {
-				if (*t == '.' && (r - t) == 1) {
-					t -= 2;
-					for (; FileSize > r - FileBuf && (*r == '\r' || *r == '\n'); r++);
+		if (MboxFormat) {
+			tpMailItem->HasHeader = 1;
+			r = GetHeaderStringPoint(p, HEAD_X_STATUS); // X-Status is always the last header written by nPOPuk
+			if (r != NULL && r > p) {
+				tpMailItem->HasHeader = 2;
+				while (*r != '\0' && (*(r-1) != '\r' || *r != '\n')) {
+					r++;
+				}
+				if (*r == '\n') {
+					r++;
+					if (*r == '\r' && *(r+1) == '\n') {
+						r += 2;
+						tpMailItem->HasHeader = 0;
+					}
+					p = r;
+				} else if (*r == '\0') {
 					break;
 				}
-				t = r + 2;
+			}
+		} else {
+			// discard all header lines
+			p = GetBodyPointa(p);
+			if (p == NULL) {
+				break;
+			}
+		}
+
+		// Find end of message
+		if (MboxFormat) {
+			for (t = r = p; *r != '\0'; r++) {
+				if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
+					t = r;
+					r += 2;
+					break;
+				}
+			}
+			if (*r == '\0') {
+				t = r;
+			}
+		} else {
+			for (t = r = p; *r != '\0'; r++) {
+				if (*r == '\r' && *(r + 1) == '\n') {
+					if (*t == '.' && (r - t) == 1) {
+						t -= 2;
+						for (; FileSize > r - FileBuf && (*r == '\r' || *r == '\n'); r++);
+						break;
+					}
+					t = r + 2;
+				}
 			}
 		}
 		if (tpMailItem != NULL) {
@@ -669,6 +707,52 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 						*s = *p;
 					}
 					*s = '\0';
+					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->Download == TRUE
+						&& tpMailItem->Attach == NULL && tpMailItem->FwdAttach == NULL) {
+						// is it text/plain and text/html with no real attachments
+#ifdef UNICODE
+						char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
+						tpMailItem->Multipart = multipart_scan(ContentType, tpMailItem->Body);
+						mem_free(&ContentType);
+#else
+						tpMailItem->Multipart = multipart_scan(tpMailItem->ContentType, tpMailItem->Body);
+#endif
+					}
+
+					if (tpMailItem->HasHeader == 1 || (MboxFormat == 1 && tpMailItem->Encoding != NULL)) {
+						// strip duplicate headers and/or convert from foreign MBOX format
+						char *newbody;
+						int len, header_size;
+						if (tpMailItem->HasHeader == 1) {
+							s = GetBodyPointa(tpMailItem->Body);
+							header_size = remove_duplicate_headers(tpMailItem->Body);
+							tpMailItem->HasHeader = 2;
+							tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+						} else {
+							s = tpMailItem->Body;
+							header_size = 0;
+						}
+						if (tpMailItem->Encoding != NULL) {
+							t = MIME_body_decode_transfer(tpMailItem, s);
+						} else {
+							t = s;
+						}
+						len = tstrlen(t);
+
+						newbody = (char *)mem_alloc(sizeof(char) * (len + header_size + 1));
+						if (newbody == NULL) {
+							if (header_size > 0) {
+								// shift body backwards (after removing duplicate headers)
+								tstrcpy(tpMailItem->Body + header_size, t);
+							}
+							// else the body is smaller than the allocated space; big deal
+						} else {
+							str_cpy_n(newbody, tpMailItem->Body, header_size + 1);
+							tstrcpy(newbody + header_size, t);
+							mem_free(&tpMailItem->Body);
+							tpMailItem->Body = newbody;
+						}
+					}
 				}
 			}
 			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENTMAIL) {
@@ -699,6 +783,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 	CloseHandle(hFile);
 #endif	// _WCE_OLD
 #endif	// _NOFILEMAP
+	tpMailBox->Loaded = TRUE;
 	return TRUE;
 }
 
@@ -868,7 +953,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 /*
  * file_save_mailbox - メールボックス内のメールを保存
  */
-BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int SaveFlag)
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -877,13 +962,19 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int 
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
 
+//	TCHAR encrypt_header[80];
 	int len = 0;
 	int i;
+//	if (op.ScrambleMailboxes) {
+//		wsprintf(encrypt_header, TEXT("%s %d.\r\n"), ENCRYPT_PREAMBLE, tpMailBox->MailItemCnt);
+//		len = lstrlen(encrypt_header);
+//	}
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
 #endif	// _WIN32_WCE
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
+	tpMailBox->DiskSize = 0;
 
 	if (SaveFlag == 0) {
 		//When it does not retain, deletion
@@ -897,18 +988,21 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int 
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len += item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		len += item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
 	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (tmp == NULL) {
 		return FALSE;
 	}
 	*p = '\0';
+//	if (op.ScrambleMailboxes) {
+//		p = str_cpy_t(p, encrypt_header);
+//	}
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		p = item_to_string(p, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		p = item_to_string(p, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
 #endif	// DIV_SAVE
 
@@ -939,18 +1033,24 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int 
 	}
 	mem_free(&tmp);
 #else	// DIV_SAVE
+//	if (op.ScrambleMailboxes) {
+//		if (file_write(hFile, encrypt_header, len) == FALSE) {
+//			CloseHandle(hFile);
+//			return FALSE;
+//		}
+//	}
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
-		len = item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		len = item_to_string_size(*(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 
 		p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 		if (tmp == NULL) {
 			CloseHandle(hFile);
 			return FALSE;
 		}
-		item_to_string(tmp, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE);
+		item_to_string(tmp, *(tpMailBox->tpMailItem + i), (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 		if (file_write(hFile, tmp, len) == FALSE) {
 			mem_free(&tmp);
 			CloseHandle(hFile);
@@ -964,7 +1064,10 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int 
 	///////////// MRP /////////////////////
 	DeleteFile(pathBackup);
 	///////////// --- /////////////////////
-	tpMailBox->NeedsSave = FALSE;
+	if (IsBackup == FALSE) {
+		tpMailBox->NeedsSave = 0;
+	}
+	tpMailBox->DiskSize = file_get_size(path);
 	return TRUE;
 }
 
@@ -1074,9 +1177,9 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 
 #ifdef _WIN32_WCE_PPC
 	///////////// MRP /////////////////////
-	if (op.UsePOOMAddressBook == 1)
+	if (op.UsePOOMAddressBook != 0)
 	{
-		UpdateAddressBook(path);
+		UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
 	}
 	///////////// --- /////////////////////
 #endif
@@ -1174,6 +1277,46 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	mem_free(&FileBuf);
 	mem_free(&AllocBuf);
 	return 1;
+}
+
+/*
+ * file_rename
+ */
+BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
+{
+	TCHAR source_path[BUF_SIZE], destin_path[BUF_SIZE];
+	TCHAR pathBackup[BUF_SIZE];
+	BOOL ret;
+
+#ifndef _WIN32_WCE
+	SetCurrentDirectory(AppDir);
+#endif
+
+	str_join_t(source_path, DataDir, Source, (TCHAR *)-1);
+	str_join_t(destin_path, DataDir, Destin, (TCHAR *)-1);
+
+	ret = MoveFile(source_path, destin_path);
+
+	if (ret) {
+		// need to delete backup file, lest it be found next time we file_read_mailbox
+
+#ifdef UNICODE
+		wcscpy(pathBackup, destin_path);
+		wcscat(pathBackup, TEXT(".bak"));
+#else
+		strcpy_s(pathBackup, BUF_SIZE-5, destin_path);
+		strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+
+		if (file_get_size(pathBackup) != -1) {
+			if (DeleteFile(pathBackup) == FALSE) {
+				wsprintf(source_path, STR_ERR_CANTDELETE, pathBackup);
+				ErrorMessage(hWnd, source_path);
+			}
+		}
+	}
+
+	return ret;
 }
 
 /* End of source */

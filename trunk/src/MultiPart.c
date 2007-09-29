@@ -74,6 +74,20 @@ void multipart_free(MULTIPART ***tpMultiPart, int cnt)
 }
 
 /*
+ * encatt_free - free encoded attachments
+ */
+#ifndef WSAASYNC
+void encatt_free(char ***EncAtt, int cnt)
+{
+	int i;
+	for (i = 0; i < cnt; i++) {
+		mem_free(&(*(*EncAtt+i)));
+	}
+	mem_free((void **)&*EncAtt);
+}
+#endif
+
+/*
  * get_next_part - 次のPartの位置を取得
  */
 static char *get_next_part(char *buf, char *Boundary)
@@ -138,7 +152,12 @@ static BOOL get_content_value(char *Content, char *Attribute, char *ret)
 		if (str_cmp_ni(p, Attribute, tstrlen(Attribute)) != 0) {
 			// 次のparameterに移動
 			for (; *p != '\0' && *p != ';'; p++);
-			if (*p == ';') p++;
+			if (*p == ';') {
+				p++;
+				if (*p == '\r' && *(p+1) == '\n' && (*(p+2) == ' ' || *(p+2) == '\t')) {
+					p+=3;
+				}
+			}
 			for (; *p == ' ' || *p == '\t'; p++);
 			continue;
 		}
@@ -479,7 +498,7 @@ int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int 
  * multipart_create - マルチパートを作成する (RFC 2046, RFC 2183)
  *                    FwdAttach added by GJC
  */
-int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody)
+int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody, int *num_att, char ***EncAtt)
 {
 #define BREAK_LEN			76
 #define	CTYPE_MULTIPART		"multipart/mixed;\r\n boundary=\""
@@ -491,37 +510,61 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 	TCHAR *f;
 	TCHAR date[15];
 	char *Boundary, *ctype;
-	char *buf, *ret, *tmp;
+	char *buf, *ret, *tmp, *prev;
 	char *cfname;
 	char *p, *ef;
 	char *cBuf;
 	char *b64str;
-	char *cp, *cr;
 	unsigned char digest[16];
 	long FileSize;
-	int i, len;
+	int i, len, attnum=0;
+	char **tpEncAtt = NULL;
 	BOOL have_file, have_fwdatt;
 #ifdef UNICODE
+	char *cp, *cr;
 	TCHAR *wtmp;
 	TCHAR dtmp[3];
 	char ctmp[3];
 #endif
 
+	*num_att = 1;
 	if (Filename == NULL || *Filename == TEXT('\0')) {
 		have_file = FALSE;
 	} else {
 		have_file = TRUE;
+		(*num_att)++;
+		for (f = Filename; *f != TEXT('\0'); f++) {
+			if (*f == ATTACH_SEP) {
+				(*num_att)++;
+			}
+		}
 	}
 	if (FwdAttach == NULL || *FwdAttach == TEXT('\0') || tpFwdMailItem == NULL) {
 		have_fwdatt = FALSE;
 	} else {
 		have_fwdatt = TRUE;
+		(*num_att)++;
+		for (f = FwdAttach; *f != TEXT('\0'); f++) {
+			if (*f == ATTACH_SEP) {
+				(*num_att)++;
+			}
+		}
 	}
 	if (have_file == FALSE && have_fwdatt == FALSE) {
+		*num_att = 0;
 		return MP_NO_ATTACH;
 	}
+#ifndef WSAASYNC
+	if (op.SendAttachIndividually != 0) {
+		tpEncAtt = (char **)mem_calloc(sizeof(char *) * (*num_att));
+		*EncAtt = tpEncAtt;
+	} else
+#endif
+	{
+		*num_att = 0;
+	}
 
-	// バウンダリの生成
+	// バウンダリの生成f
 	GetLocalTime(&st);
 	wsprintf(date, TEXT("%04d%02d%02d%02d%02d%02d"),
 		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
@@ -530,6 +573,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 		len = lstrlen(Filename) + lstrlen(FwdAttach);
 		fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len+1));
 		if (fname == NULL) {
+#ifndef WSAASYNC
+			encatt_free(EncAtt, attnum);
+#endif
 			return MP_ERROR_ALLOC;
 		}
 		wsprintf(fname, TEXT("%s%s"), Filename, FwdAttach);
@@ -556,6 +602,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 
 	Boundary = (char *)mem_alloc(sizeof(char) * ((16 * 2) + 17 + 1));
 	if (Boundary == NULL) {
+#ifndef WSAASYNC
+		encatt_free(EncAtt, attnum);
+#endif
 		return MP_ERROR_ALLOC;
 	}
 	p = str_cpy(Boundary, "-----_MULTIPART_");
@@ -578,6 +627,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 		tstrlen(body) + 4;
 	ret = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (ret == NULL) {
+#ifndef WSAASYNC
+		encatt_free(EncAtt, attnum);
+#endif
 		mem_free(&Boundary);
 		return MP_ERROR_ALLOC;
 	}
@@ -589,6 +641,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 	if (Filename != NULL && *Filename != TEXT('\0')) {
 		fpath = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Filename) + 1));
 		if (fpath == NULL) {
+#ifndef WSAASYNC
+			encatt_free(EncAtt, attnum);
+#endif
 			mem_free(&Boundary);
 			mem_free(&ret);
 			return MP_ERROR_ALLOC;
@@ -602,6 +657,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			// ファイルを読み込む
 			FileSize = file_get_size(fpath);
 			if (FileSize < 0 || (cBuf = file_read(fpath, FileSize)) == NULL) {
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&Boundary);
 				mem_free(&ret);
 				mem_free(&fpath);
@@ -609,38 +667,21 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			}
 
 			// エンコード
-			b64str = (char *)mem_alloc(FileSize * 2 + 4);
+			b64str = (char *)mem_alloc(FileSize * 2 + 4); // FileSize*4/3 for MIME, plus extra for linebreaks
 			if (b64str == NULL) {
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&Boundary);
 				mem_free(&ret);
 				mem_free(&fpath);
 				mem_free(&cBuf);
 				return MP_ERROR_ALLOC;
 			}
-			base64_encode(cBuf, b64str, FileSize);
+			base64_encode(cBuf, b64str, FileSize, BREAK_LEN);
 			mem_free(&cBuf);
 
-			// 折り返し
-			cBuf = (char *)mem_alloc(tstrlen(b64str) + (tstrlen(b64str) / BREAK_LEN * 2) + 1);
-			if (cBuf == NULL) {
-				mem_free(&Boundary);
-				mem_free(&ret);
-				mem_free(&fpath);
-				mem_free(&b64str);
-				return MP_ERROR_ALLOC;
-			}
-			for (cp = b64str, cr = cBuf, i = 0; *cp != '\0'; cp++, i++) {
-				if (i >= BREAK_LEN) {
-					i = 0;
-					*(cr++) = '\r';
-					*(cr++) = '\n';
-				}
-				*(cr++) = *cp;
-			}
-			*cr = '\0';
-			mem_free(&b64str);
-
-			buf = cBuf;
+			buf = b64str;
 
 			// MIME typeの取得
 #ifdef UNICODE
@@ -651,6 +692,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			ctype = GetMIME2Extension(NULL, fname);
 #endif
 			if (ctype == NULL) {
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&Boundary);
 				mem_free(&ret);
 				mem_free(&fpath);
@@ -670,6 +714,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 #endif
 			}
 			if (fname == NULL) {
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&Boundary);
 				mem_free(&ret);
 				mem_free(&fpath);
@@ -686,6 +733,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			ef = MIME_rfc2231_encode(fname, op.HeadCharset);
 #endif
 			if (ef == NULL) {
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&p);
 				mem_free(&Boundary);
 				mem_free(&ret);
@@ -702,6 +752,15 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 #endif
 
 			// Partの追加
+#ifndef WSAASYNC
+			if (op.SendAttachIndividually != 0) {
+				len = 0;
+				prev = NULL;
+			} else
+#endif
+			{
+				prev = ret;
+			}
 			len += (2 + tstrlen(Boundary) + 2 +
 				tstrlen(HEAD_CONTENTTYPE) + 1 + tstrlen(ctype) + 2 +
 				tstrlen(CONTENT_DIPPOS) + tstrlen(ef) + 2 +
@@ -713,6 +772,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 			if (tmp == NULL) {
 				mem_free(&p);
+#ifndef WSAASYNC
+				encatt_free(EncAtt, attnum);
+#endif
 				mem_free(&Boundary);
 				mem_free(&ret);
 				mem_free(&fpath);
@@ -725,13 +787,13 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				return MP_ERROR_ALLOC;
 			}
 			if (op.EncodeType == 1) {
-				str_join(tmp, ret, "--", Boundary, "\r\n",
+				str_join(tmp, prev, "--", Boundary, "\r\n",
 					HEAD_CONTENTTYPE, " ", ctype, CONTENT_TYPE_NAME, cfname, "\"\r\n",
 					CONTENT_DIPPOS, ef, "\r\n",
 					ENCODING_BASE64, "\r\n\r\n",
 					buf, "\r\n\r\n", (char *)-1);
 			} else {
-				str_join(tmp, ret, "--", Boundary, "\r\n",
+				str_join(tmp, prev, "--", Boundary, "\r\n",
 					HEAD_CONTENTTYPE, " ", ctype, "\r\n",
 					CONTENT_DIPPOS, ef, "\r\n",
 					ENCODING_BASE64, "\r\n\r\n",
@@ -742,11 +804,19 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			mem_free(&ef);
 			mem_free(&ctype);
 			mem_free(&buf);
-			mem_free(&ret);
 #ifdef UNICODE
 			mem_free(&cfname);
 #endif
-			ret = tmp;
+#ifndef WSAASYNC
+			if (op.SendAttachIndividually != 0) {
+				*(tpEncAtt+attnum) = tmp;
+				attnum++;
+			} else
+#endif
+			{
+				mem_free(&ret);
+				ret = tmp;
+			}
 		}
 		mem_free(&fpath);
 	}
@@ -760,6 +830,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 
 		fpath = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FwdAttach) + 1));
 		if (fpath == NULL) {
+#ifndef WSAASYNC
+			encatt_free(EncAtt, attnum);
+#endif
 			mem_free(&Boundary);
 			mem_free(&ret);
 			return MP_ERROR_ALLOC;
@@ -786,13 +859,28 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 						break;
 					}
 					str_cpy_n(buf, (*(tpMultiPart + i))->hPos, ptlen + 1);
+#ifndef WSAASYNC
+					if (op.SendAttachIndividually != 0) {
+						len = 0;
+						prev = NULL;
+					} else
+#endif
+					{
+						prev = ret;
+					}
 					len += 2 + tstrlen(Boundary) + ptlen + 4;
 					tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 					if (tmp == NULL) {
 						status = MP_ERROR_ALLOC;
 						break;
 					}
-					str_join(tmp, ret, "--", Boundary, buf, "\r\n\r\n", (char *)-1);
+					str_join(tmp, prev, "--", Boundary, buf, "\r\n\r\n", (char *)-1);
+#ifndef WSAASYNC
+					if (op.SendAttachIndividually != 0) {
+						*(tpEncAtt+attnum) = tmp;
+						attnum++;
+					}
+#endif
 #ifdef UNICODE
 					mem_free(&fname);
 #endif
@@ -812,27 +900,54 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 		mem_free(&fpath);
 		multipart_free(&tpMultiPart, cnt);
 		if (status != MP_ATTACH) {
+#ifndef WSAASYNC
+			encatt_free(EncAtt, attnum);
+#endif
 			mem_free(&Boundary);
 			mem_free(&ret);
 			return status;
 		}
 	}
 
-	// マルチパートの終わり
+#ifndef WSAASYNC
+	if (op.SendAttachIndividually != 0) {
+		len = 0;
+		prev = NULL;
+	} else
+#endif
+	{
+		prev = ret;
+	}
 	len += (2 + tstrlen(Boundary) + 2 + 2);
-	*RetBody = (char *)mem_alloc(sizeof(char) * (len + 1));
-	if (*RetBody == NULL) {
+	tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
+	if (tmp == NULL) {
+#ifndef WSAASYNC
+		encatt_free(EncAtt, attnum);
+#endif
 		mem_free(&Boundary);
 		mem_free(&ret);
 		return MP_ERROR_ALLOC;
 	}
-	str_join(*RetBody, ret, "--", Boundary, "--\r\n", (char *)-1);
-	mem_free(&ret);
+	str_join(tmp, prev, "--", Boundary, "--\r\n", (char *)-1);
+#ifndef WSAASYNC
+	if (op.SendAttachIndividually != 0) {
+		*(tpEncAtt+attnum) = tmp;
+		attnum++;
+		*RetBody = ret;
+	} else
+#endif
+	{
+		mem_free(&ret);
+		*RetBody = tmp;
+	}
 
 	// Content typeの生成
 	*RetContentType = (char *)mem_alloc(
 		sizeof(TCHAR) * (tstrlen(CTYPE_MULTIPART) + tstrlen(Boundary) + 2));
 	if (*RetContentType == NULL) {
+#ifndef WSAASYNC
+		encatt_free(EncAtt, attnum);
+#endif
 		mem_free(&Boundary);
 		mem_free(&*RetBody);
 		return MP_ERROR_ALLOC;

@@ -37,6 +37,7 @@
 #define STR_FILE_FILTER				TEXT("All Files (*.*)\0*.*\0\0")
 #define STR_TEXT_FILTER				TEXT("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0")
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")
+#define STR_MBOX_FILTER				TEXT("MBOX Files (*.mbx)\0*.mbx\0All Files (*.*)\0*.*\0\0")
 
 // Error
 #define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
@@ -57,15 +58,24 @@
 #define STR_ERR_SELECTMAILADDR		TEXT("No address selected")
 #define STR_ERR_SETMAILADDR			TEXT("No mail address set")
 #define STR_ERR_INPUTMAILADDR		TEXT("No mail address entered")
-#define STR_ERR_CREATECOPY			TEXT("Copy failed")
+#define STR_ERR_COPYFAIL			TEXT("Copy failed")
 #define STR_ERR_SAVECOPY			TEXT("Copy to Savebox failed")
 #define STR_ERR_NOITEM1				TEXT("Item 1 not set")
+#define STR_ERR_NOITEM2				TEXT("Item 2 needed for UNLESS")
 #define STR_ERR_NOSAVEBOX			TEXT("No Savebox selected")
 #define STR_ERR_NOSAVEBOXES			TEXT("No Savebox account found")
 #define STR_ERR_INPUTFINDSTRING		TEXT("No 'Find' string entered")
 #define STR_ERR_NOMAIL				TEXT("No Mail in the list")
 #define STR_ERR_SENDLOCK			TEXT("Sending barred! Transmission in progress")
 #define STR_ERR_FILTBOX				TEXT("A filter for %s has been disabled because it refers to an invalid SaveBox")
+#define STR_ERR_CANTDELETE			TEXT("Error deleting old backup file %s; please delete manually.")
+#define STR_ERR_LOADMAILBOX			TEXT("Error loading %s")
+#define STR_ERR_FILEEXIST			TEXT("Can't find file %s")
+#define STR_ERR_FILENAME			TEXT("Invalid character in filename")
+#define STR_ERR_FILECONFLICT		TEXT("\"%s\" conflicts with filename for %s")
+#define STR_ERR_NOFILENAME			TEXT("No file name specified")
+#define STR_ERR_NOSBOXNAME			TEXT("No name specified for savebox")
+#define STR_ERR_NOUIDLNOFILL		TEXT("Cannot fill-in messages because 'NoUIDL=1' for this account")
 
 // Socket error
 #define STR_ERR_SOCK_SELECT			TEXT("Selection error")
@@ -114,13 +124,17 @@
 #define STR_ERR_RAS_CONNECT			TEXT("Dial-up connection failed")
 #define STR_ERR_RAS_DISCONNECT		TEXT("Dial-up was cut or line dropped")
 
+// Warning
+#define STR_WARN_ATTACH_MEM			TEXT("Attachments may be too large to encode\nin available memory")
+
 // Question
 #define STR_Q_DELETE				TEXT("Delete it?")
-#define STR_Q_DELSERVERMAIL			TEXT("Warning!  This will delete mail from the server")
+#define STR_Q_DELSERVERMAIL			TEXT("Warning! Messages are marked to\ndelete from server. Delete them?")
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
 #define STR_Q_DELMAILBOX			TEXT("Delete mailbox?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
+#define STR_Q_DELSBOXFILE			TEXT("Delete existing file \"%s%s\" from DataFileDir?")
 #define STR_Q_OVERWRITE				TEXT("\"%s\" \nMessage already in Savebox\nOverwrite?")
 #define STR_Q_COPY					TEXT("Copy %d mail to %s?")
 #define STR_Q_MOVE					TEXT("Move %d mail to %s?")
@@ -133,7 +147,13 @@
 #define STR_Q_ATTACH				TEXT("Open this file?")
 #define STR_Q_FORWARDMAIL			TEXT("The message you are forwarding may be incomplete.\nProceed to forward anyway?")
 #define STR_Q_RASDISCON				TEXT("Disconnect dial-up connection?")
+#define STR_Q_QUEUEDMAIL_EXIT		TEXT("Messages marked for sending haven't been sent.\nExit anyway?")
+#define STR_Q_EXITSAVE				TEXT("Save files?")
 #define STR_Q_UPGRADE				TEXT("Import settings from nPOP to nPOPuk?")
+#define STR_Q_USEPOOM				TEXT("Using PocketContacts will replace existing items in Address book.\nProceed anyway?")
+#define STR_Q_LOADMAILBOX			TEXT("Load mailbox \"%s\"?")
+#define STR_Q_LOADASMBOX			TEXT("Load %s as MBOX (%d messages) instead of nPOP format (1 message)?")
+#define STR_Q_NOBODYDELATT			TEXT("Message has no text part; deleting attachments\nwill leave nothing.  Proceed?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
@@ -141,7 +161,9 @@
 									TEXT("Mark it and update server to download body")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
-#define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.")
+#define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
+#define STR_RADIO_RENAMESBOX		TEXT("Rename &savebox")
+#define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -162,10 +184,8 @@
 #define STR_TITLE_ERROR				TEXT("Error")
 #define STR_TITLE_SETMAILBOX		TEXT("Account Settings")
 #define STR_TITLE_OPTION			TEXT("Global Options")
-#ifndef _WIN32_WCE
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")
-#endif
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ALLFIND			TEXT("Look up \"%s\"")
 #define STR_TITLE_ATTACH_MSG		TEXT("Open")
@@ -175,9 +195,17 @@
 #define STR_TITLE_ADDSBOX			TEXT("Add SaveBox")
 
 // Window status
-#define STR_STATUS_VIEWINFO			TEXT("View %d  ")
+#define STR_STATUS_VIEWINFO			TEXT("View %d (%s) ")
+#ifdef _WIN32_WCE
 #define STR_STATUS_MAILBOXINFO		TEXT("View %d/ Server %d")
+#else
+#define STR_STATUS_MAILBOXINFO		TEXT("View %d (%s) / Server %d (%s)")
+#endif
 #define STR_STATUS_MAILINFO			TEXT("New %d, Unread %d")
+#define STR_STATUS_MAILSIZE_B		TEXT("%d B")
+#define STR_STATUS_MAILSIZE_KB		TEXT("%s KB")
+#define STR_STATUS_MAILSIZE_MB		TEXT("%s MB")
+#define STR_STATUS_MAILSIZE_GB		TEXT("%s GB")
 
 // Socket status
 #define STR_STATUS_GETHOSTBYNAME	TEXT("Finding Host...")
@@ -185,8 +213,11 @@
 #define STR_STATUS_SSL				TEXT("SSL connect...")
 #define STR_STATUS_RECV				TEXT("Receiving...")
 #define STR_STATUS_SENDBODY			TEXT("Sending body...")
+#define STR_STATUS_SEND_ATT			TEXT("Sending attachment %d...")
+#define STR_STATUS_ATT_END			TEXT("Done sending attachments")
 #define STR_STATUS_SOCKINFO			TEXT("%d byte %s")
 #define STR_STATUS_SOCKINFO_RECV	TEXT("Recv")
+#define STR_STATUS_RECVDONE			TEXT("Recv done.")
 #define STR_STATUS_SOCKINFO_SEND	TEXT("Send")
 #define STR_STATUS_SEND_USER		TEXT("Send username")
 #define STR_STATUS_SEND_PASS		TEXT("Send password")
@@ -223,6 +254,7 @@
 #define STR_LIST_MENU_FORWARD		TEXT("&Forward...\tCtrl+O")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark for sending\tCtrl+D")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
+#define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark for download\tCtrl+D")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
 #define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
@@ -262,9 +294,9 @@
 #define STR_FILTER_ACTION			TEXT("Action")
 #define STR_FILTER_ITEM1			TEXT("Item 1")
 #define STR_FILTER_CONTENT1			TEXT("Content 1")
+#define STR_FILTER_BOOLEAN			TEXT("Op")
 #define STR_FILTER_ITEM2			TEXT("Item 2")
 #define STR_FILTER_CONTENT2			TEXT("Content 2")
-
 #define STR_FILTER_UNRECV			TEXT("Reject")
 #define STR_FILTER_RECV				TEXT("Accept")
 #define STR_FILTER_DOWNLOADMARK		TEXT("Mark for download")
@@ -272,6 +304,13 @@
 #define STR_FILTER_READICON			TEXT("Mark as read")
 #define STR_FILTER_COPY				TEXT("Copy to:")
 #define STR_FILTER_MOVE				TEXT("Move to:")
+#define STR_FILTER_AND				TEXT("&&")
+#define STR_FILTER_OR				TEXT("||")
+#define STR_FILTER_UNLESS			TEXT("&& !")
+#define STR_LAZYLOAD_STARTUP		TEXT("All at startup")
+#define STR_LAZYLOAD_AUTO			TEXT("Automatically as needed")
+#define STR_LAZYLOAD_AUTO_NOSEARCH	TEXT("Auto, but not for find/next unread")
+#define STR_LAZYLOAD_PROMPT			TEXT("Ask before loading for find/next unread")
 
 // Cc list
 #define STR_CCLIST_TYPE				TEXT("Type")

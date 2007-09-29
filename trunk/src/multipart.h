@@ -30,10 +30,13 @@ typedef struct _MULTIPART {
 /* Function Prototypes */
 MULTIPART *multipart_add(MULTIPART ***tpMultiPart, int cnt);
 void multipart_free(MULTIPART ***tpMultiPart, int cnt);
+#ifndef WSAASYNC
+void encatt_free(char ***EncAtt, int cnt);
+#endif
 char *multipart_get_filename(char *buf, char *Attribute);
 int multipart_scan(char *ContentType, char *buf);
 int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int cnt);
-int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody);
+int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody, int *num_att, char ***EncAtt);
 
 #endif
 /* End of source */
