@@ -4,7 +4,7 @@
 
 	General.h
 
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
+	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -22,9 +22,9 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <winsock.h>
+#include <tchar.h>
 
 #ifdef UNICODE
-#include <tchar.h>
 #include <stdlib.h>
 #endif
 
@@ -39,7 +39,7 @@
 	Define
 **************************************************************************/
 
-#define APP_NAME				TEXT("nPOP Ver 1.0.1")
+#define APP_NAME				TEXT("nPOP Ver 1.0.2")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
@@ -80,6 +80,7 @@
 #define TABSTOPLEN				8					//TAB Stop
 
 #define LV_COL_CNT				4					//ListViewのカラム数
+#define AD_COL_CNT				2					//ListView Addressbook
 
 #define MAILBOX_SAVE			0					//固定メールボックス
 #define MAILBOX_SEND			1
@@ -261,10 +262,6 @@
 #define tstrlen					strlen
 #else
 #define tstrlen					lstrlen
-#endif
-
-#ifndef UNICODE
-#define _ttoi					a2i
 #endif
 
 #define tCopyMemory				memcpy

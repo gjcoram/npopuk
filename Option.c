@@ -127,6 +127,8 @@ extern int RasWaitSec;
 extern struct TPRASINFO **RasInfo;
 extern int RasInfoCnt;
 
+extern int AddColSize[];
+
 
 /**************************************************************************
 	Local Function Prototypes
@@ -3410,13 +3412,8 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 
 		hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
-#ifdef _WIN32_WCE
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 100, STR_ADDRESSLIST_MAILADDRESS, 0);
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 100, STR_ADDRESSLIST_COMMENT, 1);
-#else
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 250, STR_ADDRESSLIST_MAILADDRESS, 0);
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 190, STR_ADDRESSLIST_COMMENT, 1);
-#endif
+		ListView_AddColumn(hListView, LVCFMT_LEFT, AddColSize[0], STR_ADDRESSLIST_MAILADDRESS, 0);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, AddColSize[1], STR_ADDRESSLIST_COMMENT, 1);
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
@@ -3601,6 +3598,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if(AutoSave == 1){
 				//ƒAƒhƒŒƒX’ ‚ð•Û‘¶
 				SaveAddressBook(ADDRESS_FILE, AddressBox);
+			}
+			for(i = 0; i < AD_COL_CNT; i++){
+				AddColSize[i] = ListView_GetColumnWidth(hListView, i);
 			}
 			EndDialog(hDlg, TRUE);
 			break;

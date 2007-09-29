@@ -4,7 +4,7 @@
 
 	Item.c
 
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
+	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -964,10 +964,10 @@ int Item_GetStringSize(struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
 	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
 	int len = 0;
 
-	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
-	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
-	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
-	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+	_itot(tpMailItem->No, X_No, 10);
+	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
+	_itot(tpMailItem->Status, X_Status, 10);
+	_itot(tpMailItem->Download, X_Downflag, 10);
 
 	len += GetSaveHeaderStringSize(TEXT(HEAD_FROM), tpMailItem->From);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_TO), tpMailItem->To);
@@ -1014,10 +1014,10 @@ TCHAR *Item_GetString(TCHAR *buf, struct TPMAILITEM *tpMailItem, BOOL BodyFlag)
 	TCHAR *p = buf;
 	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
 
-	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
-	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
-	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
-	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+	_itot(tpMailItem->No, X_No, 10);
+	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
+	_itot(tpMailItem->Status, X_Status, 10);
+	_itot(tpMailItem->Download, X_Downflag, 10);
 
 	p = SaveHeaderString(TEXT(HEAD_FROM), tpMailItem->From, p);
 	p = SaveHeaderString(TEXT(HEAD_TO), tpMailItem->To, p);

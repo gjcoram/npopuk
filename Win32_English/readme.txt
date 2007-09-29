@@ -1,4 +1,4 @@
-nPOP Ver 1.0.1
+nPOP Ver 1.0.2
 --
 
 [Introduction]
@@ -110,10 +110,11 @@ Special thanks:
   Marlof Bregonje
   Takehiko Hanada
   Antoine
+  Greg Chapman
 
 --
 
-Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
+Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-10/29/2002
+02/11/2005

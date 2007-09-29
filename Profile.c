@@ -4,7 +4,7 @@
 
 	Profile.c
 
-	Copyright (C) 1996-2002 by Tomoaki Nakashima. All rights reserved.
+	Copyright (C) 1996-2005 by Nakashima Tomoaki. All rights reserved.
 		http://www.nakka.com/
 		nakka@nakka.com
 
@@ -261,7 +261,7 @@ BOOL Profile_Initialize(TCHAR *path, BOOL ReadFlag)
 	}
 
 	/* ファイルを開く */
-	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(hFile == NULL || hFile == (HANDLE)-1){
 		return FALSE;
 	}
@@ -704,7 +704,7 @@ void Profile_WriteInt(TCHAR *Section, TCHAR *Key, int num, TCHAR *File)
 {
 	TCHAR ret[BUFSIZE];
 
-	wsprintf(ret, TEXT("%d"), num);
+	_itot(num, ret, 10);
 	Profile_WriteData(Section, Key, ret, File);
 }
 /* End of source */

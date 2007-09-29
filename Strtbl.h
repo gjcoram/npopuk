@@ -15,7 +15,6 @@
 
 //General
 #define STR_DEFAULT_FONT			TEXT("ＭＳ ゴシック")
-#define STR_DEFAULT_FONTCHARSET		SHIFTJIS_CHARSET
 
 #define STR_DEFAULT_BURA			TEXT("、。，．？！゛゜…‥・’”：；）〕］｝〉》」』】≫々ゝゞぁぃぅぇぉっゃゅょァィゥェォッャュョー")
 #define STR_DEFAULT_OIDA			TEXT("‘“￥＄（［｛「〔《『【〈≪")
