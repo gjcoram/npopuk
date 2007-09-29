@@ -1,4 +1,4 @@
-nPOP Ver 1.0.8
+nPOP Ver 1.0.9
 --
 
 [Introduction]
@@ -69,4 +69,4 @@ Special thanks:
 Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-07/05/2006
+11/17/2006

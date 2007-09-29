@@ -163,7 +163,7 @@ BOOL ini_read_setting(HWND hWnd)
 		DataDir = op.DataFileDir;
 		for (p = r = DataDir; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 				p++;
 				continue;
 			}

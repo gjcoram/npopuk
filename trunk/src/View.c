@@ -1610,7 +1610,7 @@ static void OpenURL(HWND hWnd)
 		if (*p == TEXT('(') || *p == TEXT(')') || *p == TEXT('\"') ||
 			*p == TEXT('<') || *p == TEXT('>') ||
 			*p == TEXT('\r') || *p == TEXT('\n') || *p == TEXT('\t') ||
-			*p == TEXT(' ')) { // || IsDBCSLeadByte((BYTE)*p) == TRUE) {
+			*p == TEXT(' ')) { // || (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0'))) {
 			*p = TEXT('\0');
 			break;
 		}

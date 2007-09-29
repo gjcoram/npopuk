@@ -157,7 +157,7 @@ void filename_conv(TCHAR *buf)
 
 	while (*p != TEXT('\0')) {
 #ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			// 2バイトコード
 			p += 2;
 			continue;

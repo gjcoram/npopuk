@@ -886,6 +886,13 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf)
 		if (tpMailItem->Attach != NULL) {
 			TCHAR *p;
 			for (p = tpMailItem->Attach; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+				// 2バイトコードの場合は2バイト進める
+				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+					p++;
+					continue;
+				}
+#endif
 				if (*p == TEXT(',')) {
 					*p = ATTACH_SEP;
 				}

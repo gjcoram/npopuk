@@ -283,7 +283,7 @@ static int get_encode_wrap_len(TCHAR *buf, int len)
 #ifdef UNICODE
 		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 			p++;
 			i++;
