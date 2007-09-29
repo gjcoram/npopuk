@@ -393,34 +393,53 @@ int StrCmpNI(const char *buf1, const char *buf2, int len)
 /*
  * StrMatch - 2つの文字列をワイルドカード(*)を使って比較を行う
  */
-BOOL StrMatch(const TCHAR *Ptn, const TCHAR *Str)
+BOOL StrMatch(const TCHAR *ptn, const TCHAR *str)
 {
 #define ToLower(c)		((c >= TEXT('A') && c <= TEXT('Z')) ? (c - TEXT('A') + TEXT('a')) : c)
-	switch (*Ptn) {
+	switch (*ptn) {
 	case TEXT('\0'):
-		return (*Str == TEXT('\0'));
+		return (*str == TEXT('\0'));
 	case TEXT('*'):
-		return StrMatch(Ptn + 1, Str) || (*Str != TEXT('\0')) && StrMatch(Ptn, Str + 1);
+		if (StrMatch(ptn + 1, str) == TRUE) {
+			return TRUE;
+		}
+		while (*str != TEXT('\0')) {
+			str++;
+			if (StrMatch(ptn + 1, str) == TRUE) {
+				return TRUE;
+			}
+		}
+		return FALSE;
 	case TEXT('?'):
-		return (*Str != TEXT('\0')) && StrMatch(Ptn + 1, Str + 1);
+		return (*str != TEXT('\0')) && StrMatch(ptn + 1, str + 1);
 	default:
-		return (ToLower(*Ptn) == ToLower(*Str)) && StrMatch(Ptn + 1, Str + 1);
+		while (ToLower(*ptn) == ToLower(*str)) {
+			if (*ptn == TEXT('\0')) {
+				return TRUE;
+			}
+			ptn++;
+			str++;
+			if (*ptn == TEXT('*') || *ptn == TEXT('?')) {
+				return StrMatch(ptn, str);
+			}
+		}
+		return FALSE;
 	}
 }
 
 /*
  * StrFind - 文字列内に含まれる文字列を検索して位置を返す
  */
-TCHAR *StrFind(TCHAR *Ptn, TCHAR *Str, int CaseFlag)
+TCHAR *StrFind(TCHAR *ptn, TCHAR *str, int CaseFlag)
 {
 	TCHAR *p;
 	int len1, len2;
 
-	len1 = lstrlen(Ptn);
-	for (p = Str; *p != '\0'; p++) {
+	len1 = lstrlen(ptn);
+	for (p = str; *p != '\0'; p++) {
 		len2 = GetStrLen(p, len1);
 		if (CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
-			(CaseFlag) ? 0 : NORM_IGNORECASE, p, len2, Ptn, len1) == 2) {
+			(CaseFlag) ? 0 : NORM_IGNORECASE, p, len2, ptn, len1) == 2) {
 			break;
 		}
 #ifndef UNICODE

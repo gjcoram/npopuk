@@ -32,7 +32,7 @@
 #include <Strtbl.h>
 
 /* Define */
-#define APP_NAME				TEXT("nPOP Ver 1.0.4")
+#define APP_NAME				TEXT("nPOP Ver 1.0.5")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 
@@ -124,34 +124,35 @@
 #define POP_ERR					-2					// POP3コマンドフラグ
 #define POP_QUIT				-1
 #define POP_START				0
-#define POP_USER				1
-#define POP_PASS				2
-#define POP_LOGIN				3
-#define POP_STAT				4
-#define POP_LIST				5
-#define POP_UIDL				6
-#define POP_TOP					7
-#define POP_RETR				8
-#define POP_DELE				9
-#define POP_UIDL2				10
-#define POP_STARTTLS			11
+#define POP_STARTTLS			1
+#define POP_USER				2
+#define POP_PASS				3
+#define POP_LOGIN				4
+#define POP_STAT				5
+#define POP_LIST				6
+#define POP_UIDL				7
+#define POP_UIDL_ALL			8
+#define POP_UIDL_CHECK			9
+#define POP_TOP					10
+#define POP_RETR				11
+#define POP_DELE				12
 
 #define SMTP_ERR				POP_ERR				// SMTPコマンドフラグ
 #define SMTP_QUIT				POP_QUIT
 #define SMTP_START				POP_START
 #define SMTP_EHLO				1
-#define SMTP_AUTH				2
-#define SMTP_AUTHLOGIN			3
-#define SMTP_AUTHLOGIN_PASS		4
-#define SMTP_HELO				5
-#define SMTP_RSET				6
-#define SMTP_MAILFROM			7
-#define SMTP_RCPTTO				8
-#define SMTP_DATA				9
-#define SMTP_SENDBODY			10
-#define SMTP_NEXTSEND			11
-#define SMTP_SENDEND			12
-#define SMTP_STARTTLS			13
+#define SMTP_STARTTLS			2
+#define SMTP_AUTH_CRAM_MD5		3
+#define SMTP_AUTH_LOGIN			4
+#define SMTP_AUTH_LOGIN_PASS	5
+#define SMTP_HELO				6
+#define SMTP_RSET				7
+#define SMTP_MAILFROM			8
+#define SMTP_RCPTTO				9
+#define SMTP_DATA				10
+#define SMTP_SENDBODY			11
+#define SMTP_NEXTSEND			12
+#define SMTP_SENDEND			13
 
 #define ICON_NON				0					// アイコン状態
 #define ICON_MAIL				1
@@ -193,20 +194,17 @@
 #define HEAD_X_MAILER			"X-Mailer:"
 #define HEAD_X_UIDL				"X-UIDL:"
 #define HEAD_X_NO				"X-No:"
-#define HEAD_X_STATUS			"X-Mark:"
-#define HEAD_X_MSTATUS			"X-Status:"
-#define HEAD_X_DOWNFLAG			"X-Download:"
+#define HEAD_X_MARK				"X-Mark:"
+#define HEAD_X_STATUS			"X-Status:"
+#define HEAD_X_DOWNLOAD			"X-Download:"
 #define HEAD_X_MAILBOX			"X-MailBox:"
 #define HEAD_X_ATTACH			"X-File:"
 
 #define HEAD_X_NO_OLD			"X-MailNo:"
-#define HEAD_X_STATUS_OLD		"X-MarkStatus:"
-#define HEAD_X_MSTATUS_OLD		"X-MailStatus:"
-#define HEAD_X_DOWNFLAG_OLD		"X-MailDownload:"
+#define HEAD_X_MARK_OLD			"X-MarkStatus:"
+#define HEAD_X_STATUS_OLD		"X-MailStatus:"
+#define HEAD_X_DOWNLOAD_OLD		"X-MailDownload:"
 #define HEAD_X_ATTACH_OLD		"X-Attach:"
-
-#define RSET					"RSET\r\n"
-#define QUIT					"QUIT\r\n"
 
 #define URL_HTTP				TEXT("http://")
 #define URL_HTTPS				TEXT("https:// ")
@@ -586,8 +584,8 @@ int StrCmpNI(const char *buf1, const char *buf2, int len);
 #define StrCmpNI TStrCmpNI
 #endif
 
-BOOL StrMatch(const TCHAR *Ptn, const TCHAR *Str);
-TCHAR *StrFind(TCHAR *Ptn, TCHAR *Str, int CaseFlag);
+BOOL StrMatch(const TCHAR *ptn, const TCHAR *str);
+TCHAR *StrFind(TCHAR *ptn, TCHAR *str, int CaseFlag);
 TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str);
 int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag);
 BOOL GetHeaderStringT(TCHAR *buf, TCHAR *ret, BOOL CrLfFlag);
@@ -725,40 +723,37 @@ BOOL RasStatusProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL RasMailBoxStart(HWND hWnd, int BoxIndex);
 
 // WinSock
-unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr);
-SOCKET ConnectServer(HWND hWnd, unsigned long IPaddr, unsigned short Port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr);
-int RecvBufProc(HWND hWnd, SOCKET soc);
+unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr);
+SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr);
+int recv_proc(HWND hWnd, SOCKET soc);
 #ifndef WSAASYNC
-int RecvSelect(HWND hWnd, SOCKET soc);
-#endif
-int Tsend(SOCKET soc, TCHAR *wBuf);
-int SendBuf(SOCKET soc, char *buf);
+int recv_select(HWND hWnd, SOCKET soc);
+#endif	//WSAASYNC
+int send_data(SOCKET soc, TCHAR *wbuf);
+int send_buf(SOCKET soc, char *buf);
 #ifdef UNICODE
-int TSendBuf(SOCKET soc, TCHAR *wBuf);
-#else
-#define TSendBuf	SendBuf
-#endif
-void SocketClose(HWND hWnd, SOCKET soc);
+int send_buf_t(SOCKET soc, TCHAR *wbuf);
+#else	//UNICODE
+#define send_buf_t	send_buf
+#endif	//UNICODE
+void socket_close(HWND hWnd, SOCKET soc);
+void socket_free(void);
 int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr);
 void free_ssl(void);
 
 // Pop3
-void FreeMailBuf(void);
-void FreeUidlList(void);
-BOOL ListPopProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-						  MAILBOX *tpMailBox, BOOL ShowFlag);
-BOOL DownLoadPopProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-							  MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+void pop3_free(void);
 
 // Smtp
 void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
-void SmtpError(HWND hWnd);
-BOOL SmtpProc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr,
-					   MAILBOX *tpMailBox, BOOL ShowFlag);
-SOCKET SendMailItem(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
 #ifdef WSAASYNC
-BOOL SendProc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox);
+BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr, MAILBOX *tpMailBox);
 #endif
+BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
+void smtp_set_error(HWND hWnd);
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
@@ -857,11 +852,11 @@ void SwitchCursor(const BOOL Flag);
 BOOL _SetForegroundWindow(const HWND hWnd);
 #endif
 void SetStatusTextT(HWND hWnd, TCHAR *buf, int Part);
-void SetSocStatusTextT(HWND hWnd, TCHAR *buf, int Part);
+void SetSocStatusTextT(HWND hWnd, TCHAR *buf);
 #ifdef UNICODE
-void SetStatusText(HWND hWnd, char *buf);
+void SetSocStatusText(HWND hWnd, char *buf);
 #else
-#define SetStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf, 1)
+#define SetSocStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf)
 #endif
 void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox);
 void SetStatusRecvLen(HWND hWnd, int len, TCHAR *msg);

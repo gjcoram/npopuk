@@ -28,7 +28,7 @@ extern MAILBOX *AddressBox;
 static void Item_GetContentT(TCHAR *buf, TCHAR *str, TCHAR **ret);
 static int Item_GetContentInt(TCHAR *buf, TCHAR *str, int DefaultRet);
 static int Item_GetMultiContent(char *buf, char *str, char **ret);
-static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag);
+static int GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag);
 static void Item_SetMailBody(MAILITEM *tpMailItem, char *buf, BOOL download);
 static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent);
 static BOOL FilterCheck(MAILBOX *tpMailBox, char *buf);
@@ -317,9 +317,10 @@ static int Item_GetMultiContent(char *buf, char *str, char **ret)
  */
 char *Item_GetMessageId(char *buf)
 {
-	char *Content;
+	char *Content, *p;
 	MD5_CTX context;
 	unsigned char digest[16];
+	int len;
 
 	// Message-Id取得
 	Content = NULL;
@@ -329,19 +330,32 @@ char *Item_GetMessageId(char *buf)
 		return Content;
 	}
 	mem_free(&Content);
-	Content = NULL;
 
 	// UIDLを取得
+	Content = NULL;
 	Item_GetContent(buf, HEAD_X_UIDL, &Content);
 	if (Content != NULL && *Content != '\0') {
 		return Content;
 	}
 	mem_free(&Content);
-	Content = NULL;
 
-	// メッセージのハッシュ
+	// Dateを取得
+	Content = NULL;
+	Item_GetContent(buf, HEAD_DATE, &Content);
+	if (Content != NULL && *Content != '\0') {
+		return Content;
+	}
+	mem_free(&Content);
+
+	// ヘッダのハッシュ値を取得
+	p = GetBodyPointa(buf);
+	if (p != NULL) {
+		len = p - buf;
+	} else {
+		len = tstrlen(buf);
+	}
 	MD5Init(&context);
-	MD5Update(&context, buf, tstrlen(buf));
+	MD5Update(&context, buf, len);
 	MD5Final(digest, &context);
 
 	Content = (char *)mem_alloc(16 * 2 + 1);
@@ -355,7 +369,7 @@ char *Item_GetMessageId(char *buf)
 /*
  * GetMimeContent - ヘッダのコンテンツを取得してMIMEデコードを行う
  */
-static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
+static int GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
 {
 	char *Content;
 	int len;
@@ -381,6 +395,7 @@ static void GetMimeContent(char *buf, char *Head, TCHAR **ret, BOOL MultiFlag)
 #endif
 		mem_free(&Content);
 	}
+	return len;
 }
 
 /*
@@ -440,6 +455,7 @@ static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 {
 	TCHAR *Content;
 	BOOL ret;
+	int len;
 #ifdef UNICODE
 	char *head;
 #endif
@@ -447,23 +463,21 @@ static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 	if (Fcontent == NULL || *Fcontent == TEXT('\0')) {
 		return TRUE;
 	}
-
 #ifdef UNICODE
 	head = AllocTcharToChar(FHead);
 	if (head == NULL) {
 		return FALSE;
 	}
 	// コンテンツの取得
-	GetMimeContent(buf, head, &Content, TRUE);
+	len = GetMimeContent(buf, head, &Content, TRUE);
 	mem_free(&head);
 #else
 	// コンテンツの取得
-	GetMimeContent(buf, FHead, &Content, TRUE);
+	len = GetMimeContent(buf, FHead, &Content, TRUE);
 #endif
 	if (Content == NULL) {
 		return StrMatch(Fcontent, TEXT(""));
 	}
-
 	// 比較
 	ret = StrMatch(Fcontent, Content);
 	mem_free(&Content);
@@ -472,10 +486,7 @@ static BOOL FilterCheckItem(char *buf, TCHAR *FHead, TCHAR *Fcontent)
 
 /*
  * FilterCheck - フィルタ文字列のチェック
- *	(*(tpMailBox->tpFilter + i))->Flag = 0 // and
- *	(*(tpMailBox->tpFilter + i))->Flag = 1 // not
  */
-
 static int FilterCheck(MAILBOX *tpMailBox, char *buf)
 {
 	int RetFlag = 0;
@@ -486,14 +497,12 @@ static int FilterCheck(MAILBOX *tpMailBox, char *buf)
 		buf == NULL || *buf == '\0') {
 		return FILTER_RECV;
 	}
-
 	for (i = 0; i < tpMailBox->FilterCnt; i++) {
 		if (*(tpMailBox->tpFilter + i) == NULL ||
 			(*(tpMailBox->tpFilter + i))->Enable == 0) {
 			continue;
 		}
-
-		// 項目１のチェック
+		// 項目のチェック
 		if ((*(tpMailBox->tpFilter + i))->Header1 == NULL ||
 			*(*(tpMailBox->tpFilter + i))->Header1 == TEXT('\0')) {
 			continue;
@@ -502,7 +511,6 @@ static int FilterCheck(MAILBOX *tpMailBox, char *buf)
 			(*(tpMailBox->tpFilter + i))->Content1) == FALSE) {
 			continue;
 		}
-
 		if ((*(tpMailBox->tpFilter + i))->Header2 == NULL ||
 			*(*(tpMailBox->tpFilter + i))->Header2 == TEXT('\0') ||
 			FilterCheckItem(buf, (*(tpMailBox->tpFilter + i))->Header2,
@@ -630,14 +638,6 @@ BOOL Item_SetMailItem(MAILITEM *tpMailItem, char *buf, char *Size, BOOL download
 #else
 	tpMailItem->MessageID = Item_GetMessageId(buf);
 #endif
-
-	// UIDL
-	Item_GetContent(buf, HEAD_X_UIDL, &Content);
-	if (Content != NULL) {
-		mem_free(&tpMailItem->UIDL);
-		tpMailItem->UIDL = AllocCharToTchar(Content);
-		mem_free(&Content);
-	}
 
 	// In-Reply-To
 #ifdef UNICODE
@@ -839,19 +839,18 @@ MAILITEM *Item_StringToItem(MAILBOX *tpMailBox, TCHAR *buf)
 		tpMailItem->No = Item_GetContentInt(buf, TEXT(HEAD_X_NO_OLD), 0);
 	}
 	// MailStatus
-	tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_MSTATUS), -1);
+	tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_STATUS), -1);
 	if (tpMailItem->MailStatus == -1) {
-		tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_MSTATUS_OLD), 0);
+		tpMailItem->MailStatus = Item_GetContentInt(buf, TEXT(HEAD_X_STATUS_OLD), 0);
 	}
 	// MarkStatus
-	i = Item_GetContentInt(buf, TEXT(HEAD_X_STATUS), -1);
+	i = Item_GetContentInt(buf, TEXT(HEAD_X_MARK), -1);
 	tpMailItem->Status = (i != -1) ? i : tpMailItem->MailStatus;
 	// Download
-	tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNFLAG), -1);
+	tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNLOAD), -1);
 	if (tpMailItem->Download == -1) {
-		tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNFLAG_OLD), 0);
+		tpMailItem->Download = Item_GetContentInt(buf, TEXT(HEAD_X_DOWNLOAD_OLD), 0);
 	}
-
 	// Multipart
 	if (tpMailItem->Attach != NULL || (tpMailItem->ContentType != NULL &&
 		TStrCmpNI(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)) {
@@ -897,11 +896,11 @@ int Item_GetStringSize(MAILITEM *tpMailItem, BOOL BodyFlag)
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_ATTACH), tpMailItem->Attach);
 	len += GetSaveHeaderStringSize(TEXT(HEAD_X_NO), X_No);
-	len += GetSaveHeaderStringSize(TEXT(HEAD_X_MSTATUS), X_Mstatus);
+	len += GetSaveHeaderStringSize(TEXT(HEAD_X_STATUS), X_Mstatus);
 	if (tpMailItem->MailStatus != tpMailItem->Status) {
-		len += GetSaveHeaderStringSize(TEXT(HEAD_X_STATUS), X_Status);
+		len += GetSaveHeaderStringSize(TEXT(HEAD_X_MARK), X_Status);
 	}
-	len += GetSaveHeaderStringSize(TEXT(HEAD_X_DOWNFLAG), X_Downflag);
+	len += GetSaveHeaderStringSize(TEXT(HEAD_X_DOWNLOAD), X_Downflag);
 	len += 2;
 
 	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')) {
@@ -948,11 +947,11 @@ TCHAR *Item_GetString(TCHAR *buf, MAILITEM *tpMailItem, BOOL BodyFlag)
 	p = SaveHeaderString(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox, p);
 	p = SaveHeaderString(TEXT(HEAD_X_ATTACH), tpMailItem->Attach, p);
 	p = SaveHeaderString(TEXT(HEAD_X_NO), X_No, p);
-	p = SaveHeaderString(TEXT(HEAD_X_MSTATUS), X_Mstatus, p);
+	p = SaveHeaderString(TEXT(HEAD_X_STATUS), X_Mstatus, p);
 	if (tpMailItem->MailStatus != tpMailItem->Status) {
-		p = SaveHeaderString(TEXT(HEAD_X_STATUS), X_Status, p);
+		p = SaveHeaderString(TEXT(HEAD_X_MARK), X_Status, p);
 	}
-	p = SaveHeaderString(TEXT(HEAD_X_DOWNFLAG), X_Downflag, p);
+	p = SaveHeaderString(TEXT(HEAD_X_DOWNLOAD), X_Downflag, p);
 	p = TStrCpy(p, TEXT("\r\n"));
 
 	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != TEXT('\0')) {

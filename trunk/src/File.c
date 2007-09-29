@@ -739,11 +739,18 @@ BOOL ReadItemList(TCHAR *FileName, MAILBOX *tpMailBox)
 				}
 			}
 			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENDMAIL) {
-				tpMailItem->MailStatus = ICON_NON;
-				if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL && tpMailItem->Status != ICON_SEND) {
-					tpMailItem->Status = ICON_NON;
+				if (tpMailItem->Download == TRUE) {
+					tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR));
+					if (tpMailItem->Body != NULL) {
+						*tpMailItem->Body = TEXT('\0');
+					}
+				} else {
+					tpMailItem->MailStatus = ICON_NON;
+					if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL && tpMailItem->Status != ICON_SEND) {
+						tpMailItem->Status = ICON_NON;
+					}
+					tpMailItem->Download = FALSE;
 				}
-				tpMailItem->Download = FALSE;
 			}
 		}
 		p = r;
