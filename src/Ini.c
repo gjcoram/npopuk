@@ -300,6 +300,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SaveMsg = profile_get_int(GENERAL, TEXT("SaveMsg"), 1, app_path);
 	op.AutoSave = profile_get_int(GENERAL, TEXT("AutoSave"), 1, app_path);
 	op.WriteMbox = profile_get_int(GENERAL, TEXT("WriteMbox"), 0, app_path);
+	op.CheckQueuedOnExit = profile_get_int(GENERAL, TEXT("CheckQueuedOnExit"), 0, app_path);
 	op.PromptSaveOnExit = profile_get_int(GENERAL, TEXT("PromptSaveOnExit"), 0, app_path);
 #ifdef _WIN32_WCE
 	op.LazyLoadMailboxes = profile_get_int(GENERAL, TEXT("LazyLoadMailboxes"), 1, app_path);
@@ -653,6 +654,12 @@ BOOL ini_read_setting(HWND hWnd)
 		} else {
 			// 起動時に新着位置の初期化
 			(MailBox + num)->LastNo = -1;
+			if (op.StartInit == 2 || (MailBox + num)->StartInit == 2) {
+				// fill in from start, don't delete existing messages
+				(MailBox+num)->ListInitMsg = FALSE;
+			} else {
+				(MailBox+num)->ListInitMsg = TRUE;
+			}
 		}
 
 		// CyclicFlag
@@ -804,7 +811,7 @@ BOOL ini_read_setting(HWND hWnd)
 /*
  * ini_save_setting - INIファイルへ設定情報を書き出す
  */
-BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir)
 {
 	FILTER *tpFilter;
 	TCHAR app_path[BUF_SIZE];
@@ -908,6 +915,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	profile_write_int(GENERAL, TEXT("SaveMsg"), op.SaveMsg, app_path);
 	profile_write_int(GENERAL, TEXT("AutoSave"), op.AutoSave, app_path);
 	profile_write_int(GENERAL, TEXT("WriteMbox"), op.WriteMbox, app_path);
+	profile_write_int(GENERAL, TEXT("CheckQueuedOnExit"), op.CheckQueuedOnExit, app_path);
 	profile_write_int(GENERAL, TEXT("PromptSaveOnExit"), op.PromptSaveOnExit, app_path);
 	profile_write_int(GENERAL, TEXT("LazyLoadMailboxes"), op.LazyLoadMailboxes, app_path);
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
@@ -1316,8 +1324,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 	//Retention
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
 		MAILBOX *tpMailBox = MailBox + j;
-		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE) {
-			// GJC || tpMailBox->NeedsSave == 0
+		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE
+			|| (tpMailBox->NeedsSave == 0 && SaveAll == FALSE)) {
 			continue;
 		}
 		if (op.WriteMbox != tpMailBox->WasMbox) {

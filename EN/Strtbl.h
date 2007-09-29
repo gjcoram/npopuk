@@ -37,7 +37,7 @@
 #define STR_FILE_FILTER				TEXT("All Files (*.*)\0*.*\0\0")
 #define STR_TEXT_FILTER				TEXT("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0")
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")
-#define STR_MBOX_FILTER				TEXT("MBOX Files (*.mbx)\0*.mbx\0All Files (*.*)\0*.*\0\0")
+#define STR_MBOX_FILTER				TEXT("MBOX Files (*.mbx)\0*.mbx\0EML Files (*.eml)\0*.eml\0nPOP Files (*.dat)\0*.dat\0All Files (*.*)\0*.*\0\0")
 
 // Error
 #define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
@@ -51,6 +51,7 @@
 #define STR_ERR_OPEN				TEXT("Open File error")
 #define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
+#define STR_ERR_FILENAME_TOO_LONG	TEXT("Filename or path too long")
 #define STR_ERR_ADD					TEXT("Address not added")
 #define STR_ERR_VIEW				TEXT("Display failed")
 #define STR_ERR_TOOMANYFILES		TEXT("Too many files selected; try again.")
@@ -157,8 +158,7 @@
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
-#define STR_MSG_NOBODY				TEXT("Message body not downloaded. Cannot be opened\n\n")\
-									TEXT("Mark it and update server to download body")
+#define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
@@ -249,13 +249,13 @@
 #define STR_LIST_THREADSTR			TEXT("  + ")
 
 #define STR_LIST_MENU_SENDINFO		TEXT("&Property...")
-#define STR_LIST_MENU_REPLY		TEXT("&Reply...\tCtrl+R")
+#define STR_LIST_MENU_REPLY			TEXT("&Reply...\tCtrl+R")
 #define STR_LIST_MENU_REPLYALL		TEXT("Repl&y to all...\tCtrl+Alt+R")
-#define STR_LIST_MENU_FORWARD		TEXT("&Forward...\tCtrl+O")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark for sending\tCtrl+D")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark for download\tCtrl+D")
+#define STR_LIST_MENU_DELLIST		TEXT("Delete from &list")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
 #define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
 

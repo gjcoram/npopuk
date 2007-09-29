@@ -34,8 +34,10 @@ void multipart_free(MULTIPART ***tpMultiPart, int cnt);
 void encatt_free(char ***EncAtt, int cnt);
 #endif
 char *multipart_get_filename(char *buf, char *Attribute);
+#ifdef DO_MULTIPART_SCAN
 int multipart_scan(char *ContentType, char *buf);
-int multipart_parse(char *ContentType, char *buf, MULTIPART ***tpMultiPart, int cnt);
+#endif
+int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART ***tpMultiPart, int cnt);
 int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody, int *num_att, char ***EncAtt);
 
 #endif

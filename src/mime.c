@@ -1264,7 +1264,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 /*
  * MIME_body_decode - 本文のデコード (RFC 822, RFC 2822, RFC 2045)
  */
-TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt, int *TextIndex)
+TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart, MULTIPART ***tpPart, int *cnt, int *TextIndex)
 {
 #ifdef UNICODE
 	char *ContentType;
@@ -1274,7 +1274,6 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 	TCHAR *r;
 	TCHAR *wenc_ret = NULL;
 	char *enc_ret = NULL;
-	int encode = 0;
 	int i;
 	*TextIndex = -1;
 
@@ -1283,10 +1282,10 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		// マルチパートを解析する
 #ifdef UNICODE
 		ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
-		*cnt = multipart_parse(ContentType, tpMailItem->Body, tpPart, 0);
+		*cnt = multipart_parse(ContentType, tpMailItem->Body, StopAtTextPart, tpPart, 0);
 		mem_free(&ContentType);
 #else
-		*cnt = multipart_parse(tpMailItem->ContentType, tpMailItem->Body, tpPart, 0);
+		*cnt = multipart_parse(tpMailItem->ContentType, tpMailItem->Body, StopAtTextPart, tpPart, 0);
 #endif
 	}
 
@@ -1296,7 +1295,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 			(**tpPart)->ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
 			(**tpPart)->Encoding = alloc_tchar_to_char(tpMailItem->Encoding);
 		}
-		(**tpPart)->sPos = tpMailItem->Body;
+		(**tpPart)->sPos = (**tpPart)->hPos = tpMailItem->Body;
 		if (ViewSrc == TRUE || (**tpPart)->ContentType == NULL ||
 			str_cmp_ni((**tpPart)->ContentType, "text", tstrlen("text")) == 0) {
 			// テキスト
@@ -1311,6 +1310,12 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 			(**tpPart)->Filename = multipart_get_filename(tpMailItem->ContentType, "name");
 #endif
 		}
+		if (tpMailItem->HasHeader && tpMailItem->Multipart == MULTIPART_NONE && (**tpPart)->sPos != NULL) {
+			char *p = GetBodyPointa((**tpPart)->sPos);
+			if (p != NULL) {
+				(**tpPart)->sPos = p;
+			}
+		}
 		*cnt = 1;
 	} else {
 		// テキストのパートを検索
@@ -1324,14 +1329,22 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 	}
 
 	if (*cnt > 0 && *TextIndex != -1) {
+		char *spos;
+		int encode = 0;
+		if (ViewSrc == FALSE) {
+			spos = (*(*tpPart + *TextIndex))->sPos;
+		} else {
+			spos = (*(*tpPart + *TextIndex))->hPos;
+		}
+
 		// 本文の取得
 		if ((*(*tpPart + *TextIndex))->ePos == NULL) {
-			body = alloc_copy((*(*tpPart + *TextIndex))->sPos);
+			body = alloc_copy(spos);
 			if (body == NULL) {
 				return NULL;
 			}
 		} else {
-			i = (*(*tpPart + *TextIndex))->ePos - (*(*tpPart + *TextIndex))->sPos;
+			i = (*(*tpPart + *TextIndex))->ePos - spos;
 			body = (char *)mem_alloc(sizeof(char) * (i + 1));
 			if (body == NULL) {
 				return NULL;
@@ -1339,7 +1352,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 			if (i == 0) {
 				*body = '\0';
 			} else {
-				str_cpy_n(body, (*(*tpPart + *TextIndex))->sPos, i - 1);
+				str_cpy_n(body, spos, i - 1);
 			}
 		}
 
@@ -1372,15 +1385,22 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart,
 		} else {
 			mem_free(&body);
 		}
-	} else if (*TextIndex == -1) {
-		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
+//	} else if (*TextIndex == -1 && tpMailItem->Body != NULL) {
+//		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
 	}
 
-	if (wenc_ret == NULL) {
+	if (wenc_ret == NULL && tpMailItem->Body != NULL) {
+		char *p = tpMailItem->Body, *q;
+		if (ViewSrc == FALSE && tpMailItem->HasHeader) {
+			q = GetBodyPointa(p);
+			if (q != NULL) {
+				p = q;
+			}
+		}
 #ifdef UNICODE
-		r = wenc_ret = alloc_char_to_tchar(tpMailItem->Body);
+		r = wenc_ret = alloc_char_to_tchar(p);
 #else
-		r = tpMailItem->Body;
+		r = p;
 #endif
 	} else {
 		r = wenc_ret;

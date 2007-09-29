@@ -29,7 +29,7 @@ char *MIME_rfc2231_decode(char *buf);
 BOOL MIME_create_encode_header(TCHAR *charset, int encoding, char *ret_content_type, char *ret_encoding);
 char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr);
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body);
-TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, MULTIPART ***tpPart, int *cnt, int *TextIndex);
+TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart, MULTIPART ***tpPart, int *cnt, int *TextIndex);
 
 #endif
 /* End of source */

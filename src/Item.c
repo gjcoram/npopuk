@@ -53,16 +53,16 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what);
 /*
  * item_is_mailbox - メールボックス内のメールリストに指定のメールが存在するか調べる
  */
-BOOL item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem)
+int item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem)
 {
 	int i;
 
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == tpMailItem) {
-			return TRUE;
+			return i;
 		}
 	}
-	return FALSE;
+	return -1;
 }
 
 /*
@@ -783,7 +783,12 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 	// Content-Type
 	item_get_mime_content(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType, FALSE);
 	if (tpMailItem->ContentType != NULL &&
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), lstrlen(TEXT("multipart/alternative"))) == 0) {
+		tpMailItem->Multipart = MULTIPART_HTML;
+	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
+		tpMailItem->Multipart = MULTIPART_ATTACH;
+#ifdef DO_MULTIPART_SCAN
 		if (tpMailItem->Download) {
 			// if fully downloaded, check if it is text/plain and text/html with no real attachments
 #ifdef UNICODE
@@ -797,6 +802,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 			// if not fully downloaded, may be attachments in remainder
 			tpMailItem->Multipart = MULTIPART_ATTACH;
 		}
+#endif
 	} else {
 		// Content-Transfer-Encoding
 #ifdef UNICODE
@@ -1229,10 +1235,10 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 
 		// Mark
 		mrk = i / 10;
-		tpMailItem->Mark = (mrk <= ICON_ERROR) ? mrk : 0;
+		tpMailItem->Mark = (mrk <= ICON_ERROR) ? mrk : ICON_NON;
 		// Status
 		stat = i % 10;
-		tpMailItem->MailStatus = (stat <= ICON_ERROR) ? stat : 0;
+		tpMailItem->MailStatus = (stat <= ICON_ERROR) ? stat : ICON_NON;
 		
 	} else if (Import == TRUE) {
 		tpMailItem->MailStatus = tpMailItem->Mark = (ImportRead == TRUE) ? ICON_READ : ICON_MAIL;
@@ -1272,9 +1278,14 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 			tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 		}
 	} else if (tpMailItem->ContentType != NULL &&
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), lstrlen(TEXT("multipart/alternative"))) == 0) {
+		tpMailItem->Multipart = MULTIPART_HTML;
+	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		// multipart_scan *after* setting the body
 		tpMailItem->Multipart = MULTIPART_ATTACH;
+	//} else {
+	//	tpMailItem->Multipart = MULTIPART_NONE;
 	}
 	return tpMailItem;
 }
@@ -1330,7 +1341,9 @@ static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret)
 int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 {
 	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
-	int len = 0;
+	int do_body, len = 0;
+
+	do_body = (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') ? 1 : 0;
 
 	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
 	wsprintf(X_Mstatus, TEXT("%d"), STATUS_REVISION_NUMBER);
@@ -1387,11 +1400,11 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFlag)
 
 	len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
 	len += item_save_header_size(TEXT(HEAD_X_STATUS), X_Mstatus);
-	if (op.WriteMbox == 0 || tpMailItem->HasHeader == 0) {
+	if (do_body && (op.WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
 		len += 2;
 	}
 
-	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') {
+	if (do_body) {
 		if (op.WriteMbox == 1) {
 			char *r;
 			int l = tstrlen(MBOX_DELIMITER);
@@ -1419,13 +1432,15 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFla
 {
 	char *p = buf;
 	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
-	int prio;
-	int composite_status;
+	int do_body, prio, composite_status;
+
+	do_body = (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') ? 1 : 0;
+
 	// GJC: order of codes must match item_string_to_item!
 	composite_status = STATUS_REVISION_NUMBER
 		+ 10000 * 2 * tpMailItem->ReFwd
-		+  1000 * tpMailItem->HasHeader
-		+   100 * ((tpMailItem->Download == TRUE) ? 1 : 0)
+		+  1000 * tpMailItem->HasHeader * do_body
+		+   100 * ((tpMailItem->Download == TRUE) ? do_body : 0)
 		+    10 * tpMailItem->Mark
 		+         tpMailItem->MailStatus;
 
@@ -1487,11 +1502,11 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag, BOOL SepFla
 	p = item_save_header(TEXT(HEAD_X_NO), X_No, p);
 	// HEAD_X_STATUS should be the last header written by nPOPuk!
 	p = item_save_header(TEXT(HEAD_X_STATUS), X_Mstatus, p);
-	if (op.WriteMbox == 0 || tpMailItem->HasHeader == 0) {
+	if (do_body && (op.WriteMbox == 0 || tpMailItem->HasHeader == 0)) {
 		p = str_cpy(p, "\r\n");
 	}
 
-	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') {
+	if (do_body) {
 		if (op.WriteMbox == 1) {
 			char *r;
 			int l = tstrlen(MBOX_DELIMITER);

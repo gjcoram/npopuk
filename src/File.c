@@ -657,7 +657,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 				}
 				if (*r == '\n') {
 					r++;
-					if (*r == '\r' && *(r+1) == '\n') {
+					if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
+						tpMailItem->HasHeader = 0;
+					} else if (*r == '\r' && *(r+1) == '\n') {
 						r += 2;
 						tpMailItem->HasHeader = 0;
 					}
@@ -707,6 +709,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						*s = *p;
 					}
 					*s = '\0';
+// GJC: now, multipart/alternative <==> MULTIPART_HTML
+#ifdef DO_MULTIPART_SCAN
 					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->Download == TRUE
 						&& tpMailItem->Attach == NULL && tpMailItem->FwdAttach == NULL) {
 						// is it text/plain and text/html with no real attachments
@@ -718,7 +722,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						tpMailItem->Multipart = multipart_scan(tpMailItem->ContentType, tpMailItem->Body);
 #endif
 					}
-
+#endif
 					if (tpMailItem->HasHeader == 1 || (MboxFormat == 1 && tpMailItem->Encoding != NULL)) {
 						// strip duplicate headers and/or convert from foreign MBOX format
 						char *newbody;
@@ -766,7 +770,6 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 					if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL && tpMailItem->Mark != ICON_SEND) {
 						tpMailItem->Mark = ICON_NON;
 					}
-					tpMailItem->Download = FALSE;
 				}
 			}
 		}
@@ -969,6 +972,12 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 //		wsprintf(encrypt_header, TEXT("%s %d.\r\n"), ENCRYPT_PREAMBLE, tpMailBox->MailItemCnt);
 //		len = lstrlen(encrypt_header);
 //	}
+
+	i = lstrlen(SaveDir) + lstrlen(FileName) + 5; // .bak\0
+	if (i >= BUF_SIZE) {
+		ErrorMessage(NULL, STR_ERR_FILENAME_TOO_LONG);
+		return FALSE;
+	}
 
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);

@@ -329,9 +329,9 @@ BEGIN
         MENUITEM "&Next mail",                  ID_MENUITEM_NEXTMAIL
         MENUITEM "Next &unread mail",           ID_MENUITEM_NEXTUNREAD
         MENUITEM SEPARATOR
-        MENUITEM "&Reply...",                   ID_MENUITEM_REMESSEGE
+        MENUITEM "&Reply",                      ID_MENUITEM_REMESSEGE
         MENUITEM "Reply to &all",               ID_MENUITEM_ALLREMESSEGE
-        MENUITEM "&Forward...",                 ID_MENUITEM_FORWARD
+        MENUITEM "&Forward",                    ID_MENUITEM_FORWARD
         MENUITEM "Address &info",               ID_MENUITEM_PROP
         MENUITEM SEPARATOR
         POPUP "&Mark"
@@ -721,7 +721,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "^",IDC_BUTTON_UP,150,25,10,20
     PUSHBUTTON      "v",IDC_BUTTON_DOWN,150,70,10,20
-    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,0,140,30,14
+    PUSHBUTTON      "&New",IDC_BUTTON_ADD,0,140,30,14
     PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,32,140,30,14
     PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,64,140,31,14
     PUSHBUTTON      "&Mail",IDC_BUTTON_MAIL,97,140,31,14
@@ -759,7 +759,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_COMMENT,5,45,150,15,ES_AUTOHSCROLL
     LTEXT           "C&ategories:",IDC_STATIC,5,65,50,10
     COMBOBOX        IDC_ADDR_GRP_COMBO,5,75,100,110,CBS_DROPDOWN | 
-                    WS_VSCROLL | WS_TABSTOP
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Cancel",IDCANCEL,120,75,35,14
 END
 

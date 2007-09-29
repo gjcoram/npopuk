@@ -42,7 +42,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.06")
+#define APP_NAME				TEXT("nPOPuk Ver 2.07")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -331,6 +331,7 @@ typedef struct _OPTION {
 	int SaveMsg;
 	int AutoSave;
 	int WriteMbox;
+	int CheckQueuedOnExit;
 	int PromptSaveOnExit;
 	int LazyLoadMailboxes;
 	int LvColSize[LV_COL_CNT];
@@ -712,11 +713,11 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);
 // Ini
 BOOL ini_start_auth_check(void);
 BOOL ini_read_setting(HWND hWnd);
-BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir);
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir);
 void ini_free(void);
 
 // Item
-BOOL item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
+int item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
 BOOL item_set_count(MAILBOX *tpMailBox, int i);
 BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
 void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override);
@@ -917,7 +918,6 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, B
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
-void GJCDebugMessage(HWND hWnd, TCHAR *strMsg);
 
 #endif
 /* End of source */
