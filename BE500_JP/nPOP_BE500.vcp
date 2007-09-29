@@ -159,20 +159,6 @@ DEP_CPP_FILE_=\
 # Begin Source File
 
 SOURCE=..\src\Font.c
-DEP_CPP_FONT_=\
-	"..\JP\Strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
-	
 # End Source File
 # Begin Source File
 
@@ -216,7 +202,7 @@ DEP_CPP_ITEM_=\
 # Begin Source File
 
 SOURCE=..\src\jp.c
-DEP_CPP_JP_Cc=\
+DEP_CPP_JP_Ca=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
@@ -234,20 +220,6 @@ DEP_CPP_JP_Cc=\
 # Begin Source File
 
 SOURCE=..\src\kr.c
-DEP_CPP_KR_Ce=\
-	"..\JP\Strtbl.h"\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	{$(INCLUDE)}"ComComposer.h"\
-	{$(INCLUDE)}"COShellAPI.h"\
-	{$(INCLUDE)}"CoSipApi.h"\
-	{$(INCLUDE)}"CS.h"\
-	{$(INCLUDE)}"CSO.h"\
-	{$(INCLUDE)}"CSOBar.h"\
-	{$(INCLUDE)}"CSOButton.h"\
-	{$(INCLUDE)}"CWind.h"\
-	{$(INCLUDE)}"SipApi.h"\
-	
 # End Source File
 # Begin Source File
 
@@ -290,6 +262,7 @@ DEP_CPP_MAILB=\
 SOURCE=..\src\main.c
 DEP_CPP_MAIN_=\
 	"..\JP\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"ComComposer.h"\
@@ -423,7 +396,11 @@ DEP_CPP_SMTP_=\
 # Begin Source File
 
 SOURCE=..\src\String.c
-DEP_CPP_STRIN=\
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\util.c
+DEP_CPP_UTIL_=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
@@ -484,6 +461,10 @@ DEP_CPP_WINSO=\
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\src\Font.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\General.h
 # End Source File
 # Begin Source File
@@ -521,6 +502,10 @@ SOURCE=.\resrc1.h
 # Begin Source File
 
 SOURCE=.\stdafx.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\String.h
 # End Source File
 # Begin Source File
 

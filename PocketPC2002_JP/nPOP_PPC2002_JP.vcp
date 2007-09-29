@@ -227,8 +227,10 @@ DEP_CPP_CODE_=\
 	"..\src\jp.h"\
 	"..\src\kr.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_CODE_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -280,8 +282,10 @@ DEP_CPP_EDIT_=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -337,8 +341,10 @@ DEP_CPP_FILE_=\
 	"..\src\General.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_FILE_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -390,8 +396,10 @@ DEP_CPP_FONT_=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_FONT_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -447,8 +455,10 @@ DEP_CPP_INI_C=\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_INI_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -508,8 +518,10 @@ DEP_CPP_ITEM_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_ITEM_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -561,8 +573,10 @@ DEP_CPP_JP_Cc=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_JP_Cc=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -614,8 +628,10 @@ DEP_CPP_KR_Ce=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_KR_Ce=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -667,8 +683,10 @@ DEP_CPP_LISTV=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_LISTV=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -720,8 +738,10 @@ DEP_CPP_MAILB=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAILB=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -773,8 +793,10 @@ DEP_CPP_MAIN_=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAIN_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -876,8 +898,10 @@ DEP_CPP_MULTI=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MULTI=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -944,8 +968,10 @@ DEP_CPP_OPTIO=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_OPTIO=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1005,8 +1031,10 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_POP3_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1089,8 +1117,10 @@ DEP_CPP_RAS_C=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_RAS_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1134,8 +1164,10 @@ NODEP_CPP_SELEC=\
 
 DEP_CPP_SELEC=\
 	"..\JP\Strtbl.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SELEC=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1195,8 +1227,10 @@ DEP_CPP_SMTP_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SMTP_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1251,6 +1285,63 @@ NODEP_CPP_STRIN=\
 !ELSEIF  "$(CFG)" == "nPOP_PPC2002_JP - Win32 (WCE x86) Debug"
 
 DEP_CPP_STRIN=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	
+NODEP_CPP_STRIN=\
+	".\ipapi.h"\
+	".\ygshell.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\util.c
+
+!IF  "$(CFG)" == "nPOP_PPC2002_JP - Win32 (WCE ARM) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_PPC2002_JP - Win32 (WCE ARM) Debug"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_PPC2002_JP - Win32 (WCE x86) Release"
+
+DEP_CPP_UTIL_=\
+	"..\JP\Strtbl.h"\
+	"..\src\General.h"\
+	"..\src\global.h"\
+	"..\src\md5.h"\
+	".\stdafx.h"\
+	{$(INCLUDE)}"aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
+	
+
+!ELSEIF  "$(CFG)" == "nPOP_PPC2002_JP - Win32 (WCE x86) Debug"
+
+DEP_CPP_UTIL_=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
@@ -1317,8 +1408,10 @@ DEP_CPP_VIEW_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1370,8 +1463,10 @@ DEP_CPP_WINSO=\
 	"..\JP\Strtbl.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_WINSO=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ENDIF 
@@ -1381,6 +1476,10 @@ DEP_CPP_WINSO=\
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\src\Font.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\src\General.h
@@ -1420,6 +1519,10 @@ SOURCE=.\resrc1.h
 # Begin Source File
 
 SOURCE=..\src\SelectFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\String.h
 # End Source File
 # Begin Source File
 

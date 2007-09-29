@@ -123,6 +123,8 @@ DefEditApp=0
 
 #添付ファイルを開く時の保存先 (DataFileDir\AttachPath)
 AttachPath="_attach_"
+#添付ファイルを開く時に 0-警告を出さない 1-警告を出す
+AttachWarning=1
 #終了時に開くで使われた添付ファイルを 0-削除しない 1-削除する
 AttachDelete=1
 
@@ -130,11 +132,14 @@ AttachDelete=1
 URLApp=
 
 [MAILBOX-n]
+#POP3でUIDLを 0-使う 1-使わない
+NoUIDL=0
+
 #送信設定で Reply-To が指定されていない場合に付加する Reply-To
 ReplyTo=
 #「送信時に自分当てにコピーを送信」の送信先 (","で区切って複数指定可)
 BccAddr=
-#SMTP認証で強制的に認証方式を設定する 0-自動 1-CRAM_MD5 2-LOGIN 3-PLAIN
+#SMTP認証で強制的に認証方式を設定する 0-自動 1-CRAM-MD5 2-LOGIN 3-PLAIN
 SmtpAuthType=0
 
 #SSL用証明書チェーンの長さ

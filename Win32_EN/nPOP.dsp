@@ -177,6 +177,10 @@ SOURCE=..\src\String.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\util.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\View.c
 # End Source File
 # Begin Source File
@@ -187,6 +191,10 @@ SOURCE=..\src\WinSock.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\src\Font.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\src\General.h
@@ -222,6 +230,10 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=.\resrc1.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\String.h
 # End Source File
 # Begin Source File
 

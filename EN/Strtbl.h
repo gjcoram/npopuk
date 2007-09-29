@@ -156,12 +156,14 @@
 // Socket status
 #define STR_STATUS_GETHOSTBYNAME	TEXT("Finding Host...")
 #define STR_STATUS_CONNECT			TEXT("Connecting...")
+#define STR_STATUS_SSL				TEXT("SSL connect...")
 #define STR_STATUS_RECV				TEXT("Receiving...")
 #define STR_STATUS_SENDBODY			TEXT("Sending body...")
 #define STR_STATUS_SOCKINFO			TEXT("%d byte %s")
 #define STR_STATUS_SOCKINFO_RECV	TEXT("Recv")
 #define STR_STATUS_SOCKINFO_SEND	TEXT("Send")
-#define STR_STATUS_SSL				TEXT("SSL connect...")
+#define STR_STATUS_SEND_USER		TEXT("Send username")
+#define STR_STATUS_SEND_PASS		TEXT("Send password")
 
 // Ras status
 #define STR_STATUS_RAS_START		TEXT("Starting Dial-up")

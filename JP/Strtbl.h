@@ -70,25 +70,25 @@
 #define STR_ERR_SOCK_BADPASSWORD	TEXT("ﾕｰｻﾞ名かﾊﾟｽﾜｰﾄﾞが間違っています\n\n")
 #define STR_ERR_SOCK_ACCOUNT		TEXT("ｱｶｳﾝﾄが受け付けられませんでした\n\n")
 #define STR_ERR_SOCK_NOAPOP			TEXT("APOPに対応していないｻｰﾊﾞです")
-#define STR_ERR_SOCK_STAT			TEXT("STAT に失敗しました\n\n")
-#define STR_ERR_SOCK_TOP			TEXT("TOP に失敗しました\n\n")
-#define STR_ERR_SOCK_RETR			TEXT("RETR に失敗しました\n\n")
+#define STR_ERR_SOCK_STAT			TEXT("STATに失敗しました\n\n")
+#define STR_ERR_SOCK_TOP			TEXT("TOPに失敗しました\n\n")
+#define STR_ERR_SOCK_RETR			TEXT("RETRに失敗しました\n\n")
 #define STR_ERR_SOCK_DELE			TEXT("削除に失敗しました\n\n")
 #define STR_ERR_SOCK_NOATTACH		TEXT("添付ﾌｧｲﾙが見つかりませんでした")
 #define STR_ERR_SOCK_BADFROM		TEXT("送信元ﾒｰﾙｱﾄﾞﾚｽが正しく設定されていません")
-#define STR_ERR_SOCK_HELO			TEXT("HELO に失敗しました\n")\
+#define STR_ERR_SOCK_HELO			TEXT("HELOに失敗しました\n")\
 									TEXT("送信元ﾒｰﾙｱﾄﾞﾚｽが正しく設定されているか確認してください\n\n")
 #define STR_ERR_SOCK_SMTPAUTH		TEXT("SMTPｻｰﾊﾞのﾛｸﾞｲﾝに失敗しました\n\n")
-#define STR_ERR_SOCK_RSET			TEXT("RSET に失敗しました\n\n")
-#define STR_ERR_SOCK_MAILFROM		TEXT("MAIL FROM に失敗しました\n")\
+#define STR_ERR_SOCK_RSET			TEXT("RSETに失敗しました\n\n")
+#define STR_ERR_SOCK_MAILFROM		TEXT("MAIL FROMに失敗しました\n")\
 									TEXT("送信元ﾒｰﾙｱﾄﾞﾚｽが正しく設定されているか確認してください\n\n")
 #define STR_ERR_SOCK_NOTO			TEXT("送信先が設定されていません")
-#define STR_ERR_SOCK_RCPTTO			TEXT("RCPT TO に失敗しました\n")\
+#define STR_ERR_SOCK_RCPTTO			TEXT("RCPT TOに失敗しました\n")\
 									TEXT("送信先ﾒｰﾙｱﾄﾞﾚｽが正しく設定されているか確認してください\n\n")
-#define STR_ERR_SOCK_DATA			TEXT("DATA に失敗しました\n\n")
+#define STR_ERR_SOCK_DATA			TEXT("DATAに失敗しました\n\n")
 #define STR_ERR_SOCK_MAILSEND		TEXT("ﾒｰﾙ送信に失敗しました\n\n")
 #define STR_ERR_SOCK_SSL_INIT		TEXT("SSLの初期化に失敗しました\n%s")
-#define STR_ERR_SOCK_SSL_VERIFY		TEXT("サーバ証明書の検証に失敗しました\n%s")
+#define STR_ERR_SOCK_SSL_VERIFY		TEXT("ｻｰﾊﾞ証明書の検証に失敗しました\n%s")
 #define STR_ERR_SOCK_NOSSL			TEXT("'npopssl.dll' の初期化に失敗しました")
 
 // Ras error
@@ -152,14 +152,16 @@
 #define STR_STATUS_MAILINFO			TEXT("新着 %d, 未開封 %d")
 
 // Socket status
-#define STR_STATUS_GETHOSTBYNAME	TEXT("gethostbyname...")
-#define STR_STATUS_CONNECT			TEXT("connect...")
+#define STR_STATUS_GETHOSTBYNAME	TEXT("ﾎｽﾄ名解決中...")
+#define STR_STATUS_CONNECT			TEXT("接続中...")
+#define STR_STATUS_SSL				TEXT("SSL接続中...")
 #define STR_STATUS_RECV				TEXT("受信中...")
 #define STR_STATUS_SENDBODY			TEXT("本文送信中...")
 #define STR_STATUS_SOCKINFO			TEXT("%d ﾊﾞｲﾄ%s")
 #define STR_STATUS_SOCKINFO_RECV	TEXT("受信")
 #define STR_STATUS_SOCKINFO_SEND	TEXT("送信")
-#define STR_STATUS_SSL				TEXT("SSL connect...")
+#define STR_STATUS_SEND_USER		TEXT("ﾕｰｻﾞ名送信")
+#define STR_STATUS_SEND_PASS		TEXT("ﾊﾟｽﾜｰﾄﾞ送信")
 
 // Ras status
 #define STR_STATUS_RAS_START		TEXT("ﾀﾞｲﾔﾙｱｯﾌﾟ開始")

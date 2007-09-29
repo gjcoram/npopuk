@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 /* Define */
 #define IDC_CB				2000
@@ -135,13 +136,13 @@ void FreeMailBox(MAILBOX *tpMailBox)
 BOOL ReadMailBox(void)
 {
 	//•Û‘¶” 
-	(MailBox + MAILBOX_SAVE)->Name = AllocCopy(STR_SAVEBOX_NAME);
+	(MailBox + MAILBOX_SAVE)->Name = alloc_copy(STR_SAVEBOX_NAME);
 	if(ReadItemList(SAVEBOX_FILE, (MailBox + MAILBOX_SAVE)) == FALSE){
 		return FALSE;
 	}
 
 	//‘—M” 
-	(MailBox + MAILBOX_SEND)->Name = AllocCopy(STR_SENDBOX_NAME);
+	(MailBox + MAILBOX_SEND)->Name = alloc_copy(STR_SENDBOX_NAME);
 	if(ReadItemList(SENDBOX_FILE, (MailBox + MAILBOX_SEND)) == FALSE){
 		return FALSE;
 	}
@@ -486,7 +487,7 @@ int GetNameToMailBox(TCHAR *Name)
 		return -1;
 	}
 	for(i = 0; i < MailBoxCnt; i++){
-		if(TStrCmpI((MailBox + i)->Name, Name) == 0){
+		if(lstrcmpi((MailBox + i)->Name, Name) == 0){
 			return i;
 		}
 	}

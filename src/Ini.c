@@ -11,6 +11,7 @@
 /* Include Files */
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 #include "Profile.h"
 
 /* Define */
@@ -78,7 +79,7 @@ BOOL CheckStartPass(void)
 	TCHAR ret[BUF_SIZE];
 	TCHAR pass[BUF_SIZE];
 
-	TStrJoin(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	profile_initialize(app_path, TRUE);
 
 	op.StertPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
@@ -136,7 +137,7 @@ BOOL GetINI(HWND hWnd)
 #endif
 	ReleaseDC(hWnd, hdc);
 
-	TStrJoin(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	if (profile_initialize(app_path, TRUE) == FALSE) {
 		return FALSE;
 	}
@@ -207,7 +208,7 @@ BOOL GetINI(HWND hWnd)
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
 	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
-	op.Password = AllocCopy(tmp);
+	op.Password = alloc_copy(tmp);
 
 	op.LvColSize[0] = profile_get_int(GENERAL, TEXT("LvColSize-0"), 150, app_path);
 	op.LvColSize[1] = profile_get_int(GENERAL, TEXT("LvColSize-1"), 100, app_path);
@@ -314,6 +315,7 @@ BOOL GetINI(HWND hWnd)
 	op.EditFileSuffix = profile_alloc_string(GENERAL, TEXT("EditFileSuffix"), TEXT("txt"), app_path);
 	op.DefEditApp = profile_get_int(GENERAL, TEXT("DefEditApp"), 0, app_path);
 	op.AttachPath = profile_alloc_string(GENERAL, TEXT("AttachPath"), TEXT("attach"), app_path);
+	op.AttachWarning = profile_get_int(GENERAL, TEXT("AttachWarning"), 1, app_path);
 	op.AttachDelete = profile_get_int(GENERAL, TEXT("AttachDelete"), 1, app_path);
 
 #ifdef _WIN32_WCE
@@ -353,7 +355,7 @@ BOOL GetINI(HWND hWnd)
 		wsprintf(key_buf, TEXT("RASINFO-%d_%s"), j, TEXT("RasPass"));
 		len = profile_get_string(TEXT("RASINFO"), key_buf, TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((*(op.RasInfo + j))->RasUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(*(op.RasInfo + j))->RasPass = AllocCopy(tmp);
+		(*(op.RasInfo + j))->RasPass = alloc_copy(tmp);
 	}
 
 	i = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
@@ -380,7 +382,7 @@ BOOL GetINI(HWND hWnd)
 		// Pass
 		profile_get_string(buf, TEXT("Pass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((MailBox + cnt)->User, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->Pass = AllocCopy(tmp);
+		(MailBox + cnt)->Pass = alloc_copy(tmp);
 		// APOP
 		(MailBox + cnt)->APOP = profile_get_int(buf, TEXT("APOP"), 0, app_path);
 		// POP SSL
@@ -392,8 +394,10 @@ BOOL GetINI(HWND hWnd)
 		(MailBox + cnt)->PopSSLInfo.Cert = profile_alloc_string(buf, TEXT("PopSSLCert"), TEXT(""), app_path);
 		(MailBox + cnt)->PopSSLInfo.Pkey = profile_alloc_string(buf, TEXT("PopSSLPkey"), TEXT(""), app_path);
 		(MailBox + cnt)->PopSSLInfo.Pass = profile_alloc_string(buf, TEXT("PopSSLPass"), TEXT(""), app_path);
-		// No RETR
+		// Disable RETR
 		(MailBox + cnt)->NoRETR = profile_get_int(buf, TEXT("NoRETR"), 0, app_path);
+		// Disable UIDL
+		(MailBox + cnt)->NoUIDL = profile_get_int(buf, TEXT("NoUIDL"), 0, app_path);
 
 		// MailCnt
 		(MailBox + cnt)->MailCnt = profile_get_int(buf, TEXT("MailCnt"), 0, app_path);
@@ -403,7 +407,7 @@ BOOL GetINI(HWND hWnd)
 		if (op.StartInit == 0) {
 			// LastMessageId
 			profile_get_string(buf, TEXT("LastMessageId"), TEXT(""), ret, BUF_SIZE - 1, app_path);
-			(MailBox + cnt)->LastMessageId = AllocTcharToChar(ret);
+			(MailBox + cnt)->LastMessageId = alloc_tchar_to_char(ret);
 			// LastNo
 			(MailBox + cnt)->LastNo = profile_get_int(buf, TEXT("LastNo"), 0, app_path);
 		} else {
@@ -452,7 +456,7 @@ BOOL GetINI(HWND hWnd)
 		// SMTP Authentication Pass
 		profile_get_string(buf, TEXT("SmtpPass"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 		EncodePassword((MailBox + cnt)->SmtpUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + cnt)->SmtpPass = AllocCopy(tmp);
+		(MailBox + cnt)->SmtpPass = alloc_copy(tmp);
 		// SMTP SSL
 		(MailBox + cnt)->SmtpSSL = profile_get_int(buf, TEXT("SmtpSSL"), 0, app_path);
 		// SMTP SSL Option
@@ -535,7 +539,7 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 	int j, t;
 	BOOL rc = TRUE;
 
-	TStrJoin(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	str_join(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	profile_initialize(app_path, TRUE);
 
 	profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir, app_path);
@@ -674,6 +678,7 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_string(GENERAL, TEXT("EditFileSuffix"), op.EditFileSuffix, app_path);
 	profile_write_int(GENERAL, TEXT("DefEditApp"), op.DefEditApp, app_path);
 	profile_write_string(GENERAL, TEXT("AttachPath"), op.AttachPath, app_path);
+	profile_write_int(GENERAL, TEXT("AttachWarning"), op.AttachWarning, app_path);
 	profile_write_int(GENERAL, TEXT("AttachDelete"), op.AttachDelete, app_path);
 
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp, app_path);
@@ -735,8 +740,10 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 		profile_write_string(buf, TEXT("PopSSLCert"), (MailBox + j)->PopSSLInfo.Cert, app_path);
 		profile_write_string(buf, TEXT("PopSSLPkey"), (MailBox + j)->PopSSLInfo.Pkey, app_path);
 		profile_write_string(buf, TEXT("PopSSLPass"), (MailBox + j)->PopSSLInfo.Pass, app_path);
-		// No RETR
+		// Disable RETR
 		profile_write_int(buf, TEXT("NoRETR"), (MailBox + j)->NoRETR, app_path);
+		// Disable UIDL
+		profile_write_int(buf, TEXT("NoUIDL"), (MailBox + j)->NoUIDL, app_path);
 
 		// MailCnt
 		profile_write_int(buf, TEXT("MailCnt"), (MailBox + j)->MailCnt, app_path);
@@ -747,7 +754,7 @@ BOOL PutINI(HWND hWnd, BOOL SaveMailFlag)
 			// LastMessageId
 			if ((MailBox + j)->LastMessageId != NULL) {
 #ifdef UNICODE
-				CharToTchar((MailBox + j)->LastMessageId, ret, BUF_SIZE - 1);
+				char_to_tchar((MailBox + j)->LastMessageId, ret, BUF_SIZE - 1);
 				*(ret + BUF_SIZE - 1) = TEXT('\0');
 				profile_write_string(buf, TEXT("LastMessageId"), ret, app_path);
 #else

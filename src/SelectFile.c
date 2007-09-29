@@ -122,7 +122,7 @@ static BOOL CretaeList(HWND hDlg, HWND hListView)
 		lvi.pszText = LPSTR_TEXTCALLBACK;
 		lvi.cchTextMax = 0;
 		lvi.iImage = I_IMAGECALLBACK;
-		lvi.lParam = (long)(FileList + i);
+		lvi.lParam = (LPARAM)(FileList + i);
 		ListView_InsertItem(hListView, &lvi);
 	}
 	return TRUE;

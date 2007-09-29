@@ -1,6 +1,6 @@
 // Korean encode
 
-#include "General.h"
+#include "String.h"
 
 #define IS_KSC(c) ((unsigned char)(c)>(unsigned char)0xa0&& \
   (unsigned char)(c)<(unsigned char)0xff)
@@ -119,7 +119,7 @@ void iso2022kr_ksc5601(const char *krs, char *ret)
   const char *ptr=krs;
 
   while (*ptr!='\0') {
-    if (!StrCmpNI(ptr, "\033$)C", 4)) {
+    if (!str_cmp_ni(ptr, "\033$)C", 4)) {
       ptr+=4;
       continue;
     }
@@ -155,7 +155,7 @@ size_t iso2022kr_ksc5601_len(const char *krs)
 
   while (*ptr!='\0') {
     mode=0; /* ascii */
-    if (!StrCmpNI(ptr, "\033$)C", 4)) {
+    if (!str_cmp_ni(ptr, "\033$)C", 4)) {
       kr=1;
       ptr+=4;
       continue;
