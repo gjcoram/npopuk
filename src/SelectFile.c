@@ -517,6 +517,9 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		break;
 
 	case WM_LVDBLCLICK:
+		if (g_action == FILE_CHOOSE_DIR) {
+			break;
+		}
 		if(ListView_GetNextItem(GetDlgItem(hDlg, IDC_LIST_FILE), -1, LVIS_SELECTED) != -1){
 			SendMessage(hDlg, WM_COMMAND, IDOK, 0);
 		}
@@ -528,7 +531,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		}
 		*buf = TEXT('\0');
 		ListView_GetItemText(GetDlgItem(hDlg, IDC_LIST_FILE), i, 0, buf, BUF_SIZE - 1);
-		if (CheckDir(buf) == TRUE) {
+		if (g_action == FILE_CHOOSE_DIR || CheckDir(buf) == TRUE) {
 			break;
 		}
 		// GJC - allow multiple selection with CTRL
@@ -665,13 +668,30 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret)
 {
 	BOOL rc;
+	TCHAR *filepart;
 
 	g_mode_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) ? TRUE : FALSE;
 	g_action = Action;
-	if (op.RememberOSD == 1) { // GJC
+	if (Action == FILE_CHOOSE_DIR) {
+		if (*fname == TEXT('\\')) {
+			TCHAR *ph, *qh;
+			lstrcpy(path, fname);
+			ph = qh = path;
+			while (*(++ph) != TEXT('\0')) {
+				if (*ph == TEXT('\\')) {
+					qh = ph;
+				}
+			}
+			*qh = TEXT('\0');
+			filepart = qh + 1;
+		} else {
+			filepart = fname;
+		}
+	} else if (op.RememberOSD == 1) { // GJC
 		lstrcpy(path, op.OpenSaveDir);
+		filepart = fname;
 	}
-	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)fname);
+	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {
 		if (Action == FILE_OPEN_MULTI && filename[0] == TEXT('\"')) {
 			// GJC - format multiple selected files as done by OFN_MULTISELECT for Win32
@@ -688,10 +708,12 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 				}
 			}
 			*p = TEXT('\0');
+		} else if (Action == FILE_CHOOSE_DIR) {
+			wsprintf(ret, TEXT("%s\\"), path);
 		} else {
 			wsprintf(ret, TEXT("%s\\%s"), path, filename);
 		}
-		if (op.RememberOSD == 1 && lstrcmp(path, op.OpenSaveDir) != 0) { // GJC
+		if (Action != FILE_CHOOSE_DIR && op.RememberOSD == 1 && lstrcmp(path, op.OpenSaveDir) != 0) { // GJC
 			mem_free(&op.OpenSaveDir);
 			op.OpenSaveDir = alloc_copy_t(path);
 		}

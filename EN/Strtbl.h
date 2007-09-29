@@ -44,6 +44,8 @@
 #define STR_ERR_READONLY			TEXT("Application directory is read-only")
 #define STR_ERR_NODATADIR			TEXT("DataFileDir is not a directory")
 #define STR_ERR_DATAREADONLY		TEXT("DataFileDir is read-only")
+#define STR_ERROR_BACKUP_APPDIR		TEXT("Cannot back-up to Application directory")
+#define STR_ERROR_BACKUP_DATADIR	TEXT("Cannot back-up to DataFileDir")
 #define STR_ERR_OPEN				TEXT("Open File error")
 #define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
@@ -235,6 +237,7 @@
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
 
 #define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk]\r\n")
+#define STR_NPOPUK_FILES			TEXT("nPOPuk files")
 
 // Mail edit
 #define STR_EDIT_HEAD_MAILBOX		TEXT("Account: ")
@@ -317,7 +320,7 @@
 #define STR_CMDBAR_ALLREMESSEGE		TEXT("Reply to all")
 #define STR_CMDBAR_DOWNMARK			TEXT("Mark for download")
 #define STR_CMDBAR_DELMARK			TEXT("Mark for delete")
-#define STR_CMDBAR_UNREADMARK		TEXT("Mark as unread")
+#define STR_CMDBAR_UNREADMARK		TEXT("Mark as read")
 #define STR_CMDBAR_FORWARD			TEXT("Forward")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")

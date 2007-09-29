@@ -35,6 +35,7 @@
 HWND MsgWnd = NULL;
 
 extern OPTION op;
+extern TCHAR *DataDir;
 
 static MAILBOX *tpOptionMailBox;
 static BOOL PropRet;
@@ -1414,8 +1415,9 @@ int SetMailBoxType(HWND hWnd, int Type)
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBOXTYPE), hWnd, MboxTypeProc, (LPARAM)Type) == FALSE) {
 		return -1;
 	} else {
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
+		mailbox_menu_rebuild(hWnd);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
 			(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 		return (MailBox + SelBox)->Type;
@@ -4023,7 +4025,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			if (op.AutoSave == 1) {
 				// アドレス帳を保存
-				file_save_address_book(ADDRESS_FILE, AddressBook);
+				file_save_address_book(ADDRESS_FILE, DataDir, AddressBook);
 			}
 			break;
 
@@ -4582,7 +4584,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if (op.AutoSave == 1) {
 				// アドレス帳を保存
-				file_save_address_book(ADDRESS_FILE, AddressBook);
+				file_save_address_book(ADDRESS_FILE, DataDir, AddressBook);
 			}
 			for (i = 0; i < AD_COL_CNT; i++) {
 				op.AddColSize[i] = ListView_GetColumnWidth(hListView, i);

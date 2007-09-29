@@ -99,6 +99,7 @@
 #define IDC_ADDR_GRP_COMBO              227
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
+#define ID_MENUITEM_BACKUP              230
 
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002
@@ -238,10 +239,6 @@
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
 #define ID_MENUITEM_MOVESAVE            1209
-#define ID_MENUITEM_COPY2MBOX           2000 // leave MAX_MAILBOX_CNT IDs free for copy
-#define ID_MENUITEM_COPY2NEW            2999
-#define ID_MENUITEM_MOVE2MBOX           3000 // leave MAX_MAILBOX_CNT IDs free for move
-#define ID_MENUITEM_MOVE2NEW            3999
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
@@ -315,6 +312,10 @@
 #define ID_MENUITEM_ENCODE              40095
 #define ID_MENUITEM_SAVEALL             40149
 #define ID_MENUITEM_FORWARD             40150
+#define ID_MENUITEM_COPY2MBOX           42000 // leave MAX_MAILBOX_CNT IDs free for copy
+#define ID_MENUITEM_COPY2NEW            42999
+#define ID_MENUITEM_MOVE2MBOX           43000 // leave MAX_MAILBOX_CNT IDs free for move
+#define ID_MENUITEM_MOVE2NEW            43999
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

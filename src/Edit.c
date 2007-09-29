@@ -60,17 +60,16 @@ extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern HWND MainWnd;
 extern HWND FocusWnd;
-extern HWND hViewWnd;
 extern HFONT hListFont;
+extern HWND hViewWnd;
+extern HFONT hViewFont;
+extern int font_charset;
+
 extern MAILBOX *MailBox;
 extern int SelBox;
 
 extern SOCKET g_soc;
 extern BOOL gSockFlag;
-
-extern HWND hViewWnd;
-extern HFONT hViewFont;
-extern int font_charset;
 
 /* Local Function Prototypes */
 static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress);
@@ -302,11 +301,20 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 					fname = (*(tpMultiPart + i))->Filename;
 					if (i != text && (*(tpMultiPart + i))->Forwardable &&
 						fname != NULL && *fname != '\0') {
+#ifdef UNICODE
+						TCHAR *fn_t;
+#endif
 						int size;
 						if (j > 0) {
 							*(p++) = ATTACH_SEP;
 						}
-						wsprintf(p, TEXT("%s"), fname);
+#ifdef UNICODE
+						fn_t = alloc_char_to_tchar(fname);
+						wsprintf(p, TEXT("%s"), fn_t);
+						mem_free(&fn_t);
+#else
+						wsprintf(p, "%s", fname);
+#endif
 						p += tstrlen(fname);
 						size = (*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->hPos;
 						if (size > 0) tpMailItem->AttachSize += size;
@@ -1387,7 +1395,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 
 	if (op.AutoSave == 1 && sent == FALSE) {
 		//Transmission box retention to file
-		file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
+		file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, 2);
 	}
 
 	SetWindowLong(hWnd, GWL_USERDATA, (LPARAM)0);
