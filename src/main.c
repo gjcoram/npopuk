@@ -40,6 +40,9 @@
 
 #define TRAY_ID					100					// タスクトレイID
 
+#define CMD_RSET				"RSET"
+#define CMD_QUIT				"QUIT"
+
 /* Global Variables */
 HINSTANCE hInst;							// Local copy of hInstance
 TCHAR *AppDir;								// アプリケーションパス
@@ -113,8 +116,8 @@ static PPROC RecvProc;						// 送受信プロシージャ
 // 外部参照
 extern OPTION op;
 
-extern char *RecvBuf;						// 内部受信バッファ
-extern char *RemainderBuf;					// 内部受信未処理バッファ
+extern char *recv_buf;						// 内部受信バッファ
+extern char *remainder_buf;					// 内部受信未処理バッファ
 extern TCHAR *FindStr;						// 検索文字列
 extern HWND hViewWnd;						// 表示ウィンドウ
 extern HWND MsgWnd;							// メール到着メッセージ
@@ -145,7 +148,7 @@ static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static BOOL SaveWindow(HWND hWnd);
 static BOOL EndWindow(HWND hWnd);
-static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int EndMailFlag);
+static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd);
 static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag);
 static BOOL MailMarkCheck(HWND hWnd, BOOL DelMsg, BOOL NoMsg);
 static BOOL ExecItem(HWND hWnd, int BoxIndex);
@@ -386,7 +389,7 @@ void SetStatusTextT(HWND hWnd, TCHAR *buf, int Part)
 /*
  * SetSocStatusTextT - ステータスの表示 (TCHAR)
  */
-void SetSocStatusTextT(HWND hWnd, TCHAR *buf, int Part)
+void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 {
 	TCHAR *SetBuf;
 
@@ -397,28 +400,28 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf, int Part)
 		}
 		TStrJoin(SetBuf, TEXT("["), (MailBox + RecvBox)->Name, TEXT("] "), buf, (TCHAR *)-1);
 #ifdef _WIN32_WCE_PPC
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)Part | SBT_NOBORDERS, (LPARAM)SetBuf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1 | SBT_NOBORDERS, (LPARAM)SetBuf);
 #else
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)Part, (LPARAM)SetBuf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)SetBuf);
 #endif
 		if (op.SocLog == 1) SaveLog(AppDir, LOG_FILE, SetBuf);
 
 		mem_free(&SetBuf);
 	} else {
 #ifdef _WIN32_WCE_PPC
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)Part | SBT_NOBORDERS, (LPARAM)buf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1 | SBT_NOBORDERS, (LPARAM)buf);
 #else
-		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)Part, (LPARAM)buf);
+		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)buf);
 #endif
 		if (op.SocLog == 1) SaveLog(AppDir, LOG_FILE, buf);
 	}
 }
 
 /*
- * SetStatusText - ステータスの表示
+ * SetSocStatusText - ステータスの表示
  */
 #ifdef UNICODE
-void SetStatusText(HWND hWnd, char *buf)
+void SetSocStatusText(HWND hWnd, char *buf)
 {
 	TCHAR *wbuf;
 
@@ -426,7 +429,7 @@ void SetStatusText(HWND hWnd, char *buf)
 	if (wbuf == NULL) {
 		return;
 	}
-	SetSocStatusTextT(hWnd, wbuf, 1);
+	SetSocStatusTextT(hWnd, wbuf);
 	mem_free(&wbuf);
 }
 #endif
@@ -560,12 +563,12 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 {
 	// ソケットを閉じる
 	if (g_soc != -1 && GetHostFlag == FALSE) {
-		SocketClose(hWnd, g_soc);
+		socket_close(hWnd, g_soc);
 	}
 	KillTimer(hWnd, ID_TIMEOUT_TIMER);
 	g_soc = -1;
 	if (BoxIndex == MAILBOX_SEND) {
-		SmtpError(hWnd);
+		smtp_set_error(hWnd);
 	}
 
 #ifndef WSAASYNC
@@ -1405,15 +1408,14 @@ static BOOL SaveWindow(HWND hWnd)
 		ExecFlag = FALSE;
 		NewMailCnt = -1;
 		MailFlag = POP_QUIT;
-		SendBuf(g_soc, RSET);
-		SendBuf(g_soc, QUIT);
-		SocketClose(hWnd, g_soc);
+		send_buf(g_soc, CMD_RSET"\r\n");
+		send_buf(g_soc, CMD_QUIT"\r\n");
+		socket_close(hWnd, g_soc);
 		if (op.RasCheckEndDisCon == 1) {
 			RasDisconnect();
 		}
 	}
-	mem_free(&RecvBuf);
-	mem_free(&RemainderBuf);
+	socket_free();
 
 	// ダイヤルアップの切断
 	if (RasLoop == TRUE || op.RasEndDisCon == 1) {
@@ -1544,7 +1546,7 @@ static BOOL EndWindow(HWND hWnd)
 /*
  * SendMail - メールの送信開始
  */
-static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int EndMailFlag)
+static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 {
 	MAILBOX *tpMailBox;
 	TCHAR *pass;
@@ -1612,12 +1614,12 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int EndMailFlag)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	SwitchCursor(FALSE);
-	RecvProc = SmtpProc;
+	RecvProc = smtp_proc;
 	MailFlag = SMTP_START;
 	ExecFlag = TRUE;
 
 	*ErrStr = TEXT('\0');
-	g_soc = SendMailItem(hWnd, tpMailBox, tpMailItem, EndMailFlag, ErrStr);
+	g_soc = smtp_send_mail(hWnd, tpMailBox, tpMailItem, end_cmd, ErrStr);
 	if (g_soc == -1) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
 		SocketErrorMessage(hWnd, ErrStr, MAILBOX_SEND);
@@ -1676,11 +1678,11 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 
 	RecvBox = BoxIndex;
 
-	// ホスト名からIPアドレスを取得 (取得したIPは保存しておく)
+	// ホスト名からIPアドレスを取得 (取得したIPは保存する)
 	SwitchCursor(FALSE);
 	if (tpMailBox->PopIP == 0 || op.IPCache == 0) {
 		GetHostFlag = TRUE;
-		tpMailBox->PopIP = GetHostByName(hWnd, tpMailBox->Server, ErrStr);
+		tpMailBox->PopIP = get_host_by_name(hWnd, tpMailBox->Server, ErrStr);
 		GetHostFlag = FALSE;
 		if (tpMailBox->PopIP == 0) {
 			ErrorSocketEnd(hWnd, BoxIndex);
@@ -1693,10 +1695,10 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	// 接続開始
-	RecvProc = ListPopProc;
+	RecvProc = pop3_list_proc;
 	MailFlag = POP_START;
 	PopBeforeSmtpFlag = SmtpFlag;
-	g_soc = ConnectServer(hWnd,
+	g_soc = connect_server(hWnd,
 		tpMailBox->PopIP, (unsigned short)tpMailBox->Port,
 		(tpMailBox->PopSSL == 0 || tpMailBox->PopSSLInfo.Type == 4) ? -1 : tpMailBox->PopSSLInfo.Type,
 		&tpMailBox->PopSSLInfo,
@@ -1814,11 +1816,11 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 
 	RecvBox = BoxIndex;
 
-	// ホスト名からIPアドレスを取得 (取得したIPは保存しておく)
+	// ホスト名からIPアドレスを取得 (取得したIPは保存する)
 	SwitchCursor(FALSE);
 	if (tpMailBox->PopIP == 0 || op.IPCache == 0) {
 		GetHostFlag = TRUE;
-		tpMailBox->PopIP = GetHostByName(hWnd, tpMailBox->Server, ErrStr);
+		tpMailBox->PopIP = get_host_by_name(hWnd, tpMailBox->Server, ErrStr);
 		GetHostFlag = FALSE;
 		if (tpMailBox->PopIP == 0) {
 			ErrorSocketEnd(hWnd, BoxIndex);
@@ -1831,9 +1833,9 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
 	// 接続開始
-	RecvProc = DownLoadPopProc;
+	RecvProc = pop3_exec_proc;
 	MailFlag = POP_START;
-	g_soc = ConnectServer(hWnd,
+	g_soc = connect_server(hWnd,
 		tpMailBox->PopIP, (unsigned short)tpMailBox->Port,
 		(tpMailBox->PopSSL == 0 || tpMailBox->PopSSLInfo.Type == 4) ? -1 : tpMailBox->PopSSLInfo.Type,
 		&tpMailBox->PopSSLInfo,
@@ -2730,7 +2732,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				break;
 			}
-			switch (RecvSelect(hWnd, g_soc)) {
+			switch (recv_select(hWnd, g_soc)) {
 			// メモリエラー
 			case SELECT_MEM_ERROR:
 				ErrorSocketEnd(hWnd, RecvBox);
@@ -2749,7 +2751,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					ErrorSocketEnd(hWnd, RecvBox);
 					SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 				} else {
-					SocketClose(hWnd, g_soc);
+					socket_close(hWnd, g_soc);
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
 					g_soc = -1;
 					SetItemCntStatusText(hWnd, NULL);
@@ -3418,7 +3420,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (MailFlag == POP_QUIT || MailFlag == POP_START) {
-				SocketClose(hWnd, g_soc);
+				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				RecvBox = -1;
 				SetItemCntStatusText(hWnd, NULL);
@@ -3426,10 +3428,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			MailFlag = POP_QUIT;
-			SetStatusText(hWnd, RSET);
-			SendBuf(g_soc, RSET);
-			SetStatusText(hWnd, QUIT);
-			SendBuf(g_soc, QUIT);
+			SetSocStatusTextT(hWnd, TEXT(CMD_RSET));
+			send_buf(g_soc, CMD_RSET"\r\n");
+			SetSocStatusTextT(hWnd, TEXT(CMD_QUIT));
+			send_buf(g_soc, CMD_QUIT"\r\n");
 			break;
 
 		// ====== メール =========
@@ -3683,7 +3685,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case FD_READ:						/* 受信バッファにデータがある事を示すイベント */
 			/* データを受信して蓄積する */
-			if (RecvBufProc(hWnd, g_soc) == SELECT_MEM_ERROR) {
+			if (recv_proc(hWnd, g_soc) == SELECT_MEM_ERROR) {
 				// メモリエラー
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_MEMALLOC, RecvBox);
@@ -3696,7 +3698,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			{
 				TCHAR ErrStr[BUF_SIZE];
 				*ErrStr = TEXT('\0');
-				if (SendProc(hWnd, g_soc, ErrStr, (MailBox + RecvBox)) == FALSE) {
+				if (smtp_send_proc(hWnd, g_soc, ErrStr, (MailBox + RecvBox)) == FALSE) {
 					ErrorSocketEnd(hWnd, RecvBox);
 					SocketErrorMessage(hWnd, ErrStr, RecvBox);
 					break;
@@ -3711,7 +3713,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 			} else {
-				SocketClose(hWnd, g_soc);
+				socket_close(hWnd, g_soc);
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				g_soc = -1;
 				SetItemCntStatusText(hWnd, NULL);

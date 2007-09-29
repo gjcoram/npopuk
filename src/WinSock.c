@@ -17,19 +17,20 @@
 #define LF_LEN				1
 
 #ifdef _WIN32_WCE
-#define RECVBUFSIZE			4096	/* 受信バッファサイズ */
+#define RECVBUFSIZE			4096		// 受信バッファサイズ */
 #else
-#define RECVBUFSIZE			32768	/* 受信バッファサイズ */
+#define RECVBUFSIZE			32768		// 受信バッファサイズ */
 #endif
 
 /* Global Variables */
-char *RecvBuf = NULL;				// 内部受信バッファ
-char *RemainderBuf = NULL;			// 内部受信未処理バッファ
-int RemainderBufLen = 0;
+static char *recv_buf = NULL;			// 内部受信バッファ
+static char *remainder_buf = NULL;		// 内部受信未処理バッファ
+static int remainder_buf_len = 0;
 
-SSL_INFO SSLInfo;
 int ssl_type = -1;
-long ssl;
+static long ssl;
+static SSL_INFO ssl_info;
+
 static HMODULE ssl_lib;
 static FARPROC ssl_init;
 static FARPROC ssl_send;
@@ -39,14 +40,13 @@ static FARPROC ssl_free;
 
 // 外部参照
 extern OPTION op;
-extern char *MailSize;				// メールサイズ
 
 /* Local Function Prototypes */
 
 /*
- * GetHostByName - ホスト名からIPアドレスを取得する
+ * get_host_by_name - ホスト名からIPアドレスを取得する
  */
-unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr)
+unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr)
 {
 	unsigned long ret;
 	LPHOSTENT lpHostEnt;
@@ -54,20 +54,17 @@ unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr)
 	char *HostName;
 #endif
 
-	SetSocStatusTextT(hWnd, STR_STATUS_GETHOSTBYNAME, 1);
-
-	if (Server == NULL || *Server == TEXT('\0')) {
+	SetSocStatusTextT(hWnd, STR_STATUS_GETHOSTBYNAME);
+	if (server == NULL || *server == TEXT('\0')) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOSERVER);
 		return 0;
 	}
-
 #ifdef UNICODE
-	HostName = AllocTcharToChar(Server);
+	HostName = AllocTcharToChar(server);
 	if (HostName == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return 0;
 	}
-
 	ret = inet_addr(HostName);
 	if (ret == -1) {
 		lpHostEnt = gethostbyname(HostName);
@@ -80,9 +77,9 @@ unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr)
 	}
 	mem_free(&HostName);
 #else
-	ret = inet_addr(Server);
+	ret = inet_addr(server);
 	if (ret == -1) {
-		lpHostEnt = gethostbyname(Server);
+		lpHostEnt = gethostbyname(server);
 		if (lpHostEnt != NULL) {
 			ret = ((struct in_addr *)lpHostEnt->h_addr_list[0])->s_addr;
 		} else {
@@ -95,42 +92,41 @@ unsigned long GetHostByName(HWND hWnd, TCHAR *Server, TCHAR *ErrStr)
 }
 
 /*
- * ConnectServer - サーバに接続する
+ * connect_server - サーバに接続する
  */
-SOCKET ConnectServer(HWND hWnd, unsigned long IPaddr, unsigned short Port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr)
+SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, const int ssl_tp, const SSL_INFO *si, TCHAR *ErrStr)
 {
-	SOCKET Soc;
+	SOCKET soc;
 	struct sockaddr_in serversockaddr;
 
-	SetSocStatusTextT(hWnd, STR_STATUS_CONNECT, 1);
+	SetSocStatusTextT(hWnd, STR_STATUS_CONNECT);
 
-	SSLInfo = *si;
+	// SSL情報
+	ssl_info = *si;
 	ssl_type = ssl_tp;
 	ssl = 0;
-
 	// ソケットの作成
-	Soc = socket(PF_INET, SOCK_STREAM, 0);
-	if (Soc == INVALID_SOCKET) {
+	soc = socket(PF_INET, SOCK_STREAM, 0);
+	if (soc == INVALID_SOCKET) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_CREATESOCKET);
 		return -1;
 	}
 	// 接続先の設定
 	serversockaddr.sin_family = AF_INET;
-	serversockaddr.sin_addr.s_addr = IPaddr;
-	serversockaddr.sin_port = htons((unsigned short)Port);
+	serversockaddr.sin_addr.s_addr = ip_addr;
+	serversockaddr.sin_port = htons((unsigned short)port);
 	ZeroMemory(serversockaddr.sin_zero, sizeof(serversockaddr.sin_zero));
-
 #ifdef WSAASYNC
-	if (WSAAsyncSelect(Soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_CLOSE) == SOCKET_ERROR) {
+	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_CLOSE) == SOCKET_ERROR) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return -1;
 	}
 #endif
 	// 接続
-	if (connect(Soc, (struct sockaddr *)&serversockaddr, sizeof(serversockaddr)) == SOCKET_ERROR) {
+	if (connect(soc, (struct sockaddr *)&serversockaddr, sizeof(serversockaddr)) == SOCKET_ERROR) {
 #ifdef WSAASYNC
 		if (WSAGetLastError() == WSAEWOULDBLOCK) {
-			return Soc;
+			return soc;
 		}
 #endif
 		lstrcpy(ErrStr, STR_ERR_SOCK_CONNECT);
@@ -138,17 +134,17 @@ SOCKET ConnectServer(HWND hWnd, unsigned long IPaddr, unsigned short Port, const
 	}
 #ifndef WSAASYNC
 	// SSLの初期化
-	if (init_ssl(hWnd, Soc, ErrStr) == -1) {
+	if (init_ssl(hWnd, soc, ErrStr) == -1) {
 		return -1;
 	}
 #endif
-	return Soc;
+	return soc;
 }
 
 /*
- * RecvBufProc - 受信して改行単位で処理する
+ * recv_proc - 受信して改行単位で処理する
  */
-int RecvBufProc(HWND hWnd, SOCKET soc)
+int recv_proc(HWND hWnd, SOCKET soc)
 {
 	char *buf;
 	char *rbuf = NULL;
@@ -158,17 +154,17 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 	int i;
 
 	// 受信用バッファの確保
-	if (RecvBuf == NULL) {
-		if ((RecvBuf = (char *)mem_alloc(RECVBUFSIZE)) == NULL) {
+	if (recv_buf == NULL) {
+		if ((recv_buf = (char *)mem_alloc(RECVBUFSIZE)) == NULL) {
 			return SELECT_MEM_ERROR;
 		}
 	}
 
 	// 受信
 	if (ssl_type == -1 || ssl_recv == NULL) {
-		buf_len = recv(soc, RecvBuf, RECVBUFSIZE - 1, 0);
+		buf_len = recv(soc, recv_buf, RECVBUFSIZE - 1, 0);
 	} else {
-		buf_len = ssl_recv(ssl, RecvBuf, RECVBUFSIZE - 1);
+		buf_len = ssl_recv(ssl, recv_buf, RECVBUFSIZE - 1);
 	}
 	if (buf_len == SOCKET_ERROR || buf_len == 0) {
 #ifdef WSAASYNC
@@ -178,18 +174,18 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 #endif
 		return SELECT_SOC_CLOSE;
 	}
-	*(RecvBuf + buf_len) = '\0';
-	p = RecvBuf;
+	*(recv_buf + buf_len) = '\0';
+	p = recv_buf;
 
-	if (RemainderBuf != NULL && *RemainderBuf != '\0') {
+	if (remainder_buf != NULL && *remainder_buf != '\0') {
 		// 前回の未処理分のバッファと今回のバッファを結合する
-		p = rbuf = (char *)mem_alloc(RemainderBufLen + buf_len + 1);
+		p = rbuf = (char *)mem_alloc(remainder_buf_len + buf_len + 1);
 		if (rbuf == NULL) {
 			return SELECT_MEM_ERROR;
 		}
-		CopyMemory(rbuf, RemainderBuf, RemainderBufLen);
-		CopyMemory(rbuf + RemainderBufLen, RecvBuf, buf_len);
-		buf_len += RemainderBufLen;
+		CopyMemory(rbuf, remainder_buf, remainder_buf_len);
+		CopyMemory(rbuf + remainder_buf_len, recv_buf, buf_len);
+		buf_len += remainder_buf_len;
 	}
 	buf = (char *)mem_alloc(buf_len + 1);
 	if (buf == NULL) {
@@ -224,20 +220,20 @@ int RecvBufProc(HWND hWnd, SOCKET soc)
 		}
 	}
 	// 未処理の文字列を待避
-	mem_free(&RemainderBuf);
-	RemainderBuf = buf;
-	RemainderBufLen = tstrlen(buf);
+	mem_free(&remainder_buf);
+	remainder_buf = buf;
+	remainder_buf_len = tstrlen(buf);
 	mem_free(&rbuf);
 	return SELECT_SOC_SUCCEED;
 }
 
 /*
- * RecvSelect - 受信可能なバッファがある場合に受信を行う
+ * recv_select - 受信可能なバッファがある場合に受信を行う
  */
 #ifndef WSAASYNC
-int RecvSelect(HWND hWnd, SOCKET soc)
+int recv_select(HWND hWnd, SOCKET soc)
 {
-#define TIMEOUT			0		/* タイムアウト秒数 */
+#define TIMEOUT			0		// タイムアウト秒数
 	struct timeval waittime;
 	fd_set rdps;
 	int selret;
@@ -248,7 +244,6 @@ int RecvSelect(HWND hWnd, SOCKET soc)
 	ZeroMemory(&rdps, sizeof(fd_set));
 	FD_ZERO(&rdps);
 	FD_SET(soc, &rdps);
-
 	selret = select(FD_SETSIZE, &rdps, (fd_set *)0, (fd_set *)0, &waittime);
 	if (selret == SOCKET_ERROR) {
 		return SELECT_SOC_ERROR;
@@ -256,23 +251,24 @@ int RecvSelect(HWND hWnd, SOCKET soc)
 	if (selret == 0 || FD_ISSET(soc, &rdps) == FALSE) {
 		return SELECT_SOC_NODATA;
 	}
-	return RecvBufProc(hWnd, soc);
+	return recv_proc(hWnd, soc);
 }
 #endif
 
 /*
- * Tsend - TCHAR型の文字列の送信
+ * send_data - 文字列の送信
  */
-int Tsend(SOCKET soc, TCHAR *wBuf)
+int send_data(SOCKET soc, TCHAR *wbuf)
 {
 #ifdef UNICODE
 	char *p;
 	int ret;
 
-	p = AllocTcharToChar(wBuf);
+	p = AllocTcharToChar(wbuf);
 	if (p == NULL) {
 		return -1;
 	}
+	// データ送信
 	if (ssl_type == -1 || ssl_send == NULL) {
 		ret = send(soc, p, tstrlen(p), 0);
 	} else {
@@ -281,17 +277,18 @@ int Tsend(SOCKET soc, TCHAR *wBuf)
 	mem_free(&p);
 	return ret;
 #else
+	// データ送信
 	if (ssl_type == -1 || ssl_send == NULL) {
-		return send(soc, wBuf, lstrlen(wBuf), 0);
+		return send(soc, wbuf, lstrlen(wbuf), 0);
 	}
-	return ssl_send(ssl, wBuf, strlen(wBuf));
+	return ssl_send(ssl, wbuf, strlen(wbuf));
 #endif
 }
 
 /*
- * SendBuf - 文字列の送信
+ * send_buf - 文字列の送信
  */
-int SendBuf(SOCKET soc, char *buf)
+int send_buf(SOCKET soc, char *buf)
 {
 #define TIMEOUT			0
 	struct timeval waittime;
@@ -301,11 +298,10 @@ int SendBuf(SOCKET soc, char *buf)
 	int len;
 	int selret;
 
-	r = buf;
-
 	waittime.tv_sec = TIMEOUT;
 	waittime.tv_usec = 0;
 
+	r = buf;
 	while (*r != '\0') {
 		// 送信バッファの空を確認
 		ZeroMemory(&rdps, sizeof(fd_set));
@@ -336,55 +332,63 @@ int SendBuf(SOCKET soc, char *buf)
 }
 
 /*
- * TSendBuf - TCHAR型の文字列の送信
+ * send_buf_t - TCHAR型の文字列の送信
  */
 #ifdef UNICODE
-int TSendBuf(SOCKET soc, TCHAR *wBuf)
+int send_buf_t(SOCKET soc, TCHAR *wbuf)
 {
 	char *p;
 	int ret;
 
-	p = AllocTcharToChar(wBuf);
+	p = AllocTcharToChar(wbuf);
 	if (p == NULL) {
 		return -1;
 	}
-	ret = SendBuf(soc, p);
+	ret = send_buf(soc, p);
 	mem_free(&p);
 	return ret;
 }
 #endif
 
 /*
- * SocketClose - 通信終了
+ * socket_close - 通信終了
  */
-void SocketClose(HWND hWnd, SOCKET soc)
+void socket_close(HWND hWnd, SOCKET soc)
 {
 #ifdef WSAASYNC
 	WSAAsyncSelect(soc, hWnd, 0, 0);
 #endif
-
 	if (ssl_type != -1 && ssl_close != NULL) {
+		// SSLを切断
 		ssl_close(ssl);
 	}
-
+	// 切断
 	shutdown(soc, 2);
 	closesocket(soc);
-
 	if (ssl_type != -1 && ssl_free != NULL) {
+		// SSLの解放
 		ssl_free(ssl);
 	}
 	ssl = 0;
 
-	FreeUidlList();
-	FreeMailBuf();
+	// POP3情報の解放
+	pop3_free();
 
-	mem_free(&RecvBuf);
-	RecvBuf = NULL;
-	mem_free(&RemainderBuf);
-	RemainderBuf = NULL;
-	RemainderBufLen = 0;
-	mem_free(&MailSize);
-	MailSize = NULL;
+	// 受信バッファを解放
+	mem_free(&recv_buf);
+	recv_buf = NULL;
+	mem_free(&remainder_buf);
+	remainder_buf = NULL;
+	remainder_buf_len = 0;
+}
+
+/*
+ * socket_free - ソケット情報の解放
+ */
+void socket_free(void)
+{
+	mem_free(&recv_buf);
+	mem_free(&remainder_buf);
 }
 
 /*
@@ -399,7 +403,7 @@ int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr)
 		return 0;
 	}
 
-	SetSocStatusTextT(hWnd, STR_STATUS_SSL, 1);
+	SetSocStatusTextT(hWnd, STR_STATUS_SSL);
 
 	if (ssl_init == NULL) {
 		if ((ssl_lib = LoadLibrary(TEXT("npopssl.dll"))) == NULL) {
@@ -440,12 +444,12 @@ int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr)
 #ifdef UNICODE
 	{
 		char *ca = AllocTcharToChar(op.CAFile);
-		char *cert = AllocTcharToChar(SSLInfo.Cert);
-		char *pkey = AllocTcharToChar(SSLInfo.Pkey);
-		char *pass = AllocTcharToChar(SSLInfo.Pass);
+		char *cert = AllocTcharToChar(ssl_info.Cert);
+		char *pkey = AllocTcharToChar(ssl_info.Pkey);
+		char *pass = AllocTcharToChar(ssl_info.Pass);
 		char err[BUF_SIZE];
 		*err = '\0';
-		ssl = ssl_init(soc, ssl_type, SSLInfo.Verify, SSLInfo.Depth, ca, NULL, cert, pkey, pass, err);
+		ssl = ssl_init(soc, ssl_type, ssl_info.Verify, ssl_info.Depth, ca, NULL, cert, pkey, pass, err);
 		CharToTchar(err, buf, BUF_SIZE - 1);
 		mem_free(&ca);
 		mem_free(&cert);
@@ -454,7 +458,7 @@ int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr)
 	}
 #else
 	*buf = TEXT('\0');
-	ssl = ssl_init(soc, ssl_type, SSLInfo.Verify, SSLInfo.Depth, op.CAFile, NULL, SSLInfo.Cert, SSLInfo.Pkey, SSLInfo.Pass, buf);
+	ssl = ssl_init(soc, ssl_type, ssl_info.Verify, ssl_info.Depth, op.CAFile, NULL, ssl_info.Cert, ssl_info.Pkey, ssl_info.Pass, buf);
 #endif
 	if (ssl == 0 || ssl == -1) {
 		if (ssl == -1) {
@@ -466,7 +470,7 @@ int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr)
 		return -1;
 	}
 	wsprintf(tmp, TEXT("verify: %s"), buf);
-	SetSocStatusTextT(hWnd, tmp, 1);
+	SetSocStatusTextT(hWnd, tmp);
 	return 0;
 }
 
