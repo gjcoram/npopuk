@@ -95,17 +95,18 @@ char *base64_decode(char *buf, char *ret)
 /*
  * base64_encode - BASE64 (RFC 2045)
  */
-void base64_encode(char *buf, char *ret, int size)
+void base64_encode(char *buf, char *ret, int size, int breaklen)
 {
 	char tmp, tmp2;
 	char *r;
-	int c, i;
+	int c, i, cnt;
 	const char Base[] =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		"abcdefghijklmnopqrstuvwxyz"
 		"0123456789+/";
 
 	i = 0;
+	cnt = 0;
 	r = ret;
 	while (1) {
 		if ((size == 0 && *(buf + i) == '\0') || (size > 0 && size <= i)) {
@@ -114,6 +115,7 @@ void base64_encode(char *buf, char *ret, int size)
 		c = (*(buf + i) & 0xFC) >> 2;
 		*(r++) = *(Base + c);
 		i++;
+		cnt++;
 
 		if ((size == 0 && *(buf + i) == '\0') || (size > 0 && size <= i)) {
 			c = (char)(*(buf + i - 1) << 4) & 0x30;
@@ -126,6 +128,7 @@ void base64_encode(char *buf, char *ret, int size)
 		tmp = (char)(*(buf + i) >> 4) & 0xF;
 		c = tmp2 | tmp;
 		*(r++) = *(Base + c);
+		cnt++;
 
 		if ((size == 0 && *(buf + i + 1) == '\0') || (size > 0 && size <= (i + 1))) {
 			c = (char)(*(buf + i) << 2) & 0x3C;
@@ -139,10 +142,18 @@ void base64_encode(char *buf, char *ret, int size)
 		c = tmp2 | tmp;
 		*(r++) = *(Base + c);
 		i++;
+		cnt++;
 
 		c = *(buf + i) & 0x3F;
 		*(r++) = *(Base + c);
 		i++;
+		cnt++;
+
+		if (breaklen > 0 && cnt >= breaklen) {
+			*(r++) = '\r';
+			*(r++) = '\n';
+			cnt = 0;
+		}
 	}
 	*r = '\0';
 }
@@ -151,7 +162,7 @@ void base64_encode(char *buf, char *ret, int size)
  * base64_encode_t - BASE64 (UNICODE)
  */
 #ifdef UNICODE
-void base64_encode_t(TCHAR *buf, TCHAR *ret, int size)
+void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen)
 {
 	char *b64str;
 	char *cret;
@@ -172,7 +183,7 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size)
 		return;
 	}
 	//Base64 encoding
-	base64_encode(b64str, cret, 0);
+	base64_encode(b64str, cret, 0, 0);
 	mem_free(&b64str);
 
 	//char which houses the character string which it converts conversion to TCHAR
@@ -212,8 +223,18 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 				p++;
 
 			} else {
-				*(r++) = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+				*r = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
 				p += 2;
+				if (*r == '\n' && *(r-1) != '\r') {
+					*(r++) = '\r';
+					*r = '\n';
+#ifdef DO_I_NEED_THIS
+				} else if (*r == '\r' && *p != '\n' && *p != '=' && *(p+1) != '0' && *(p+2) != 'D') {
+					r++;
+					*r = '\n';
+#endif
+				}
+				r++;
 			}
 		} else {
 			*(r++) = *p;

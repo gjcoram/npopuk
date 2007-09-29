@@ -60,9 +60,11 @@ static BOOL receiving_uidl;					// UIDLレスポンス受信中
 static BOOL receiving_data;					// メールデータ受信中
 static BOOL disable_uidl;					// UIDLサポートフラグ
 static BOOL disable_top;					// TOPサポートフラグ (op.ListDownload が 1 or TOPが未サポート)
+static BOOL uidl_missing = FALSE;
 
 typedef struct _UIDL_INFO {
 	int no;
+	BOOL in_mailbox;
 	TCHAR *uidl;
 } UIDL_INFO;
 
@@ -82,6 +84,7 @@ extern HWND hViewWnd;						// 表示ウィンドウ
 extern BOOL ShowMsgFlag;
 extern BOOL NewMail_Flag;
 extern BOOL EndThreadSortFlag;
+extern BOOL ServerDelete;
 
 extern int PopBeforeSmtpFlag;
 extern int ssl_type;
@@ -95,6 +98,7 @@ static BOOL uidl_init(int size);
 static BOOL uidl_set(char *buf, int len);
 static TCHAR *uidl_get(int get_no);
 static int uidl_check(TCHAR *buf);
+static int uidl_find_missing(HWND hWnd, int GotNo);
 static void uidl_free(void);
 static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
 static char *skip_response(char *p);
@@ -234,6 +238,7 @@ static BOOL uidl_set(char *buf, int len)
 	}
 
 	ui[ui_pt].no = a2i(buf);
+	ui[ui_pt].in_mailbox = FALSE;
 	for (p = buf; *p != ' ' && *p != '\0'; p++);		// 番号
 	for (; *p == ' '; p++);								// 空白
 
@@ -272,10 +277,28 @@ static int uidl_check(TCHAR *buf)
 	}
 	for (i = 0; i < ui_size; i++) {
 		if (lstrcmp(ui[i].uidl, buf) == 0) {
+			ui[i].in_mailbox = TRUE;
 			return ui[i].no;
 		}
 	}
 	return 0;
+}
+
+/*
+ * uidl_find_missing - find number of message whose UIDL is not in the mailbox
+ */
+static int uidl_find_missing(HWND hWnd, int GotNo)
+{
+	int i;
+
+	for (i = 0; i < ui_size; i++) {
+		if (GotNo > 0 && ui[i].no == GotNo) {
+			ui[i].in_mailbox = TRUE;
+		} else if (ui[i].in_mailbox == FALSE) {
+			return ui[i].no;
+		}
+	}
+	return -1;
 }
 
 /*
@@ -300,13 +323,17 @@ static void uidl_free(void)
  */
 static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
-	if (ShowFlag == TRUE) {
-		ListView_DeleteAllItems(GetDlgItem(hWnd, IDC_LISTVIEW));
+	HWND hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
+	if (tpMailBox->ListInitMsg == TRUE) {
+		if (ShowFlag == TRUE) {
+			ListView_DeleteAllItems(hListView);
+		}
+		item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
+		mem_free((void **)&tpMailBox->tpMailItem);
+		tpMailBox->tpMailItem = NULL;
+		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
+		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	}
-	item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
-	mem_free((void **)&tpMailBox->tpMailItem);
-	tpMailBox->tpMailItem = NULL;
-	tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 	tpMailBox->LastNo = 0;
 }
 
@@ -690,13 +717,13 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (t != NULL) {
 		tpMailBox->MailSize = a2i(t);
 	}
-	if (tpMailBox->MailCnt == 0 || tpMailBox->LastNo == -1) {
-		// メールボックスの初期化
+	if (tpMailBox->MailCnt == 0) {
+		tpMailBox->ListInitMsg = TRUE;
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
-		if (tpMailBox->MailCnt == 0) {
-			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
-			return POP_QUIT;
-		}
+		SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+		return POP_QUIT;
+	} else if (tpMailBox->LastNo == -1) {
+		init_mailbox(hWnd, tpMailBox, ShowFlag);
 	}
 	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 
@@ -709,7 +736,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
 	}
-	if (tpMailBox->LastNo == 0 || tpMailBox->LastMessageId == NULL) {
+	if (tpMailBox->LastNo == 0 || tpMailBox->LastMessageId == NULL || *(tpMailBox->LastMessageId) == TEXT('\0')) {
 		// 指定番目から取得
 		if (disable_uidl == FALSE) {
 			receiving_uidl = FALSE;
@@ -778,8 +805,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 	MAILITEM *tpMailItem;
 	MAILITEM *tpLastMailItem;
 	HWND hListView;
-	int No;
-	int i;
+	int No, i, last_match;
 	SetSocStatusTextT(hWnd, TEXT("uidl_all"));
 
 	// UIDLレスポンスの1行目
@@ -814,14 +840,16 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		return POP_UIDL_ALL;
 	}
 
-	if (tpMailBox->LastNo == 0 || tpMailBox->LastMessageId == NULL) {
-		// 指定番目から取得
-		list_get_no = (tpMailBox->LastNo == 0) ? 1 : tpMailBox->LastNo;
+	if (tpMailBox->LastNo == 0 || tpMailBox->LastMessageId == NULL || *(tpMailBox->LastMessageId) == TEXT('\0')) {
 		init_recv = TRUE;
-		if (send_command(hWnd, soc, TEXT(CMD_LIST), list_get_no, ErrStr) == FALSE) {
-			return POP_ERR;
+		if (tpMailBox->ListInitMsg == TRUE) {
+			list_get_no = (tpMailBox->LastNo == 0) ? 1 : tpMailBox->LastNo;
+			if (send_command(hWnd, soc, TEXT(CMD_LIST), list_get_no, ErrStr) == FALSE) {
+				return POP_ERR;
+			}
+			return POP_LIST;
 		}
-		return POP_LIST;
+		// else "filling in", fall through to check UIDLs
 	}
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -831,6 +859,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 	SwitchCursor(FALSE);
 	// 現在表示されているメール一覧とUIDLを比較して番号を振り直す
 	tpLastMailItem = NULL;
+	last_match = 0;
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
 		if (tpMailItem == NULL) {
@@ -858,7 +887,12 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 
 		default:
 			if (No > tpMailItem->No) {
-				SetSocStatusTextT(hWnd, TEXT("X-No: was increased!"));
+				TCHAR msg[BUF_SIZE];
+				uidl_missing = TRUE;
+				wsprintf(msg, TEXT("X-No: was increased from %d to %d"), tpMailItem->No, No);
+				SetSocStatusTextT(hWnd, msg);
+			} else if (No == tpMailItem->No && uidl_missing == FALSE && No > last_match) {
+				last_match = No;
 			}
 			// メール番号を設定
 			tpMailItem->No = No;
@@ -866,6 +900,16 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 				tpLastMailItem = tpMailItem;
 			}
 			break;
+		}
+	}
+	if (init_recv == TRUE) {
+		uidl_missing = TRUE;
+		last_match = tpMailBox->LastNo;
+	}
+	// handles messages deleted from list
+	for (i = 0; i < ui_size; i++) {
+		if (ui[i].no < last_match) {
+			ui[i].in_mailbox = TRUE;
 		}
 	}
 	// 削除されたメールを一覧から消す
@@ -885,6 +929,14 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		tpMailBox->LastNo = tpLastMailItem->No;
 	}
 	list_get_no = tpMailBox->LastNo + 1;
+	if (uidl_missing) {
+		i = uidl_find_missing(hWnd, 0);
+		if (i == -1) {
+			uidl_missing = FALSE;
+		} else {
+			list_get_no = i;
+		}	
+	}
 	if (list_get_no > tpMailBox->MailCnt) {
 		return POP_QUIT;
 	}
@@ -987,6 +1039,7 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 	receiving_data = FALSE;
+
 	if (mail_buf_init((len > 0) ? len : MAIL_BUF_SIZE) == FALSE) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
@@ -1013,6 +1066,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	LV_ITEM lvi;
 	HWND hListView;
 	TCHAR *p;
+	char *new_message_id;
 	int i, nOldMailCnt = NewMailCnt;
 	int st;
 
@@ -1049,6 +1103,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		}
 		return POP_TOP;
 	}
+	SetSocStatusTextT(hWnd, STR_STATUS_RECVDONE);
 
 	if (list_get_no == tpMailBox->LastNo) {
 		if (init_recv == TRUE) {
@@ -1075,9 +1130,11 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			return POP_ERR;
 		}
 	}
+	new_message_id = item_get_message_id(mail_buf);
 	// ヘッダからアイテムを作成
 	tpMailItem = item_header_to_item(tpMailBox, mail_buf, mail_size);
 	if (tpMailItem == NULL) {
+		mem_free(&new_message_id);
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
 	}
@@ -1159,7 +1216,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		// 新着カウント
 		NewMailCnt++;
 		tpMailBox->NewMail = TRUE;
-		tpMailBox->NeedsSave = TRUE;		
+		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;		
 	}
 	 
 	if (nOldMailCnt != NewMailCnt)
@@ -1173,10 +1230,12 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	}
 
 	// 最後に受信したメールの番号とメッセージIDを保存する
-	tpMailBox->LastNo = list_get_no;
-	mem_free(&tpMailBox->LastMessageId);
-	tpMailBox->LastMessageId = item_get_message_id(mail_buf);
-	if (tpMailBox->LastMessageId == NULL) {
+	if (list_get_no > tpMailBox->LastNo) {
+		tpMailBox->LastNo = list_get_no;
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = new_message_id;
+	}
+	if (new_message_id == NULL) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOMESSAGEID);
 		return POP_ERR;
 	}
@@ -1194,8 +1253,17 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		}
 	}
 
-	// 次のメールを取得
-	list_get_no++;
+	if (uidl_missing) {
+		i = uidl_find_missing(hWnd, list_get_no);
+		if (i == -1) {
+			uidl_missing = FALSE;
+			list_get_no = tpMailBox->MailCnt+1;
+		} else {
+			list_get_no = i;
+		}
+	} else {
+		list_get_no++;
+	}
 	if (list_get_no > tpMailBox->MailCnt) {
 		return POP_QUIT;
 	}
@@ -1249,8 +1317,9 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
-		// 削除
-		get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		if (ServerDelete == TRUE) {
+			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		}
 		if (get_no == -1) {
 			return POP_QUIT;
 		}
@@ -1325,6 +1394,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 		return POP_RETR;
 	}
+	SetSocStatusTextT(hWnd, STR_STATUS_RECVDONE);
 
 	get_no = item_get_number_to_index(tpMailBox, download_get_no);
 	if (get_no == -1) {
@@ -1347,7 +1417,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
 	}
-	tpMailBox->NeedsSave = TRUE;
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 
 	if (ShowFlag == TRUE) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -1385,7 +1455,9 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
-		get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		if (ServerDelete == TRUE) {
+			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+		}
 		if (get_no == -1) {
 			return POP_QUIT;
 		}
@@ -1501,6 +1573,7 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		}
 		return POP_TOP;
 	}
+	SetSocStatusTextT(hWnd, STR_STATUS_RECVDONE);
 
 	get_no = item_get_number_to_index(tpMailBox, delete_get_no);
 	if (get_no == -1) {
@@ -1736,6 +1809,20 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 		break;
 	}
 	return TRUE;
+}
+
+/*
+ * claim_mail_buf
+ */
+char *claim_mail_buf(char *buf)
+{
+	if (buf == mail_buf) {
+		mail_buf = NULL;
+		mail_buf_size = 0;
+		return buf;
+	} else {
+		return NULL;
+	}
 }
 
 /*

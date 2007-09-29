@@ -1,5 +1,5 @@
 /* nPOPuk 
- * ppcpoom.cpp
+ * ppcpoom.h
  * Code originally from Matthew R. Pattman (?)
  * Info at http://www.npopsupport.org.uk
  */
@@ -7,7 +7,7 @@
 extern "C"{
 #endif 
 
-void UpdateAddressBook(unsigned short * szFileName);
+void UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComment);
 
 #ifdef __cplusplus
 }

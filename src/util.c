@@ -1028,7 +1028,7 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 			*ret = TEXT('\0');
 			return;
 		}
-		base64_encode(p, r, len);
+		base64_encode(p, r, len, 0);
 		mem_free(&p);
 		p = r;
 
@@ -1508,15 +1508,25 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 			ret += CSTEP;
 
 		} else if (*p == TEXT('\r')) {
-			cnt = 0;
+			// CRNL
 			p += 2;
 			ret += 2;
 			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
 				Quoting = TRUE;
+				p += quotlen;
+				ret += quotlen;
+				cnt = quotlen;
 			} else {
 				Flag = FALSE;
 				Quoting = FALSE;
+				cnt = 0;
+			}
+			if (*p == TEXT(' ')) {
+				// don't remove spaces after user-specified CRNL
+				p++;
+				cnt++;
+				ret++;
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -1619,17 +1629,25 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 #endif
 
 		} else if (*p == TEXT('\r')) {
-			// â¸çs
-			cnt = 0;
+			// CRNL
 			*(r++) = *(p++);
 			*(r++) = *(p++);
-			cnt = 0;
 			if (str != NULL && str_cmp_ni_t(p, str, quotlen) == 0) {
 				Flag = BreakFlag;
 				Quoting = TRUE;
+				cnt = quotlen;
+				for (i=0; i<quotlen; i++) {
+					*(r++) = *(p++);
+				}
 			} else {
 				Flag = FALSE;
 				Quoting = FALSE;
+				cnt = 0;
+			}
+			if (*p == TEXT(' ')) {
+				// don't remove spaces after user-specified CRNL
+				cnt++;
+				*(r++) = *(p++);
 			}
 
 		} else if (*p == TEXT('\t')) {
@@ -2357,6 +2375,7 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 				}
 				last_char = LAST_NONWHITE;
 			} else if (str_cmp_ni_t(p, TEXT("<br>"), lstrlen(TEXT("<br>"))) == 0) {
+				// GJC could also be <br />
 				p += lstrlen(TEXT("<br>"));
 				if (last_char == LAST_NONWHITE) {
 					*(q++) = TEXT('\r');
@@ -2364,6 +2383,7 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 				}
 				last_char = LAST_NL;
 			} else if (str_cmp_ni_t(p, TEXT("<p>"), lstrlen(TEXT("<p>"))) == 0) {
+				// GJC what about </p>?
 				p += lstrlen(TEXT("<p>"));
 				*(q++) = TEXT('\r');
 				*(q++) = TEXT('\n');
@@ -2444,6 +2464,11 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 				*(q++) = TEXT('(');
 				*(q++) = TEXT('R');
 				*(q++) = TEXT(')');
+			} else if (str_cmp_ni_t(p, TEXT("&euro;"), lstrlen(TEXT("&euro;"))) == 0) {
+				p += lstrlen(TEXT("&euro;"));
+				*(q++) = TEXT('E');
+				*(q++) = TEXT('U');
+				*(q++) = TEXT('R');
 			} else {
 				*(q++) = *(p++);
 			}
@@ -2462,4 +2487,58 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 	*q = TEXT('\0');
 	return ret;
 }
+
+/*
+ * remove_duplicate_headers - remove headers that nPOPuk stores separately
+ */
+int remove_duplicate_headers(char *buf)
+{
+	BOOL did_one = FALSE;
+	char *p, *r;
+	p = r = buf;
+	while (*p != '\0') {
+		if (str_cmp_n(p, HEAD_SUBJECT, strlen(HEAD_SUBJECT)) == 0
+			|| str_cmp_ni(p, HEAD_FROM, strlen(HEAD_FROM)) == 0
+			|| str_cmp_ni(p, HEAD_TO, strlen(HEAD_TO)) == 0
+			|| str_cmp_ni(p, HEAD_CC, strlen(HEAD_CC)) == 0
+			|| str_cmp_ni(p, HEAD_REPLYTO, strlen(HEAD_REPLYTO)) == 0
+			|| str_cmp_ni(p, HEAD_CONTENTTYPE, strlen(HEAD_CONTENTTYPE)) == 0
+			|| str_cmp_ni(p, HEAD_ENCODING, strlen(HEAD_ENCODING)) == 0
+			|| str_cmp_ni(p, HEAD_DATE, strlen(HEAD_DATE)) == 0
+			|| str_cmp_ni(p, HEAD_MESSAGEID, strlen(HEAD_MESSAGEID)) == 0
+			|| str_cmp_ni(p, HEAD_X_UIDL, strlen(HEAD_X_UIDL)) == 0
+			|| str_cmp_ni(p, HEAD_INREPLYTO, strlen(HEAD_INREPLYTO)) == 0
+			|| str_cmp_ni(p, HEAD_REFERENCES, strlen(HEAD_REFERENCES)) == 0
+			|| str_cmp_ni(p, HEAD_IMPORTANCE, strlen(HEAD_IMPORTANCE)) == 0
+		//	|| str_cmp_ni(p, HEAD_X_PRIORITY, strlen(HEAD_X_PRIORITY)) == 0
+		//	|| str_cmp_ni(p, HEAD_PRIORITY, strlen(HEAD_PRIORITY)) == 0
+			|| str_cmp_ni(p, HEAD_READ1, strlen(HEAD_READ1)) == 0
+			|| str_cmp_ni(p, HEAD_READ2, strlen(HEAD_READ2)) == 0
+			|| str_cmp_ni(p, HEAD_DELIVERY, strlen(HEAD_DELIVERY)) == 0
+			|| str_cmp_ni(p, HEAD_READ2, strlen(HEAD_READ2)) == 0) {
+				// skip
+				did_one = TRUE;
+				while (*p != '\0' && (*(p-1) != '\r' || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+					p++;
+				}
+				p++;
+		} else {
+				while (*p != '\0' && (*(p-1) != '\r' || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+					*(r++) = *(p++);
+				}
+				*(r++) = *(p++);
+		}
+
+		if (*p == '\r' && *(p+1) == '\n') {
+			*(r++) = *(p++);
+			*(r++) = *(p++);
+			if (did_one) {
+				*r = '\0';
+			}
+			break;
+		}
+	}
+	return (r - buf);
+}
+
 /* End of source */

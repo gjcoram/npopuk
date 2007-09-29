@@ -24,6 +24,7 @@
 #define SEND_SIZE				4096		// 送信時の分割サイズ
 
 /* Global Variables */
+extern TCHAR *AppDir;
 static char *recv_buf;						// 受信バッファ
 static char *old_buf;						// 未処理バッファ
 static int old_buf_len;
@@ -113,6 +114,9 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 	SOCKET	soc;
 	struct	sockaddr_in serversockaddr;
 	BOOL	bSSL_Local = FALSE;
+#ifdef _WIN32_WCE_PPC
+	TCHAR SSLPath[BUF_SIZE];
+#endif
 
 	SetSocStatusTextT(hWnd, STR_STATUS_CONNECT);
 
@@ -129,7 +133,10 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 
 #ifdef _WIN32_WCE_PPC
 	// Use built-in SSL if no npopssl.dll
-	if (ssl_tp >= 0 && INVALID_FILE_SIZE == GetFileAttributes(TEXT("\\Windows\\npopssl.dll")))
+	str_join_t(SSLPath, AppDir, TEXT("npopssl.dll"), (TCHAR *)-1);
+	if (ssl_tp >= 0 && op.UseBuiltinSSL == 1
+		&& INVALID_FILE_SIZE == GetFileAttributes(TEXT("\\Windows\\npopssl.dll"))
+		&& INVALID_FILE_SIZE == GetFileAttributes(SSLPath))
 	{
 		SSLVALIDATECERTHOOK hook;
 		int		err;

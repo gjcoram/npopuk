@@ -20,9 +20,9 @@
 
 /* Function Prototypes */
 char *base64_decode(char *buf, char *ret);
-void base64_encode(char *buf, char *ret, int size);
+void base64_encode(char *buf, char *ret, int size, int breaklen);
 #ifdef UNICODE
-void base64_encode_t(TCHAR *buf, TCHAR *ret, int size);
+void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen);
 #else
 #define base64_encode_t base64_encode
 #endif

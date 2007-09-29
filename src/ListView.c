@@ -107,8 +107,13 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 #endif
 
 	// ƒwƒbƒ_‚ÌÝ’è
-	ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 0), STR_LIST_LVHEAD_SUBJECT, 0);
-	ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 1), STR_LIST_LVHEAD_FROM, 1);
+	if (lstrcmpi(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 0), STR_LIST_LVHEAD_FROM, 0);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 1), STR_LIST_LVHEAD_SUBJECT, 1);
+	} else {
+		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 0), STR_LIST_LVHEAD_SUBJECT, 0);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 1), STR_LIST_LVHEAD_FROM, 1);
+	}
 	ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 2), STR_LIST_LVHEAD_DATE, 2);
 	ListView_AddColumn(hListView, LVCFMT_RIGHT, *(op.LvColSize + 3), STR_LIST_LVHEAD_SIZE, 3);
 
@@ -526,7 +531,11 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 
 	//Text
 	if (hLVItem->mask & LVIF_TEXT) {
-		switch (hLVItem->iSubItem) {
+		int col = hLVItem->iSubItem;
+		if ((col == 0 || col == 1) && lstrcmp(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+			col = (col == 0) ? 1 : 0;
+		}
+		switch (col) {
 		// Œ–¼
 		case 0:
 			p = (tpMailItem->Subject != NULL && *tpMailItem->Subject != TEXT('\0')) ?

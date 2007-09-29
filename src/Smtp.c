@@ -57,6 +57,7 @@ static int send_end_cmd;						// メール送信完了時のコマンド
 
 // 外部参照
 extern OPTION op;
+extern BOOL gSendAndQuit;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -342,7 +343,7 @@ static TCHAR *auth_create_plain(TCHAR *user, TCHAR *pass, TCHAR *ErrStr)
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return NULL;
 	}
-	base64_encode(tmp, buf, len);
+	base64_encode(tmp, buf, len, 0);
 	mem_free(&tmp);
 #ifdef UNICODE
 	ret = alloc_char_to_tchar(buf);
@@ -519,9 +520,9 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
 	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
-	char *mctypr;
-	char *mbody;
-	int len;
+	char *mctypr, *mbody;
+	char **enc_att = NULL;
+	int len, num_att;
 
 	// From
 	mem_free(&tpMailItem->From);
@@ -645,7 +646,8 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		}
 	}
 	// 添付ファイルがある場合はマルチパートで送信する
-	switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, ctype, enc_type, &mctypr, send_body, &mbody)) {
+	switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, 
+								ctype, enc_type, &mctypr, send_body, &mbody, &num_att, &enc_att)) {
 	case MP_ERROR_FILE:
 		mem_free(&send_body);
 		send_body = NULL;
@@ -681,6 +683,9 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			mem_free(&send_body);
 			send_body = NULL;
 			mem_free(&mctypr);
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}
 		mem_free(&mctypr);
@@ -693,30 +698,45 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 
 		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), HIGH_PRIORITY, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 	} else if (tpMailItem->Priority == 5) {
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 
 		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), LOW_PRIORITY, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 	} else {
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 
@@ -728,6 +748,9 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 	}
@@ -738,12 +761,18 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 	
 		if(send_header_t(soc, TEXT(HEAD_READ2), tpMailItem->From, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
+#ifndef WSAASYNC
+			encatt_free(&enc_att, num_att);
+#endif
 			return FALSE;
 		}	
 	}
@@ -753,12 +782,18 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
 		mem_free(&send_body);
 		send_body = NULL;
+#ifndef WSAASYNC
+		encatt_free(&enc_att, num_att);
+#endif
 		return FALSE;
 	}
 	// ヘッダと本文の区切り
 	if (send_buf(soc, "\r\n") == -1) {
 		mem_free(&send_body);
 		send_body = NULL;
+#ifndef WSAASYNC
+		encatt_free(&enc_att, num_att);
+#endif
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
@@ -770,6 +805,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
 		mem_free(&send_body);
 		send_body = NULL;
+		//encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}
@@ -778,11 +814,33 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (send_body != NULL && send_buf(soc, send_body) == -1) {
 		mem_free(&send_body);
 		send_body = NULL;
+		encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
 	mem_free(&send_body);
 	send_body = NULL;
+	ResetTimeoutTimer();
+	if (num_att != 0) {
+		int i;
+		for (i = 0; i < num_att; i++) {
+			if (i < num_att - 1) {
+				wsprintf(buf, STR_STATUS_SEND_ATT, i+1);
+			} else {
+				wsprintf(buf, STR_STATUS_ATT_END);
+			}
+			SetSocStatusTextT(hWnd, buf);
+			if (enc_att[i] != NULL && send_buf(soc, enc_att[i]) == -1) {
+				mem_free(&send_body);
+				send_body = NULL;
+				encatt_free(&enc_att, num_att);
+				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+				return FALSE;
+			}
+			ResetTimeoutTimer();
+		}
+	}
+	encatt_free(&enc_att, num_att);
 
 	if (send_buf(soc, CMD_DATA_END) == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -1025,7 +1083,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		//Base64エンコード
-		base64_encode_t(wbuf, p, 0);
+		base64_encode_t(wbuf, p, 0, 0);
 		mem_free(&wbuf);
 
 		// パスワード送信
@@ -1062,7 +1120,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		// Base64エンコード
-		base64_encode_t(user, p, 0);
+		base64_encode_t(user, p, 0, 0);
 		// ユーザ名送信
 		wbuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(TEXT("\r\n")) + lstrlen(p) + 1));
 		if (wbuf == NULL) {
@@ -1101,7 +1159,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		// Base64エンコード
-		base64_encode_t(pass, p, 0);
+		base64_encode_t(pass, p, 0, 0);
 		// パスワード送信
 		wbuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(TEXT("\r\n")) + lstrlen(p) + 1));
 		if (wbuf == NULL) {
@@ -1268,9 +1326,10 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				UpdateWindow(hListView);
 			}
 		}
+		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
 		}
 
 		// 次の送信メールの取得
@@ -1326,16 +1385,21 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				UpdateWindow(hListView);
 			}
 		}
+		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
 		}
 		command_status = SMTP_QUIT;
 		break;
 
 	case SMTP_QUIT:
+		if (gSendAndQuit == TRUE) {
+			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
+		}
 		break;
 	}
+
 	return TRUE;
 }
 

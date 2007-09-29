@@ -20,7 +20,7 @@
 #ifdef _DEBUG
 static long all_alloc_size = 0;
 
-// #define MEM_CHECK
+#define MEM_CHECK
 #ifdef MEM_CHECK
 #define ADDRESS_CNT		100000
 #define DEBUG_ADDRESS	0
@@ -128,8 +128,9 @@ void mem_debug(void)
 
 		for (i = 0; i < ADDRESS_CNT; i++) {
 			if (address[i] != 0) {
-				wsprintf(buf, TEXT("leak address: %u, %lu"), i, address[i]);
+				wsprintf(buf, TEXT("leak address: %u, %lu, %lx"), i, address[i], address[i]);
 				MessageBox(NULL, buf, TEXT("debug"), 0);
+				MessageBox(NULL, (TCHAR *)address[i], TEXT("debug"), 0);
 				break;
 			}
 		}
