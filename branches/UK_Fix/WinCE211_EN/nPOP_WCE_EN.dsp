@@ -18,7 +18,7 @@ CFG=nPOP_WCE_EN - Win32 (WCE ARM) Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "nPOP_WCE_EN.mak" CFG="nPOP_WCE_EN - Win32 (WCE MIPS) Debug"
+!MESSAGE NMAKE /f "nPOP_WCE_EN.mak" CFG="nPOP_WCE_EN - Win32 (WCE ARM) Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -345,21 +345,21 @@ LINK32=link.exe
 # PROP Intermediate_Dir "X86EMRel"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-CPP=cl.exe
-# ADD BASE CPP /nologo /Gz /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CEConfigName)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Oxs /c
-# ADD CPP /nologo /Gz /W3 /I "." /I "..\EN" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
-RSC=rc.exe
-# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "i486" /r
-# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "i486" /r
-MTL=midl.exe
-# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /machine:IX86 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:"$(CENoDefaultLib)" /windowsce:emulation
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /machine:IX86 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:"$(CENoDefaultLib)" /out:"X86EMRel/nPOP.exe" /windowsce:emulation
+# ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib nologo stack:0x10000,0x1000 subsystem:windows machine:IX86 nodefaultlib:"OLDNAMES.lib" nodefaultlib:"$(CENoDefaultLib)" windowsce:emulation
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib nologo stack:0x10000,0x1000 subsystem:windows machine:IX86 nodefaultlib:"OLDNAMES.lib" nodefaultlib:"$(CENoDefaultLib)" out:"X86EMRel/nPOP.exe" windowsce:emulation
+BSC32=bscmake.exe
+# ADD BASE BSC32 nologo
+# ADD BSC32 nologo
+MTL=midl.exe
+# ADD BASE MTL nologo D "NDEBUG" mktyplib203 o "NUL" win32
+# ADD MTL nologo D "NDEBUG" mktyplib203 o "NUL" win32
+RSC=rc.exe
+# ADD BASE RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "NDEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
+# ADD RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "NDEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
+CPP=cl.exe
+# ADD BASE CPP nologo Gz W3 D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "i486" D UNDER_CE=$(CEVersion) D "UNICODE" D "_UNICODE" D "_X86_" D "x86" D "NDEBUG" YX Oxs c
+# ADD CPP nologo Gz W3 I "." I "..\EN" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "i486" D "_X86_" D "x86" D "NDEBUG" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX Oxs c
 
 !ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86em) Debug"
 
@@ -374,21 +374,21 @@ LINK32=link.exe
 # PROP Intermediate_Dir "X86EMDbg"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-CPP=cl.exe
-# ADD BASE CPP /nologo /Gz /W3 /Zi /Od /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /c
-# ADD CPP /nologo /Gz /W3 /Zi /Od /I "." /I "..\EN" /D "DEBUG" /D "i486" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
-RSC=rc.exe
-# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "i486" /r
-# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "i486" /r
-MTL=midl.exe
-# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /machine:IX86 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:"$(CENoDefaultLib)" /windowsce:emulation
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /machine:IX86 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:"$(CENoDefaultLib)" /out:"X86EMDbg/nPOP.exe" /windowsce:emulation
+# ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib nologo stack:0x10000,0x1000 subsystem:windows debug machine:IX86 nodefaultlib:"OLDNAMES.lib" nodefaultlib:"$(CENoDefaultLib)" windowsce:emulation
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib nologo stack:0x10000,0x1000 subsystem:windows debug machine:IX86 nodefaultlib:"OLDNAMES.lib" nodefaultlib:"$(CENoDefaultLib)" out:"X86EMDbg/nPOP.exe" windowsce:emulation
+BSC32=bscmake.exe
+# ADD BASE BSC32 nologo
+# ADD BSC32 nologo
+MTL=midl.exe
+# ADD BASE MTL nologo D "_DEBUG" mktyplib203 o "NUL" win32
+# ADD MTL nologo D "_DEBUG" mktyplib203 o "NUL" win32
+RSC=rc.exe
+# ADD BASE RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "DEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
+# ADD RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "DEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
+CPP=cl.exe
+# ADD BASE CPP nologo Gz W3 Zi Od D "DEBUG" D "i486" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_X86_" D "x86" YX c
+# ADD CPP nologo Gz W3 Zi Od I "." I "..\EN" D "DEBUG" D "i486" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "_X86_" D "x86" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX c
 
 !ENDIF 
 
@@ -699,6 +699,8 @@ DEP_CPP_EDIT_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_EDIT_=\
 	".\Strtbl.h"\
 	
 
@@ -836,6 +838,8 @@ DEP_CPP_FILE_=\
 	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_FILE_=\
 	".\Strtbl.h"\
 	
 
@@ -1092,6 +1096,8 @@ DEP_CPP_INI_C=\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_INI_C=\
 	".\Strtbl.h"\
 	
 
@@ -1249,6 +1255,8 @@ DEP_CPP_ITEM_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_ITEM_=\
 	".\Strtbl.h"\
 	
 
@@ -1385,6 +1393,8 @@ DEP_CPP_JP_Ce=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_JP_Ce=\
 	".\Strtbl.h"\
 	
 
@@ -1513,6 +1523,8 @@ DEP_CPP_LISTV=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_LISTV=\
 	".\Strtbl.h"\
 	
 
@@ -1641,6 +1653,8 @@ DEP_CPP_MAILB=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MAILB=\
 	".\Strtbl.h"\
 	
 
@@ -1773,6 +1787,8 @@ DEP_CPP_MAIN_=\
 	"..\src\General.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MAIN_=\
 	".\Strtbl.h"\
 	
 
@@ -2068,6 +2084,8 @@ DEP_CPP_MIME_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MIME_=\
 	".\Strtbl.h"\
 	
 
@@ -2229,6 +2247,8 @@ DEP_CPP_MULTI=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MULTI=\
 	".\Strtbl.h"\
 	
 
@@ -2394,6 +2414,8 @@ DEP_CPP_OPTIO=\
 	"..\src\General.h"\
 	"..\src\jp.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_OPTIO=\
 	".\Strtbl.h"\
 	
 
@@ -2538,6 +2560,8 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_POP3_=\
 	".\Strtbl.h"\
 	
 
@@ -2753,6 +2777,8 @@ DEP_CPP_RAS_C=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_RAS_C=\
 	".\Strtbl.h"\
 	
 
@@ -2906,6 +2932,8 @@ DEP_CPP_SMTP_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_SMTP_=\
 	".\Strtbl.h"\
 	
 
@@ -3182,6 +3210,8 @@ DEP_CPP_UTIL_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_UTIL_=\
 	".\Strtbl.h"\
 	
 
@@ -3344,6 +3374,8 @@ DEP_CPP_VIEW_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_VIEW_=\
 	".\Strtbl.h"\
 	
 
@@ -3480,10 +3512,10 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	".\Strtbl.h"\
 	
 NODEP_CPP_WINSO=\
 	".\slsock.h"\
+	".\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOP_WCE_EN - Win32 (WCE x86) Release"
@@ -3603,47 +3635,51 @@ SOURCE=..\EN\Strtbl.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=..\res\ico00001.ico
+SOURCE=..\Res\Ico_clhi.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00002.ico
+SOURCE=..\Res\Ico_cllo.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00003.ico
+SOURCE=..\Res\Ico_down.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00004.ico
+SOURCE=..\Res\Ico_high.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00005.ico
+SOURCE=..\Res\Ico_main.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00006.ico
+SOURCE=..\Res\Ico_nchk.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00007.ico
+SOURCE=..\Res\Ico_none.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00008.ico
+SOURCE=..\Res\Ico_read.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00011.ico
+SOURCE=..\Res\Ico_repl.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon1.ico
+SOURCE=..\Res\Ico_send.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_che.ico
+SOURCE=..\Res\Ico_sent.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\Res\Icon_chk.ico
 # End Source File
 # Begin Source File
 
@@ -3651,15 +3687,31 @@ SOURCE=..\res\icon_cli.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\Res\Icon_del.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\Res\Icon_fwd.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\Res\Icon_low.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\res\icon_new.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_rea.ico
+SOURCE=..\Res\tbar_edit.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_sen.ico
+SOURCE=..\Res\tbar_view.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Res\Toolbar.bmp
 # End Source File
 # End Group
 # End Target

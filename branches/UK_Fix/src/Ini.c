@@ -115,6 +115,7 @@ static void ini_get_encode_info(void)
 		op.BodyEncoding = 2;
 		break;
 	}
+#ifndef _WCE_OLD
 	set_default_encode(GetACP(), &op.HeadCharset, &op.BodyCharset);
 	if (op.HeadCharset == NULL) {
 		op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
@@ -122,6 +123,10 @@ static void ini_get_encode_info(void)
 	if (op.BodyCharset == NULL) {
 		op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
 	}
+#else
+	op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+	op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
+#endif
 }
 
 /*
@@ -217,6 +222,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.lv_font.italic = profile_get_int(GENERAL, TEXT("LvFontItalic"), 0, app_path);
 	op.lv_font.charset = profile_get_int(GENERAL, TEXT("LvFontCharset"), char_set, app_path);
 
+	op.StatusBarCharWidth = profile_get_int(GENERAL, TEXT("StatusBarCharWidth"), 7, app_path);
+
 	op.HeadCharset = profile_alloc_string(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET, app_path);
 	op.HeadEncoding = profile_get_int(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE, app_path);
 	op.BodyCharset = profile_alloc_string(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET, app_path);
@@ -269,7 +276,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SaveMsg = profile_get_int(GENERAL, TEXT("SaveMsg"), 1, app_path);
 	op.AutoSave = profile_get_int(GENERAL, TEXT("AutoSave"), 1, app_path);
 
-	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0, app_path);
+	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
+	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
 	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
@@ -323,7 +331,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewShowDate = profile_get_int(GENERAL, TEXT("ViewShowDate"), 0, app_path);
 ////////////////////// --- ////////////////////
 #endif
-	op.MatchCase = profile_get_int(GENERAL, TEXT("MatchCase"), 0, app_path);
+	op.MatchCase = profile_get_int(GENERAL, TEXT("MstchCase"), 0, app_path);
+	op.MatchCase = profile_get_int(GENERAL, TEXT("MatchCase"), op.MatchCase, app_path);
 	op.AllFind = profile_get_int(GENERAL, TEXT("AllFind"), 1, app_path);
 	op.SubjectFind = profile_get_int(GENERAL, TEXT("SubjectFind"), 0, app_path);
 
@@ -332,7 +341,6 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SendMessageId = profile_get_int(GENERAL, TEXT("SendMessageId"), 1, app_path);
 	op.SendDate = profile_get_int(GENERAL, TEXT("SendDate"), 1, app_path);
 	op.SelectSendBox = profile_get_int(GENERAL, TEXT("SelectSendBox"), 1, app_path);
-	op.AutoMarkSend = profile_get_int(GENERAL, TEXT("AutoMarkSend"), 0, app_path);		// Added PHH 27-Sep-2003
 	op.ExpertMode = profile_get_int(GENERAL, TEXT("DisableWarning"), 0, app_path);		// Added PHH 4-Oct-2003
 	op.PopBeforeSmtpIsLoginOnly = profile_get_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), 1, app_path);
 	op.PopBeforeSmtpWait = profile_get_int(GENERAL, TEXT("PopBeforeSmtpWait"), 300, app_path);
@@ -340,6 +348,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.AutoQuotation = profile_get_int(GENERAL, TEXT("AutoQuotation"), 1, app_path);
 	op.FwdQuotation = profile_get_int(GENERAL, TEXT("FwdQuotation"), 1, app_path);
 	op.SignForward = profile_get_int(GENERAL, TEXT("SignForward"), 1, app_path);
+	op.SignReplyAbove = profile_get_int(GENERAL, TEXT("SignReplyAbove"), 0, app_path);
 	op.QuotationChar = profile_alloc_string(GENERAL, TEXT("QuotationChar"), TEXT("> "), app_path);
 #ifdef _WIN32_WCE_PPC
 ////////////////////// MRP ////////////////////
@@ -356,24 +365,30 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.ReHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.ReHeader);
 	}
+	len = profile_get_string(GENERAL, TEXT("FwdHeader"), TEXT("\\n--------------------------------------------------\\nTo: %T\\nCC: %C\\nSubject: %S\\nDate: %D\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	op.FwdHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	if (op.FwdHeader != NULL) {
+		DecodeCtrlChar(conv_buf, op.FwdHeader);
+	}
     op.AltReplyTo = profile_alloc_string(GENERAL, TEXT("ReplyTo"), TEXT(""), app_path);
 
 	op.Bura = profile_alloc_string(GENERAL, TEXT("Bura"), STR_DEFAULT_BURA, app_path);
 	op.Oida = profile_alloc_string(GENERAL, TEXT("Oida"), STR_DEFAULT_OIDA, app_path);
-	op.sBura = profile_alloc_string(GENERAL, TEXT("sBura"), TEXT(",.?!%:;)]}£¡¤Þß"), app_path);
-	op.sOida = profile_alloc_string(GENERAL, TEXT("sOida"), TEXT("\\$([{¢"), app_path);
 
 	op.CAFile = profile_alloc_string(GENERAL, TEXT("CAFile"), TEXT("ca.pem"), app_path);
 	op.IPCache = profile_get_int(GENERAL, TEXT("IPCache"), 1, app_path);
 	op.EncodeType = profile_get_int(GENERAL, TEXT("EncodeType"), 0, app_path);
 
-	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessage"), 1, app_path);
+	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessgae"), 1, app_path);
+	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage, app_path);
 	op.ShowNoMailMessage = profile_get_int(GENERAL, TEXT("ShowNoMailMessage"), 0, app_path);
 #ifdef _WIN32_WCE
-	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessage"), 1, app_path);
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 1, app_path);
 #else
-	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessage"), 0, app_path);
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 0, app_path);
 #endif
+	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
+	op.ClearNewOverlay = profile_get_int(GENERAL, TEXT("ClearNewOverlay"), 0, app_path);
 
 #ifdef _WIN32_WCE_PPC
 	///////////// MRP /////////////////////
@@ -439,6 +454,7 @@ BOOL ini_read_setting(HWND hWnd)
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1, app_path);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1, app_path);
+	op.RasCheckEndDisConTimeout = profile_get_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), 0, app_path);
 	op.RasEndDisCon = profile_get_int(GENERAL, TEXT("RasEndDisCon"), 1, app_path);
 	op.RasNoCheck = profile_get_int(GENERAL, TEXT("RasNoCheck"), 1, app_path);
 	op.RasWaitSec = profile_get_int(GENERAL, TEXT("RasWaitSec"), 5, app_path);
@@ -681,6 +697,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("LvFontItalic"), op.lv_font.italic, app_path);
 	profile_write_int(GENERAL, TEXT("LvFontCharset"), op.lv_font.charset, app_path);
 
+	profile_write_int(GENERAL, TEXT("StatusBarCharWidth"), op.StatusBarCharWidth, app_path);
+
 	profile_write_string(GENERAL, TEXT("HeadCharset"), op.HeadCharset, app_path);
 	profile_write_int(GENERAL, TEXT("HeadEncoding"), op.HeadEncoding, app_path);
 	profile_write_string(GENERAL, TEXT("BodyCharset"), op.BodyCharset, app_path);
@@ -754,7 +772,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("SendMessageId"), op.SendMessageId, app_path);
 	profile_write_int(GENERAL, TEXT("SendDate"), op.SendDate, app_path);
 	profile_write_int(GENERAL, TEXT("SelectSendBox"), op.SelectSendBox, app_path);
-	profile_write_int(GENERAL, TEXT("AutoMarkSend"), op.AutoMarkSend, app_path);	// Added PHH 27-Sep-2003
 	profile_write_int(GENERAL, TEXT("DisableWarning"), op.ExpertMode, app_path);	// Added PHH 4-Oct-2003
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), op.PopBeforeSmtpIsLoginOnly, app_path);
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpWait"), op.PopBeforeSmtpWait, app_path);
@@ -762,6 +779,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("AutoQuotation"), op.AutoQuotation, app_path);
 	profile_write_int(GENERAL, TEXT("FwdQuotation"), op.FwdQuotation, app_path);
 	profile_write_int(GENERAL, TEXT("SignForward"), op.SignForward, app_path);
+	profile_write_int(GENERAL, TEXT("SignReplyAbove"), op.SignReplyAbove, app_path);
 	profile_write_string(GENERAL, TEXT("QuotationChar"), op.QuotationChar, app_path);
 	profile_write_int(GENERAL, TEXT("WordBreakSize"), op.WordBreakSize, app_path);
 	profile_write_int(GENERAL, TEXT("QuotationBreak"), op.QuotationBreak, app_path);
@@ -769,13 +787,12 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_string(GENERAL, TEXT("FwdSubject"), op.FwdSubject, app_path);		// Added PHH 4-10-2003
 	EncodeCtrlChar(op.ReHeader, conv_buf);
 	profile_write_string(GENERAL, TEXT("ReHeader"), conv_buf, app_path);
+	EncodeCtrlChar(op.FwdHeader, conv_buf);
+	profile_write_string(GENERAL, TEXT("FwdHeader"), conv_buf, app_path);
 	profile_write_string(GENERAL, TEXT("ReplyTo"), op.AltReplyTo, app_path);
 
 	profile_write_string(GENERAL, TEXT("Bura"), op.Bura, app_path);
 	profile_write_string(GENERAL, TEXT("Oida"), op.Oida, app_path);
-
-	profile_write_string(GENERAL, TEXT("sBura"), op.sBura, app_path);
-	profile_write_string(GENERAL, TEXT("sOida"), op.sOida, app_path);
 
 	profile_write_string(GENERAL, TEXT("CAFile"), op.CAFile, app_path);
 
@@ -785,6 +802,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	profile_write_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage, app_path);
 	profile_write_int(GENERAL, TEXT("ShowNoMailMessage"), op.ShowNoMailMessage, app_path);
 	profile_write_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage, app_path);
+	profile_write_int(GENERAL, TEXT("ClearNewOverlay"), op.ClearNewOverlay, app_path);
 
 #ifdef _WIN32_WCE_PPC
 	///////////// MRP /////////////////////
@@ -829,9 +847,18 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 
 	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon, app_path);
 	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon, app_path);
+	profile_write_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), op.RasCheckEndDisConTimeout, app_path);
 	profile_write_int(GENERAL, TEXT("RasEndDisCon"), op.RasEndDisCon, app_path);
 	profile_write_int(GENERAL, TEXT("RasNoCheck"), op.RasNoCheck, app_path);
 	profile_write_int(GENERAL, TEXT("RasWaitSec"), op.RasWaitSec, app_path);
+	// GJC delete obsolete entries
+	profile_delete_key(GENERAL, TEXT("StertPass"));
+	profile_delete_key(GENERAL, TEXT("MstchCase"));
+	profile_delete_key(GENERAL, TEXT("ShowNewMailMessgae"));
+	profile_delete_key(GENERAL, TEXT("ActiveNewMailMessgae"));
+	profile_delete_key(GENERAL, TEXT("sOida"));
+	profile_delete_key(GENERAL, TEXT("sBura"));
+	profile_delete_key(GENERAL, TEXT("AutoMarkSend"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {
 		if (*(op.RasInfo + j) == NULL ||
@@ -1056,11 +1083,10 @@ void ini_free(void)
 	mem_free(&op.ReSubject);
 	mem_free(&op.FwdSubject);
 	mem_free(&op.ReHeader);
+	mem_free(&op.FwdHeader);
 	mem_free(&op.AltReplyTo);
 	mem_free(&op.Bura);
 	mem_free(&op.Oida);
-	mem_free(&op.sBura);
-	mem_free(&op.sOida);
 	mem_free(&op.HeadCharset);
 	mem_free(&op.BodyCharset);
 	mem_free(&op.TimeZone);

@@ -10,7 +10,9 @@
 
 /* Include Files */
 #include <windows.h>
+#ifndef _WCE_OLD
 #include <imm.h>
+#endif
 
 #include "General.h"
 #include "Memory.h"
@@ -48,7 +50,7 @@
 #define ID_VIEW_DELETE_ATTACH		402
 #define ID_ATTACH					500
 
-#define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\nCc: %c\r\nSubject: %s\r\nDate: %d\r\nMessage-ID: %i\r\n\r\n")
+#define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\nCc: %c\r\nSubject: %s\r\nDate: %D\r\nMessage-ID: %i\r\n\r\n")
 
 /* Global Variables */
 static WNDPROC EditWindowProcedure;
@@ -212,24 +214,6 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		}
 	}
 
-	///////////// MRP /////////////////////
-	len+= lstrlen(STR_VIEW_HEAD_PRIORITY);
-	if (tpMailItem->Priority == 1)
-	{
-		len+= lstrlen(HIGH_PRIORITY);
-	}
-
-	if (tpMailItem->Priority == 3)
-	{
-		len+= lstrlen(NORMAL_PRIORITY);
-	}
-
-	if (tpMailItem->Priority == 5)
-	{
-		len+= lstrlen(LOW_PRIORITY);
-	}
-	///////////// --- /////////////////////
-
 	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (buf == NULL) {
 		return;
@@ -246,23 +230,6 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	if (op.ViewShowDate == 1) {
 		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->FmtDate, (TCHAR *)-1);
 	}
-
-	///////////// MRP /////////////////////
-	if (tpMailItem->Priority == 1)
-	{
-		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, HIGH_PRIORITY, (TCHAR *)-1);
-	}
-
-	if (tpMailItem->Priority == 3)
-	{
-		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, NORMAL_PRIORITY, (TCHAR *)-1);
-	}
-
-	if (tpMailItem->Priority == 5)
-	{
-		p = str_join_t(p, STR_VIEW_HEAD_PRIORITY, LOW_PRIORITY, (TCHAR *)-1);
-	}
-	///////////// --- /////////////////////
 
 	SetWindowText(hHeader, buf);
 	mem_free(&buf);
@@ -712,11 +679,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{3,	ID_MENUITEM_REMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{4,	ID_MENUITEM_ALLREMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{5,	ID_MENUITEM_FORWARD,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-#ifndef _WIN32_WCE_PPC
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{6,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{7,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-#endif	// _WIN32_WCE_PPC
+		{7,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -730,10 +695,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_REMESSEGE,
 		STR_CMDBAR_ALLREMESSEGE,
 		STR_CMDBAR_FORWARD,
-#ifndef _WIN32_WCE_PPC
 		STR_CMDBAR_DOWNMARK,
-		STR_CMDBAR_DELMARK,
-#endif
+		STR_CMDBAR_DELMARK
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
@@ -758,9 +721,15 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hToolBar = mbi.hwndMB;
 
-	CommandBar_AddToolTips(hToolBar, 8, szTips);
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-	CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+	if (GetSystemMetrics(SM_CXSCREEN) >= 500) {
+		CommandBar_AddToolTips(hToolBar, 10, szTips);
+		CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 8, TB_ICONSIZE, TB_ICONSIZE);
+		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+	} else {
+		CommandBar_AddToolTips(hToolBar, 8, szTips);
+		CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
+		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 3, tbButton);
+	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
 	hCSOBar = CSOBar_Create(hInst, hWnd, 1, BaseInfo);
@@ -783,7 +752,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-	CommandBar_AddToolTips(hToolBar, 8, szTips);
+    CommandBar_AddToolTips(hToolBar, 8, szTips);
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
 	} else {
@@ -874,8 +843,10 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
 #endif
 
+#ifndef _WCE_OLD
 	// IMEをオフにする
 	ImmAssociateContext(GetDlgItem(hWnd, IDC_EDIT_BODY), (HIMC)NULL);
+#endif
 
 	SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 	SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
@@ -1119,9 +1090,11 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 {
 	TCHAR *buf, *mbuf, *p;
 	int LvFocus;
+	BOOL redraw = FALSE;
 #ifndef _WIN32_WCE
 	OSVERSIONINFO os_info;
 #endif
+	HWND hListView;
 
 	if (tpMailItem == NULL || tpMailItem->Body == NULL) {
 		return;
@@ -1129,19 +1102,26 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 
 	SwitchCursor(FALSE);
 
+	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	vSelBox = SelBox;
-	LvFocus = ListView_GetNextItem(GetDlgItem(MainWnd, IDC_LISTVIEW), -1, LVNI_FOCUSED);
+	LvFocus = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
 
 	// 開封済みにする
-	if (tpMailItem->MailStatus != ICON_NON && tpMailItem->MailStatus < ICON_SENDMAIL) {
+	if (tpMailItem->MailStatus != ICON_NON && tpMailItem->MailStatus < ICON_SENTMAIL) {
 		tpMailItem->MailStatus = ICON_READ;
+		tpMailItem->New = FALSE;
+		redraw = TRUE;
 	}
 
 	// 一覧のアイコンの設定
-	if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL) {
-		tpMailItem->Status = tpMailItem->MailStatus;
-		ListView_RedrawItems(GetDlgItem(MainWnd, IDC_LISTVIEW), LvFocus, LvFocus);
-		UpdateWindow(GetDlgItem(MainWnd, IDC_LISTVIEW));
+	if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL) {
+		tpMailItem->Mark = tpMailItem->MailStatus;
+		redraw = TRUE;
+	}
+	if (redraw == TRUE) {
+		ListView_SetItemState(hListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
+		ListView_RedrawItems(hListView, LvFocus, LvFocus);
+		UpdateWindow(hListView);
 	}
 
 	// ウィンドウタイトルの設定
@@ -1163,7 +1143,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 	mbuf = buf;
 
 	// GJC don't show headers unless ViewSrc
-	if (ViewSrc == FALSE && tpMailItem->HasHeader == TRUE && tpMailItem->Multipart == FALSE) {
+	if (ViewSrc == FALSE && tpMailItem->HasHeader == TRUE  && tpMailItem->Multipart == FALSE) {
 		if ((p = GetBodyPointaT(buf)) != NULL) {
 			buf = p;
 		}
@@ -1699,15 +1679,33 @@ static void OpenURL(HWND hWnd)
  */
 static void SetReMessage(HWND hWnd, int ReplyFlag)
 {
+	HWND hEdit;
+	TCHAR *buf = NULL, *seltext = NULL;
+	DWORD selStart, selEnd;
 	int ret;
+
 	if (item_is_mailbox(MailBox + vSelBox,
 		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
 		ErrorMessage(hWnd, STR_ERR_NOMAIL);
 		return;
 	}
 
+	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
+	SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+	if (selStart != selEnd) {
+		AllocGetText(hEdit, &buf);
+		if (buf != NULL) {
+			seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
+			if (seltext != NULL) {
+				str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
+			}
+			mem_free(&buf);
+		}
+	}
+
 	ret = Edit_InitInstance(hInst, hWnd, vSelBox,
-		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), ReplyFlag);
+		(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA), ReplyFlag, seltext);
+	mem_free(&seltext);
 #ifdef _WIN32_WCE
 	if (ret == EDIT_INSIDEEDIT) {
 		ShowWindow(hWnd, SW_HIDE);
@@ -1971,13 +1969,13 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 		return FALSE;
 	}
 	// ヘッダの保存
-	len = CreateHeaderStringSize(head, tpMailItem);
+	len = CreateHeaderStringSize(head, tpMailItem, NULL);
 	tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (tmp == NULL) {
 		CloseHandle(hFile);
 		return FALSE;
 	}
-	CreateHeaderString(head, tmp, tpMailItem);
+	CreateHeaderString(head, tmp, tpMailItem, NULL);
 
 	if (file_write_ascii(hFile, tmp, len) == FALSE) {
 		mem_free(&tmp);
@@ -2078,8 +2076,8 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	i = ListView_GetMemToItem(hListView, tpMailItem);
 
-	if (tpMailItem->Status == mark) {
-		tpMailItem->Status = tpMailItem->MailStatus;
+	if (tpMailItem->Mark == mark) {
+		tpMailItem->Mark = tpMailItem->MailStatus;
 		if (i != -1) {
 			if (tpMailItem->Download == FALSE) {
 				ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
@@ -2087,7 +2085,7 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 			ListView_RedrawItems(hListView, i, i);
 		}
 	} else {
-		tpMailItem->Status = mark;
+		tpMailItem->Mark = mark;
 		if (i != -1) {
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 			ListView_RedrawItems(hListView, i, i);
@@ -2123,17 +2121,17 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 
 	enable = (SelBox != MAILBOX_SAVE && !(vSelBox == RecvBox && ExecFlag == TRUE));
 
-	CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Status == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Status == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Mark == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Mark == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);
 	EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !enable);
 	EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !enable);
 
 #if !defined(_WIN32_WCE) || (defined(_WIN32_WCE) && !defined(_WIN32_WCE_PPC) && !defined(_WIN32_WCE_LAGENDA))
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Status == ICON_DOWN) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Status == ICON_DOWN) ? 1 : 0, 0));
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
 
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Status == ICON_DEL) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Status == ICON_DEL) ? 1 : 0, 0));
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0));
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0));
 
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(enable, 0));
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(enable, 0));
@@ -2577,17 +2575,18 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		}
 
 		// 開封済みにする
-		if (((MAILITEM *)lpParam)->MailStatus != ICON_NON && ((MAILITEM *)lpParam)->MailStatus < ICON_SENDMAIL) {
+		if (((MAILITEM *)lpParam)->MailStatus != ICON_NON && ((MAILITEM *)lpParam)->MailStatus < ICON_SENTMAIL) {
 			((MAILITEM *)lpParam)->MailStatus = ICON_READ;
+			((MAILITEM *)lpParam)->New = FALSE;
 		}
 
 		// 一覧のアイコンの設定
-		if (((MAILITEM *)lpParam)->Status != ICON_DOWN && ((MAILITEM *)lpParam)->Status != ICON_DEL) {
-			int LvFocus;
-			LvFocus = ListView_GetNextItem(GetDlgItem(MainWnd, IDC_LISTVIEW), -1, LVNI_FOCUSED);
-			((MAILITEM *)lpParam)->Status = ((MAILITEM *)lpParam)->MailStatus;
-			ListView_RedrawItems(GetDlgItem(MainWnd, IDC_LISTVIEW), LvFocus, LvFocus);
-			UpdateWindow(GetDlgItem(MainWnd, IDC_LISTVIEW));
+		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL) {
+			HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+			int LvFocus = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+			((MAILITEM *)lpParam)->Mark = ((MAILITEM *)lpParam)->MailStatus;
+			ListView_RedrawItems(hListView, LvFocus, LvFocus);
+			UpdateWindow(hListView);
 		}
 		return FALSE;
 	}

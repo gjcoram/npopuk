@@ -508,7 +508,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 					*s = '\0';
 				}
 			}
-			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENDMAIL) {
+			if (tpMailItem->Body == NULL && tpMailItem->MailStatus < ICON_SENTMAIL) {
 				if (tpMailItem->Download == TRUE) {
 					tpMailItem->Body = (char *)mem_alloc(sizeof(char));
 					if (tpMailItem->Body != NULL) {
@@ -516,8 +516,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox)
 					}
 				} else {
 					tpMailItem->MailStatus = ICON_NON;
-					if (tpMailItem->Status != ICON_DOWN && tpMailItem->Status != ICON_DEL && tpMailItem->Status != ICON_SEND) {
-						tpMailItem->Status = ICON_NON;
+					if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL && tpMailItem->Mark != ICON_SEND) {
+						tpMailItem->Mark = ICON_NON;
 					}
 					tpMailItem->Download = FALSE;
 				}

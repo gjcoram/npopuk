@@ -113,6 +113,7 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 		sjis_iso2022jp(buf, ret);
 #endif
 	} else {
+#ifndef _WCE_OLD
 #ifdef UNICODE
 		ret = charset_encode(charset, buf, -1);
 #else
@@ -124,6 +125,11 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 		ret = charset_encode(wcharset, wbuf, -1);
 		mem_free(&wcharset);
 		mem_free(&wbuf);
+#endif
+#else
+		// not supported in WinCE2.00
+		// ought to pop a warning box, but don't have hWnd in this context
+		ret = NULL;
 #endif
 	}
 	return ret;
@@ -156,6 +162,7 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 		iso2022jp_sjis(buf, ret);
 #endif
 	} else {
+#ifndef _WCE_OLD
 #ifdef UNICODE
 		ret = charset_decode(charset, buf, -1);
 #else
@@ -167,6 +174,11 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 		mem_free(&wcharset);
 		ret = alloc_wchar_to_char(cp, wret);
 		mem_free(&wret);
+#endif
+#else
+		// not supported in WinCE2.00
+		// ought to pop a warning box, but don't have hWnd in this context
+		return NULL;
 #endif
 	}
 	return ret;
@@ -1062,14 +1074,18 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 		MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
 
 		// charset‚Ì•ÏŠ·
+#ifndef _WCE_OLD
 		cret = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, charset_t);
 		if (cret == NULL) {
+#endif
 #ifdef UNICODE
 			cret = alloc_tchar_to_char(buf);
 #else
 			cret = alloc_copy_t(buf);
 #endif
+#ifndef _WCE_OLD
 		}
+#endif
 		switch (encoding) {
 		case ENC_TYPE_7BIT:
 		case ENC_TYPE_8BIT:
@@ -1163,11 +1179,13 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		for (p = charset; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++);
 		*p = TEXT('\0');
 
+#ifndef _WCE_OLD
 		ret = MIME_charset_decode(charset_to_cp((BYTE)font_charset), buf, charset);
 		if (ret != NULL) {
 			mem_free(&charset);
 			return ret;
 		}
+#endif
 		mem_free(&charset);
 		break;
 	}

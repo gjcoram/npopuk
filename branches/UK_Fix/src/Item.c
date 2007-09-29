@@ -20,6 +20,7 @@
 #include "md5.h"
 
 /* Define */
+#define STATUS_REVISION_NUMBER 100000
 
 /* Global Variables */
 extern OPTION op;
@@ -115,7 +116,7 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem)
 {
 	CopyMemory(tpToMailItem, tpFromMailItem, sizeof(MAILITEM));
-	tpToMailItem->Status = tpToMailItem->MailStatus;
+	tpToMailItem->Mark = tpToMailItem->MailStatus;
 	tpToMailItem->New = FALSE;
 	tpToMailItem->No = 0;
 	tpToMailItem->UIDL = NULL;
@@ -137,6 +138,8 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem)
 	tpToMailItem->Body = alloc_copy(tpFromMailItem->Body);
 	tpToMailItem->MailBox = alloc_copy_t(tpFromMailItem->MailBox);
 	tpToMailItem->Attach = alloc_copy_t(tpFromMailItem->Attach);
+	tpToMailItem->FwdAttach = alloc_copy_t(tpFromMailItem->FwdAttach);
+	tpToMailItem->AttachSize = tpFromMailItem->AttachSize;
 
 	tpToMailItem->HeadCharset = alloc_copy_t(tpFromMailItem->HeadCharset);
 	tpToMailItem->BodyCharset = alloc_copy_t(tpFromMailItem->BodyCharset);
@@ -170,7 +173,7 @@ MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *Ma
 		(*(tpMailList + i))->MailBox = alloc_copy_t(MailBoxName);
 	}
 	if (SendClear == TRUE) {
-		(*(tpMailList + i))->MailStatus = (*(tpMailList + i))->Status = ICON_NON;
+		(*(tpMailList + i))->MailStatus = (*(tpMailList + i))->Mark = ICON_NON;
 		mem_free(&(*(tpMailList + i))->Date);
 		(*(tpMailList + i))->Date = NULL;
 		mem_free(&(*(tpMailList + i))->FmtDate);
@@ -503,7 +506,7 @@ int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Status == ICON_DOWN) {
+		if (tpMailItem->Mark == ICON_DOWN) {
 			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
@@ -526,7 +529,7 @@ int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Status == ICON_DEL) {
+		if (tpMailItem->Mark == ICON_DEL) {
 			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
@@ -549,7 +552,7 @@ int item_get_next_send_mark(MAILBOX *tpMailBox, int Index, int *MailBoxIndex)
 
 	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL || tpMailItem->Status != ICON_SEND) {
+		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND) {
 			continue;
 		}
 		if (MailBoxIndex == NULL) {
@@ -586,7 +589,7 @@ int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIn
 	}
 	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL || tpMailItem->Status != ICON_SEND) {
+		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND) {
 			continue;
 		}
 		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox);
@@ -646,7 +649,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 		}
 	}
 	if (tpMailItem->Body != NULL) {
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_MAIL;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
 	}
 }
 
@@ -655,7 +658,8 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
  */
 BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 {
-	TCHAR *msgid1 = NULL, *msgid2 = NULL, *t = NULL, *priority = NULL;
+	TCHAR *msgid1 = NULL, *msgid2 = NULL, *t = NULL;
+	char *priority = NULL;
 	char *Content;
 #ifdef UNICODE
 	char *dcode;
@@ -795,38 +799,62 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download)
 		mem_free(&Content);
 	}
 
+	// GJC modifies MRP
+	// X-Priority: is a number 1 (high) to 5 (low)
+	//   officially non-standard (because of leading X-), but common
+	// Priority: is a string: urgent, normal, non-urgent
+	//   mentioned in RFC1327 (not for general use)
+	// Importance: is string: high, normal, low
+	//   mentioned in RFC2156 (SHOULD be used)
+
+	tpMailItem->Priority = -1;
+	item_get_content(buf, HEAD_IMPORTANCE, &priority);
+	if (priority != NULL && *priority != '\0') {
+		if (str_cmp_ni(priority, "high", 4) == 0) {
+			tpMailItem->Priority = 1;
+		} else if (str_cmp_ni(priority, "low", 3) == 0) {
+			tpMailItem->Priority = 5;
+		} else if (str_cmp_ni(priority, "normal", 6) == 0) {
+			tpMailItem->Priority = 3;
+		}
+		mem_free(&priority);
+	}
+	if (tpMailItem->Priority == -1) {
+		tpMailItem->Priority = item_get_content_int(buf, HEAD_X_PRIORITY, -1);
+		if (tpMailItem->Priority == 2) {
+			tpMailItem->Priority = 1;
+		} else if (tpMailItem->Priority == 4) {
+			tpMailItem->Priority = 5;
+		}
+	}
+	if (tpMailItem->Priority == -1) {
+		tpMailItem->Priority = 3;
+		item_get_content(buf, HEAD_PRIORITY, &priority);
+		if (priority != NULL && *priority != '\0') {
+			if (str_cmp_ni(priority, "urgent", 6) == 0) {
+				tpMailItem->Priority = 1;
+			} else if (str_cmp_ni(priority, "non-urgent", 10) == 0) {
+				tpMailItem->Priority = 5;
+			}
+			mem_free(&priority);
+		}
+	}
+
 	///////////// MRP /////////////////////
-	// MRP - HEAD_X_PRIORITY
-
-	tpMailItem->Priority = item_get_content_int(buf, HEAD_X_PRIORITY, 3);
-
-	if (tpMailItem->Priority == 2)
-	{
-		tpMailItem->Priority = 1;
-	}
-
-	if (tpMailItem->Priority == 4)
-	{
-		tpMailItem->Priority = 5;
-	}
-
 	tpMailItem->ReadReceipt = 0;
 	item_get_content(buf, HEAD_READ1, &Content);
-	if(Content != NULL)
-	{
+	if(Content != NULL) {
 		tpMailItem->ReadReceipt = 1;
 	}
 
 	item_get_content(buf, HEAD_READ2, &Content);
-	if(Content != NULL)
-	{
+	if(Content != NULL) {
 		tpMailItem->ReadReceipt = 1;
 	}
 
 	tpMailItem->DeliveryReceipt = 0;
 	item_get_content(buf, HEAD_DELIVERY, &Content);
-	if(Content != NULL)
-	{
+	if(Content != NULL) {
 		tpMailItem->DeliveryReceipt = 1;
 	}
 	////////////////// --- /////////////////////
@@ -878,13 +906,13 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size)
 	//Filter operation setting
 	//Opening being completed setting
 	if (fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_READ;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
 	}
 	//Macro description
 	if (fret & FILTER_DOWNLOADMARK) {
-		tpMailItem->Status = ICON_DOWN;
+		tpMailItem->Mark = ICON_DOWN;
 	} else if (fret & FILTER_DELETEMARK) {
-		tpMailItem->Status = ICON_DEL;
+		tpMailItem->Mark = ICON_DEL;
 	}
 	//To retention box copy
 	if (fret & FILTER_SAVE &&
@@ -978,15 +1006,18 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf)
 	item_get_content_t(buf, HEAD_READ1, &Temp);
 	if (Temp != NULL)
 		tpMailItem->ReadReceipt = 1;
+	mem_free(&Temp);
 
 	item_get_content_t(buf, HEAD_READ2, &Temp);
 	if(Temp != NULL)
 		tpMailItem->ReadReceipt = 1;
+	mem_free(&Temp);
 
 	tpMailItem->DeliveryReceipt = 0;
 	item_get_content_t(buf, HEAD_DELIVERY, &Temp);
 	if(Temp != NULL)
 		tpMailItem->DeliveryReceipt = 1;
+	mem_free(&Temp);
 	//////////////////--- /////////////////////
 
 	item_get_content_t(buf, HEAD_X_MAILBOX, &tpMailItem->MailBox);
@@ -1012,21 +1043,65 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf)
 	if (tpMailItem->No == -1) {
 		tpMailItem->No = item_get_content_int(buf, HEAD_X_NO_OLD, 0);
 	}
-	// MailStatus
-	tpMailItem->MailStatus = item_get_content_int(buf, HEAD_X_STATUS, -1);
-	if (tpMailItem->MailStatus == -1) {
-		tpMailItem->MailStatus = item_get_content_int(buf, HEAD_X_STATUS_OLD, 0);
+	tpMailItem->New = FALSE;
+	// GJC: MailStatus, Mark, Download, and HasHeader combined into X-Status: header
+	// order of codes must match item_to_string!
+	item_get_content_t(buf, HEAD_X_STATUS, &Temp);
+	if (Temp != NULL) {
+		i = _ttoi(Temp);
+	} else {
+		i = -1;
 	}
-	// MarkStatus
-	i = item_get_content_int(buf, HEAD_X_MARK, -1);
-	tpMailItem->Status = (i != -1) ? i : tpMailItem->MailStatus;
-	// Download
-	tpMailItem->Download = item_get_content_int(buf, HEAD_X_DOWNLOAD, -1);
-	if (tpMailItem->Download == -1) {
-		tpMailItem->Download = item_get_content_int(buf, HEAD_X_DOWNLOAD_OLD, 0);
+	if (i >= STATUS_REVISION_NUMBER && lstrlen(Temp) >= 6) {
+		int rev, refwd, head, dwn, mrk, stat;
+
+		// STATUS_REVISION_NUMBER
+		rev = i / 100000;
+		i = i % 100000;
+
+		// Replied/Forwarded
+		refwd = i / 10000;
+		tpMailItem->ReFwd = (refwd <= 7) ? (char)(refwd/2) : 0;
+		i = i % 10000;
+
+		// HasHeader
+		head = i / 1000;
+		tpMailItem->HasHeader = (head == 0) ? FALSE : TRUE;
+		i = i % 1000;
+
+		// Downloaded
+		dwn = i / 100;
+		tpMailItem->Download = (dwn == 0) ? FALSE : TRUE;
+		i = i % 100;
+
+		// Mark
+		mrk = i / 10;
+		tpMailItem->Mark = (mrk <= ICON_ERROR) ? mrk : 0;
+		// Status
+		stat = i % 10;
+		tpMailItem->MailStatus = (stat <= ICON_ERROR) ? stat : 0;
+		
+	} else{ // legacy status
+		// MailStatus
+		tpMailItem->MailStatus = i;
+		if (tpMailItem->MailStatus == -1) {
+			tpMailItem->MailStatus = item_get_content_int(buf, HEAD_X_STATUS_OLD, 0);
+		}
+		// MarkStatus
+		i = item_get_content_int(buf, HEAD_X_MARK, -1);
+		tpMailItem->Mark = (i != -1) ? i : tpMailItem->MailStatus;
+		// Download
+		tpMailItem->Download = item_get_content_int(buf, HEAD_X_DOWNLOAD, -1);
+		if (tpMailItem->Download == -1) {
+			tpMailItem->Download = item_get_content_int(buf, HEAD_X_DOWNLOAD_OLD, 0);
+		}
+		// Full header info
+		tpMailItem->HasHeader = item_get_content_int(buf, HEAD_X_HASHEADER, 0);
+		// Replied or forwarded
+		tpMailItem->ReFwd = ICON_NON;
 	}
-	// Full header info
-	tpMailItem->HasHeader = item_get_content_int(buf, HEAD_X_HASHEADER, 0);
+	mem_free(&Temp);
+
 	// Multipart
 	if (tpMailItem->Attach != NULL || (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0)) {
@@ -1085,22 +1160,17 @@ static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret)
  */
 int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag)
 {
-	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
-	TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
+	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
 	int len = 0;
 
 #ifndef _itot
 	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
-	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
-	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
-	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+	wsprintf(X_Mstatus, TEXT("%d"), STATUS_REVISION_NUMBER);
 	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
 	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 #else
 	_itot(tpMailItem->No, X_No, 10);
-	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
-	_itot(tpMailItem->Status, X_Status, 10);
-	_itot(tpMailItem->Download, X_Downflag, 10);
+	_itot(STATUS_REVISION_NUMBER, X_Mstatus, 10);
 	_itot(tpMailItem->HeadEncoding, X_HeadEncoding, 10);
 	_itot(tpMailItem->BodyEncoding, X_BodyEncoding, 10);
 #endif
@@ -1172,13 +1242,6 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag)
 
 	len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
 	len += item_save_header_size(TEXT(HEAD_X_STATUS), X_Mstatus);
-	if (tpMailItem->MailStatus != tpMailItem->Status) {
-		len += item_save_header_size(TEXT(HEAD_X_MARK), X_Status);
-	}
-	len += item_save_header_size(TEXT(HEAD_X_DOWNLOAD), X_Downflag);
-	if (tpMailItem->HasHeader) {
-		len += item_save_header_size(TEXT(HEAD_X_HASHEADER), TEXT("1"));
-	}
 	len += 2;
 
 	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') {
@@ -1194,21 +1257,24 @@ int item_to_string_size(MAILITEM *tpMailItem, BOOL BodyFlag)
 char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag)
 {
 	char *p = buf;
-	TCHAR X_No[10], X_Mstatus[10], X_Status[10], X_Downflag[10];
-	TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
+	TCHAR X_No[10], X_Mstatus[10], X_HeadEncoding[10], X_BodyEncoding[10];
+	int composite_status;
+	// GJC: order of codes must match item_string_to_item!
+	composite_status = STATUS_REVISION_NUMBER
+		+ 10000 * 2 * tpMailItem->ReFwd
+		+  1000 * ((tpMailItem->HasHeader == TRUE) ? 1 : 0)
+		+   100 * ((tpMailItem->Download == TRUE) ? 1 : 0)
+		+    10 * tpMailItem->Mark
+		+         tpMailItem->MailStatus;
 
 #ifndef _itot
 	wsprintf(X_No, TEXT("%d"), tpMailItem->No);
-	wsprintf(X_Mstatus, TEXT("%d"), tpMailItem->MailStatus);
-	wsprintf(X_Status, TEXT("%d"), tpMailItem->Status);
-	wsprintf(X_Downflag, TEXT("%d"), tpMailItem->Download);
+	wsprintf(X_Mstatus, TEXT("%d"), composite_status);
 	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
 	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 #else
 	_itot(tpMailItem->No, X_No, 10);
-	_itot(tpMailItem->MailStatus, X_Mstatus, 10);
-	_itot(tpMailItem->Status, X_Status, 10);
-	_itot(tpMailItem->Download, X_Downflag, 10);
+	_itot(composite_status, X_Mstatus, 10);
 	_itot(tpMailItem->HeadEncoding, X_HeadEncoding, 10);
 	_itot(tpMailItem->BodyEncoding, X_BodyEncoding, 10);
 #endif
@@ -1279,13 +1345,6 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, BOOL BodyFlag)
 
 	p = item_save_header(TEXT(HEAD_X_NO), X_No, p);
 	p = item_save_header(TEXT(HEAD_X_STATUS), X_Mstatus, p);
-	if (tpMailItem->MailStatus != tpMailItem->Status) {
-		p = item_save_header(TEXT(HEAD_X_MARK), X_Status, p);
-	}
-	p = item_save_header(TEXT(HEAD_X_DOWNLOAD), X_Downflag, p);
-	if (tpMailItem->HasHeader) {
-		p = item_save_header(TEXT(HEAD_X_HASHEADER), TEXT("1"), p);
-	}
 	p = str_cpy(p, "\r\n");
 
 	if (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') {

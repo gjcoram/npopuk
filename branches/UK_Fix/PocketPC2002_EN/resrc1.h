@@ -28,15 +28,17 @@
 #define IDI_ICON_NEW                    121
 #define IDR_MENU_EDIT                   122
 #define IDD_DIALOG_SETSEND              123
+#define IDD_DIALOG_SETSEND_WIDE         124
 #define IDB_TOOLBAR_EDIT                128
-#define IDI_ICON_SENDMAIL               129
+#define IDI_ICON_SENTMAIL               129
 #define IDI_ICON_SEND                   130
 #define IDR_ACCELERATOR_EDIT            131
 #define IDR_ACCELERATOR_VIEW            132
 #define IDD_DIALOG_SMTP                 134
-#define IDD_DIALOG_MAKE                 135
+#define IDD_DIALOG_SIG                  135
+#define IDD_DIALOG_OPTION_FWD           136
+#define IDD_DIALOG_OPTION_REPLY         137
 #define IDD_DIALOG_OPTION_SEND          138
-#define IDD_DIALOG_OPTION_MAKE          139
 #define IDD_DIALOG_CC                   140
 #define IDD_DIALOG_ETCHEAD              141
 #define IDD_DIALOG_OPTION_CHECK         142
@@ -45,6 +47,9 @@
 #define IDD_DIALOG_MSG                  146
 #define IDR_MENU_POPUP                  148
 #define IDD_DIALOG_OPTION_ETC           149
+#define IDD_DIALOG_OPTION_SORT          150
+#define IDC_SORT_SELECT_FIRST           151
+#define IDC_SORT_SELECT_LAST            152
 #define IDD_DIALOG_FILTER               154
 #define IDD_DIALOG_FILTER_EDIT          155
 #define IDD_DIALOG_INITMAILBOX          160
@@ -74,6 +79,11 @@
 #define IDC_AUTOSORT1                   201
 #define IDC_AUTOSORT2                   202
 #define IDC_AUTOSORT3                   203
+#define IDI_ICON_FWD                    210
+#define IDI_ICON_REPL                   211
+#define IDI_ICON_REPLFWD                212
+#define IDC_DATE_FORMAT                 213
+#define IDC_TIME_FORMAT                 214
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
@@ -158,6 +168,7 @@
 #define IDC_RADIO_FIRSTGET              1065
 #define IDC_RADIO_SETGET                1066
 #define IDC_CHECK_QUOTATION             1066
+#define IDC_CHECK_QUOT_3ST              1067
 #define IDC_CHECK_SMTPAUTH              1068
 #define IDC_RADIO_RASMODE_0             1070
 #define IDC_RADIO_RASMODE_1             1071
@@ -199,12 +210,16 @@
 #define IDC_ABOUT_TEXT                  1101
 #define IDC_DEL							1102
 #define IDC_READ						1103
-#define IDC_QUOTFWD                     1200
-#define IDC_SIGNFWD                     1201
-#define IDC_FWDHEAD                     1202
-#define IDC_COMBO_REPLYTO               1203
+#define IDC_QUOTSTYLE_0                 1200
+#define IDC_QUOTSTYLE_1                 1201
+#define IDC_QUOTSTYLE_2                 1202 // placeholder for "fwd as attachment"
+#define IDC_SIGNFWD                     1203
+#define IDC_SIGNFWD_ABOVE               1204
+#define IDC_SIGNRE_ABOVE                1205
+#define IDC_EDIT_FWDHEAD                1206
+#define IDC_COMBO_REPLYTO               1207
 #define ID_MENUITEM_RECV                40001
-#define ID_MENUITE_QUIT                 40002
+#define ID_MENUITEM_QUIT                40002
 #define ID_KEY_ESC                      40004
 #define ID_MENUITEM_OPEN                40005
 #define ID_MENUITEM_DOWNMARK            40006
@@ -224,7 +239,7 @@
 #define ID_MENUITEM_ABOUT               40020
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
-#define ID_MENUITE_SAVECOPY             40025
+#define ID_MENUITEM_SAVECOPY            40025
 #define ID_MENUITEM_WORDBREAK           40026
 #define ID_MENUITEM_OPTION              40027
 #define ID_MENUITEM_REMESSEGE           40028
@@ -232,9 +247,10 @@
 #define ID_MENUITEM_NEWMAIL             40031
 #define ID_MENUITEM_SEND                40032
 #define ID_MENUITEM_SENDBOX             40033
-#define ID_MENUITEM_SENDINFO            40034
-#define ID_KEY_ALTUP                    40035
-#define ID_KEY_ALTDOWN                  40036
+#define ID_MENUITEM_SBOXMARK            40034
+#define ID_MENUITEM_SENDINFO            40035
+#define ID_KEY_ALTUP                    40036
+#define ID_KEY_ALTDOWN                  40037
 #define ID_KEY_UP                       40039
 #define ID_KEY_DOWN                     40040
 #define ID_KEY_LEFT                     40041
@@ -248,6 +264,8 @@
 #define ID_MENUITEM_ALLCHECK            40050
 #define ID_MENUITEM_ADDRESS             40051
 #define ID_MENUITEM_RESTORE             40054
+#define ID_MENUITEM_NEXTMAILBOX         40055
+#define ID_MENUITEM_PREVMAILBOX         40056
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_SHOWMENU                 40067

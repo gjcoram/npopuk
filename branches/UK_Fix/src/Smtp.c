@@ -667,49 +667,37 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 
 ////////////////////// MRP ////////////////////
 // this is where the Priority and receipts go.
-	if (tpMailItem->Priority == 1)
-	{
+	if (tpMailItem->Priority == 1) {
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
 			return FALSE;
 		}	
 
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), HIGH_PRIORITY, ErrStr) == FALSE){
+		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), HIGH_PRIORITY, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
 			return FALSE;
 		}	
-	}
-
-	if (tpMailItem->Priority == 3)
-	{
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-			return FALSE;
-		}	
-
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), NORMAL_PRIORITY, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-			return FALSE;
-		}	
-	}
-
-	if (tpMailItem->Priority == 5)
-	{
+	} else if (tpMailItem->Priority == 5) {
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
 			return FALSE;
 		}	
 
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY2), LOW_PRIORITY, ErrStr) == FALSE){
+		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), LOW_PRIORITY, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
 			return FALSE;
 		}	
+	} else {
+		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
+			mem_free(&send_body);
+			send_body = NULL;
+			return FALSE;
+		}	
+
 	}
 
 
@@ -1253,7 +1241,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_SENDMAIL;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_SENTMAIL;
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1311,7 +1299,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
 		}
-		tpMailItem->Status = tpMailItem->MailStatus = ICON_SENDMAIL;
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_SENTMAIL;
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1460,7 +1448,7 @@ void smtp_set_error(HWND hWnd)
 	if (send_mail_item == NULL) {
 		return;
 	}
-	send_mail_item->Status = send_mail_item->MailStatus = ICON_ERROR;
+	send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
 
 	if (SelBox == MAILBOX_SEND) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);

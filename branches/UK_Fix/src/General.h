@@ -35,7 +35,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME_VERSION		TEXT("nPOP Ver 1.0.8 UK Fix-4")
+#define APP_NAME_VERSION		TEXT("nPOP Ver 1.0.8 UK Fix-5")
 #define APP_NAME				TEXT("nPOP")
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -47,6 +47,9 @@
 #define PRIORITY_NUMBER3		TEXT("3")
 #define PRIORITY_NUMBER4		TEXT("4")
 #define PRIORITY_NUMBER5		TEXT("5")
+
+#define PRIORITY_URGENT			TEXT("urgent")
+#define PRIORITY_NON_URGENT		TEXT("non-urgent")
 ////////////////////// --- ////////////////////
 
 #define WINDOW_TITLE			TEXT("nPOP")
@@ -136,7 +139,7 @@
 #define SELECT_SOC_NODATA		2
 
 #define SORT_NO					100					//of socket processing Sort flag
-#define SORT_IOCN				101
+#define SORT_ICON				101
 #define SORT_THREAD				102
 
 #define POP_ERR					-2					//pop3 command flag
@@ -177,10 +180,13 @@
 #define ICON_READ				2
 #define ICON_DOWN				3
 #define ICON_DEL				4
-#define ICON_SENDMAIL			5
+#define ICON_SENTMAIL			5
 #define ICON_SEND				6
 #define ICON_ERROR				7
-#define ICON_NEW				8
+// overlays -- INDEXTOOVERLAYMASK(i) is ((i) << 8)
+#define ICON_NEW_MASK			0x04
+#define ICON_REPL_MASK			0x01
+#define ICON_FWD_MASK			0x02
 
 #define FILTER_UNRECV			1					//Filter type
 #define FILTER_RECV				2
@@ -220,7 +226,8 @@
 #define HEAD_X_HASHEADER		"X-HasHeader:"
 ////////////// MRP ///////////////////////
 #define HEAD_X_PRIORITY			"X-Priority:"
-#define HEAD_X_PRIORITY2		"Importance:"
+#define HEAD_IMPORTANCE			"Importance:"
+#define HEAD_PRIORITY			"Priority:"
 
 #define HEAD_DELIVERY			"Return-Receipt-To:"
 #define HEAD_READ1				"X-Confirm-Reading-To:"
@@ -265,6 +272,7 @@ typedef struct _OPTION {
 
 	FONT_INFO view_font;
 	FONT_INFO lv_font;
+	int StatusBarCharWidth;
 
 	#ifndef _WIN32_WCE
 	RECT MainRect;
@@ -309,7 +317,6 @@ typedef struct _OPTION {
 	int SendMessageId;
 	int SendDate;
 	int SelectSendBox;
-	int AutoMarkSend;	// Added PHH 4-10-2003
 	int ExpertMode;		// Added PHH 4-10-2003
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
@@ -325,17 +332,17 @@ typedef struct _OPTION {
 	int AutoQuotation;
 	int FwdQuotation;
 	int SignForward;
+	int SignReplyAbove;
 	TCHAR *QuotationChar;
 	int WordBreakSize;
 	int QuotationBreak;
 	TCHAR *ReSubject;
 	TCHAR *FwdSubject;		// Added PHH 4-10-2003
 	TCHAR *ReHeader;
+	TCHAR *FwdHeader;
 	TCHAR *AltReplyTo;
 	TCHAR *Bura;
 	TCHAR *Oida;
-	TCHAR *sBura;
-	TCHAR *sOida;
 
 	int IPCache;
 	int EncodeType;
@@ -346,6 +353,7 @@ typedef struct _OPTION {
 	int ShowNewMailMessage;
 	int ShowNoMailMessage;
 	int ActiveNewMailMessage;
+	int ClearNewOverlay;
 
 	int NewMailSound;
 	TCHAR *NewMailSoundFile;
@@ -383,6 +391,7 @@ typedef struct _OPTION {
 
 	int RasCon;
 	int RasCheckEndDisCon;
+	int RasCheckEndDisConTimeout;
 	int RasEndDisCon;
 	int RasNoCheck;
 	int RasWaitSec;
@@ -469,8 +478,9 @@ typedef struct _MAILBOX {
 
 typedef struct _MAILITEM {
 	int No;
-	int Status;
-	int MailStatus;
+	char MailStatus;
+	char Mark;
+	char ReFwd;
 	int PrevNo;
 	int NextNo;
 	int Indent;
@@ -502,6 +512,7 @@ typedef struct _MAILITEM {
 	TCHAR *MailBox;
 	TCHAR *Attach;
 	TCHAR *FwdAttach;
+	long AttachSize;
 	TCHAR *HeadCharset;
 	int HeadEncoding;
 	TCHAR *BodyCharset;
@@ -689,8 +700,8 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 void EncodeCtrlChar(TCHAR *buf, TCHAR *ret);
 void DecodeCtrlChar(TCHAR *buf, TCHAR *ret);
 TCHAR *CreateMessageId(long id, TCHAR *MailAddress);
-int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem);
-TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem);
+int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr);
+TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr);
 int GetReplyBodySize(TCHAR *body, TCHAR *ReStr);
 TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr);
 int SetDotSize(TCHAR *buf);
@@ -729,7 +740,7 @@ BOOL Edit_InitApplication(HINSTANCE hInstance);
 int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
 void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
-					   MAILITEM *tpReMailItem, int OpenFlag);
+					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext);
 
 // Option
 void AllocGetText(HWND hEdit, TCHAR **buf);
@@ -790,6 +801,7 @@ void SetMailMenu(HWND hWnd);
 void SetNoReadCntTitle(HWND hWnd);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
+void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark);
 
 #endif
 /* End of source */

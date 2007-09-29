@@ -3194,31 +3194,51 @@ SOURCE=..\EN\Strtbl.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=..\res\ico00002.ico
+SOURCE=..\res\ico_clhi.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00003.ico
+SOURCE=..\res\ico_cllo.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00005.ico
+SOURCE=..\res\ico_down.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00006.ico
+SOURCE=..\res\ico_high.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00008.ico
+SOURCE=..\res\ico_main.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\ico00011.ico
+SOURCE=..\res\ico_nchk.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_che.ico
+SOURCE=..\res\ico_none.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_read.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_repl.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_send.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_sent.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\icon_chk.ico
 # End Source File
 # Begin Source File
 
@@ -3226,15 +3246,31 @@ SOURCE=..\res\icon_cli.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\res\icon_del.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\icon_fwd.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\icon_low.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\res\icon_new.ico
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_rea.ico
+SOURCE=..\res\tbar_edit.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=..\res\icon_sen.ico
+SOURCE=..\res\tbar_view.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\Toolbar.bmp
 # End Source File
 # End Group
 # End Target

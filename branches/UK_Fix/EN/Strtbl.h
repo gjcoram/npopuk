@@ -118,6 +118,7 @@
 #define STR_Q_SENDMAIL				TEXT("Send it?")
 #define STR_Q_ATTACH				TEXT("Open this file?")
 #define STR_Q_FORWARDMAIL		TEXT("The message you are forwarding may be incomplete.\nProceed to forward anyway?")
+#define STR_Q_RASDISCON				TEXT("Disconnect dial-up connection?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
@@ -153,7 +154,7 @@
 #define STR_TITLE_ATTACH_MSG		TEXT("Open")
 
 // Window status
-#define STR_STATUS_VIEWINFO			TEXT("View %d")
+#define STR_STATUS_VIEWINFO			TEXT("View %d  ")
 #define STR_STATUS_MAILBOXINFO		TEXT("View %d/ Server %d")
 #define STR_STATUS_MAILINFO			TEXT("New %d, Unread %d")
 
@@ -196,6 +197,7 @@
 
 #define STR_LIST_MENU_SENDINFO		TEXT("&Property...")
 #define STR_LIST_MENU_REPLY		TEXT("&Reply...\tCtrl+R")
+#define STR_LIST_MENU_REPLYALL		TEXT("Repl&y to all...\t")
 #define STR_LIST_MENU_FORWARD		TEXT("&Forward...\tCtrl+O")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark for sending\tCtrl+D")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
@@ -206,10 +208,6 @@
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")
 #define STR_VIEW_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 #define STR_VIEW_HEAD_DATE			TEXT("\r\nDate: ")
-///////////// MRP /////////////////////
-#define STR_VIEW_HEAD_PRIORITY		TEXT("\r\nPriority: ")
-///////////// --- /////////////////////
-
 
 #define STR_VIEW_MENU_ATTACH		TEXT("&View text")
 #define STR_VIEW_MENU_SOURCE		TEXT("&View source")
@@ -282,11 +280,13 @@
 #define STR_CMDBAR_FORWARD		TEXT("Forward")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")
+#define STR_CMDBAR_SBOXMARK			TEXT("Save and Mark")
 #define STR_CMDBAR_SENDBOX			TEXT("Save to Outbox")
 #define STR_CMDBAR_SENDINFO			TEXT("Property")
 
 #define STR_LIST_PPCMENU_SENDINFO	TEXT("&Property")
 #define STR_LIST_PPCMENU_REPLY		TEXT("&Reply")
+#define STR_LIST_PPCMENU_REPLYALL		TEXT("Repl&y to all")
 #define STR_LIST_PPCMENU_FORWARD		TEXT("&Forward")
 #define STR_LIST_PPCMENU_SENDMARK	TEXT("&Mark for send")
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")

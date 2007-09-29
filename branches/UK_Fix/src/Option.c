@@ -43,6 +43,7 @@ extern OPTION op;
 static MAILBOX *tpOptionMailBox;
 static BOOL PropRet;
 static HWND hLvFilter;
+static int ViewClose;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
@@ -86,9 +87,11 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static BOOL CALLBACK SetMakeOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetReplyOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetForwardOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag);
 static void SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type);
@@ -1244,8 +1247,8 @@ BOOL SetMailBoxOption(HWND hWnd)
 	psp.pfnDlgProc = SmtpSetProc;
 	hpsp[1] = CreatePropertySheetPage(&psp);
 
-	//Compilation
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_MAKE);
+	//Signature
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_SIG);
 	psp.pfnDlgProc = MakeSetProc;
 	hpsp[2] = CreatePropertySheetPage(&psp);
 
@@ -1371,19 +1374,29 @@ BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 
+#ifndef _WCE_OLD
 		charset_enum(GetDlgItem(hDlg, IDC_COMBO_CHARSET_H));
 		if (SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET_H, CB_GETCOUNT, 0, 0) <= 0) {
 			SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET_H, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_8859_1));
 			SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET_H, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_2022_JP));
 		}
+#else
+		SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET_H, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_8859_1));
+		EnableWindow(GetDlgItem(hDlg, IDC_COMBO_CHARSET_H), FALSE);
+#endif
 		SendDlgItemMessage(hDlg, IDC_COMBO_ENCODE_H, CB_ADDSTRING, 0, (LPARAM)TEXT(ENCODE_BASE64));
 		SendDlgItemMessage(hDlg, IDC_COMBO_ENCODE_H, CB_ADDSTRING, 0, (LPARAM)TEXT(ENCODE_Q_PRINT));
 
+#ifndef _WCE_OLD
 		charset_enum(GetDlgItem(hDlg, IDC_COMBO_CHARSET));
 		if (SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET, CB_GETCOUNT, 0, 0) <= 0) {
 			SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_8859_1));
 			SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_2022_JP));
 		}
+#else
+		SendDlgItemMessage(hDlg, IDC_COMBO_CHARSET, CB_ADDSTRING, 0, (LPARAM)TEXT(CHARSET_ISO_8859_1));
+		EnableWindow(GetDlgItem(hDlg, IDC_COMBO_CHARSET), FALSE);
+#endif
 		SendDlgItemMessage(hDlg, IDC_COMBO_ENCODE, CB_ADDSTRING, 0, (LPARAM)TEXT(ENCODE_7BIT));
 		SendDlgItemMessage(hDlg, IDC_COMBO_ENCODE, CB_ADDSTRING, 0, (LPARAM)TEXT(ENCODE_8BIT));
 		SendDlgItemMessage(hDlg, IDC_COMBO_ENCODE, CB_ADDSTRING, 0, (LPARAM)TEXT(ENCODE_BASE64));
@@ -1484,7 +1497,6 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_SETCHECK, op.SendDate, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_SETCHECK, op.EncodeType, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_SETCHECK, op.SelectSendBox, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_AUTOMARKSEND, BM_SETCHECK, op.AutoMarkSend, 0);		// Added PHH 27-Sep-2003
 
 		break;
 
@@ -1511,7 +1523,6 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.SendDate = SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_GETCHECK, 0, 0);
 			op.EncodeType = SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_GETCHECK, 0, 0);
 			op.SelectSendBox = SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_GETCHECK, 0, 0);
-			op.AutoMarkSend = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOMARKSEND, BM_GETCHECK, 0, 0);	// Added PHH 27-Sep-2003
 
 			break;
 		}
@@ -1524,30 +1535,32 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 }
 
 /*
- * SetMakeOptionProc - 作成設定プロシージャ
+ * SetReplyOptionProc - Global options Reply callback
  */
-static BOOL CALLBACK SetMakeOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK SetReplyOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* コントロールの初期化 */
 		SetControlFont(hDlg);
 		SendDlgItemMessage(hDlg, IDC_CHECK_AUTOQUOT, BM_SETCHECK, op.AutoQuotation, 0);
-		SendDlgItemMessage(hDlg, IDC_QUOTFWD, BM_SETCHECK, op.FwdQuotation, 0);
-		SendDlgItemMessage(hDlg, IDC_SIGNFWD, BM_SETCHECK, op.SignForward, 0);
 #ifndef _WIN32_WCE
-		SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_SETCHECK, op.ViewClose, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_SETCHECK, ViewClose, 0);
 #endif
 		if (op.QuotationChar != NULL) {
 			SendDlgItemMessage(hDlg, IDC_EDIT_QUOTCHAR, WM_SETTEXT, 0, (LPARAM)op.QuotationChar);
 		}
+		SendDlgItemMessage(hDlg, IDC_EDIT_QUOTCHAR, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_SIGNRE_ABOVE, BM_SETCHECK, op.SignReplyAbove, 0);
 		if (op.ReHeader != NULL) {
 			SendDlgItemMessage(hDlg, IDC_EDIT_REHEAD, WM_SETTEXT, 0, (LPARAM)op.ReHeader);
 		}
-		SendDlgItemMessage(hDlg, IDC_EDIT_QUOTCHAR, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		break;
 
 	case WM_NOTIFY:
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_SETCHECK, ViewClose, 0);
+#endif
 		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
 
 	case WM_COMMAND:
@@ -1559,17 +1572,97 @@ static BOOL CALLBACK SetMakeOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			break;
 #endif
 
+#ifndef _WIN32_WCE
+		case IDC_CHECK_VIEWCLOSE:
+			ViewClose = SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_GETCHECK, 0, 0);
+			break;
+#endif
+
+		case IDC_CHECK_AUTOQUOT:
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_QUOTCHAR),
+				SendDlgItemMessage(hDlg, IDC_CHECK_AUTOQUOT, BM_GETCHECK, 0, 0));
+			break;
+
 		case IDOK:
 			op.AutoQuotation = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOQUOT, BM_GETCHECK, 0, 0);
-			op.FwdQuotation = SendDlgItemMessage(hDlg, IDC_QUOTFWD, BM_GETCHECK, 0, 0);
-			op.SignForward = SendDlgItemMessage(hDlg, IDC_SIGNFWD, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
 			op.ViewClose = SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_GETCHECK, 0, 0);
 #endif
 			// 引用記号
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_QUOTCHAR), &op.QuotationChar);
+			op.SignReplyAbove = SendDlgItemMessage(hDlg, IDC_SIGNRE_ABOVE, BM_GETCHECK, 0, 0);
 			// 返信用ヘッダ
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_REHEAD), &op.ReHeader);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
+ * SetFwdOptionProc - Global options Forward callback
+ */
+static BOOL CALLBACK SetForwardOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		/* コントロールの初期化 */
+		SetControlFont(hDlg);
+		if (op.FwdQuotation == 1) {
+			SendDlgItemMessage(hDlg, IDC_QUOTSTYLE_0, BM_SETCHECK, 1, 0);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_QUOTSTYLE_1, BM_SETCHECK, 1, 0);
+		}
+		SendDlgItemMessage(hDlg, IDC_SIGNFWD, BM_SETCHECK, (op.SignForward==0) ? 0 : 1, 0);
+		EnableWindow(GetDlgItem(hDlg, IDC_SIGNFWD_ABOVE), (op.SignForward==0) ? FALSE : TRUE);
+		SendDlgItemMessage(hDlg, IDC_SIGNFWD_ABOVE, BM_SETCHECK, (op.SignForward>=2) ? 1 : 0, 0);
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_SETCHECK, ViewClose, 0);
+#endif
+		if (op.FwdHeader != NULL) {
+			SendDlgItemMessage(hDlg, IDC_EDIT_FWDHEAD, WM_SETTEXT, 0, (LPARAM)op.FwdHeader);
+		}
+		break;
+
+	case WM_NOTIFY:
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_SETCHECK, ViewClose, 0);
+#endif
+		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_EDIT_FWDHEAD:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
+#ifndef _WIN32_WCE
+		case IDC_CHECK_VIEWCLOSE:
+			ViewClose = SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_GETCHECK, 0, 0);
+			break;
+#endif
+
+		case IDC_SIGNFWD:
+			EnableWindow(GetDlgItem(hDlg, IDC_SIGNFWD_ABOVE), 
+				SendDlgItemMessage(hDlg, IDC_SIGNFWD, BM_GETCHECK, 0, 0));
+			break;
+
+		case IDOK:
+			op.FwdQuotation = SendDlgItemMessage(hDlg, IDC_QUOTSTYLE_0, BM_GETCHECK, 0, 0);
+
+			op.SignForward = SendDlgItemMessage(hDlg, IDC_SIGNFWD, BM_GETCHECK, 0, 0)
+				+ 2 * SendDlgItemMessage(hDlg, IDC_SIGNFWD_ABOVE, BM_GETCHECK, 0, 0);
+
+#ifndef _WIN32_WCE
+			op.ViewClose = SendDlgItemMessage(hDlg, IDC_CHECK_VIEWCLOSE, BM_GETCHECK, 0, 0);
+#endif
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FWDHEAD), &op.FwdHeader);
 			break;
 		}
 		break;
@@ -1735,9 +1828,9 @@ static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 }
 
 /*
- * SetEtcOptionProc - その他の設定プロシージャ
+ * SetSortOptionProc - callback for GlobalOptions/Sort property sheet
  */
-static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	BOOL retval = TRUE;
 	BOOL enable;
@@ -1745,15 +1838,6 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		redraw = FALSE;
-		/* コントロールの初期化 */
-		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_SETCHECK, op.ShowTrayIcon, 0);
-#ifndef _WIN32_WCE
-		SendDlgItemMessage(hDlg, IDC_CHECK_MINSIZEHIDE, BM_SETCHECK, op.MinsizeHide, 0);
-#endif
-		SendDlgItemMessage(hDlg, IDC_CHECK_CLOSEHIDE, BM_SETCHECK, op.CloseHide, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_MOVEALLMAILBOX, BM_SETCHECK, op.MoveAllMailBox, 0);
-
-		SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_SETCHECK, op.ExpertMode, 0);		// Added PHH 4-Oct-2003
 
 		if (op.LvAutoSort == 0)  // Added PHH 11-Nov-2003
 		{
@@ -1790,51 +1874,19 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		{
 			SendDlgItemMessage(hDlg, IDC_SORTITEM4, BM_SETCHECK, 1, 0);
 		}
-
-#ifdef _WIN32_WCE_PPC
-		///////////// MRP /////////////////////
-		SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_SETCHECK, op.UsePOOMAddressBook, 0);
-#else
-		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_USEPOOM), FALSE);  // Hide the options
-		ShowWindow(GetDlgItem(hDlg, IDC_CHECK_USEPOOM), FALSE);
-		///////////// --- /////////////////////
-#endif
-
-#ifndef _WIN32_WCE
-		SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_SETCHECK, op.StartPass, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_SETCHECK, op.ShowPass, 0);
-		SendDlgItemMessage(hDlg, IDC_EDIT_PASS, WM_SETTEXT, 0, (LPARAM)op.Password);
-#endif
-
-#ifndef _WIN32_WCE
-		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MINSIZEHIDE), op.ShowTrayIcon);
-#endif
-		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_CLOSEHIDE), op.ShowTrayIcon);
-		break;
+		if (op.LvDefSelectPos == 0) {
+			SendDlgItemMessage(hDlg, IDC_SORT_SELECT_FIRST, BM_SETCHECK, 1, 0);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_SORT_SELECT_LAST, BM_SETCHECK, 1, 0);
+		}
 
 	case WM_NOTIFY:
 		retval = OptionNotifyProc(hDlg, uMsg, wParam, lParam);
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
-		case IDC_CHECK_SHOWTRAYICON:
-#ifndef _WIN32_WCE
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MINSIZEHIDE),
-				SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0));
-#endif
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_CLOSEHIDE),
-				SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0));
-			break;
 
 		case IDOK:
-			op.ShowTrayIcon = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0);
-#ifndef _WIN32_WCE
-			op.MinsizeHide = SendDlgItemMessage(hDlg, IDC_CHECK_MINSIZEHIDE, BM_GETCHECK, 0, 0);
-#endif
-			op.CloseHide = SendDlgItemMessage(hDlg, IDC_CHECK_CLOSEHIDE, BM_GETCHECK, 0, 0);
-			op.MoveAllMailBox = SendDlgItemMessage(hDlg, IDC_CHECK_MOVEALLMAILBOX, BM_GETCHECK, 0, 0);
-			op.ExpertMode = SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_GETCHECK, 0, 0);	// Added PHH 4-Oct-2003
-
 			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1)  // Added PHH 11-Nov-2003
 			{
 				op.LvAutoSort = 0;	
@@ -1878,18 +1930,12 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				op.LvSortItem = -op.LvSortItem;
 			}
 
-#ifdef _WIN32_WCE_PPC
-			///////////// MRP /////////////////////
-			op.UsePOOMAddressBook = SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_GETCHECK, 0, 0);
-			///////////// --- /////////////////////
-#endif
+			if (SendDlgItemMessage(hDlg, IDC_SORT_SELECT_FIRST, BM_GETCHECK, 0, 0) == 1) {
+				op.LvDefSelectPos = 0;
+			} else {
+				op.LvDefSelectPos = 1;
+			}
 
-
-#ifndef _WIN32_WCE
-			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
-			op.ShowPass = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_GETCHECK, 0, 0);
-			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
-#endif
 			//GJC redraw window if sort order changed
 			if (redraw) {
 				mailbox_select(MainWnd, SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
@@ -1925,17 +1971,111 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 }
 
 /*
+ * SetEtcOptionProc - その他の設定プロシージャ
+ */
+static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL retval = TRUE;
+	static BOOL redraw = FALSE;
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		redraw = FALSE;
+		/* コントロールの初期化 */
+		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_SETCHECK, op.ShowTrayIcon, 0);
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_MINSIZEHIDE, BM_SETCHECK, op.MinsizeHide, 0);
+#endif
+		SendDlgItemMessage(hDlg, IDC_CHECK_CLOSEHIDE, BM_SETCHECK, op.CloseHide, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_MOVEALLMAILBOX, BM_SETCHECK, op.MoveAllMailBox, 0);
+
+		SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_SETCHECK, op.ExpertMode, 0);		// Added PHH 4-Oct-2003
+
+#ifdef _WIN32_WCE_PPC
+		///////////// MRP /////////////////////
+		SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_SETCHECK, op.UsePOOMAddressBook, 0);
+#else
+		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_USEPOOM), FALSE);  // Hide the options
+		ShowWindow(GetDlgItem(hDlg, IDC_CHECK_USEPOOM), FALSE);
+		///////////// --- /////////////////////
+#endif
+
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_SETCHECK, op.StartPass, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_SETCHECK, op.ShowPass, 0);
+		SendDlgItemMessage(hDlg, IDC_EDIT_PASS, WM_SETTEXT, 0, (LPARAM)op.Password);
+#endif
+
+#ifndef _WIN32_WCE
+		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MINSIZEHIDE), op.ShowTrayIcon);
+#endif
+		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_CLOSEHIDE), op.ShowTrayIcon);
+
+		SendDlgItemMessage(hDlg, IDC_DATE_FORMAT, WM_SETTEXT, 0, (LPARAM)op.DateFormat);
+		SendDlgItemMessage(hDlg, IDC_TIME_FORMAT, WM_SETTEXT, 0, (LPARAM)op.TimeFormat);
+
+		break;
+
+	case WM_NOTIFY:
+		retval = OptionNotifyProc(hDlg, uMsg, wParam, lParam);
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_CHECK_SHOWTRAYICON:
+#ifndef _WIN32_WCE
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MINSIZEHIDE),
+				SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0));
+#endif
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_CLOSEHIDE),
+				SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0));
+			break;
+
+		case IDOK:
+			op.ShowTrayIcon = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWTRAYICON, BM_GETCHECK, 0, 0);
+#ifndef _WIN32_WCE
+			op.MinsizeHide = SendDlgItemMessage(hDlg, IDC_CHECK_MINSIZEHIDE, BM_GETCHECK, 0, 0);
+#endif
+			op.CloseHide = SendDlgItemMessage(hDlg, IDC_CHECK_CLOSEHIDE, BM_GETCHECK, 0, 0);
+			op.MoveAllMailBox = SendDlgItemMessage(hDlg, IDC_CHECK_MOVEALLMAILBOX, BM_GETCHECK, 0, 0);
+			op.ExpertMode = SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_GETCHECK, 0, 0);	// Added PHH 4-Oct-2003
+
+#ifdef _WIN32_WCE_PPC
+			///////////// MRP /////////////////////
+			op.UsePOOMAddressBook = SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_GETCHECK, 0, 0);
+			///////////// --- /////////////////////
+#endif
+
+#ifndef _WIN32_WCE
+			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
+			op.ShowPass = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_GETCHECK, 0, 0);
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
+#endif
+			AllocGetText(GetDlgItem(hDlg, IDC_DATE_FORMAT), &op.DateFormat);
+			AllocGetText(GetDlgItem(hDlg, IDC_TIME_FORMAT), &op.TimeFormat);
+
+			break;
+		}
+		break;
+
+	default:
+		retval = FALSE;
+	}
+	return retval;
+}
+
+/*
  * SetOption - 設定ダイアログの表示
  */
 void SetOption(HWND hWnd)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
-	HPROPSHEETPAGE hpsp[6];
+	HPROPSHEETPAGE hpsp[8];
 
 	psp.dwSize = sizeof(PROPSHEETPAGE);
 	psp.dwFlags = PSP_DEFAULT;
 	psp.hInstance = hInst;
+
+	ViewClose = op.ViewClose;
 
 	// 受信
 #if defined(_WIN32_WCE) && !defined(_WIN32_WCE_PPC) && !defined(_WIN32_WCE_LAGENDA)
@@ -1955,25 +2095,35 @@ void SetOption(HWND hWnd)
 	psp.pfnDlgProc = SetSendOptionProc;
 	hpsp[1] = CreatePropertySheetPage(&psp);
 
-	//Compilation
-	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_MAKE);
-	psp.pfnDlgProc = SetMakeOptionProc;
+	//Reply
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_REPLY);
+	psp.pfnDlgProc = SetReplyOptionProc;
 	hpsp[2] = CreatePropertySheetPage(&psp);
+
+	//Forward
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_FWD);
+	psp.pfnDlgProc = SetForwardOptionProc;
+	hpsp[3] = CreatePropertySheetPage(&psp);
 
 	//Check
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_CHECK);
 	psp.pfnDlgProc = SetCheckOptionProc;
-	hpsp[3] = CreatePropertySheetPage(&psp);
+	hpsp[4] = CreatePropertySheetPage(&psp);
 
 	//Dial up
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RAS);
 	psp.pfnDlgProc = SetRasOptionProc;
-	hpsp[4] = CreatePropertySheetPage(&psp);
+	hpsp[5] = CreatePropertySheetPage(&psp);
+
+	//Sort
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_SORT);
+	psp.pfnDlgProc = SetSortOptionProc;
+	hpsp[6] = CreatePropertySheetPage(&psp);
 
 	//In addition
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_ETC);
 	psp.pfnDlgProc = SetEtcOptionProc;
-	hpsp[5] = CreatePropertySheetPage(&psp);
+	hpsp[7] = CreatePropertySheetPage(&psp);
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof_PROPSHEETHEADER;
@@ -2441,6 +2591,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	MAILITEM *tpMailItem;
 	TCHAR fpath[BUF_SIZE], buf[BUF_SIZE], *f, *f1, *f2;
 	int i, len, len1, len2, cnt, cnt1, cnt2;
+	long FileSize;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -2556,6 +2707,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpMailItem->Attach = NULL;
 			mem_free(&tpMailItem->FwdAttach);
 			tpMailItem->FwdAttach = NULL;
+			tpMailItem->AttachSize = 0;
 
 			if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0) <= 0) {
 				EndDialog(hDlg, TRUE);
@@ -2606,12 +2758,20 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						*(f1++) = ATTACH_SEP;
 					}
 					f1 = str_cpy_t(f1, fpath);
+					FileSize = file_get_size(fpath); // does not account for mime-encoding
+					if (FileSize > 0) {
+						tpMailItem->AttachSize += FileSize;
+					}
 					cnt1++;
 				} else {
 					if (cnt2 != 0) {
 						*(f2++) = ATTACH_SEP;
 					}
 					f2 = str_cpy_t(f2, fpath+len);
+					FileSize = 0; // GJC how to get size of original attachment?
+					if (FileSize > 0) {
+						tpMailItem->AttachSize += FileSize;
+					}
 					cnt2++;
 				}
 			}
@@ -2685,6 +2845,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	MAILITEM *tpTmpMailItem;
 	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
+	TCHAR *mb_replyto;
 	int len;
 	int i, j, st, mb, cnt, sel;
 	BOOL BtnFlag, found;
@@ -2741,9 +2902,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETCURSEL, mb, 0);
 		}
 
-		// GJC ReplyTo options: address, replyto for each mailbox
+		// GJC ReplyTo options: global replyto and replyto/address for each mailbox
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
+		mb_replyto = (MailBox+(mb+MAILBOX_USER))->ReplyTo;
 		cnt = 0;
 		sel = -1;
 		if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
@@ -2752,6 +2914,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		} else {
 			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
 		}
+		// global replyto
 		if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
 			p = op.AltReplyTo;
 			while (*p != TEXT('\0')) {
@@ -2777,49 +2940,40 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 		}
+		// replyto/address for user mailboxes
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+			TCHAR *addr_to_match = NULL;
 			if ((MailBox + i)->ReplyTo != NULL && *(MailBox + i)->ReplyTo != TEXT('\0')) {
+				addr_to_match = (MailBox + i)->ReplyTo;
+			} else if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
+				addr_to_match = (MailBox + i)->MailAddress;
+			}
+			// check that this address isn't a duplicate of one from a later account
+			if (addr_to_match != NULL) {
 				found = FALSE;
 				for (j = i+1; j < MailBoxCnt; j++) {
 					if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-						if (lstrcmp((MailBox + j)->ReplyTo, (MailBox + i)->ReplyTo) == 0) {
+						if (lstrcmp((MailBox + j)->ReplyTo, addr_to_match) == 0) {
 							found = TRUE;
 							break;
 						}
 					} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-						if (lstrcmp((MailBox + j)->MailAddress, (MailBox + i)->ReplyTo) == 0) {
+						if (lstrcmp((MailBox + j)->MailAddress, addr_to_match) == 0) {
 							found = TRUE;
 							break;
 						}
 					}
 				}
 				if (found == FALSE) {
-					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)(MailBox + i)->ReplyTo);
+					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)addr_to_match);
 					cnt++;
-					if (sel == -1 && mb == i - MAILBOX_USER) {
+					// check if this address is the ReplyTo for the selected account
+					if (sel == -1 && mb_replyto != NULL && *mb_replyto != TEXT('\0')
+						&& lstrcmp(mb_replyto, addr_to_match) == 0) {
 						sel = cnt;
 					}
 				}
-			} else if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
-				found = FALSE;
-				for (j = i+1; j < MailBoxCnt; j++) {
-					if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-						if (lstrcmp((MailBox + j)->ReplyTo, (MailBox + i)->MailAddress) == 0) {
-							found = TRUE;
-							break;
-						}
-					} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-						if (lstrcmp((MailBox + j)->MailAddress, (MailBox + i)->MailAddress) == 0) {
-							found = TRUE;
-							break;
-						}
-					}
-				}
-				if (found == FALSE) {
-					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)(MailBox + i)->MailAddress);
-					cnt++;
-				}
-			}			
+			}
 		}
 		sel = (sel < 0) ? 0 : sel;
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
@@ -2859,19 +3013,15 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_ATTACH), STR_SETSEND_BTN_ATTACH, TRUE);
 		}
 		//of list of file name Quotation
-		if (tpMailItem->Status == 2) {
+		if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
+			SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, (tpMailItem->Mark == 1) ? op.AutoQuotation : 1, 0);
+		} else if (tpMailItem->Mark == 2) {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
-			if (tpMailItem->HasHeader) {
-				SendDlgItemMessage(hDlg, IDC_FWDHEAD, BM_SETCHECK, 0, 0);
-			} else {
-				ShowWindow(GetDlgItem(hDlg, IDC_FWDHEAD), SW_HIDE);
-			}
-		} else if (tpMailItem->Status == 1) {
-				SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, op.AutoQuotation, 0);
-				ShowWindow(GetDlgItem(hDlg, IDC_FWDHEAD), SW_HIDE);
+			SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
 		} else {
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
-			ShowWindow(GetDlgItem(hDlg, IDC_FWDHEAD), SW_HIDE);
 		}
 
 		*(tpSendMailIList + 1) = tpTmpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
@@ -2885,6 +3035,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
 		tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
 		tpTmpMailItem->FwdAttach = alloc_copy_t(tpMailItem->FwdAttach);
+		tpTmpMailItem->AttachSize = tpMailItem->AttachSize;
 		tpTmpMailItem->ReplyTo = alloc_copy_t(tpMailItem->ReplyTo);
 		tpTmpMailItem->DefReplyTo = tpMailItem->DefReplyTo;
 		break;
@@ -2973,7 +3124,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						i += MAILBOX_USER;
 						p = (MailBox + i)->ReplyTo;
 						if (p != NULL && *p != TEXT('\0')) {
-							for (j=0; j <= SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCOUNT, 0, 0); j++) {
+							for (j=0; j < SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0); j++) {
 								SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETLBTEXT, j, (LPARAM)buf);
 								if (lstrcmpi(p, buf) == 0) {
 									sel = j;
@@ -3093,6 +3244,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				// Attach
 				tpMailItem->Attach = alloc_copy_t(tpTmpMailItem->Attach);
 				tpMailItem->FwdAttach = alloc_copy_t(tpTmpMailItem->FwdAttach);
+				tpMailItem->AttachSize = tpTmpMailItem->AttachSize;
 				if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
 					|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) ) {
 					tpMailItem->Multipart = TRUE;
@@ -3150,10 +3302,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 
 			//Quotation
-			if (tpMailItem->Status == 1) {
-				tpMailItem->Status = SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
-			} else if (tpMailItem->Status == 2  && tpMailItem->HasHeader) {
-				tpMailItem->HasHeader = !SendDlgItemMessage(hDlg, IDC_FWDHEAD, BM_GETCHECK, 0, 0);
+			if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
+				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
+			} else if (tpMailItem->Mark == 2) {
+				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
 			}
 			mem_free((void **)&tpSendMailIList);
 			EndDialog(hDlg, TRUE);
@@ -3366,7 +3518,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpMailItem->ReplyTo = buf;
 
 			//of information of reply Setting
-			i = Edit_InitInstance(hInst, hDlg, vSelBox, tpMailItem, EDIT_REPLY);
+			i = Edit_InitInstance(hInst, hDlg, vSelBox, tpMailItem, EDIT_REPLY, NULL);
 			item_free(&tpMailItem, 1);
 			if (i != EDIT_NONEDIT) {
 				EndDialog(hDlg, TRUE);

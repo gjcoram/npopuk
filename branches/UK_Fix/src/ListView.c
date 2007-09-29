@@ -14,7 +14,7 @@
 #include "String.h"
 
 /* Define */
-#define ICONCOUNT			9
+#define ICONCOUNT			12
 
 /* Global Variables */
 // ŠO•”ŽQÆ
@@ -117,11 +117,11 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 	ImageListIconAdd(IconList, IDI_ICON_READ);
 	ImageListIconAdd(IconList, IDI_ICON_DOWN);
 	ImageListIconAdd(IconList, IDI_ICON_DEL);
-	ImageListIconAdd(IconList, IDI_ICON_SENDMAIL);
+	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL);
 	ImageListIconAdd(IconList, IDI_ICON_SEND);
 
 	//of image list Mail of transmission error compilation (synthesis of transmission being completed mail and deletion mark)
-	TmpIconList = ImageList_Merge(IconList, ICON_SENDMAIL, IconList, ICON_DEL, 0, 0);
+	TmpIconList = ImageList_Merge(IconList, ICON_SENTMAIL, IconList, ICON_DEL, 0, 0);
 	TmpIcon = ImageList_GetIcon(TmpIconList, 0, ILD_NORMAL);
 	ImageList_AddIcon(IconList, TmpIcon);
 	DestroyIcon(TmpIcon);
@@ -129,7 +129,16 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 
 	//Overlay
 	ImageListIconAdd(IconList, IDI_ICON_NEW);
-	ImageList_SetOverlayImage(IconList, ICON_NEW, 1);
+	ImageList_SetOverlayImage(IconList, 8, ICON_NEW_MASK);
+
+	// GJC overlays for replied, forwarded
+	ImageListIconAdd(IconList, IDI_ICON_REPL);
+	ImageList_SetOverlayImage(IconList, 9, ICON_REPL_MASK);
+	ImageListIconAdd(IconList, IDI_ICON_FWD);
+	ImageList_SetOverlayImage(IconList, 10, ICON_FWD_MASK);
+	// could do this with ImageList_Merge
+	ImageListIconAdd(IconList, IDI_ICON_REPLFWD);
+	ImageList_SetOverlayImage(IconList, 11, (ICON_REPL_MASK | ICON_FWD_MASK));
 
 	ListView_SetImageList(hListView, IconList, LVSIL_SMALL);
 
@@ -144,6 +153,7 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 	ImageListIconAdd(IconList, IDI_ICON_HIGH);
 	ImageListIconAdd(IconList, IDI_ICON_LOW);
 	///////////// --- /////////////////////
+	
 	ListView_SetImageList(hListView, IconList, LVSIL_STATE);
 
 	return hListView;
@@ -298,7 +308,7 @@ int ListView_GetNextDeleteItem(HWND hListView, int Index)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Status == ICON_DEL) {
+		if (tpMailItem->Mark == ICON_DEL) {
 			return i;
 		}
 	}
@@ -414,7 +424,11 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
 		if ((tpMailItem = (*(tpMailBox->tpMailItem + i))) == NULL) {
 			continue;
 		}
-		lvi.state = (tpMailItem->New == TRUE) ? INDEXTOOVERLAYMASK(1) : 0;
+		if (tpMailItem->New == TRUE) {
+			lvi.state = INDEXTOOVERLAYMASK(ICON_NEW_MASK);
+		} else {
+			lvi.state = INDEXTOOVERLAYMASK(tpMailItem->ReFwd);
+		}
 		switch (tpMailItem->Priority)
 		{
 			case 5:  // LOW
@@ -456,8 +470,8 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox)
 		}
 		///////////// --- /////////////////////
 
-		if (tpMailItem->Download == FALSE && tpMailItem->Status != ICON_DOWN &&
-			tpMailItem->Status != ICON_DEL && MAILBOX_SEND != SelBox) {
+		if (tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN &&
+			tpMailItem->Mark != ICON_DEL && MAILBOX_SEND != SelBox) {
 			lvi.state |= LVIS_CUT;
 		}
 		lvi.iItem = j + 1;
@@ -521,7 +535,7 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 
 	//Idea contest
 	if (hLVItem->mask & LVIF_IMAGE) {
-		hLVItem->iImage = tpMailItem->Status;
+		hLVItem->iImage = tpMailItem->Mark;
 	}
 
 	//Text
@@ -577,17 +591,22 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
  */
 static int GetIconSortStatus(MAILITEM *tpMailItem)
 {
-	switch (tpMailItem->Status) {
-	case ICON_MAIL:		return (tpMailItem->Download == TRUE) ? 1 : 2;
-	case ICON_READ:		return (tpMailItem->Download == TRUE) ? 3 : 4;
-	case ICON_SENDMAIL:	return 5;
-	case ICON_ERROR:	return 6;
-	case ICON_DOWN:		return 7;
-	case ICON_DEL:		return 8;
-	case ICON_SEND:		return 9;
-	case ICON_NON:		return 10;
+	int retval = 0;
+	switch (tpMailItem->Mark) {
+		case ICON_MAIL:     retval = 100; break;
+		case ICON_READ:     retval = 200; break;
+		case ICON_SENTMAIL:	retval = 300; break;
+		case ICON_ERROR:	retval = 400; break;
+		case ICON_DOWN:		retval = 500; break;
+		case ICON_DEL:		retval = 600; break;
+		case ICON_SEND:		retval = 700; break;
+		case ICON_NON:		retval = 800; break;
+		default:            retval = 0; break;
 	}
-	return 0;
+	retval += tpMailItem->Priority * 1000;
+	retval += tpMailItem->Download * 10;
+	retval += tpMailItem->ReFwd;
+	return retval;
 }
 
 /*
@@ -687,7 +706,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		break;
 
 	//Idea contest
-	case SORT_IOCN:
+	case SORT_ICON:
 		len1 = GetIconSortStatus((MAILITEM *)lParam1);
 		len2 = GetIconSortStatus((MAILITEM *)lParam2);
 		NumFlag = TRUE;

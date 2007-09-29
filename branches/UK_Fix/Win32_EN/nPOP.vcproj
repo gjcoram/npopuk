@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="nPOP"
-	ProjectGUID="{BB83D12C-B3DB-4B65-8BCD-8C6043C3593C}"
+	ProjectGUID="{35C38CA1-ED19-461C-A44F-1CBD8AF8AD0F}"
 	>
 	<Platforms>
 		<Platform
@@ -1528,79 +1528,55 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="..\res\bitmap.bmp"
+				RelativePath="..\res\ico_clhi.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\bmp00001.bmp"
+				RelativePath="..\res\ico_cllo.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\bmp00002.bmp"
+				RelativePath="..\res\ico_down.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\bmp00003.bmp"
+				RelativePath="..\res\ico_high.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00001.ico"
+				RelativePath="..\res\ico_main.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00002.ico"
+				RelativePath="..\res\ico_nchk.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00003.ico"
+				RelativePath="..\res\ico_none.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00004.ico"
+				RelativePath="..\res\ico_read.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00005.ico"
+				RelativePath="..\res\ico_refw.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00006.ico"
+				RelativePath="..\res\ico_repl.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00007.ico"
+				RelativePath="..\res\ico_send.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00008.ico"
+				RelativePath="..\res\ico_sent.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\res\ico00009.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\ico00010.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\ico00011.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\ico00012.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\icon.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\icon1.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\icon_che.ico"
+				RelativePath="..\res\icon_chk.ico"
 				>
 			</File>
 			<File
@@ -1612,7 +1588,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\res\icon_dow.ico"
+				RelativePath="..\res\icon_fwd.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\res\icon_low.ico"
 				>
 			</File>
 			<File
@@ -1620,31 +1600,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\res\icon_non.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\icon_rea.ico"
-				>
-			</File>
-			<File
-				RelativePath="..\res\icon_sen.ico"
-				>
-			</File>
-			<File
 				RelativePath="..\res\manifest.xml"
 				>
 			</File>
 			<File
+				RelativePath="..\res\tbar_edit.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\res\tbar_view.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\res\toolbar.bmp"
-				>
-			</File>
-			<File
-				RelativePath="..\res\toolbar_.bmp"
-				>
-			</File>
-			<File
-				RelativePath="..\res\toolbar_win32.bmp"
 				>
 			</File>
 		</Filter>

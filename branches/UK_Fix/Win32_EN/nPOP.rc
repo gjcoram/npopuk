@@ -60,21 +60,24 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_MAIN           ICON                    "..\\res\\ico00005.ico"
-IDI_ICON_DEL            ICON                    "..\\res\\ico00002.ico"
-IDI_ICON_DOWN           ICON                    "..\\res\\ico00003.ico"
+IDI_ICON_MAIN           ICON                    "..\\res\\ico_main.ico"
+IDI_ICON_DEL            ICON                    "..\\res\\icon_del.ico"
+IDI_ICON_DOWN           ICON                    "..\\res\\ico_down.ico"
 IDI_ICON_NEW            ICON                    "..\\res\\icon_new.ico"
-IDI_ICON_NON            ICON                    "..\\res\\ico00006.ico"
-IDI_ICON_SENDMAIL       ICON                    "..\\res\\icon_sen.ico"
-IDI_ICON_SEND           ICON                    "..\\res\\ico00008.ico"
-IDI_ICON_NOCHECK        ICON                    "..\\res\\ico00011.ico"
-IDI_ICON_CHECK          ICON                    "..\\res\\icon_che.ico"
+IDI_ICON_NON            ICON                    "..\\res\\ico_none.ico"
+IDI_ICON_SENTMAIL       ICON                    "..\\res\\ico_sent.ico"
+IDI_ICON_SEND           ICON                    "..\\res\\ico_send.ico"
+IDI_ICON_NOCHECK        ICON                    "..\\res\\ico_nchk.ico"
+IDI_ICON_CHECK          ICON                    "..\\res\\icon_chk.ico"
 IDI_ICON_CLIP           ICON                    "..\\res\\icon_cli.ico"
-IDI_ICON_READ           ICON                    "..\\res\\icon_rea.ico"
-IDI_ICON_CLIP_HIGH      ICON                    "..\\res\\icon1.ico"
-IDI_ICON_CLIP_LOW       ICON                    "..\\res\\ico00001.ico"
-IDI_ICON_LOW            ICON                    "..\\res\\ico00004.ico"
-IDI_ICON_HIGH           ICON                    "..\\res\\ico00007.ico"
+IDI_ICON_READ           ICON                    "..\\res\\ico_read.ico"
+IDI_ICON_CLIP_HIGH      ICON                    "..\\res\\ico_clhi.ico"
+IDI_ICON_CLIP_LOW       ICON                    "..\\res\\ico_cllo.ico"
+IDI_ICON_LOW            ICON                    "..\\res\\icon_low.ico"
+IDI_ICON_HIGH           ICON                    "..\\res\\ico_high.ico"
+IDI_ICON_FWD            ICON                    "..\\res\\icon_fwd.ico"
+IDI_ICON_REPL           ICON                    "..\\res\\ico_repl.ico"
+IDI_ICON_REPLFWD        ICON                    "..\\res\\ico_refw.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -87,7 +90,7 @@ BEGIN
     "B",            ID_MENUITEM_READMAIL,   VIRTKEY, CONTROL, NOINVERT
     "B",            ID_MENUITEM_NOREADMAIL, VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
-    "C",            ID_MENUITE_SAVECOPY,    VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_MENUITEM_SAVECOPY,   VIRTKEY, CONTROL, NOINVERT
     "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
     "E",            ID_MENUITEM_EXEC,       VIRTKEY, CONTROL, NOINVERT
     "E",            ID_MENUITEM_EXEC,       VIRTKEY, SHIFT, CONTROL, 
@@ -136,10 +139,11 @@ END
 IDR_ACCELERATOR_EDIT ACCELERATORS 
 BEGIN
     "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
-    "G",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
 END
 
@@ -188,8 +192,8 @@ END
 // Bitmap
 //
 
-IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\bmp00001.bmp"
-IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\bmp00002.bmp"
+IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view.bmp"
+IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit.bmp"
 IDB_TOOLBAR             BITMAP                  "..\\res\\toolbar.bmp"
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
@@ -249,7 +253,8 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Send now\tShft+Ctrl+G",      ID_MENUITEM_SEND
-        MENUITEM "Save to &Outbox\tCtrl+G",     ID_MENUITEM_SENDBOX
+        MENUITEM "Save and &Mark\tCtrl+G",      ID_MENUITEM_SBOXMARK
+        MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
@@ -284,7 +289,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&New message...",             ID_MENUITEM_NEWMAIL
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       ID_MENUITE_QUIT
+        MENUITEM "&Exit",                       ID_MENUITEM_QUIT
     END
 END
 
@@ -308,10 +313,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Save All",                   ID_MENUITEM_SAVEALL
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       ID_MENUITE_QUIT
+        MENUITEM "&Exit",                       ID_MENUITEM_QUIT
     END
     POPUP "&Account"
     BEGIN
+        MENUITEM "&Next",                       ID_MENUITEM_NEXTMAILBOX
+        MENUITEM "&Previous",                   ID_MENUITEM_PREVMAILBOX
+        MENUITEM SEPARATOR
         MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
         MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
         MENUITEM "&Delete",                     ID_MENUITEM_DELETEMAILBOX
@@ -319,7 +327,7 @@ BEGIN
         MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Sort by &icon",               ID_MENUITEM_ICONSORT
+        MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
         MENUITEM SEPARATOR
         MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT
     END
@@ -337,6 +345,7 @@ BEGIN
     BEGIN
         MENUITEM "&Open\tEnter",                ID_MENUITEM_OPEN
         MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
+        MENUITEM "Repl&y to all...",            ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM SEPARATOR
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
@@ -346,7 +355,7 @@ BEGIN
         MENUITEM "Mark as r&ead\tCtrl+B",       ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShft+Ctrl+B", ID_MENUITEM_NOREADMAIL
         MENUITEM SEPARATOR
-        MENUITEM "Copy to &Savebox\tCtrl+C",    ID_MENUITE_SAVECOPY
+        MENUITEM "Copy to &Savebox\tCtrl+C",    ID_MENUITEM_SAVECOPY
         MENUITEM "Delete from &list\tDel",      ID_MENUITEM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
@@ -414,8 +423,8 @@ BEGIN
                     WS_TABSTOP
     CONTROL         "&Quote text",IDC_CHECK_QUOTATION,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,98,60,54,10
-    CONTROL         "&Include headers",IDC_FWDHEAD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,98,60,65,10
+    CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",
+                    BS_AUTO3STATE | WS_TABSTOP,98,60,54,10
     CONTROL         "&Read Receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,75,60,10
     CONTROL         "&Delivery Receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
@@ -477,7 +486,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,64,128,90,10
 END
 
-IDD_DIALOG_MAKE DIALOG  0, 0, 212, 148
+IDD_DIALOG_SIG DIALOG  0, 0, 212, 148
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Signature"
 FONT 8, "MS Sans Serif"
@@ -487,25 +496,45 @@ BEGIN
                     WS_VSCROLL | WS_HSCROLL
 END
 
-IDD_DIALOG_OPTION_MAKE DIALOG  0, 0, 217, 158
+IDD_DIALOG_OPTION_REPLY DIALOG  0, 0, 217, 158
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Reply/Fwd"
+CAPTION "Reply"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "&Quote original message",IDC_CHECK_AUTOQUOT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,10,145,10
-    LTEXT           "Quotation ch&ar:",IDC_STATIC,15,25,65,10
+    LTEXT           "Quotation ch&ar:",IDC_STATIC,18,25,65,10
     EDITTEXT        IDC_EDIT_QUOTCHAR,85,23,55,12,ES_AUTOHSCROLL
-    CONTROL         "&Use quotation char for forwarded mail",IDC_QUOTFWD,
-                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,45,145,10
-    CONTROL         "Use &signature for forwarded mail",IDC_SIGNFWD,
-                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,60,145,10
-    LTEXT           "Reply/Fwd &header:",IDC_STATIC,5,78,75,10
-    EDITTEXT        IDC_EDIT_REHEAD,5,88,204,72,ES_MULTILINE | ES_WANTRETURN | 
+    CONTROL         "&Signature above quoted message",IDC_SIGNRE_ABOVE,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,45,125,10
+    LTEXT           "Reply &header:",IDC_STATIC,5,62,75,10
+    EDITTEXT        IDC_EDIT_REHEAD,5,75,204,72,ES_MULTILINE | ES_WANTRETURN | 
                     WS_VSCROLL | WS_HSCROLL
-    CONTROL         "&Close message window when reply/fwd created",
+    CONTROL         "&Close message window when reply/forward created",
                     IDC_CHECK_VIEWCLOSE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,170,170,10
+                    WS_TABSTOP,5,170,180,10
+END
+
+IDD_DIALOG_OPTION_FWD DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Forward"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT          "Forward message:",IDC_STATIC,5,10,65,10
+    CONTROL         "&Quoted",IDC_QUOTSTYLE_0,"Button",BS_AUTORADIOBUTTON,
+                    70,10,155,10
+    CONTROL         "&In-line",IDC_QUOTSTYLE_1,"Button",BS_AUTORADIOBUTTON,
+                    70,25,155,10
+    CONTROL         "Use &signature for forwarded mail",IDC_SIGNFWD,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,45,125,10
+    CONTROL         "Above orig msg",IDC_SIGNFWD_ABOVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,130,45,65,10
+    LTEXT           "Forward &header:",IDC_STATIC,5,62,75,10
+    EDITTEXT        IDC_EDIT_FWDHEAD,5,75,204,72,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    CONTROL         "&Close message window when reply/forward created",
+                    IDC_CHECK_VIEWCLOSE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,170,180,10
 END
 
 IDD_DIALOG_OPTION_RECV DIALOG  0, 0, 217, 158
@@ -547,8 +576,6 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,68,160,10
-    CONTROL         "&Automatically Mark to Send",IDC_CHECK_AUTOMARKSEND,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,82,124,10
     PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,94,80,15
 END
 
@@ -649,6 +676,36 @@ BEGIN
     PUSHBUTTON      "&No",IDCANCEL,81,37,50,14
 END
 
+IDD_DIALOG_OPTION_SORT DIALOGEX 0, 0, 217, 187
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sort"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&All lists in server order",IDC_AUTOSORT1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,10,80,10
+    CONTROL         "&SaveBox by column",IDC_AUTOSORT2,"Button",
+                    BS_AUTORADIOBUTTON,10,25,80,10
+    CONTROL         "All lists &by column",IDC_AUTOSORT3,"Button",
+                    BS_AUTORADIOBUTTON,10,40,70,10
+    GROUPBOX        "Column",IDC_STATIC,98,25,85,60
+    CONTROL         "Subjec&t",IDC_SORTITEM1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,104,40,40,10
+    CONTROL         "Fro&m",IDC_SORTITEM2,"Button",BS_AUTORADIOBUTTON,104,55,
+                    40,10
+    CONTROL         "&Date",IDC_SORTITEM3,"Button",BS_AUTORADIOBUTTON,145,40,
+                    31,10
+    CONTROL         "Si&ze",IDC_SORTITEM4,"Button",BS_AUTORADIOBUTTON,145,55,
+                    29,10
+    CONTROL         "&Reverse Order",IDC_CHECK_SORTORDER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,104,70,61,10
+    GROUPBOX        "When changing folders, select",IDC_STATIC,3,97,180,31
+    CONTROL         "&First",IDC_SORT_SELECT_FIRST,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,110,30,10
+    CONTROL         "&Last",IDC_SORT_SELECT_LAST,"Button",BS_AUTORADIOBUTTON,
+                    40,110,30,10
+    LTEXT           "item in list",IDC_STATIC,70,111,70,10
+END
+
 IDD_DIALOG_OPTION_ETC DIALOGEX 0, 0, 217, 187
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Other"
@@ -676,24 +733,10 @@ BEGIN
     CONTROL         "&Use Pocket Contacts Address Book",IDC_CHECK_USEPOOM,
                     "Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | 
                     WS_TABSTOP,5,63,161,10
-    GROUPBOX        "Mail List Sorting",IDC_STATIC,3,133,207,51
-    CONTROL         "As ser&ver",IDC_AUTOSORT1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,8,146,52,10
-    CONTROL         "SaveBo&x",IDC_AUTOSORT2,"Button",BS_AUTORADIOBUTTON,8,
-                    157,52,10
-    CONTROL         "&All",IDC_AUTOSORT3,"Button",BS_AUTORADIOBUTTON,8,168,44,
-                    10
-    GROUPBOX        "Column",IDC_STATIC,108,139,99,42
-    CONTROL         "Subjec&t",IDC_SORTITEM1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,114,149,55,10
-    CONTROL         "&From",IDC_SORTITEM2,"Button",BS_AUTORADIOBUTTON,114,159,
-                    53,10
-    CONTROL         "&Date",IDC_SORTITEM3,"Button",BS_AUTORADIOBUTTON,173,149,
-                    31,10
-    CONTROL         "Si&ze",IDC_SORTITEM4,"Button",BS_AUTORADIOBUTTON,173,159,
-                    29,10
-    CONTROL         "&Reverse Order",IDC_CHECK_SORTORDER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,114,169,61,10
+    LTEXT           "&Date format:",IDC_STATIC,5,141,46,10
+    EDITTEXT        IDC_DATE_FORMAT,52,139,70,12,ES_AUTOHSCROLL
+    LTEXT           "&Time format:",IDC_STATIC,5,156,46,10
+    EDITTEXT        IDC_TIME_FORMAT,52,154,70,12,ES_AUTOHSCROLL
 END
 
 IDD_DIALOG_FILTER DIALOGEX 0, 0, 217, 148
@@ -973,7 +1016,7 @@ BEGIN
         BOTTOMMARGIN, 141
     END
 
-    IDD_DIALOG_MAKE, DIALOG
+    IDD_DIALOG_SIG, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 205
@@ -981,7 +1024,15 @@ BEGIN
         BOTTOMMARGIN, 141
     END
 
-    IDD_DIALOG_OPTION_MAKE, DIALOG
+    IDD_DIALOG_OPTION_REPLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_OPTION_FWD, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 210
@@ -1185,6 +1236,7 @@ END
 STRINGTABLE 
 BEGIN
     ID_MENUITEM_SEND        "Send now"
+    ID_MENUITEM_SBOXMARK    "Save and Mark"
     ID_MENUITEM_SENDBOX     "Save to Outbox"
     ID_MENUITEM_SENDINFO    "Property"
 END
@@ -1240,13 +1292,13 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "UK fix-4 based on nPOP 1.0.8"
+            VALUE "Comments", "UK fix-5 based on nPOP 1.0.8"
             VALUE "FileDescription", "nPOP"
             VALUE "FileVersion", "1, 0, 8, 0"
             VALUE "InternalName", "nPOP"
             VALUE "LegalCopyright", "Copyright ©2006 by Nakashima Tomoaki"
             VALUE "OriginalFilename", "nPOP.exe"
-            VALUE "PrivateBuild", "nPOP Ver 1.0.8 (UK fix-4)"
+            VALUE "PrivateBuild", "nPOP Ver 1.0.8 (UK fix-5)"
             VALUE "ProductName", "nPOP"
             VALUE "ProductVersion", "1, 0, 8, 0"
         END

@@ -74,7 +74,7 @@ static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress);
 static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, TCHAR *ret);
 static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem);
 static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int rebox, int ReplyFlag);
-static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag);
+static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag, TCHAR *seltext);
 static void SetWindowString(HWND hWnd, TCHAR *Subject, BOOL editable);
 static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem);
 #ifndef _WIN32_WCE
@@ -83,9 +83,9 @@ static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam);
 static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
-static BOOL EndWindow(HWND hWnd);
+static BOOL EndWindow(HWND hWnd, BOOL sent);
 static void SetEditMenu(HWND hWnd);
-static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag);
+static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFlag);
 static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag);
 static void ShowSendInfo(HWND hWnd);
 static BOOL AppEditMail(HWND hWnd, long id, char *buf, MAILITEM *tpMailItem);
@@ -261,8 +261,6 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		tpMailItem->MailBox = alloc_copy_t(tpReMailItem->MailBox);
 	}
 
-	tpMailItem->FwdAttach = NULL;
-
 	// Set the appropriate To/From settings
 	if(ReplyFlag == EDIT_FORWARD) {	// It's actually forwarding
 		tpMailItem->To = NULL;				// clear the To:
@@ -272,7 +270,6 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		tpMailItem->ContentType = alloc_copy_t(tpReMailItem->ContentType);
 		tpMailItem->Encoding = tpReMailItem->Encoding;
 		tpMailItem->Multipart = tpReMailItem->Multipart;
-		tpMailItem->HasHeader = tpReMailItem->HasHeader;
 		if (0 && tpMailItem->Multipart == TRUE) {
 			// GJC copy attachments
 			MULTIPART **tpMultiPart = NULL;
@@ -358,56 +355,89 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 /*
  * SetReplyMessageBody - It sets the text of the reply mail
  */
-static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag)
+static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag, TCHAR *seltext)
 {
 	MULTIPART **tpMultiPart = NULL;
-	TCHAR *p, *mBody, *mBodya;
-	TCHAR *body;
-	TCHAR *quotchar = NULL;
-	int len;
-	int cnt, i;
-	int do_sig;
+	TCHAR *p, *mBody, *mBodya, *body, *sig;
+	TCHAR *quotchar = NULL, *qBody = NULL;
+	int len, cnt, i;
+	int qlen = 0;
+	BOOL do_sig, do_sig_above;
 
 	//Setting
-	if(tpMailItem->Status == 1 && tpReMailItem != NULL && tpReMailItem->Body != NULL)
-    {
-		mBody = MIME_body_decode(tpReMailItem, FALSE, &tpMultiPart, &cnt);
-		mBodya = mBody;
-		multipart_free(&tpMultiPart, cnt);
+	if ( (tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
+		|| (tpMailItem->Mark == 2 && seltext != NULL) ) {
+		if (tpMailItem->Mark == 2 && seltext != NULL) {
+			mBodya = seltext;
+			mBody = qBody = NULL;
+		} else {
+			mBody = MIME_body_decode(tpReMailItem, FALSE, &tpMultiPart, &cnt);
+			mBodya = mBody;
 
-		// GJC don't forward headers
-		if (tpMailItem->HasHeader == TRUE) {
-			if ((p = GetBodyPointaT(mBodya)) != NULL) {
-				mBodya = p;
+			// GJC don't include headers
+			if (tpReMailItem->HasHeader == TRUE && tpReMailItem->Multipart == FALSE) {
+				if ((p = GetBodyPointaT(mBodya)) != NULL) {
+					mBodya = p;
+				}
 			}
+			multipart_free(&tpMultiPart, cnt);
 		}
 
-		len = CreateHeaderStringSize(op.ReHeader, tpReMailItem) + 2;
 		if (op.FwdQuotation || ReplyFlag != EDIT_FORWARD) {
 			quotchar = op.QuotationChar;
+			qlen = lstrlen(quotchar);
+		}
+		if (ReplyFlag == EDIT_FORWARD) {
+			len = CreateHeaderStringSize(op.FwdHeader, tpReMailItem, quotchar) + 2;
+		} else {
+			len = CreateHeaderStringSize(op.ReHeader, tpReMailItem, NULL) + 2;
+		}
+		if (op.QuotationBreak == FALSE) {
+			qBody = (TCHAR *)mem_alloc(sizeof(TCHAR) * 
+				(WordBreakStringSize(mBodya, NULL, op.WordBreakSize - qlen, TRUE) + 1));
+			if (qBody != NULL) {
+				WordBreakString(mBodya, qBody, NULL, op.WordBreakSize - qlen, TRUE);
+				mBodya = qBody;
+			}
 		}
 		len += GetReplyBodySize(mBodya, quotchar);
 
 		i = mailbox_name_to_index(tpMailItem->MailBox);
-		do_sig = (i != -1) && ((MailBox + i)->Signature != NULL)
-			&& (*(MailBox + i)->Signature != TEXT('\0'))
-			&& (ReplyFlag != EDIT_FORWARD || op.SignForward);
-		if (do_sig) {
-			len += lstrlen((MailBox + i)->Signature) + 2;
+		if (i!= -1) {
+			sig = (MailBox + i)->Signature;
+		} else {
+			sig = NULL;
 		}
+		do_sig = (sig != NULL) && (*sig != TEXT('\0'))
+			&& (ReplyFlag != EDIT_FORWARD || (op.SignForward == 1 || op.SignForward == 3));
+		if (do_sig) {
+			len += lstrlen(sig) + 2;
+		}
+		do_sig_above = do_sig &&
+			((ReplyFlag == EDIT_FORWARD && op.SignForward == 3) || 
+			(ReplyFlag != EDIT_FORWARD && op.SignReplyAbove == 1));
 
 		body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (body != NULL) {
-			p = CreateHeaderString(op.ReHeader, body, tpReMailItem);
+			p = body;
+			if (do_sig_above) {
+				p = str_join_t(p, sig, TEXT("\r\n"), (TCHAR *)-1);
+			}
+			if (ReplyFlag == EDIT_FORWARD) {
+				p = CreateHeaderString(op.FwdHeader, p, tpReMailItem, quotchar);
+			} else {
+				p = CreateHeaderString(op.ReHeader, p, tpReMailItem, NULL);
+			}
 			p = str_cpy_t(p, TEXT("\r\n"));
 			if (mBodya != NULL) {
 				p = SetReplyBody(mBodya, p, quotchar);
 			}
-			if (do_sig) {
-				str_join_t(p, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
+			if (do_sig && !do_sig_above) {
+				str_join_t(p, TEXT("\r\n"), sig, (TCHAR *)-1);
 			}
 		}
 		mem_free(&mBody);
+		mem_free(&qBody);
 
 		if (tpMailItem->BodyCharset == NULL &&
 			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
@@ -416,22 +446,26 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
 			tpMailItem->BodyEncoding = op.BodyEncoding;
 		}
+#ifndef _WCE_OLD
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
+#endif
 #ifdef UNICODE
 			tpMailItem->Body = alloc_tchar_to_char(body);
 #else
 			tpMailItem->Body = alloc_copy(body);
 #endif
+#ifndef _WCE_OLD
 		}
+#endif
 		mem_free(&body);
 
 	} else {
-		i = mailbox_name_to_index(tpMailItem->MailBox);
-		if (i == -1 || (MailBox + i)->Signature == NULL || *(MailBox + i)->Signature == TEXT('\0')) {
+		if (ReplyFlag == EDIT_FORWARD && (op.SignForward == 0 || op.SignForward == 2)) {
 			return;
 		}
-		if (ReplyFlag == EDIT_REPLY && !(op.SignForward)) {
+		i = mailbox_name_to_index(tpMailItem->MailBox);
+		if (i == -1 || (MailBox + i)->Signature == NULL || *(MailBox + i)->Signature == TEXT('\0')) {
 			return;
 		}
 		len = lstrlen((MailBox + i)->Signature);
@@ -446,14 +480,18 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
 			tpMailItem->BodyEncoding = op.BodyEncoding;
 		}
+#ifndef _WCE_OLD
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
+#endif
 #ifdef UNICODE
 			tpMailItem->Body = alloc_tchar_to_char(body);
 #else
 			tpMailItem->Body = alloc_copy(body);
 #endif
+#ifndef _WCE_OLD
 		}
+#endif
 		mem_free(&body);
 	}
 }
@@ -710,6 +748,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		1,						CSOBAR_BUTTON_SUBMENU_DOWN,	CSO_BUTTON_DISP, (-1),					NULL, STR_MENU_FILE,	NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, CLR_INVALID,				FALSE, FALSE,
 		2,						CSOBAR_BUTTON_SUBMENU_DOWN,	CSO_BUTTON_DISP, (-1),					NULL, STR_MENU_EDIT,	NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, CLR_INVALID,				FALSE, FALSE,
 		ID_MENUITEM_SEND,		CSOBAR_BUTTON_NORM,			CSO_BUTTON_DISP, IDB_BITMAP_SEND,		NULL, NULL,				NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, RGB(0xC0, 0xC0, 0xC0),	FALSE, FALSE,
+		ID_MENUITEM_SBOXMARK,	CSOBAR_BUTTON_NORM,			CSO_BUTTON_DISP, IDB_BITMAP_SENDBOX,	NULL, NULL,				NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, RGB(0xC0, 0xC0, 0xC0),	FALSE, FALSE,
 		ID_MENUITEM_SENDBOX,	CSOBAR_BUTTON_NORM,			CSO_BUTTON_DISP, IDB_BITMAP_SENDBOX,	NULL, NULL,				NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, RGB(0xC0, 0xC0, 0xC0),	FALSE, FALSE,
 		ID_MENUITEM_SENDINFO,	CSOBAR_BUTTON_NORM,			CSO_BUTTON_DISP, IDB_BITMAP_SENDINFO,	NULL, NULL,				NULL, CSOBAR_CODEPOS_CENTER, 1, (-1), (-1), (-1), (-1), 0,				CLR_INVALID, CLR_INVALID, RGB(0xC0, 0xC0, 0xC0),	FALSE, FALSE,
 	};
@@ -723,9 +762,10 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif	// _WIN32_WCE_PPC
 #endif	// _WIN32_WCE
 		{0,	ID_MENUITEM_SEND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{1,	ID_MENUITEM_SENDBOX,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{1,	ID_MENUITEM_SBOXMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{2,	ID_MENUITEM_SENDBOX,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{2,	ID_MENUITEM_SENDINFO,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{3,	ID_MENUITEM_SENDINFO,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -734,6 +774,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif	// _WIN32_WCE_PPC
 		NULL, // menu skipping
 		STR_CMDBAR_SEND,
+		STR_CMDBAR_SBOXMARK,
 		STR_CMDBAR_SENDBOX,
 		STR_CMDBAR_SENDINFO
 	};
@@ -749,7 +790,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		return FALSE;
 	}
 	SetWindowString(hWnd, tpMailItem->Subject,
-		(tpMailItem->Status == ICON_SENDMAIL) ? FALSE : TRUE);
+		(tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -764,8 +805,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 
 	hEditToolBar = mbi.hwndMB;
-    CommandBar_AddToolTips(hEditToolBar, 5, szTips);
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 3, TB_ICONSIZE, TB_ICONSIZE);
+    CommandBar_AddToolTips(hEditToolBar, 6, szTips);
+	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 4, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	Height = 0;
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -789,13 +830,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hEditToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-    CommandBar_AddToolTips(hEditToolBar, 4, szTips);
+    CommandBar_AddToolTips(hEditToolBar, 6, szTips);
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hEditToolBar, hInst, IDR_MENU_EDIT_HPC, 0);
 	} else {
 		CommandBar_InsertMenubar(hEditToolBar, hInst, IDR_MENU_EDIT, 0);
 	}
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 3, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 4, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hEditToolBar, 0, 0);
 
@@ -803,7 +844,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif
 #else
 	// Win32
-	hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 3, hInst, IDB_TOOLBAR_EDIT,
+	hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 4, hInst, IDB_TOOLBAR_EDIT,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hEditToolBar, GWL_STYLE, GetWindowLong(hEditToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hEditToolBar, TB_SETINDENT, 5, 0);
@@ -899,7 +940,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifdef _WIN32_WCE
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
-		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_SENDMAIL), IMAGE_ICON, 16, 16, 0));
+		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_SENTMAIL), IMAGE_ICON, 16, 16, 0));
 	EditMaxLength = EDITMAXSIZE;
 #else
 	{
@@ -916,14 +957,18 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	if (tpMailItem->Body != NULL) {
 		SwitchCursor(FALSE);
+#ifndef _WCE_OLD
 		if (tpMailItem->BodyCharset == NULL ||
 			(tmp = MIME_charset_decode(charset_to_cp((BYTE)font_charset), tpMailItem->Body, tpMailItem->BodyCharset)) == NULL) {
+#endif
 #ifdef UNICODE
 			tmp = alloc_char_to_tchar(tpMailItem->Body);
 #else
 			tmp = alloc_copy(tpMailItem->Body);
 #endif
+#ifndef _WCE_OLD
 		}
+#endif
 		if (tmp != NULL) {
 			buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + 1));
 			if (buf != NULL) {
@@ -941,7 +986,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETMODIFY, (WPARAM)FALSE, 0);
 
 	tpMailItem->hEditWnd = hWnd;
-	if (tpMailItem->Status == ICON_SENDMAIL) {
+	if (tpMailItem->Mark == ICON_SENTMAIL) {
 		SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
 	} else {
@@ -1033,14 +1078,13 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 /*
  * EndWindow
  */
-static BOOL EndWindow(HWND hWnd)
+static BOOL EndWindow(HWND hWnd, BOOL sent)
 {
 	MAILITEM *tpMailItem;
-	BOOL sent;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem != NULL) {
-		sent = (tpMailItem->Status == ICON_SENDMAIL);
+		sent = (tpMailItem->Mark == ICON_SENTMAIL);
 		if (SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETMODIFY, 0, 0) == TRUE &&
 			MessageBox(hWnd, STR_Q_EDITCANSEL,
 				STR_TITLE_MAILEDIT, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
@@ -1112,7 +1156,7 @@ static void SetEditMenu(HWND hWnd)
 	hMenu = GetMenu(hWnd);
 #endif
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-	if (tpMailItem == NULL || tpMailItem->Status != ICON_SENDMAIL) {
+	if (tpMailItem == NULL || tpMailItem->Mark != ICON_SENTMAIL) {
 		editable = TRUE;
 	} else {
 		editable = FALSE;
@@ -1127,13 +1171,14 @@ static void SetEditMenu(HWND hWnd)
 /*
  * SetItemToSendBox - Retention to transmission box
  */
-static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
+static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFlag)
 {
 	MAILITEM *tpMailItem;
 	TCHAR *buf, *tmp;
 	TCHAR numbuf[10];
-	int len;
-	int i;
+	int len, i;
+	long size;
+	BOOL mkdlg;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem == NULL) {
@@ -1148,8 +1193,19 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 
 		//of type dependence letter When subject is not set, information of transmission is indicated
 		if (EndFlag == 0 && (tpMailItem->Subject == NULL || *tpMailItem->Subject == TEXT('\0'))) {
-			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-				(LPARAM)tpMailItem) == FALSE) {
+#ifdef _WIN32_WCE
+			if (GetSystemMetrics(SM_CXSCREEN) >= 450) { // _WIDE
+				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+					(LPARAM)tpMailItem);
+			} else {
+				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+					(LPARAM)tpMailItem);
+			}
+#else
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+#endif
+			if (mkdlg == FALSE) {
 				return FALSE;
 			}
 		}
@@ -1186,14 +1242,18 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 				tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
 				tpMailItem->BodyEncoding = op.BodyEncoding;
 			}
+#ifndef _WCE_OLD
 			if (tpMailItem->BodyCharset == NULL ||
 				(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset)) == NULL) {
+#endif
 #ifdef UNICODE
 				tpMailItem->Body = alloc_tchar_to_char(tmp);
 #else
 				tpMailItem->Body = alloc_copy(tmp);
 #endif
+#ifndef _WCE_OLD
 			}
+#endif
 			mem_free(&tmp);
 		}
 		SwitchCursor(TRUE);
@@ -1201,11 +1261,15 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 
 	//Setting size
 	mem_free(&tpMailItem->Size);
-	wsprintf(numbuf, TEXT("%d"), (tpMailItem->Body != NULL)? tstrlen(tpMailItem->Body) - 1 : 0);
+	size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body) - 1) : 0;
+	size += (tpMailItem->AttachSize * 4)/3; // 4/3 for MIME encoding
+	wsprintf(numbuf, TEXT("%d"), size);
 	tpMailItem->Size = alloc_copy_t(numbuf);
 
-	if (op.AutoMarkSend == 1) {
-		tpMailItem->Status = ICON_SEND;
+	if (MarkFlag == TRUE) {
+		tpMailItem->Mark = ICON_SEND;
+	} else {
+		tpMailItem->Mark = ICON_NON;
 	}
 	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
 
@@ -1290,6 +1354,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag)
 static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 {
 	MAILITEM *tpMailItem;
+	BOOL sent;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem == NULL) {
@@ -1298,14 +1363,15 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 
 	tpMailItem->hEditWnd = NULL;
 	tpMailItem->hProcess = NULL;
+	sent = (tpMailItem->Mark == ICON_SENTMAIL) ? TRUE : FALSE;
 
-	if (op.AutoSave == 1) {
+	if (op.AutoSave == 1 && sent == FALSE) {
 		//Transmission box retention to file
 		file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
 	}
 
 	SetWindowLong(hWnd, GWL_USERDATA, (LPARAM)0);
-	EndWindow(hWnd);
+	EndWindow(hWnd, sent);
 #ifdef _WIN32_WCE
 	FocusWnd = MainWnd;
 #ifdef _WIN32_WCE_LAGENDA
@@ -1333,17 +1399,29 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 static void ShowSendInfo(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
+	BOOL mkdlg;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem == NULL) {
 		return;
 	}
-	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-		(LPARAM)tpMailItem) == FALSE) {
+#ifdef _WIN32_WCE
+	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+			(LPARAM)tpMailItem);
+	} else {
+		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+			(LPARAM)tpMailItem);
+	}
+#else
+	mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+		(LPARAM)tpMailItem);
+#endif
+	if (mkdlg == FALSE) {
 		return;
 	}
 	SetWindowString(hWnd, tpMailItem->Subject,
-		(tpMailItem->Status == ICON_SENDMAIL) ? FALSE : TRUE);
+		(tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 }
 
@@ -1606,6 +1684,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 	case WM_ENDCLOSE:
 		{
 			BOOL BodyFlag = FALSE;
+			BOOL ReadyClose, ShowFlag;
 
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (tpMailItem != NULL && tpMailItem->hProcess != NULL) {
@@ -1616,8 +1695,19 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 				ProcessFlag = FALSE;
 #endif
 			}
-			if (SetItemToSendBox(hWnd, BodyFlag, wParam) == TRUE) {
-				CloseEditMail(hWnd, FALSE, FALSE);
+			if (wParam == 2) {
+				ShowFlag = TRUE;
+				wParam = 0;
+			} else {
+				ShowFlag = FALSE;
+			}
+			if (tpMailItem != NULL && tpMailItem->Mark == ICON_SENTMAIL) {
+				ReadyClose = TRUE;
+			} else {
+				ReadyClose = SetItemToSendBox(hWnd, BodyFlag, wParam, FALSE);
+			}
+			if (ReadyClose) {
+				CloseEditMail(hWnd, FALSE, ShowFlag);
 #ifdef _WIN32_WCE_LAGENDA
 				SipShowIM(SIPF_OFF);
 #endif
@@ -1626,7 +1716,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 		break;
 
 	case WM_CLOSE:
-		if (EndWindow(hWnd) == FALSE) {
+		if (EndWindow(hWnd,FALSE) == FALSE) {
 			break;
 		}
 #ifdef _WIN32_WCE
@@ -1693,7 +1783,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			ProcessFlag = FALSE;
 #endif
 			//In transmission box retention
-			if (SetItemToSendBox(hWnd, TRUE, 0) == TRUE) {
+			if (SetItemToSendBox(hWnd, TRUE, 0, FALSE) == TRUE) {
 				CloseEditMail(hWnd, FALSE, TRUE);
 			} else {
 				ShowWindow(hWnd, SW_SHOW);
@@ -1726,7 +1816,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 			break;
 
 		case IDOK:
-			SendMessage(hWnd, WM_ENDCLOSE, 0, 0);
+			SendMessage(hWnd, WM_ENDCLOSE, (WPARAM)2, 0);
 			break;
 #elif defined _WIN32_WCE_LAGENDA
 		case IDC_EDIT_BODY:
@@ -1750,13 +1840,19 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lPara
 				ErrorMessage(NULL, STR_ERR_SENDLOCK);
 				break;
 			}
-			if (SetItemToSendBox(hWnd, FALSE, 0) == TRUE) {
+			if (SetItemToSendBox(hWnd, FALSE, 0, TRUE) == TRUE) {
 				CloseEditMail(hWnd, TRUE, TRUE);
 			}
 			break;
 
 		case ID_MENUITEM_SENDBOX:
-			if (SetItemToSendBox(hWnd, FALSE, 0) == TRUE) {
+			if (SetItemToSendBox(hWnd, FALSE, 0, FALSE) == TRUE) {
+				CloseEditMail(hWnd, FALSE, TRUE);
+			}
+			break;
+
+		case ID_MENUITEM_SBOXMARK:
+			if (SetItemToSendBox(hWnd, FALSE, 0, TRUE) == TRUE) {
 				CloseEditMail(hWnd, FALSE, TRUE);
 			}
 			break;
@@ -1902,7 +1998,7 @@ BOOL Edit_InitApplication(HINSTANCE hInstance)
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_SENDMAIL));
+	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_SENTMAIL));
 	wc.hbrBackground = (HBRUSH)COLOR_BTNSHADOW;
 	wc.lpszClassName = EDIT_WND_CLASS;
 
@@ -1934,7 +2030,7 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 		return FALSE;
 	}
 	ExistFlag = TRUE;
-	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW);
+	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL);
 	item_free(&tpMailItem, 1);
 	ExistFlag = FALSE;
 	return ret;
@@ -1954,6 +2050,7 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT);
+	SipShowIM((editable) ? SIPF_ON : SIPF_OFF);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -1967,6 +2064,7 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 		menu_state = (editable == TRUE) ? MF_ENABLED : MF_GRAYED;
 
 		EnableMenuItem(hMenu, ID_MENUITEM_SEND, menu_state);
+		EnableMenuItem(hMenu, ID_MENUITEM_SBOXMARK, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_SENDBOX, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_SENDINFO, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_ENCODE, menu_state);
@@ -1982,6 +2080,8 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 	if (hEditToolBar != NULL) {
 		SendMessage(hEditToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SEND,
 			(LPARAM)MAKELONG(editable, 0));
+		SendMessage(hEditToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SBOXMARK,
+			(LPARAM)MAKELONG(editable, 0));
 		SendMessage(hEditToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SENDBOX,
 			(LPARAM)MAKELONG(editable, 0));
 		SendMessage(hEditToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SENDINFO,
@@ -1992,10 +2092,11 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 /*
  * Edit_InitInstance - of transmission mail Compilation
  */
-int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReMailItem, int OpenFlag)
+int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext)
 {
 	MAILITEM *tpMailItem;
 	int key;
+	BOOL mkdlg;
 #ifdef _WIN32_WCE_PPC
 	SIPINFO si;
 	int x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx, cy;
@@ -2050,18 +2151,30 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		if (tpReMailItem != NULL) {
 			item_copy(tpReMailItem, tpMailItem);
 		}
+		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
-		tpMailItem->FwdAttach = NULL;
 		tpMailItem->DefReplyTo = TRUE;
-		tpMailItem->HasHeader = FALSE;
 		// Transmission information setting
 		_SetForegroundWindow(hWnd);
-		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc, (LPARAM)tpMailItem) == FALSE) {
+
+#ifdef _WIN32_WCE
+		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		} else {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		}
+#else
+		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+			(LPARAM)tpMailItem);
+#endif
+		if (mkdlg == FALSE) {
 			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
 		if (tpMailItem->Body == NULL) {
-			SetReplyMessageBody(tpMailItem, NULL, EDIT_REPLY);
+			SetReplyMessageBody(tpMailItem, NULL, EDIT_NEW, NULL);
 		}
 		break;
 
@@ -2073,24 +2186,42 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			ErrorMessage(hWnd, STR_ERR_MEMALLOC);
 			return EDIT_NONEDIT;
 		}
+		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
-		tpMailItem->HasHeader = FALSE;
+
 		if (tpReMailItem != NULL) {
 			// Reply setting
 			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
-			if (tpReMailItem->Body != NULL) {
-				tpMailItem->Status = 1;
-			}
+		}
+		if (seltext != NULL) {
+			tpMailItem->Mark = 2;
+		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
+			tpMailItem->Mark = 1;
 		}
 
 		//Transmission information setting
-		if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc, (LPARAM)tpMailItem) == FALSE) {
+#ifdef _WIN32_WCE
+		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		} else {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		}
+#else
+		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+			(LPARAM)tpMailItem);
+#endif
+		if (mkdlg == FALSE) {
 			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
-		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_REPLY);
-		tpMailItem->Status = 0;
+		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_REPLY, seltext);
+		tpMailItem->Mark = 0;
+		if (rebox >= MAILBOX_USER && tpReMailItem != NULL) {
+			SetReplyFwdMark(tpReMailItem, ICON_REPL_MASK);
+		}
 		break;
 
 	case EDIT_FORWARD:
@@ -2100,32 +2231,51 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			ErrorMessage(hWnd, STR_ERR_MEMALLOC);
 			return EDIT_NONEDIT;
 		}
+		tpMailItem->MailStatus = ICON_NON;
+		tpMailItem->Download = TRUE;
+		tpMailItem->DefReplyTo = TRUE;
 
 		// New function needed to copy the "tpMailItem" from "tpReMailItem"
 		if(tpReMailItem != NULL){
 			// Forward settings
 			SetReplyMessage(tpMailItem, tpReMailItem, rebox, EDIT_FORWARD);
 		}
-		tpMailItem->Download = TRUE;
-		tpMailItem->DefReplyTo = TRUE;
 
 		//////////// MRP ///////////////
-		if (tpReMailItem->Download == FALSE) {
+		if (tpReMailItem != NULL && tpReMailItem->Download == FALSE) {
 			if(MessageBox(hWnd, STR_Q_FORWARDMAIL, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				item_free(&tpMailItem, 1);
 				return EDIT_NONEDIT;
 			}
 		}
 		//////////// ---- ///////////////
-		tpMailItem->Status = 2; // enable including headers
+		if (seltext != NULL) {
+			tpMailItem->Mark = 2;
+		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
+			tpMailItem->Mark = 3;
+		}
 		//Transmission information setting
-		if(DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc, (LPARAM)tpMailItem) == FALSE){
+#ifdef _WIN32_WCE
+		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		} else {
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+		}
+#else
+		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+			(LPARAM)tpMailItem);
+#endif
+		if (mkdlg == FALSE) {
 			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
-		tpMailItem->Status = 1; // We want to include all the body.
-		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_FORWARD);
-		tpMailItem->Status = 0;
+		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_FORWARD, seltext);
+		tpMailItem->Mark = 0;
+		if (rebox >= MAILBOX_USER && tpReMailItem != NULL) {
+			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK);
+		}
 		break;
 	}
 
