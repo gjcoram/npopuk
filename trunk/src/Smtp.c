@@ -57,7 +57,7 @@ static int send_end_cmd;						// メール送信完了時のコマンド
 
 // 外部参照
 extern OPTION op;
-
+extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
 extern int SelBox;
@@ -1270,7 +1270,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, 2);
 		}
 
 		// 次の送信メールの取得
@@ -1328,7 +1328,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, MailBox + MAILBOX_SEND, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, 2);
 		}
 		command_status = SMTP_QUIT;
 		break;

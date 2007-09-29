@@ -211,7 +211,6 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 /*
  * filename_select - the log Acquisition
- *   OpenSave = TRUE means Open, FALSE means Save
  */
 BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action)
 {
@@ -223,9 +222,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 #else	// _WIN32_WCE_PPC
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE];
-#ifdef _WIN32_WCE
-	TCHAR *ph;
-#endif	// _WIN32_WCE
+	TCHAR *ph, *qh;
 
 	//Retention to file
 	lstrcpy(path, ret);
@@ -268,10 +265,20 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 				ErrorMessage(hWnd, STR_ERR_TOOMANYFILES); 
 			}
 			return FALSE;
-		}
+		} 
 	} else {
 		if (GetSaveFileName((LPOPENFILENAME)&of) == FALSE) {
 			return FALSE;
+		}
+		if (Action == FILE_CHOOSE_DIR) {
+			ph = qh = path;
+			while (*ph != TEXT('\0')) {
+				if (*ph == TEXT('\\')) {
+					qh = ph + 1;
+				}
+				ph++;
+			}
+			*qh = TEXT('\0');
 		}
 	}
 
@@ -861,7 +868,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 /*
  * file_save_mailbox - メールボックス内のメールを保存
  */
-BOOL file_save_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int SaveFlag)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -876,7 +883,7 @@ BOOL file_save_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag)
 #ifndef _WIN32_WCE
 	SetCurrentDirectory(AppDir);
 #endif	// _WIN32_WCE
-	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 
 	if (SaveFlag == 0) {
 		//When it does not retain, deletion
@@ -1010,7 +1017,7 @@ static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem)
 /*
  * file_save_address_book - アドレス帳をファイルに保存
  */
-BOOL file_save_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
+BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -1020,7 +1027,7 @@ BOOL file_save_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	SetCurrentDirectory(AppDir);
 #endif
 
-	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 
 	//The file which it retains is opened
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);

@@ -243,6 +243,8 @@ BOOL ini_read_setting(HWND hWnd)
 		}
 	}
 
+	op.BackupDir = profile_alloc_string(GENERAL, TEXT("BackupDir"), TEXT(""), app_path);
+
 	op.Version = profile_get_int(GENERAL, TEXT("Version"), APP_VERSION_NUM, app_path);
 	if (op.Version > APP_VERSION_NUM) {
 		wsprintf(tmp, STR_MSG_NEWVERSION, app_path, KEY_NAME);
@@ -752,7 +754,7 @@ BOOL ini_read_setting(HWND hWnd)
 /*
  * ini_save_setting - INIファイルへ設定情報を書き出す
  */
-BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir)
 {
 	FILTER *tpFilter;
 	TCHAR app_path[BUF_SIZE];
@@ -771,7 +773,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 	BOOL rc = TRUE;
 	BOOL found;
 
-	str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	if (SaveDir == NULL) {
+		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	} else {
+		str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	}
 
 	///////////// MRP /////////////////////
 #ifdef UNICODE
@@ -787,7 +793,12 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 
 	profile_initialize(app_path, FALSE);
 
-	profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir, app_path);
+	if (SaveDir == NULL) {
+		profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir, app_path);
+	} else {
+		profile_write_string(GENERAL, TEXT("DataFileDir"), TEXT(""), app_path);
+	}
+	profile_write_string(GENERAL, TEXT("BackupDir"), op.BackupDir, app_path);
 	profile_write_int(GENERAL, TEXT("Version"), op.Version, app_path);
 	profile_write_int(GENERAL, TEXT("SocLog"), op.SocLog, app_path);
 
@@ -1197,6 +1208,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 		return rc;
 	}
 
+	// GJC for backup
+	if (SaveDir == NULL) {
+		SaveDir = DataDir;
+	}
+
 	//Retention
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
 		if ((MailBox + j) == NULL) {
@@ -1204,7 +1220,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
 		}
 		//of mail inside mailbox Mail item
 		wsprintf(buf, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
-		if (file_save_mailbox(buf, MailBox + j, 
+		if (file_save_mailbox(buf, SaveDir, MailBox + j, 
 			((MailBox + j)->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode) == FALSE) {
 			rc = FALSE;
 		}
@@ -1217,6 +1233,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag)
  */
 void ini_free(void)
 {
+	mem_free(&op.BackupDir);
 	mem_free(&op.view_font.name);
 	mem_free(&op.lv_font.name);
 	mem_free(&op.SendHelo);

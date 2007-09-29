@@ -103,6 +103,7 @@
 #define IDC_ADDR_GRP_COMBO              227
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
+#define ID_MENUITEM_BACKUP              230
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
@@ -227,8 +228,8 @@
 #define IDC_CHECK_AUTOMARKSEND          1099
 #define IDC_CHECK_PARANOID              1100
 #define IDC_ABOUT_TEXT                  1101
-#define IDC_DEL							1102
-#define IDC_READ						1103
+#define IDC_DEL                         1102
+#define IDC_READ                        1103
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202 // placeholder for "fwd as attachment"
@@ -243,7 +244,7 @@
 #define ID_MENUITEM_COPY2NEW            2999
 #define ID_MENUITEM_MOVE2MBOX           3000 // leave MAX_MAILBOX_CNT IDs free for move
 #define ID_MENUITEM_MOVE2NEW            3999
-#define LVS_NOSORTHEADER				0x8000
+#define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
@@ -335,6 +336,10 @@
 #define ID_MENUITEM_ENCODE              40148  
 #define ID_MENUITEM_SAVEALL             40149
 #define ID_MENUITEM_FORWARD             40150
+#define ID_MENUITEM_COPY2MBOX           42000 // leave MAX_MAILBOX_CNT IDs free for copy
+#define ID_MENUITEM_COPY2NEW            42999
+#define ID_MENUITEM_MOVE2MBOX           43000 // leave MAX_MAILBOX_CNT IDs free for move
+#define ID_MENUITEM_MOVE2NEW            43999
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

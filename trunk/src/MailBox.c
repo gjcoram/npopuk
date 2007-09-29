@@ -27,10 +27,14 @@ extern OPTION op;
 
 #ifdef _WIN32_WCE_LAGENDA
 extern HMENU hMainMenu;
+extern HMENU hViewMenu;
 #endif
 
 extern int MailMenuPos;
+extern HWND MainWnd;
 extern HWND hMainToolBar;
+extern HWND hViewWnd;
+extern HWND hViewToolBar;
 
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -292,12 +296,14 @@ int mailbox_next_unread(int index, int endindex)
 /*
  * mailbox_menu_rebuild
  */
-BOOL mailbox_menu_rebuild(HWND hWnd) {
+BOOL mailbox_menu_rebuild(HWND unused) {
 	int i, this_id;
-	int last_copy_id = ID_MENUITEM_COPY2NEW;
-	int last_move_id = ID_MENUITEM_MOVE2NEW;
+	int last_copy_id, last_move_id, last_copy_idv, last_move_idv;
 	TCHAR *name;
-	HMENU hMenu;
+	HMENU hMenu, vMenu = NULL;
+
+	last_copy_id = last_copy_idv = ID_MENUITEM_COPY2NEW;
+	last_move_id = last_move_idv = ID_MENUITEM_MOVE2NEW;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -305,17 +311,35 @@ BOOL mailbox_menu_rebuild(HWND hWnd) {
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hMainMenu, MailMenuPos);
 #else
-	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos);
+	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), MailMenuPos);
 #endif
 #else
-	hMenu = GetSubMenu(GetMenu(hWnd), MailMenuPos);
+	hMenu = GetSubMenu(GetMenu(MainWnd), MailMenuPos);
 #endif
+
+	if (hViewWnd != NULL) {
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+		vMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_FILE);
+#elif defined(_WIN32_WCE_LAGENDA)
+		vMenu = GetSubMenu(hViewMenu, 0);
+#else
+		vMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hViewWnd, IDC_VCB), 0), 0);
+#endif
+#else
+		vMenu = GetSubMenu(GetMenu(hViewWnd), 2);
+#endif
+	}
 
 	// build in reverse order because InsertMenu puts item above
 	for (i = MailBoxCnt; i >= 0; i--) {
 		// ModifyMenu not available for PPC2002, so delete all existing entries ...
 		DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
 		DeleteMenu(hMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+		if (vMenu != NULL) {
+			DeleteMenu(vMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
+			DeleteMenu(vMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+		}
 		// ... and repopulate those that are saveboxes
 		if (i < MailBoxCnt && (MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 			if ((MailBox+i)->Name == NULL || *(MailBox+i)->Name == TEXT('\0')) {
@@ -327,9 +351,15 @@ BOOL mailbox_menu_rebuild(HWND hWnd) {
 			if (InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_copy_id = this_id;
 			}
+			if (vMenu != NULL && InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				last_copy_idv = this_id;
+			}
 			this_id = ID_MENUITEM_MOVE2MBOX+i;
 			if (InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 				last_move_id = this_id;
+			}
+			if (vMenu != NULL && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				last_move_idv = this_id;
 			}
 		}
 	}

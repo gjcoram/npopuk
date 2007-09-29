@@ -61,7 +61,7 @@
 static WNDPROC EditWindowProcedure;
 HWND hViewWnd = NULL;
 #ifdef _WIN32_WCE_PPC
-static HWND hToolBar;
+HWND hViewToolBar;
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -262,7 +262,7 @@ static void SetHeaderSize(HWND hWnd)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
 #elif defined _WIN32_WCE_LAGENDA
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -502,7 +502,7 @@ int SetWordBreak(HWND hWnd)
 	if (i & WS_HSCROLL) {
 		i ^= WS_HSCROLL;
 #ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), MF_CHECKED);
+		SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), MF_CHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_CHECKED);
 #else
@@ -512,7 +512,7 @@ int SetWordBreak(HWND hWnd)
 	} else {
 		i |= WS_HSCROLL;
 #ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), MF_UNCHECKED);
+		SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), MF_UNCHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_UNCHECKED);
 #else
@@ -669,7 +669,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	DWORD style;
 #else	// _WIN32_WCE_LAGENDA
 #ifndef _WIN32_WCE_PPC
-	HWND hToolBar;
+	HWND hViewToolBar;
 #endif	// _WIN32_WCE_PPC
 	TBBUTTON tbButton[] = {
 #ifdef _WIN32_WCE
@@ -726,16 +726,16 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	mbi.nBmpId     = 0;
 	mbi.cBmpImages = 0;
 	SHCreateMenuBar(&mbi);
-	hToolBar = mbi.hwndMB;
+	hViewToolBar = mbi.hwndMB;
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		CommandBar_AddToolTips(hToolBar, 11, szTips);
-		CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+		CommandBar_AddToolTips(hViewToolBar, 11, szTips);
+		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
+		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	} else {
-		CommandBar_AddToolTips(hToolBar, 8, szTips);
-		CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 3, tbButton);
+		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
+		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
+		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 3, tbButton);
 	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -758,24 +758,24 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	g_menu_height = CSOBar_Height(hCSOBar);
 #else
 	// H/PC & PsPC
-	hToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-    CommandBar_AddToolTips(hToolBar, 9, szTips);
+	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
+    CommandBar_AddToolTips(hViewToolBar, 9, szTips);
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
+		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
 	} else {
-		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_VIEW, 0);
+		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW, 0);
 	}
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
-	CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
-	CommandBar_AddAdornments(hToolBar, 0, 0);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+	CommandBar_AddAdornments(hViewToolBar, 0, 0);
 #endif
 #else
 	// Win32
-	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 9, hInst, IDB_TOOLBAR_VIEW,
+	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 9, hInst, IDB_TOOLBAR_VIEW,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
-	SetWindowLong(hToolBar, GWL_STYLE, GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
-	SendMessage(hToolBar, TB_SETINDENT, 5, 0);
-	ShowWindow(hToolBar, SW_SHOW);
+	SetWindowLong(hViewToolBar, GWL_STYLE, GetWindowLong(hViewToolBar, GWL_STYLE) | TBSTYLE_FLAT);
+	SendMessage(hViewToolBar, TB_SETINDENT, 5, 0);
+	ShowWindow(hViewToolBar, SW_SHOW);
 #endif
 
 	// ヘッダを表示するSTATICコントロールの作成
@@ -838,7 +838,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
-	SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
+	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -952,7 +952,7 @@ static void EndWindow(HWND hWnd)
 	DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-    DestroyWindow(hToolBar);
+    DestroyWindow(hViewToolBar);
 #elif defined _WIN32_WCE_LAGENDA
 	DestroyMenu(hViewMenu);
 #else
@@ -978,7 +978,7 @@ static void SetEditMenu(HWND hWnd)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -1007,7 +1007,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -2140,7 +2140,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hToolBar, ID_MENUITEM_FILE);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_FILE);
 	htv = NULL;
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 0);
@@ -2186,12 +2186,46 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 }
 
 /*
+ * ViewDeleteItem - delete item from list (not from server)
+ */
+static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
+	HWND hListView = NULL;
+	TCHAR buf[BUF_SIZE];
+	int i;
+
+	wsprintf(buf, STR_Q_DELLISTMAIL, 1, (vSelBox != MAILBOX_SEND && ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE))
+		? STR_Q_DELLISTMAIL_NOSERVER : TEXT(""));
+	if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+		return FALSE;
+	}
+	if (SelBox == vSelBox) {
+		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+		i = -1;
+		while ((i = ListView_GetNextItem(hListView, i, 0)) != -1) {
+			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+			if (tpMailItem == delItem) {
+				ListView_DeleteItem(hListView, i);
+				break;
+			}
+		}
+	}
+	for (i = 0; i < (MailBox + vSelBox)->MailItemCnt; i++) {
+		if (*((MailBox + vSelBox)->tpMailItem + i) == delItem) {
+			item_free(((MailBox + vSelBox)->tpMailItem + i), 1);
+			break;
+		}
+	}
+	item_resize_mailbox(MailBox + vSelBox);
+	return TRUE;
+}
+
+/*
  * ViewProc - メール表示プロシージャ
  */
 static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	MAILITEM *tpMailItem;
-	int i;
+	int i, command_id;
 	BOOL ret;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = FALSE;
@@ -2320,11 +2354,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 
 	case WM_COMMAND:
-		switch (GET_WM_COMMAND_ID(wParam, lParam)) {
+		command_id = GET_WM_COMMAND_ID(wParam, lParam);
+		switch (command_id) {
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), 0, 0, FALSE);
+			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), 0, 0, FALSE);
 			break;
 
 		case IDC_EDIT_BODY:
@@ -2588,16 +2623,77 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		default:
-			{
-				int id = GET_WM_COMMAND_ID(wParam, lParam);
-				if (id >= ID_ATTACH && id <= ID_ATTACH + 100) {
-					if (item_is_mailbox(MailBox + vSelBox,
-						(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
-						ErrorMessage(hWnd, STR_ERR_NOMAIL);
-						break;
+			if (command_id >= ID_ATTACH && command_id <= ID_ATTACH + 100) {
+				if (item_is_mailbox(MailBox + vSelBox,
+					(MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)) == FALSE) {
+					ErrorMessage(hWnd, STR_ERR_NOMAIL);
+					break;
+				}
+				if (Decode(hWnd, command_id - ID_ATTACH, FALSE) == FALSE) {
+					ErrorMessage(hWnd, STR_ERR_SAVE);
+				}
+				break;
+			}
+
+			if (command_id == ID_MENUITEM_COPY2NEW) {
+				// GJC - copy to new SaveBox
+				int old_selbox, newbox;
+				old_selbox = SelBox;
+				SelBox = newbox = mailbox_create(hWnd, TRUE, FALSE);
+				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
+					mailbox_delete(hWnd, newbox, FALSE);
+					command_id = 0;
+				} else {
+					command_id = newbox + ID_MENUITEM_COPY2MBOX;
+					// and fall through to do the copy
+				}
+				SelBox = old_selbox;
+			} else if (command_id == ID_MENUITEM_MOVE2NEW) {
+				// GJC - move to new SaveBox
+				int old_selbox, newbox;
+				old_selbox = SelBox;
+				SelBox = newbox = mailbox_create(hWnd, TRUE, FALSE);
+				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
+					mailbox_delete(hWnd, newbox, FALSE);
+					command_id = 0;
+				} else {
+					command_id = newbox + ID_MENUITEM_MOVE2MBOX;
+					// and fall through to do the move
+				}
+				SelBox = old_selbox;
+			}
+			if (command_id >= ID_MENUITEM_COPY2MBOX) {
+				// move or copy to SaveBox
+				BOOL mark_del = FALSE, close_win = FALSE;
+				int mbox = command_id - ID_MENUITEM_COPY2MBOX;
+				if (command_id >= ID_MENUITEM_MOVE2MBOX) {
+					mbox = command_id - ID_MENUITEM_MOVE2MBOX;
+					mark_del = TRUE;
+				}
+				if (mbox >= 0 && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
+					tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+					if (ItemToSaveBox(hWnd, tpMailItem, mbox, TRUE, mark_del) == TRUE && mark_del == TRUE) {
+						// delete from list or mark for deletion
+						if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+							close_win = ViewDeleteItem(hWnd, tpMailItem);
+						} else {
+							SetMark(hWnd, tpMailItem, ICON_DEL);
+							GetMarkStatus(hWnd, tpMailItem);
+						}
 					}
-					if (Decode(hWnd, id - ID_ATTACH, FALSE) == FALSE) {
-						ErrorMessage(hWnd, STR_ERR_SAVE);
+					if (op.AutoSave == 1) {
+						TCHAR buf[BUF_SIZE];
+						wsprintf(buf, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
+						file_save_mailbox(buf, DataDir, MailBox+mbox, 2);
+					}
+					if (SelBox == mbox) {
+						SwitchCursor(FALSE);
+						ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
+						SwitchCursor(TRUE);
+						SetItemCntStatusText(MainWnd, NULL, FALSE);
+					}
+					if (close_win == TRUE) {
+						SendMessage(hWnd, WM_CLOSE, 0, 0);
 					}
 				}
 			}
@@ -2715,6 +2811,7 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		return FALSE;
 	}
 
+	mailbox_menu_rebuild(hViewWnd);
 	ShowWindow(hViewWnd, SW_SHOW);
 	UpdateWindow(hViewWnd);
 	return TRUE;

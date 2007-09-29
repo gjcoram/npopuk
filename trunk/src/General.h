@@ -16,6 +16,11 @@
 
 //#define GJC_SPECIAL // for Eudora import
 
+// hacks for old compilers (VC++6)
+//#define FILE_READ_ONLY_VOLUME 0
+//#define strcpy_s(dest,size,src) strcpy(dest,src)
+//#define strcat_s(dest,size,append) strcat(dest,append)
+
 /* Include Files */
 #define _INC_OLE
 #include <windows.h>
@@ -40,7 +45,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.0")
+#define APP_NAME				TEXT("nPOPuk Ver 2.01")
 #define APP_VERSION_NUM			2000
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -201,6 +206,7 @@
 #define FILE_OPEN_MULTI			1
 #define FILE_SAVE_SINGLE		2
 #define FILE_SAVE_MULTI			3
+#define FILE_CHOOSE_DIR			4
 
 #define MULTIPART_NONE			0
 #define MULTIPART_HTML			1
@@ -289,6 +295,7 @@ typedef struct _OPTION {
 	TCHAR *Password;
 
 	TCHAR DataFileDir[BUF_SIZE];
+	TCHAR *BackupDir;
 
 	FONT_INFO view_font;
 	FONT_INFO lv_font;
@@ -671,15 +678,15 @@ BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
 BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
-BOOL file_save_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, int SaveFlag);
-BOOL file_save_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, int SaveFlag);
+BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 
 // Ini
 #ifndef _WIN32_WCE
 BOOL ini_start_auth_check(void);
 #endif
 BOOL ini_read_setting(HWND hWnd);
-BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag);
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, TCHAR *SaveDir);
 void ini_free(void);
 
 // Item
@@ -871,8 +878,9 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag);
 void SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
-int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
+BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, BOOL delete);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark);
+int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
 
 #endif
 /* End of source */
