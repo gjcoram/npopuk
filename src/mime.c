@@ -561,7 +561,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding)
 #endif
 					return NULL;
 				}
-				QuotedPrintable_encode(eb->encode_buf, tmp, 0);
+				QuotedPrintable_encode(eb->encode_buf, tmp, 0, FALSE);
 				mem_free(&eb->encode_buf);
 				eb->encode_buf = tmp;
 				EncType = "Q";
@@ -1114,7 +1114,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 				lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 				return FALSE;
 			}
-			QuotedPrintable_encode(cret, tmp, BODY_ENCODE_LINELEN);
+			QuotedPrintable_encode(cret, tmp, BODY_ENCODE_LINELEN, TRUE);
 			mem_free(&cret);
 			cret = tmp;
 			break;
@@ -1160,7 +1160,7 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		if (charset == NULL) {
 			return NULL;
 		}
-		for (p = charset; *p != TEXT('\0') && *p != TEXT('\"'); p++);
+		for (p = charset; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++);
 		*p = TEXT('\0');
 
 		ret = MIME_charset_decode(charset_to_cp((BYTE)font_charset), buf, charset);

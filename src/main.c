@@ -2654,7 +2654,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (wParam == SIZE_MINIMIZED) {
 			confirm_flag = 1;
 		} 
-#endif
+#endif	//_WIN32_WCE
 		if (wParam == SIZE_MINIMIZED && op.ShowTrayIcon == 1 && op.MinsizeHide == 1) {
 			ShowWindow(hWnd, SW_HIDE);
 			return 0;
@@ -2666,13 +2666,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ShowWindow(hWnd, SW_MINIMIZE);
 			return 0;
 		}
-#endif
+#endif	//_WIN32_WCE
+#ifndef _WIN32_WCE_LAGENDA
 		SetWindowSize(hWnd, wParam, lParam);
+#endif	//_WIN32_WCE_LAGENDA
 #ifndef _WIN32_WCE
 		if (wParam != SIZE_MINIMIZED) {
 			confirm_flag = 0;
 		} 
-#endif
+#endif	//_WIN32_WCE
 		break;
 
 #ifndef _WIN32_WCE
@@ -4077,13 +4079,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
 				COPYDATASTRUCT cpdata;
 
-				cpdata.lpData = lpCmdLine;
+#ifdef _WIN32_WCE
+				CmdLine = alloc_copy_t(lpCmdLine);
+#else
+				CmdLine = alloc_char_to_tchar(lpCmdLine);
+#endif
+				cpdata.lpData = CmdLine;
 #ifdef _WIN32_WCE
 				cpdata.cbData = sizeof(TCHAR) * (lstrlen(lpCmdLine) + 1);
 #else
-				cpdata.cbData = sizeof(char) * (tstrlen(lpCmdLine) + 1);
+				cpdata.cbData = sizeof(TCHAR) * (tstrlen(lpCmdLine) + 1);
 #endif
 				SendMessage(hWnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cpdata);
+				mem_free(&CmdLine);
 			} else {
 				SendMessage(hWnd, WM_SHOWLASTWINDOW, 0, 0);
 			}

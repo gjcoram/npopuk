@@ -1,4 +1,4 @@
-nPOP Ver 1.0.7
+nPOP Ver 1.0.8
 --
 
 ■ はじめに
@@ -799,6 +799,11 @@ npop_ini.txt を参照してください。
 
 ■ 更新履歴
 
+・Ver 1.0.7 -> Ver 1.0.8
+	・Unicode版で起動時のコマンドラインが正常に処理されていないのを修正した。
+	・Unicode版でクリッカブルURLが機能しない場合があったのを修正した。
+	・受信メール本文のデコードに失敗する場合があったのを修正した。
+
 ・Ver 1.0.6 -> Ver 1.0.7
 	・httpsとftpのクリッカブルURLが無効になっていたのを修正した。
 	・JIS以外のエンコードはOSにインストールされているものを使用するように
@@ -959,4 +964,4 @@ documentation and/or software.
 Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
 	http://www.nakka.com/
 
-2006/03/02
+2006/07/05

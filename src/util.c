@@ -58,6 +58,9 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr);
  */
 static TCHAR *AllocURLDecode(TCHAR *buf)
 {
+#ifdef UNICODE
+	TCHAR *ret;
+#endif
 	char *cbuf;
 	char *tmp;
 
@@ -79,7 +82,9 @@ static TCHAR *AllocURLDecode(TCHAR *buf)
 	URL_decode(cbuf, tmp);
 #ifdef UNICODE
 	mem_free(&cbuf);
-	return alloc_char_to_tchar(tmp);
+	ret = alloc_char_to_tchar(tmp);
+	mem_free(&tmp);
+	return ret;
 #else
 	return tmp;
 #endif
@@ -1741,9 +1746,10 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 		URLHeadToItem(tmp, TEXT("replyto"), &tpMailItem->ReplyTo);
 		URLHeadToItem(tmp, TEXT("subject"), &tpMailItem->Subject);
 #ifdef UNICODE
-		URLHeadToItem(tmp, TEXT("body"), &body);
-		tpMailItem->Body = alloc_tchar_to_char(body);
-		mem_free(&body);
+		if (URLHeadToItem(tmp, TEXT("body"), &body) == TRUE) {
+			tpMailItem->Body = alloc_tchar_to_char(body);
+			mem_free(&body);
+		}
 #else
 		URLHeadToItem(tmp, TEXT("body"), &tpMailItem->Body);
 #endif

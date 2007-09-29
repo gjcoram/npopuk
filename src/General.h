@@ -35,7 +35,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOP Ver 1.0.7")
+#define APP_NAME				TEXT("nPOP Ver 1.0.8")
 #define WINDOW_TITLE			TEXT("nPOP")
 #define KEY_NAME				TEXT("nPOP")
 

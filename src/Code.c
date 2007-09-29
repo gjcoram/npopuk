@@ -232,15 +232,16 @@ char *QuotedPrintable_decode(char *buf, char *ret)
  * QuotedPrintable_encode - Quoted Printableのエンコード (RFC 2045)
  */
 static const char cHex[] = "0123456789ABCDEF";
-void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size)
+void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body)
 {
 	unsigned char *p;
+	unsigned char *t;
 	char *r;
 	int i = 0;
 
 	for (p = buf, r = ret; *p != '\0'; p++) {
-		if ((*p >= 0x21 && *p <= 0x7F && *p != '=' && *p != '?' && *p != '_') ||
-			*p == '\r' || *p == '\n' || *p == '\t') {
+		if ((((*p >= 0x21 && *p <= 0x3C) || (*p >= 0x3E && *p <= 0x7E)) && *p != '=' && *p != '?' && *p != '_') ||
+			*p == '\r' || *p == '\n') {
 			*(r++) = *p;
 			i++;
 			if (*p == '\r') {
@@ -250,17 +251,29 @@ void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size)
 				i = 0;
 			}
 		} else {
-			*(r++) = '=';
-			*(r++) = cHex[*p >> 4];
-			*(r++) = cHex[*p & 0xF];
-			i += 3;
+			for (t = p; *t == ' ' || *t == '\t'; t++);
+			if (body == TRUE && (*p == ' ' || *p == '\t') && !(*t == '\r' || *t == '\n')) {
+				*(r++) = *p;
+				i++;
+			} else {
+				if (break_size > 0 && (break_size - 1) <= (i + 3)) {
+					*(r++) = '=';
+					*(r++) = '\r';
+					*(r++) = '\n';
+					i = 0;
+				}
+				*(r++) = '=';
+				*(r++) = cHex[*p >> 4];
+				*(r++) = cHex[*p & 0xF];
+				i += 3;
+			}
 		}
-		if (break_size > 0 && break_size <= i) {
+		if (break_size > 0 && (break_size - 1) <= i) {
 			*(r++) = '=';
 			*(r++) = '\r';
 			*(r++) = '\n';
 			i = 0;
-			if (*(p + 1) == '.') {
+			if (body == TRUE && *(p + 1) == '.') {
 				*(r++) = '.';
 				i++;
 			}

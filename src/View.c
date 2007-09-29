@@ -1524,6 +1524,7 @@ static void OpenURL(HWND hWnd)
 	*buf = TEXT('\0');
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
 
+	for (; *(buf + j) != TEXT('\0') && *(buf + j) != TEXT('\r') && *(buf + j) != TEXT('\n') && *(buf + j) != TEXT(' '); j++);
 #ifdef UNICODE
 	str = (TCHAR *)mem_alloc(sizeof(TCHAR) * (j - i + 2));
 	if (str == NULL) {
@@ -2144,9 +2145,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 #endif
 
+#ifndef _WIN32_WCE_LAGENDA
 	case WM_SIZE:
 		SetWindowSize(hWnd, wParam, lParam);
 		break;
+#endif
 
 #ifndef _WIN32_WCE
 	case WM_EXITSIZEMOVE:
