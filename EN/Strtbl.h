@@ -199,13 +199,19 @@
 #define STR_TITLE_ADDSBOX			TEXT("Add SaveBox")
 
 // Window status
-#define STR_STATUS_VIEWINFO			TEXT("View %d (%s) ")
 #ifdef _WIN32_WCE
-#define STR_STATUS_MAILBOXINFO		TEXT("View %d/ Server %d")
+#define STR_STATUS_VIEWINFO			TEXT("%d View (%s) ")
+#define STR_STATUS_MAILBOXINFO		TEXT("%d/%d View/Server")
+#define STR_STATUS_MAILINFO			TEXT("%d/%d New/Unread")
+#define STR_STATUS_MAILINFO_U		TEXT("%d/%d/%d New/Unread/Unsent")
+#define STR_STATUS_UNSENT			TEXT("%d Unsent")
 #else
+#define STR_STATUS_VIEWINFO			TEXT("View %d (%s) ")
 #define STR_STATUS_MAILBOXINFO		TEXT("View %d (%s) / Server %d (%s)")
-#endif
 #define STR_STATUS_MAILINFO			TEXT("New %d, Unread %d")
+#define STR_STATUS_MAILINFO_U		TEXT("New %d, Unread %d, Unsent %d")
+#define STR_STATUS_UNSENT			TEXT("Unsent %d")
+#endif
 #define STR_STATUS_MAILSIZE_B		TEXT("%d B")
 #define STR_STATUS_MAILSIZE_KB		TEXT("%s KB")
 #define STR_STATUS_MAILSIZE_MB		TEXT("%s MB")
@@ -390,7 +396,7 @@
 #define STR_TITLE_SETSSL			TEXT("Set SSL")
 #define STR_TITLE_FILTER			TEXT("Set filter")
 #define STR_TITLE_INITMAILBOX		TEXT("Initialise")
-#define STR_TITLE_CCBCC				TEXT("Cc, Bcc")
+#define STR_TITLE_CCBCC				TEXT("Recipients")
 #define STR_TITLE_ATTACH			TEXT("Attach files")
 #define STR_TITLE_ETCHEADER			TEXT("Other headers")
 #define STR_TITLE_SENDINFO			TEXT("Property")
