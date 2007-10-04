@@ -574,8 +574,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 	TCHAR wbuf[BUF_SIZE], dtmp[20], decpt[5];
 	long dsize;
 	int ItemCnt;
-	int NewCnt = 0;
-	int UnreadCnt = 0;
+	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0;
 	int i;
 
 	tpMailBox = (MailBox + SelBox);
@@ -583,7 +582,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		return;
 	}
 
-	ItemCnt = ListView_GetItemCount(GetDlgItem(hWnd, IDC_LISTVIEW));
+	ItemCnt = ListView_GetItemCount(GetDlgItem(MainWnd, IDC_LISTVIEW));
 	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)decpt, 4);
 	dsize = tpMailBox->DiskSize;
 	if (dsize < 0) {
@@ -606,9 +605,9 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 
 	if (SelBox == MAILBOX_SEND || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 		wsprintf(wbuf, STR_STATUS_VIEWINFO, ItemCnt, dtmp);
-		SetStatusTextT(hWnd, wbuf, 0);
+		SetStatusTextT(MainWnd, wbuf, 0);
 		if (g_soc == -1) {
-			SetStatusTextT(hWnd, TEXT(""), 1);
+			SetStatusTextT(MainWnd, TEXT(""), 1);
 		}
 	} else {
 #ifndef _WIN32_WCE
@@ -633,12 +632,41 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 #else
 		wsprintf(wbuf, STR_STATUS_MAILBOXINFO, ItemCnt, tpMailBox->MailCnt);
 #endif
-		SetStatusTextT(hWnd, wbuf, 0);
+		SetStatusTextT(MainWnd, wbuf, 0);
 	}
 
-	if (SelBox == MAILBOX_SEND || g_soc != -1) {
+	if (g_soc != -1) {
 		return;
 	}
+	tpMailBox = MailBox + MAILBOX_SEND;
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		tpMailItem = *(tpMailBox->tpMailItem + i);
+		if (tpMailItem == NULL) {
+			continue;
+		}
+		if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
+			UnsentCnt++;
+		}
+	}
+	if (UnsentCnt > 0) {
+		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
+	} else {
+#ifdef _WIN32_WCE
+		unsigned int len;
+#else
+		int len;
+#endif
+		len = SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
+		if (len > lstrlen(STR_SENDBOX_NAME)) {
+			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		}
+	}
+	if (SelBox == MAILBOX_SEND) {
+		wsprintf(wbuf, STR_STATUS_UNSENT, UnsentCnt);
+		SetStatusTextT(MainWnd, wbuf, 1);
+		return;
+	}
+	tpMailBox = (MailBox + SelBox);
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
 		if (tpMailItem == NULL) {
@@ -651,8 +679,12 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 			UnreadCnt++;
 		}
 	}
-	wsprintf(wbuf, STR_STATUS_MAILINFO, NewCnt, UnreadCnt);
-	SetStatusTextT(hWnd, wbuf, 1);
+	if (UnsentCnt > 0) {
+		wsprintf(wbuf, STR_STATUS_MAILINFO_U, NewCnt, UnreadCnt, UnsentCnt);
+	} else {
+		wsprintf(wbuf, STR_STATUS_MAILINFO, NewCnt, UnreadCnt);
+	}
+	SetStatusTextT(MainWnd, wbuf, 1);
 
 	if (tpMailBox->NewMail == TRUE && NewCnt == 0) {
 		// GJC - remove * from drop-down list
@@ -661,11 +693,11 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : tpMailBox->Name;
 
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)p);
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)p);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 		tpMailBox->NewMail = FALSE;
-		SetUnreadCntTitle(hWnd, FALSE);
+		SetUnreadCntTitle(MainWnd, FALSE);
 	}
 
 	// Notify programs of new count
@@ -1260,7 +1292,13 @@ static int CreateComboBox(HWND hWnd, int Top)
 #endif
 	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETEXTENDEDUI, TRUE, 0);
 
-	for (i = 0; i < MailBoxCnt; i++) {
+	{
+		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_ADDSTRING, 0, 
+			((next==-1) ? (LPARAM)STR_SENDBOX_NAME : (LPARAM)STR_SENDBOX_NAME TEXT(" *")));
+	}
+
+	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		SendDlgItemMessage(hWnd, IDC_COMBO, CB_ADDSTRING, 0,
 			(LPARAM)(((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name));
@@ -2486,9 +2524,10 @@ static void ListDeleteAttach(HWND hWnd)
  */
 static void SetDownloadMark(HWND hWnd, BOOL Flag)
 {
-#define SEND_OR_DOWN_ICON	((SelBox == MAILBOX_SEND) ? ICON_SEND : ICON_DOWN)
 	MAILITEM *tpMailItem;
 	HWND hListView;
+	BOOL MarkedOne = FALSE;
+	int SendOrDownIcon = ((SelBox == MAILBOX_SEND) ? ICON_SEND : ICON_DOWN);
 	int i;
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -2503,18 +2542,22 @@ static void SetDownloadMark(HWND hWnd, BOOL Flag)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Mark == SEND_OR_DOWN_ICON && Flag == TRUE) {
+		if (tpMailItem->Mark == SendOrDownIcon && Flag == TRUE) {
 			tpMailItem->Mark = tpMailItem->MailStatus;
 			if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
 				ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 			}
 		} else if (SelBox != MAILBOX_SEND || tpMailItem->Mark != ICON_SENTMAIL) {
-			tpMailItem->Mark = SEND_OR_DOWN_ICON;
+			tpMailItem->Mark = SendOrDownIcon;
+			MarkedOne = TRUE;
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 		}
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
+	if (SelBox == MAILBOX_SEND && MarkedOne == TRUE) {
+		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, TRUE);
+	}
 
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
@@ -2581,6 +2624,18 @@ static void UnMark(HWND hWnd)
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
+
+	if (SelBox == MAILBOX_SEND) {
+#ifdef _WIN32_WCE
+		unsigned int len;
+#else
+		int len;
+#endif
+		len = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
+		if (len > lstrlen(STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
+			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, TRUE);
+		}
+	}
 
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
@@ -4529,12 +4584,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ErrorSocketEnd(hWnd, RecvBox);
 			switch (WSAGETSELECTEVENT(lParam)) {
 			case FD_CONNECT:
-				if (RecvBox == MAILBOX_SEND) {
-					(MailBox+RecvBox)->SmtpIP = 0; // clear cached IP
-				} else {
-					(MailBox+RecvBox)->PopIP = 0; // clear cached IP
+				{
+					TCHAR buf[BUF_SIZE];
+					TCHAR *hname;
+					if (RecvBox == MAILBOX_SEND) {
+						(MailBox+RecvBox)->SmtpIP = 0; // clear cached IP
+						hname = (MailBox+RecvBox)->SmtpServer;
+					} else {
+						(MailBox+RecvBox)->PopIP = 0; // clear cached IP
+						hname = (MailBox+RecvBox)->Server;
+					}
+					wsprintf(buf, TEXT("%s (%s)"), STR_ERR_SOCK_CONNECT, hname); 
+					SocketErrorMessage(hWnd, buf, RecvBox);
 				}
-				SocketErrorMessage(hWnd, STR_ERR_SOCK_CONNECT, RecvBox);
 				break;
 
 			case FD_READ:
@@ -4888,18 +4950,6 @@ BOOL MessageFunc(HWND hWnd, MSG *msg)
 }
 
 
-// Dummy function for debugging
-void testFunction()
-{
-	TCHAR szText[] = {TEXT("This is some long test text to debug where line breaks are")}; 
-	TCHAR szText2[] = {TEXT("This is some long test,   text,   to,   debug,   where,   line,   breaks,   are")}; 
-	TCHAR szBuffer[1000];
-
-	WordBreakString(szText, szBuffer, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
-	WordBreakString(szText2, szBuffer, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
-}
-
-
 /*
  * WinMain - ÉÅÉCÉì
  */
@@ -5086,10 +5136,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	nBroadcastMsg = RegisterWindowMessage(BROADCAST_STRING);
 
-#ifdef _DEBUG
-	testFunction();
-#endif
-
 	//Message loop
 	while (1) {
 		BOOL iResult;
@@ -5097,7 +5143,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		iResult = GetMessage(&msg, NULL, 0, 0);
 		if (iResult == TRUE) {
 			MessageFunc(hWnd, &msg);
-		} else if (msg.wParam != TIMEOUT_QUIT_WPARAM) {
+		} else if (msg.hwnd != 0 || msg.wParam != TIMEOUT_QUIT_WPARAM) {
 			break;
 		}
 	}
@@ -5147,6 +5193,26 @@ int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int n
 	else
 	{
       return MessageBox(hWnd, strMsg, strTitle, nStyle);
+	}
+}
+
+/*
+ * SetMenuStar - add * to IDC_COMBO drop-down
+ */
+void SetMenuStar(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
+{
+	TCHAR buf[BUF_SIZE], *p;
+
+	if (UseFlag == FALSE) {
+		p = Name;
+	} else {
+		wsprintf(buf, TEXT("%s *"), Name);
+		p = buf;
+	}
+	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, EntryNum, 0);
+	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, EntryNum, (LPARAM)p);
+	if (SetCurSel) {
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, EntryNum, 0);
 	}
 }
 

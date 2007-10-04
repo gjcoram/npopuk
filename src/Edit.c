@@ -1242,7 +1242,12 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 	MAILITEM *tpMailItem;
 	TCHAR *buf, *tmp;
 	TCHAR numbuf[10];
-	int len, i;
+#ifdef _WIN32_WCE
+	unsigned int len;
+#else
+	int len;
+#endif
+	int i;
 	long size;
 	BOOL mkdlg;
 	HWND hListView;
@@ -1348,8 +1353,14 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 
 	if (MarkFlag == TRUE) {
 		tpMailItem->Mark = ICON_SEND;
+		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
 	} else {
 		tpMailItem->Mark = ICON_NON;
+		len = SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
+		if (len > lstrlen(STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
+			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		}
+
 	}
 	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == -1) {
 
@@ -1359,9 +1370,9 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 		if (EndFlag == 0 && SelBox == MAILBOX_SEND) {
 			ListView_InsertItemEx(hListView, (TCHAR *)LPSTR_TEXTCALLBACK, 0, 
 				I_IMAGECALLBACK, (long)tpMailItem, ListView_GetItemCount(hListView));
-			SetItemCntStatusText(MainWnd, NULL, FALSE);
 		}
 	}
+	SetItemCntStatusText(hWnd, NULL, FALSE);
 	if (EndFlag == 0) {
 		if (op.SelectSendBox == 1 && SelBox != MAILBOX_SEND) {
 			mailbox_select(MainWnd, MAILBOX_SEND);
