@@ -1778,6 +1778,13 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 	if (str_cmp_ni_t(p, URL_MAILTO, lstrlen(URL_MAILTO)) != 0) {
 		// メールアドレスのみ
 		tpMailItem->To = alloc_copy_t(p);
+		s = tpMailItem->To + lstrlen(tpMailItem->To) - 1;
+		while (*s == TEXT('.') || *s == TEXT(',') || *s == TEXT(';') || *s == TEXT(':')
+				|| *s == TEXT('!') || *s == TEXT('?')) {
+			// remove trailing punctuation
+			*s = TEXT('\0');
+			s--;
+		}
 		return TRUE;
 	}
 
