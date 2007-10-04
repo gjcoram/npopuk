@@ -284,10 +284,17 @@ BOOL ini_read_setting(HWND hWnd)
 	{
 		// GJC: reposition if outside current display
 		int s_left, s_top, s_right, s_bot, diff;
+#if(WINVER >= 0x0500)
 		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
 		s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
 		s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
 		s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
+#else
+		s_left  = 0;
+		s_top   = 0;
+		s_right = GetSystemMetrics(SM_CXSCREEN);
+		s_bot   = GetSystemMetrics(SM_CYSCREEN);
+#endif
 		if (op.MainRect.left < s_left) {
 			op.MainRect.right += (s_left - op.MainRect.left);
 			op.MainRect.left = s_left;
