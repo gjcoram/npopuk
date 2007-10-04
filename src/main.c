@@ -2617,6 +2617,9 @@ static void UnMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
+		if (SelBox == MAILBOX_SEND && tpMailItem->MailStatus == ICON_ERROR) {
+			tpMailItem->MailStatus = ICON_NON;
+		}
 		tpMailItem->Mark = tpMailItem->MailStatus;
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
 			ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
