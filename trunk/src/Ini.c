@@ -281,6 +281,48 @@ BOOL ini_read_setting(HWND hWnd)
 	op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), 0, app_path);
 	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 440, app_path);
 	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
+	{
+		// GJC: reposition if outside current display
+		int s_left, s_top, s_right, s_bot, diff;
+		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
+		s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
+		s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
+		s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
+		if (op.MainRect.left < s_left) {
+			op.MainRect.right += (s_left - op.MainRect.left);
+			op.MainRect.left = s_left;
+		} else if (op.MainRect.left > s_right) {
+			op.MainRect.right -= op.MainRect.left;
+			op.MainRect.left = 0;
+		}
+		if (op.MainRect.right < op.MainRect.left) {
+			op.MainRect.right = op.MainRect.left + 440;
+		}
+		if (op.MainRect.top < s_top) {
+			op.MainRect.bottom += (s_top - op.MainRect.top);
+			op.MainRect.top = s_top;
+		} else if (op.MainRect.top > s_bot) {
+			op.MainRect.bottom -= op.MainRect.top;
+			op.MainRect.top = 0;
+		}
+		if (op.MainRect.bottom < op.MainRect.top) {
+			op.MainRect.bottom = op.MainRect.top + 320;
+		}
+		if (op.MainRect.right > s_right) {
+			op.MainRect.left += (s_right - op.MainRect.right);
+			if (op.MainRect.left < s_left) {
+				op.MainRect.left = s_left;
+			}
+			op.MainRect.right = s_right;
+		}
+		if (op.MainRect.bottom > s_bot) {
+			op.MainRect.top += (s_bot - op.MainRect.bottom);
+			if (op.MainRect.top < s_top) {
+				op.MainRect.top = s_top;
+			}
+			op.MainRect.bottom = s_bot;
+		}
+	}
 #endif
 
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
