@@ -3116,7 +3116,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 		}
 #ifndef _WIN32_WCE
-		SetWindowPos(hWnd, 0, op.MainRect.left, op.MainRect.top, op.MainRect.right, op.MainRect.bottom,
+		SetWindowPos(hWnd, 0, op.MainRect.left, op.MainRect.top, op.MainRect.right - op.MainRect.left, op.MainRect.bottom - op.MainRect.top,
 			SWP_NOZORDER | SWP_HIDEWINDOW);
 #endif
 
@@ -3282,8 +3282,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (IsWindowVisible(hWnd) != 0 &&
 			IsIconic(hWnd) == 0 && IsZoomed(hWnd) == 0) {
 			GetWindowRect(hWnd, (LPRECT)&op.MainRect);
-			op.MainRect.right -= op.MainRect.left;
-			op.MainRect.bottom -= op.MainRect.top;
 		}
 		break;
 
