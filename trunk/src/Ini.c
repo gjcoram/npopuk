@@ -41,7 +41,9 @@ extern BOOL SaveBoxesLoaded;
 
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
+#ifndef _WIN32_WCE
 static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
+#endif
 
 /*
  * ini_start_auth_check - Check Password
@@ -1405,6 +1407,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 /*
  * ini_check_window_pos - check window isn't outside current screen (GJC)
  */
+#ifndef _WIN32_WCE
 static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 {
 	int s_left, s_top, s_right, s_bot;
@@ -1460,6 +1463,7 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		the_rect->bottom = s_bot;
 	}
 }
+#endif
 
 /*
  * ini_free - İ’èî•ñ‚ğ‰ğ•ú‚·‚é
