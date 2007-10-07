@@ -1003,14 +1003,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_SENTMAIL), IMAGE_ICON, 16, 16, 0));
 	EditMaxLength = EDITMAXSIZE;
 #else
-	{
-		OSVERSIONINFO os_info;
-
-		os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		GetVersionEx(&os_info);
-
-		EditMaxLength = (os_info.dwPlatformId == VER_PLATFORM_WIN32_NT) ? 0 : EDITMAXSIZE;
-	}
+	EditMaxLength = (op.osPlatformId == VER_PLATFORM_WIN32_NT) ? 0 : EDITMAXSIZE;
 #endif
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 

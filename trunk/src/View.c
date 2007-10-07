@@ -1164,9 +1164,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 	int LvFocus, TextIndex = -1;
 	BOOL redraw = FALSE;
 	BOOL IsAttach = FALSE;
-#ifndef _WIN32_WCE
-	OSVERSIONINFO os_info;
-#endif
 	HWND hListView;
 
 	if (tpMailItem == NULL) { // || tpMailItem->Body == NULL) {
@@ -1267,11 +1264,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			*(buf + EDITMAXSIZE) = TEXT('\0');
 		}
 #else
-		// OSî•ñ‚ÌŽæ“¾
-		os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		GetVersionEx(&os_info);
-
-		if (os_info.dwPlatformId != VER_PLATFORM_WIN32_NT && lstrlen(buf) > EDITMAXSIZE) {
+		if (op.osPlatformId != VER_PLATFORM_WIN32_NT && lstrlen(buf) > EDITMAXSIZE) {
 			*(buf + EDITMAXSIZE) = TEXT('\0');
 		}
 #endif
