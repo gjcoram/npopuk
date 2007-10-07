@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b2p1")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b3")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -318,6 +318,7 @@ typedef struct _OPTION {
 	#endif
 
 	int Version;
+	int osPlatformId, osMajorVer, osMinorVer;
 	int ShowTrayIcon;
 	int StartHide;
 	int MinsizeHide;
