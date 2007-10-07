@@ -41,6 +41,7 @@ extern BOOL SaveBoxesLoaded;
 
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
+static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
 
 /*
  * ini_start_auth_check - Check Password
@@ -243,6 +244,15 @@ BOOL ini_read_setting(HWND hWnd)
 	}
 	// if op.Version < APP_VERSION_NUM, adjust at end (after checking other settings)
 
+	{
+		OSVERSIONINFO os_info;
+		os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&os_info);
+		op.osPlatformId = os_info.dwPlatformId;
+		op.osMajorVer = os_info.dwMajorVersion;
+		op.osMinorVer = os_info.dwMinorVersion;
+	}
+
 #ifdef _DEBUG
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 1, app_path);
 #else
@@ -281,55 +291,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), 0, app_path);
 	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 440, app_path);
 	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
-	{
-		// GJC: reposition if outside current display
-		int s_left, s_top, s_right, s_bot, diff;
-#if(WINVER >= 0x0500)
-		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
-		s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
-		s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
-		s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
-#else
-		s_left  = 0;
-		s_top   = 0;
-		s_right = GetSystemMetrics(SM_CXSCREEN);
-		s_bot   = GetSystemMetrics(SM_CYSCREEN);
-#endif
-		if (op.MainRect.left < s_left) {
-			op.MainRect.right += (s_left - op.MainRect.left);
-			op.MainRect.left = s_left;
-		} else if (op.MainRect.left > s_right) {
-			op.MainRect.right -= op.MainRect.left;
-			op.MainRect.left = 0;
-		}
-		if (op.MainRect.right < op.MainRect.left) {
-			op.MainRect.right = op.MainRect.left + 440;
-		}
-		if (op.MainRect.top < s_top) {
-			op.MainRect.bottom += (s_top - op.MainRect.top);
-			op.MainRect.top = s_top;
-		} else if (op.MainRect.top > s_bot) {
-			op.MainRect.bottom -= op.MainRect.top;
-			op.MainRect.top = 0;
-		}
-		if (op.MainRect.bottom < op.MainRect.top) {
-			op.MainRect.bottom = op.MainRect.top + 320;
-		}
-		if (op.MainRect.right > s_right) {
-			op.MainRect.left += (s_right - op.MainRect.right);
-			if (op.MainRect.left < s_left) {
-				op.MainRect.left = s_left;
-			}
-			op.MainRect.right = s_right;
-		}
-		if (op.MainRect.bottom > s_bot) {
-			op.MainRect.top += (s_bot - op.MainRect.bottom);
-			if (op.MainRect.top < s_top) {
-				op.MainRect.top = s_top;
-			}
-			op.MainRect.bottom = s_bot;
-		}
-	}
+	ini_check_window_pos(&op.MainRect, 440, 320);
 #endif
 
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
@@ -421,11 +383,13 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewRect.top = profile_get_int(GENERAL, TEXT("viewtop"), 0, app_path);
 	op.ViewRect.right = profile_get_int(GENERAL, TEXT("viewright"), 450, app_path);
 	op.ViewRect.bottom = profile_get_int(GENERAL, TEXT("viewbottom"), 400, app_path);
+	ini_check_window_pos(&op.ViewRect, 450, 400);
 
 	op.EditRect.left = profile_get_int(GENERAL, TEXT("editleft"), 0, app_path);
 	op.EditRect.top = profile_get_int(GENERAL, TEXT("edittop"), 0, app_path);
 	op.EditRect.right = profile_get_int(GENERAL, TEXT("editright"), 450, app_path);
 	op.EditRect.bottom = profile_get_int(GENERAL, TEXT("editbottom"), 400, app_path);
+	ini_check_window_pos(&op.EditRect, 450, 400);
 #endif
 
 	op.ShowHeader = profile_get_int(GENERAL, TEXT("ShowHeader"), 0, app_path);
@@ -1436,6 +1400,65 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		}
 	}
 	return rc;
+}
+
+/*
+ * ini_check_window_pos - check window isn't outside current screen (GJC)
+ */
+static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
+{
+	int s_left, s_top, s_right, s_bot;
+#if(WINVER >= 0x0500)
+	if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
+		// Win98 or later
+		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
+		s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
+		s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
+		s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
+	} else
+#endif
+	{
+		s_left  = 0;
+		s_top   = 0;
+		s_right = GetSystemMetrics(SM_CXSCREEN);
+		s_bot   = GetSystemMetrics(SM_CYSCREEN);
+	}
+
+	if (the_rect->left < s_left) {
+		the_rect->right += (s_left - the_rect->left);
+		the_rect->left = s_left;
+	} else if (the_rect->left > s_right) {
+		the_rect->right -= the_rect->left;
+		the_rect->left = 0;
+	}
+	if (the_rect->right < the_rect->left) {
+		the_rect->right = the_rect->left + def_w;
+	}
+	if (the_rect->right > s_right) {
+		the_rect->left += (s_right - the_rect->right);
+		if (the_rect->left < s_left) {
+			the_rect->left = s_left;
+		}
+		the_rect->right = s_right;
+	}
+
+	if (the_rect->top < s_top) {
+		the_rect->bottom += (s_top - the_rect->top);
+		the_rect->top = s_top;
+	} else if (the_rect->top > s_bot) {
+		the_rect->bottom -= the_rect->top;
+		the_rect->top = 0;
+	}
+	if (the_rect->bottom < the_rect->top) {
+		the_rect->bottom = the_rect->top + def_l;
+	}
+	if (the_rect->bottom > s_bot) {
+		the_rect->top += (s_bot - the_rect->bottom);
+		if (the_rect->top < s_top) {
+			the_rect->top = s_top;
+		}
+		the_rect->bottom = s_bot;
+	}
 }
 
 /*
