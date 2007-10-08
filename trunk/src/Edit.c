@@ -1175,8 +1175,6 @@ BOOL EndEditWindow(HWND hWnd, BOOL sent)
 #else
 	if (IsWindowVisible(hWnd) != 0 && IsIconic(hWnd) == 0 && IsZoomed(hWnd) == 0) {
 		GetWindowRect(hWnd, (LPRECT)&op.EditRect);
-		op.EditRect.right -= op.EditRect.left;
-		op.EditRect.bottom -= op.EditRect.top;
 	}
 	DestroyWindow(GetDlgItem(hWnd, IDC_VTB));
 #endif
@@ -2435,8 +2433,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		WS_OVERLAPPEDWINDOW,
 		op.EditRect.left,
 		op.EditRect.top,
-		op.EditRect.right,
-		op.EditRect.bottom,
+		op.EditRect.right - op.EditRect.left,
+		op.EditRect.bottom - op.EditRect.top,
 		NULL, NULL, hInstance, (LPVOID)tpMailItem);
 #endif
 	if (hEditWnd == NULL) {

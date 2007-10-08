@@ -2824,8 +2824,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	case WM_EXITSIZEMOVE:
 		if (IsWindowVisible(hWnd) != 0 && IsIconic(hWnd) == 0 && IsZoomed(hWnd) == 0) {
 			GetWindowRect(hWnd, (LPRECT)&op.ViewRect);
-			op.ViewRect.right -= op.ViewRect.left;
-			op.ViewRect.bottom -= op.ViewRect.top;
 		}
 		break;
 #endif
@@ -3436,8 +3434,8 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		WS_OVERLAPPEDWINDOW,
 		op.ViewRect.left,
 		op.ViewRect.top,
-		op.ViewRect.right,
-		op.ViewRect.bottom,
+		op.ViewRect.right - op.ViewRect.left,
+		op.ViewRect.bottom - op.ViewRect.top,
 		NULL, NULL, hInstance, lpParam);
 #endif
 	if (hViewWnd == NULL) {
