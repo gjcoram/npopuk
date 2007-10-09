@@ -759,6 +759,7 @@ ADDRESSBOOK *addressbook_copy(void)
 			olditem = *(AddressBook->tpAddrItem + i);
 			newitem = *(tmpAddrBook->tpAddrItem + i) = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
 			newitem->MailAddress = alloc_copy_t(olditem->MailAddress);
+			newitem->AddressOnly = alloc_copy_t(olditem->AddressOnly);
 			newitem->Comment = alloc_copy_t(olditem->Comment);
 			newitem->Group = alloc_copy_t(olditem->Group);
 			newitem->Num = olditem->Num;
@@ -823,6 +824,7 @@ void addr_delete(ADDRESSBOOK *tpAddrBook, int num)
 	int i;
 	ADDRESSITEM *AddrItem = *(tpAddrBook->tpAddrItem + num);
 	mem_free(&AddrItem->MailAddress);
+	mem_free(&AddrItem->AddressOnly);
 	mem_free(&AddrItem->Comment);
 	mem_free(&AddrItem->Group);
 	mem_free(&AddrItem);
@@ -846,6 +848,7 @@ void addr_free(ADDRESSITEM **tpAddrItem, int cnt)
 			continue;
 		}
 		mem_free(&(*(tpAddrItem + i))->MailAddress);
+		mem_free(&(*(tpAddrItem + i))->AddressOnly);
 		mem_free(&(*(tpAddrItem + i))->Comment);
 		mem_free(&(*(tpAddrItem + i))->Group);
 		mem_free(&*(tpAddrItem + i));
