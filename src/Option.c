@@ -55,6 +55,9 @@ static BOOL CcWndShowing = FALSE;
 #else
 #define WNDPROC_KEY			TEXT("OldWndProc")
 #endif
+static TCHAR AutoCompleteStr[BUF_SIZE] = TEXT("");
+static int MatchedAddrItem = 0;
+static BOOL AutoComplete = FALSE;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
@@ -4653,58 +4656,95 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (msg == WM_CHAR) {
+		DWORD dwStart, dwEnd;
+
+		if (AutoComplete == TRUE && LOWORD(wParam) == VK_BACK) {
+			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+			if (dwEnd <= dwStart) {
+				dwStart = 0;
+				dwEnd = SendMessage(hWnd, WM_GETTEXTLENGTH, 0, 0);
+				SendMessage(hWnd, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
+			}
+			SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)AutoCompleteStr);
+			return 0;
+		}
 		if ((TCHAR)wParam == TEXT(' ')) {
 			TCHAR addr[BUF_SIZE], part[BUF_SIZE];
-			TCHAR *p, *q, *match = NULL, *best_match = NULL;
+			TCHAR *p, *q, *match = NULL;
 			int i, len, start = 0;
+			BOOL more = FALSE;
+
 			SendMessage(hWnd, WM_GETTEXT, BUF_SIZE-1, (LPARAM)addr);
-			p = addr;
-			q = part;
-			while (*p != TEXT('\0')) {
-				if (*p == TEXT(' ')) {
-					p++;
+			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+			if (dwEnd > dwStart && lstrlen(AutoCompleteStr) > 0) {
+				wsprintf(part, TEXT("%s"), AutoCompleteStr);
+				start = (int)dwStart;
+			} else {
+				MatchedAddrItem = 0;
+				p = addr;
+				q = part;
+				while (*p != TEXT('\0')) {
+					if (*p == TEXT(' ')) {
+						p++;
+					}
+					if (*p == TEXT('\"')) {
+						while (*p != TEXT('\"') && *p != TEXT('\0')) p++;
+					} else if (*p == TEXT(',')) {
+						q = part;
+						p++;
+						while (*p == TEXT(' ')) p++;
+						start = (p - addr);
+					}
+					if (*p != TEXT('\0')) {
+						*(q++) = *(p++);
+					}
 				}
-				if (*p == TEXT('\"')) {
-					while (*p != TEXT('\"') && *p != TEXT('\0')) p++;
-				} else if (*p == TEXT(',')) {
-					q = part;
-					p++;
-					while (*p == TEXT(' ')) p++;
-					start = (p - addr);
-				}
-				if (*p != TEXT('\0')) {
-					*(q++) = *(p++);
-				}
+				*q = TEXT('\0');
 			}
-			*q = TEXT('\0');
 			len = lstrlen(part);
 			if (len > 0) {
-				for (i = 0; i < AddressBook->ItemCnt; i++) {
+				BOOL looped = FALSE;
+				wsprintf(AutoCompleteStr, TEXT("%s"), part);
+				i = MatchedAddrItem; 
+				while (i < AddressBook->ItemCnt) {
 					ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-					if (str_cmp_n_t(part, item->MailAddress, len) == 0) {
-						best_match = item->MailAddress;
-						if (op.AddressShowGroup != NULL && *op.AddressShowGroup != TEXT('\0')
-							&& lstrcmp(item->Group, op.AddressShowGroup) == 0) {
+					if ((item->MailAddress != NULL && str_cmp_ni_t(part, item->MailAddress, len) == 0)
+						|| (item->AddressOnly != NULL &&str_cmp_ni_t(part, item->AddressOnly, len) == 0)
+						|| (item->Comment != NULL &&str_cmp_ni_t(part, item->Comment, len) == 0)) {
+						if (match == NULL) {
+							match = item->MailAddress;
+						} else {
+							more = TRUE;
+							MatchedAddrItem = i;
 							break;
 						}
-					} else if (str_cmp_ni_t(part, item->Comment, len) == 0) {
-						match = item->MailAddress;
+					}
+					i++;
+					if (i == AddressBook->ItemCnt && looped == FALSE) {
+						looped = TRUE;
+						i = 0;
+					}
+					if (i == MatchedAddrItem) {
+						break;
 					}
 				}
 			}
-			if (best_match == NULL && match != NULL) {
-				best_match = match;
-			}
-			if (best_match != NULL) {
-				SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+len));
-				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)best_match);
-				//SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+lstrlen(best_match)));
+			if (match != NULL && lstrlen(match) > len) {
+				if (dwEnd <= dwStart) {
+					SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+len));
+				}
+				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)match);
+				if (more == TRUE) {
+					SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+lstrlen(match)));
+				}
+				AutoComplete = TRUE;
 				return 0;
 			}
 		}
+		AutoComplete = FALSE;
 	}
 #ifdef _WIN32_WCE
-	return CallWindowProc((CcWndShowing == TRUE) ? CcAddrWndProc : EditToWndProc, hWnd, msg, wParam, lParam);
+	return CallWindowProcW((CcWndShowing == TRUE) ? CcAddrWndProc : EditToWndProc, hWnd, msg, wParam, lParam);
 #else
 	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
 #endif
@@ -4717,10 +4757,10 @@ static void SetEditToSubClass(HWND hWnd, BOOL CcWnd)
 {
 #ifdef _WIN32_WCE
 	if (CcWnd) {
-		CcAddrWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)AddrCompleteCallback);
+		CcAddrWndProc = (WNDPROC)SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)AddrCompleteCallback);
 		CcWndShowing = TRUE;
 	} else {
-		EditToWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)AddrCompleteCallback);
+		EditToWndProc = (WNDPROC)SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)AddrCompleteCallback);
 	}
 #else
 	WNDPROC OldWndProc = NULL;
@@ -4736,14 +4776,14 @@ static void SetEditToSubClass(HWND hWnd, BOOL CcWnd)
 static void DelEditToSubClass(HWND hWnd, BOOL CcWnd)
 {
 #ifdef _WIN32_WCE
-	if (CcWnd) {
-		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)CcAddrWndProc);
-		CcAddrWndProc = NULL;
-		CcWndShowing = FALSE;
-	} else {
-		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)EditToWndProc);
-		EditToWndProc = NULL;
-	}
+//	if (CcWnd) {
+//		SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)CcAddrWndProc);
+//		CcAddrWndProc = NULL;
+//		CcWndShowing = FALSE;
+//	} else {
+//		SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)EditToWndProc);
+//		EditToWndProc = NULL;
+//	}
 #else
 	WNDPROC OldWndProc = (WNDPROC)GetProp(hWnd, WNDPROC_KEY);
 	if (OldWndProc) {

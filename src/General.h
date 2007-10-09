@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b3")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b3p2")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -609,7 +609,8 @@ typedef struct _ADDRESSBOOK {
 } ADDRESSBOOK;
 
 typedef struct _ADDRESSITEM {
-	TCHAR *MailAddress;
+	TCHAR *MailAddress; // may include "name" <address>
+	TCHAR *AddressOnly;
 	TCHAR *Comment;
 	TCHAR *Group;
 	int Num;
@@ -843,6 +844,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice);
 int remove_duplicate_headers(char *buf);
+BOOL item_in_list(TCHAR *item, TCHAR *list);
 
 // View
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);

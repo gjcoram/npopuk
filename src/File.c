@@ -1003,7 +1003,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 	tpMailBox->DiskSize = 0;
 
-	if (SaveFlag == 0) {
+	if (SaveFlag == 0 && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
 		//When it does not retain, deletion
 		DeleteFile(path);
 		return TRUE;
@@ -1034,11 +1034,17 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
 #ifdef _DEBUG
-i = tstrlen(tmp);
-if (op.GJCDebug && len != i) {
+{
 	TCHAR msg[BUF_SIZE];
-	wsprintf(msg, TEXT("file_save_mismatch (%s): len1=%d != len2 = %d"), FileName, len, i);
-	ErrorMessage(NULL, msg);
+	i = tstrlen(tmp);
+	if (op.GJCDebug && len != i) {
+		wsprintf(msg, TEXT("file_save_mismatch (%s): len1=%d != len2 = %d"), FileName, len, i);
+		ErrorMessage(NULL, msg);
+	}
+	if (len == 0 && tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+		wsprintf(msg, TEXT("file_save_mailbox (%s): no data to save! (mailcnt=%d)"), FileName, tpMailBox->MailItemCnt);
+		ErrorMessage(NULL, msg);
+	}
 }
 #endif
 #endif	// DIV_SAVE
@@ -1076,7 +1082,13 @@ if (op.GJCDebug && len != i) {
 //			return FALSE;
 //		}
 //	}
-	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+#ifdef _DEBUG
+if (tpMailBox->MailItemCnt == 0 && tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+	TCHAR msg[BUF_SIZE];
+	wsprintf(msg, TEXT("file_save_mailbox (%s): no data to save! (mailcnt=%d)"), FileName, tpMailBox->MailItemCnt);
+	ErrorMessage(NULL, msg);
+}
+#endif	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
@@ -1099,6 +1111,7 @@ if (op.GJCDebug && len != i) {
 	}
 #endif	// DIV_SAVE
 	CloseHandle(hFile);
+	tpMailBox->DiskSize = file_get_size(path);
 
 	///////////// MRP /////////////////////
 	DeleteFile(pathBackup);
@@ -1106,7 +1119,6 @@ if (op.GJCDebug && len != i) {
 	if (IsBackup == FALSE) {
 		tpMailBox->NeedsSave = 0;
 	}
-	tpMailBox->DiskSize = file_get_size(path);
 	return TRUE;
 }
 
@@ -1285,6 +1297,12 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 					*s = *p;
 				}
 				*s = '\0';
+				if (s > tpAddrItem->MailAddress) {
+					s = (TCHAR *)mem_alloc(sizeof(TCHAR) * (s - tpAddrItem->MailAddress + 1));
+					GetMailAddress(tpAddrItem->MailAddress, s, NULL, FALSE);
+					tpAddrItem->AddressOnly = alloc_copy_t(s);
+					mem_free(&s);
+				}
 			}
 		}
 		if (*r == TEXT('\t')) r++;
