@@ -124,7 +124,6 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void SetEditToSubClass(HWND hWnd, BOOL CcWnd);
-static void DelEditToSubClass(HWND hWnd, BOOL CcWnd);
 
 /*
  * PropSheetCallback - プロパティシートのコールバック
@@ -3355,7 +3354,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_CLOSE:
-		DelEditToSubClass(hDlg, TRUE);
 		EndDialog(hDlg, FALSE);
 		break;
 
@@ -3367,7 +3365,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		if (wParam == NM_CLICK) {
 			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpMailItem == NULL) {
-				DelEditToSubClass(hDlg, TRUE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -3445,7 +3442,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case ID_LV_EDIT:
 			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpMailItem == NULL) {
-				DelEditToSubClass(hDlg, TRUE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -3467,7 +3463,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case ID_LV_DELETE:
 			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpMailItem == NULL) {
-				DelEditToSubClass(hDlg, TRUE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -3537,12 +3532,10 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpMailItem == NULL) {
-				DelEditToSubClass(hDlg, TRUE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
 			if (tpMailItem->Mark == ICON_SENTMAIL) {
-				DelEditToSubClass(hDlg, TRUE);
 				EndDialog(hDlg, TRUE);
 				break;
 			}
@@ -3622,8 +3615,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					lstrcat(tpMailItem->Cc, buf2);
 				}
 			}
-
-			DelEditToSubClass(hDlg, TRUE);
 			EndDialog(hDlg, TRUE);
 			break;
 
@@ -3633,7 +3624,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #elif defined(_WIN32_WCE_LAGENDA)
 			SipShowIM(SIPF_OFF);
 #endif
-			DelEditToSubClass(hDlg, TRUE);
 			EndDialog(hDlg, FALSE);
 			break;
 		}
@@ -4276,7 +4266,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (tpSendMailIList != NULL) {
 			mem_free((void **)&tpSendMailIList);
 		}
-		DelEditToSubClass(hDlg, FALSE);
 		EndDialog(hDlg, FALSE);
 		break;
 
@@ -4310,7 +4299,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON_CC:
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
-				DelEditToSubClass(hDlg, FALSE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -4332,7 +4320,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON_ATTACH:
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
-				DelEditToSubClass(hDlg, FALSE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -4350,7 +4337,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (op.FwdQuotation == 2) {
 					tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 					if (tpSendMailIList == NULL) {
-						DelEditToSubClass(hDlg, FALSE);
 						EndDialog(hDlg, FALSE);
 						break;
 					}
@@ -4372,7 +4358,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_CHECK_ATT_MSG:
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
-				DelEditToSubClass(hDlg, FALSE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -4405,7 +4390,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam) == CBN_CLOSEUP) {
 				tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 				if (tpSendMailIList == NULL) {
-					DelEditToSubClass(hDlg, FALSE);
 					EndDialog(hDlg, FALSE);
 					break;
 				}
@@ -4446,7 +4430,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam) == CBN_EDITCHANGE || HIWORD(wParam) == CBN_CLOSEUP) {
 				tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 				if (tpSendMailIList == NULL) {
-					DelEditToSubClass(hDlg, FALSE);
 					EndDialog(hDlg, FALSE);
 					break;
 				}
@@ -4492,7 +4475,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
-				DelEditToSubClass(hDlg, FALSE);
 				EndDialog(hDlg, FALSE);
 				break;
 			}
@@ -4503,7 +4485,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					item_free(&tpTmpMailItem, 1);
 				}
 				mem_free((void **)&tpSendMailIList);
-				DelEditToSubClass(hDlg, FALSE);
 				EndDialog(hDlg, TRUE);
 				break;
 			}
@@ -4628,7 +4609,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
 			}
 			mem_free((void **)&tpSendMailIList);
-			DelEditToSubClass(hDlg, FALSE);
 			EndDialog(hDlg, TRUE);
 			break;
 
@@ -4655,25 +4635,43 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (msg == WM_CHAR) {
-		DWORD dwStart, dwEnd;
-
+	switch(msg) {
+	case WM_CHAR:
 		if (AutoComplete == TRUE && LOWORD(wParam) == VK_BACK) {
+			DWORD dwStart, dwEnd;
 			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 			if (dwEnd <= dwStart) {
+				TCHAR addr[BUF_SIZE];
+				TCHAR *p;
+				SendMessage(hWnd, WM_GETTEXT, BUF_SIZE-1, (LPARAM)addr);
 				dwStart = 0;
+				for (p = addr; *p != TEXT('\0'); p++) {
+					if (*p == TEXT('\"')) {
+						while (*p != TEXT('\"') && *p != TEXT('\0')) p++;
+					} else if (*p == TEXT(',')) {
+						p++;
+						while (*p == TEXT(' ')) p++;
+						dwStart = (p - addr);
+					}
+				}
 				dwEnd = SendMessage(hWnd, WM_GETTEXTLENGTH, 0, 0);
 				SendMessage(hWnd, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
 			}
 			SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)AutoCompleteStr);
+			AutoComplete = FALSE;
 			return 0;
 		}
 		if ((TCHAR)wParam == TEXT(' ')) {
 			TCHAR addr[BUF_SIZE], part[BUF_SIZE];
 			TCHAR *p, *q, *match = NULL;
-			int i, len, start = 0;
+			DWORD dwStart, dwEnd;
+			int i, start = 0;
+#ifdef _WIN32_WCE
+			unsigned int len;
+#else
+			int len;
+#endif
 			BOOL more = FALSE;
-
 			SendMessage(hWnd, WM_GETTEXT, BUF_SIZE-1, (LPARAM)addr);
 			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 			if (dwEnd > dwStart && lstrlen(AutoCompleteStr) > 0) {
@@ -4682,7 +4680,7 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			} else {
 				MatchedAddrItem = 0;
 				p = addr;
-				q = part;
+				q =	part;
 				while (*p != TEXT('\0')) {
 					if (*p == TEXT(' ')) {
 						p++;
@@ -4709,8 +4707,8 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 				while (i < AddressBook->ItemCnt) {
 					ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
 					if ((item->MailAddress != NULL && str_cmp_ni_t(part, item->MailAddress, len) == 0)
-						|| (item->AddressOnly != NULL &&str_cmp_ni_t(part, item->AddressOnly, len) == 0)
-						|| (item->Comment != NULL &&str_cmp_ni_t(part, item->Comment, len) == 0)) {
+						|| (item->AddressOnly != NULL && str_cmp_ni_t(part, item->AddressOnly, len) == 0)
+						|| (item->Comment != NULL && str_cmp_ni_t(part, item->Comment, len) == 0)) {
 						if (match == NULL) {
 							match = item->MailAddress;
 						} else {
@@ -4741,7 +4739,13 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 				return 0;
 			}
 		}
+	case WM_CUT:
+	case WM_CLEAR:
+	case WM_PASTE:
+	case WM_KEYDOWN:
+	case WM_SETCURSOR:
 		AutoComplete = FALSE;
+		break;
 	}
 #ifdef _WIN32_WCE
 	return CallWindowProcW((CcWndShowing == TRUE) ? CcAddrWndProc : EditToWndProc, hWnd, msg, wParam, lParam);
@@ -4751,7 +4755,8 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 }
 
 /*
- * SetEditToSubClass - Subclass (callback) modification for IDC_EDIT_TO
+ * SetEditToSubClass - Subclass (callback) modification for IDC_EDIT_TO, IDC_EDIT_MAILADDRESS (GJC)
+ *                     Note: this subclass is not removed; removal crashes PPC, and it's not really necessary
  */
 static void SetEditToSubClass(HWND hWnd, BOOL CcWnd)
 {
@@ -4767,29 +4772,6 @@ static void SetEditToSubClass(HWND hWnd, BOOL CcWnd)
 
 	OldWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)AddrCompleteCallback);
 	SetProp(hWnd, WNDPROC_KEY, OldWndProc);
-#endif
-}
-
-/*
- * DelEditToSubClass - Reset window callback to standard
- */
-static void DelEditToSubClass(HWND hWnd, BOOL CcWnd)
-{
-#ifdef _WIN32_WCE
-//	if (CcWnd) {
-//		SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)CcAddrWndProc);
-//		CcAddrWndProc = NULL;
-//		CcWndShowing = FALSE;
-//	} else {
-//		SetWindowLongW(hWnd, GWL_WNDPROC, (DWORD)EditToWndProc);
-//		EditToWndProc = NULL;
-//	}
-#else
-	WNDPROC OldWndProc = (WNDPROC)GetProp(hWnd, WNDPROC_KEY);
-	if (OldWndProc) {
-		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)OldWndProc);
-	}
-	RemoveProp(hWnd, WNDPROC_KEY);
 #endif
 }
 
