@@ -854,11 +854,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Other"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "&Icon on Today Page",IDC_CHECK_SHOWTRAYICON,"Button",
+    CONTROL         "&Icon on Today page",IDC_CHECK_SHOWTRAYICON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,1,5,120,10
     CONTROL         "&Remember open/save directory",IDC_CHECK_REMEMBERDIR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,17,148,10
-    CONTROL         "Use Pocket &Contacts Address Book",IDC_CHECK_USEPOOM,
+    CONTROL         "Use Pocket &Contacts address book",IDC_CHECK_USEPOOM,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,30,148,10
     CONTROL         "Put name in comment field",IDC_POOMNAMECOMMENT,
                     "Button",BS_AUTOCHECKBOX,15,41,148,10
@@ -871,7 +871,7 @@ BEGIN
     EDITTEXT        IDC_DATE_FORMAT,52,68,70,12,ES_AUTOHSCROLL
     LTEXT           "&Time format:",IDC_STATIC,5,83,46,10
     EDITTEXT        IDC_TIME_FORMAT,52,81,70,12,ES_AUTOHSCROLL
-    CONTROL         "Disable Warning Popup &Boxes",IDC_CHECK_PARANOID,"Button",
+    CONTROL         "Disable warning popup &boxes",IDC_CHECK_PARANOID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,1,100,120,10
 END
 
