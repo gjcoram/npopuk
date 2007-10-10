@@ -1543,7 +1543,7 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 {
 	TCHAR *Content;
 	BOOL ret;
-	int len;
+	int len, datecomp=0;
 	char *cbuf;
 
 	if (filter_content == NULL || *filter_content == TEXT('\0')) {
@@ -1584,8 +1584,23 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 	if (Content == NULL) {
 		return str_match_t(filter_content, TEXT(""));
 	}
-	// î‰är
-	ret = str_match_t(filter_content, Content);
+// Important that these have the same length!
+#define FILTER_DATE_OLDER TEXT("**OLDERTHAN")
+#define FILTER_DATE_NEWER TEXT("**NEWERTHAN")
+	if (lstrcmpi(filter_header, TEXT("date:")) == 0) {
+		len = lstrlen(FILTER_DATE_OLDER);
+		if (str_cmp_ni_t(filter_content, FILTER_DATE_OLDER, len) == 0) {
+			datecomp = -1;
+		} else if (str_cmp_ni_t(filter_content, FILTER_DATE_NEWER, len) == 0) {
+			datecomp = 1;
+		}
+	}
+	if (datecomp != 0) {
+		int days = _ttoi(filter_content + len);
+		ret = DateCompare(Content, days, (datecomp==1) ? TRUE : FALSE);
+	} else {
+		ret = str_match_t(filter_content, Content);
+	}
 	mem_free(&Content);
 	return ret;
 }

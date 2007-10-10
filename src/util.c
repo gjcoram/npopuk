@@ -850,6 +850,68 @@ int DateUnConv(char *buf, char *ret)
 	return 0;
 }
 
+static int DayOfYear(SYSTEMTIME mytime)
+{
+	int retval = mytime.wDay;
+	if (mytime.wMonth >  1) retval += 31;
+	if (mytime.wMonth >  2) {
+		retval += 28;
+		if (mytime.wYear % 4 == 0 && (mytime.wYear % 100 != 0 || mytime.wYear % 400 == 0)) {
+			// leap year: all years evenly divisible by four, except for centennial years
+			// (those ending in -00), which receive the extra day only if they are evenly
+			// divisible by 400
+			retval++;
+		}
+	}
+	if (mytime.wMonth >  3) retval += 31;
+	if (mytime.wMonth >  4) retval += 30;
+	if (mytime.wMonth >  5) retval += 31;
+	if (mytime.wMonth >  6) retval += 30;
+	if (mytime.wMonth >  7) retval += 31;
+	if (mytime.wMonth >  8) retval += 31;
+	if (mytime.wMonth >  9) retval += 30;
+	if (mytime.wMonth > 10) retval += 31;
+	if (mytime.wMonth > 11) retval += 30;
+	return retval;
+}
+
+/*
+ * DateCompare - compare msg_date to current date
+ */
+BOOL DateCompare(TCHAR *msg_date, int days, BOOL newer)
+{
+	SYSTEMTIME gTime, nTime;
+	char *buf;
+	int i;
+
+#ifdef UNICODE
+	buf = alloc_tchar_to_char(msg_date);
+#else
+	buf = msg_date;
+#endif
+
+	// “úŽž•¶Žš—ñ‚ð SYSTEMTIME ‚É•ÏŠ·
+	i = FormatDateConv("w, d m y h:n:s t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("w, d-m-y h:n:s t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("w, d m y h:n t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("w d m y h:n:s t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("w m d h:n:s y t", buf, &gTime);
+#ifdef UNICODE
+		mem_free(&buf);
+#endif
+	if (i == -1) {
+		return FALSE;
+	}
+	GetLocalTime(&nTime);
+	i = 365*(nTime.wYear - gTime.wYear) + DayOfYear(nTime) - DayOfYear(gTime);
+	if (newer == TRUE && i < days) {
+		return TRUE;
+	} else if (newer == FALSE && i > days) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 /*
  * GetTimeString - ŽžŠÔ•¶Žš—ñ‚ÌŽæ“¾ (RFC 822, RFC 2822)
  */
@@ -2568,7 +2630,7 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 }
 
 /*
- * remove_duplicate_headers - remove headers that nPOPuk stores separately
+ * remove_duplicate_headers - remove headers that nPOPuk stores separately (GJC)
  */
 int remove_duplicate_headers(char *buf)
 {
@@ -2618,6 +2680,35 @@ int remove_duplicate_headers(char *buf)
 		}
 	}
 	return (r - buf);
+}
+
+/*
+ * item_in_list - check if item is in list (GJC)
+ */
+BOOL item_in_list(TCHAR *item, TCHAR *list)
+{
+	TCHAR *buf, *p;
+	if (list == NULL || *list == TEXT('\0')) {
+		return FALSE;
+	}
+	if (item == NULL || *item == TEXT('\0')) {
+		return TRUE;
+	}
+	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(list) + 1));
+	if (buf == NULL) {
+		return FALSE;
+	}
+	p = list;
+	while (*p != TEXT('\0')) {
+		while (*p == TEXT(' ')) p++;
+		p = str_cpy_f_t(buf, p, TEXT(','));
+		if (lstrcmp(buf, item) == 0) {
+			mem_free(&buf);
+			return TRUE;
+		}
+	}
+	mem_free(&buf);
+	return FALSE;
 }
 
 /* End of source */
