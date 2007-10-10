@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b3p2")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b4")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -817,6 +817,7 @@ BOOL ConvReferences(char *p, char *r, BOOL Flag);
 void DateAdd(SYSTEMTIME *sTime, char *tz);
 int DateConv(char *buf, char *ret, BOOL for_sort);
 int DateUnConv(char *buf, char *ret);
+BOOL DateCompare(TCHAR *msg_date, int days, BOOL newer);
 void GetTimeString(TCHAR *buf);
 void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decode);
 void EncodeCtrlChar(TCHAR *buf, TCHAR *ret);
