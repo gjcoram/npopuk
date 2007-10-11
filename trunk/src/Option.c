@@ -57,7 +57,7 @@ static BOOL CcWndShowing = FALSE;
 #endif
 static TCHAR AutoCompleteStr[BUF_SIZE] = TEXT("");
 static int MatchedAddrItem = 0;
-static BOOL AutoComplete = FALSE;
+static BOOL AutoCompleted = FALSE;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
@@ -4637,7 +4637,7 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 {
 	switch(msg) {
 	case WM_CHAR:
-		if (AutoComplete == TRUE && LOWORD(wParam) == VK_BACK) {
+		if (AutoCompleted == TRUE && LOWORD(wParam) == VK_BACK) {
 			DWORD dwStart, dwEnd;
 			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 			if (dwEnd <= dwStart) {
@@ -4658,14 +4658,14 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 				SendMessage(hWnd, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
 			}
 			SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)AutoCompleteStr);
-			AutoComplete = FALSE;
+			AutoCompleted = FALSE;
 			return 0;
 		}
 		if ((TCHAR)wParam == TEXT(' ')) {
 			TCHAR addr[BUF_SIZE], part[BUF_SIZE];
-			TCHAR *p, *q, *match = NULL;
+			TCHAR *p, *q;
 			DWORD dwStart, dwEnd;
-			int i, start = 0;
+			int start = 0;
 #ifdef _WIN32_WCE
 			unsigned int len;
 #else
@@ -4680,7 +4680,7 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			} else {
 				MatchedAddrItem = 0;
 				p = addr;
-				q =	part;
+				q = part;
 				while (*p != TEXT('\0')) {
 					if (*p == TEXT(' ')) {
 						p++;
@@ -4701,14 +4701,15 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			}
 			len = lstrlen(part);
 			if (len > 0) {
+				TCHAR *match = NULL;
 				BOOL looped = FALSE;
+				int i;
 				wsprintf(AutoCompleteStr, TEXT("%s"), part);
 				i = MatchedAddrItem; 
 				while (i < AddressBook->ItemCnt) {
 					ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-					if ((item->MailAddress != NULL && str_cmp_ni_t(part, item->MailAddress, len) == 0)
-						|| (item->AddressOnly != NULL && str_cmp_ni_t(part, item->AddressOnly, len) == 0)
-						|| (item->Comment != NULL && str_cmp_ni_t(part, item->Comment, len) == 0)) {
+					if ((item->MailAddress != NULL && word_find_ni_t(part, item->MailAddress, len) == TRUE)
+						|| (item->Comment != NULL && word_find_ni_t(part, item->Comment, len) == TRUE)) {
 						if (match == NULL) {
 							match = item->MailAddress;
 						} else {
@@ -4726,25 +4727,29 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 						break;
 					}
 				}
-			}
-			if (match != NULL && lstrlen(match) > len) {
-				if (dwEnd <= dwStart) {
-					SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+len));
+				if (match != NULL && lstrlen(match) > len) {
+					if (dwEnd <= dwStart) {
+						SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+len));
+					}
+					SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)match);
+					if (more == TRUE) {
+						SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+lstrlen(match)));
+					}
+					AutoCompleted = TRUE;
+					return 0;
 				}
-				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)match);
-				if (more == TRUE) {
-					SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+lstrlen(match)));
-				}
-				AutoComplete = TRUE;
-				return 0;
 			}
 		}
 	case WM_CUT:
 	case WM_CLEAR:
 	case WM_PASTE:
-	case WM_KEYDOWN:
 	case WM_SETCURSOR:
-		AutoComplete = FALSE;
+		AutoCompleted = FALSE;
+		break;
+	case WM_KEYDOWN:
+		if (LOWORD(wParam) != VK_BACK) {
+			AutoCompleted = FALSE;
+		}
 		break;
 	}
 #ifdef _WIN32_WCE

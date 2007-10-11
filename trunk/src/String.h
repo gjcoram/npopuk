@@ -138,5 +138,7 @@ BOOL str_match(const char *ptn, const char *str);
 #endif
 TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag);
 
+BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len);
+
 #endif
 /* End of source */
