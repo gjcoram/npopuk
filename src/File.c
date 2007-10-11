@@ -1297,14 +1297,14 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 					*s = *p;
 				}
 				*s = '\0';
-				if (s > tpAddrItem->MailAddress) {
-					s = (TCHAR *)mem_alloc(sizeof(TCHAR) * (s - tpAddrItem->MailAddress + 1));
-					if (s != NULL) {
-						GetMailAddress(tpAddrItem->MailAddress, s, NULL, FALSE);
-						tpAddrItem->AddressOnly = alloc_copy_t(s);
-						mem_free(&s);
-					}
-				}
+				//if (s > tpAddrItem->MailAddress) {
+				//	s = (TCHAR *)mem_alloc(sizeof(TCHAR) * (s - tpAddrItem->MailAddress + 1));
+				//	if (s != NULL) {
+				//		GetMailAddress(tpAddrItem->MailAddress, s, NULL, FALSE);
+				//		tpAddrItem->AddressOnly = alloc_copy_t(s);
+				//		mem_free(&s);
+				//	}
+				//}
 			}
 		}
 		if (*r == TEXT('\t')) r++;
