@@ -436,6 +436,7 @@ typedef struct _OPTION {
 	int DefViewApp;
 	int ViewAppMsgSource;
 	int AutoOpenAttachMsg;
+	int ViewWindowCursor;
 	TCHAR *EditApp;
 	TCHAR *EditAppCmdLine;
 	TCHAR *EditFileSuffix;

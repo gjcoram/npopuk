@@ -598,6 +598,50 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 	case EM_UNDO:
 		return 0;
 
+	case WM_KEYDOWN:
+		if (op.ViewWindowCursor == 0) {
+			short key_sh, key_ctl, key_alt;
+			key_sh  = GetKeyState(VK_SHIFT);
+			key_ctl = GetKeyState(VK_CONTROL);
+			key_alt = GetKeyState(VK_MENU);
+			switch(LOWORD(wParam)) {
+			case VK_LEFT:
+				if (key_sh >= 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_KEY_LEFT, 0);
+				}
+				return 0;
+				break;
+
+			case VK_RIGHT:
+				if (key_sh >= 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_KEY_RIGHT, 0);
+				}
+				return 0;
+				break;
+
+			case VK_UP:
+				if (key_ctl < 0 || key_alt < 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_PREVMAIL, 0);
+				} else if (key_sh >= 0) {
+					SendMessage(hWnd, WM_VSCROLL, SB_LINEUP, 0);
+				}
+				return 0;
+				break;
+
+			case VK_DOWN:
+				if (key_ctl < 0 && key_alt < 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_NEXTUNREAD, 0);
+				} else if (key_ctl < 0 || key_alt < 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+				} else if (key_sh >= 0) {
+					SendMessage(hWnd, WM_VSCROLL, SB_LINEDOWN, 0);
+				}
+				return 0;
+				break;
+			}
+		}
+		break;
+
 	case WM_LBUTTONDBLCLK:
 		SetTimer(GetParent(hWnd), ID_CLICK_TIMER, 100, NULL);
 		break;
@@ -874,7 +918,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif
 
 	SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
-	SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
+	if (op.ViewWindowCursor == 0) {
+		SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
+	}
 	return TRUE;
 }
 
@@ -1280,7 +1326,9 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		ShowWindow(hWnd, SW_RESTORE);
 	}
 #endif
-	HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	if (op.ViewWindowCursor == 0) {
+		HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	}
 	SwitchCursor(TRUE);
 }
 
@@ -2830,7 +2878,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_SETFOCUS:
 		SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
-		HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+		if (op.ViewWindowCursor == 0) {
+			HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+		}
 		FocusWnd = hWnd;
 		ESCFlag = FALSE;
 		break;
@@ -3137,7 +3187,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			op.WordBreakFlag = SetWordBreak(hWnd);
 #endif
 			SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
-			HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+			if (op.ViewWindowCursor == 0) {
+				HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+			}
 			break;
 
 #ifndef _WIN32_WCE
