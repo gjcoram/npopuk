@@ -344,10 +344,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	}
 
 	///////////// MRP /////////////////////
-	// MRP - HEAD_X_PRIORITY
 	tpMailItem->Priority = tpReMailItem->Priority;
-	tpMailItem->DeliveryReceipt = tpReMailItem->DeliveryReceipt;
-	tpMailItem->ReadReceipt = tpReMailItem->ReadReceipt;
 	///////////// --- /////////////////////
 
 	if(tpReMailItem->MessageID != NULL && *tpReMailItem->MessageID == TEXT('<')) {
