@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b5p1")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -846,6 +846,7 @@ TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice);
 int remove_duplicate_headers(char *buf);
+BOOL item_in_list(TCHAR *item, TCHAR *list);
 
 // View
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
@@ -873,7 +874,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext);
 
 // Option
-void AllocGetText(HWND hEdit, TCHAR **buf);
+int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);
 BOOL SetSaveBoxName(HWND hWnd);
