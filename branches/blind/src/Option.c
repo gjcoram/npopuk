@@ -3333,7 +3333,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #endif
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
-		SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 
 		if (tpMailItem->Mark == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), 0);
@@ -3542,8 +3541,8 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 
-			SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-			if (*buf != TEXT('\0')) {
+			i = SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_GETTEXTLENGTH, 0, 0);
+			if (i > 0) {
 				ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_CC), -1, 0, LVIS_SELECTED);
 				SendMessage(hDlg, WM_COMMAND, IDC_BUTTON_CC, 0);
 			}
@@ -4641,7 +4640,7 @@ static TCHAR *AddressGetWholeGroup(TCHAR *groupname)
 	int i, len = 1;
 	for (i = 0; i < AddressBook->ItemCnt; i++) {
 		ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-		if (item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
+		if (item != NULL && item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
 			len += lstrlen(item->MailAddress) + 2;
 		}
 	}
@@ -4652,7 +4651,7 @@ static TCHAR *AddressGetWholeGroup(TCHAR *groupname)
 	p = ret;
 	for (i = 0; i < AddressBook->ItemCnt; i++) {
 		ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-		if (item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
+		if (item != NULL && item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
 			p = str_join_t(p, item->MailAddress, TEXT(", "), (TCHAR *)-1);
 		}
 	}
@@ -4749,18 +4748,20 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 				}
 				while (i < AddressBook->ItemCnt) {
 					ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-					if ((item->MailAddress != NULL && word_find_ni_t(part, item->MailAddress, len) == TRUE)
-						|| (item->Comment != NULL && word_find_ni_t(part, item->Comment, len) == TRUE)) {
-						if (match == NULL) {
-							match = item->MailAddress;
-						} else {
-							more = TRUE;
-							MatchedAddrItem = i;
-							break;
+					if (item != NULL) {
+						if ((item->MailAddress != NULL && word_find_ni_t(part, item->MailAddress, len) == TRUE)
+							|| (item->Comment != NULL && word_find_ni_t(part, item->Comment, len) == TRUE)) {
+							if (match == NULL) {
+								match = item->MailAddress;
+							} else {
+								more = TRUE;
+								MatchedAddrItem = i;
+								break;
+							}
 						}
-					}
-					if (group == FALSE && item->Group != NULL && item_in_list(part, item->Group) == TRUE) {
-						group = TRUE;
+						if (group == FALSE && item->Group != NULL && item_in_list(part, item->Group) == TRUE) {
+							group = TRUE;
+						}
 					}
 					i++;
 					if (i == AddressBook->ItemCnt && looped == FALSE) {
@@ -5161,9 +5162,6 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-#define IS_ALPHA_T(c)		((c >= TEXT('a') && c <= TEXT('z')) || (c >= TEXT('A') && c <= TEXT('Z')))
-#define IS_NUM_T(c)			(c >= TEXT('0') && c <= TEXT('9'))
-#define IS_ALNUM_T(c)		(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('+') || c == TEXT('-'))
 
 /*
  * SetAddressList - リストビューにアドレス帳のリストを表示する
@@ -5225,7 +5223,7 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 				p = item->MailAddress;
 			}
 			while (p != NULL && *p != TEXT('\0') && len < 9) {
-				if (IS_ALNUM_T(*p)) {
+				if (IS_ALNUM_UM_T(*p)) {
 					key[len] = *p;
 					len++;
 				}
@@ -5453,6 +5451,10 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				if (sel >= 0) {
 					ListView_SetItemText(hAddrList, sel, 1, buf);
 				}
+				*buf = TEXT('\0');
+				mem_free(&AddrItem->AddressOnly);
+				GetMailAddress(AddrItem->MailAddress, buf, NULL, FALSE);
+				AddrItem->AddressOnly = alloc_copy_t(buf);
 
 				//Comment
 				*buf = TEXT('\0');
@@ -5478,7 +5480,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						p = AddrItem->MailAddress;
 					}
 					while (p != NULL && *p != TEXT('\0') && len < 9) {
-						if (IS_ALNUM_T(*p)) {
+						if (IS_ALNUM_UM_T(*p)) {
 							key[len] = *p;
 							len++;
 						}

@@ -572,10 +572,6 @@ TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag)
 	return p;
 }
 
-#define IS_ALPHA_T(c)		((c >= TEXT('a') && c <= TEXT('z')) || (c >= TEXT('A') && c <= TEXT('Z')))
-#define IS_NUM_T(c)			(c >= TEXT('0') && c <= TEXT('9'))
-#define IS_ALNUM_T(c)		(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('_') || c == TEXT('-'))
-
 /*
  * word_find_ni_t - search for pattern in all words of string
  */
@@ -584,7 +580,7 @@ BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len)
 	const TCHAR *p;
 	p = str;
 	while (*p != '\0') {
-		while(!IS_ALNUM_T(*p)) p++;
+		while(!IS_ALNUM_UM_T(*p)) p++;
 		if (str_cmp_ni_t(ptn, p, len) == 0) {
 			return TRUE;
 		}

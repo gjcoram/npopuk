@@ -526,9 +526,6 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
  */
 static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 {
-#define IS_ALPHA(c)		((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-#define IS_NUM(c)		(c >= '0' && c <= '9')
-#define IS_ALNUM(c)		(IS_NUM(c) || IS_ALPHA(c) || c == '+' || c == '-')
 	int i;
 	char *p, *r, *t;
 	char tmp[BUF_SIZE];
@@ -628,7 +625,7 @@ static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 			break;
 
 		case 't':	// TZ
-			for (t = tz; IS_ALNUM(*r); r++) {
+			for (t = tz; IS_ALNUM_PM(*r); r++) {
 				*(t++) = *r;
 			}
 			*t = '\0';
