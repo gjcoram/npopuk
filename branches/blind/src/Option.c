@@ -3484,6 +3484,14 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 0);
 			break;
 
+		case ID_LV_ALLSELECT:
+			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_CC), -1, LVIS_SELECTED, LVIS_SELECTED);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_TO), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_CC), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BCC), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+			break;
+
 		case IDC_BUTTON_TO:
 		case IDC_BUTTON_CC:
 		case IDC_BUTTON_BCC:
@@ -5215,7 +5223,7 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 		}
 		if (AddIt == TRUE) {
 			// jump key
-			TCHAR key[10];
+			TCHAR key[12];
 			int len = 0;
 			if (op.AddressJumpKey == 1) {
 				p = item->Comment;
@@ -5223,6 +5231,13 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 				p = item->MailAddress;
 			}
 			while (p != NULL && *p != TEXT('\0') && len < 9) {
+#ifndef UNICODE
+				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+					key[len] = *(p++);
+					key[len] = *p;
+					len+=2;
+				} else
+#endif
 				if (IS_ALNUM_UM_T(*p)) {
 					key[len] = *p;
 					len++;
@@ -5472,7 +5487,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				{
 					// sort key
-					TCHAR *p, key[10];
+					TCHAR *p, key[12];
 					int len = 0;
 					if (op.AddressJumpKey == 1) {
 						p = AddrItem->Comment;
@@ -5480,6 +5495,13 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						p = AddrItem->MailAddress;
 					}
 					while (p != NULL && *p != TEXT('\0') && len < 9) {
+#ifndef UNICODE
+						if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+							key[len] = *(p++);
+							key[len] = *p;
+							len+=2;
+						} else
+#endif
 						if (IS_ALNUM_UM_T(*p)) {
 							key[len] = *p;
 							len++;
@@ -5701,9 +5723,18 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN10), FALSE);
 		}
+		{
+			LV_DISPINFO *plv = (LV_DISPINFO *)lParam;
+			if (plv->hdr.code == LVN_ITEMCHANGED) {
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), 1);
+			}
+		}
 		break;
 
 	case WM_LV_EVENT:
+		//GJC
 		if (wParam == NM_CLICK) {
 			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 			if (ListView_GetSelectedCount(hListView) <= 0) {
@@ -5721,6 +5752,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		switch (LOWORD(wParam)) {
 		case ID_LV_ALLSELECT:
 			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_ADDRESS), -1, LVIS_SELECTED, LVIS_SELECTED);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), 1);
 			break;
 
 		case IDC_BUTTON_NUM:
