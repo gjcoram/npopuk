@@ -122,6 +122,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 static void SetButtonText(HWND hButton, TCHAR *title, BOOL UseFlag);
 static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter);
 static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static TCHAR *AddressGetWholeGroup(TCHAR *groupname);
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void SetEditToSubClass(HWND hWnd, BOOL CcWnd);
 
@@ -337,7 +338,7 @@ static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col)
 /*
  * AllocGetText - EDITに設定されているサイズ分のメモリを確保してEDITの内容を設定する
  */
-void AllocGetText(HWND hEdit, TCHAR **buf)
+int AllocGetText(HWND hEdit, TCHAR **buf)
 {
 	int len;
 
@@ -348,6 +349,7 @@ void AllocGetText(HWND hEdit, TCHAR **buf)
 		**buf = TEXT('\0');
 		SendMessage(hEdit, WM_GETTEXT, len, (LPARAM)*buf);
 	}
+	return len;
 }
 
 /*
@@ -3331,7 +3333,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #endif
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
-		SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 
 		if (tpMailItem->Mark == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), 0);
@@ -3483,6 +3484,14 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 0);
 			break;
 
+		case ID_LV_ALLSELECT:
+			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_CC), -1, LVIS_SELECTED, LVIS_SELECTED);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_TO), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_CC), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BCC), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+			break;
+
 		case IDC_BUTTON_TO:
 		case IDC_BUTTON_CC:
 		case IDC_BUTTON_BCC:
@@ -3540,8 +3549,8 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 
-			SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-			if (*buf != TEXT('\0')) {
+			i = SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_GETTEXTLENGTH, 0, 0);
+			if (i > 0) {
 				ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_CC), -1, 0, LVIS_SELECTED);
 				SendMessage(hDlg, WM_COMMAND, IDC_BUTTON_CC, 0);
 			}
@@ -4631,6 +4640,35 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /*
+ * AddressGetWholeGroup - get string of all members of a group
+ */
+static TCHAR *AddressGetWholeGroup(TCHAR *groupname)
+{
+	TCHAR *ret, *p;
+	int i, len = 1;
+	for (i = 0; i < AddressBook->ItemCnt; i++) {
+		ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
+		if (item != NULL && item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
+			len += lstrlen(item->MailAddress) + 2;
+		}
+	}
+	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (ret == NULL) {
+		return NULL;
+	}
+	p = ret;
+	for (i = 0; i < AddressBook->ItemCnt; i++) {
+		ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
+		if (item != NULL && item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
+			p = str_join_t(p, item->MailAddress, TEXT(", "), (TCHAR *)-1);
+		}
+	}
+	p-=2;
+	*p = TEXT('\0');
+	return ret;
+}
+
+/*
  * AddrCompleteCallback - event handler for address auto-completion (GJC)
  */
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -4641,10 +4679,9 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			DWORD dwStart, dwEnd;
 			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 			if (dwEnd <= dwStart) {
-				TCHAR addr[BUF_SIZE];
-				TCHAR *p;
-				SendMessage(hWnd, WM_GETTEXT, BUF_SIZE-1, (LPARAM)addr);
+				TCHAR *p, *addr = NULL;
 				dwStart = 0;
+				dwEnd = AllocGetText(hWnd, &addr);
 				for (p = addr; *p != TEXT('\0'); p++) {
 					if (*p == TEXT('\"')) {
 						while (*p != TEXT('\"') && *p != TEXT('\0')) p++;
@@ -4654,34 +4691,37 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 						dwStart = (p - addr);
 					}
 				}
-				dwEnd = SendMessage(hWnd, WM_GETTEXTLENGTH, 0, 0);
+				mem_free(&addr);
 				SendMessage(hWnd, EM_SETSEL, (WPARAM)dwStart, (LPARAM)dwEnd);
 			}
 			SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)AutoCompleteStr);
 			AutoCompleted = FALSE;
+			MatchedAddrItem = 0;
+			*AutoCompleteStr = TEXT('\0');
 			return 0;
 		}
 		if ((TCHAR)wParam == TEXT(' ')) {
-			TCHAR addr[BUF_SIZE], part[BUF_SIZE];
-			TCHAR *p, *q;
+			TCHAR part[BUF_SIZE];
+			TCHAR *p, *q, *addr = NULL;
 			DWORD dwStart, dwEnd;
-			int start = 0;
+			int i, start = 0;
 #ifdef _WIN32_WCE
 			unsigned int len;
 #else
 			int len;
 #endif
-			BOOL more = FALSE;
-			SendMessage(hWnd, WM_GETTEXT, BUF_SIZE-1, (LPARAM)addr);
+			AllocGetText(hWnd, &addr);
 			SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 			if (dwEnd > dwStart && lstrlen(AutoCompleteStr) > 0) {
 				wsprintf(part, TEXT("%s"), AutoCompleteStr);
 				start = (int)dwStart;
 			} else {
 				MatchedAddrItem = 0;
+				*AutoCompleteStr = TEXT('\0');
 				p = addr;
 				q = part;
-				while (*p != TEXT('\0')) {
+				i = 1;
+				while (*p != TEXT('\0') && i < BUF_SIZE) {
 					if (*p == TEXT(' ')) {
 						p++;
 					}
@@ -4689,33 +4729,46 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 						while (*p != TEXT('\"') && *p != TEXT('\0')) p++;
 					} else if (*p == TEXT(',')) {
 						q = part;
+						i = 1;
 						p++;
 						while (*p == TEXT(' ')) p++;
 						start = (p - addr);
 					}
 					if (*p != TEXT('\0')) {
 						*(q++) = *(p++);
+						i++;
 					}
 				}
 				*q = TEXT('\0');
 			}
+			mem_free(&addr);
 			len = lstrlen(part);
 			if (len > 0) {
 				TCHAR *match = NULL;
-				BOOL looped = FALSE;
-				int i;
+				BOOL more = FALSE, looped = FALSE, group = FALSE, free_match = FALSE;
 				wsprintf(AutoCompleteStr, TEXT("%s"), part);
-				i = MatchedAddrItem; 
+				i = MatchedAddrItem;
+				if (i == AddressBook->ItemCnt) {
+					// flag for group match
+					match = AddressGetWholeGroup(part);
+					free_match = TRUE;
+					i = 0;
+				}
 				while (i < AddressBook->ItemCnt) {
 					ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
-					if ((item->MailAddress != NULL && word_find_ni_t(part, item->MailAddress, len) == TRUE)
-						|| (item->Comment != NULL && word_find_ni_t(part, item->Comment, len) == TRUE)) {
-						if (match == NULL) {
-							match = item->MailAddress;
-						} else {
-							more = TRUE;
-							MatchedAddrItem = i;
-							break;
+					if (item != NULL) {
+						if ((item->MailAddress != NULL && word_find_ni_t(part, item->MailAddress, len) == TRUE)
+							|| (item->Comment != NULL && word_find_ni_t(part, item->Comment, len) == TRUE)) {
+							if (match == NULL) {
+								match = item->MailAddress;
+							} else {
+								more = TRUE;
+								MatchedAddrItem = i;
+								break;
+							}
+						}
+						if (group == FALSE && item->Group != NULL && item_in_list(part, item->Group) == TRUE) {
+							group = TRUE;
 						}
 					}
 					i++;
@@ -4724,6 +4777,17 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 						i = 0;
 					}
 					if (i == MatchedAddrItem) {
+						if (group == TRUE) {
+							if (match == NULL) {
+								// the group is the only match
+								match = AddressGetWholeGroup(part);
+								free_match = TRUE;
+								more = FALSE;
+							} else {
+								more = TRUE;
+								MatchedAddrItem = AddressBook->ItemCnt;
+							}
+						}
 						break;
 					}
 				}
@@ -4735,6 +4799,9 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 					if (more == TRUE) {
 						SendMessage(hWnd, EM_SETSEL, (WPARAM)start, (LPARAM)(start+lstrlen(match)));
 					}
+					if (free_match == TRUE) {
+						mem_free(&match);
+					}
 					AutoCompleted = TRUE;
 					return 0;
 				}
@@ -4743,12 +4810,14 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 	case WM_CUT:
 	case WM_CLEAR:
 	case WM_PASTE:
-	case WM_SETCURSOR:
+	case WM_KILLFOCUS:
 		AutoCompleted = FALSE;
+		*AutoCompleteStr = TEXT('\0');
 		break;
 	case WM_KEYDOWN:
-		if (LOWORD(wParam) != VK_BACK) {
+		if (LOWORD(wParam) != VK_BACK && (TCHAR)wParam != TEXT(' ')) {
 			AutoCompleted = FALSE;
+			*AutoCompleteStr = TEXT('\0');
 		}
 		break;
 	}
@@ -5101,9 +5170,6 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-#define IS_ALPHA_T(c)		((c >= TEXT('a') && c <= TEXT('z')) || (c >= TEXT('A') && c <= TEXT('Z')))
-#define IS_NUM_T(c)			(c >= TEXT('0') && c <= TEXT('9'))
-#define IS_ALNUM_T(c)		(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('+') || c == TEXT('-'))
 
 /*
  * SetAddressList - リストビューにアドレス帳のリストを表示する
@@ -5157,7 +5223,7 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 		}
 		if (AddIt == TRUE) {
 			// jump key
-			TCHAR key[10];
+			TCHAR key[12];
 			int len = 0;
 			if (op.AddressJumpKey == 1) {
 				p = item->Comment;
@@ -5165,9 +5231,14 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 				p = item->MailAddress;
 			}
 			while (p != NULL && *p != TEXT('\0') && len < 9) {
-				if (IS_ALNUM_T(*p)) {
-					key[len] = *p;
-					len++;
+#ifndef UNICODE
+				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+					key[len++] = *(p++);
+					key[len++] = *p;
+				} else
+#endif
+				if (IS_ALNUM_UM_T(*p)) {
+					key[len++] = *p;
 				}
 				p++;
 			}
@@ -5393,6 +5464,10 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				if (sel >= 0) {
 					ListView_SetItemText(hAddrList, sel, 1, buf);
 				}
+				*buf = TEXT('\0');
+				mem_free(&AddrItem->AddressOnly);
+				GetMailAddress(AddrItem->MailAddress, buf, NULL, FALSE);
+				AddrItem->AddressOnly = alloc_copy_t(buf);
 
 				//Comment
 				*buf = TEXT('\0');
@@ -5410,7 +5485,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				{
 					// sort key
-					TCHAR *p, key[10];
+					TCHAR *p, key[12];
 					int len = 0;
 					if (op.AddressJumpKey == 1) {
 						p = AddrItem->Comment;
@@ -5418,9 +5493,14 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						p = AddrItem->MailAddress;
 					}
 					while (p != NULL && *p != TEXT('\0') && len < 9) {
-						if (IS_ALNUM_T(*p)) {
-							key[len] = *p;
-							len++;
+#ifndef UNICODE
+						if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+							key[len++] = *(p++);
+							key[len++] = *p;
+						} else
+#endif
+						if (IS_ALNUM_UM_T(*p)) {
+							key[len++] = *p;
 						}
 						p++;
 					}
@@ -5639,9 +5719,18 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN10), FALSE);
 		}
+		{
+			LV_DISPINFO *plv = (LV_DISPINFO *)lParam;
+			if (plv->hdr.code == LVN_ITEMCHANGED) {
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), 1);
+			}
+		}
 		break;
 
 	case WM_LV_EVENT:
+		//GJC
 		if (wParam == NM_CLICK) {
 			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 			if (ListView_GetSelectedCount(hListView) <= 0) {
@@ -5659,6 +5748,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		switch (LOWORD(wParam)) {
 		case ID_LV_ALLSELECT:
 			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_ADDRESS), -1, LVIS_SELECTED, LVIS_SELECTED);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), 1);
 			break;
 
 		case IDC_BUTTON_NUM:

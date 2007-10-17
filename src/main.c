@@ -4160,7 +4160,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			AllCheck = FALSE;
 			ExecFlag = TRUE;
 			NewMailCnt = -1;
-			if (op.CheckAfterUpdate == 1) {
+			if (op.CheckAfterUpdate == 1 && SelBox != MAILBOX_SEND) {
 				NewMailCnt = 0;
 				Init_NewMailFlag(hWnd);
 				if (SaveBoxesLoaded == FALSE) {
