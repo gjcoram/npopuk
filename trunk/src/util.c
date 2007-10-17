@@ -526,9 +526,6 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
  */
 static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 {
-#define IS_ALPHA(c)		((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
-#define IS_NUM(c)		(c >= '0' && c <= '9')
-#define IS_ALNUM(c)		(IS_NUM(c) || IS_ALPHA(c) || c == '+' || c == '-')
 	int i;
 	char *p, *r, *t;
 	char tmp[BUF_SIZE];
@@ -628,7 +625,7 @@ static int FormatDateConv(char *format, char *buf, SYSTEMTIME *gTime)
 			break;
 
 		case 't':	// TZ
-			for (t = tz; IS_ALNUM(*r); r++) {
+			for (t = tz; IS_ALNUM_PM(*r); r++) {
 				*(t++) = *r;
 			}
 			*t = '\0';
@@ -2680,6 +2677,35 @@ int remove_duplicate_headers(char *buf)
 		}
 	}
 	return (r - buf);
+}
+
+/*
+ * item_in_list - check if item is in list (GJC)
+ */
+BOOL item_in_list(TCHAR *item, TCHAR *list)
+{
+	TCHAR *buf, *p;
+	if (list == NULL || *list == TEXT('\0')) {
+		return FALSE;
+	}
+	if (item == NULL || *item == TEXT('\0')) {
+		return TRUE;
+	}
+	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(list) + 1));
+	if (buf == NULL) {
+		return FALSE;
+	}
+	p = list;
+	while (*p != TEXT('\0')) {
+		while (*p == TEXT(' ')) p++;
+		p = str_cpy_f_t(buf, p, TEXT(','));
+		if (lstrcmp(buf, item) == 0) {
+			mem_free(&buf);
+			return TRUE;
+		}
+	}
+	mem_free(&buf);
+	return FALSE;
 }
 
 /* End of source */
