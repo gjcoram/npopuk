@@ -143,13 +143,13 @@ BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len);
 // IS_ALNUM_PM: alpha, num, +, - (for timezone)
 // IS_ALNUM_UM: alpha, num, _, - (for e-mail addresses)
 // foo = isalnum('À'); (a) causes a run-time violation and (b) returns 0
-#define IS_ALPHA(c)		((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= 'À' && c <= 'ÿ' && c != '×' && c!= '÷'))
-#define IS_NUM(c)		(c >= '0' && c <= '9')
+#define IS_ALPHA(c)			((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= 'À' && c <= 'ÿ' && c != '×' && c!= '÷'))
+#define IS_NUM(c)			(c >= '0' && c <= '9')
 #define IS_ALNUM_PM(c)		(IS_NUM(c) || IS_ALPHA(c) || c == '+' || c == '-')
 #define IS_ALPHA_T(c)		((c >= TEXT('a') && c <= TEXT('z')) || (c >= TEXT('A') && c <= TEXT('Z')) || (c >= TEXT('À') && c <= TEXT('ÿ') && c != TEXT('×') && c != TEXT('÷')))
 #define IS_NUM_T(c)			(c >= TEXT('0') && c <= TEXT('9'))
-#define IS_ALNUM_PM_T(c)		(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('+') || c == TEXT('-'))
-#define IS_ALNUM_UM_T(c)		(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('_') || c == TEXT('-'))
-
+#define IS_ALNUM_PM_T(c)	(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('+') || c == TEXT('-'))
+#define IS_ALNUM_UM_T(c)	(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('_') || c == TEXT('-'))
+#define IS_PAREN_QUOTE_T(c)	(c == TEXT('(') || c == TEXT(')') || c == TEXT('<') || c == TEXT('>') || c == TEXT('\"') || c == TEXT('\''))
 #endif
 /* End of source */

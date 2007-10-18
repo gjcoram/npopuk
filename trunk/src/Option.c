@@ -5237,7 +5237,7 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
 					key[len++] = *p;
 				} else
 #endif
-				if (IS_ALNUM_UM_T(*p)) {
+				if (!IS_PAREN_QUOTE_T(*p)) {
 					key[len++] = *p;
 				}
 				p++;
@@ -5499,7 +5499,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 							key[len++] = *p;
 						} else
 #endif
-						if (IS_ALNUM_UM_T(*p)) {
+						if (!IS_PAREN_QUOTE_T(*p)) {
 							key[len++] = *p;
 						}
 						p++;
