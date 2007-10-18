@@ -4668,6 +4668,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case FD_CLOSE:						/* サーバへの接続が終了した事を示すイベント */
 			/* 接続を終了する */
 			if (command_status != POP_QUIT) {
+				if (command_status == POP_RETR || command_status == POP_TOP) {
+					TCHAR ErrStr[BUF_SIZE];
+					*ErrStr = TEXT('\0');
+					pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
+				}
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 			} else {
