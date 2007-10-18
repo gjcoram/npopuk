@@ -708,6 +708,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 	if (tpMailBox->MailCnt == 0) {
 		tpMailBox->ListInitMsg = TRUE;
+		if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Clearing mailbox: server says 0 messages"));
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 		SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 		return POP_QUIT;
