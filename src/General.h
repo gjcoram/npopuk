@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b5p5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b6")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -691,6 +691,7 @@ void free_ssl(void);
 // Pop3
 BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL pop3_salvage_buffer(HWND hWnd, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 char *claim_mail_buf(char *buf);
 void pop3_free(void);
 #ifdef _WIN32_WCE_PPC

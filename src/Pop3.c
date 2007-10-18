@@ -1135,6 +1135,9 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
 		}
 	}
+	if (soc == -1) {
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+	}
 
 	if ((int)tpMailItem != -1) {
 		// V’…ƒtƒ‰ƒO‚Ìœ‹Ž
@@ -1194,6 +1197,9 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		NewMailCnt++;
 		tpMailBox->NewMail = TRUE;
 		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;		
+	}
+	if (soc == -1) {
+		return POP_QUIT;
 	}
 	 
 	if (nOldMailCnt != NewMailCnt)
@@ -1399,6 +1405,9 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		return POP_ERR;
 	}
 	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+	if (soc == -1) {
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+	}
 
 	if (ShowFlag == TRUE) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -1415,6 +1424,9 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
+	}
+	if (soc == -1) {
+		return POP_QUIT;
 	}
 
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
@@ -1775,6 +1787,29 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 		break;
 	}
 	return TRUE;
+}
+
+/*
+ * pop3_salvage_buffer - when server disconnects, preserve what's been received
+ */
+BOOL pop3_salvage_buffer(HWND hWnd, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
+{
+	BOOL ret = FALSE;
+	if (receiving_data == TRUE) {
+		char end[2] = ".";
+		int salvage = POP_ERR;
+		if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Salvaging received mail data"));
+		if (command_status == POP_RETR) {
+			salvage = exec_proc_retr(hWnd, -1, end, 1, ErrStr, tpMailBox, ShowFlag);
+		} else if (command_status == POP_TOP) {
+			salvage = list_proc_top(hWnd, -1, end, 1, ErrStr, tpMailBox, ShowFlag);
+		}
+		if (salvage == POP_QUIT) {
+			ret = TRUE;
+		}
+	}
+
+	return ret;
 }
 
 /*
