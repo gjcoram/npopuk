@@ -5730,7 +5730,6 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_LV_EVENT:
-		//GJC
 		if (wParam == NM_CLICK) {
 			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 			if (ListView_GetSelectedCount(hListView) <= 0) {
@@ -5926,6 +5925,8 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tpTmpAddressBook->EditNum = -1;
 				SetAddressList(hDlg, tpTmpAddressBook, buf);
 				ListView_SetRedraw(hListView, TRUE);
+				SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
+				SetFocus(hListView); 
 			}
 			break;
 
