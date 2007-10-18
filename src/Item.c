@@ -39,6 +39,7 @@ extern MAILBOX *MailBox;
 extern MAILITEM *AttachMailItem;
 extern int SelBox;
 extern int MailBoxCnt;
+extern ADDRESSBOOK *AddressBook;
 
 /* Local Function Prototypes */
 static int item_get_content(char *buf, char *header, char **ret);
@@ -1543,7 +1544,7 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 {
 	TCHAR *Content;
 	BOOL ret;
-	int len, datecomp=0;
+	int len, comptype=0;
 	char *cbuf;
 
 	if (filter_content == NULL || *filter_content == TEXT('\0')) {
@@ -1584,20 +1585,40 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 	if (Content == NULL) {
 		return str_match_t(filter_content, TEXT(""));
 	}
-// Important that these have the same length!
+#define FILTER_IN_ADDRESSBOOK TEXT("**INADDRESSBOOK")
+// Important that the next two have the same length!
 #define FILTER_DATE_OLDER TEXT("**OLDERTHAN")
 #define FILTER_DATE_NEWER TEXT("**NEWERTHAN")
-	if (lstrcmpi(filter_header, TEXT("date:")) == 0) {
+
+	if (lstrcmpi(filter_header, TEXT("from:")) == 0) {
+		len = lstrlen(FILTER_IN_ADDRESSBOOK);
+		if (str_cmp_ni_t(filter_content, FILTER_IN_ADDRESSBOOK, len) == 0) {
+			comptype = 10;
+		}
+	} else if (lstrcmpi(filter_header, TEXT("date:")) == 0) {
 		len = lstrlen(FILTER_DATE_OLDER);
 		if (str_cmp_ni_t(filter_content, FILTER_DATE_OLDER, len) == 0) {
-			datecomp = -1;
+			comptype = -1;
 		} else if (str_cmp_ni_t(filter_content, FILTER_DATE_NEWER, len) == 0) {
-			datecomp = 1;
+			comptype = 1;
 		}
 	}
-	if (datecomp != 0) {
+	if (comptype == 10) {
+		int i;
+		TCHAR *fromaddr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Content) + 1));
+		GetMailAddress(Content, fromaddr, NULL, FALSE);
+		ret = FALSE;
+		for (i = 0; i < AddressBook->ItemCnt; i++) {
+			ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
+			if (item != NULL && item->AddressOnly != NULL
+				&& lstrcmp(fromaddr, item->AddressOnly) == 0) {
+				ret = TRUE;
+				break;
+			}
+		}
+	} else if (comptype != 0) {
 		int days = _ttoi(filter_content + len);
-		ret = DateCompare(Content, days, (datecomp==1) ? TRUE : FALSE);
+		ret = DateCompare(Content, days, (comptype==1) ? TRUE : FALSE);
 	} else {
 		ret = str_match_t(filter_content, Content);
 	}
