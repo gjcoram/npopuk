@@ -3408,6 +3408,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			//Cutting
 			case SELECT_SOC_CLOSE:
 				if (command_status != POP_QUIT) {
+					if (command_status == POP_RETR || command_status == POP_TOP) {
+						TCHAR ErrStr[BUF_SIZE];
+						*ErrStr = TEXT('\0');
+						pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
+					}
 					ErrorSocketEnd(hWnd, RecvBox);
 					SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
 				} else {
@@ -4242,6 +4247,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				RecvBox = -1;
 				EndSocketFunc(hWnd, FALSE);
 				break;
+			}
+			if (command_status == POP_RETR || command_status == POP_TOP) {
+				TCHAR ErrStr[BUF_SIZE];
+				*ErrStr = TEXT('\0');
+				pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
 			}
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
