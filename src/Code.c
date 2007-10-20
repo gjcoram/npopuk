@@ -199,9 +199,9 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen)
 static int hex_val(int c)
 {
 	if (c >= '0' && c <= '9') return c - '0';
-	if (c >= 'A' && c <= 'Z') return c - 'A' + 10;
-	if (c >= 'a' && c <= 'z') return c - 'a' + 10;
-	return 0;
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	return 256;
 }
 
 /*
@@ -210,6 +210,7 @@ static int hex_val(int c)
 char *QuotedPrintable_decode(char *buf, char *ret)
 {
 	char *p, *r;
+	int hextmp;
 
 	p = buf;
 	r = ret;
@@ -223,7 +224,13 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 				p++;
 
 			} else {
-				*r = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+				hextmp = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+				if (hextmp > 255) { // preserve bad "digits"
+					*(r++) = *p;
+					*(r++) = *(p + 1);
+					hextmp = *(p + 2);
+				}
+				*r = hextmp;
 				p += 2;
 				if (*r == '\n' && *(r-1) != '\r') {
 					*(r++) = '\r';
@@ -306,13 +313,20 @@ void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const
 char *URL_decode(char *buf, char *ret)
 {
 	char *p, *r;
+	int hextmp;
 
 	p = buf;
 	r = ret;
 
 	while (*p) {
 		if (*p == '%') {
-			*(r++) = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+			hextmp = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+			if (hextmp > 255) { // preserve bad "digits"
+				*(r++) = *p;
+				*(r++) = *(p + 1);
+				hextmp = *(p + 2);
+			}
+			*(r++) = hextmp;
 			p += 2;
 		} else if (*p == '+') {
 			*(r++) = ' ';
