@@ -1765,10 +1765,10 @@ BOOL ImportSavebox(HWND hWnd)
 
 #ifdef _WIN32_WCE
 	*buf = TEXT('\0');
-	if (filename_select(hWnd, buf, TEXT("*"), STR_FILE_FILTER, FILE_OPEN_SINGLE) == FALSE) {
+	if (filename_select(hWnd, buf, TEXT("*"), STR_FILE_FILTER, FILE_OPEN_SINGLE, &op.SavedOpenDir) == FALSE) {
 #else
 	*buf = TEXT('\0');
-	if (filename_select(hWnd, buf, TEXT("mbx"), STR_MBOX_FILTER, FILE_OPEN_SINGLE) == FALSE) {
+	if (filename_select(hWnd, buf, TEXT("mbx"), STR_MBOX_FILTER, FILE_OPEN_SINGLE, &op.SavedOpenDir) == FALSE) {
 #endif
 		return FALSE;
 	}
@@ -2438,7 +2438,7 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 
 		case IDC_BUTTON_SOUND_BROWS:
 			*buf = TEXT('\0');
-			if (filename_select(hDlg, buf, TEXT("wav"), STR_WAVE_FILTER, FILE_OPEN_SINGLE) == FALSE) {
+			if (filename_select(hDlg, buf, TEXT("wav"), STR_WAVE_FILTER, FILE_OPEN_SINGLE, &op.SavedOpenDir) == FALSE) {
 				break;
 			}
 			SendDlgItemMessage(hDlg, IDC_EDIT_SOUND, WM_SETTEXT, 0, (LPARAM)buf);
@@ -3747,7 +3747,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam)) {
 		case IDC_BUTTON_ADD:
 			*fpath = TEXT('\0');
-			if (filename_select(hDlg, fpath, NULL, NULL, FILE_OPEN_MULTI) == FALSE) {
+			if (filename_select(hDlg, fpath, NULL, NULL, FILE_OPEN_MULTI, &op.SavedOpenDir) == FALSE) {
 				break;
 			}
 			// GJC multiselect - return value is either

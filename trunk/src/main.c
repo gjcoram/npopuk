@@ -1671,7 +1671,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		lstrcpy(SaveDir, DataDir);
 	} else {
 		wsprintf(SaveDir, TEXT("%s%s"), op.BackupDir, STR_NPOPUK_FILES);
-		if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR) == FALSE) {
+		if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, NULL) == FALSE) {
 			return FALSE;
 		} else if (lstrcmpi(SaveDir, AppDir) == 0) {
 			ErrorMessage(hWnd, STR_ERROR_BACKUP_APPDIR);

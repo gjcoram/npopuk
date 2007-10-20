@@ -2311,7 +2311,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	}
 	if (AttachProcess == 0) {
 		// save it
-		ret = file_save(hWnd, fname, ext, dstr, endpoint - dstr, (DoWhat==DECODE_SAVE_ALL));
+		ret = file_save_message(hWnd, fname, ext, dstr, endpoint - dstr, (DoWhat==DECODE_SAVE_ALL));
 	} else if (AttachProcess == 1 && is_msg == TRUE) {
 		item_free(&AttachMailItem, 1);
 		AttachMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
@@ -2496,7 +2496,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 			lstrcpy(path, TEXT(".txt"));
 		}
 		// ƒtƒ@ƒCƒ‹–¼‚ÌŽæ“¾
-		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_SINGLE) == FALSE) {
+		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_SINGLE, &op.SavedSaveDir) == FALSE) {
 			return TRUE;
 		}
 		if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {

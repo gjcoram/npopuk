@@ -217,17 +217,18 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /*
  * filename_select - the log Acquisition
  */
-BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action)
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR** opptr)
 {
 #ifdef _WIN32_WCE_PPC
 	TCHAR path[BUF_SIZE];
 
 	lstrcpy(path, ret);
-	return SelectFile(hWnd, hInst, Action, path, ret);
+	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else	// _WIN32_WCE_PPC
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE];
 	TCHAR *ph, *qh;
+
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
@@ -245,6 +246,9 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	} else {
 		of.lpstrTitle = STR_TITLE_SAVE;
 		lstrcpy(path, ret);
+	}
+        if (opptr != NULL) {
+		of.lpstrInitialDir = *opptr;
 	}
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
@@ -270,7 +274,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 				ErrorMessage(hWnd, STR_ERR_TOOMANYFILES); 
 			}
 			return FALSE;
-		} 
+		}
 	} else {
 		if (GetSaveFileName((LPOPENFILENAME)&of) == FALSE) {
 			return FALSE;
@@ -285,6 +289,15 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 			}
 			*qh = TEXT('\0');
 		}
+	}
+
+        if (opptr) {
+		// wastes a bit of space (length of file name part) when only
+	        // one filereturned, but simplifies the coding significantly.
+		ph = alloc_copy_t(of.lpstrFile);
+		ph[ of.nFileOffset - 1 ] = TEXT('\0');
+        	mem_free(opptr);
+		*opptr = ph;
 	}
 
 #ifdef _WIN32_WCE
@@ -409,7 +422,7 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 #else
 	*path = TEXT('\0');
 #endif
-	if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_OPEN_SINGLE) == FALSE) {
+	if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_OPEN_SINGLE, &op.SavedOpenDir) == FALSE) {
 		return TRUE;
 	}
 
@@ -854,7 +867,7 @@ BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len)
 /*
  * file_save - ƒtƒ@ƒCƒ‹‚Ì•Û‘¶
  */
-BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi)
+BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -868,7 +881,7 @@ BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL 
 		lstrcpy(path, FileName);
 	}
 
-	if (filename_select(hWnd, path, Ext, NULL, SaveAction) == FALSE) {
+	if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
 		return TRUE;
 	}
 

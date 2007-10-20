@@ -550,10 +550,18 @@ BOOL ini_read_setting(HWND hWnd)
 #ifdef _WIN32_WCE_PPC
 	op.RememberOSD = profile_get_int(GENERAL, TEXT("RememberOpenSaveDir"), 0, app_path);
 	if (op.RememberOSD == 1) {
-		op.OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+		TCHAR *OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+		op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), OpenSaveDir, app_path);
+		op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), OpenSaveDir, app_path);
+                mem_free(&OpenSaveDir);
+                profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
 	} else {
-		op.OpenSaveDir = alloc_copy_t(TEXT(""));
+		op.SavedOpenDir = alloc_copy_t(TEXT(""));
+		op.SavedSaveDir = alloc_copy_t(TEXT(""));
 	}
+#else
+        op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
+        op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
 #endif
 
 
@@ -1099,11 +1107,19 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("StripHtmlTags"), op.StripHtmlTags, app_path);
 #ifdef _WIN32_WCE_PPC
 	profile_write_int(GENERAL, TEXT("RememberOpenSaveDir"), op.RememberOSD, app_path);
-	if (op.RememberOSD == 1 && op.OpenSaveDir != NULL) {
-		profile_write_string(GENERAL, TEXT("OpenSaveDir"), op.OpenSaveDir, app_path);
+	if (op.RememberOSD == 1 && op.SavedOpenDir != NULL) {
+		profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
 	} else {
-		profile_write_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+		profile_write_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
 	}
+	if (op.RememberOSD == 1 && op.SavedSaveDir != NULL) {
+		profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
+	} else {
+		profile_write_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
+	}
+#else
+        profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
+        profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
 #endif
 
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp, app_path);
@@ -1501,9 +1517,8 @@ void ini_free(void)
 	mem_free(&op.EditApp);
 	mem_free(&op.EditAppCmdLine);
 	mem_free(&op.EditFileSuffix);
-#ifdef _WIN32_WCE_PPC
-	mem_free(&op.OpenSaveDir);
-#endif
+        mem_free(&op.SavedOpenDir);
+        mem_free(&op.SavedSaveDir);
 	mem_free(&op.URLApp);
 	mem_free(&op.AttachPath);
 	mem_free(&op.Password);
