@@ -265,7 +265,7 @@ void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const
 	int i = 0;
 
 	for (p = buf, r = ret; *p != '\0'; p++) {
-		if ((((*p >= 0x21 && *p <= 0x3C) || (*p >= 0x3E && *p <= 0x7E)) && *p != '=' && *p != '?' && *p != '_') ||
+		if ((*p >= 0x21 && *p <= 0x7E && *p != '=' && *p != '?' && *p != '_') ||
 			*p == '\r' || *p == '\n') {
 			*(r++) = *p;
 			i++;
