@@ -445,9 +445,10 @@ typedef struct _OPTION {
 //	int AttachWarning;
 	int AttachDelete;
 	int StripHtmlTags;
+        TCHAR *SavedOpenDir;
+        TCHAR *SavedSaveDir;
 #ifdef _WIN32_WCE_PPC
 	int RememberOSD;
-	TCHAR *OpenSaveDir;
 #endif
 
 	TCHAR *URLApp;
@@ -715,7 +716,7 @@ BOOL log_clear(TCHAR *fpath, TCHAR *fname);
 BOOL dir_check(TCHAR *path);
 BOOL dir_delete(TCHAR *Path, TCHAR *file);
 void filename_conv(TCHAR *buf);
-BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action);
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR **opptr);
 long file_get_size(TCHAR *FileName);
 char *file_read(TCHAR *path, long FileSize);
 BOOL file_read_select(HWND hWnd, TCHAR **buf);
@@ -725,7 +726,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import);
 int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
 BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
-BOOL file_save(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
+BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);

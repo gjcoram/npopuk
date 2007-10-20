@@ -750,7 +750,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 /*
  * SelectFile - ファイル選択
  */
-BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret)
+BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret, TCHAR **opptr)
 {
 	BOOL rc;
 	TCHAR *filepart = fname;
@@ -772,8 +772,8 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		} else {
 			filepart = fname;
 		}
-	} else if (op.RememberOSD == 1) { // GJC
-		lstrcpy(path, op.OpenSaveDir);
+	} else if (op.RememberOSD == 1 && opptr != NULL) {
+		lstrcpy(path, *opptr);
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {
@@ -803,9 +803,11 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		} else {
 			wsprintf(ret, TEXT("%s\\%s"), path, filename);
 		}
-		if (Action != FILE_CHOOSE_DIR && op.RememberOSD == 1 && lstrcmp(path, op.OpenSaveDir) != 0) { // GJC
-			mem_free(&op.OpenSaveDir);
-			op.OpenSaveDir = alloc_copy_t(path);
+		if (Action != FILE_CHOOSE_DIR && op.RememberOSD == 1 && opptr != NULL) {
+			if (lstrcmp(path, *opptr) != 0) {
+				mem_free(opptr);
+				*opptr = alloc_copy_t(path);
+			}
 		}
 	}
 	if (FileList != NULL) {
