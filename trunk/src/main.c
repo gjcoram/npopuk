@@ -2617,7 +2617,7 @@ static void UnMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (SelBox == MAILBOX_SEND && tpMailItem->MailStatus == ICON_ERROR) {
+		if (tpMailItem->MailStatus == ICON_ERROR) {
 			tpMailItem->MailStatus = ICON_NON;
 		}
 		tpMailItem->Mark = tpMailItem->MailStatus;
@@ -3409,9 +3409,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			case SELECT_SOC_CLOSE:
 				if (command_status != POP_QUIT) {
 					if (command_status == POP_RETR || command_status == POP_TOP) {
-						TCHAR ErrStr[BUF_SIZE];
-						*ErrStr = TEXT('\0');
-						pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
+						pop3_salvage_buffer(hWnd, (MailBox + RecvBox), RecvBox == SelBox);
 					}
 					ErrorSocketEnd(hWnd, RecvBox);
 					SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
@@ -3635,6 +3633,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc == -1) {
 				KillTimer(hWnd, wParam);
 				break;
+			}
+			if (command_status == POP_RETR || command_status == POP_TOP) {
+				pop3_salvage_buffer(hWnd, (MailBox + RecvBox), RecvBox == SelBox);
 			}
 			ErrorSocketEnd(hWnd, RecvBox);
 			SocketErrorMessage(hWnd, STR_ERR_SOCK_TIMEOUT, RecvBox);
@@ -4249,9 +4250,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (command_status == POP_RETR || command_status == POP_TOP) {
-				TCHAR ErrStr[BUF_SIZE];
-				*ErrStr = TEXT('\0');
-				pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
+				pop3_salvage_buffer(hWnd, (MailBox + RecvBox), RecvBox == SelBox);
 			}
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
@@ -4679,9 +4678,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			/* ê⁄ë±ÇèIóπÇ∑ÇÈ */
 			if (command_status != POP_QUIT) {
 				if (command_status == POP_RETR || command_status == POP_TOP) {
-					TCHAR ErrStr[BUF_SIZE];
-					*ErrStr = TEXT('\0');
-					pop3_salvage_buffer(hWnd, ErrStr, (MailBox + RecvBox), RecvBox == SelBox);
+					pop3_salvage_buffer(hWnd, (MailBox + RecvBox), RecvBox == SelBox);
 				}
 				ErrorSocketEnd(hWnd, RecvBox);
 				SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);

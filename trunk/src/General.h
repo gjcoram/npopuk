@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b6p1")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b6p3")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -445,8 +445,8 @@ typedef struct _OPTION {
 //	int AttachWarning;
 	int AttachDelete;
 	int StripHtmlTags;
-        TCHAR *SavedOpenDir;
-        TCHAR *SavedSaveDir;
+	TCHAR *SavedOpenDir;
+	TCHAR *SavedSaveDir;
 #ifdef _WIN32_WCE_PPC
 	int RememberOSD;
 #endif
@@ -692,7 +692,7 @@ void free_ssl(void);
 // Pop3
 BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
-BOOL pop3_salvage_buffer(HWND hWnd, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
 char *claim_mail_buf(char *buf);
 void pop3_free(void);
 #ifdef _WIN32_WCE_PPC
