@@ -519,12 +519,13 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	char *din, *dout;
 #endif
 	TCHAR *FromAddress = NULL;
+	TCHAR *BodyCSet;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
 	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
 	char *mctypr, *mbody;
 	char **enc_att = NULL;
-	int len, num_att;
+	int len, enc, num_att;
 
 	// From
 	mem_free(&tpMailItem->From);
@@ -615,26 +616,20 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (send_header_t(soc, TEXT(HEAD_MIMEVERSION), TEXT(MIME_VERSION), ErrStr) == FALSE) {
 		return FALSE;
 	}
-	// 本文のエンコード
 	if (tpMailItem->BodyCharset != NULL) {
-		if (tpMailItem->Body == NULL) {
-			send_body = (char *)mem_alloc(sizeof(char));
-			if (send_body != NULL) {
-				*send_body = '\0';
-			}
-		} else {
-			send_body = alloc_copy(tpMailItem->Body);
-		}
-		MIME_create_encode_header(tpMailItem->BodyCharset, tpMailItem->BodyEncoding, ctype, enc_type);
+		BodyCSet = tpMailItem->BodyCharset;
+		enc = tpMailItem->BodyEncoding;
 	} else {
-#ifdef UNICODE
-		body = alloc_char_to_tchar(tpMailItem->Body);
-		send_body = MIME_body_encode(body, op.BodyCharset, op.BodyEncoding, ctype, enc_type, ErrStr);
-		mem_free(&body);
-#else
-		send_body = MIME_body_encode(tpMailItem->Body, op.BodyCharset, op.BodyEncoding, ctype, enc_type, ErrStr);
-#endif
+		BodyCSet = op.BodyCharset;
+		enc = op.BodyEncoding;
 	}
+#ifdef UNICODE
+	body = alloc_char_to_tchar(tpMailItem->Body);
+	send_body = MIME_body_encode(body, BodyCSet, enc, ctype, enc_type, ErrStr);
+	mem_free(&body);
+#else
+	send_body = MIME_body_encode(tpMailItem->Body, BodyCSet, enc, ctype, enc_type, ErrStr);
+#endif
 	if (send_body == NULL) {
 		return FALSE;
 	}
