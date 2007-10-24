@@ -229,7 +229,6 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	TCHAR path[MULTI_BUF_SIZE];
 	TCHAR *ph, *qh;
 
-
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
 	of.hInstance = hInst;
@@ -247,7 +246,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.lpstrTitle = STR_TITLE_SAVE;
 		lstrcpy(path, ret);
 	}
-        if (opptr != NULL) {
+	if (opptr != NULL) {
 		of.lpstrInitialDir = *opptr;
 	}
 	of.lpstrFile = path;
@@ -291,12 +290,12 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		}
 	}
 
-        if (opptr) {
+	if (opptr) {
 		// wastes a bit of space (length of file name part) when only
-	        // one filereturned, but simplifies the coding significantly.
+		// one file returned, but simplifies the coding significantly.
 		ph = alloc_copy_t(of.lpstrFile);
 		ph[ of.nFileOffset - 1 ] = TEXT('\0');
-        	mem_free(opptr);
+		mem_free(opptr);
 		*opptr = ph;
 	}
 
