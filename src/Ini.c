@@ -460,7 +460,7 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.FwdHeader != NULL) {
 		DecodeCtrlChar(conv_buf, op.FwdHeader);
 	}
-    op.AltReplyTo = profile_alloc_string(GENERAL, TEXT("ReplyTo"), TEXT(""), app_path);
+	op.AltReplyTo = profile_alloc_string(GENERAL, TEXT("ReplyTo"), TEXT(""), app_path);
 
 	op.Bura = profile_alloc_string(GENERAL, TEXT("Bura"), STR_DEFAULT_BURA, app_path);
 	op.Oida = profile_alloc_string(GENERAL, TEXT("Oida"), STR_DEFAULT_OIDA, app_path);
@@ -553,15 +553,14 @@ BOOL ini_read_setting(HWND hWnd)
 		TCHAR *OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
 		op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), OpenSaveDir, app_path);
 		op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), OpenSaveDir, app_path);
-                mem_free(&OpenSaveDir);
-                profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
+		mem_free(&OpenSaveDir);
 	} else {
 		op.SavedOpenDir = alloc_copy_t(TEXT(""));
 		op.SavedSaveDir = alloc_copy_t(TEXT(""));
 	}
 #else
-        op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
-        op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
+	op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
+	op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
 #endif
 
 
@@ -1144,6 +1143,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_delete_key(GENERAL, TEXT("AutoMarkSend"));
 	profile_delete_key(GENERAL, TEXT("MoveAllMailBox"));
 	profile_delete_key(GENERAL, TEXT("ViewAppFullHeaders"));
+	profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {
 		if (*(op.RasInfo + j) == NULL ||
