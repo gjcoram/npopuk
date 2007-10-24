@@ -478,13 +478,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		}
 		mem_free(&mBody);
 
-		if (tpMailItem->BodyCharset == NULL &&
-			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
-			lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
-			// UTF-7, UTF-8 は常にエンコードして保存
-			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
-			tpMailItem->BodyEncoding = op.BodyEncoding;
-		}
+		tpMailItem->BodyEncoding = op.BodyEncoding;
 #ifndef _WCE_OLD
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
@@ -512,13 +506,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		if (body != NULL) {
 			str_join_t(body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 		}
-		if (tpMailItem->BodyCharset == NULL &&
-			(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
-			lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
-			// UTF-7, UTF-8 は常にエンコードして保存
-			tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
-			tpMailItem->BodyEncoding = op.BodyEncoding;
-		}
+		tpMailItem->BodyEncoding = op.BodyEncoding;
 #ifndef _WCE_OLD
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
@@ -1034,6 +1022,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		SwitchCursor(TRUE);
 	}
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETMODIFY, (WPARAM)FALSE, 0);
+	tpMailItem->BodyEncoding = op.BodyEncoding;
 
 	tpMailItem->hEditWnd = hWnd;
 	if (tpMailItem->Mark == ICON_SENTMAIL) {
@@ -1298,13 +1287,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 				SetDot(buf, tmp);
 			}
 			mem_free(&buf);
-			if (tpMailItem->BodyCharset == NULL &&
-				(lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_8)) == 0 ||
-				lstrcmpi(op.BodyCharset, TEXT(CHARSET_UTF_7)) == 0)) {
-				// UTF-7, UTF-8 は常にエンコードして保存
-				tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
-				tpMailItem->BodyEncoding = op.BodyEncoding;
-			}
+			tpMailItem->BodyEncoding = op.BodyEncoding;
 #ifndef _WCE_OLD
 			if (tpMailItem->BodyCharset == NULL ||
 				(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset)) == NULL) {
