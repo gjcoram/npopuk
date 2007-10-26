@@ -194,6 +194,7 @@ static BOOL InitApplication(HINSTANCE hInstance);
 static HWND InitInstance(HINSTANCE hInstance, int CmdShow);
 void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
 static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout);
+static void PlayMarkSound(int mark);
 
 /*
  * GetAppPath - ユーザディレクトリの作成
@@ -935,14 +936,14 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 /*
  * SetMailMenu - メニューの活性／非活性の切り替え
  */
-void SetMailMenu(HWND hWnd)
+int SetMailMenu(HWND hWnd)
 {
 	HMENU hMenu;
-	HWND hToolBar;
+	HWND hToolBar, hListView;
 	int SelFlag, SocFlag;
 	int RecvBoxFlag, SaveTypeFlag, SendBoxFlag;
 	int MoveBoxFlag;
-	int i;
+	int i, retval = -1;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -959,11 +960,19 @@ void SetMailMenu(HWND hWnd)
 	hMenu = GetMenu(hWnd);
 	hToolBar = GetDlgItem(hWnd, IDC_TB);
 #endif
-	if (hMenu == NULL) {
-		return;
+	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
+	if (hMenu == NULL || hListView == NULL) {
+		return -1;
 	}
 
-	SelFlag = (ListView_GetSelectedCount(GetDlgItem(hWnd, IDC_LISTVIEW)) <= 0) ? 0 : 1;
+	i = ListView_GetSelectedCount(hListView);
+	if (i == 1) {
+		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, 
+			ListView_GetNextItem(hListView, -1, LVNI_SELECTED));
+		retval = tpMailItem->Mark;
+		if (tpMailItem->New) retval += 100;
+	}
+	SelFlag = (i <= 0) ? 0 : 1;
 	SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
 	RecvBoxFlag = (SelBox == RecvBox) ? 0 : 1;
 	SaveTypeFlag = ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) ? 0 : 1;
@@ -1039,6 +1048,7 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_COPY2NEW, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVE2NEW, !SelFlag);
 
+	return retval;
 }
 
 /*
@@ -1367,8 +1377,8 @@ static BOOL InitWindow(HWND hWnd)
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
 		NULL, // menu skipping
-#endif	// _WIN32_WCE_PPC
 		NULL, // menu skipping
+#endif	// _WIN32_WCE_PPC
 		STR_CMDBAR_RECV,
 		STR_CMDBAR_ALLCHECK,
 		STR_CMDBAR_EXEC,
@@ -2618,7 +2628,7 @@ static void UnMark(HWND hWnd)
 			continue;
 		}
 		if (tpMailItem->MailStatus == ICON_ERROR) {
-			tpMailItem->MailStatus = ICON_NON;
+			tpMailItem->MailStatus = (SelBox == MAILBOX_SEND) ? ICON_NON : ICON_READ;
 		}
 		tpMailItem->Mark = tpMailItem->MailStatus;
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
@@ -4764,7 +4774,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_LV_EVENT:
 		switch (wParam) {
 		case LVN_ITEMCHANGED:
-			SetMailMenu(hWnd);
+			// GJC sound on 
+			i = SetMailMenu(hWnd);
+			if (i >= 0 && op.ItemPlaySound) {
+				PlayMarkSound(i);
+			}
 			break;
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -5279,6 +5293,43 @@ static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned i
 	}
 
 	return iResult;
+}
+
+/*
+ * PlayMarkSound - sound based on Mark (icon status)
+ */
+static void PlayMarkSound(int mark)
+{
+#ifdef _WIN32_WCE_LAGENDA
+	MessageBuzzer(0xFFFFFFFF);
+#else
+	long beep_code = MB_OK; // ICON_NON, ICON_READ, and ICON_SENTMAIL
+	switch(mark) {
+		case ICON_NON:
+		case ICON_READ:
+		case ICON_SENTMAIL:
+			beep_code = MB_OK;
+			break;
+		case ICON_MAIL:
+			beep_code = MB_ICONHAND;
+			break;
+		case ICON_DOWN:
+			beep_code = MB_ICONQUESTION;
+			break;
+		case ICON_DEL:
+			beep_code = MB_ICONEXCLAMATION;
+			break;
+		case ICON_ERROR:
+			beep_code = MB_ICONERROR;
+			break;
+		case ICON_SEND:
+		default: // mark > 100 means new
+			beep_code = MB_ICONASTERISK;
+			break;
+	}
+	MessageBeep(beep_code);
+#endif
+	return;
 }
 
 /***
