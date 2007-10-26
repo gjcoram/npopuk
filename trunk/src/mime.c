@@ -1232,7 +1232,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 
 	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL) {
 		char *p;
-		for (p = enc_buf; p != '\0'; p++) {
+		for (p = enc_buf; *p != '\0'; p++) {
 			if (*p == '\r' && *(p+1) != '\n') {
 				if (*(p+1) == '\r') {
 					*(p+1) = '\n'; // \r\r -> \r\n
