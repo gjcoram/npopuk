@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b6p3")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b7")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -407,8 +407,9 @@ typedef struct _OPTION {
 	int ClearNewOverlay;
 
 	int NewMailSound;
-	TCHAR *NewMailSoundFile;
 	int ExecEndSound;
+	int ItemPlaySound;
+	TCHAR *NewMailSoundFile;
 	TCHAR *ExecEndSoundFile;
 
 	int AutoCheck;
@@ -937,7 +938,7 @@ void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);
 int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag);
-void SetMailMenu(HWND hWnd);
+int SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);

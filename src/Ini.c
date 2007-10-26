@@ -494,6 +494,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.NewMailSoundFile = profile_alloc_string(GENERAL, TEXT("NewMailSoundFile"), TEXT(""), app_path);
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0, app_path);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""), app_path);
+	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0, app_path);
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0, app_path);
 	op.AutoCheckTime = profile_get_int(GENERAL, TEXT("AutoCheckTime"), 10, app_path);
@@ -1068,6 +1069,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_string(GENERAL, TEXT("NewMailSoundFile"), op.NewMailSoundFile, app_path);
 	profile_write_int(GENERAL, TEXT("ExecEndSound"), op.ExecEndSound, app_path);
 	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile, app_path);
+	profile_write_int(GENERAL, TEXT("ItemPlaySound"), op.ItemPlaySound, app_path);
 
 	profile_write_int(GENERAL, TEXT("AutoCheck"), op.AutoCheck, app_path);
 	profile_write_int(GENERAL, TEXT("AutoCheckTime"), op.AutoCheckTime, app_path);
