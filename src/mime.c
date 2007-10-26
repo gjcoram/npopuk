@@ -1230,9 +1230,20 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 		tstrcpy(enc_buf, body);
 	}
 
-	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL ||
-		str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
-		// テキストではない
+	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL) {
+		char *p;
+		for (p = enc_buf; p != '\0'; p++) {
+			if (*p == '\r' && *(p+1) != '\n') {
+				if (*(p+1) == '\r') {
+					*(p+1) = '\n'; // \r\r -> \r\n
+				} else {
+					*p = ' ';
+				}
+			}
+		}
+		return enc_buf;
+	}
+	if (str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
 		return enc_buf;
 	}
 
