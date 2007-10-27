@@ -819,8 +819,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
 		NULL, // menu skipping
-#endif	// _WIN32_WCE_PPC
 		NULL, // menu skipping
+#endif	// _WIN32_WCE_PPC
 		STR_CMDBAR_SEND,
 		STR_CMDBAR_SBOXMARK,
 		STR_CMDBAR_SENDBOX,
