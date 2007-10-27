@@ -424,6 +424,11 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
+		if (op.SocLog > 1) {
+			TCHAR buf[256];
+			wsprintf(buf, TEXT("%s failed for %s"), CMD_RCPT_TO, p);
+			log_save(AppDir, LOG_FILE, buf);
+		}
 		mem_free(&p);
 		return (TCHAR *)-1;
 	}
