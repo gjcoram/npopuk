@@ -616,7 +616,10 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			} else {
 				SendMessage(hWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
 			}
+		} else if (wParam == 0x03) { // 0x03 is ascii for ctrl-C
+			SendMessage(hWnd, WM_COPY, 0, 0);
 		}
+		// and fall through for the return
 	case WM_DEADCHAR:
 	case WM_CUT:
 	case WM_CLEAR:
