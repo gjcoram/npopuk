@@ -1068,8 +1068,13 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 	}
 
 	if (encode == FALSE) {
-		// US-ASCII
-		MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
+		if (charset_t != NULL && (lstrcmpi(charset_t, TEXT(CHARSET_UTF_8)) == 0 ||
+			lstrcmpi(charset_t, TEXT(CHARSET_UTF_7)) == 0)) {
+			MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
+		} else {
+			// US-ASCII
+			MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
+		}
 		ret = alloc_tchar_to_char(buf);
 	} else {
 		MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
