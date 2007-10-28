@@ -4124,6 +4124,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SaveBoxesLoaded = TRUE; // may become false if filter is added
 			}
 			if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Check all"));
+			AutoCheckCnt = 0; // reset autocheck timer
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
 			ExecFlag = FALSE;
@@ -4222,7 +4223,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 
 			AutoCheckFlag = FALSE;
-			AutoCheckCnt = 0; // reset autocheck timer
 			AllCheck = TRUE;
 			ExecFlag = TRUE;
 			CheckBox = MAILBOX_USER - 1;
