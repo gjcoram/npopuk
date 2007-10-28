@@ -649,6 +649,8 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 			if (((MAILITEM *)lParam2)->From != NULL)
 				wbuf2 = ((MAILITEM *)lParam2)->From;
 		}
+		while (*wbuf1 == TEXT('"') || *wbuf1 == TEXT('<')) wbuf1++;
+		while (*wbuf2 == TEXT('"') || *wbuf2 == TEXT('<')) wbuf2++;
 		break;
 
 	//Date
