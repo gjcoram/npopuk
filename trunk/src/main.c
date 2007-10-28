@@ -3621,11 +3621,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (AutoCheckCnt < op.AutoCheckTime) {
 				break;
 			}
-			AutoCheckCnt = 0;
 			if (g_soc != -1 || ShowError == TRUE) {
 				break;
 			}
 			if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Auto check"));
+			AutoCheckCnt = 0;
 			AutoCheckFlag = TRUE;
 			AllCheck = TRUE;
 			KeyShowHeader = FALSE;
@@ -4222,6 +4222,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 
 			AutoCheckFlag = FALSE;
+			AutoCheckCnt = 0; // reset autocheck timer
 			AllCheck = TRUE;
 			ExecFlag = TRUE;
 			CheckBox = MAILBOX_USER - 1;
@@ -4774,7 +4775,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_LV_EVENT:
 		switch (wParam) {
 		case LVN_ITEMCHANGED:
-			// GJC sound on 
+			// GJC sound if single selection, based on mailitem's Mark
 			i = SetMailMenu(hWnd);
 			if (i >= 0 && op.ItemPlaySound) {
 				PlayMarkSound(i);
