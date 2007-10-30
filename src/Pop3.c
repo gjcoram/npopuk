@@ -1792,10 +1792,11 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 /*
  * pop3_salvage_buffer - when server disconnects, preserve what's been received
  */
-BOOL pop3_salvage_buffer(HWND hWnd, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
+BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
 	BOOL ret = FALSE;
 	if (receiving_data == TRUE) {
+		TCHAR ErrStr[BUF_SIZE] = TEXT("");
 		char end[2] = ".";
 		int salvage = POP_ERR;
 		if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Salvaging received mail data"));
@@ -1807,6 +1808,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL Show
 		if (salvage == POP_QUIT) {
 			ret = TRUE;
 		}
+		if (op.SocLog > 1 && *ErrStr != TEXT('\0')) log_save(AppDir, LOG_FILE, ErrStr);
 	}
 
 	return ret;
