@@ -77,6 +77,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern SOCKET g_soc;
 extern MAILBOX *MailBox;
 extern BOOL AutoCheckFlag;
+extern int command_status, SelBox, RecvBox;
 
 /* Local Function Prototypes */
 static BOOL RasConnectStart(HWND hWnd, int BoxIndex);
@@ -362,6 +363,9 @@ static void RasErr(int ErrorCode, TCHAR *ErrStr)
 	} else {
 		wRasGetErrorString = GetProcAddress((HMODULE)hrasapi, NAME_RasGetErrorString);
 		if (wRasGetErrorString == NULL) {
+			if (command_status == POP_RETR || command_status == POP_TOP) {
+				pop3_salvage_buffer(NULL, (MailBox + RecvBox), RecvBox == SelBox);
+			}
 			lstrcpy(ErrStr,STR_ERR_RAS_DISCONNECT);
 		} else {
 			wRasGetErrorString((unsigned int)ErrorCode, ErrStr, BUF_SIZE - 1);
