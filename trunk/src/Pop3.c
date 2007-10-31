@@ -1120,6 +1120,19 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			return POP_ERR;
 		}
 	}
+	if (soc == -1) {
+		// salvaging: check for minimal headers
+		char *p;
+		for (p = mail_buf; *p != '\0'; p++) {
+			if (str_cmp_ni(p, "From:", 5) == 0 || str_cmp_ni(p, "Subject:", 8) == 0) {
+				break;
+			}
+		}
+		if (*p == '\0') {
+			return POP_ERR;
+		}
+	}
+
 	new_message_id = item_get_message_id(mail_buf);
 	// ヘッダからアイテムを作成
 	tpMailItem = item_header_to_item(tpMailBox, mail_buf, mail_size);
@@ -1397,6 +1410,22 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (check_message_id(mail_buf, tpMailItem, ErrStr, tpMailBox) == FALSE) {
 		return POP_ERR;
 	}
+	if (soc == -1) {
+		// salvaging: check for minimal headers
+		char *p;
+		for (p = mail_buf; *p != '\0'; p++) {
+			if (str_cmp_ni(p, "From:", 5) == 0 || str_cmp_ni(p, "Subject:", 8) == 0) {
+				break;
+			}
+		}
+		if (*p == '\0') {
+			return POP_ERR;
+		}
+		// salvaging: did we get more than last time?
+		if (tpMailItem->Body != NULL && lstrlen(tpMailItem->Body) > mail_buf_len) {
+			return POP_ERR;
+		}
+	}
 
 	// 本文を取得
 	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE, tpMailBox);
@@ -1404,10 +1433,11 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
 	}
-	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	if (soc == -1) {
 		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+		tpMailItem->Download = FALSE;
 	}
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 
 	if (ShowFlag == TRUE) {
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -1795,7 +1825,7 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
 	BOOL ret = FALSE;
-	if (receiving_data == TRUE) {
+	if (receiving_data == TRUE && mail_buf_len > 10) {
 		TCHAR ErrStr[BUF_SIZE] = TEXT("");
 		char end[2] = ".";
 		int salvage = POP_ERR;
