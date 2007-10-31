@@ -235,7 +235,7 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 				if (*r == '\n' && *(r-1) != '\r') {
 					*(r++) = '\r';
 					*r = '\n';
-#ifdef DO_I_NEED_THIS
+#ifdef HANDLE_BARE_SLASH_R
 				} else if (*r == '\r' && *p != '\n' && *p != '=' && *(p+1) != '0' && *(p+2) != 'D') {
 					r++;
 					*r = '\n';
