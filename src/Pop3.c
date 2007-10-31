@@ -48,8 +48,8 @@
 
 /* Global Variables */
 static char *mail_buf = NULL;				// メール受信用バッファ
-static int mail_buf_size;					// メール受信用バッファの実サイズ
-static int mail_buf_len;					// メール受信用バッファ内の文字列長
+static unsigned int mail_buf_size;			// メール受信用バッファの実サイズ
+static unsigned int mail_buf_len;			// メール受信用バッファ内の文字列長
 static int mail_size = -1;					// メールサイズ
 static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
@@ -92,7 +92,7 @@ extern int ssl_type;
 extern UINT nBroadcastMsg;
 
 /* Local Function Prototypes */
-static BOOL mail_buf_init(int size);
+static BOOL mail_buf_init(unsigned int size);
 static BOOL mail_buf_set(char *buf, int len);
 static BOOL uidl_init(int size);
 static BOOL uidl_set(char *buf, int len);
@@ -157,7 +157,7 @@ HWND findTodayPlugin(WCHAR *wTodayItem)
 /*
  * mail_buf_init - メールバッファを初期化
  */
-static BOOL mail_buf_init(int size)
+static BOOL mail_buf_init(unsigned int size)
 {
 	if (mail_buf == NULL || mail_buf_size < size) {
 		mem_free(&mail_buf);
@@ -1422,7 +1422,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			return POP_ERR;
 		}
 		// salvaging: did we get more than last time?
-		if (tpMailItem->Body != NULL && lstrlen(tpMailItem->Body) > mail_buf_len) {
+		if (tpMailItem->Body != NULL && strlen(tpMailItem->Body) > mail_buf_len) {
 			return POP_ERR;
 		}
 	}
