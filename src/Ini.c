@@ -508,7 +508,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0, app_path);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""), app_path);
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0, app_path);
-	wsprintf(tmp, TEXT("%s\\SOUNDS\\"), DataDir);
+	wsprintf(tmp, TEXT("%sSOUNDS\\"), DataDir);
 	op.SoundDirectory = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), tmp, app_path);
 	if (op.ItemPlaySound > 0) {
 		get_sound_file(op.SoundDirectory, TEXT("NEW.WAV"), &op.ItemNewSoundFile);
