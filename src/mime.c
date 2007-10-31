@@ -1068,15 +1068,19 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 	}
 
 	if (encode == FALSE) {
-		if (charset_t != NULL && (lstrcmpi(charset_t, TEXT(CHARSET_UTF_8)) == 0 ||
-			lstrcmpi(charset_t, TEXT(CHARSET_UTF_7)) == 0)) {
-			MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
-		} else {
-			// US-ASCII
-			MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
-		}
+		*ret_content_type = '\0';
+		*ret_encoding = '\0';
+		// US-ASCII
+		//MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
 		ret = alloc_tchar_to_char(buf);
 	} else {
+		if (encoding == ENC_TYPE_7BIT) {
+			// can't send 8bit data with 7bit encoding (unless you convert ü to ue or "u ?)
+			encoding = ENC_TYPE_Q_PRINT;
+		}
+		//if (lstrcmpi(charset_t, TEXT(CHARSET_US_ASCII)) == 0) {
+			// that's a lie if there's 8-bit data ...
+		//}
 		MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
 
 		// charset‚Ì•ÏŠ·
@@ -1238,9 +1242,19 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL) {
 		char *p;
 		for (p = enc_buf; *p != '\0'; p++) {
+#ifdef HANDLE_BARE_SLASH_R
 			if (*p == '\r' && *(p+1) != '\n') {
 				if (*(p+1) == '\r') {
 					*(p+1) = '\n'; // \r\r -> \r\n
+				} else {
+					*p = ' ';
+				}
+			}
+#endif
+			// YPOPs! fix (some messages come in with bare \n
+			if (*p == '\n' && *(p-1) != '\r') {
+				if (*(p+1) == '\n') {
+					*p = '\r'; // \n\n -> \r\n
 				} else {
 					*p = ' ';
 				}
