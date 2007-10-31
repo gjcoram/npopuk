@@ -556,15 +556,17 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 
 	///////////// MRP /////////////////////
 #ifdef UNICODE
-   wcscpy(pathBackup, path);
-   wcscat(pathBackup, TEXT(".bak"));
+	wcscpy(pathBackup, path);
+	wcscat(pathBackup, TEXT(".bak"));
 #else
-   strcpy_s(pathBackup, BUF_SIZE-5, path);
-   strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+	strcpy_s(pathBackup, BUF_SIZE-5, path);
+	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
 
-	if(file_get_size(pathBackup) != -1) // Backup File exists
-	{
+	FileSize = file_get_size(pathBackup);
+	if (FileSize == 0) {
+		DeleteFile(pathBackup); // GJC
+	} else if (FileSize != -1) { // Backup File exists
 		DeleteFile(path);  // delete the current file
 		MoveFile(pathBackup, path); // replace the the current file with the backup file.
 	}
@@ -1045,29 +1047,15 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 		p = item_to_string(p, *(tpMailBox->tpMailItem + i), 
 			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
-#ifdef _DEBUG
-{
-	TCHAR msg[BUF_SIZE];
-	i = tstrlen(tmp);
-	if (op.GJCDebug && len != i) {
-		wsprintf(msg, TEXT("file_save_mismatch (%s): len1=%d != len2 = %d"), FileName, len, i);
-		ErrorMessage(NULL, msg);
-	}
-	if (len == 0 && tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-		wsprintf(msg, TEXT("file_save_mailbox (%s): no data to save! (mailcnt=%d)"), FileName, tpMailBox->MailItemCnt);
-		ErrorMessage(NULL, msg);
-	}
-}
-#endif
 #endif	// DIV_SAVE
 
 	///////////// MRP /////////////////////
 #ifdef UNICODE
-   wcscpy(pathBackup, path);
-   wcscat(pathBackup, TEXT(".bak"));
+	wcscpy(pathBackup, path);
+	wcscat(pathBackup, TEXT(".bak"));
 #else
-   strcpy_s(pathBackup, BUF_SIZE-5, path);
-   strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+	strcpy_s(pathBackup, BUF_SIZE-5, path);
+	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
 	DeleteFile(pathBackup);
 	MoveFile(path, pathBackup); // Create the backup file.
@@ -1094,13 +1082,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 //			return FALSE;
 //		}
 //	}
-#ifdef _DEBUG
-if (tpMailBox->MailItemCnt == 0 && tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-	TCHAR msg[BUF_SIZE];
-	wsprintf(msg, TEXT("file_save_mailbox (%s): no data to save! (mailcnt=%d)"), FileName, tpMailBox->MailItemCnt);
-	ErrorMessage(NULL, msg);
-}
-#endif	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
@@ -1186,7 +1168,7 @@ static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem)
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook)
 {
 	HANDLE hFile;
-	TCHAR path[BUF_SIZE];
+	TCHAR path[BUF_SIZE], pathBackup[BUF_SIZE];
 	int i;
 
 #ifndef _WIN32_WCE
@@ -1194,6 +1176,16 @@ BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddr
 #endif
 
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
+
+#ifdef UNICODE
+	wcscpy(pathBackup, path);
+	wcscat(pathBackup, TEXT(".bak"));
+#else
+	strcpy_s(pathBackup, BUF_SIZE-5, path);
+	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+	DeleteFile(pathBackup);
+	MoveFile(path, pathBackup); // Create the backup file.
 
 	//The file which it retains is opened
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1212,6 +1204,7 @@ BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddr
 		}
 	}
 	CloseHandle(hFile);
+	DeleteFile(pathBackup);
 	return TRUE;
 }
 
@@ -1221,7 +1214,7 @@ BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddr
 int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 {
 	ADDRESSITEM *tpAddrItem;
-	TCHAR path[BUF_SIZE];
+	TCHAR path[BUF_SIZE], pathBackup[BUF_SIZE];
 	TCHAR *MemFile, *AllocBuf = NULL;
 	TCHAR *p, *r, *s;
 	char *FileBuf;
@@ -1238,6 +1231,22 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 #endif
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+
+	// GJC copies MRP code from file_read_mailbox
+#ifdef UNICODE
+	wcscpy(pathBackup, path);
+	wcscat(pathBackup, TEXT(".bak"));
+#else
+	strcpy_s(pathBackup, BUF_SIZE-5, path);
+	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+	FileSize = file_get_size(pathBackup);
+	if (FileSize == 0) {
+		DeleteFile(pathBackup); // GJC
+	} else if (FileSize != -1) { // Backup File exists
+		DeleteFile(path);  // delete the current file
+		MoveFile(pathBackup, path); // replace the the current file with the backup file.
+	}
 
 #ifdef _WIN32_WCE
 	///////////// MRP /////////////////////
