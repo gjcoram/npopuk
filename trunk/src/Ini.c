@@ -172,7 +172,7 @@ static void ini_get_encode_info(void)
 static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
 {
 	TCHAR buf[BUF_SIZE];
-	wsprintf(buf, TEXT("%s\\%s"), dir, name);
+	wsprintf(buf, TEXT("%s%s"), dir, name);
 	if (file_get_size(buf) > 0) {
 		*ret = alloc_copy_t(buf);
 	}
