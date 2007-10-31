@@ -970,7 +970,10 @@ int SetMailMenu(HWND hWnd)
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, 
 			ListView_GetNextItem(hListView, -1, LVNI_SELECTED));
 		retval = tpMailItem->Mark;
-		if (tpMailItem->New) retval += 100;
+		if (tpMailItem->New) retval |= 0x10;
+		if (tpMailItem->Download) retval |= 0x20;
+		if (tpMailItem->Multipart == MULTIPART_ATTACH) retval |= 0x40;
+		if (tpMailItem->Multipart == MULTIPART_CONTENT) retval |= 0x80;
 	}
 	SelFlag = (i <= 0) ? 0 : 1;
 	SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
@@ -5301,35 +5304,65 @@ static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned i
  */
 static void PlayMarkSound(int mark)
 {
-#ifdef _WIN32_WCE_LAGENDA
-	MessageBuzzer(0xFFFFFFFF);
-#else
-	long beep_code = MB_OK; // ICON_NON, ICON_READ, and ICON_SENTMAIL
-	switch(mark) {
+	if ((mark & 0x01) && op.ItemNewSoundFile != NULL) {
+		sndPlaySound(op.ItemNewSoundFile, SND_ASYNC | SND_NODEFAULT);
+	}
+	if (mark & 0x20) {
+		if (op.ItemFullSoundFile != NULL) {
+			sndPlaySound(op.ItemFullSoundFile, SND_ASYNC | SND_NODEFAULT);
+		}
+	} else if (op.ItemPartialSoundFile != NULL) {
+		sndPlaySound(op.ItemPartialSoundFile, SND_ASYNC | SND_NODEFAULT);
+	}
+	if (mark & 0x40 && op.ItemAttachSoundFile != NULL) {
+		sndPlaySound(op.ItemAttachSoundFile, SND_ASYNC | SND_NODEFAULT);
+	}
+	if (mark & 0x80 && op.ItemHtmlSoundFile != NULL) {
+		sndPlaySound(op.ItemHtmlSoundFile, SND_ASYNC | SND_NODEFAULT);
+	}
+	switch (mark & 0x0F) {
 		case ICON_NON:
-		case ICON_READ:
-		case ICON_SENTMAIL:
-			beep_code = MB_OK;
+			if (op.ItemNonSoundFile != NULL) {
+				sndPlaySound(op.ItemNonSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
 		case ICON_MAIL:
-			beep_code = MB_ICONHAND;
+			if (op.ItemUnreadSoundFile != NULL) {
+				sndPlaySound(op.ItemUnreadSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
+			break;
+		case ICON_READ:
+			if (op.ItemReadSoundFile != NULL) {
+				sndPlaySound(op.ItemReadSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
 		case ICON_DOWN:
-			beep_code = MB_ICONQUESTION;
+			if (op.ItemDownSoundFile != NULL) {
+				sndPlaySound(op.ItemDownSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
 		case ICON_DEL:
-			beep_code = MB_ICONEXCLAMATION;
+			if (op.ItemDelSoundFile != NULL) {
+				sndPlaySound(op.ItemDelSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
-		case ICON_ERROR:
-			beep_code = MB_ICONERROR;
+		case ICON_SENTMAIL:
+			if (op.ItemSentSoundFile != NULL) {
+				sndPlaySound(op.ItemSentSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
 		case ICON_SEND:
-		default: // mark > 100 means new
-			beep_code = MB_ICONASTERISK;
+			if (op.ItemSendSoundFile != NULL) {
+				sndPlaySound(op.ItemSendSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
+			break;
+		case ICON_ERROR:
+			if (op.ItemErrorSoundFile != NULL) {
+				sndPlaySound(op.ItemErrorSoundFile, SND_ASYNC | SND_NODEFAULT);
+			}
 			break;
 	}
-	MessageBeep(beep_code);
-#endif
+
 	return;
 }
 

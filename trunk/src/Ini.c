@@ -41,6 +41,7 @@ extern BOOL SaveBoxesLoaded;
 
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
+static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret);
 #ifndef _WIN32_WCE
 static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
 #endif
@@ -163,6 +164,18 @@ static void ini_get_encode_info(void)
 	op.HeadCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
 	op.BodyCharset = alloc_copy_t(TEXT(CHARSET_ISO_8859_1));
 #endif
+}
+
+/*
+ * get_sound_file
+ */
+static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
+{
+	TCHAR buf[BUF_SIZE];
+	wsprintf(buf, TEXT("%s\\%s"), dir, name);
+	if (file_get_size(buf) > 0) {
+		*ret = alloc_copy_t(buf);
+	}
 }
 
 /*
@@ -495,6 +508,23 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0, app_path);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""), app_path);
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0, app_path);
+	wsprintf(tmp, TEXT("%s\\SOUNDS\\"), DataDir);
+	op.SoundDirectory = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), tmp, app_path);
+	if (op.ItemPlaySound > 0) {
+		get_sound_file(op.SoundDirectory, TEXT("NEW.WAV"), &op.ItemNewSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("FULL.WAV"), &op.ItemFullSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("ATTACH.WAV"), &op.ItemAttachSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("ATTACH_HTML.WAV"), &op.ItemHtmlSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("NO_ICON.WAV"), &op.ItemNonSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("UNREAD.WAV"), &op.ItemUnreadSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("READ.WAV"), &op.ItemReadSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("DOWNLOAD.WAV"), &op.ItemDownSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("DELETE.WAV"), &op.ItemDelSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("SEND.WAV"), &op.ItemSendSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("SENT.WAV"), &op.ItemSentSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
+	}
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0, app_path);
 	op.AutoCheckTime = profile_get_int(GENERAL, TEXT("AutoCheckTime"), 10, app_path);
@@ -1070,6 +1100,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ExecEndSound"), op.ExecEndSound, app_path);
 	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile, app_path);
 	profile_write_int(GENERAL, TEXT("ItemPlaySound"), op.ItemPlaySound, app_path);
+	profile_write_string(GENERAL, TEXT("SoundDirectory"), op.SoundDirectory, app_path);
 
 	profile_write_int(GENERAL, TEXT("AutoCheck"), op.AutoCheck, app_path);
 	profile_write_int(GENERAL, TEXT("AutoCheckTime"), op.AutoCheckTime, app_path);
@@ -1512,6 +1543,20 @@ void ini_free(void)
 	mem_free(&op.TimeFormat);
 	mem_free(&op.NewMailSoundFile);
 	mem_free(&op.ExecEndSoundFile);
+	mem_free(&op.SoundDirectory);
+	mem_free(&op.ItemNewSoundFile);
+	mem_free(&op.ItemPartialSoundFile);
+	mem_free(&op.ItemFullSoundFile);
+	mem_free(&op.ItemAttachSoundFile);
+	mem_free(&op.ItemHtmlSoundFile);
+	mem_free(&op.ItemNonSoundFile);
+	mem_free(&op.ItemUnreadSoundFile);
+	mem_free(&op.ItemReadSoundFile);
+	mem_free(&op.ItemDownSoundFile);
+	mem_free(&op.ItemDelSoundFile);
+	mem_free(&op.ItemSendSoundFile);
+	mem_free(&op.ItemSentSoundFile);
+	mem_free(&op.ItemErrorSoundFile);
 	mem_free(&op.ViewApp);
 	mem_free(&op.ViewAppCmdLine);
 	mem_free(&op.ViewFileSuffix);

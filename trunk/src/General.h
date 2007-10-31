@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b7p2")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b7p5")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -411,6 +411,20 @@ typedef struct _OPTION {
 	int ItemPlaySound;
 	TCHAR *NewMailSoundFile;
 	TCHAR *ExecEndSoundFile;
+	TCHAR *SoundDirectory;
+	TCHAR *ItemNewSoundFile;
+	TCHAR *ItemPartialSoundFile;
+	TCHAR *ItemFullSoundFile;
+	TCHAR *ItemAttachSoundFile;
+	TCHAR *ItemHtmlSoundFile;
+	TCHAR *ItemNonSoundFile;
+	TCHAR *ItemUnreadSoundFile;
+	TCHAR *ItemReadSoundFile;
+	TCHAR *ItemDownSoundFile;
+	TCHAR *ItemDelSoundFile;
+	TCHAR *ItemSendSoundFile;
+	TCHAR *ItemSentSoundFile;
+	TCHAR *ItemErrorSoundFile;
 
 	int AutoCheck;
 	int AutoCheckTime;
