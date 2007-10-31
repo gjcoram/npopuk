@@ -972,8 +972,10 @@ int SetMailMenu(HWND hWnd)
 		retval = tpMailItem->Mark;
 		if (tpMailItem->New) retval |= 0x10;
 		if (tpMailItem->Download) retval |= 0x20;
-		if (tpMailItem->Multipart == MULTIPART_ATTACH) retval |= 0x40;
-		if (tpMailItem->Multipart == MULTIPART_CONTENT) retval |= 0x80;
+		if (tpMailItem->Multipart == MULTIPART_ATTACH || tpMailItem->Multipart == MULTIPART_CONTENT) 
+			retval |= 0x40;
+		if (tpMailItem->Multipart == MULTIPART_HTML) 
+			retval |= 0x80;
 	}
 	SelFlag = (i <= 0) ? 0 : 1;
 	SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
@@ -5304,21 +5306,21 @@ static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned i
  */
 static void PlayMarkSound(int mark)
 {
-	if ((mark & 0x01) && op.ItemNewSoundFile != NULL) {
-		sndPlaySound(op.ItemNewSoundFile, SND_ASYNC | SND_NODEFAULT);
+	if ((mark & 0x10) && op.ItemNewSoundFile != NULL) {
+		sndPlaySound(op.ItemNewSoundFile, SND_SYNC | SND_NODEFAULT);
 	}
 	if (mark & 0x20) {
 		if (op.ItemFullSoundFile != NULL) {
-			sndPlaySound(op.ItemFullSoundFile, SND_ASYNC | SND_NODEFAULT);
+			sndPlaySound(op.ItemFullSoundFile, SND_SYNC | SND_NODEFAULT);
 		}
 	} else if (op.ItemPartialSoundFile != NULL) {
-		sndPlaySound(op.ItemPartialSoundFile, SND_ASYNC | SND_NODEFAULT);
+		sndPlaySound(op.ItemPartialSoundFile, SND_SYNC | SND_NODEFAULT);
 	}
-	if (mark & 0x40 && op.ItemAttachSoundFile != NULL) {
-		sndPlaySound(op.ItemAttachSoundFile, SND_ASYNC | SND_NODEFAULT);
+	if ((mark & 0x40) && op.ItemAttachSoundFile != NULL) {
+		sndPlaySound(op.ItemAttachSoundFile, SND_SYNC | SND_NODEFAULT);
 	}
-	if (mark & 0x80 && op.ItemHtmlSoundFile != NULL) {
-		sndPlaySound(op.ItemHtmlSoundFile, SND_ASYNC | SND_NODEFAULT);
+	if ((mark & 0x80) && op.ItemHtmlSoundFile != NULL) {
+		sndPlaySound(op.ItemHtmlSoundFile, SND_SYNC | SND_NODEFAULT);
 	}
 	switch (mark & 0x0F) {
 		case ICON_NON:
