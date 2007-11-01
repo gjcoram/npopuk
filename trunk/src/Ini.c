@@ -508,9 +508,21 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0, app_path);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""), app_path);
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0, app_path);
-	wsprintf(tmp, TEXT("%sSOUNDS\\"), DataDir);
-	op.SoundDirectory = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), tmp, app_path);
-	if (op.ItemPlaySound > 0) {
+	op.SoundDirSetting = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), TEXT("DataFileDir\\SOUNDS"), app_path);
+	len = lstrlen(TEXT("DataFileDir\\"));
+	if (str_cmp_n_t(op.SoundDirSetting, TEXT("DataFileDir\\"), len) == 0) {
+		wsprintf(tmp, TEXT("%s%s"), DataDir, op.SoundDirSetting + len);
+		op.SoundDirectory = alloc_copy_t(tmp);
+	} else {
+		len = lstrlen(TEXT("AppDir\\"));
+		if (str_cmp_n_t(op.SoundDirSetting, TEXT("AppDir\\"), len) == 0) {
+			wsprintf(tmp, TEXT("%s%s"), AppDir, op.SoundDirSetting + len);
+			op.SoundDirectory = alloc_copy_t(tmp);
+		} else {
+			op.SoundDirectory = alloc_copy_t(op.SoundDirSetting);
+		}
+	}
+	if (op.ItemPlaySound > 0 && op.SoundDirectory != NULL) {
 		get_sound_file(op.SoundDirectory, TEXT("NEW.WAV"), &op.ItemNewSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("FULL.WAV"), &op.ItemFullSoundFile);
@@ -1100,7 +1112,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ExecEndSound"), op.ExecEndSound, app_path);
 	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile, app_path);
 	profile_write_int(GENERAL, TEXT("ItemPlaySound"), op.ItemPlaySound, app_path);
-	profile_write_string(GENERAL, TEXT("SoundDirectory"), op.SoundDirectory, app_path);
+	profile_write_string(GENERAL, TEXT("SoundDirectory"), op.SoundDirSetting, app_path);
 
 	profile_write_int(GENERAL, TEXT("AutoCheck"), op.AutoCheck, app_path);
 	profile_write_int(GENERAL, TEXT("AutoCheckTime"), op.AutoCheckTime, app_path);
@@ -1544,6 +1556,7 @@ void ini_free(void)
 	mem_free(&op.NewMailSoundFile);
 	mem_free(&op.ExecEndSoundFile);
 	mem_free(&op.SoundDirectory);
+	mem_free(&op.SoundDirSetting);
 	mem_free(&op.ItemNewSoundFile);
 	mem_free(&op.ItemPartialSoundFile);
 	mem_free(&op.ItemFullSoundFile);
