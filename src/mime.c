@@ -1055,23 +1055,20 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 	BOOL encode = FALSE;
 
 	buf = (body != NULL) ? body : TEXT("");
-	for (p = buf; *p != TEXT('\0'); p++) {
-		if (is_8bit_char_t(p) == TRUE) {
+	for (p = buf, i = 0; *p != TEXT('\0'); p++, i++) {
+		if (is_8bit_char_t(p) == TRUE || i > 1000) {
 			encode = TRUE;
 			break;
 		}
-#ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (*p == '\r' && *(p+1) == '\n') {
+			i = 0;
 			p++;
 		}
-#endif
 	}
 
 	if (encode == FALSE) {
-		*ret_content_type = '\0';
-		*ret_encoding = '\0';
-		// US-ASCII
-		//MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
+		// Assume US-ASCII (could be national variant)
+		MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
 		ret = alloc_tchar_to_char(buf);
 	} else {
 		if (encoding == ENC_TYPE_7BIT) {
