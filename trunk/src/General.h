@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b7p5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -411,7 +411,8 @@ typedef struct _OPTION {
 	int ItemPlaySound;
 	TCHAR *NewMailSoundFile;
 	TCHAR *ExecEndSoundFile;
-	TCHAR *SoundDirectory;
+	TCHAR *SoundDirSetting; // in ini file, may be relative to DataDir or AppDir
+	TCHAR *SoundDirectory; // actual path
 	TCHAR *ItemNewSoundFile;
 	TCHAR *ItemPartialSoundFile;
 	TCHAR *ItemFullSoundFile;
@@ -621,7 +622,7 @@ typedef struct _MAILITEM {
 typedef struct _ADDRESSBOOK {
 	struct _ADDRESSITEM **tpAddrItem;
 	TCHAR *AddrList;
-	BOOL GetAddrList;
+	BOOL GetAddrList, FromAddrInfo;
 	int ItemCnt, EditNum;
 } ADDRESSBOOK;
 
