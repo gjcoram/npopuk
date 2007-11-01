@@ -4900,7 +4900,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR *buf, *p;
 	TCHAR *type;
 	TCHAR msg[BUF_SIZE];
-	int i, ItemIndex;
+	int i, ItemIndex, ans;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -5056,8 +5056,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON_ADDADDRESS:
 			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 			if (ListView_GetSelectedCount(hListView) <= 0) {
-				ErrorMessage(hDlg, STR_ERR_SELECTMAILADDR);
-				break;
+				SendMessage(hDlg, WM_COMMAND, ID_LV_ALLSELECT, 0);
 			}
 #ifdef _WIN32_WCE
 			wsprintf(msg, (op.UsePOOMAddressBook == 0) ? STR_Q_ADDADDRESS : STR_Q_ADDPOOM,
@@ -5066,7 +5065,8 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			wsprintf(msg, STR_Q_ADDADDRESS,
 				ListView_GetSelectedCount(hListView));
 #endif
-			if (MessageBox(hDlg, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+			ans = MessageBox(hDlg, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNOCANCEL);
+			if (ans == IDCANCEL) {
 				break;
 			}
 			i = -1;
@@ -5145,6 +5145,12 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					mem_free(&tpAddrItem);
 					ErrorMessage(hDlg, STR_ERR_ADD);
 					return FALSE;
+				}
+				if (ans == IDYES) {
+					AddressBook->EditNum = AddressBook->ItemCnt - 1;
+					AddressBook->FromAddrInfo = TRUE;
+					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
+						hDlg, EditAddressProc, (LPARAM)AddressBook);
 				}
 			}
 #ifdef _WIN32_WCE
@@ -5310,7 +5316,7 @@ static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter)
  */
 static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	HWND hAddrList;
+	HWND hAddrList = NULL;
 	ADDRESSBOOK *tpTmpAddressBook;
 	ADDRESSITEM *AddrItem;
 	TCHAR buf[BUF_SIZE];
@@ -5443,13 +5449,15 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			} else if (idx >= 0) {
 				AddrItem = *(tpTmpAddressBook->tpAddrItem + idx);
 			}
-			hAddrList = GetDlgItem(GetParent(hDlg), IDC_LIST_ADDRESS);
-			sel = ListView_GetNextItem(hAddrList, -1, LVIS_SELECTED);
+			if (tpTmpAddressBook->FromAddrInfo == FALSE) {
+				hAddrList = GetDlgItem(GetParent(hDlg), IDC_LIST_ADDRESS);
+				sel = ListView_GetNextItem(hAddrList, -1, LVIS_SELECTED);
 #ifdef _DEBUG
-			if (idx >= 0  && idx != ((ADDRESSITEM *)ListView_GetlParam(hAddrList, sel))->Num) {
-				MessageBox(hDlg, TEXT("mismatch 2"), TEXT("gjc debug"), MB_OK);
-			}
+				if (idx >= 0  && idx != ((ADDRESSITEM *)ListView_GetlParam(hAddrList, sel))->Num) {
+					MessageBox(hDlg, TEXT("mismatch 2"), TEXT("gjc debug"), MB_OK);
+				}
 #endif
+			}
 			if (idx != -2) {
 				//Mail address
 				*buf = TEXT('\0');
@@ -5461,7 +5469,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				delete_ctrl_char(buf);
 				mem_free(&AddrItem->MailAddress);
 				AddrItem->MailAddress = alloc_copy_t(buf);
-				if (sel >= 0) {
+				if (sel >= 0 && hAddrList != NULL) {
 					ListView_SetItemText(hAddrList, sel, 1, buf);
 				}
 				*buf = TEXT('\0');
@@ -5479,7 +5487,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				} else {
 					AddrItem->Comment = NULL;
 				}
-				if (sel >= 0) {
+				if (sel >= 0 && hAddrList != NULL) {
 					ListView_SetItemText(hAddrList, sel, 2, buf);
 				}
 
@@ -5505,7 +5513,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						p++;
 					}
 					key[len] = TEXT('\0');
-					if (sel >= 0) {
+					if (sel >= 0 && hAddrList != NULL) {
 						ListView_SetItemText(hAddrList, sel, 0, key);
 					}
 				}
@@ -5518,7 +5526,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			if (idx == -2) { // changing Group of multiple addresses
 				if (*buf != TEXT('\0')) {
 					int add = SendDlgItemMessage(hDlg, IDC_RADIO_GROUP_ADD, BM_GETCHECK, 0, 0);
-					while (sel >= 0) {
+					while (sel >= 0 && hAddrList != NULL) {
 						i = ((ADDRESSITEM *)ListView_GetlParam(hAddrList, sel))->Num;
 						AddrItem = *(tpTmpAddressBook->tpAddrItem + i);
 						if (add) {
@@ -5603,7 +5611,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				} else {
 					AddrItem->Group = NULL;
 				}
-				if (sel >= 0) {
+				if (sel >= 0 && hAddrList != NULL) {
 					ListView_SetItemText(hAddrList, sel, 3, buf);
 				}
 			}
