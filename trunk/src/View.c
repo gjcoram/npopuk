@@ -2802,6 +2802,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 
 	key = GetKeyState(VK_SHIFT);
+	if (key >= 0) {
+		key = GetKeyState(VK_CONTROL);
+	}
 
 	switch (msg) {
 	case WM_CREATE:
