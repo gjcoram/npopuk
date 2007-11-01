@@ -142,9 +142,9 @@
 #define STR_Q_MOVE					TEXT("Move %d mail to %s?")
 #define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
-#define STR_Q_ADDADDRESS			TEXT("Add %d mail addresses to the address book?")
+#define STR_Q_ADDADDRESS			TEXT("Edit addresses (%d) when adding to the address book?")
 #ifdef _WIN32_WCE
-#define STR_Q_ADDPOOM				TEXT("Add %d mail addresses to PocketContacts?")
+#define STR_Q_ADDPOOM				TEXT("Edit addresses (%d) when adding to PocketContacts?")
 #endif
 #define STR_Q_NEXTFIND				TEXT("Search completed!\nRedo from the start?")
 #define STR_Q_EDITCANCEL			TEXT("Cancel the edit?")
