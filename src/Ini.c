@@ -545,7 +545,6 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SocIgnoreError = profile_get_int(GENERAL, TEXT("SocIgnoreError"), 0, app_path);
 	op.SendIgnoreError = profile_get_int(GENERAL, TEXT("SendIgnoreError"), 0, app_path);
 	op.NoIgnoreErrorTimeout = profile_get_int(GENERAL, TEXT("NoIgnoreErrorTimeout"), 0, app_path);
-	op.DecodeInPlace = profile_get_int(GENERAL, TEXT("DecodeInPlace"), 1, app_path);
 	op.SendAttachIndividually = profile_get_int(GENERAL, TEXT("SendAttachIndividually"), 1, app_path);
 	op.CheckEndExec = profile_get_int(GENERAL, TEXT("CheckEndExec"), 0, app_path);
 	op.CheckEndExecNoDelMsg = profile_get_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), 1, app_path);
@@ -1121,7 +1120,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("SocIgnoreError"), op.SocIgnoreError, app_path);
 	profile_write_int(GENERAL, TEXT("SendIgnoreError"), op.SendIgnoreError, app_path);
 	profile_write_int(GENERAL, TEXT("NoIgnoreErrorTimeout"), op.NoIgnoreErrorTimeout, app_path);
-	profile_write_int(GENERAL, TEXT("DecodeInPlace"), op.DecodeInPlace, app_path);
 	profile_write_int(GENERAL, TEXT("SendAttachIndividually"), op.SendAttachIndividually, app_path);
 	profile_write_int(GENERAL, TEXT("CheckEndExec"), op.CheckEndExec, app_path);
 	profile_write_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), op.CheckEndExecNoDelMsg, app_path);
@@ -1189,6 +1187,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_delete_key(GENERAL, TEXT("MoveAllMailBox"));
 	profile_delete_key(GENERAL, TEXT("ViewAppFullHeaders"));
 	profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
+	profile_delete_key(GENERAL, TEXT("DecodeInPlace"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {
 		if (*(op.RasInfo + j) == NULL ||

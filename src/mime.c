@@ -33,6 +33,7 @@
 /* Global Variables */
 extern OPTION op;
 extern int font_charset;
+extern TCHAR *AppDir; //GJC remove after debugging
 
 // エンコード情報
 typedef struct _ENCODE_INFO {
@@ -1223,22 +1224,16 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
  */
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 {
-	char *enc_buf, *enc_ret = NULL;
+	char *enc_ret = NULL;
 	int encode = 0;
 
-	if (op.DecodeInPlace) {
-		enc_buf = body;
-	} else {
-		enc_buf = (char *)mem_alloc(tstrlen(body) + 1);
-		if (enc_buf == NULL) {
-			return NULL;
-		}
-		tstrcpy(enc_buf, body);
+	if (body == NULL) {
+		return NULL;
 	}
 
 	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL) {
 		char *p;
-		for (p = enc_buf; *p != '\0'; p++) {
+		for (p = body; *p != '\0'; p++) {
 #ifdef HANDLE_BARE_SLASH_R
 			if (*p == '\r' && *(p+1) != '\n') {
 				if (*(p+1) == '\r') {
@@ -1257,10 +1252,10 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 				}
 			}
 		}
-		return enc_buf;
+		return body;
 	}
 	if (str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
-		return enc_buf;
+		return body;
 	}
 
 	// デコード
@@ -1270,22 +1265,17 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 		encode = ENC_TYPE_Q_PRINT;
 	}
 	if (encode != 0) {
-		if (op.DecodeInPlace) {
-			enc_ret = enc_buf;
-		} else {
-			enc_ret = (char *)mem_alloc(tstrlen(enc_buf) + 1);
-		}
-		if (enc_ret != NULL) {
-			((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(enc_buf, enc_ret);
-			if (!op.DecodeInPlace) {
-				mem_free(&enc_buf);
-				enc_buf = enc_ret;
-			}
-		}
+		enc_ret = body;
+		((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret);
+	}
+	if (op.SocLog > 2) {
+		TCHAR buf[BUF_SIZE];
+		wsprintf(buf, TEXT("Msg from %s, orig_enc=%s"), tpMailItem->From, tpMailItem->Encoding);
+		log_save(AppDir, LOG_FILE, buf);
 	}
 	mem_free(&tpMailItem->Encoding);
 	tpMailItem->Encoding = NULL;
-	return enc_buf;
+	return enc_ret;
 }
 
 /*
