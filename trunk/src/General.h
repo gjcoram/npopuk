@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p1")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -434,7 +434,6 @@ typedef struct _OPTION {
 	int SocIgnoreError;
 	int SendIgnoreError;
 	int NoIgnoreErrorTimeout;
-	int DecodeInPlace;
 	int SendAttachIndividually;
 	int CheckEndExec;
 	int CheckEndExecNoDelMsg;
