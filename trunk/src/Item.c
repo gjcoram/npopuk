@@ -690,7 +690,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 		// b) the body was encoded
 		mem_free(&tpMailItem->Body);
 		tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (len + header_size + 1));
-		if (tpMailItem->Body == NULL && op.DecodeInPlace) {
+		if (tpMailItem->Body == NULL) {
 			// if it's incoming mail, try to take control of buf (=mail_buf)
 			tpMailItem->Body = claim_mail_buf(buf);
 			if (tpMailItem->Body != NULL && header_size > 2) {
@@ -711,9 +711,6 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 				tpMailItem->HasHeader = 0;
 			}
 			tstrcpy(tpMailItem->Body + header_size, r);
-		}
-		if (!op.DecodeInPlace) {
-			mem_free(&r);
 		}
 
 	} else if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
@@ -757,6 +754,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 		mem_free(&tpMailItem->ReplyTo);
 		mem_free(&tpMailItem->ContentType);
 		mem_free(&tpMailItem->Encoding);
+		mem_free(&tpMailItem->Attach); // X-File: _ when attachments deleted
 		mem_free(&tpMailItem->Date);
 		tpMailItem->Date = NULL;
 		mem_free(&tpMailItem->FmtDate);
