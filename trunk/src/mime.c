@@ -33,7 +33,6 @@
 /* Global Variables */
 extern OPTION op;
 extern int font_charset;
-extern TCHAR *AppDir; //GJC remove after debugging
 
 // エンコード情報
 typedef struct _ENCODE_INFO {
@@ -1224,58 +1223,46 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
  */
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 {
-	char *enc_ret = NULL;
-	int encode = 0;
-
+	char *p;
 	if (body == NULL) {
 		return NULL;
 	}
 
-	if (tpMailItem->Encoding == NULL || tpMailItem->ContentType == NULL) {
-		char *p;
-		for (p = body; *p != '\0'; p++) {
+	if (tpMailItem->ContentType != NULL &&
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
+		// don't try to decode non-text
+		return body;
+	} else if (tpMailItem->Encoding != NULL) {
+		// decoding always takes fewer characters, so do it in-place
+		if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
+			base64_decode(body, body);
+		} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
+			QuotedPrintable_decode(body, body);
+		}
+		// else encoding is assumed 7bit or 8bit
+	}
+	for (p = body; *p != '\0'; p++) {
 #ifdef HANDLE_BARE_SLASH_R
-			if (*p == '\r' && *(p+1) != '\n') {
-				if (*(p+1) == '\r') {
-					*(p+1) = '\n'; // \r\r -> \r\n
-				} else {
-					*p = ' ';
-				}
-			}
-#endif
-			// YPOPs! fix (some messages come in with bare \n
-			if (*p == '\n' && *(p-1) != '\r') {
-				if (*(p+1) == '\n') {
-					*p = '\r'; // \n\n -> \r\n
-				} else {
-					*p = ' ';
-				}
+		if (*p == '\r' && *(p+1) != '\n') {
+			if (*(p+1) == '\r') {
+				*(p+1) = '\n'; // \r\r -> \r\n
+			} else {
+				*p = ' ';
 			}
 		}
-		return body;
-	}
-	if (str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
-		return body;
-	}
-
-	// デコード
-	if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
-		encode = ENC_TYPE_BASE64;
-	} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
-		encode = ENC_TYPE_Q_PRINT;
-	}
-	if (encode != 0) {
-		enc_ret = body;
-		((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret);
-	}
-	if (op.SocLog > 2) {
-		TCHAR buf[BUF_SIZE];
-		wsprintf(buf, TEXT("Msg from %s, orig_enc=%s"), tpMailItem->From, tpMailItem->Encoding);
-		log_save(AppDir, LOG_FILE, buf);
+#endif
+		// YPOPs! fix (some messages come in with bare \n
+		if (*p == '\n' && p > body && *(p-1) != '\r') {
+			if (*(p+1) == '\n') {
+				*p = '\r'; // \n\n -> \r\n
+			} else {
+				*p = ' ';
+			}
+		}
 	}
 	mem_free(&tpMailItem->Encoding);
 	tpMailItem->Encoding = NULL;
-	return enc_ret;
+	return body;
 }
 
 /*
