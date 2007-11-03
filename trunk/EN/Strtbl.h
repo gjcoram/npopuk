@@ -34,6 +34,8 @@
 #define STR_DEFAULT_DATEFORMAT		TEXT("dd/MM/yyyy")
 #define STR_DEFAULT_TIMEFORMAT		TEXT("HH:mm")
 
+#define STR_DOCS			TEXT("documents")
+
 #define STR_FILE_FILTER				TEXT("All Files (*.*)\0*.*\0\0")
 #define STR_TEXT_FILTER				TEXT("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0")
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")

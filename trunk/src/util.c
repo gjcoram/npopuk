@@ -1324,7 +1324,6 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			if (*(p+1) == TEXT('{')) {
 				// {{ becomes {
 				*(r++) = *(p++);
-				continue;
 			} else {
 				// {Optional text}
 				if (Optional == 0) {
@@ -1334,6 +1333,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 				}
 				Optional++;
 			}
+			continue;
 		} else if (*p == TEXT('}')) {
 			if (*(p+1) == TEXT('}')) {
 				// }} becomes }
@@ -1403,7 +1403,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			t = TEXT("%");
 			break;
 		}
-		if (t != NULL) {
+		if (t != NULL  &&  *t != TEXT('\0')) {
 			r = str_cpy_t(r, t);
 			Found = TRUE;
 		}

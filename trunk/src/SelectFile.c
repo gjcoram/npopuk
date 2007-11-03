@@ -782,7 +782,7 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		}
 	} else if (op.RememberOSD == 1 && opptr != NULL) {
 		if (*opptr == NULL || **opptr == TEXT('\0') || !dir_check(*opptr)) {
-			wsprintf(path, TEXT("%s%s"), DataDir, TEXT("documents"));
+			wsprintf(path, TEXT("%s%s"), DataDir, STR_DOCS);
 			dir_create(path);
 		} else {
 			lstrcpy(path, *opptr);

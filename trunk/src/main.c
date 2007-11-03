@@ -518,7 +518,7 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 #else
 		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)st_buf);
 #endif
-		if (op.SocLog > 0) log_save(AppDir, LOG_FILE, st_buf);
+		if (op.SocLog > 0) log_save(st_buf);
 		mem_free(&st_buf);
 	} else {
 #ifdef _WIN32_WCE_PPC
@@ -526,7 +526,7 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 #else
 		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)buf);
 #endif
-		if (op.SocLog > 0) log_save(AppDir, LOG_FILE, buf);
+		if (op.SocLog > 0) log_save(buf);
 	}
 }
 
@@ -753,7 +753,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 		//In status bar information of error indicatory
 		SetStatusTextT(hWnd, buf, 1);
 	}
-	if (op.SocLog > 0) log_save(AppDir, LOG_FILE, buf);
+	if (op.SocLog > 0) log_save(buf);
 	if (op.SocIgnoreError == 1 && BoxIndex >= MAILBOX_USER) {
 		// ŽóMƒGƒ‰[‚ð–³Ž‹‚·‚éÝ’è‚Ìê‡
 		return;
@@ -1949,7 +1949,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 		}
 	}
 
-	if (op.SocLog > 0) log_init(AppDir, LOG_FILE, TEXT("send"));
+	if (op.SocLog > 0) log_header(TEXT("send"));
 
 	SetTimer(hWnd, ID_TIMEOUT_TIMER, TIMEOUTTIME * op.TimeoutInterval, NULL);
 
@@ -2012,7 +2012,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 		}
 	}
 
-	if (op.SocLog > 0) log_init(AppDir, LOG_FILE, TEXT("recv"));
+	if (op.SocLog > 0) log_header(TEXT("recv"));
 
 	RecvBox = BoxIndex;
 
@@ -2182,7 +2182,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 		}
 	}
 
-	if (op.SocLog > 0) log_init(AppDir, LOG_FILE, TEXT("exec"));
+	if (op.SocLog > 0) log_header(TEXT("exec"));
 
 	RecvBox = BoxIndex;
 
@@ -3149,7 +3149,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		save_flag = FALSE;
 		mailbox_select(hWnd, MAILBOX_USER);
 
-		if (op.SocLog > 0) log_clear(AppDir, LOG_FILE);
 		SwitchCursor(TRUE);
 
 		//of control inside window Setting
@@ -3541,8 +3540,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("CheckTimer: box=%d"), SelBox);
-				log_save(AppDir, LOG_FILE, msg);
+				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), SelBox);
+				log_save(msg);
 			}
 			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
@@ -3629,7 +3628,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1 || ShowError == TRUE) {
 				break;
 			}
-			if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Auto check"));
+			if (op.SocLog > 1) log_save(TEXT("Auto check\r\n"));
 			AutoCheckCnt = 0;
 			AutoCheckFlag = TRUE;
 			AllCheck = TRUE;
@@ -4095,8 +4094,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("Check: box=%d"), SelBox);
-				log_save(AppDir, LOG_FILE, msg);
+				wsprintf(msg, TEXT("Check: box=%d\r\n"), SelBox);
+				log_save(msg);
 			}
 			AllCheck = FALSE;
 			ExecFlag = FALSE;
@@ -4128,7 +4127,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				SaveBoxesLoaded = TRUE; // may become false if filter is added
 			}
-			if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Check all"));
+			if (op.SocLog > 1) log_save(TEXT("Check all\r\n"));
 			AutoCheckCnt = 0; // reset autocheck timer
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
@@ -4170,8 +4169,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("Update: box=%d, delete=%d"), SelBox, ServerDelete);
-				log_save(AppDir, LOG_FILE, msg);
+				wsprintf(msg, TEXT("Update: box=%d, delete=%d\r\n"), SelBox, ServerDelete);
+				log_save(msg);
 			}
 			i = SelBox;
 			AutoCheckFlag = FALSE;
@@ -4223,8 +4222,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("Update all: delete=%d"), SelBox, ServerDelete);
-				log_save(AppDir, LOG_FILE, msg);
+				wsprintf(msg, TEXT("Update all: delete=%d\r\n"), SelBox, ServerDelete);
+				log_save(msg);
 			}
 
 			AutoCheckFlag = FALSE;
@@ -5268,7 +5267,7 @@ void SetMenuStar(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
 void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime)
 {
 	g_bTimedOut = TRUE;
-	if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("MessageBoxTimer timed out"));
+	if (op.SocLog > 1) log_save(TEXT("MessageBoxTimer timed out\r\n"));
 	if (g_hwndTimedOwner)
 		EnableWindow(g_hwndTimedOwner, TRUE);
 	PostQuitMessage(TIMEOUT_QUIT_WPARAM);
