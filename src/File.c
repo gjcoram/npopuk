@@ -119,17 +119,32 @@ BOOL log_clear(TCHAR *fpath, TCHAR *fname)
 /*
  * dir_check - ディレクトリかどうかチェック
  */
-BOOL dir_check(TCHAR *path)
+BOOL dir_check(const TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(path, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
 
 	if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*
+ * dir_create
+ */
+BOOL dir_create(TCHAR *path)
+{
+	if (dir_check(path)) {
+		return TRUE;
+	}
+	if (CreateDirectory(path, NULL)) {
 		return TRUE;
 	}
 	return FALSE;
@@ -151,6 +166,7 @@ BOOL dir_delete(TCHAR *Path, TCHAR *file)
 	wsprintf(sPath, TEXT("%s\\%s"), Path, file);
 
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -226,7 +242,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else	// _WIN32_WCE_PPC
 	OPENFILENAME of;
-	TCHAR path[MULTI_BUF_SIZE];
+	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
 	TCHAR *ph, *qh;
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
@@ -248,6 +264,12 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	}
 	if (opptr != NULL) {
 		of.lpstrInitialDir = *opptr;
+	}
+	if (of.lpstrInitialDir == NULL || *of.lpstrInitialDir == TEXT('\0') ||
+			!dir_check(of.lpstrInitialDir)) {
+		wsprintf(buf, TEXT("%s%s"), DataDir, TEXT("documents"));
+		dir_create(buf);
+		of.lpstrInitialDir = buf;
 	}
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
@@ -326,6 +348,7 @@ long file_get_size(TCHAR *FileName)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(FileName, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return -1;
 	}
 	FindClose(hFindFile);
@@ -463,10 +486,6 @@ BOOL file_savebox_convert(TCHAR *NewFileName)
 	TCHAR path[BUF_SIZE], newpath[BUF_SIZE];
 	BOOL ret;
 
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
 	str_join_t(path, DataDir, SAVEBOX_FILE, (TCHAR *)-1);
 
 	if(file_get_size(path) == -1) {
@@ -488,10 +507,6 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 	TCHAR path[BUF_SIZE];
 	TCHAR pathBackup[BUF_SIZE];
 	TCHAR msg[BUF_SIZE];
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -547,10 +562,6 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 	long FileSize;
 	int i, cnt, len = 7; // len = tstrlen(MBOX_DELIMITER);
 	int MboxFormat = 0;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -907,9 +918,7 @@ BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int le
  */
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 {
-	WIN32_FIND_DATA FindData;
 	SHELLEXECUTEINFO sei;
-	HANDLE hFindFile;
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	TCHAR tmp_path[BUF_SIZE];
@@ -922,11 +931,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 
 	// ディレクトリの検索
 	wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
-	hFindFile = FindFirstFile(path, &FindData);
-	FindClose(hFindFile);
-	if (hFindFile == INVALID_HANDLE_VALUE || !(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-		CreateDirectory(path, NULL);
-	}
+	dir_create(path);
 
 	wsprintf(path, TEXT("%s%s\\%s"), DataDir, op.AttachPath, FileName);
 	if (op.AttachDelete == 0) {
@@ -1011,9 +1016,6 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 		return FALSE;
 	}
 
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif	// _WIN32_WCE
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 	tpMailBox->DiskSize = 0;
 
@@ -1171,10 +1173,6 @@ BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddr
 	TCHAR path[BUF_SIZE], pathBackup[BUF_SIZE];
 	int i;
 
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 
 #ifdef UNICODE
@@ -1225,10 +1223,6 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	int LineCnt = 0;
 	int i;
 	int retcode = 0;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -1376,10 +1370,6 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 	TCHAR source_path[BUF_SIZE], destin_path[BUF_SIZE];
 	TCHAR pathBackup[BUF_SIZE];
 	BOOL ret;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
 
 	str_join_t(source_path, DataDir, Source, (TCHAR *)-1);
 	str_join_t(destin_path, DataDir, Destin, (TCHAR *)-1);
