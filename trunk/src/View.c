@@ -2600,10 +2600,6 @@ static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex)
 	int cnt = 0;
 	BOOL ViewSrc;
 
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
 	// メールをファイルに保存
 	str_join_t(path, DataDir, VIEW_FILE, TEXT("."), op.ViewFileSuffix, (TCHAR *)-1);
 	ViewSrc = (ViewWndViewSrc == TRUE || op.ViewAppMsgSource == 1);

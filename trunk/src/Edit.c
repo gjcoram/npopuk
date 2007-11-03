@@ -1463,10 +1463,6 @@ static BOOL AppEditMail(HWND hWnd, long id, char *buf, MAILITEM *tpMailItem)
 	TCHAR path[BUF_SIZE];
 	TCHAR *p;
 
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
-
 #ifdef _WIN32_WCE
 	str_join_t(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);
 #else
@@ -1549,10 +1545,6 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 	TCHAR *tmp, *p;
 	char *fbuf;
 	int len;
-
-#ifndef _WIN32_WCE
-	SetCurrentDirectory(AppDir);
-#endif
 
 #ifdef _WIN32_WCE
 	str_join_t(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);

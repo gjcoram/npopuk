@@ -3178,7 +3178,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		
 		// 起動時チェックの開始
 		if (op.StartCheck == 1) {
-			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
+			if (!gSendAndQuit) {
+				SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
+			}
 		} else {
 			gCheckAndQuit = FALSE;
 		}
@@ -4848,7 +4850,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_RESTORE, 0);
 #endif
 		if (op.StartCheck == 1) {
-			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
+			if (!gSendAndQuit) {
+				SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
+			}
 		}
 		break;
 

@@ -142,6 +142,7 @@ static BOOL check_file(const TCHAR *fname)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(fname, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -368,12 +369,13 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 			if (section_info == NULL || p == r) {
 				break;
 			}
-			if (*p == TEXT('#')) {
+			if (*p == TEXT(';')  ||  *p == TEXT('#')) {
 				// コメント
 				for (s = tmp; p < r; p++, s++) {
 					*s = *p;
 				}
 				*s = TEXT('\0');
+				*tmp = TEXT(';'); // convert comments to ;
 				key_add((section_info + section_count - 1), tmp, TEXT(""), TRUE);
 			} else {
 				// キーの追加

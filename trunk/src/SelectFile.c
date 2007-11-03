@@ -22,6 +22,8 @@
 #include "resource.h"
 #include "String.h"
 
+extern TCHAR *DataDir;
+
 /* Define */
 #define WM_SHOWFILELIST			(WM_USER + 1)
 #define WM_LVCLICK				(WM_USER + 2)
@@ -88,6 +90,7 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// count directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -107,6 +110,7 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		} while (FindNextFile(hFindFile, &FindData) == TRUE);
 		FindClose(hFindFile);
 	} else if (cnt == 0) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -121,6 +125,7 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// get directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -150,6 +155,7 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		FindClose(hFindFile);
 	} else if (i == 0) {
 		// no directories either
+		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -355,6 +361,7 @@ static BOOL CheckDir(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -376,6 +383,7 @@ static BOOL CheckFile(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
+		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -773,7 +781,12 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 			filepart = fname;
 		}
 	} else if (op.RememberOSD == 1 && opptr != NULL) {
-		lstrcpy(path, *opptr);
+		if (*opptr == NULL || **opptr == TEXT('\0') || !dir_check(*opptr)) {
+			wsprintf(path, TEXT("%s%s"), DataDir, TEXT("documents"));
+			dir_create(path);
+		} else {
+			lstrcpy(path, *opptr);
+		}
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {
