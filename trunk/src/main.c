@@ -3177,10 +3177,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		
 		// 起動時チェックの開始
-		if (op.StartCheck == 1) {
-			if (!gSendAndQuit) {
-				SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
-			}
+		if (op.StartCheck == 1  && gSendAndQuit == FALSE) {
+			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
 		} else {
 			gCheckAndQuit = FALSE;
 		}
@@ -4849,10 +4847,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #else
 		SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_RESTORE, 0);
 #endif
-		if (op.StartCheck == 1) {
-			if (!gSendAndQuit) {
-				SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
-			}
+		if (op.StartCheck == 1 && gSendAndQuit == FALSE) {
+			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
 		}
 		break;
 
@@ -5310,9 +5306,7 @@ static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned i
  */
 static void PlayMarkSound(int mark)
 {
-	if ((mark & 0x10) && op.ItemNewSoundFile != NULL) {
-		sndPlaySound(op.ItemNewSoundFile, SND_SYNC | SND_NODEFAULT);
-	}
+	int lowbits = mark & 0x0F;
 	if (mark & 0x20) {
 		if (op.ItemFullSoundFile != NULL) {
 			sndPlaySound(op.ItemFullSoundFile, SND_SYNC | SND_NODEFAULT);
@@ -5326,49 +5320,51 @@ static void PlayMarkSound(int mark)
 	if ((mark & 0x80) && op.ItemHtmlSoundFile != NULL) {
 		sndPlaySound(op.ItemHtmlSoundFile, SND_SYNC | SND_NODEFAULT);
 	}
-	switch (mark & 0x0F) {
-		case ICON_NON:
-			if (op.ItemNonSoundFile != NULL) {
-				sndPlaySound(op.ItemNonSoundFile, SND_ASYNC | SND_NODEFAULT);
+	if (lowbits == ICON_ERROR) {
+		if (op.ItemErrorSoundFile != NULL) {
+			sndPlaySound(op.ItemErrorSoundFile, SND_ASYNC | SND_NODEFAULT);
+		}
+	} else if ((mark & 0x10) && op.ItemNewSoundFile != NULL) {
+		sndPlaySound(op.ItemNewSoundFile, SND_ASYNC | SND_NODEFAULT);
+	} else {
+		switch (lowbits) {
+			case ICON_MAIL:
+				if (op.ItemUnreadSoundFile != NULL) {
+					sndPlaySound(op.ItemUnreadSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			case ICON_READ:
+				if (op.ItemReadSoundFile != NULL) {
+					sndPlaySound(op.ItemReadSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			case ICON_DOWN:
+				if (op.ItemDownSoundFile != NULL) {
+					sndPlaySound(op.ItemDownSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			case ICON_DEL:
+				if (op.ItemDelSoundFile != NULL) {
+					sndPlaySound(op.ItemDelSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			case ICON_SENTMAIL:
+				if (op.ItemSentSoundFile != NULL) {
+					sndPlaySound(op.ItemSentSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			case ICON_SEND:
+				if (op.ItemSendSoundFile != NULL) {
+					sndPlaySound(op.ItemSendSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
+			default: // including ICON_NON
+				if (op.ItemNonSoundFile != NULL) {
+					sndPlaySound(op.ItemNonSoundFile, SND_ASYNC | SND_NODEFAULT);
+				}
+				break;
 			}
-			break;
-		case ICON_MAIL:
-			if (op.ItemUnreadSoundFile != NULL) {
-				sndPlaySound(op.ItemUnreadSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_READ:
-			if (op.ItemReadSoundFile != NULL) {
-				sndPlaySound(op.ItemReadSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_DOWN:
-			if (op.ItemDownSoundFile != NULL) {
-				sndPlaySound(op.ItemDownSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_DEL:
-			if (op.ItemDelSoundFile != NULL) {
-				sndPlaySound(op.ItemDelSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_SENTMAIL:
-			if (op.ItemSentSoundFile != NULL) {
-				sndPlaySound(op.ItemSentSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_SEND:
-			if (op.ItemSendSoundFile != NULL) {
-				sndPlaySound(op.ItemSendSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
-		case ICON_ERROR:
-			if (op.ItemErrorSoundFile != NULL) {
-				sndPlaySound(op.ItemErrorSoundFile, SND_ASYNC | SND_NODEFAULT);
-			}
-			break;
 	}
-
 	return;
 }
 
