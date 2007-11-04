@@ -1160,8 +1160,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
 	}
 #else
-        profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
-        profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
+	profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
+	profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
 #endif
 
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp, app_path);
@@ -1576,8 +1576,8 @@ void ini_free(void)
 	mem_free(&op.EditApp);
 	mem_free(&op.EditAppCmdLine);
 	mem_free(&op.EditFileSuffix);
-        mem_free(&op.SavedOpenDir);
-        mem_free(&op.SavedSaveDir);
+	mem_free(&op.SavedOpenDir);
+	mem_free(&op.SavedSaveDir);
 	mem_free(&op.URLApp);
 	mem_free(&op.AttachPath);
 	mem_free(&op.Password);
