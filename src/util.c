@@ -1338,7 +1338,6 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			if (*(p+1) == TEXT('}')) {
 				// }} becomes }
 				*(r++) = *(p++);
-				continue;
 			} else {
 				// {%C}
 				if (Optional > 0) {
@@ -1349,8 +1348,8 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 				} else {
 					Optional = 0;
 				}
-				continue;
 			}
+			continue;
 		}
 		if (*p != TEXT('%')) {
 			*(r++) = *p;
