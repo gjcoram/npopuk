@@ -426,8 +426,8 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
 		if (op.SocLog > 1) {
 			TCHAR buf[256];
-			wsprintf(buf, TEXT("%s failed for %s\r\n"), CMD_RCPT_TO, p);
-			log_save(buf);
+			wsprintf(buf, TEXT("%s failed for %s"), CMD_RCPT_TO, p);
+			log_save(AppDir, LOG_FILE, buf);
 		}
 		mem_free(&p);
 		return (TCHAR *)-1;
@@ -1484,7 +1484,7 @@ BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX
 			//In status bar information of error indicatory
 			SetStatusTextT(hWnd, STR_ERR_SOCK_SEND, 1);
 		}
-		if (op.SocLog > 0) log_save(STR_ERR_SOCK_SEND);
+		if (op.SocLog > 0) log_save(AppDir, LOG_FILE, STR_ERR_SOCK_SEND);
 		smtp_set_error(hWnd);
 	}
 	return ret;

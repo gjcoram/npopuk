@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8gl2")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p3")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -212,7 +212,8 @@
 #define FILE_OPEN_MULTI			1
 #define FILE_SAVE_SINGLE		2
 #define FILE_SAVE_MULTI			3
-#define FILE_CHOOSE_DIR			4
+#define FILE_SAVE_MSG			4
+#define FILE_CHOOSE_DIR			5
 
 #define MULTIPART_NONE			0
 #define MULTIPART_ATTACH		1
@@ -725,10 +726,10 @@ void smtp_set_error(HWND hWnd);
 void smtp_free(void);
 
 // File
-BOOL log_clear(BOOL clear);
-BOOL log_save(TCHAR *buf);
-BOOL log_header(TCHAR *buf);
-BOOL dir_check(const TCHAR *path);
+BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
+BOOL log_save(TCHAR *fpath, TCHAR *fname, TCHAR *buf);
+BOOL log_clear(TCHAR *fpath, TCHAR *fname);
+BOOL dir_check(TCHAR *path);
 BOOL dir_create(TCHAR *path);
 BOOL dir_delete(TCHAR *Path, TCHAR *file);
 void filename_conv(TCHAR *buf);

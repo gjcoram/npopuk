@@ -2496,7 +2496,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 			lstrcpy(path, TEXT(".txt"));
 		}
 		// ƒtƒ@ƒCƒ‹–¼‚ÌŽæ“¾
-		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_SINGLE, &op.SavedSaveDir) == FALSE) {
+		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_MSG, &op.SavedSaveDir) == FALSE) {
 			return TRUE;
 		}
 		if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {

@@ -46,91 +46,9 @@ static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem);
 static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*
- * log_clear
+ * log_init - ログの区切りの保存
  */
-HANDLE hLogFile;
-BOOL log_opened = FALSE;
-
-BOOL log_clear(BOOL clear)
-{
-	TCHAR path[BUF_SIZE];
-	DWORD create = CREATE_ALWAYS;
-	if (log_opened) create = OPEN_ALWAYS;
-
-	// create the name
-	wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
-
-        // create or open the file
-	hLogFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, create, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
-	if (hLogFile == NULL || hLogFile == (HANDLE)-1) {
-		return FALSE;
-	}
-	SetFilePointer(hLogFile, 0, NULL, FILE_END);
-	log_opened = TRUE;
-	return TRUE;
-}
-
-/*
- * log_save
- */
-BOOL log_save(TCHAR *buf)
-{
-	DWORD ret;
-	int len;
-	char *ascii;
-	BOOL alloc = FALSE;
-#ifdef UNICODE
-	int clen;
-#endif
-
-	if (hLogFile == 0  ||  hLogFile == (HANDLE)-1) {
-		log_clear(FALSE);
-	}
-
-	len = lstrlen(buf);
-#ifdef UNICODE
-	clen = tchar_to_char_size(buf) + 2;
-	ascii = (char *)mem_alloc(clen + 2);
-	if (ascii == NULL) {
-		return FALSE;
-	}
-	alloc = TRUE;
-	tchar_to_char(buf, ascii, clen);
-	if (*(buf + len - 1) != TEXT('\n')) {
-		strcpy_s(ascii + clen - 3, 3, "\r\n");
-		len = clen - 1;
-	} else {
-		len = clen - 3;
-	}
-#else
-	if (*(buf + len - 1) != TEXT('\n')) {
-		ascii = (char *)mem_alloc(len + 3);
-		if (ascii == NULL) {
-			return FALSE;
-		}
-		alloc = TRUE;
-		memcpy(ascii, buf, len);
-		strcpy_s(ascii + len, 3, "\r\n");
-		len += 2;
-	} else {
-		ascii = buf;
-	}
-#endif
-	if (WriteFile(hLogFile, ascii, len, &ret, NULL) == FALSE) {
-		CloseHandle(hLogFile);
-		hLogFile = NULL;
-		if (alloc) mem_free(&ascii);
-		return FALSE;
-	}
-	if (alloc) mem_free(&ascii);
-	return TRUE;
-}
-
-/*
- * log_header - ログの区切りの保存
- * Write a header to the log.
- */
-BOOL log_header(TCHAR *buf)
+BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
 {
 #define LOG_SEP				TEXT("\r\n-------------------------------- ")
 	TCHAR fDay[BUF_SIZE];
@@ -144,27 +62,69 @@ BOOL log_header(TCHAR *buf)
 	if (GetTimeFormat(0, 0, NULL, NULL, fTime, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
-	p = mem_alloc(sizeof(TCHAR) * (lstrlen(LOG_SEP) + lstrlen(fDay) + 1 + lstrlen(fTime) + 2 + lstrlen(buf) + 2 + 2));
+	p = mem_alloc(sizeof(TCHAR) * (lstrlen(LOG_SEP) + lstrlen(fDay) + 1 + lstrlen(fTime) + 2 + lstrlen(buf) + 2));
 	if (p == NULL) {
 		return FALSE;
 	}
-	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")\r\n"), (TCHAR *)-1);
-	ret = log_save(p);
+	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
+	ret = log_save(fpath, fname, p);
 	mem_free(&p);
 	return ret;
 }
 
+/*
+ * log_save
+ */
+BOOL log_save(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
+{
+	HANDLE hFile;
+	TCHAR path[BUF_SIZE];
+	DWORD ret;
+
+	//Retention to file
+	wsprintf(path, TEXT("%s%s"), fpath, fname);
+
+	//The file which it retains is opened
+	hFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == (HANDLE)-1) {
+		return FALSE;
+	}
+	SetFilePointer(hFile, 0, NULL, FILE_END);
+
+	if (file_write_ascii(hFile, buf, lstrlen(buf)) == FALSE) {
+		CloseHandle(hFile);
+		return FALSE;
+	}
+	if (*(buf + lstrlen(buf) - 1) != TEXT('\n')) {
+		if (WriteFile(hFile, "\r\n", 2, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			return FALSE;
+		}
+	}
+	CloseHandle(hFile);
+	return TRUE;
+}
+
+/*
+ * log_clear - of non activity Clearing
+ */
+BOOL log_clear(TCHAR *fpath, TCHAR *fname)
+{
+	TCHAR path[BUF_SIZE];
+
+	wsprintf(path, TEXT("%s%s"), fpath, fname);
+	return DeleteFile(path);
+}
 
 /*
  * dir_check - ディレクトリかどうかチェック
  */
-BOOL dir_check(const TCHAR *path)
+BOOL dir_check(TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(path, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -205,7 +165,6 @@ BOOL dir_delete(TCHAR *Path, TCHAR *file)
 	wsprintf(sPath, TEXT("%s\\%s"), Path, file);
 
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -278,11 +237,12 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	TCHAR path[BUF_SIZE];
 
 	lstrcpy(path, ret);
-	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
-#else	// _WIN32_WCE_PPC
+	return SelectFile(hWnd, hInst, Action, path, ret, ofdirptr);
+#else
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
 	TCHAR *ph, *qh;
+	BOOL is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
@@ -294,22 +254,27 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.lpstrFilter = filter;
 	}
 	of.nFilterIndex = 1;
-	if (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) {
+	if (is_open) {
 		of.lpstrTitle = STR_TITLE_OPEN;
 		*path = TEXT('\0');
 	} else {
 		of.lpstrTitle = STR_TITLE_SAVE;
 		lstrcpy(path, ret);
 	}
-	if (opptr != NULL) {
-		of.lpstrInitialDir = *opptr;
+	if (Action != FILE_CHOOSE_DIR) {
+		// check if directory exists
+		if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
+			of.lpstrInitialDir = *opptr;
+		} else if (Action == FILE_SAVE_MSG) {
+			of.lpstrInitialDir = DataDir;
+		} else if (is_open == FALSE) {
+			// saving an attachment
+			wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
+			dir_create(buf);
+			of.lpstrInitialDir = buf;
+		} // else is_open: just let Windows determine the directory
 	}
-	if (of.lpstrInitialDir == NULL || *of.lpstrInitialDir == TEXT('\0') ||
-			!dir_check(of.lpstrInitialDir)) {
-		wsprintf(buf, TEXT("%s%s"), DataDir, STR_DOCS);
-		dir_create(buf);
-		of.lpstrInitialDir = buf;
-	}
+
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
 	of.lpstrDefExt = DefExt;
@@ -327,7 +292,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 #endif
 
 	//File selective dialogue is indicated
-	if (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) {
+	if (is_open) {
 		of.Flags |= OFN_FILEMUSTEXIST;
 		if (GetOpenFileName((LPOPENFILENAME)&of) == FALSE) {
 			if (Action == FILE_OPEN_MULTI && lstrcmp(path, ret) != 0) {
@@ -387,7 +352,6 @@ long file_get_size(TCHAR *FileName)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(FileName, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return -1;
 	}
 	FindClose(hFindFile);
@@ -627,9 +591,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 		tpMailBox->Loaded = TRUE;
 		if (op.SocLog > 1) {
 			int pos = lstrlen(path);
-			if (pos > 228) pos = 228;
-			wsprintf(path+pos, TEXT(" loaded but empty\r\n"));
-			log_save(path);
+			if (pos > 230) pos = 230;
+			wsprintf(path+pos, TEXT(" loaded but empty"));
+			log_save(AppDir, LOG_FILE, path);
 		}
 		return TRUE;
 	}
@@ -865,9 +829,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 	tpMailBox->Loaded = TRUE;
 	if (op.SocLog > 1) {
 		int pos = lstrlen(path);
-		if (pos > 238) pos = 238;
-		wsprintf(path+pos, TEXT(" was loaded\r\n"));
-		log_save(path);
+		if (pos > 240) pos = 240;
+		wsprintf(path+pos, TEXT(" was loaded"));
+		log_save(AppDir, LOG_FILE, path);
 	}
 	return TRUE;
 }

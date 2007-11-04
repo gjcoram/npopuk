@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopsupport.org.uk
  */
 
 /* Include Files */
