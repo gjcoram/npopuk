@@ -22,8 +22,6 @@
 #include "resource.h"
 #include "String.h"
 
-extern TCHAR *DataDir;
-
 /* Define */
 #define WM_SHOWFILELIST			(WM_USER + 1)
 #define WM_LVCLICK				(WM_USER + 2)
@@ -36,6 +34,7 @@ extern TCHAR *DataDir;
 /* Global Variables */
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern OPTION op;
+extern TCHAR *DataDir;
 static TCHAR path[BUF_SIZE];
 static TCHAR filename[BUF_SIZE];
 static BOOL g_mode_open, g_action;
@@ -90,7 +89,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// count directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -110,7 +108,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		} while (FindNextFile(hFindFile, &FindData) == TRUE);
 		FindClose(hFindFile);
 	} else if (cnt == 0) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -125,7 +122,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// get directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -155,7 +151,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		FindClose(hFindFile);
 	} else if (i == 0) {
 		// no directories either
-		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -361,7 +356,6 @@ static BOOL CheckDir(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -383,7 +377,6 @@ static BOOL CheckFile(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -781,12 +774,17 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 			filepart = fname;
 		}
 	} else if (op.RememberOSD == 1 && opptr != NULL) {
-		if (*opptr == NULL || **opptr == TEXT('\0') || !dir_check(*opptr)) {
-			wsprintf(path, TEXT("%s%s"), DataDir, STR_DOCS);
-			dir_create(path);
-		} else {
+		if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 			lstrcpy(path, *opptr);
-		}
+		} else if (Action == FILE_SAVE_MSG) {
+			lstrcpy(path, DataDir);
+		} else if (Action != FILE_OPEN_SINGLE && Action != FILE_OPEN_MULTI) {
+			TCHAR buf[BUF_SIZE];
+			// saving an attachment
+			wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
+			dir_create(buf);
+			lstrcpy(path, DataDir);
+		} // else open: just let Windows determine the directory
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {

@@ -237,7 +237,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	TCHAR path[BUF_SIZE];
 
 	lstrcpy(path, ret);
-	return SelectFile(hWnd, hInst, Action, path, ret, ofdirptr);
+	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
