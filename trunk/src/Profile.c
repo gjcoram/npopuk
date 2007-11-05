@@ -142,7 +142,6 @@ static BOOL check_file(const TCHAR *fname)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(fname, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
