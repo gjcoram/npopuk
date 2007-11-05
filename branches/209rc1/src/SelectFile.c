@@ -783,7 +783,7 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 			// saving an attachment
 			wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
 			dir_create(buf);
-			lstrcpy(path, DataDir);
+			lstrcpy(path, buf);
 		} // else open: just let Windows determine the directory
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
