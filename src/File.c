@@ -164,7 +164,6 @@ BOOL dir_check(const TCHAR *path)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(path, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -205,7 +204,6 @@ BOOL dir_delete(TCHAR *Path, TCHAR *file)
 	wsprintf(sPath, TEXT("%s\\%s"), Path, file);
 
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -387,7 +385,6 @@ long file_get_size(TCHAR *FileName)
 	HANDLE hFindFile;
 
 	if ((hFindFile = FindFirstFile(FileName, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return -1;
 	}
 	FindClose(hFindFile);

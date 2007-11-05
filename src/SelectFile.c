@@ -90,7 +90,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// count directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -110,7 +109,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		} while (FindNextFile(hFindFile, &FindData) == TRUE);
 		FindClose(hFindFile);
 	} else if (cnt == 0) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -125,7 +123,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 	// get directories
 	wsprintf(sPath, TEXT("%s\\%s"), path, TEXT("*"));
 	if ((hFindFile = FindFirstFile(sPath, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	do{
@@ -155,7 +152,6 @@ static BOOL CreateList(HWND hDlg, HWND hListView)
 		FindClose(hFindFile);
 	} else if (i == 0) {
 		// no directories either
-		FindClose(hFindFile);
 		return FALSE;
 	}
 
@@ -361,7 +357,6 @@ static BOOL CheckDir(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
@@ -383,7 +378,6 @@ static BOOL CheckFile(TCHAR *fname)
 
 	wsprintf(buf, TEXT("%s\\%s"), path, fname);
 	if ((hFindFile = FindFirstFile(buf, &FindData)) == INVALID_HANDLE_VALUE) {
-		FindClose(hFindFile);
 		return FALSE;
 	}
 	FindClose(hFindFile);
