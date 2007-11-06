@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p3")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p5")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -463,9 +463,6 @@ typedef struct _OPTION {
 	int StripHtmlTags;
 	TCHAR *SavedOpenDir;
 	TCHAR *SavedSaveDir;
-#ifdef _WIN32_WCE_PPC
-	int RememberOSD;
-#endif
 
 	TCHAR *URLApp;
 

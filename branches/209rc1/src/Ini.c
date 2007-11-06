@@ -565,7 +565,7 @@ BOOL ini_read_setting(HWND hWnd)
 	///////////// MRP /////////////////////
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("html"), app_path);
 	len = profile_get_string(GENERAL, TEXT("ViewFileHeader"),
-	TEXT("<B>From:</B> %f<BR>\\n<B>To:</B> %t<BR>\\n<B>Cc:</B> %c<BR>\\n<B>Subject:</B> %s<BR>\\n<B>Date:</B> %d<BR>\\n<HR>\\n<BR>\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+		TEXT("<B>From:</B> %f<BR>\\n<B>To:</B> %t<BR>\\n{<B>Cc:</B> %c<BR>}\\n}<B>Subject:</B> %s<BR>\\n<B>Date:</B> %d<BR>\\n<HR>\\n<BR>\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
 	///////////// --- /////////////////////
 #else
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("txt"), app_path);
@@ -590,15 +590,11 @@ BOOL ini_read_setting(HWND hWnd)
 	op.AttachDelete = profile_get_int(GENERAL, TEXT("AttachDelete"), 1, app_path);
 	op.StripHtmlTags = profile_get_int(GENERAL, TEXT("StripHtmlTags"), 1, app_path);
 #ifdef _WIN32_WCE_PPC
-	op.RememberOSD = profile_get_int(GENERAL, TEXT("RememberOpenSaveDir"), 0, app_path);
-	if (op.RememberOSD == 1) {
+	{
 		TCHAR *OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
 		op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), OpenSaveDir, app_path);
 		op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), OpenSaveDir, app_path);
 		mem_free(&OpenSaveDir);
-	} else {
-		op.SavedOpenDir = alloc_copy_t(TEXT(""));
-		op.SavedSaveDir = alloc_copy_t(TEXT(""));
 	}
 #else
 	op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
@@ -1147,22 +1143,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	//profile_write_int(GENERAL, TEXT("AttachWarning"), op.AttachWarning, app_path);
 	profile_write_int(GENERAL, TEXT("AttachDelete"), op.AttachDelete, app_path);
 	profile_write_int(GENERAL, TEXT("StripHtmlTags"), op.StripHtmlTags, app_path);
-#ifdef _WIN32_WCE_PPC
-	profile_write_int(GENERAL, TEXT("RememberOpenSaveDir"), op.RememberOSD, app_path);
-	if (op.RememberOSD == 1 && op.SavedOpenDir != NULL) {
-		profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
-	} else {
-		profile_write_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
-	}
-	if (op.RememberOSD == 1 && op.SavedSaveDir != NULL) {
-		profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
-	} else {
-		profile_write_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
-	}
-#else
 	profile_write_string(GENERAL, TEXT("SavedOpenDir"), op.SavedOpenDir, app_path);
 	profile_write_string(GENERAL, TEXT("SavedSaveDir"), op.SavedSaveDir, app_path);
-#endif
 
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp, app_path);
 
@@ -1187,6 +1169,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_delete_key(GENERAL, TEXT("MoveAllMailBox"));
 	profile_delete_key(GENERAL, TEXT("ViewAppFullHeaders"));
 	profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
+	profile_delete_key(GENERAL, TEXT("RememberOpenSaveDir"));
 	profile_delete_key(GENERAL, TEXT("DecodeInPlace"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {

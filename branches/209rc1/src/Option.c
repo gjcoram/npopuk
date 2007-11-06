@@ -2781,9 +2781,6 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_SETCHECK, op.ExpertMode, 0);		// Added PHH 4-Oct-2003
 
-#ifdef _WIN32_WCE_PPC
-		SendDlgItemMessage(hDlg, IDC_CHECK_REMEMBERDIR, BM_SETCHECK, op.RememberOSD, 0);
-#endif // _WIN32_WCE_PPC
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_SETCHECK, (op.UsePOOMAddressBook!=0), 0);
 		SendDlgItemMessage(hDlg, IDC_POOMNAMECOMMENT, BM_SETCHECK, op.POOMNameIsComment, 0);
@@ -2850,9 +2847,6 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 			op.ExpertMode = SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_GETCHECK, 0, 0);	// Added PHH 4-Oct-2003
 
-#ifdef _WIN32_WCE_PPC
-			op.RememberOSD = SendDlgItemMessage(hDlg, IDC_CHECK_REMEMBERDIR, BM_GETCHECK, 0, 0);
-#endif
 #ifdef _WIN32_WCE
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_GETCHECK, 0, 0)) {
 				int newsort, newcmmt;
