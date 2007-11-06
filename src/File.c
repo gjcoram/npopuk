@@ -47,6 +47,10 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 /*
  * log_clear
+ *
+ * The first time through (log_opened==FALSE), we use CREATE_ALWAYS to start
+ * with a clean, empty file.  After that, if some error causes the log file
+ * to close, it is reopened without truncation.
  */
 HANDLE hLogFile;
 BOOL log_opened = FALSE;
@@ -72,6 +76,19 @@ BOOL log_clear(BOOL clear)
 
 /*
  * log_save
+ * 
+ * It is more efficient to pass messages already containing \r\n at the end,
+ * especially on non-UNICODE platforms, which don't have to convert the text.
+ * But if the buffer to be logged is used for another purpose, for which the 
+ * \r\n should not be present, log_save will add it appropriately.
+ * 
+ * The UNICODE case could be improved by overestimating the size buffer
+ * needed, rather than laboriously calculating exactly what is needed.  This
+ * would temporarily consume a bit of extra space.
+ *
+ * A local buffer might also avoid the need for malloc free, and could be
+ * handy for short log messages... since most are short, this could be a big
+ * win.
  */
 BOOL log_save(TCHAR *buf)
 {
