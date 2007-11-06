@@ -131,7 +131,6 @@
 #define IDC_RADIO_FORMAT_MBOX           258
 #define IDC_COMBO_LAZYLOAD              259
 #define IDC_CHECK_ATTACHSEP             260
-#define IDC_CHECK_REMEMBERDIR           261
 #define IDD_DIALOG_UPDATEOPTS           262
 #define IDC_RADIO_UAC_DELETE            263
 #define IDC_RADIO_UAC_KEEP              264
