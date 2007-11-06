@@ -1267,6 +1267,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	// Multipart
 	if (tpMailItem->Attach != NULL || tpMailItem->FwdAttach != NULL) {
 		tpMailItem->Multipart = MULTIPART_ATTACH;
+		tpMailItem->AttachSize = _ttoi(tpMailItem->Size); // - strlen(body) done later
 	} else if (tpMailBox == MailBox + MAILBOX_SEND) {
 		// presently, can't forward as attachment
 		tpMailItem->Multipart = MULTIPART_NONE;

@@ -758,33 +758,19 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 
 	g_mode_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) ? TRUE : FALSE;
 	g_action = Action;
-	if (Action == FILE_CHOOSE_DIR) {
-		if (*fname == TEXT('\\')) {
-			TCHAR *ph, *qh;
-			lstrcpy(path, fname);
-			ph = qh = path;
-			while (*(++ph) != TEXT('\0')) {
-				if (*ph == TEXT('\\')) {
-					qh = ph;
-				}
-			}
-			*qh = TEXT('\0');
-			filepart = qh + 1;
-		} else {
-			filepart = fname;
-		}
-	} else if (op.RememberOSD == 1 && opptr != NULL) {
-		if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
-			lstrcpy(path, *opptr);
-		} else if (Action == FILE_SAVE_MSG) {
-			lstrcpy(path, DataDir);
-		} else if (Action != FILE_OPEN_SINGLE && Action != FILE_OPEN_MULTI) {
-			TCHAR buf[BUF_SIZE];
-			// saving an attachment
-			wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
-			dir_create(buf);
-			lstrcpy(path, buf);
-		} // else open: just let Windows determine the directory
+	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
+		// directory exists, use it
+		lstrcpy(path, *opptr);
+	} else if (Action == FILE_SAVE_MSG) {
+		lstrcpy(path, DataDir);
+	} else if (g_mode_open == FALSE && Action != FILE_CHOOSE_DIR) {
+		TCHAR buf[BUF_SIZE];
+		// saving an attachment
+		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
+		dir_create(buf);
+		lstrcpy(path, buf);
+	} else {
+		*path = TEXT('\0');
 	}
 	rc = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELECTFILE), hDlg, SelectFileDlgProc, (LPARAM)filepart);
 	if (rc == TRUE) {
@@ -814,11 +800,9 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		} else {
 			wsprintf(ret, TEXT("%s\\%s"), path, filename);
 		}
-		if (Action != FILE_CHOOSE_DIR && op.RememberOSD == 1 && opptr != NULL) {
-			if (lstrcmp(path, *opptr) != 0) {
-				mem_free(opptr);
-				*opptr = alloc_copy_t(path);
-			}
+		if (opptr != NULL && lstrcmp(path, *opptr) != 0) {
+			mem_free(opptr);
+			*opptr = alloc_copy_t(path);
 		}
 	}
 	if (FileList != NULL) {

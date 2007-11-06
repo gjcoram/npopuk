@@ -231,7 +231,7 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /*
  * filename_select - the log Acquisition
  */
-BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR** opptr)
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR **opptr)
 {
 #ifdef _WIN32_WCE_PPC
 	TCHAR path[BUF_SIZE];
@@ -261,23 +261,23 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.lpstrTitle = STR_TITLE_SAVE;
 		lstrcpy(path, ret);
 	}
-	if (Action != FILE_CHOOSE_DIR) {
-		// check if directory exists
-		if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
-			of.lpstrInitialDir = *opptr;
-		} else if (Action == FILE_SAVE_MSG) {
-			of.lpstrInitialDir = DataDir;
-		} else if (is_open == FALSE) {
-			// saving an attachment
-			wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
-			dir_create(buf);
-			of.lpstrInitialDir = buf;
-		} // else is_open: just let Windows determine the directory
-	}
-
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
 	of.lpstrDefExt = DefExt;
+
+	// check if directory exists
+	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
+		// yes, use it
+		of.lpstrInitialDir = *opptr;
+	} else if (Action == FILE_SAVE_MSG) {
+		of.lpstrInitialDir = DataDir;
+	} else if (is_open == FALSE && Action != FILE_CHOOSE_DIR) {
+		// saving an attachment
+		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
+		dir_create(buf);
+		of.lpstrInitialDir = buf;
+	} // else is_open or choose dir (backup): just let Windows determine the directory
+
 	of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 #ifndef _WIN32_WCE
 	// GJC allow multiselect
@@ -743,6 +743,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 		if (tpMailItem != NULL) {
 			//Body copy
 			if ((t - p) > 0) {
+				if (tpMailItem->Multipart == MULTIPART_ATTACH) {
+					tpMailItem->AttachSize -= (t - p);
+				}
 				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1));
 				if (tpMailItem->Body != NULL) {
 					for (s = tpMailItem->Body; p < t; p++, s++) {
