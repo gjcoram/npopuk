@@ -1214,7 +1214,8 @@ TCHAR *CreateMessageId(long id, TCHAR *MailAddress)
 }
 
 /*
- * CreateHeaderStringSize - ヘッダ文字列を作成したときのサイズ
+ * CreateHeaderStringSize - This calculates an approximate header string size.
+ * It doesn't compensate for {} causing some plain text removal.
  */
 int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
@@ -1277,7 +1278,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 			ret += NULLCHECK_STRLEN(tpMailItem->Bcc);
 			break;
 
-		case TEXT('%'):
+		case TEXT('%'): case TEXT('{'): case TEXT('}'):
 			ret++;
 			break;
 
@@ -1289,7 +1290,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 }
 
 /*
- * CreateHeaderString - ヘッダ文字列の作成
+ * CreateHeaderString - substitute header values for placeholders
  */
 TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
@@ -1321,33 +1322,23 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 		// Optional text: include only if header is non-null (GJC)
 		// {CC: %C\n} will be included only if CC is non-null
 		if (*p == TEXT('{')) {
-			if (*(p+1) == TEXT('{')) {
-				// {{ becomes {
-				*(r++) = *(p++);
-			} else {
-				// {Optional text}
-				if (Optional == 0) {
-					// presently don't handle nested {}
-					Found = FALSE;
-					s = r;
-				}
-				Optional++;
+			// {Optional text}
+			if (Optional == 0) {
+				// presently don't handle nested {}
+				Found = FALSE;
+				s = r;
 			}
+			Optional++;
 			continue;
 		} else if (*p == TEXT('}')) {
-			if (*(p+1) == TEXT('}')) {
-				// }} becomes }
-				*(r++) = *(p++);
-			} else {
-				// {%C}
-				if (Optional > 0) {
-					Optional--;
-					if (Optional == 0 && Found == FALSE) {
-						r = s; // reset to before {
-					}
-				} else {
-					Optional = 0;
+			// {%C}
+			if (Optional > 0) {
+				Optional--;
+				if (Optional == 0 && Found == FALSE) {
+					r = s; // reset to before {
 				}
+			} else {
+				Optional = 0;
 			}
 			continue;
 		}
@@ -1397,10 +1388,12 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			t = tpMailItem->Bcc;
 			break;
 
-		// %
+		// %% becomes %, %{ becomes {, %{ becomes {
 		case TEXT('%'):
-			t = TEXT("%");
-			break;
+		case TEXT('{'):
+		case TEXT('}'):
+			*(r++) = *p;
+			continue;
 		}
 		if (t != NULL  &&  *t != TEXT('\0')) {
 			r = str_cpy_t(r, t);
