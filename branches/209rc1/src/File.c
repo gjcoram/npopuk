@@ -276,6 +276,8 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
 		dir_create(buf);
 		of.lpstrInitialDir = buf;
+	} else if (Action == FILE_CHOOSE_DIR) {
+		ParanoidMessageBox(hWnd, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
 	} // else is_open or choose dir (backup): just let Windows determine the directory
 
 	of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
