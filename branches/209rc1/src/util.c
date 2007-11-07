@@ -1321,33 +1321,23 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 		// Optional text: include only if header is non-null (GJC)
 		// {CC: %C\n} will be included only if CC is non-null
 		if (*p == TEXT('{')) {
-			if (*(p+1) == TEXT('{')) {
-				// {{ becomes {
-				*(r++) = *(p++);
-			} else {
-				// {Optional text}
-				if (Optional == 0) {
-					// presently don't handle nested {}
-					Found = FALSE;
-					s = r;
-				}
-				Optional++;
+			// {Optional text}
+			if (Optional == 0) {
+				// presently don't handle nested {}
+				Found = FALSE;
+				s = r;
 			}
+			Optional++;
 			continue;
 		} else if (*p == TEXT('}')) {
-			if (*(p+1) == TEXT('}')) {
-				// }} becomes }
-				*(r++) = *(p++);
-			} else {
-				// {%C}
-				if (Optional > 0) {
-					Optional--;
-					if (Optional == 0 && Found == FALSE) {
-						r = s; // reset to before {
-					}
-				} else {
-					Optional = 0;
+			// {%C}
+			if (Optional > 0) {
+				Optional--;
+				if (Optional == 0 && Found == FALSE) {
+					r = s; // reset to before {
 				}
+			} else {
+				Optional = 0;
 			}
 			continue;
 		}
@@ -1397,9 +1387,11 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			t = tpMailItem->Bcc;
 			break;
 
-		// %
+		// %% becomes %, %{ becomes {, %{ becomes {
 		case TEXT('%'):
-			t = TEXT("%");
+		case TEXT('{'):
+		case TEXT('}'):
+			*(r++) = *p;
 			break;
 		}
 		if (t != NULL  &&  *t != TEXT('\0')) {
