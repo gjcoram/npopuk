@@ -1685,16 +1685,20 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 	if (SelDir == FALSE) {
 		lstrcpy(SaveDir, DataDir);
 	} else {
-		lstrcpy(SaveDir, STR_NPOPUK_FILES);
-		if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.BackupDir) == FALSE) {
-			return FALSE;
-		} else if (lstrcmpi(SaveDir, AppDir) == 0) {
-			ErrorMessage(hWnd, STR_ERROR_BACKUP_APPDIR);
-			return FALSE;
-		} else if (lstrcmpi(SaveDir, DataDir) == 0) {
-			ErrorMessage(hWnd, STR_ERROR_BACKUP_DATADIR);
-			return FALSE;
-		}
+		BOOL repeat;
+		do {
+			repeat = FALSE;
+			lstrcpy(SaveDir, STR_NPOPUK_FILES);
+			if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.BackupDir) == FALSE) {
+				return FALSE;
+			} else if (lstrcmpi(SaveDir, AppDir) == 0) {
+				ErrorMessage(hWnd, STR_ERROR_BACKUP_APPDIR);
+				repeat = TRUE;
+			} else if (lstrcmpi(SaveDir, DataDir) == 0) {
+				ErrorMessage(hWnd, STR_ERROR_BACKUP_DATADIR);
+				repeat = TRUE;
+			}
+		} while (repeat == TRUE);
 	}
 
 	SwitchCursor(FALSE);
