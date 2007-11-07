@@ -565,7 +565,7 @@ BOOL ini_read_setting(HWND hWnd)
 	///////////// MRP /////////////////////
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("html"), app_path);
 	len = profile_get_string(GENERAL, TEXT("ViewFileHeader"),
-	TEXT("<B>From:</B> %f<BR>\\n<B>To:</B> %t<BR>\\n<B>Cc:</B> %c<BR>\\n<B>Subject:</B> %s<BR>\\n<B>Date:</B> %d<BR>\\n<HR>\\n<BR>\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
+	TEXT("<B>From:</B> %f<BR>\\n<B>To:</B> %t<BR>\\n{<B>Cc:</B> %c<BR>\\n}<B>Subject:</B> %s<BR>\\n<B>Date:</B> %d<BR>\\n<HR>\\n<BR>\\n"), conv_buf, INI_BUF_SIZE - 1, app_path);
 	///////////// --- /////////////////////
 #else
 	op.ViewFileSuffix = profile_alloc_string(GENERAL, TEXT("ViewFileSuffix"), TEXT("txt"), app_path);
