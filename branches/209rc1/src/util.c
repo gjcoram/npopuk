@@ -1277,7 +1277,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 			ret += NULLCHECK_STRLEN(tpMailItem->Bcc);
 			break;
 
-		case TEXT('%'):
+		case TEXT('%'): case TEXT('{'): case TEXT('}'):
 			ret++;
 			break;
 
