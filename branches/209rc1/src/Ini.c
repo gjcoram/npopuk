@@ -441,10 +441,6 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SendDate = profile_get_int(GENERAL, TEXT("SendDate"), 1, app_path);
 	op.SelectSendBox = profile_get_int(GENERAL, TEXT("SelectSendBox"), 1, app_path);
 	op.ExpertMode = profile_get_int(GENERAL, TEXT("DisableWarning"), 0, app_path);		// Added PHH 4-Oct-2003
-#ifdef _DEBUG
-	op.GJCDebug = profile_get_int(GENERAL, TEXT("GJCDebug"), 1, app_path);
-	op.GJCDebug = 1;
-#endif
 	op.PopBeforeSmtpIsLoginOnly = profile_get_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), 1, app_path);
 	op.PopBeforeSmtpWait = profile_get_int(GENERAL, TEXT("PopBeforeSmtpWait"), 300, app_path);
 

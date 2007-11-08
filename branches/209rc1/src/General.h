@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p6")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -367,9 +367,6 @@ typedef struct _OPTION {
 	int SendDate;
 	int SelectSendBox;
 	int ExpertMode;		// Added PHH 4-10-2003
-#ifdef _DEBUG
-	int GJCDebug;
-#endif
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
 
