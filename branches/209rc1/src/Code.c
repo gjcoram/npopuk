@@ -396,8 +396,18 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 					*(r++) = *(p + 1);
 					hextmp = *(p + 2);
 				}
-				*(r++) = hextmp;
+				*r = hextmp;
 				p += 2;
+				if (*r == '\n' && *(r-1) != '\r') {
+					*(r++) = '\r';
+					*r = '\n';
+#ifdef HANDLE_BARE_SLASH_R
+				} else if (*r == '\r' && *p != '\n' && *p != '=' && *(p+1) != '0' && *(p+2) != 'D') {
+					r++;
+					*r = '\n';
+#endif
+				}
+				r++;
 			}
 		} else {
 			*(r++) = *p;

@@ -1871,6 +1871,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
  */
 static BOOL ShellOpen(TCHAR *FileName)
 {
+	TCHAR *p;
+	BOOL retval;
 #ifndef _WIN32_WCE_LAGENDA
 	SHELLEXECUTEINFO sei;
 
@@ -1879,29 +1881,37 @@ static BOOL ShellOpen(TCHAR *FileName)
 	sei.fMask = 0;
 	sei.hwnd = NULL;
 	sei.lpVerb = NULL;
+	p = NULL;
 	if (op.URLApp == NULL || *op.URLApp == TEXT('\0')) {
 		sei.lpFile = FileName;
 		sei.lpParameters = NULL;
 	} else {
 		sei.lpFile = op.URLApp;
-		sei.lpParameters = FileName;
+		p = CreateCommandLine(op.URLAppCmdLine, FileName, FALSE);
+		sei.lpParameters = (p != NULL) ? p : FileName;
 	}
 	sei.lpDirectory = NULL;
 	sei.nShow = SW_SHOWNORMAL;
 	sei.hInstApp = hInst;
-	return ShellExecuteEx(&sei);
+	retval = ShellExecuteEx(&sei);
+	mem_free(&p);
+	return retval;
 #else
 	TCHAR *file;
 	TCHAR *param;
 
+	p = NULL;
 	if (op.URLApp == NULL || *op.URLApp == TEXT('\0')) {
 		file = FileName;
 		param = NULL;
 	} else {
 		file = op.URLApp;
-		param = FileName;
+		p = CreateCommandLine(op.URLAppCmdLine, FileName, FALSE);
+		param = (p != NULL) ? p : FileName;
 	}
-	return CoshExecute(NULL, file, param);
+	retval = CoshExecute(NULL, file, param);
+	mem_free(&p);
+	return retval;
 #endif
 }
 
@@ -2041,15 +2051,16 @@ static void OpenURL(HWND hWnd)
 		str_cmp_ni_t(s, URL_FTP, lstrlen(URL_FTP)) == 0) {
 
 #ifndef _WIN32_WCE
-		TCHAR *QuotFileName = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(s) + 3));
-		if (QuotFileName == NULL) {
-			QuotFileName = s;
-		} else {
-			wsprintf(QuotFileName, TEXT("\"%s\""), s);
-		}
+//		TCHAR *QuotFileName = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(s) + 3));
+//		if (QuotFileName == NULL) {
+//			QuotFileName = s;
+//		} else {
+//			wsprintf(QuotFileName, TEXT("\"%s\""), s);
+//		}
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
-		ShellOpen(QuotFileName);
-		mem_free(&QuotFileName);
+//		ShellOpen(QuotFileName);
+//		mem_free(&QuotFileName);
+		ShellOpen(s);
 #else
 		ShellOpen(s);
 #endif
@@ -2598,7 +2609,7 @@ static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex)
 	TCHAR *p;
 	int len = 0;
 	int cnt = 0;
-	BOOL ViewSrc;
+	BOOL ViewSrc, retval;
 
 	// メールをファイルに保存
 	str_join_t(path, DataDir, VIEW_FILE, TEXT("."), op.ViewFileSuffix, (TCHAR *)-1);
@@ -2626,13 +2637,9 @@ static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex)
 	sei.lpDirectory = NULL;
 	sei.nShow = SW_SHOWNORMAL;
 	sei.hInstApp = hInst;
-	// 起動
-	if (ShellExecuteEx(&sei) == FALSE) {
-		mem_free(&p);
-		return FALSE;
-	}
+	retval = ShellExecuteEx(&sei);
 	mem_free(&p);
-	return TRUE;
+	return retval;
 #else
 	p = NULL;
 	if (op.ViewApp == NULL || *op.ViewApp == TEXT('\0')) {
@@ -2643,7 +2650,9 @@ static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex)
 		p = CreateCommandLine(op.ViewAppCmdLine, path, FALSE);
 		param = (p != NULL) ? p : path;
 	}
-	return CoshExecute(NULL, file, param);
+	retval = CoshExecute(NULL, file, param);
+	mem_free(&p);
+	return retval;
 #endif
 }
 
@@ -2758,8 +2767,9 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 /*
  * ViewDeleteItem - delete item from list (not from server)
  */
-static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
+static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 	HWND hListView = NULL;
+	MAILITEM *tpNextMail = NULL;
 	int i;
 
 	// delete item from listview
@@ -2770,6 +2780,11 @@ static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 			if (tpMailItem == delItem) {
 				ListView_DeleteItem(hListView, i);
+				ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
+				ListView_SetItemState(hListView,
+					i, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+				ListView_EnsureVisible(hListView, i, TRUE);
+				tpNextMail = (MAILITEM *)ListView_GetlParam(hListView, i);
 				break;
 			}
 		}
@@ -2782,7 +2797,7 @@ static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 		}
 	}
 	item_resize_mailbox(MailBox + vSelBox);
-	return TRUE;
+	return tpNextMail;
 }
 
 /*
@@ -2790,7 +2805,7 @@ static BOOL ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
  */
 static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	MAILITEM *tpMailItem;
+	MAILITEM *tpMailItem, *tpNextMail;
 	int key, i, command_id;
 	BOOL ret;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -3085,13 +3100,27 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			{
+			if ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE) {
+				break;
+			}
+			if (op.ExpertMode != 1 || key >=0) {
 				TCHAR buf[BUF_SIZE];
 				wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));
-				if (ParanoidMessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDYES) {
-					ViewDeleteItem(hWnd, tpMailItem);
-					SendMessage(hWnd, WM_CLOSE, 0, 0);
+				if (MessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+					break;
 				}
+			}
+			tpNextMail = ViewDeleteItem(hWnd, tpMailItem);
+			if (op.ViewNextAfterDel == 0) {
+				tpNextMail = NULL;
+			} else if (op.ViewNextAfterDel == 2 && (tpNextMail == NULL || tpMailItem->MailStatus != ICON_MAIL)) {
+				tpNextMail = View_NextUnreadMail(hWnd);
+			}
+			if (tpNextMail == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
+			} else if (tpNextMail != NULL) {
+				SetWindowLong(hWnd, GWL_USERDATA, (long)tpNextMail);
+				ModifyWindow(hWnd, tpNextMail, FALSE, FALSE);
 			}
 			break;
 
@@ -3330,7 +3359,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			if (command_id >= ID_MENUITEM_COPY2MBOX) {
 				// move or copy to SaveBox
-				BOOL mark_del = FALSE, close_win = FALSE;
+				BOOL mark_del = FALSE;
 				int mbox = command_id - ID_MENUITEM_COPY2MBOX;
 				if (command_id >= ID_MENUITEM_MOVE2MBOX) {
 					mbox = command_id - ID_MENUITEM_MOVE2MBOX;
@@ -3338,16 +3367,28 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				}
 				if (mbox >= 0 && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
 					tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+					tpNextMail = NULL;
 					if (ItemToSaveBox(hWnd, tpMailItem, mbox, TRUE, mark_del) == TRUE) {
 						if (mark_del == TRUE) {
 							// delete from list or mark for deletion
 							if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
-								close_win = ViewDeleteItem(hWnd, tpMailItem);
+								tpNextMail = ViewDeleteItem(hWnd, tpMailItem);
+								if (op.ViewNextAfterDel == 0) {
+									tpNextMail = NULL;
+								} else if (op.ViewNextAfterDel == 2 && (tpNextMail == NULL || tpMailItem->MailStatus != ICON_MAIL)) {
+									tpNextMail = View_NextUnreadMail(hWnd);
+								}
+								if (tpNextMail != NULL) {
+									SetWindowLong(hWnd, GWL_USERDATA, (long)tpNextMail);
+									ModifyWindow(hWnd, tpNextMail, FALSE, FALSE);
+								}
 							} else {
 								SetMark(hWnd, tpMailItem, ICON_DEL);
 								GetMarkStatus(hWnd, tpMailItem);
-								if (op.ViewCloseNoNext == 1) {
-									close_win = TRUE;
+								if (op.ViewNextAfterDel == 1) {
+									tpNextMail = View_NextMail(hWnd);
+								} else if (op.ViewNextAfterDel == 2) {
+									tpNextMail = View_NextUnreadMail(hWnd);
 								}
 							}
 						}
@@ -3369,13 +3410,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						SwitchCursor(TRUE);
 						SetItemCntStatusText(MainWnd, NULL, FALSE);
 					}
-					if (mark_del) {
-						if ((op.ViewNextAfterDel == 1 && (View_NextMail(hWnd) != NULL))
-							|| (op.ViewNextAfterDel == 2 && (View_NextUnreadMail(hWnd) != NULL)) ) {
-								close_win = FALSE;
-						}
-					}
-					if (close_win == TRUE) {
+					if (tpNextMail == NULL && op.ViewCloseNoNext == 1) {
 						SendMessage(hWnd, WM_CLOSE, 0, 0);
 					}
 				}

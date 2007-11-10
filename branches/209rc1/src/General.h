@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p6")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b8p8")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -462,6 +462,7 @@ typedef struct _OPTION {
 	TCHAR *SavedSaveDir;
 
 	TCHAR *URLApp;
+	TCHAR *URLAppCmdLine;
 
 	int EnableLAN;
 

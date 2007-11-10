@@ -1078,12 +1078,11 @@ static void FreeAllMailBox(void)
  */
 static BOOL CloseEditViewWindows(int Flag)
 {
+#ifndef _WIN32_WCE
 	HWND fWnd;
+#endif
 	BOOL retval = TRUE;
 
-	if (op.SocLog > 1) {
-		log_save(AppDir, LOG_FILE, TEXT("CloseEditViewWindows"));
-	}
 	// Close the View window
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_ENDCLOSE, 0, 0);
@@ -1104,9 +1103,6 @@ static BOOL CloseEditViewWindows(int Flag)
 		SendMessage(fWnd, WM_ENDCLOSE, Flag, 0); // Flag==1 for all calls on this platform
 	}
 #endif
-	if (op.SocLog > 1) {
-		log_save(AppDir, LOG_FILE, TEXT("CloseEditViewWindows done"));
-	}
 	return retval;
 }
 

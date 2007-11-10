@@ -607,6 +607,7 @@ BOOL ini_read_setting(HWND hWnd)
 #else	// _WIN32_WCE
 	op.URLApp = profile_alloc_string(GENERAL, TEXT("URLApp"), TEXT(""), app_path);
 #endif	// _WIN32_WCE
+	op.URLAppCmdLine = profile_alloc_string(GENERAL, TEXT("URLAppCmdLine"), TEXT(""), app_path);
 
 	op.EnableLAN = profile_get_int(GENERAL, TEXT("EnableLAN"), 0, app_path);
 
@@ -1558,6 +1559,7 @@ void ini_free(void)
 	mem_free(&op.SavedOpenDir);
 	mem_free(&op.SavedSaveDir);
 	mem_free(&op.URLApp);
+	mem_free(&op.URLAppCmdLine);
 	mem_free(&op.AttachPath);
 	mem_free(&op.Password);
 }

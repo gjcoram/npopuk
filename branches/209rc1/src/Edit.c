@@ -1128,10 +1128,17 @@ BOOL EndEditWindow(HWND hWnd, BOOL sent)
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem != NULL) {
 		sent = (tpMailItem->Mark == ICON_SENTMAIL);
-		if (SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETMODIFY, 0, 0) == TRUE &&
-			MessageBox(hWnd, STR_Q_EDITCANCEL,
-				STR_TITLE_MAILEDIT, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
-			return FALSE;
+		if (sent == FALSE && SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETMODIFY, 0, 0) == TRUE) {
+#ifdef _WIN32_WCE
+			FocusWnd = hEditWnd;
+			ShowWindow(hEditWnd, SW_SHOW);
+			_SetForegroundWindow(hEditWnd);
+#endif
+			if (MessageBox(hWnd, STR_Q_EDITCANCEL, STR_TITLE_MAILEDIT,
+				MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
+				return FALSE;
+			}
+			FocusWnd = MainWnd;
 		}
 		//if (tpMailItem->InReplyTo != NULL || tpMailItem->References != NULL) {
 			// GJC remove re/fwd overlay?
@@ -1318,7 +1325,7 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 
 	//Setting size
 	mem_free(&tpMailItem->Size);
-	size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body) - 1) : 0;
+	size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body)) : 0;
 	if (size < 0) size = 0;
 	size += tpMailItem->AttachSize;
 	wsprintf(numbuf, TEXT("%d"), size);
