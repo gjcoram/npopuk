@@ -2729,8 +2729,13 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 #ifndef _WIN32_WCE
 			hMenu = GetSubMenu(hMenu, 0);
 #endif
+#ifdef _WIN32_WCE_PPC
+			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
+				STR_LIST_PPCMENU_DELLIST);
+#else
 			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
 				STR_LIST_MENU_DELLIST);
+#endif
 		}
 	} else {
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
