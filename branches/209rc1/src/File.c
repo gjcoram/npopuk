@@ -772,6 +772,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						// strip duplicate headers and/or convert from foreign MBOX format
 						char *newbody;
 						int len, header_size;
+						BOOL free_t = FALSE;
 						if (tpMailItem->HasHeader == 1) {
 							s = GetBodyPointa(tpMailItem->Body);
 							header_size = remove_duplicate_headers(tpMailItem->Body);
@@ -783,6 +784,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						}
 						if (tpMailItem->Encoding != NULL) {
 							t = MIME_body_decode_transfer(tpMailItem, s);
+							if (t != s) {
+								free_t = TRUE;
+							}
 						} else {
 							t = s;
 						}
@@ -800,6 +804,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 							tstrcpy(newbody + header_size, t);
 							mem_free(&tpMailItem->Body);
 							tpMailItem->Body = newbody;
+						}
+						if (free_t == TRUE) {
+							mem_free(&t);
 						}
 					}
 				}

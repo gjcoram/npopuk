@@ -1226,7 +1226,8 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
  */
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 {
-	char *p;
+	char *ret = body;
+	BOOL check_slash_n = TRUE;
 	if (body == NULL) {
 		return NULL;
 	}
@@ -1241,31 +1242,71 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 			base64_decode(body, body);
 		} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
 			QuotedPrintable_decode(body, body);
+			check_slash_n = FALSE; // handled in QP_decode
 		}
 		// else encoding is assumed 7bit or 8bit
 	}
-	for (p = body; *p != '\0'; p++) {
+	if (check_slash_n == TRUE) {
+		char *p, *q;
+		int incr = 0, len = 0;
+		for (p = body; *p != '\0'; p++, len++) {
 #ifdef HANDLE_BARE_SLASH_R
-		if (*p == '\r' && *(p+1) != '\n') {
-			if (*(p+1) == '\r') {
-				*(p+1) = '\n'; // \r\r -> \r\n
-			} else {
-				*p = ' ';
+			if (*p == '\r' && *(p+1) != '\n') {
+				incr++;
+			}
+#endif
+			if (*p == '\n' && (p == body || (p > body && *(p-1) != '\r'))) {
+				incr++;
 			}
 		}
+		if (incr > 0) {
+			ret = q = (char *)mem_alloc(len + incr + 1);
+			if (ret == NULL) {
+				ret = body;
+			}
+			for (p = body; *p != '\0'; p++) {
+				if (q != NULL) {
+					*q = *p;
+				}
+#ifdef HANDLE_BARE_SLASH_R
+				if (*p == '\r' && *(p+1) != '\n') {
+					if (q == NULL) {
+						if (*(p+1) == '\r') {
+							*(++p) = '\n'; // \r\r -> \r\n
+						} else {
+							*p = ' ';
+						}
+					} else {
+						q++;
+						*q = '\n';
+					}
+				}
 #endif
-		// YPOPs! fix (some messages come in with bare \n
-		if (*p == '\n' && p > body && *(p-1) != '\r') {
-			if (*(p+1) == '\n') {
-				*p = '\r'; // \n\n -> \r\n
-			} else {
-				*p = ' ';
+				// YPOPs! fix (some messages come in with bare \n
+				if (*p == '\n' && (p == body || (p > body && *(p-1) != '\r'))) {
+					if (q == NULL) {
+						if (*(p+1) == '\n') {
+							*(p++) = '\r'; // \n\n -> \r\n
+						} else {
+							*p = ' ';
+						}
+					} else {
+						*(q++) = '\r';
+						*q = '\n';
+					}
+				}
+				if (q != NULL) {
+					q++;
+				}
+			}
+			if (q != NULL) {
+				*q = '\0';
 			}
 		}
 	}
 	mem_free(&tpMailItem->Encoding);
 	tpMailItem->Encoding = NULL;
-	return body;
+	return ret;
 }
 
 /*
