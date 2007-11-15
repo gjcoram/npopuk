@@ -6357,6 +6357,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		SetControlFont(hDlg);
 		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
+		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
 		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
 
 		memset ((char *)&logfont, 0, sizeof (logfont));
@@ -6404,22 +6405,26 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CLOSE:
 		AboutWnd = NULL;
-      DeleteObject(hFont);
+		DeleteObject(hFont);
 		EndDialog(hDlg, FALSE);
 		break;
 
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
+		case IDC_VISIT_WEB:
+			ShellOpen(STR_WEB_ADDR);
+			break;
+
 		case IDOK:
 			AboutWnd = NULL;
-         DeleteObject(hFont);
+			DeleteObject(hFont);
 			EndDialog(hDlg, TRUE);
 			break;
 
 		case IDCANCEL:
 			AboutWnd = NULL;
-         DeleteObject(hFont);
+			DeleteObject(hFont);
 			EndDialog(hDlg, FALSE);
 			break;
 		}

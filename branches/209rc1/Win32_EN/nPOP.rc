@@ -431,8 +431,7 @@ BEGIN
     ICON            IDI_ICON_MAIN,IDC_STATIC,7,2,21,20
     EDITTEXT        IDC_ABOUT_TEXT,3,52,150,64,ES_MULTILINE | ES_READONLY | 
                     WS_VSCROLL
-    LTEXT           "http://www.npopsupport.org.uk",IDC_STATIC,3,23,
-                    149,26
+    PUSHBUTTON      "STR_WEB_ADDR",IDC_VISIT_WEB,7,23,142,14
 END
 
 IDD_DIALOG_INPUTPASS DIALOG  0, 0, 135, 73

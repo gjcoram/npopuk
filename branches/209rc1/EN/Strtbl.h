@@ -128,6 +128,7 @@
 
 // Warning
 #define STR_WARN_ATTACH_MEM			TEXT("Attachments may be too large to encode\nin available memory")
+#define STR_WARN_BACKUPDIR			TEXT("Previous backup directory no longer exists")
 
 // Question
 #define STR_Q_DELETE				TEXT("Delete it?")
@@ -265,7 +266,7 @@
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark for download\tCtrl+D")
-#define STR_LIST_MENU_DELLIST		TEXT("Delete from &list")
+#define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tDel")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
 #define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
 
@@ -388,6 +389,7 @@
 #define STR_LIST_PPCMENU_SENDMARK	TEXT("&Mark for send")
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark for download")
+#define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
 #define STR_LIST_PPCMENU_SAVEBOXCOPY	TEXT("Copy to &Savebox")
 #define STR_LIST_PPCMENU_SAVEBOXMOVE	TEXT("Move to &Savebox")
 
@@ -424,6 +426,7 @@
 
 ///////////// MRP /////////////////////
 #define STR_TITLE_ABOUT				TEXT("About")
+#define STR_WEB_ADDR			TEXT("http://www.npopsupport.org.uk")
 #define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
 

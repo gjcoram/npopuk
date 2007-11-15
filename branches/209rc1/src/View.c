@@ -139,7 +139,6 @@ static MAILITEM *View_NextMail(HWND hWnd);
 static MAILITEM *View_PrevMail(HWND hWnd);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
 static void View_Scroll(HWND hViewWnd, int dir);
-static BOOL ShellOpen(TCHAR *FileName);
 static void OpenURL(HWND hWnd);
 static void SetReMessage(HWND hWnd, int ReplyFlag);
 static BOOL Decode(HWND hWnd, int id, int DoWhat);
@@ -1869,7 +1868,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 /*
  * ShellOpen - ファイルを関連付けで実行
  */
-static BOOL ShellOpen(TCHAR *FileName)
+BOOL ShellOpen(TCHAR *FileName)
 {
 	TCHAR *p;
 	BOOL retval;

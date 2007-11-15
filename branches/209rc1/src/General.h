@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09rc1")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b9")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -875,6 +875,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
+BOOL ShellOpen(TCHAR *FileName);
 
 // Edit
 #ifndef _WIN32_WCE
