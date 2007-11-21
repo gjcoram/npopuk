@@ -334,6 +334,7 @@
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
 #define STR_FWD_ORIG_MSG			TEXT("Fwd: (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
+
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
 #define STR_MAILPROP_MAILADDRESS	TEXT("Mail address")
@@ -347,6 +348,7 @@
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
 #define STR_ADDRESSLIST_NOGROUP		TEXT("[No cat.]")
 #define STR_ADDRESSBOOK_ADDGROUP	TEXT("Change category")
+#define STR_ADDREDIT_NAME			TEXT("Name")
 #else
 #define STR_ADDRESSLIST_GROUP		TEXT("Group")
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")

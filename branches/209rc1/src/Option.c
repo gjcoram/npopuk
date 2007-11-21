@@ -2865,7 +2865,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						SwitchCursor(FALSE);
 						read = file_read_address_book(ADDRESS_FILE, tpTmpAddressBook);
 						SwitchCursor(TRUE);
-						if (read < 50) {
+						if (read < -50) {
 							MessageBox(hDlg, STR_ERR_POOM, WINDOW_TITLE, MB_OK);
 							read += 100;
 						}
@@ -5065,6 +5065,9 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			i = -1;
 			while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
+#ifdef _WIN32_WCE
+				TCHAR *addr, *cmmt, *fname, *lname;
+#endif
 				tpAddrItem = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
 				if (tpAddrItem == NULL) {
 					ErrorMessage(hDlg, STR_ERR_ADD);
@@ -5079,58 +5082,15 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				delete_ctrl_char(tpAddrItem->MailAddress);
 #ifdef _WIN32_WCE
-				if (op.UsePOOMAddressBook != 0) {
-					TCHAR *addr, *cmmt, *fname, *lname;
-					BOOL done = FALSE;
-					int ret, len = lstrlen(tpAddrItem->MailAddress) + 1;
+				if (op.UsePOOMAddressBook != 0 && (op.POOMNameIsComment || ans == IDYES)) {
+					int len = lstrlen(tpAddrItem->MailAddress) + 1;
 					addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 					cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 					*addr = *cmmt = TEXT('\0');
 					GetMailAddress(tpAddrItem->MailAddress, addr, cmmt, FALSE);
-					len = lstrlen(cmmt) + 1;
-					if (len > 1) {
-						for (p = cmmt; *p != TEXT('\0'); p++) {
-							if (*p == TEXT(',')) {
-								*p = TEXT('\0');
-								lname = alloc_copy_t(cmmt);
-								p++;
-								while (*p == TEXT(' ')) p++;
-								fname = alloc_copy_t(p);
-								done = TRUE;
-								break;
-							}
-						}
-						if (!done) {
-							for (p = cmmt; *p != TEXT('\0'); p++) {
-								if (*p == TEXT(' ')) {
-									*p = TEXT('\0');
-									fname = alloc_copy_t(cmmt);
-									p++;
-									while (*p == TEXT(' ')) p++;
-									lname = alloc_copy_t(p);
-									done = TRUE;
-									break;
-								}
-							}
-						}
-						if (!done) {
-							lname = alloc_copy_t(cmmt);
-							fname = NULL;
-						}
-					} else {
-						lname = fname = NULL;
-					}
-					ret = AddPOOMContact(addr, fname, lname);
-					if (op.POOMNameIsComment) {
-						mem_free(&tpAddrItem->MailAddress);
-						tpAddrItem->MailAddress = addr;
-						tpAddrItem->Comment = cmmt;
-					} else {
-						mem_free(&addr);
-						mem_free(&cmmt);
-					}
-					mem_free(&fname);
-					mem_free(&lname);
+					mem_free(&tpAddrItem->MailAddress);
+					tpAddrItem->MailAddress = addr;
+					tpAddrItem->Comment = cmmt;
 				}
 #endif
 				//of information of transmission In address register mail address additional
@@ -5146,6 +5106,52 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
 						hDlg, EditAddressProc, (LPARAM)AddressBook);
 				}
+#ifdef _WIN32_WCE
+				// add to POOM Address Book
+				addr = tpAddrItem->MailAddress;
+				cmmt = tpAddrItem->Comment;
+				if (op.UsePOOMAddressBook != 0 && addr != NULL && cmmt != NULL) {
+					BOOL done = FALSE;
+					int len = lstrlen(cmmt) + 1;
+					if (len > 1) {
+						for (p = cmmt; *p != TEXT('\0'); p++) {
+							if (*p == TEXT(',')) {
+								*p = TEXT('\0');
+								lname = alloc_copy_t(cmmt);
+								*p = TEXT(',');
+								p++;
+								while (*p == TEXT(' ')) p++;
+								fname = alloc_copy_t(p);
+								done = TRUE;
+								break;
+							}
+						}
+						if (!done) {
+							for (p = cmmt; *p != TEXT('\0'); p++) {
+								if (*p == TEXT(' ')) {
+									*p = TEXT('\0');
+									fname = alloc_copy_t(cmmt);
+									*p = TEXT(' ');
+									p++;
+									while (*p == TEXT(' ')) p++;
+									lname = alloc_copy_t(p);
+									done = TRUE;
+									break;
+								}
+							}
+						}
+						if (!done) {
+							lname = alloc_copy_t(cmmt);
+							fname = NULL;
+						}
+					} else {
+						lname = fname = NULL;
+					}
+					AddPOOMContact(addr, fname, lname, tpAddrItem->Group);
+					mem_free(&fname);
+					mem_free(&lname);
+				}
+#endif
 			}
 #ifdef _WIN32_WCE
 			if (op.AutoSave == 1 && op.UsePOOMAddressBook == 0) {
@@ -5336,6 +5342,11 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_SETTEXT, 0, (LPARAM)STR_EXAMPLE_ADDRESS);
 		}
 		SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+#ifdef _WIN32_WCE
+		if (tpTmpAddressBook->FromAddrInfo == TRUE && op.UsePOOMAddressBook != 0) {
+			SendDlgItemMessage(hDlg, IDC_COMMENT_OR_NAME, WM_SETTEXT, 0, (LPARAM)STR_ADDREDIT_NAME);
+		}
+#endif
 		SendDlgItemMessage(hDlg, IDC_EDIT_COMMENT, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		// idx==-1, add new address item
 		if (idx == -2) {

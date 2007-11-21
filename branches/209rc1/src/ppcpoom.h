@@ -8,7 +8,7 @@ extern "C"{
 #endif 
 
 int UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComment);
-int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short *lname);
+int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short *lname, unsigned short *categ);
 void FormatOutputString(char *ret, WCHAR *name, WCHAR *email, WCHAR *ctgy, int fmt);
 
 #ifdef __cplusplus

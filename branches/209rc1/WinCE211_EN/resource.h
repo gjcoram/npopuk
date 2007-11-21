@@ -157,6 +157,7 @@
 #define IDC_EDIT_PORT                   1004
 #define IDC_EDIT_USER                   1005
 #define IDC_EDIT_PASS                   1006
+#define IDC_COMMENT_OR_NAME             1006
 #define IDC_CHECK_DELATTACH             1007
 #define IDC_CHECK_APOP                  1008
 #define IDC_EDIT_READLINE               1009

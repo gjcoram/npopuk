@@ -1261,10 +1261,8 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	///////////// MRP /////////////////////
 	if (op.UsePOOMAddressBook != 0) {
 		retcode = UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
-		if (retcode < 0) {
-			// some kind of failure
-			retcode = -100;
-		}
+		// retcode = number of addresses if > 0, some kind of failure if < 0
+		retcode = (retcode < 0) ? -100 : 0;
 	}
 	///////////// --- /////////////////////
 #endif
