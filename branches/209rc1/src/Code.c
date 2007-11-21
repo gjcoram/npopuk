@@ -268,7 +268,7 @@ void base64_encode(char *buf, char *ret, int size, int breaklen)
 	r = ret;
 	bp = buf;
 	if (size == 0) {
-		size = strlen(buf);
+		tsize = size = strlen(buf);
 	}
 	ep = bp + size;
 	while (1) {
@@ -313,7 +313,7 @@ void base64_encode(char *buf, char *ret, int size, int breaklen)
 	*r = '\0';
 #ifdef _DEBUG
 	{
-		char *tmp = (char *)mem_alloc(2*tstrlen(buf)+4+1);
+		char *tmp = (char *)mem_alloc(2*tsize+4+1);
 		base64_encode_old(buf, tmp, tsize, breaklen);
 		d = strcmp(ret, tmp);
 		if (d != 0) {
