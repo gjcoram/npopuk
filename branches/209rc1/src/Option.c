@@ -5082,7 +5082,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				delete_ctrl_char(tpAddrItem->MailAddress);
 #ifdef _WIN32_WCE
-				if (op.UsePOOMAddressBook != 0 && (op.POOMNameIsComment || ans == IDYES)) {
+				if (op.UsePOOMAddressBook != 0) {
 					int len = lstrlen(tpAddrItem->MailAddress) + 1;
 					addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 					cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
