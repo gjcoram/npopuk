@@ -167,6 +167,7 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 			continue;
 		}
 		CopyMemory((TmpMailBox + j), (MailBox + i), sizeof(MAILBOX));
+		(TmpMailBox + j)->NeedsSave |= MAILITEMS_CHANGED;
 		j++;
 	}
 	mem_free(&MailBox);
