@@ -167,18 +167,15 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
 	}
 	mailbox_free(MailBox + DelIndex);
-#ifdef DELETE_UNUSED_FILE
-	{
-		// the old mailbox file may or may not get overwritten by file_rename
+	if ((MailBox+DelIndex)->Filename == NULL)  {
 		TCHAR name[BUF_SIZE];
-		if ((MailBox+DelIndex)->Filename == NULL)  {
-			wsprintf(name, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
-		} else {
-			lstrcpy(name, (MailBox+DelIndex)->Filename);
-		}
+		wsprintf(name, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
 		file_delete(hWnd, name);
-	}
+#ifdef DELETE_FILE_ALWAYS
+	} else {
+		file_delete(hWnd, (MailBox+DelIndex)->Filename);
 #endif
+	}
 	// rename MailBox%d files above DelIndex, rather than loading&writing them
 	for (i = DelIndex; i < cnt; i++) {
 		if ((TmpMailBox + i)->Filename == NULL) {
@@ -206,8 +203,6 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 				(TmpMailBox + i)->Filename = alloc_copy_t(name2);
 			}
 			file_rename(hWnd, name1, name2);
-			wsprintf(name1, TEXT("%s.bak"), name2);
-			file_delete(hWnd, name1);
 		}
 	}
 	mem_free(&MailBox);
