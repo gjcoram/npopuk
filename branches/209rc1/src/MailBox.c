@@ -160,15 +160,55 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		SendMessage(hViewWnd, WM_CLOSE, 0, 0);
 	}
 
-	j = 0;
-	for(i = 0; i < MailBoxCnt; i++){
-		if(i == DelIndex){
-			mailbox_free(MailBox + i);
-			continue;
+	if (DelIndex > 0) {
+		CopyMemory(TmpMailBox, MailBox, DelIndex*sizeof(MAILBOX));
+	}
+	if (DelIndex < cnt) {
+		CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
+	}
+	mailbox_free(MailBox + DelIndex);
+#ifdef DELETE_UNUSED_FILE
+	{
+		// the old mailbox file may or may not get overwritten by file_rename
+		TCHAR name[BUF_SIZE];
+		if ((MailBox+DelIndex)->Filename == NULL)  {
+			wsprintf(name, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
+		} else {
+			lstrcpy(name, (MailBox+DelIndex)->Filename);
 		}
-		CopyMemory((TmpMailBox + j), (MailBox + i), sizeof(MAILBOX));
-		(TmpMailBox + j)->NeedsSave |= MAILITEMS_CHANGED;
-		j++;
+		file_delete(hWnd, name);
+	}
+#endif
+	// rename MailBox%d files above DelIndex, rather than loading&writing them
+	for (i = DelIndex; i < cnt; i++) {
+		if ((TmpMailBox + i)->Filename == NULL) {
+			TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
+			BOOL clash;
+			int k = i;
+			wsprintf(name1, TEXT("MailBox%d.dat"), i + 1 - MAILBOX_USER);
+			do {
+				clash = FALSE;
+				wsprintf(name2, TEXT("MailBox%d.dat"), k - MAILBOX_USER);
+				for (j = 0; j < cnt; j++) {
+					if ((TmpMailBox + j)->Filename != NULL 
+						&& lstrcmpi(name2, (TmpMailBox + j)->Filename) == 0) {
+						clash = TRUE;
+						if (k == i) {
+							k = cnt+1;
+						} else {
+							k++;
+						}
+						break;
+					}
+				}
+			} while (clash == TRUE);
+			if (k != i) {
+				(TmpMailBox + i)->Filename = alloc_copy_t(name2);
+			}
+			file_rename(hWnd, name1, name2);
+			wsprintf(name1, TEXT("%s.bak"), name2);
+			file_delete(hWnd, name1);
+		}
 	}
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
@@ -299,8 +339,8 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 			for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
 				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
 					&& lstrcmp(name2, (MailBox+k)->Filename) == 0) {
-						found = TRUE;
-						break;
+					found = TRUE;
+					break;
 				}
 			}
 			if (found || file_rename(hWnd, name1, name2) == FALSE) {

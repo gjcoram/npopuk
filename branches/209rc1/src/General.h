@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b10")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09t12")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -743,6 +743,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);
+BOOL file_delete(HWND hWnd, TCHAR *name);
 
 // Ini
 BOOL ini_start_auth_check(void);

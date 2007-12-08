@@ -1381,7 +1381,6 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 {
 	TCHAR source_path[BUF_SIZE], destin_path[BUF_SIZE];
-	TCHAR pathBackup[BUF_SIZE];
 	BOOL ret;
 
 	str_join_t(source_path, DataDir, Source, (TCHAR *)-1);
@@ -1391,24 +1390,43 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 
 	if (ret) {
 		// need to delete backup file, lest it be found next time we file_read_mailbox
-
-#ifdef UNICODE
-		wcscpy(pathBackup, destin_path);
-		wcscat(pathBackup, TEXT(".bak"));
-#else
-		strcpy_s(pathBackup, BUF_SIZE-5, destin_path);
-		strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
-#endif
-
-		if (file_get_size(pathBackup) != -1) {
-			if (DeleteFile(pathBackup) == FALSE) {
-				wsprintf(source_path, STR_ERR_CANTDELETE, pathBackup);
-				ErrorMessage(hWnd, source_path);
-			}
-		}
+		TCHAR pathBackup[BUF_SIZE];
+		wsprintf(pathBackup, TEXT("%s.bak"), Destin);
+		file_delete(hWnd, pathBackup);
 	}
 
 	return ret;
+}
+
+BOOL file_delete(HWND hWnd, TCHAR *name)
+{
+	TCHAR path[2*BUF_SIZE];
+	BOOL done = FALSE;
+	str_join_t(path, DataDir, name, (TCHAR *)-1);
+	if (file_get_size(path) != -1) {
+#ifdef DO_RECYCLE_BIN
+BOOL file_delete(HWND hWnd, TCHAR *name, BOOL recycle)
+		if (recycle) {
+#ifdef _WIN32_WCE
+			TCHAR RecycPath[BUF_SIZE], pathR[2*BUF_SIZE];
+			if (CeGetSpecialFolderPath(CSIDL_BITBUCKET, BUF_SIZE, RecycPath) > 0) {
+				str_join_t(pathR, RecycPath, name, (TCHAR *)-1);
+				done = MoveFile(path, pathR);
+			}
+#else
+			// what's the call on Win32?
+#endif
+#endif
+		if (done == FALSE && DeleteFile(path) == FALSE) {
+			TCHAR msg[3*BUF_SIZE];
+			wsprintf(msg, STR_ERR_CANTDELETE, path);
+			ErrorMessage(hWnd, msg);
+			done = FALSE;
+		}
+	} else {
+		done = TRUE;
+	}
+	return done;
 }
 
 /* End of source */
