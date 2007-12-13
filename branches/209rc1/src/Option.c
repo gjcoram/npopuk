@@ -3108,13 +3108,14 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 		case IDOK:
-			gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &g_Pass);
 			if (gPassSt == 0) {
 				if (g_Pass == NULL || lstrcmp(op.Password, g_Pass) != 0) {
 					ErrorMessage(hDlg, STR_ERR_SOCK_BADPASSWORD);
 					break;
 				}
+			} else {
+				gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0);
 			}
 			PassWnd = NULL;
 			EndDialog(hDlg, TRUE);
@@ -4196,16 +4197,15 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
 			|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) 
-			|| (tpMailItem->Mark == 3 && op.FwdQuotation == 2) ) {
+			|| (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) ) {
 			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_ATTACH), STR_SETSEND_BTN_ATTACH, TRUE);
 		}
 		//of list of file name Quotation
-		if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
-			// 1: reply, 3: forward
+		if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, 
-				(tpMailItem->Mark == 1) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
-		} else if (tpMailItem->Mark == 2) {
+				(tpMailItem->Mark == MARK_REPLYING) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
+		} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
 			// text is selected
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
@@ -4213,7 +4213,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 		}
-		if (tpMailItem->Mark == 3) {
+		if (tpMailItem->Mark == MARK_FORWARDING) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_SETCHECK, (op.FwdQuotation == 2) ? 1 : 0, 0);
 		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ATT_MSG), SW_HIDE);
@@ -4242,7 +4242,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->Cc = alloc_copy_t(tpMailItem->Cc);
 		tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
 		tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
-		if (tpMailItem->Mark == 3 && op.FwdQuotation == 2) {
+		if (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) {
 			// GJC forward entire message as attachment
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * 2);
 			if (p != NULL) {
@@ -4366,6 +4366,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			tpMailItem = *tpSendMailIList;
 			tpTmpMailItem = *(tpSendMailIList + 1);
+			if (tpMailItem != NULL && tpMailItem->Mark != MARK_FORWARDING) {
+				break;
+			}
 			if (tpTmpMailItem != NULL) {
 				if (SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_GETCHECK, 0, 0)) {
 					// attach whole message
@@ -4606,9 +4609,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 
 			//Quotation
-			if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
+			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
-			} else if (tpMailItem->Mark == 2) {
+			} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
 			}
 			mem_free((void **)&tpSendMailIList);

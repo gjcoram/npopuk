@@ -2300,9 +2300,9 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
 		}
 		if (seltext != NULL) {
-			tpMailItem->Mark = 2;
+			tpMailItem->Mark = MARK_REFWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
-			tpMailItem->Mark = 1;
+			tpMailItem->Mark = MARK_REPLYING;
 		}
 
 		//Transmission information setting
@@ -2354,9 +2354,9 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 
 		if (seltext != NULL) {
-			tpMailItem->Mark = 2;
+			tpMailItem->Mark = MARK_REFWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
-			tpMailItem->Mark = 3;
+			tpMailItem->Mark = MARK_FORWARDING;
 		}
 		//Transmission information setting
 #ifdef _WIN32_WCE

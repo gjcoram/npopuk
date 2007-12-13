@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09t12")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b13")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -207,6 +207,11 @@
 #define ICON_NEW_MASK			0x04
 #define ICON_REPL_MASK			0x01
 #define ICON_FWD_MASK			0x02
+
+// marks for forwarding/replying and the property dialog
+#define MARK_REPLYING			1
+#define MARK_REFWD_SELTEXT		2
+#define MARK_FORWARDING			3
 
 #define FILE_OPEN_SINGLE		0
 #define FILE_OPEN_MULTI			1

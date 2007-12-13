@@ -255,7 +255,7 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "Password:",IDC_STATIC_TITLE,5,5,125,10
     EDITTEXT        IDC_EDIT_PASS,5,17,124,15,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "Do not save password",IDC_CHECK_TMPPASS,"Button",
+    CONTROL         "Remember password until exit",IDC_CHECK_TMPPASS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,38,125,10
     DEFPUSHBUTTON   "OK",IDOK,15,56,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,70,56,50,14

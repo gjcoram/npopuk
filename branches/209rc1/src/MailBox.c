@@ -24,6 +24,7 @@
 
 /* Global Variables */
 extern OPTION op;
+extern TCHAR *DataDir;
 
 #ifdef _WIN32_WCE_LAGENDA
 extern HMENU hMainMenu;
@@ -146,6 +147,7 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 {
 	MAILBOX *TmpMailBox;
+	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
 	int cnt;
 	int i, j;
 
@@ -168,9 +170,16 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 	}
 	mailbox_free(MailBox + DelIndex);
 	if ((MailBox+DelIndex)->Filename == NULL)  {
-		TCHAR name[BUF_SIZE];
-		wsprintf(name, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
-		file_delete(hWnd, name);
+		wsprintf(name1, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
+		str_join_t(name2, DataDir, name1, (TCHAR *)-1);
+		i = file_get_size(name2);
+		if (i == 0) {
+			file_delete(hWnd, name1);
+		} else if (i > 0) {
+			wsprintf(name2, TEXT("MailBox%d.old"), DelIndex - MAILBOX_USER);
+			file_delete(hWnd, name2);
+			file_rename(hWnd, name1, name2);
+		} // else i<0 => does not exist
 #ifdef DELETE_FILE_ALWAYS
 	} else {
 		file_delete(hWnd, (MailBox+DelIndex)->Filename);
@@ -179,7 +188,6 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 	// rename MailBox%d files above DelIndex, rather than loading&writing them
 	for (i = DelIndex; i < cnt; i++) {
 		if ((TmpMailBox + i)->Filename == NULL) {
-			TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
 			BOOL clash;
 			int k = i;
 			wsprintf(name1, TEXT("MailBox%d.dat"), i + 1 - MAILBOX_USER);
