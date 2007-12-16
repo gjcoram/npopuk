@@ -1214,7 +1214,8 @@ TCHAR *CreateMessageId(long id, TCHAR *MailAddress)
 }
 
 /*
- * CreateHeaderStringSize - ヘッダ文字列を作成したときのサイズ
+ * CreateHeaderStringSize - This calculates an approximate header string size.
+ * It doesn't compensate for {} causing some plain text removal.
  */
 int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
@@ -1289,7 +1290,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 }
 
 /*
- * CreateHeaderString - ヘッダ文字列の作成
+ * CreateHeaderString - substitute header values for placeholders
  */
 TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
@@ -1392,7 +1393,7 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 		case TEXT('{'):
 		case TEXT('}'):
 			*(r++) = *p;
-			break;
+			continue;
 		}
 		if (t != NULL  &&  *t != TEXT('\0')) {
 			r = str_cpy_t(r, t);
