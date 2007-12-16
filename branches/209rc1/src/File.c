@@ -30,8 +30,10 @@
 #define ENCRYPT_PREAMBLE	TEXT("NPOPUK_ENCRYPT")
 
 /* Global Variables */
-extern OPTION op;
+HANDLE hLogFile;
+BOOL gLogOpened = FALSE;
 
+extern OPTION op;
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern TCHAR *AppDir;
 extern TCHAR *DataDir;
@@ -46,9 +48,66 @@ static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem);
 static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*
- * log_init - ログの区切りの保存
+ * log_clear
+ *
+ * The first time through (log_opened==FALSE), we use CREATE_ALWAYS to start
+ * with a clean, empty file.  After that, if some error causes the log file
+ * to close, it is reopened without truncation.
  */
-BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
+BOOL log_clear(BOOL clear)
+{
+	TCHAR path[BUF_SIZE];
+	DWORD create = CREATE_ALWAYS;
+	if (gLogOpened) create = OPEN_ALWAYS;
+
+	// create the name
+	wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
+
+        // create or open the file
+	hLogFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, create, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+	if (hLogFile == NULL || hLogFile == (HANDLE)-1) {
+		return FALSE;
+	}
+	SetFilePointer(hLogFile, 0, NULL, FILE_END);
+	gLogOpened = TRUE;
+	return TRUE;
+}
+
+/*
+ * log_save - write string to log file.  buf assumed to end with \r\n
+ * would be nice to avoid alloc/free for unicode, especially since most
+ * messages are ascii anyway
+ */
+BOOL log_save(TCHAR *buf)
+{
+	char *ascii;
+	BOOL ret;
+
+	if (hLogFile == 0  ||  hLogFile == (HANDLE)-1) {
+		log_clear(FALSE);
+	}
+
+#ifdef UNICODE
+	ascii = alloc_tchar_to_char(buf);
+#else
+	ascii = buf;
+#endif
+
+	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
+	if (ret == FALSE) {
+		CloseHandle(hLogFile);
+		hLogFile = NULL;
+	}
+#ifdef UNICODE
+	mem_free(&ascii);
+#endif
+	return ret;
+}
+
+/*
+ * log_header - Write a header to the log.
+ */
+BOOL log_header(TCHAR *buf)
 {
 #define LOG_SEP				TEXT("\r\n-------------------------------- ")
 	TCHAR fDay[BUF_SIZE];
@@ -62,64 +121,20 @@ BOOL log_init(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
 	if (GetTimeFormat(0, 0, NULL, NULL, fTime, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
-	p = mem_alloc(sizeof(TCHAR) * (lstrlen(LOG_SEP) + lstrlen(fDay) + 1 + lstrlen(fTime) + 2 + lstrlen(buf) + 2));
+	p = mem_alloc(sizeof(TCHAR) * (lstrlen(LOG_SEP) + lstrlen(fDay) + 1 + lstrlen(fTime) + 2 + lstrlen(buf) + 2 + 2));
 	if (p == NULL) {
 		return FALSE;
 	}
-	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")"), (TCHAR *)-1);
-	ret = log_save(fpath, fname, p);
+	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")\r\n"), (TCHAR *)-1);
+	ret = log_save(p);
 	mem_free(&p);
 	return ret;
 }
 
 /*
- * log_save
- */
-BOOL log_save(TCHAR *fpath, TCHAR *fname, TCHAR *buf)
-{
-	HANDLE hFile;
-	TCHAR path[BUF_SIZE];
-	DWORD ret;
-
-	//Retention to file
-	wsprintf(path, TEXT("%s%s"), fpath, fname);
-
-	//The file which it retains is opened
-	hFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == NULL || hFile == (HANDLE)-1) {
-		return FALSE;
-	}
-	SetFilePointer(hFile, 0, NULL, FILE_END);
-
-	if (file_write_ascii(hFile, buf, lstrlen(buf)) == FALSE) {
-		CloseHandle(hFile);
-		return FALSE;
-	}
-	if (*(buf + lstrlen(buf) - 1) != TEXT('\n')) {
-		if (WriteFile(hFile, "\r\n", 2, &ret, NULL) == FALSE) {
-			CloseHandle(hFile);
-			return FALSE;
-		}
-	}
-	CloseHandle(hFile);
-	return TRUE;
-}
-
-/*
- * log_clear - of non activity Clearing
- */
-BOOL log_clear(TCHAR *fpath, TCHAR *fname)
-{
-	TCHAR path[BUF_SIZE];
-
-	wsprintf(path, TEXT("%s%s"), fpath, fname);
-	return DeleteFile(path);
-}
-
-/*
  * dir_check - ディレクトリかどうかチェック
  */
-BOOL dir_check(TCHAR *path)
+BOOL dir_check(const TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
@@ -593,9 +608,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 		tpMailBox->Loaded = TRUE;
 		if (op.SocLog > 1) {
 			int pos = lstrlen(path);
-			if (pos > 230) pos = 230;
-			wsprintf(path+pos, TEXT(" loaded but empty"));
-			log_save(AppDir, LOG_FILE, path);
+			if (pos > 236) pos = 236; // 236 = BUF_SIZE - strlen(" loaded but empty\r\n") - 1
+			wsprintf(path+pos, TEXT(" loaded but empty\r\n"));
+			log_save(path);
 		}
 		return TRUE;
 	}
@@ -841,9 +856,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 	tpMailBox->Loaded = TRUE;
 	if (op.SocLog > 1) {
 		int pos = lstrlen(path);
-		if (pos > 240) pos = 240;
-		wsprintf(path+pos, TEXT(" was loaded"));
-		log_save(AppDir, LOG_FILE, path);
+		if (pos > 242) pos = 242; // 242 = BUF_SIZE - strlen(" was loaded\r\n") - 1
+		wsprintf(path+pos, TEXT(" was loaded\r\n"));
+		log_save(path);
 	}
 	return TRUE;
 }

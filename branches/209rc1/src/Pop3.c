@@ -708,7 +708,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 	if (tpMailBox->MailCnt == 0) {
 		tpMailBox->ListInitMsg = TRUE;
-		if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Clearing mailbox: server says 0 messages"));
+		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 		SetItemCntStatusText(hWnd, tpMailBox, FALSE);
 		return POP_QUIT;
@@ -1318,7 +1318,7 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
 		} else if (op.SocLog > 2) {
-			log_save(AppDir, LOG_FILE, TEXT("exec_proc_init: ServerDelete is false"));
+			log_save(TEXT("exec_proc_init: ServerDelete is false\r\n"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1464,7 +1464,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
 		} else if (op.SocLog > 2) {
-			log_save(AppDir, LOG_FILE, TEXT("exec_proc_retr: ServerDelete is false"));
+			log_save(TEXT("exec_proc_retr: ServerDelete is false\r\n"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1829,7 +1829,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		TCHAR ErrStr[BUF_SIZE] = TEXT("");
 		char end[2] = ".";
 		int salvage = POP_ERR;
-		if (op.SocLog > 1) log_save(AppDir, LOG_FILE, TEXT("Salvaging received mail data"));
+		if (op.SocLog > 1) log_save(TEXT("Salvaging received mail data\r\n"));
 		if (command_status == POP_RETR) {
 			salvage = exec_proc_retr(hWnd, -1, end, 1, ErrStr, tpMailBox, ShowFlag);
 		} else if (command_status == POP_TOP) {
@@ -1838,7 +1838,13 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		if (salvage == POP_QUIT) {
 			ret = TRUE;
 		}
-		if (op.SocLog > 1 && *ErrStr != TEXT('\0')) log_save(AppDir, LOG_FILE, ErrStr);
+		if (op.SocLog > 1 && *ErrStr != TEXT('\0')) {
+			if (lstrlen(ErrStr) > BUF_SIZE - 3) {
+				*(ErrStr + BUF_SIZE - 3) = TEXT('\0');
+			}
+			str_join_t(ErrStr, ErrStr, TEXT("\r\n"), (TCHAR *)-1);
+			log_save(ErrStr);
+		}
 	}
 
 	return ret;
