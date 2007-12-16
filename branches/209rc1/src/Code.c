@@ -24,79 +24,6 @@
 /*
  * base64_decode - BASE64 (RFC 2045)
  */
-#ifdef _DEBUG
-char *base64_decode_old(char *buf, char *ret)
-{
-	int b, c, d, i;
-	int Base[256];
-	unsigned char bb, *bf, *rf;
-
-	if (*buf == '\0') {
-		*ret = '\0';
-		return ret;
-	}
-
-	for (i = 0; i < 26; i++) {
-		*(Base + 'A' + i) = i;
-		*(Base + 'a' + i) = i + 26;
-	}
-	for (i = 0; i < 10; i++) {
-		*(Base + '0' + i) = i + 52;
-	}
-	*(Base + '+') = 62;
-	*(Base + '/') = 63;
-
-	bf = buf;
-	rf = ret;
-
-	for (; *bf != '\0' &&
-		(*bf == ' ' || *bf == '\t' || *bf == '\r' || *bf == '\n'); bf++);
-
-	while (1) {
-		if ((bb = *bf) == '=' || bb == '\0') {
-			break;
-		}
-		c = *(Base + bb);
-
-		bf++;
-		for (; *bf != '\0' &&
-			(*bf == ' ' || *bf == '\t' || *bf == '\r' || *bf == '\n'); bf++);
-		if ((bb = *bf) == '=' || bb == '\0') {
-			break;
-		}
-        d = *(Base + bb);
-        b = c & 0x3;
-        *(rf++) = (c << 2) | (d >> 4);
-
-		bf++;
-		for (; *bf != '\0' &&
-			(*bf == ' ' || *bf == '\t' || *bf == '\r' || *bf == '\n'); bf++);
-		if ((bb = *bf) == '=' || bb == '\0') {
-			break;
-		}
-		c = *(Base + bb);
-        b = d & 0xF;
-        *(rf++) = (b << 4) | (c >> 2);
-
-		bf++;
-		for (; *bf != '\0' &&
-			(*bf == ' ' || *bf == '\t' || *bf == '\r' || *bf == '\n'); bf++);
-		if ((bb = *bf) == '=' || bb == '\0') {
-			break;
-		}
-		d = *(Base + bb);
-		bf++;
-		for (; *bf != '\0' &&
-			(*bf == ' ' || *bf == '\t' || *bf == '\r' || *bf == '\n'); bf++);
-
-        b = c & 0x3;
-        *(rf++) = (b << 6) | d;
-	}
-	*rf = '\0';
-
-	return rf;
-}
-#endif
 static const signed char db64[256] = {
 //0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
  -1, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, // 00
@@ -166,91 +93,16 @@ char *base64_decode(char *buf, char *ret)
 		*(rf++) = c | d; // third output char from group
 	}
 	*rf = '\0';
-#ifdef _DEBUG
-	{
-		char *tmp = (char *)mem_alloc(tstrlen(buf));
-		base64_decode_old(buf, tmp);
-		d = strcmp(ret, tmp);
-		if (d != 0) {
-			MessageBox(NULL, "mismatch", "b64decode", MB_OK);
-		}
-		mem_free(&tmp);
-	}
-#endif
 	return rf;
 }
 
 /*
  * base64_encode - BASE64 (RFC 2045)
  */
-#ifdef _DEBUG
-void base64_encode_old(char *buf, char *ret, int size, int breaklen)
-{
-	char tmp, tmp2;
-	char *r;
-	int c, i, cnt;
-	const char Base[] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz"
-		"0123456789+/";
-
-	i = 0;
-	cnt = 0;
-	r = ret;
-	while (1) {
-		if ((size == 0 && *(buf + i) == '\0') || (size > 0 && size <= i)) {
-			break;
-		}
-		c = (*(buf + i) & 0xFC) >> 2;
-		*(r++) = *(Base + c);
-		i++;
-		cnt++;
-
-		if ((size == 0 && *(buf + i) == '\0') || (size > 0 && size <= i)) {
-			c = (char)(*(buf + i - 1) << 4) & 0x30;
-			*(r++) = *(Base + c);
-			*(r++) = '=';
-			*(r++) = '=';
-			break;
-		}
-		tmp2 = (char)(*(buf + i - 1) << 4) & 0x30;
-		tmp = (char)(*(buf + i) >> 4) & 0xF;
-		c = tmp2 | tmp;
-		*(r++) = *(Base + c);
-		cnt++;
-
-		if ((size == 0 && *(buf + i + 1) == '\0') || (size > 0 && size <= (i + 1))) {
-			c = (char)(*(buf + i) << 2) & 0x3C;
-			*(r++) = *(Base + c);
-			*(r++) = '=';
-			break;
-		}
-
-		tmp2 = (char)(*(buf + i) << 2) & 0x3C;
-		tmp = (char)(*(buf + i + 1) >> 6) & 0x3;
-		c = tmp2 | tmp;
-		*(r++) = *(Base + c);
-		i++;
-		cnt++;
-
-		c = *(buf + i) & 0x3F;
-		*(r++) = *(Base + c);
-		i++;
-		cnt++;
-
-		if (breaklen > 0 && cnt >= breaklen) {
-			*(r++) = '\r';
-			*(r++) = '\n';
-			cnt = 0;
-		}
-	}
-	*r = '\0';
-}
-#endif
 void base64_encode(char *buf, char *ret, int size, int breaklen)
 {
 	char *r, *bp, *ep;
-	int c, d, cnt, tsize=size;
+	int c, d, cnt;
 	const char Base[] =
 	  // 00000000001111111111222222
 	  // 01234567890123456789012345
@@ -268,7 +120,7 @@ void base64_encode(char *buf, char *ret, int size, int breaklen)
 	r = ret;
 	bp = buf;
 	if (size == 0) {
-		tsize = size = strlen(buf);
+		size = strlen(buf);
 	}
 	ep = bp + size;
 	while (1) {
@@ -311,17 +163,6 @@ void base64_encode(char *buf, char *ret, int size, int breaklen)
 		}
 	}
 	*r = '\0';
-#ifdef _DEBUG
-	{
-		char *tmp = (char *)mem_alloc(2*tsize+4+1);
-		base64_encode_old(buf, tmp, tsize, breaklen);
-		d = strcmp(ret, tmp);
-		if (d != 0) {
-			MessageBox(NULL, "mismatch", "b64encode", MB_OK);
-		}
-		mem_free(&tmp);
-	}
-#endif
 }
 
 /*
