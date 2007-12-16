@@ -2050,19 +2050,9 @@ static void OpenURL(HWND hWnd)
 		str_cmp_ni_t(s, URL_FTP, lstrlen(URL_FTP)) == 0) {
 
 #ifndef _WIN32_WCE
-//		TCHAR *QuotFileName = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(s) + 3));
-//		if (QuotFileName == NULL) {
-//			QuotFileName = s;
-//		} else {
-//			wsprintf(QuotFileName, TEXT("\"%s\""), s);
-//		}
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
-//		ShellOpen(QuotFileName);
-//		mem_free(&QuotFileName);
-		ShellOpen(s);
-#else
-		ShellOpen(s);
 #endif
+		ShellOpen(s);
 
 	} else if (str_cmp_ni_t(s, URL_MAILTO, lstrlen(URL_MAILTO)) == 0 ||
 		MailToFlag == 1) {
