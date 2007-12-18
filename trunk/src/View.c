@@ -60,6 +60,8 @@
 #define DECODE_SAVE_ALL				2
 #define DECODE_OPEN_IF_MSG			3
 
+#define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\n{Cc: %c\r\n}Subject: %s\r\nDate: %D\r\nMessage-ID: %i\r\n\r\n")
+
 /* Global Variables */
 static WNDPROC EditWindowProcedure;
 HWND hViewWnd = NULL;
@@ -1086,6 +1088,10 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 		AppendMenu(hMenu, MF_STRING, ID_RETURN_TO_MASTER, STR_VIEW_RETURN);
 	}
 
+	if (MultiPartCnt == 0 && ViewSrc == TRUE) {
+		AppendMenu(hMenu, MF_STRING, ID_VIEW_PART, STR_VIEW_MENU_ATTACH);
+		return 0;
+	}
 	if ((*tpMultiPart)->sPos == tpMailItem->Body) {
 		startbody = TRUE;
 	} else if (tpMailItem->HasHeader) {
@@ -1106,10 +1112,6 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
 			AppendMenu(hMenu, MF_STRING, ID_ATTACH, TEXT("text/html"));
 		}
-		return 0;
-	}
-	if (MultiPartCnt == 1 && ViewSrc == TRUE) {
-		AppendMenu(hMenu, MF_STRING, ID_VIEW_PART, STR_VIEW_MENU_ATTACH);
 		return 0;
 	}
 
@@ -3154,7 +3156,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (SaveViewMail(NULL, hWnd, vSelBox, tpMailItem, op.ViewFileHeader, FALSE) == FALSE) {
+			if (SaveViewMail(NULL, hWnd, vSelBox, tpMailItem, SAVE_HEADER, FALSE) == FALSE) {
 				ErrorMessage(hWnd, STR_ERR_SAVE);
 			}
 			break;

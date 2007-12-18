@@ -77,19 +77,6 @@ BOOL log_clear(BOOL clear)
  * log_save - write string to log file.  buf assumed to end with \r\n
  * would be nice to avoid alloc/free for unicode, especially since most
  * messages are ascii anyway
- * 
- * It is more efficient to pass messages already containing \r\n at the end,
- * especially on non-UNICODE platforms, which don't have to convert the text.
- * But if the buffer to be logged is used for another purpose, for which the 
- * \r\n should not be present, log_save will add it appropriately.
- * 
- * The UNICODE case could be improved by overestimating the size buffer
- * needed, rather than laboriously calculating exactly what is needed.  This
- * would temporarily consume a bit of extra space.
- *
- * A local buffer might also avoid the need for malloc free, and could be
- * handy for short log messages... since most are short, this could be a big
- * win.
  */
 BOOL log_save(TCHAR *buf)
 {
