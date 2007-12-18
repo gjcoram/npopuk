@@ -159,7 +159,7 @@ static BOOL ConfirmPass(HWND hWnd, TCHAR *ps);
 static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, TCHAR *pszTip);
 static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf);
 static void FreeAllMailBox(void);
-static void CloseViewWindow(int Flag);
+static BOOL CloseEditViewWindows(int Flag);
 static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
 static void SetListViewSubClass(HWND hWnd);
 static void DelListViewSubClass(HWND hWnd);
@@ -508,7 +508,7 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 	TCHAR *st_buf;
 
 	if (PPCFlag == FALSE && RecvBox >= MAILBOX_USER && (MailBox + RecvBox)->Name != NULL) {
-		st_buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + RecvBox)->Name) + lstrlen(buf) + 4));
+		st_buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + RecvBox)->Name) + lstrlen(buf) + 6));
 		if (st_buf == NULL) {
 			return;
 		}
@@ -518,7 +518,10 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 #else
 		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)st_buf);
 #endif
-		if (op.SocLog > 0) log_save(st_buf);
+		if (op.SocLog > 0) {
+			str_join_t(st_buf, st_buf, TEXT("\r\n"), (TCHAR *)-1);
+			log_save(st_buf);
+		}
 		mem_free(&st_buf);
 	} else {
 #ifdef _WIN32_WCE_PPC
@@ -526,7 +529,22 @@ void SetSocStatusTextT(HWND hWnd, TCHAR *buf)
 #else
 		SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETTEXT, (WPARAM)1, (LPARAM)buf);
 #endif
-		if (op.SocLog > 0) log_save(buf);
+		if (op.SocLog > 0) {
+			TCHAR logbuf[BUF_SIZE];
+			int len = lstrlen(buf) + 3;
+			if (len < BUF_SIZE) {
+				st_buf = logbuf;
+			} else {
+				st_buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+			}
+			if (st_buf != NULL) {
+				str_join_t(st_buf, buf, TEXT("\r\n"), (TCHAR *)-1);
+				log_save(st_buf);
+				if (st_buf != logbuf) {
+					mem_free(&st_buf);
+				}
+			}
+		}
 	}
 }
 
@@ -753,7 +771,11 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 		//In status bar information of error indicatory
 		SetStatusTextT(hWnd, buf, 1);
 	}
-	if (op.SocLog > 0) log_save(buf);
+	if (op.SocLog > 0) {
+		TCHAR logbuf[BUF_SIZE];
+		str_join_t(logbuf, buf, TEXT("\r\n"), (TCHAR *)-1);
+		log_save(logbuf);
+	}
 	if (op.SocIgnoreError == 1 && BoxIndex >= MAILBOX_USER) {
 		// 受信エラーを無視する設定の場合
 		return;
@@ -1076,17 +1098,34 @@ static void FreeAllMailBox(void)
 /*
  * CloseViewWindow - メール表示ウィンドウとメール編集ウィンドウを閉じる
  */
-static void CloseViewWindow(int Flag)
+static BOOL CloseEditViewWindows(int Flag)
 {
+#ifndef _WIN32_WCE
 	HWND fWnd;
-	//of all mailboxes The mail indicatory window is closed the
+#endif
+	BOOL retval = TRUE;
+
+	// Close the View window
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_ENDCLOSE, 0, 0);
 	}
-	//The mail compilation window is closed the
-	while ((fWnd = FindWindow(EDIT_WND_CLASS, NULL)) != NULL) {
-		SendMessage(fWnd, WM_ENDCLOSE, Flag, 0);
+
+#ifdef _WIN32_WCE
+	// Close the Edit or Sent Mail window (there's only one)
+	if (hEditWnd != NULL) {
+		if (Flag == 0) {
+			retval = EndEditWindow(hEditWnd, FALSE);
+		} else {
+			SendMessage(hEditWnd, WM_ENDCLOSE, Flag, 0);
+		}
 	}
+#else
+	// Close all Edit or Sent Mail windows
+	while ((fWnd = FindWindow(EDIT_WND_CLASS, NULL)) != NULL) {
+		SendMessage(fWnd, WM_ENDCLOSE, Flag, 0); // Flag==1 for all calls on this platform
+	}
+#endif
+	return retval;
 }
 
 /*
@@ -1685,18 +1724,20 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 	if (SelDir == FALSE) {
 		lstrcpy(SaveDir, DataDir);
 	} else {
-		wsprintf(SaveDir, TEXT("%s%s"), op.BackupDir, STR_NPOPUK_FILES);
-		if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, NULL) == FALSE) {
-			return FALSE;
-		} else if (lstrcmpi(SaveDir, AppDir) == 0) {
-			ErrorMessage(hWnd, STR_ERROR_BACKUP_APPDIR);
-			return FALSE;
-		} else if (lstrcmpi(SaveDir, DataDir) == 0) {
-			ErrorMessage(hWnd, STR_ERROR_BACKUP_DATADIR);
-			return FALSE;
-		}
-		mem_free(&op.BackupDir);
-		op.BackupDir = alloc_copy_t(SaveDir);
+		BOOL repeat;
+		do {
+			repeat = FALSE;
+			lstrcpy(SaveDir, STR_NPOPUK_FILES);
+			if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.BackupDir) == FALSE) {
+				return FALSE;
+			} else if (lstrcmpi(SaveDir, AppDir) == 0) {
+				ErrorMessage(hWnd, STR_ERROR_BACKUP_APPDIR);
+				repeat = TRUE;
+			} else if (lstrcmpi(SaveDir, DataDir) == 0) {
+				ErrorMessage(hWnd, STR_ERROR_BACKUP_DATADIR);
+				repeat = TRUE;
+			}
+		} while (repeat == TRUE);
 	}
 
 	SwitchCursor(FALSE);
@@ -1730,7 +1771,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 	}
 
 	//of dial rise The indicatory and compilation window is closed the
-	CloseViewWindow(1);
+	CloseEditViewWindows(1);
 
 	// Give user the option of not saving
 	if (PromptSave == TRUE && op.PromptSaveOnExit != 0) {
@@ -3176,7 +3217,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		
 		// 起動時チェックの開始
-		if (op.StartCheck == 1  && gSendAndQuit == FALSE) {
+		if (op.StartCheck == 1 && gSendAndQuit == FALSE) {
 			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
 		} else {
 			gCheckAndQuit = FALSE;
@@ -3201,7 +3242,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_COPYDATA:
 #ifdef _WIN32_WCE
-		CloseViewWindow(1);
+		if (CloseEditViewWindows(0) == FALSE) {
+			break;
+		}
 		FocusWnd = hWnd;
 		ShowWindow(hWnd, SW_SHOW);
 		if (CommandLine(hWnd, ((PCOPYDATASTRUCT)lParam)->lpData) == TRUE) {
@@ -3234,7 +3277,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SendMessage(hWnd, WM_SHOWLASTWINDOW, 0, 0);
 				break;
 			}
-			CloseViewWindow(1);
+			CloseEditViewWindows(0);
 			FocusWnd = hWnd;
 			ShowWindow(hWnd, SW_SHOW);
 			_SetForegroundWindow(hWnd);
@@ -3318,7 +3361,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef _WIN32_WCE
 	case WM_HIBERNATE:
-		CloseViewWindow(1);
+		CloseEditViewWindows(1);
 		FocusWnd = hWnd;
 		break;
 #endif
@@ -3327,7 +3370,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (op.ShowTrayIcon == 1 && op.CloseHide == 1) {
 			ShowWindow(hWnd, SW_HIDE);
 #ifdef _WIN32_WCE
-			CloseViewWindow(1);
+			CloseEditViewWindows(1);
 #endif
 			FocusWnd = hWnd;
 #ifdef _WIN32_WCE_LAGENDA
@@ -4461,7 +4504,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Indicatory
 		case ID_MENUITEM_RESTORE:
 #ifdef _WIN32_WCE
-			CloseViewWindow(1);
+			if (CloseEditViewWindows(0) == FALSE) {
+				break;
+			}
 			FocusWnd = hWnd;
 			ShowWindow(hWnd, SW_SHOW);
 #else

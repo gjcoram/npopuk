@@ -30,8 +30,10 @@
 #define ENCRYPT_PREAMBLE	TEXT("NPOPUK_ENCRYPT")
 
 /* Global Variables */
-extern OPTION op;
+HANDLE hLogFile;
+BOOL gLogOpened = FALSE;
 
+extern OPTION op;
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern TCHAR *AppDir;
 extern TCHAR *DataDir;
@@ -52,14 +54,11 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
  * with a clean, empty file.  After that, if some error causes the log file
  * to close, it is reopened without truncation.
  */
-HANDLE hLogFile;
-BOOL log_opened = FALSE;
-
 BOOL log_clear(BOOL clear)
 {
 	TCHAR path[BUF_SIZE];
 	DWORD create = CREATE_ALWAYS;
-	if (log_opened) create = OPEN_ALWAYS;
+	if (gLogOpened) create = OPEN_ALWAYS;
 
 	// create the name
 	wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
@@ -70,12 +69,14 @@ BOOL log_clear(BOOL clear)
 		return FALSE;
 	}
 	SetFilePointer(hLogFile, 0, NULL, FILE_END);
-	log_opened = TRUE;
+	gLogOpened = TRUE;
 	return TRUE;
 }
 
 /*
- * log_save
+ * log_save - write string to log file.  buf assumed to end with \r\n
+ * would be nice to avoid alloc/free for unicode, especially since most
+ * messages are ascii anyway
  * 
  * It is more efficient to pass messages already containing \r\n at the end,
  * especially on non-UNICODE platforms, which don't have to convert the text.
@@ -92,60 +93,32 @@ BOOL log_clear(BOOL clear)
  */
 BOOL log_save(TCHAR *buf)
 {
-	DWORD ret;
-	int len;
 	char *ascii;
-	BOOL alloc = FALSE;
-#ifdef UNICODE
-	int clen;
-#endif
+	BOOL ret;
 
 	if (hLogFile == 0  ||  hLogFile == (HANDLE)-1) {
 		log_clear(FALSE);
 	}
 
-	len = lstrlen(buf);
 #ifdef UNICODE
-	clen = tchar_to_char_size(buf) + 2;
-	ascii = (char *)mem_alloc(clen + 2);
-	if (ascii == NULL) {
-		return FALSE;
-	}
-	alloc = TRUE;
-	tchar_to_char(buf, ascii, clen);
-	if (*(buf + len - 1) != TEXT('\n')) {
-		strcpy_s(ascii + clen - 3, 3, "\r\n");
-		len = clen - 1;
-	} else {
-		len = clen - 3;
-	}
+	ascii = alloc_tchar_to_char(buf);
 #else
-	if (*(buf + len - 1) != TEXT('\n')) {
-		ascii = (char *)mem_alloc(len + 3);
-		if (ascii == NULL) {
-			return FALSE;
-		}
-		alloc = TRUE;
-		memcpy(ascii, buf, len);
-		strcpy_s(ascii + len, 3, "\r\n");
-		len += 2;
-	} else {
-		ascii = buf;
-	}
+	ascii = buf;
 #endif
-	if (WriteFile(hLogFile, ascii, len, &ret, NULL) == FALSE) {
+
+	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
+	if (ret == FALSE) {
 		CloseHandle(hLogFile);
 		hLogFile = NULL;
-		if (alloc) mem_free(&ascii);
-		return FALSE;
 	}
-	if (alloc) mem_free(&ascii);
-	return TRUE;
+#ifdef UNICODE
+	mem_free(&ascii);
+#endif
+	return ret;
 }
 
 /*
- * log_header - ログの区切りの保存
- * Write a header to the log.
+ * log_header - Write a header to the log.
  */
 BOOL log_header(TCHAR *buf)
 {
@@ -170,7 +143,6 @@ BOOL log_header(TCHAR *buf)
 	mem_free(&p);
 	return ret;
 }
-
 
 /*
  * dir_check - ディレクトリかどうかチェック
@@ -287,17 +259,18 @@ static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /*
  * filename_select - the log Acquisition
  */
-BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR** opptr)
+BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR **opptr)
 {
 #ifdef _WIN32_WCE_PPC
 	TCHAR path[BUF_SIZE];
 
 	lstrcpy(path, ret);
 	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
-#else	// _WIN32_WCE_PPC
+#else
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
 	TCHAR *ph, *qh;
+	BOOL is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
@@ -309,25 +282,32 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.lpstrFilter = filter;
 	}
 	of.nFilterIndex = 1;
-	if (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) {
+	if (is_open) {
 		of.lpstrTitle = STR_TITLE_OPEN;
 		*path = TEXT('\0');
 	} else {
 		of.lpstrTitle = STR_TITLE_SAVE;
 		lstrcpy(path, ret);
 	}
-	if (opptr != NULL) {
-		of.lpstrInitialDir = *opptr;
-	}
-	if (of.lpstrInitialDir == NULL || *of.lpstrInitialDir == TEXT('\0') ||
-			!dir_check(of.lpstrInitialDir)) {
-		wsprintf(buf, TEXT("%s%s"), DataDir, STR_DOCS);
-		dir_create(buf);
-		of.lpstrInitialDir = buf;
-	}
 	of.lpstrFile = path;
 	of.nMaxFile = BUF_SIZE - 1;
 	of.lpstrDefExt = DefExt;
+
+	// check if directory exists
+	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
+		// yes, use it
+		of.lpstrInitialDir = *opptr;
+	} else if (Action == FILE_SAVE_MSG) {
+		of.lpstrInitialDir = DataDir;
+	} else if (is_open == FALSE && Action != FILE_CHOOSE_DIR) {
+		// saving an attachment
+		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
+		dir_create(buf);
+		of.lpstrInitialDir = buf;
+	} else if (Action == FILE_CHOOSE_DIR) {
+		ParanoidMessageBox(hWnd, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
+	} // else is_open or choose dir (backup): just let Windows determine the directory
+
 	of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 #ifndef _WIN32_WCE
 	// GJC allow multiselect
@@ -342,7 +322,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 #endif
 
 	//File selective dialogue is indicated
-	if (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) {
+	if (is_open) {
 		of.Flags |= OFN_FILEMUSTEXIST;
 		if (GetOpenFileName((LPOPENFILENAME)&of) == FALSE) {
 			if (Action == FILE_OPEN_MULTI && lstrcmp(path, ret) != 0) {
@@ -641,7 +621,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 		tpMailBox->Loaded = TRUE;
 		if (op.SocLog > 1) {
 			int pos = lstrlen(path);
-			if (pos > 228) pos = 228;
+			if (pos > 236) pos = 236; // 236 = BUF_SIZE - strlen(" loaded but empty\r\n") - 1
 			wsprintf(path+pos, TEXT(" loaded but empty\r\n"));
 			log_save(path);
 		}
@@ -793,6 +773,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 		if (tpMailItem != NULL) {
 			//Body copy
 			if ((t - p) > 0) {
+				if (tpMailItem->Multipart == MULTIPART_ATTACH) {
+					tpMailItem->AttachSize -= (t - p);
+				}
 				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1));
 				if (tpMailItem->Body != NULL) {
 					for (s = tpMailItem->Body; p < t; p++, s++) {
@@ -817,6 +800,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						// strip duplicate headers and/or convert from foreign MBOX format
 						char *newbody;
 						int len, header_size;
+						BOOL free_t = FALSE;
 						if (tpMailItem->HasHeader == 1) {
 							s = GetBodyPointa(tpMailItem->Body);
 							header_size = remove_duplicate_headers(tpMailItem->Body);
@@ -828,6 +812,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 						}
 						if (tpMailItem->Encoding != NULL) {
 							t = MIME_body_decode_transfer(tpMailItem, s);
+							if (t != s) {
+								free_t = TRUE;
+							}
 						} else {
 							t = s;
 						}
@@ -845,6 +832,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 							tstrcpy(newbody + header_size, t);
 							mem_free(&tpMailItem->Body);
 							tpMailItem->Body = newbody;
+						}
+						if (free_t == TRUE) {
+							mem_free(&t);
 						}
 					}
 				}
@@ -879,7 +869,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 	tpMailBox->Loaded = TRUE;
 	if (op.SocLog > 1) {
 		int pos = lstrlen(path);
-		if (pos > 238) pos = 238;
+		if (pos > 242) pos = 242; // 242 = BUF_SIZE - strlen(" was loaded\r\n") - 1
 		wsprintf(path+pos, TEXT(" was loaded\r\n"));
 		log_save(path);
 	}
@@ -1299,10 +1289,8 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	///////////// MRP /////////////////////
 	if (op.UsePOOMAddressBook != 0) {
 		retcode = UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
-		if (retcode < 0) {
-			// some kind of failure
-			retcode = -100;
-		}
+		// retcode = number of addresses if > 0, some kind of failure if < 0
+		retcode = (retcode < 0) ? -100 : 0;
 	}
 	///////////// --- /////////////////////
 #endif
@@ -1421,7 +1409,6 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 {
 	TCHAR source_path[BUF_SIZE], destin_path[BUF_SIZE];
-	TCHAR pathBackup[BUF_SIZE];
 	BOOL ret;
 
 	str_join_t(source_path, DataDir, Source, (TCHAR *)-1);
@@ -1431,24 +1418,43 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 
 	if (ret) {
 		// need to delete backup file, lest it be found next time we file_read_mailbox
-
-#ifdef UNICODE
-		wcscpy(pathBackup, destin_path);
-		wcscat(pathBackup, TEXT(".bak"));
-#else
-		strcpy_s(pathBackup, BUF_SIZE-5, destin_path);
-		strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
-#endif
-
-		if (file_get_size(pathBackup) != -1) {
-			if (DeleteFile(pathBackup) == FALSE) {
-				wsprintf(source_path, STR_ERR_CANTDELETE, pathBackup);
-				ErrorMessage(hWnd, source_path);
-			}
-		}
+		TCHAR pathBackup[BUF_SIZE];
+		wsprintf(pathBackup, TEXT("%s.bak"), Destin);
+		file_delete(hWnd, pathBackup);
 	}
 
 	return ret;
+}
+
+BOOL file_delete(HWND hWnd, TCHAR *name)
+{
+	TCHAR path[2*BUF_SIZE];
+	BOOL done = FALSE;
+	str_join_t(path, DataDir, name, (TCHAR *)-1);
+	if (file_get_size(path) != -1) {
+#ifdef DO_RECYCLE_BIN
+BOOL file_delete(HWND hWnd, TCHAR *name, BOOL recycle)
+		if (recycle) {
+#ifdef _WIN32_WCE
+			TCHAR RecycPath[BUF_SIZE], pathR[2*BUF_SIZE];
+			if (CeGetSpecialFolderPath(CSIDL_BITBUCKET, BUF_SIZE, RecycPath) > 0) {
+				str_join_t(pathR, RecycPath, name, (TCHAR *)-1);
+				done = MoveFile(path, pathR);
+			}
+#else
+			// what's the call on Win32?
+#endif
+#endif
+		if (done == FALSE && DeleteFile(path) == FALSE) {
+			TCHAR msg[3*BUF_SIZE];
+			wsprintf(msg, STR_ERR_CANTDELETE, path);
+			ErrorMessage(hWnd, msg);
+			done = FALSE;
+		}
+	} else {
+		done = TRUE;
+	}
+	return done;
 }
 
 /* End of source */

@@ -213,7 +213,7 @@ void FormatOutputString(char *ret, WCHAR *name, WCHAR *email, WCHAR *ctgy, int f
 }
 
 
-int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short *lname)
+int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short *lname, unsigned short *categ)
 {
 	IPOutlookApp	*pOutlook;
 	HRESULT hr;
@@ -264,6 +264,8 @@ int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short 
 						pContact->put_LastName(lname);
 					if (email != NULL)
 						pContact->put_Email1Address(email);
+					if (categ != NULL)
+						pContact->put_Categories(categ);
 
 					// Save the new contact
 					pContact->Save();

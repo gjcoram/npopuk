@@ -1211,11 +1211,8 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		tpMailBox->NewMail = TRUE;
 		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;		
 	}
-	if (soc == -1) {
-		return POP_QUIT;
-	}
 	 
-	if (nOldMailCnt != NewMailCnt)
+	if (nOldMailCnt != NewMailCnt && soc != -1)
 	{
 #ifdef _WIN32_WCE_PPC
 		HWND hPlugin;
@@ -1236,6 +1233,9 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		return POP_ERR;
 	} else if (tpMailBox->LastMessageId != new_message_id) {
 		mem_free(&new_message_id);
+	}
+	if (soc == -1) {
+		return POP_QUIT;
 	}
 
 	if ((int)tpMailItem != -1 && disable_uidl == FALSE) {
@@ -1838,7 +1838,13 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		if (salvage == POP_QUIT) {
 			ret = TRUE;
 		}
-		if (op.SocLog > 1 && *ErrStr != TEXT('\0')) log_save(ErrStr);
+		if (op.SocLog > 1 && *ErrStr != TEXT('\0')) {
+			if (lstrlen(ErrStr) > BUF_SIZE - 3) {
+				*(ErrStr + BUF_SIZE - 3) = TEXT('\0');
+			}
+			str_join_t(ErrStr, ErrStr, TEXT("\r\n"), (TCHAR *)-1);
+			log_save(ErrStr);
+		}
 	}
 
 	return ret;

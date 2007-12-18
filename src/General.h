@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b8gl3")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b15")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -208,11 +208,17 @@
 #define ICON_REPL_MASK			0x01
 #define ICON_FWD_MASK			0x02
 
+// marks for forwarding/replying and the property dialog
+#define MARK_REPLYING			1
+#define MARK_REFWD_SELTEXT		2
+#define MARK_FORWARDING			3
+
 #define FILE_OPEN_SINGLE		0
 #define FILE_OPEN_MULTI			1
 #define FILE_SAVE_SINGLE		2
 #define FILE_SAVE_MULTI			3
-#define FILE_CHOOSE_DIR			4
+#define FILE_SAVE_MSG			4
+#define FILE_CHOOSE_DIR			5
 
 #define MULTIPART_NONE			0
 #define MULTIPART_ATTACH		1
@@ -366,9 +372,6 @@ typedef struct _OPTION {
 	int SendDate;
 	int SelectSendBox;
 	int ExpertMode;		// Added PHH 4-10-2003
-#ifdef _DEBUG
-	int GJCDebug;
-#endif
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
 
@@ -462,11 +465,9 @@ typedef struct _OPTION {
 	int StripHtmlTags;
 	TCHAR *SavedOpenDir;
 	TCHAR *SavedSaveDir;
-#ifdef _WIN32_WCE_PPC
-	int RememberOSD;
-#endif
 
 	TCHAR *URLApp;
+	TCHAR *URLAppCmdLine;
 
 	int EnableLAN;
 
@@ -747,6 +748,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);
+BOOL file_delete(HWND hWnd, TCHAR *name);
 
 // Ini
 BOOL ini_start_auth_check(void);
@@ -879,6 +881,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
+BOOL ShellOpen(TCHAR *FileName);
 
 // Edit
 #ifndef _WIN32_WCE
