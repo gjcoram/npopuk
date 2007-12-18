@@ -413,9 +413,10 @@ static BOOL send_address(HWND hWnd, SOCKET soc, TCHAR *command, TCHAR *address, 
 static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 {
 	TCHAR *p;
+	int len = lstrlen(address) + 1;
 
 	// メールアドレスの抽出
-	p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(address) + 1));
+	p = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 	if (p == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return (TCHAR *)-1;
@@ -426,6 +427,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
 		if (op.SocLog > 1) {
 			TCHAR buf[256];
+			if (len > 200) *(p+200) = TEXT('\0'); // prevent buffer overflow
 			wsprintf(buf, TEXT("%s failed for %s\r\n"), CMD_RCPT_TO, p);
 			log_save(buf);
 		}
@@ -1484,7 +1486,7 @@ BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX
 			//In status bar information of error indicatory
 			SetStatusTextT(hWnd, STR_ERR_SOCK_SEND, 1);
 		}
-		if (op.SocLog > 0) log_save(STR_ERR_SOCK_SEND);
+		if (op.SocLog > 0) log_save(STR_ERR_SOCK_SEND TEXT("\r\n"));
 		smtp_set_error(hWnd);
 	}
 	return ret;

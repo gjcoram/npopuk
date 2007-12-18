@@ -24,6 +24,7 @@
 
 /* Global Variables */
 extern OPTION op;
+extern TCHAR *DataDir;
 
 #ifdef _WIN32_WCE_LAGENDA
 extern HMENU hMainMenu;
@@ -146,6 +147,7 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 {
 	MAILBOX *TmpMailBox;
+	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
 	int cnt;
 	int i, j;
 
@@ -160,14 +162,56 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		SendMessage(hViewWnd, WM_CLOSE, 0, 0);
 	}
 
-	j = 0;
-	for(i = 0; i < MailBoxCnt; i++){
-		if(i == DelIndex){
-			mailbox_free(MailBox + i);
-			continue;
+	if (DelIndex > 0) {
+		CopyMemory(TmpMailBox, MailBox, DelIndex*sizeof(MAILBOX));
+	}
+	if (DelIndex < cnt) {
+		CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
+	}
+	mailbox_free(MailBox + DelIndex);
+	if ((MailBox+DelIndex)->Filename == NULL)  {
+		wsprintf(name1, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
+		str_join_t(name2, DataDir, name1, (TCHAR *)-1);
+		i = file_get_size(name2);
+		if (i == 0) {
+			file_delete(hWnd, name1);
+		} else if (i > 0) {
+			wsprintf(name2, TEXT("MailBox%d.old"), DelIndex - MAILBOX_USER);
+			file_delete(hWnd, name2);
+			file_rename(hWnd, name1, name2);
+		} // else i<0 => does not exist
+#ifdef DELETE_FILE_ALWAYS
+	} else {
+		file_delete(hWnd, (MailBox+DelIndex)->Filename);
+#endif
+	}
+	// rename MailBox%d files above DelIndex, rather than loading&writing them
+	for (i = DelIndex; i < cnt; i++) {
+		if ((TmpMailBox + i)->Filename == NULL) {
+			BOOL clash;
+			int k = i;
+			wsprintf(name1, TEXT("MailBox%d.dat"), i + 1 - MAILBOX_USER);
+			do {
+				clash = FALSE;
+				wsprintf(name2, TEXT("MailBox%d.dat"), k - MAILBOX_USER);
+				for (j = 0; j < cnt; j++) {
+					if ((TmpMailBox + j)->Filename != NULL 
+						&& lstrcmpi(name2, (TmpMailBox + j)->Filename) == 0) {
+						clash = TRUE;
+						if (k == i) {
+							k = cnt+1;
+						} else {
+							k++;
+						}
+						break;
+					}
+				}
+			} while (clash == TRUE);
+			if (k != i) {
+				(TmpMailBox + i)->Filename = alloc_copy_t(name2);
+			}
+			file_rename(hWnd, name1, name2);
 		}
-		CopyMemory((TmpMailBox + j), (MailBox + i), sizeof(MAILBOX));
-		j++;
 	}
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
@@ -298,8 +342,8 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 			for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
 				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
 					&& lstrcmp(name2, (MailBox+k)->Filename) == 0) {
-						found = TRUE;
-						break;
+					found = TRUE;
+					break;
 				}
 			}
 			if (found || file_rename(hWnd, name1, name2) == FALSE) {

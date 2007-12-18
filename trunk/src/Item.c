@@ -670,11 +670,14 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 
 	p = GetBodyPointa(buf);
 	if (p != NULL && *p != '\0') {
+		BOOL free_r = FALSE;
 		// デコード
 		r = MIME_body_decode_transfer(tpMailItem, p);
 		if (r == NULL) {
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 			return;
+		} else if (r != p) {
+			free_r = TRUE;
 		}
 		len = tstrlen(r);
 
@@ -697,6 +700,9 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 				tpMailItem->HasHeader = 2;
 				// shift body backwards (after removing duplicate headers)
 				tstrcpy(tpMailItem->Body + header_size, r);
+				if (free_r == TRUE) {
+					mem_free(&r);
+				}
 				return;
 			}
 		}
@@ -711,6 +717,9 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download)
 				tpMailItem->HasHeader = 0;
 			}
 			tstrcpy(tpMailItem->Body + header_size, r);
+		}
+		if (free_r == TRUE) {
+			mem_free(&r);
 		}
 
 	} else if (op.ShowHeader == 1 || KeyShowHeader == TRUE) {
@@ -1267,6 +1276,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	// Multipart
 	if (tpMailItem->Attach != NULL || tpMailItem->FwdAttach != NULL) {
 		tpMailItem->Multipart = MULTIPART_ATTACH;
+		tpMailItem->AttachSize = _ttoi(tpMailItem->Size); // - strlen(body) done later
 	} else if (tpMailBox == MailBox + MAILBOX_SEND) {
 		// presently, can't forward as attachment
 		tpMailItem->Multipart = MULTIPART_NONE;

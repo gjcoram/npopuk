@@ -34,8 +34,6 @@
 #define STR_DEFAULT_DATEFORMAT		TEXT("dd/MM/yyyy")
 #define STR_DEFAULT_TIMEFORMAT		TEXT("HH:mm")
 
-#define STR_DOCS			TEXT("documents")
-
 #define STR_FILE_FILTER				TEXT("All Files (*.*)\0*.*\0\0")
 #define STR_TEXT_FILTER				TEXT("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0")
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")
@@ -130,6 +128,7 @@
 
 // Warning
 #define STR_WARN_ATTACH_MEM			TEXT("Attachments may be too large to encode\nin available memory")
+#define STR_WARN_BACKUPDIR			TEXT("Previous backup directory no longer exists")
 
 // Question
 #define STR_Q_DELETE				TEXT("Delete it?")
@@ -267,7 +266,7 @@
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark for download\tCtrl+D")
-#define STR_LIST_MENU_DELLIST		TEXT("Delete from &list")
+#define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tDel")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
 #define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
 
@@ -335,6 +334,7 @@
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
 #define STR_FWD_ORIG_MSG			TEXT("Fwd: (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
+
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
 #define STR_MAILPROP_MAILADDRESS	TEXT("Mail address")
@@ -348,6 +348,7 @@
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
 #define STR_ADDRESSLIST_NOGROUP		TEXT("[No cat.]")
 #define STR_ADDRESSBOOK_ADDGROUP	TEXT("Change category")
+#define STR_ADDREDIT_NAME			TEXT("Name")
 #else
 #define STR_ADDRESSLIST_GROUP		TEXT("Group")
 #define STR_ADDRESSLIST_ALLGROUP	TEXT("[All]")
@@ -390,6 +391,7 @@
 #define STR_LIST_PPCMENU_SENDMARK	TEXT("&Mark for send")
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark for download")
+#define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
 #define STR_LIST_PPCMENU_SAVEBOXCOPY	TEXT("Copy to &Savebox")
 #define STR_LIST_PPCMENU_SAVEBOXMOVE	TEXT("Move to &Savebox")
 
@@ -426,6 +428,7 @@
 
 ///////////// MRP /////////////////////
 #define STR_TITLE_ABOUT				TEXT("About")
+#define STR_WEB_ADDR			TEXT("http://www.npopsupport.org.uk")
 #define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
 

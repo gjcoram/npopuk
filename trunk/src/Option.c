@@ -2781,9 +2781,6 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_SETCHECK, op.ExpertMode, 0);		// Added PHH 4-Oct-2003
 
-#ifdef _WIN32_WCE_PPC
-		SendDlgItemMessage(hDlg, IDC_CHECK_REMEMBERDIR, BM_SETCHECK, op.RememberOSD, 0);
-#endif // _WIN32_WCE_PPC
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_SETCHECK, (op.UsePOOMAddressBook!=0), 0);
 		SendDlgItemMessage(hDlg, IDC_POOMNAMECOMMENT, BM_SETCHECK, op.POOMNameIsComment, 0);
@@ -2850,9 +2847,6 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 			op.ExpertMode = SendDlgItemMessage(hDlg, IDC_CHECK_PARANOID, BM_GETCHECK, 0, 0);	// Added PHH 4-Oct-2003
 
-#ifdef _WIN32_WCE_PPC
-			op.RememberOSD = SendDlgItemMessage(hDlg, IDC_CHECK_REMEMBERDIR, BM_GETCHECK, 0, 0);
-#endif
 #ifdef _WIN32_WCE
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_USEPOOM, BM_GETCHECK, 0, 0)) {
 				int newsort, newcmmt;
@@ -2871,7 +2865,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						SwitchCursor(FALSE);
 						read = file_read_address_book(ADDRESS_FILE, tpTmpAddressBook);
 						SwitchCursor(TRUE);
-						if (read < 50) {
+						if (read < -50) {
 							MessageBox(hDlg, STR_ERR_POOM, WINDOW_TITLE, MB_OK);
 							read += 100;
 						}
@@ -3114,13 +3108,14 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 		case IDOK:
-			gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &g_Pass);
 			if (gPassSt == 0) {
 				if (g_Pass == NULL || lstrcmp(op.Password, g_Pass) != 0) {
 					ErrorMessage(hDlg, STR_ERR_SOCK_BADPASSWORD);
 					break;
 				}
+			} else {
+				gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0);
 			}
 			PassWnd = NULL;
 			EndDialog(hDlg, TRUE);
@@ -4202,16 +4197,15 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
 			|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) 
-			|| (tpMailItem->Mark == 3 && op.FwdQuotation == 2) ) {
+			|| (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) ) {
 			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_ATTACH), STR_SETSEND_BTN_ATTACH, TRUE);
 		}
 		//of list of file name Quotation
-		if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
-			// 1: reply, 3: forward
+		if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, 
-				(tpMailItem->Mark == 1) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
-		} else if (tpMailItem->Mark == 2) {
+				(tpMailItem->Mark == MARK_REPLYING) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
+		} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
 			// text is selected
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
@@ -4219,7 +4213,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 		}
-		if (tpMailItem->Mark == 3) {
+		if (tpMailItem->Mark == MARK_FORWARDING) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_SETCHECK, (op.FwdQuotation == 2) ? 1 : 0, 0);
 		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ATT_MSG), SW_HIDE);
@@ -4248,7 +4242,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->Cc = alloc_copy_t(tpMailItem->Cc);
 		tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
 		tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
-		if (tpMailItem->Mark == 3 && op.FwdQuotation == 2) {
+		if (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) {
 			// GJC forward entire message as attachment
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * 2);
 			if (p != NULL) {
@@ -4372,6 +4366,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			tpMailItem = *tpSendMailIList;
 			tpTmpMailItem = *(tpSendMailIList + 1);
+			if (tpMailItem != NULL && tpMailItem->Mark != MARK_FORWARDING) {
+				break;
+			}
 			if (tpTmpMailItem != NULL) {
 				if (SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_GETCHECK, 0, 0)) {
 					// attach whole message
@@ -4612,9 +4609,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 
 			//Quotation
-			if (tpMailItem->Mark == 1 || tpMailItem->Mark == 3) {
+			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
-			} else if (tpMailItem->Mark == 2) {
+			} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
 			}
 			mem_free((void **)&tpSendMailIList);
@@ -5071,6 +5068,9 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			i = -1;
 			while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
+#ifdef _WIN32_WCE
+				TCHAR *addr, *cmmt, *fname, *lname;
+#endif
 				tpAddrItem = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
 				if (tpAddrItem == NULL) {
 					ErrorMessage(hDlg, STR_ERR_ADD);
@@ -5086,57 +5086,14 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				delete_ctrl_char(tpAddrItem->MailAddress);
 #ifdef _WIN32_WCE
 				if (op.UsePOOMAddressBook != 0) {
-					TCHAR *addr, *cmmt, *fname, *lname;
-					BOOL done = FALSE;
-					int ret, len = lstrlen(tpAddrItem->MailAddress) + 1;
+					int len = lstrlen(tpAddrItem->MailAddress) + 1;
 					addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 					cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 					*addr = *cmmt = TEXT('\0');
 					GetMailAddress(tpAddrItem->MailAddress, addr, cmmt, FALSE);
-					len = lstrlen(cmmt) + 1;
-					if (len > 1) {
-						for (p = cmmt; *p != TEXT('\0'); p++) {
-							if (*p == TEXT(',')) {
-								*p = TEXT('\0');
-								lname = alloc_copy_t(cmmt);
-								p++;
-								while (*p == TEXT(' ')) p++;
-								fname = alloc_copy_t(p);
-								done = TRUE;
-								break;
-							}
-						}
-						if (!done) {
-							for (p = cmmt; *p != TEXT('\0'); p++) {
-								if (*p == TEXT(' ')) {
-									*p = TEXT('\0');
-									fname = alloc_copy_t(cmmt);
-									p++;
-									while (*p == TEXT(' ')) p++;
-									lname = alloc_copy_t(p);
-									done = TRUE;
-									break;
-								}
-							}
-						}
-						if (!done) {
-							lname = alloc_copy_t(cmmt);
-							fname = NULL;
-						}
-					} else {
-						lname = fname = NULL;
-					}
-					ret = AddPOOMContact(addr, fname, lname);
-					if (op.POOMNameIsComment) {
-						mem_free(&tpAddrItem->MailAddress);
-						tpAddrItem->MailAddress = addr;
-						tpAddrItem->Comment = cmmt;
-					} else {
-						mem_free(&addr);
-						mem_free(&cmmt);
-					}
-					mem_free(&fname);
-					mem_free(&lname);
+					mem_free(&tpAddrItem->MailAddress);
+					tpAddrItem->MailAddress = addr;
+					tpAddrItem->Comment = cmmt;
 				}
 #endif
 				//of information of transmission In address register mail address additional
@@ -5152,6 +5109,52 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
 						hDlg, EditAddressProc, (LPARAM)AddressBook);
 				}
+#ifdef _WIN32_WCE
+				// add to POOM Address Book
+				addr = tpAddrItem->MailAddress;
+				cmmt = tpAddrItem->Comment;
+				if (op.UsePOOMAddressBook != 0 && addr != NULL && cmmt != NULL) {
+					BOOL done = FALSE;
+					int len = lstrlen(cmmt) + 1;
+					if (len > 1) {
+						for (p = cmmt; *p != TEXT('\0'); p++) {
+							if (*p == TEXT(',')) {
+								*p = TEXT('\0');
+								lname = alloc_copy_t(cmmt);
+								*p = TEXT(',');
+								p++;
+								while (*p == TEXT(' ')) p++;
+								fname = alloc_copy_t(p);
+								done = TRUE;
+								break;
+							}
+						}
+						if (!done) {
+							for (p = cmmt; *p != TEXT('\0'); p++) {
+								if (*p == TEXT(' ')) {
+									*p = TEXT('\0');
+									fname = alloc_copy_t(cmmt);
+									*p = TEXT(' ');
+									p++;
+									while (*p == TEXT(' ')) p++;
+									lname = alloc_copy_t(p);
+									done = TRUE;
+									break;
+								}
+							}
+						}
+						if (!done) {
+							lname = alloc_copy_t(cmmt);
+							fname = NULL;
+						}
+					} else {
+						lname = fname = NULL;
+					}
+					AddPOOMContact(addr, fname, lname, tpAddrItem->Group);
+					mem_free(&fname);
+					mem_free(&lname);
+				}
+#endif
 			}
 #ifdef _WIN32_WCE
 			if (op.AutoSave == 1 && op.UsePOOMAddressBook == 0) {
@@ -5342,6 +5345,11 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_SETTEXT, 0, (LPARAM)STR_EXAMPLE_ADDRESS);
 		}
 		SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+#ifdef _WIN32_WCE
+		if (tpTmpAddressBook->FromAddrInfo == TRUE && op.UsePOOMAddressBook != 0) {
+			SendDlgItemMessage(hDlg, IDC_COMMENT_OR_NAME, WM_SETTEXT, 0, (LPARAM)STR_ADDREDIT_NAME);
+		}
+#endif
 		SendDlgItemMessage(hDlg, IDC_EDIT_COMMENT, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		// idx==-1, add new address item
 		if (idx == -2) {
@@ -6363,6 +6371,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		SetControlFont(hDlg);
 		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
+		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
 		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
 
 		memset ((char *)&logfont, 0, sizeof (logfont));
@@ -6410,22 +6419,26 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CLOSE:
 		AboutWnd = NULL;
-      DeleteObject(hFont);
+		DeleteObject(hFont);
 		EndDialog(hDlg, FALSE);
 		break;
 
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
+		case IDC_VISIT_WEB:
+			ShellOpen(STR_WEB_ADDR);
+			break;
+
 		case IDOK:
 			AboutWnd = NULL;
-         DeleteObject(hFont);
+			DeleteObject(hFont);
 			EndDialog(hDlg, TRUE);
 			break;
 
 		case IDCANCEL:
 			AboutWnd = NULL;
-         DeleteObject(hFont);
+			DeleteObject(hFont);
 			EndDialog(hDlg, FALSE);
 			break;
 		}
