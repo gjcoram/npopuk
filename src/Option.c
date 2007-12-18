@@ -3882,7 +3882,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 				if (fwd_whole_msg > 0) {
-					// should be item_to_string_size
+					// should be item_to_string_size, but that's slow to compute
 					// need to mime-encode (4/3) because may have 8-bit characters
 					fwd_whole_msg = (tstrlen(tpFwdMailItem->Body)*4)/3;
 				} else {

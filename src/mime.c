@@ -1326,6 +1326,19 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	*TextIndex = -1;
 
 	*cnt = 0;
+	if (ViewSrc == TRUE) {
+		// put full headers in for view source
+		i = item_to_string_size(tpMailItem, TRUE, TRUE, FALSE);
+		body = (char *)mem_alloc(sizeof(char) * (i + 1));
+		*body = '\0';
+		item_to_string(body, tpMailItem, TRUE, TRUE, FALSE);
+		buf = alloc_char_to_tchar(body);
+		mem_free(&body);
+		if (buf != NULL && *buf != TEXT('\0')) {
+			DelDot(buf, buf);
+			return buf;
+		}
+	}
 	if (tpMailItem->Multipart > MULTIPART_ATTACH && ViewSrc == FALSE) {
 		// マルチパートを解析する
 #ifdef UNICODE
@@ -1448,18 +1461,13 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 #ifdef UNICODE
 		r = wenc_ret = alloc_char_to_tchar(p);
 #else
-		r = p;
+		r = alloc_copy(p);
 #endif
 	} else {
 		r = wenc_ret;
 	}
 	if (r != NULL) {
-		buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(r) + 1));
-		if (buf != NULL) {
-			DelDot(r, buf);
-			mem_free(&wenc_ret);
-			r = buf;
-		}
+		DelDot(r, r); // process in place
 	}
 	return r;
 }
