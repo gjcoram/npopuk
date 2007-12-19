@@ -4608,7 +4608,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				item_free(&tpTmpMailItem, 1);
 			}
 
-			//Quotation
+			//Quotation -- on exit from this dialog, ->Mark is 0, 1, or 2
+			// 0: no quoting
+			// 1: quote full message (reply or forward)
+			// 2: quote selected text
 			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
 			} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
