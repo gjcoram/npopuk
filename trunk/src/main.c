@@ -2612,7 +2612,7 @@ static void SetDownloadMark(HWND hWnd, BOOL Flag)
 	}
 	UpdateWindow(hListView);
 	if (SelBox == MAILBOX_SEND && MarkedOne == TRUE) {
-		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, TRUE);
+		SetItemCntStatusText(hWnd, NULL, FALSE);
 	}
 
 	if (hViewWnd != NULL) {
@@ -2660,6 +2660,7 @@ static void UnMark(HWND hWnd)
 	MAILITEM *tpMailItem;
 	HWND hListView;
 	int i;
+	BOOL unmarked_one = FALSE;
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	if (ListView_GetSelectedCount(hListView) <= 0) {
@@ -2674,9 +2675,17 @@ static void UnMark(HWND hWnd)
 			continue;
 		}
 		if (tpMailItem->MailStatus == ICON_ERROR) {
-			tpMailItem->MailStatus = (SelBox == MAILBOX_SEND) ? ICON_NON : ICON_READ;
+			if (SelBox == MAILBOX_SEND) {
+				unmarked_one = TRUE;
+				tpMailItem->MailStatus = ICON_NON;
+			} else {
+				tpMailItem->MailStatus = ICON_READ;
+			}
 		}
-		tpMailItem->Mark = tpMailItem->MailStatus;
+		if (tpMailItem->Mark != tpMailItem->MailStatus) {
+			unmarked_one = TRUE;
+			tpMailItem->Mark = tpMailItem->MailStatus;
+		}
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
 			ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 		}
@@ -2684,16 +2693,8 @@ static void UnMark(HWND hWnd)
 	}
 	UpdateWindow(hListView);
 
-	if (SelBox == MAILBOX_SEND) {
-#ifdef _WIN32_WCE
-		unsigned int len;
-#else
-		int len;
-#endif
-		len = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
-		if (len > lstrlen(STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
-			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, TRUE);
-		}
+	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
+		SetItemCntStatusText(hWnd, NULL, FALSE);
 	}
 
 	if (hViewWnd != NULL) {

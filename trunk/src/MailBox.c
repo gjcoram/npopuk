@@ -170,9 +170,10 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 	}
 	mailbox_free(MailBox + DelIndex);
 	if ((MailBox+DelIndex)->Filename == NULL)  {
+		TCHAR path[2*BUF_SIZE];
 		wsprintf(name1, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
-		str_join_t(name2, DataDir, name1, (TCHAR *)-1);
-		i = file_get_size(name2);
+		str_join_t(path, DataDir, name1, (TCHAR *)-1);
+		i = file_get_size(path);
 		if (i == 0) {
 			file_delete(hWnd, name1);
 		} else if (i > 0) {
@@ -341,7 +342,7 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 			wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
 			for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
 				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
-					&& lstrcmp(name2, (MailBox+k)->Filename) == 0) {
+					&& lstrcmpi(name2, (MailBox+k)->Filename) == 0) {
 					found = TRUE;
 					break;
 				}

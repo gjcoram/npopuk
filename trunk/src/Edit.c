@@ -393,7 +393,10 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	int qlen = 0;
 	BOOL fwd_as_att, do_sig, do_sig_above;
 
-	if (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD) {
+	if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
+		// overrides forward as attachment
+		fwd_as_att = FALSE;
+	} else if (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD) {
 		fwd_as_att = TRUE;
 	} else {
 		fwd_as_att = FALSE;
@@ -402,8 +405,8 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	//Setting
 	if ( fwd_as_att == FALSE
 		&& ((tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
-		||  (tpMailItem->Mark == 2 && seltext != NULL)) ) {
-		if (tpMailItem->Mark == 2 && seltext != NULL) {
+		||  (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL)) ) {
+		if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
 			mBody = alloc_copy_t(seltext);
 		} else {
 			mBody = MIME_body_decode(tpReMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
@@ -422,7 +425,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			multipart_free(&tpMultiPart, cnt);
 		}
 
-		if (op.FwdQuotation == 1 || ReplyFlag != EDIT_FORWARD) {
+		if (op.FwdQuotation != 0 || ReplyFlag != EDIT_FORWARD) {
 			quotchar = op.QuotationChar;
 			qlen = lstrlen(quotchar);
 		}

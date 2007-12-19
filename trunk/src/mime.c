@@ -1328,10 +1328,10 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	*cnt = 0;
 	if (ViewSrc == TRUE) {
 		// put full headers in for view source
-		i = item_to_string_size(tpMailItem, TRUE, TRUE, FALSE);
+		i = item_to_string_size(tpMailItem, 2, TRUE, FALSE);
 		body = (char *)mem_alloc(sizeof(char) * (i + 1));
 		*body = '\0';
-		item_to_string(body, tpMailItem, TRUE, TRUE, FALSE);
+		item_to_string(body, tpMailItem, 2, TRUE, FALSE);
 		buf = alloc_char_to_tchar(body);
 		mem_free(&body);
 		if (buf != NULL && *buf != TEXT('\0')) {
