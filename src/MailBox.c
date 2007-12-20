@@ -168,7 +168,6 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 	if (DelIndex < cnt) {
 		CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
 	}
-	mailbox_free(MailBox + DelIndex);
 	if ((MailBox+DelIndex)->Filename == NULL)  {
 		TCHAR path[2*BUF_SIZE];
 		wsprintf(name1, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
@@ -186,6 +185,8 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		file_delete(hWnd, (MailBox+DelIndex)->Filename);
 #endif
 	}
+	mailbox_free(MailBox + DelIndex);
+
 	// rename MailBox%d files above DelIndex, rather than loading&writing them
 	for (i = DelIndex; i < cnt; i++) {
 		if ((TmpMailBox + i)->Filename == NULL) {
@@ -324,6 +325,7 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 		wsprintf(name1, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
 		if ((MailBox+j)->Filename == NULL) {
 			TCHAR *tmp_name = TEXT("$npop_tmp_mailbox.dat");
+			file_delete(hWnd, tmp_name);
 			wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
 			if (file_rename(hWnd, name1, tmp_name) == FALSE) {
 				// rename failed, so use the current names
