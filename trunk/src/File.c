@@ -1395,13 +1395,18 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
  */
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 {
-	TCHAR source_path[BUF_SIZE], destin_path[BUF_SIZE];
+	TCHAR source_path[2*BUF_SIZE], destin_path[2*BUF_SIZE];
 	BOOL ret;
 
 	str_join_t(source_path, DataDir, Source, (TCHAR *)-1);
 	str_join_t(destin_path, DataDir, Destin, (TCHAR *)-1);
 
 	ret = MoveFile(source_path, destin_path);
+	if (op.SocLog > 1) {
+		TCHAR msg[2*BUF_SIZE];
+		wsprintf(msg, TEXT("renaming %s to %s\r\n"), source_path, destin_path);
+		log_save(msg);
+	}
 
 	if (ret) {
 		// need to delete backup file, lest it be found next time we file_read_mailbox

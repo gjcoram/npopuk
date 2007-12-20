@@ -271,6 +271,9 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
+		} else if (op.FwdQuotation == 2) {
+			// forward as attachment
+			tpMailItem->AttachSize = (tstrlen(tpReMailItem->Body)*4)/3;
 		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
 			MULTIPART **tpMultiPart = NULL;
