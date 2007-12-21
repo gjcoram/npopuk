@@ -1402,11 +1402,6 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 	str_join_t(destin_path, DataDir, Destin, (TCHAR *)-1);
 
 	ret = MoveFile(source_path, destin_path);
-	if (op.SocLog > 1) {
-		TCHAR msg[2*BUF_SIZE];
-		wsprintf(msg, TEXT("renaming %s to %s\r\n"), source_path, destin_path);
-		log_save(msg);
-	}
 
 	if (ret) {
 		// need to delete backup file, lest it be found next time we file_read_mailbox
