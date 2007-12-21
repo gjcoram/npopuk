@@ -24,10 +24,6 @@
 /* Define */
 #define ESC						0x1B
 
-#define HEAD_LINELEN			800
-#define HEAD_ENCODE_LINELEN		15
-#define BODY_ENCODE_LINELEN		76
-
 #define ENC_TYPE_7BIT			0
 #define ENC_TYPE_8BIT			1
 #define ENC_TYPE_BASE64			2
@@ -1134,7 +1130,8 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 
 		case ENC_TYPE_Q_PRINT:
 			// quoted-printable
-			tmp = (char *)mem_alloc(tstrlen(cret) * 4 + 1);
+			i = QuotedPrintable_encode_length(cret, BODY_ENCODE_LINELEN, TRUE);
+			tmp = (char *)mem_alloc(sizeof(char) * i);
 			if (tmp == NULL) {
 				mem_free(&cret);
 				lstrcpy(ErrStr, STR_ERR_MEMALLOC);

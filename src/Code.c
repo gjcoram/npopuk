@@ -260,6 +260,54 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 }
 
 /*
+ * QuotedPrintable_encode_length - Quoted Printable (RFC 2045)
+ */
+
+int QuotedPrintable_encode_length(unsigned char *buf, int break_size, const BOOL body)
+{
+	unsigned char *p;
+	unsigned char *t;
+	int len = 0, i = 0;
+
+	for (p = buf; *p != '\0'; p++) {
+		if ((*p >= 0x21 && *p <= 0x7E && *p != '=' && *p != '?' && *p != '_') ||
+			*p == '\r' || *p == '\n') {
+			len++;
+			i++;
+			if (*p == '\r') {
+				continue;
+			}
+			if (*p == '\n') {
+				i = 0;
+			}
+		} else {
+			for (t = p; *t == ' ' || *t == '\t'; t++);
+			if (body == TRUE && (*p == ' ' || *p == '\t') && !(*t == '\r' || *t == '\n')) {
+				len++;
+				i++;
+			} else {
+				if (break_size > 0 && (break_size - 1) <= (i + 3)) {
+					len += 3;
+					i = 0;
+				}
+				len += 3;
+				i += 3;
+			}
+		}
+		if (break_size > 0 && (break_size - 1) <= i) {
+			len += 3;
+			i = 0;
+			if (body == TRUE && *(p + 1) == '.') {
+				len++;
+				i++;
+			}
+		}
+	}
+	len++;
+	return len;
+}
+
+/*
  * QuotedPrintable_encode - Quoted Printable (RFC 2045)
  */
 static const char cHex[] = "0123456789ABCDEF";

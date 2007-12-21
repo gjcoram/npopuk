@@ -16,6 +16,9 @@
 #include "multipart.h"
 
 /* Define */
+#define HEAD_LINELEN			800
+#define HEAD_ENCODE_LINELEN		15
+#define BODY_ENCODE_LINELEN		76
 
 /* Struct */
 

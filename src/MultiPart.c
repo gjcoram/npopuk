@@ -515,6 +515,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 #define	CTYPE_MULTIPART		"multipart/mixed;\r\n boundary=\""
 #define CONTENT_DIPPOS		"Content-Disposition: attachment;"
 #define ENCODING_BASE64		"Content-Transfer-Encoding: base64"
+#define ENCODING_QP			"Content-Transfer-Encoding: quoted-printable"
 #define CONTENT_TYPE_NAME	";\r\n name=\""
 	SYSTEMTIME st;
 	TCHAR *fpath, *fname;
@@ -847,7 +848,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				return MP_ERROR_ALLOC;
 			}
 			item_to_string(buf, tpFwdMailItem, 2, TRUE, FALSE);
-			b64str = (char *)mem_alloc(sizeof(char)*(msglen * 2 + 4)); // FileSize*4/3 for MIME, plus extra for linebreaks
+
+			msglen = QuotedPrintable_encode_length(buf, BODY_ENCODE_LINELEN, TRUE);
+			b64str = (char *)mem_alloc(sizeof(char) * msglen);
 			if (b64str == NULL) {
 #ifndef WSAASYNC
 				encatt_free(EncAtt, attnum);
@@ -857,7 +860,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				mem_free(&buf);
 				return MP_ERROR_ALLOC;
 			}
-			base64_encode(buf, b64str, msglen, BREAK_LEN);
+			QuotedPrintable_encode(buf, b64str, BODY_ENCODE_LINELEN, TRUE);
 			mem_free(&buf);
 			buf = b64str;
 #ifndef WSAASYNC
@@ -870,7 +873,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				prev = ret;
 			}
 			len += (2 + tstrlen(Boundary) + 2 + tstrlen(CTYPE_RFC822) +
-				tstrlen(ENCODING_BASE64) + 4 + tstrlen(buf) + 4);
+				tstrlen(ENCODING_QP) + 4 + msglen + 4);
 			tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 			if (tmp == NULL) {
 #ifndef WSAASYNC
@@ -882,7 +885,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				return MP_ERROR_ALLOC;
 			}
 			str_join(tmp, prev, "--", Boundary, "\r\n", CTYPE_RFC822,
-					ENCODING_BASE64, "\r\n\r\n", buf, "\r\n\r\n", (char *)-1);
+					ENCODING_QP, "\r\n\r\n", buf, "\r\n\r\n", (char *)-1);
 			mem_free(&buf);
 #ifndef WSAASYNC
 			if (op.SendAttachIndividually != 0) {
