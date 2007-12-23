@@ -67,6 +67,9 @@
 
 /* Function Prototypes */
 int a2i(const char *str);
+#ifdef UNICODE
+int a2i_t(const TCHAR *str);
+#endif
 void delete_ctrl_char(TCHAR *buf);
 
 TCHAR *alloc_copy_t(const TCHAR *buf);
