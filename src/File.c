@@ -42,19 +42,19 @@ extern MAILBOX *MailBox;
 /**************************************************************************
 	Local Function Prototypes
 **************************************************************************/
-
+BOOL log_open(void);
 static int file_get_mail_count(char *buf, long Size, int MboxFormat);
 static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem);
 static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*
- * log_clear
+ * log_open
  *
- * The first time through (log_opened==FALSE), we use CREATE_ALWAYS to start
+ * The first time through (gLogOpened==FALSE), we use CREATE_ALWAYS to start
  * with a clean, empty file.  After that, if some error causes the log file
  * to close, it is reopened without truncation.
  */
-BOOL log_clear(BOOL clear)
+BOOL log_open(void)
 {
 	TCHAR path[BUF_SIZE];
 	DWORD create = CREATE_ALWAYS;
@@ -73,6 +73,15 @@ BOOL log_clear(BOOL clear)
 	return TRUE;
 }
 
+void log_close(void)
+{
+	if (hLogFile != NULL && hLogFile != (HANDLE)-1) {
+		CloseHandle(hLogFile);
+		hLogFile = NULL;
+	}
+	return;
+}
+
 /*
  * log_save - write string to log file.  buf assumed to end with \r\n
  * would be nice to avoid alloc/free for unicode, especially since most
@@ -83,8 +92,10 @@ BOOL log_save(TCHAR *buf)
 	char *ascii;
 	BOOL ret;
 
-	if (hLogFile == 0  ||  hLogFile == (HANDLE)-1) {
-		log_clear(FALSE);
+	if (hLogFile == NULL || hLogFile == (HANDLE)-1) {
+		if (log_open() == FALSE) {
+			return FALSE;
+		}
 	}
 
 #ifdef UNICODE

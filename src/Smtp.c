@@ -743,6 +743,8 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 			return FALSE;
 		}	
+#ifndef _DEBUG
+		// try not sending this, it's the default anyway, for Craig
 	} else {
 		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
 			mem_free(&send_body);
@@ -752,7 +754,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 			return FALSE;
 		}	
-
+#endif
 	}
 
 	// delivery receipt
