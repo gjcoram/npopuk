@@ -47,6 +47,29 @@ int a2i(const char *str)
 	return num * m;
 }
 
+#ifdef UNICODE
+/*
+ * a2i_t - TCHAR to int
+ */
+int a2i_t(const TCHAR *str)
+{
+	int num = 0;
+	int m = 1;
+
+	if (*str == TEXT('-')) {
+		m = -1;
+		str++;
+	} else if (*str == TEXT('+')) {
+		str++;
+	}
+
+	for (; *str >= TEXT('0') && *str <= TEXT('9'); str++) {
+		num = 10 * num + (*str - TEXT('0'));
+	}
+	return num * m;
+}
+#endif
+
 /*
  * delete_ctrl_char - ƒRƒ“ƒgƒ[ƒ‹•¶Žš‚ðíœ‚·‚é
  */
