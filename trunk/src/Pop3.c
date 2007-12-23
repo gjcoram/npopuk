@@ -1317,8 +1317,6 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
-		} else if (op.SocLog > 2) {
-			log_save(TEXT("exec_proc_init: ServerDelete is false\r\n"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1463,8 +1461,6 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
-		} else if (op.SocLog > 2) {
-			log_save(TEXT("exec_proc_retr: ServerDelete is false\r\n"));
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1654,6 +1650,13 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (tpMailItem == NULL || tpMailItem->Mark != ICON_DEL) {
 			continue;
 		}
+		if (tpMailItem->Size != NULL) {
+#ifdef UNICODE
+			tpMailBox->MailSize -= a2i_t(tpMailItem->Size);
+#else
+			tpMailBox->MailSize -= a2i(tpMailItem->Size);
+#endif
+		}
 		item_free((tpMailBox->tpMailItem + i), 1);
 
 		// 削除したメールより後ろのメールの番号を減らす
@@ -1664,6 +1667,11 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			}
 		}
 		tpMailBox->MailCnt--;
+		if (tpMailBox->MailCnt == 0) {
+			tpMailBox->MailSize = 0;
+		} else if (tpMailBox->MailSize < 0) {
+			tpMailBox->MailSize = 0;
+		}
 		tpMailBox->LastNo--;
 	}
 	// 最後のメッセージが削除されている場合は一覧取得用メッセージIDを変更する

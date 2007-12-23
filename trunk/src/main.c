@@ -775,6 +775,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 		TCHAR logbuf[BUF_SIZE];
 		str_join_t(logbuf, buf, TEXT("\r\n"), (TCHAR *)-1);
 		log_save(logbuf);
+		log_close();
 	}
 	if (op.SocIgnoreError == 1 && BoxIndex >= MAILBOX_USER) {
 		// 受信エラーを無視する設定の場合
@@ -1764,6 +1765,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		if (op.RasCheckEndDisCon == 1) {
 			RasDisconnect();
 		}
+		if (op.SocLog > 0) log_close();
 	}
 	//Cutting
 	if (RasLoop == TRUE || op.RasEndDisCon == 1) {
@@ -1945,6 +1947,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	//of font Dial rise start
 	if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, BoxIndex, 0) == FALSE) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
+		if (op.SocLog > 0) log_close();
 		SetMailMenu(hWnd);
 		return FALSE;
 	}
@@ -3474,6 +3477,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				} else {
 					socket_close(hWnd, g_soc);
 					g_soc = -1;
+					if (op.SocLog > 0) log_close();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
 					SetItemCntStatusText(hWnd, NULL, FALSE);
 					SetUnreadCntTitle(hWnd, TRUE);
@@ -3539,6 +3543,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// POP before SMTP
 				if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
 					ErrorSocketEnd(hWnd, CheckBox);
+					if (op.SocLog > 0) log_close();
 					SetMailMenu(hWnd);
 					break;
 				}
@@ -3579,6 +3584,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			//of the setting which Dial rise start
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
+				if (op.SocLog > 0) log_close();
 				SetMailMenu(hWnd);
 				break;
 			}
@@ -3641,6 +3647,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// ダイヤルアップ開始
 				if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
 					ErrorSocketEnd(hWnd, CheckBox);
+					if (op.SocLog > 0) log_close();
 					SetMailMenu(hWnd);
 					break;
 				}
@@ -4306,6 +4313,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				g_soc = -1;
 				RecvBox = -1;
 				EndSocketFunc(hWnd, FALSE);
+				if (op.SocLog > 0) log_close();
 				break;
 			}
 			if (command_status == POP_RETR || command_status == POP_TOP) {
@@ -4318,6 +4326,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SetItemCntStatusText(hWnd, NULL, FALSE);
 				SetUnreadCntTitle(hWnd, TRUE);
 				EndSocketFunc(hWnd, FALSE);
+				if (op.SocLog > 0) log_close();
 				break;
 			}
 			command_status = POP_QUIT;
@@ -4325,6 +4334,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			send_buf(g_soc, CMD_RSET"\r\n");
 			SetSocStatusTextT(hWnd, TEXT(CMD_QUIT));
 			send_buf(g_soc, CMD_QUIT"\r\n");
+			if (op.SocLog > 0) log_close();
 			break;
 
 		//====== mail =========
@@ -4747,6 +4757,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
+				if (op.SocLog > 0) log_close();
 				AutoSave_Mailboxes(hWnd);
 				SetItemCntStatusText(hWnd, NULL, FALSE);
 				SetUnreadCntTitle(hWnd, TRUE);
@@ -4788,6 +4799,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					SocketErrorMessage(hWnd, ErrStr, RecvBox);
 				} else {
 					RecvBox = -1;
+					if (op.SocLog > 0) log_close();
 					SetMailMenu(hWnd);
 				}
 				return FALSE;
@@ -4809,6 +4821,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			AutoCheckFlag = FALSE;
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
+				if (op.SocLog > 0) log_close();
 				SetMailMenu(hWnd);
 				break;
 			}
