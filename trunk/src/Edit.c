@@ -273,7 +273,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
 		} else if (op.FwdQuotation == 2) {
 			// forward as attachment
-			tpMailItem->AttachSize = (tstrlen(tpReMailItem->Body)*4)/3;
+			// set tpMailItem->AttachSize = (tstrlen(tpReMailItem->Body)*4)/3; in SetReplyMessageBody
 		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
 			MULTIPART **tpMultiPart = NULL;
@@ -403,6 +403,11 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		fwd_as_att = TRUE;
 	} else {
 		fwd_as_att = FALSE;
+	}
+
+	if (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach == ATTACH_SEP) {
+		// attaching whole message
+		tpMailItem->AttachSize += (tstrlen(tpReMailItem->Body)*4)/3;
 	}
 
 	//Setting
