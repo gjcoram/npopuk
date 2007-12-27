@@ -559,7 +559,8 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 		}
 	}
 
-	if (lstrcmp(Source, path) == 0) {
+	if (lstrcmpi(Source, path) == 0) {
+		// what if one uses 8.3 filenames?
 		return TRUE;
 	}
 	if (file_get_size(path) != -1) {
