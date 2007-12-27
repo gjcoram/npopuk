@@ -279,7 +279,7 @@
 #define STR_VIEW_MENU_SOURCE		TEXT("&View source")
 #define STR_VIEW_MENU_SAVEATTACH	TEXT("&Save attach")
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
-#define STR_VIEW_RETURN				TEXT("&Return to message")
+#define STR_VIEW_RETURN				TEXT("&Return to original")
 
 #define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk]\r\n")
 #define STR_NPOPUK_FILES			TEXT("nPOPuk files")

@@ -1084,7 +1084,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	// ƒƒjƒ…[‚ð‰Šú‰»‚·‚é
 	while (DeleteMenu(hMenu, MENU_ATTACH_POS, MF_BYPOSITION) == TRUE);
 
-	if (DigestMaster != NULL) { // || tpMailItem == AttachMailItem) {
+	if (DigestMaster != NULL) {
 		AppendMenu(hMenu, MF_STRING, ID_RETURN_TO_MASTER, STR_VIEW_RETURN);
 	}
 
@@ -2329,6 +2329,10 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 					} else {
 						AttachMailItem->MailBox = alloc_copy_t((MailBox+vSelBox)->Name);
 					}
+					if (DigestMaster == NULL) {
+						// if we're already in an attachment, don't reset the master
+						DigestMaster = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+					}
 					SetWindowLong(hWnd, GWL_USERDATA, (long)AttachMailItem);
 					ModifyWindow(hWnd, AttachMailItem, FALSE, FALSE);
 				}
@@ -3291,8 +3295,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				SetWindowLong(hWnd, GWL_USERDATA, (long)DigestMaster);
 				ModifyWindow(hWnd, DigestMaster, FALSE, FALSE);
 			}
-			// else if (AttachMailItem == (tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA)))
-			//	don't have pointer to original message ...
 			break;
 
 		case ID_MENUITEM_VIEW:
