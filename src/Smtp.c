@@ -395,9 +395,10 @@ static BOOL send_address(HWND hWnd, SOCKET soc, TCHAR *command, TCHAR *address, 
 		return FALSE;
 	}
 	// command:<address>\r\n
-	str_join_t(wbuf, command, TEXT(":<"), address, TEXT(">\r\n"), (TCHAR *)-1);
+	str_join_t(wbuf, command, TEXT(":<"), address, TEXT(">"), (TCHAR *)-1);
 
 	SetSocStatusTextT(hWnd, wbuf);
+	lstrcat(wbuf, TEXT("\r\n"));
 	if (send_buf_t(soc, wbuf) == -1) {
 		mem_free(&wbuf);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -969,8 +970,9 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;
 		}
-		str_join_t(wbuf, r, p, TEXT("\r\n"), (TCHAR *)-1);
+		str_join_t(wbuf, r, p, (TCHAR *)-1);
 		SetSocStatusTextT(hWnd, wbuf);
+		lstrcat(wbuf, TEXT("\r\n"));
 		if (send_buf_t(soc, wbuf) == -1) {
 			mem_free(&wbuf);
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);

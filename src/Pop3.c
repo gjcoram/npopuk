@@ -403,7 +403,7 @@ static int check_last_mail(HWND hWnd, SOCKET soc, BOOL check_flag, TCHAR *ErrStr
 		if (disable_uidl == FALSE) {
 			// UIDLで全メールの同期を取る
 			receiving_uidl = FALSE;
-			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL)TEXT("\r\n"));
+			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL));
 			if (send_buf(soc, CMD_UIDL"\r\n") == -1) {
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return FALSE;
@@ -433,8 +433,9 @@ static BOOL send_command(HWND hWnd, SOCKET soc, TCHAR *Command, int Cnt, TCHAR *
 {
 	TCHAR wBuf[BUF_SIZE];
 
-	wsprintf(wBuf, TEXT("%s %d\r\n"), Command, Cnt);
+	wsprintf(wBuf, TEXT("%s %d"), Command, Cnt);
 	SetSocStatusTextT(hWnd, wBuf);
+	lstrcat(wBuf, TEXT("\r\n"));
 
 	if (send_buf_t(soc, wBuf) == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -450,8 +451,9 @@ static int send_command_top(HWND hWnd, SOCKET soc, int Cnt, TCHAR *ErrStr, int l
 {
 	TCHAR wBuf[BUF_SIZE];
 
-	wsprintf(wBuf, TEXT(CMD_TOP)TEXT(" %d %d\r\n"), Cnt, len);
+	wsprintf(wBuf, TEXT(CMD_TOP)TEXT(" %d %d"), Cnt, len);
 	SetSocStatusTextT(hWnd, wBuf);
+	lstrcat(wBuf, TEXT("\r\n"));
 
 	if (send_buf_t(soc, wBuf) == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -618,8 +620,9 @@ static int login_proc(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrSt
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return POP_ERR;
 		}
-		str_join_t(wbuf, TEXT(CMD_USER), TEXT(" "), tpMailBox->User, TEXT("\r\n"), (TCHAR *)-1);
+		str_join_t(wbuf, TEXT(CMD_USER), TEXT(" "), tpMailBox->User, (TCHAR *)-1);
 		SetSocStatusTextT(hWnd, wbuf);
+		lstrcat(wbuf, TEXT("\r\n"));
 		if (send_buf_t(soc, wbuf) == -1) {
 			mem_free(&wbuf);
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -730,7 +733,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		// 指定番目から取得
 		if (disable_uidl == FALSE) {
 			receiving_uidl = FALSE;
-			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL)TEXT("\r\n"));
+			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL));
 			if (send_buf(soc, CMD_UIDL"\r\n") == -1) {
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return POP_ERR;
@@ -748,7 +751,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		// 前回最後に取得したメール数より少ない
 		if (disable_uidl == FALSE) {
 			receiving_uidl = FALSE;
-			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL)TEXT("\r\n"));
+			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL));
 			if (send_buf(soc, CMD_UIDL"\r\n") == -1) {
 				lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 				return POP_ERR;
@@ -812,7 +815,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		}
 		// UIDL未サポート
 		disable_uidl = TRUE;
-		SetSocStatusTextT(hWnd, TEXT(CMD_STAT)TEXT("\r\n"));
+		SetSocStatusTextT(hWnd, TEXT(CMD_STAT));
 		if (send_buf(soc, CMD_STAT"\r\n") == -1) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return POP_ERR;
@@ -1711,7 +1714,7 @@ BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 			if (PopBeforeSmtpFlag == TRUE) {
 				command_status = POP_QUIT;
 			} else {
-				SetSocStatusTextT(hWnd, TEXT(CMD_STAT)TEXT("\r\n"));
+				SetSocStatusTextT(hWnd, TEXT(CMD_STAT));
 				if (send_buf(soc, CMD_STAT"\r\n") == -1) {
 					lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 					return FALSE;
