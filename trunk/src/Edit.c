@@ -247,7 +247,7 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 }
 
 /*
- * SetReplyMessage - t sets the reply mail and also forwards mail (Added PHH 4-Oct-2003)
+ * SetReplyMessage - It sets the reply mail and also forwards mail (Added PHH 4-Oct-2003)
  */
 static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int rebox, int ReplyFlag)
 {
@@ -271,9 +271,9 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (op.FwdQuotation == 2) {
+		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT) {
 			// forward as attachment
-			// set tpMailItem->AttachSize = (tstrlen(tpReMailItem->Body)*4)/3; in SetReplyMessageBody
+			tpMailItem->AttachSize = item_to_string_size(tpReMailItem, 2, TRUE, FALSE);
 		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
 			MULTIPART **tpMultiPart = NULL;
@@ -403,11 +403,6 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		fwd_as_att = TRUE;
 	} else {
 		fwd_as_att = FALSE;
-	}
-
-	if (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach == ATTACH_SEP) {
-		// attaching whole message
-		tpMailItem->AttachSize += (tstrlen(tpReMailItem->Body)*4)/3;
 	}
 
 	//Setting
@@ -2306,14 +2301,14 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
 
-		if (tpReMailItem != NULL) {
-			// Reply setting
-			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
-		}
 		if (seltext != NULL) {
 			tpMailItem->Mark = MARK_REFWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
 			tpMailItem->Mark = MARK_REPLYING;
+		}
+		if (tpReMailItem != NULL) {
+			// Reply setting
+			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
 		}
 
 		//Transmission information setting
@@ -2358,17 +2353,16 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
 
-		// New function needed to copy the "tpMailItem" from "tpReMailItem"
-		if(tpReMailItem != NULL){
-			// Forward settings
-			SetReplyMessage(tpMailItem, tpReMailItem, rebox, EDIT_FORWARD);
-		}
-
 		if (seltext != NULL) {
 			tpMailItem->Mark = MARK_REFWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
 			tpMailItem->Mark = MARK_FORWARDING;
 		}
+		if (tpReMailItem != NULL) {
+			// Forward settings
+			SetReplyMessage(tpMailItem, tpReMailItem, rebox, EDIT_FORWARD);
+		}
+
 		//Transmission information setting
 #ifdef _WIN32_WCE
 		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
