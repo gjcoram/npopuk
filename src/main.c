@@ -3318,15 +3318,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 
 	case WM_SIZE:
-#ifndef _WIN32_WCE
 		if (wParam == SIZE_MINIMIZED) {
+#ifdef _WIN32_WCE
+			if (op.MinsizeSaveAll == 1) {
+				// could also unload mailboxes here
+				SaveWindow(hWnd, FALSE, FALSE, FALSE);
+			}
+#else
 			confirm_flag = 1;
-		} 
 #endif
-		if (wParam == SIZE_MINIMIZED && op.ShowTrayIcon == 1 && op.MinsizeHide == 1) {
-			ShowWindow(hWnd, SW_HIDE);
-			return 0;
-		}
+			if (op.ShowTrayIcon == 1 && op.MinsizeHide == 1) {
+				ShowWindow(hWnd, SW_HIDE);
+				return 0;
+			}
+		} 
 #ifndef _WIN32_WCE
 		if (op.ShowPass == 1 &&
 			(wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) &&

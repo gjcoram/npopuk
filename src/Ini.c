@@ -312,6 +312,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
 	op.StartHide = profile_get_int(GENERAL, TEXT("StartHide"), 0, app_path);
 	op.MinsizeHide = profile_get_int(GENERAL, TEXT("MinsizeHide"), 0, app_path);
+	op.MinsizeSaveAll = profile_get_int(GENERAL, TEXT("MinsizeSaveAll"), 1, app_path);
 	op.CloseHide = profile_get_int(GENERAL, TEXT("CloseHide"), 0, app_path);
 	op.TrayIconToggle = profile_get_int(GENERAL, TEXT("TrayIconToggle"), 0, app_path);
 	op.StartInit = profile_get_int(GENERAL, TEXT("StartInit"), 0, app_path);
@@ -991,6 +992,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ShowTrayIcon"), op.ShowTrayIcon, app_path);
 	profile_write_int(GENERAL, TEXT("StartHide"), op.StartHide, app_path);
 	profile_write_int(GENERAL, TEXT("MinsizeHide"), op.MinsizeHide, app_path);
+	profile_write_int(GENERAL, TEXT("MinsizeSaveAll"), op.MinsizeSaveAll, app_path);
 	profile_write_int(GENERAL, TEXT("CloseHide"), op.CloseHide, app_path);
 	profile_write_int(GENERAL, TEXT("TrayIconToggle"), op.TrayIconToggle, app_path);
 	profile_write_int(GENERAL, TEXT("StartInit"), op.StartInit, app_path);
