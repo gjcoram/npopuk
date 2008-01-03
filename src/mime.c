@@ -718,7 +718,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 				enc_err = TRUE;
 				continue;
 			}
-			QuotedPrintable_decode(content, dec_buf);
+			Q_decode(content, dec_buf);
 			mem_free(&content);
 			break;
 		default:
