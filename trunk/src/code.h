@@ -28,6 +28,7 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen);
 #endif
 
 char *QuotedPrintable_decode(char *buf, char *ret);
+char *Q_decode(char *buf, char *ret);
 int QuotedPrintable_encode_length(unsigned char *buf, int break_size, const BOOL body);
 void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body);
 
