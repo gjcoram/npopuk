@@ -63,7 +63,7 @@ BOOL log_open(void)
 	// create the name
 	wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
 
-        // create or open the file
+	// create or open the file
 	hLogFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, create, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
 	if (hLogFile == NULL || hLogFile == (HANDLE)-1) {
 		return FALSE;
@@ -84,7 +84,7 @@ void log_close(void)
 
 void log_flush(void)
 {
-#ifndef _WIN32_CE
+#ifndef _WIN32_WCE
 	BOOL ret;
 	ret = FlushFileBuffers(hLogFile);
 	if (ret == FALSE)
@@ -117,7 +117,7 @@ BOOL log_save(TCHAR *buf)
 	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
 #ifdef FLUSH_ON_EVERY_WRITE
 	if (ret != FALSE)
-	        ret = FlushFileBuffers(hLogFile);
+		ret = FlushFileBuffers(hLogFile);
 #endif
 	if (ret == FALSE)
 		log_close();
