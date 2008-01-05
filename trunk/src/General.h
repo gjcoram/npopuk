@@ -728,6 +728,7 @@ void smtp_free(void);
 
 // File
 void log_close(void);
+void log_flush(void);
 BOOL log_save(TCHAR *buf);
 BOOL log_header(TCHAR *buf);
 BOOL dir_check(const TCHAR *path);
