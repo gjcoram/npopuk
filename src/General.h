@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09b21")
+#define APP_NAME				TEXT("nPOPuk Ver 2.09b23")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -328,7 +328,6 @@ typedef struct _OPTION {
 	int ShowTrayIcon;
 	int StartHide;
 	int MinsizeHide;
-	int MinsizeSaveAll;
 	int CloseHide;
 	int TrayIconToggle;
 	int StartInit;
@@ -727,7 +726,6 @@ void smtp_set_error(HWND hWnd);
 void smtp_free(void);
 
 // File
-void log_close(void);
 void log_flush(void);
 BOOL log_save(TCHAR *buf);
 BOOL log_header(TCHAR *buf);
