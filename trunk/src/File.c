@@ -43,6 +43,7 @@ extern MAILBOX *MailBox;
 	Local Function Prototypes
 **************************************************************************/
 BOOL log_open(void);
+void log_close(void);
 static int file_get_mail_count(char *buf, long Size, int MboxFormat);
 static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem);
 static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

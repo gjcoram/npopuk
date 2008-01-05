@@ -1782,6 +1782,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		if (op.PromptSaveOnExit == 2) {
 			type |= MB_DEFBUTTON2;
 		}
+		_SetForegroundWindow(hWnd);
 		if (MessageBox(hWnd, STR_Q_EXITSAVE, WINDOW_TITLE, type) == IDNO) {
 			return TRUE;
 		}
@@ -3319,8 +3320,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_SIZE:
 		if (wParam == SIZE_MINIMIZED) {
-#ifdef _WIN32_WCE
-			if (op.MinsizeSaveAll == 1) {
+#ifdef _WIN32_WCE_PPC
+			if (op.AutoSave == 1) {
 				// could also unload mailboxes here
 				SaveWindow(hWnd, FALSE, FALSE, FALSE);
 			}
