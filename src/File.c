@@ -82,6 +82,16 @@ void log_close(void)
 	return;
 }
 
+void log_flush(void)
+{
+#ifndef _WIN32_CE
+	BOOL ret;
+	ret = FlushFileBuffers(hLogFile);
+	if (ret == FALSE)
+#endif
+		log_close();
+}
+
 /*
  * log_save - write string to log file.  buf assumed to end with \r\n
  * would be nice to avoid alloc/free for unicode, especially since most
@@ -105,10 +115,12 @@ BOOL log_save(TCHAR *buf)
 #endif
 
 	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
-	if (ret == FALSE) {
-		CloseHandle(hLogFile);
-		hLogFile = NULL;
-	}
+#ifdef FLUSH_ON_EVERY_WRITE
+	if (ret != FALSE)
+	        ret = FlushFileBuffers(hLogFile);
+#endif
+	if (ret == FALSE)
+		log_close();
 #ifdef UNICODE
 	mem_free(&ascii);
 #endif
