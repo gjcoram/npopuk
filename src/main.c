@@ -3325,7 +3325,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// could also unload mailboxes here
 				SaveWindow(hWnd, FALSE, FALSE, FALSE);
 			}
-#else
+#endif
+#ifndef _WIN32_WCE
 			confirm_flag = 1;
 #endif
 			if (op.ShowTrayIcon == 1 && op.MinsizeHide == 1) {
