@@ -1174,6 +1174,89 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 }
 
 /*
+ * file_append_savebox - append without loading
+ */
+BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int SaveFlag)
+{
+	HANDLE hFile;
+	TCHAR path[BUF_SIZE];
+	char *tmp, *p;
+	///////////// MRP /////////////////////
+	TCHAR pathBackup[BUF_SIZE];
+	///////////// --- /////////////////////
+//	TCHAR encrypt_header[80];
+	int write_mbox = 0;
+	int len = 0;
+
+//	if (op.ScrambleMailboxes) {
+//		wsprintf(encrypt_header, TEXT("%s %d.\r\n"), ENCRYPT_PREAMBLE, tpMailBox->MailItemCnt);
+//		len = lstrlen(encrypt_header);
+//	}
+
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+
+	// check existing file to see what format (npop/mbox) to write
+	if (tpMailBox->WasMbox == -1) {
+		if (file_get_size(path) <= 0) {
+			// no file -- use global option
+			tpMailBox->WasMbox = (op.WriteMbox == 1) ? TRUE : FALSE;
+		} else {
+			tmp = file_read(path, 7);
+			if (str_cmp_n(tmp, "From ", 5) == 0) {
+				tpMailBox->WasMbox = TRUE;
+			} else {
+				tpMailBox->WasMbox = FALSE;
+			}
+			mem_free(&tmp);
+		}
+	}
+	write_mbox = (tpMailBox->WasMbox == TRUE) ? 1 : 0;
+
+	len += item_to_string_size(tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
+	if (tmp == NULL) {
+		return FALSE;
+	}
+	*p = '\0';
+//	if (op.ScrambleMailboxes) {
+//		p = str_cpy_t(p, encrypt_header);
+//	}
+	item_to_string(p, tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+
+	///////////// MRP /////////////////////
+#ifdef UNICODE
+	wcscpy(pathBackup, path);
+	wcscat(pathBackup, TEXT(".bak"));
+#else
+	strcpy_s(pathBackup, BUF_SIZE-5, path);
+	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+	DeleteFile(pathBackup);
+	MoveFile(path, pathBackup); // Create the backup file.
+	///////////// --- /////////////////////
+
+	//Retention
+	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == (HANDLE)-1) {
+		mem_free(&tmp);
+		return FALSE;
+	}
+	SetFilePointer(hFile, 0, NULL, FILE_END);
+	if (file_write(hFile, tmp, len) == FALSE) {
+		mem_free(&tmp);
+		return FALSE;
+	}
+	mem_free(&tmp);
+	CloseHandle(hFile);
+	tpMailBox->DiskSize += len;
+
+	///////////// MRP /////////////////////
+	DeleteFile(pathBackup);
+	///////////// --- /////////////////////
+	return TRUE;
+}
+
+/*
  * file_save_address_item - ƒAƒhƒŒƒX’ ‚ğ1Œ•Û‘¶
  */
 static BOOL file_save_address_item(HANDLE hFile, ADDRESSITEM *tpAddrItem)

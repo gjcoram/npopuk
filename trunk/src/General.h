@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.09")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10a1")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -348,6 +348,7 @@ typedef struct _OPTION {
 	int CheckQueuedOnExit;
 	int PromptSaveOnExit;
 	int LazyLoadMailboxes;
+	int BlindAppend;
 	int LvColSize[LV_COL_CNT];
 	int AddColSize[AD_COL_CNT];
 	int AddressSort;
@@ -746,6 +747,7 @@ BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
 BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag);
+BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);
 BOOL file_delete(HWND hWnd, TCHAR *name);
@@ -960,7 +962,7 @@ int SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
-BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, BOOL delete);
+BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL delete);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);

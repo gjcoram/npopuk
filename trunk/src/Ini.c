@@ -346,6 +346,7 @@ BOOL ini_read_setting(HWND hWnd)
 	if (op.LazyLoadMailboxes == 0) {
 		SaveBoxesLoaded = TRUE;
 	}
+	op.BlindAppend = profile_get_int(GENERAL, TEXT("BlindAppend"), 0, app_path);
 
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
@@ -665,6 +666,7 @@ BOOL ini_read_setting(HWND hWnd)
 		}
 		// Type
 		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0, app_path);
+		(MailBox + num)->WasMbox = -1; // unknown, updated when loaded
 		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
 			// GJC - SaveBox type (not an account)
 
@@ -1010,6 +1012,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("CheckQueuedOnExit"), op.CheckQueuedOnExit, app_path);
 	profile_write_int(GENERAL, TEXT("PromptSaveOnExit"), op.PromptSaveOnExit, app_path);
 	profile_write_int(GENERAL, TEXT("LazyLoadMailboxes"), op.LazyLoadMailboxes, app_path);
+	profile_write_int(GENERAL, TEXT("BlindAppend"), op.BlindAppend, app_path);
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass, app_path);
 //	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes, app_path);
