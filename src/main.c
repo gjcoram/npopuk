@@ -2371,7 +2371,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 /*
  * ItemToSaveBox - move/copy mailitem to a savebox
  */
-BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, BOOL delete)
+BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL delete)
 {
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
@@ -2409,8 +2409,10 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, B
 
 	SwitchCursor(FALSE);
 	if (tpMailBox->Loaded == FALSE) {
-		if (mailbox_load_now(hWnd, TargetBox, FALSE, FALSE) != 1) {
-			return FALSE;
+		if (op.BlindAppend == 0) { // || TargetBox == MAILBOX_SEND, assumed always loaded
+			if (mailbox_load_now(hWnd, TargetBox, FALSE, FALSE) != 1) {
+				return FALSE;
+			}
 		}
 	}
 	i = -1;
@@ -2449,7 +2451,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, B
 			if (SelPoint == -1) {
 				SelPoint = j;
 			}
-		} else {
+		} else if (tpMailBox->Loaded) {
 			// See if message is already in this box
 			j = item_find_thread(tpMailBox, tpMailItem->MessageID, tpMailBox->MailItemCnt);
 			if (j != -1) {
@@ -2480,12 +2482,16 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, BOOL ask, B
 				retval = FALSE;
 				break;
 			}
+		} else {
+			file_append_savebox(fname, tpMailBox, tpMailItem, 2);
 		}
 		if (tpSingleItem != NULL) {
 			break;
 		}
 	}
-	item_resize_mailbox(tpMailBox);
+	if (tpMailBox->Loaded) {
+		item_resize_mailbox(tpMailBox);
+	}
 	SetItemCntStatusText(hWnd, NULL, FALSE);
 	if (SelPoint != -1) {
 		//of mail item The item which is added is selected the
@@ -3391,6 +3397,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		if (op.CheckQueuedOnExit > 0 
 			&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
+			_SetForegroundWindow(hWnd);
 			if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_YESNO) == IDNO) {
 				mailbox_select(hWnd, MAILBOX_SEND);
 				break;
@@ -4139,7 +4146,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
-			if (SaveBoxesLoaded == FALSE) {
+			if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
 				if (mailbox_load_now(hWnd, SelBox, FALSE, TRUE) != 1) {
 					break;
 				}
@@ -4174,7 +4181,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				BOOL err = FALSE;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
-						if (mailbox_load_now(hWnd, i, FALSE, TRUE) != 1) {
+						if (mailbox_load_now(hWnd, i, FALSE, (op.BlindAppend == 0) ? TRUE : FALSE) != 1) {
 							err = TRUE;
 							break;
 						}
@@ -4242,7 +4249,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.CheckAfterUpdate == 1 && SelBox != MAILBOX_SEND) {
 				NewMailCnt = 0;
 				Init_NewMailFlag(hWnd);
-				if (SaveBoxesLoaded == FALSE) {
+				if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
 					if (mailbox_load_now(hWnd, SelBox, FALSE, TRUE) != 1) {
 						break;
 					}
@@ -4263,7 +4270,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				BOOL err = FALSE;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
-						BOOL do_saveboxes = op.CheckAfterUpdate || (MailBox+i)->FilterEnable == 2;
+						BOOL do_saveboxes =  (op.BlindAppend == 0) && (op.CheckAfterUpdate || (MailBox+i)->FilterEnable == 2);
 						if (mailbox_load_now(hWnd, i, FALSE, do_saveboxes) != 1) {
 							err = TRUE;
 							break;
@@ -4452,7 +4459,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					}
 				}
 				if (Target != -1) {
-					if (ItemToSaveBox(hWnd, NULL, Target, (cnt<=1), mark_del) == TRUE) {
+					TCHAR fname[BUF_SIZE];
+					if (Target == MAILBOX_SEND) {
+						lstrcpy(fname, SENDBOX_FILE);
+					} else if ((MailBox + Target)->Filename == NULL) {
+						wsprintf(fname, TEXT("MailBox%d.dat"), Target - MAILBOX_USER);
+					} else {
+						lstrcpy(fname, (MailBox + Target)->Filename);
+					}
+					if (ItemToSaveBox(hWnd, NULL, Target, fname, (cnt<=1), mark_del) == TRUE) {
 						if (mark_del == TRUE) {
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
 								ListDeleteItem(hWnd, FALSE);
@@ -4460,19 +4475,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								SetDeleteMark(hWnd);
 							}
 						}
-						if (op.AutoSave == 1) {
+						if (op.AutoSave == 1 && (MailBox+Target)->Loaded == TRUE) {
 							// save Target mailbox
-							if (Target == MAILBOX_SEND) {
-								file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
-							} else {
-								TCHAR buf[BUF_SIZE];
-								if ((MailBox + Target)->Filename == NULL) {
-									wsprintf(buf, TEXT("MailBox%d.dat"), Target - MAILBOX_USER);
-								} else {
-									lstrcpy(buf, (MailBox + Target)->Filename);
-								}
-								file_save_mailbox(buf, DataDir, MailBox+Target, FALSE, 2);
-							}
+							file_save_mailbox(fname, DataDir, MailBox+Target, FALSE, 2);
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
@@ -4594,7 +4599,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					mark_del = TRUE;
 				}
 				if (mbox >=0 && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
-					if (ItemToSaveBox(hWnd, NULL, mbox, TRUE, mark_del) == TRUE) {
+					TCHAR fname[BUF_SIZE];
+					if (mbox == MAILBOX_SEND) {
+						lstrcpy(fname, SENDBOX_FILE);
+					} else if ((MailBox + mbox)->Filename == NULL) {
+						wsprintf(fname, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
+					} else {
+						lstrcpy(fname, (MailBox + mbox)->Filename);
+					}
+					if (ItemToSaveBox(hWnd, NULL, mbox, fname, TRUE, mark_del) == TRUE) {
 						if (mark_del == TRUE) {
 							// delete from list or mark for deletion
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
@@ -4603,18 +4616,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								SetDeleteMark(hWnd);
 							}
 						}
-						if (op.AutoSave == 1) {
-							if (mbox == MAILBOX_SEND) {
-								file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
-							} else {
-								TCHAR buf[BUF_SIZE];
-								if ((MailBox + mbox)->Filename == NULL) {
-									wsprintf(buf, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
-								} else {
-									lstrcpy(buf, (MailBox + mbox)->Filename);
-								}
-								file_save_mailbox(buf, DataDir, MailBox+mbox, FALSE, 2);
-							}
+						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
+							file_save_mailbox(fname, DataDir, MailBox+mbox, FALSE, 2);
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
