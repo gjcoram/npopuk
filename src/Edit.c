@@ -1408,7 +1408,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 
 	if (op.AutoSave == 1 && sent == FALSE) {
 		//Transmission box retention to file
-		file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
+		file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, 2);
 	}
 
 	SetWindowLong(hWnd, GWL_USERDATA, (LPARAM)0);

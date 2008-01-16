@@ -1775,7 +1775,7 @@ BOOL ImportSavebox(HWND hWnd)
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_IMPORTSBOX), hWnd, ImportSboxProc, (LPARAM)buf) == FALSE) {
 		return FALSE;
 	}
-	return file_read_mailbox(tpMailBox->Filename, tpMailBox, TRUE);
+	return file_read_mailbox(tpMailBox->Filename, tpMailBox, TRUE, FALSE);
 }
 
 /*
@@ -2129,6 +2129,12 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_SETCHECK, op.SendAttachIndividually, 0);
 #endif
+		SendDlgItemMessage(hDlg, IDC_CHECK_QUEUE_EXIT, BM_SETCHECK, op.CheckQueuedOnExit, 0);
+		if (op.CheckQueuedOnExit == 0) {
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SENDERR_EXIT), 0);
+		} else if (op.CheckQueuedOnExit == 2) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_SENDERR_EXIT, BM_SETCHECK, 1, 0);
+		}
 
 		break;
 
@@ -2142,6 +2148,10 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			SetSip(hDlg, HIWORD(wParam));
 			break;
 #endif
+		case IDC_CHECK_QUEUE_EXIT:
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SENDERR_EXIT), SendDlgItemMessage(hDlg, IDC_CHECK_QUEUE_EXIT, BM_GETCHECK, 0, 0));
+			break;
+
 		case IDC_BUTTON_ENCODE:
 			// エンコード設定
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ENCODE), hDlg, SetEncodeProc, (LPARAM)0);
@@ -2158,7 +2168,10 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #ifdef _WIN32_WCE
 			op.SendAttachIndividually = SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_GETCHECK, 0, 0);
 #endif
-
+			op.CheckQueuedOnExit = SendDlgItemMessage(hDlg, IDC_CHECK_QUEUE_EXIT, BM_GETCHECK, 0, 0);
+			if (op.CheckQueuedOnExit) {
+				op.CheckQueuedOnExit += SendDlgItemMessage(hDlg, IDC_CHECK_SENDERR_EXIT, BM_GETCHECK, 0, 0);
+			}
 			break;
 		}
 		break;
@@ -2522,6 +2535,9 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		}
 		SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_SETCHECK, op.ViewCloseNoNext, 0);
 		SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_SETCHECK, op.ViewAppMsgSource, 0);
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_SETCHECK, op.ViewWindowCursor, 0);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -2549,6 +2565,9 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			}
 			op.ViewCloseNoNext = SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_GETCHECK, 0, 0);
 			op.ViewAppMsgSource = SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_GETCHECK, 0, 0);
+#ifndef _WIN32_WCE
+			op.ViewWindowCursor = SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_GETCHECK, 0, 0);
+#endif
 			break;
 		}
 		break;

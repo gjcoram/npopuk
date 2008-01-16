@@ -1800,7 +1800,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 			(MailBox+MAILBOX_SEND)->NeedsSave |= MBOX_FORMAT_CHANGED;
 		}
 		// BOOL IsBackup = SelDir;
-		err |= !file_save_mailbox(SENDBOX_FILE, SaveDir, MailBox + MAILBOX_SEND, SelDir, 2);
+		err |= !file_save_mailbox(SENDBOX_FILE, SaveDir, MAILBOX_SEND, SelDir, 2);
 		if (err != FALSE) {
 			SwitchCursor(TRUE);
 			if (MessageBox(hWnd, STR_ERR_SAVEEND,
@@ -2483,6 +2483,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 				break;
 			}
 		} else {
+			// mailbox not loaded -> append to file
 			file_append_savebox(fname, tpMailBox, tpMailItem, 2);
 		}
 		if (tpSingleItem != NULL) {
@@ -3136,7 +3137,7 @@ static void AutoSave_Mailboxes(HWND hWnd)
 			} else {
 				lstrcpy(buf, tpMailBox->Filename);
 			}
-			file_save_mailbox(buf, DataDir, tpMailBox, FALSE,
+			file_save_mailbox(buf, DataDir, i, FALSE,
 				(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
 			DidOne = TRUE;
 		}
@@ -4477,7 +4478,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						}
 						if (op.AutoSave == 1 && (MailBox+Target)->Loaded == TRUE) {
 							// save Target mailbox
-							file_save_mailbox(fname, DataDir, MailBox+Target, FALSE, 2);
+							file_save_mailbox(fname, DataDir, Target, FALSE, 2);
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
@@ -4617,7 +4618,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
-							file_save_mailbox(fname, DataDir, MailBox+mbox, FALSE, 2);
+							file_save_mailbox(fname, DataDir, mbox, FALSE, 2);
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);

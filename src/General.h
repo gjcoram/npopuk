@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10a1")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b1")
 #define APP_VERSION_NUM			2007
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -740,13 +740,13 @@ char *file_read(TCHAR *path, long FileSize);
 BOOL file_read_select(HWND hWnd, TCHAR **buf);
 BOOL file_savebox_convert(TCHAR *NewFileName);
 BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName);
-BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import);
+BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL CheckDup);
 int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
 BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
 BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
-BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag);
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, int SaveFlag);
 BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);

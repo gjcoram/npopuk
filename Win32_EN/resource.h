@@ -112,6 +112,7 @@
 #define IDC_VIEWSKIPDEL_UNREAD          239
 #define IDC_VIEWCLOSENONEXT             240
 #define IDC_VIEWAPP_MSGSRC              241
+#define IDC_VIEWWND_CURSOR              242
 #define IDC_BCCADDRESS                  242
 #define IDC_MSG_DIALOG_TXT              243
 #define IDC_FIND_NEXT_MESSAGE           244
@@ -285,7 +286,9 @@
 #define IDC_EDIT_FWDHEAD                1206
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
-#define ID_MENUITEM_MOVESAVE            1209
+#define IDC_CHECK_QUEUE_EXIT            1209
+#define IDC_CHECK_SENDERR_EXIT          1210
+#define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

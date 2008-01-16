@@ -38,6 +38,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
+extern int SelBox, vSelBox, RecvBox;
 
 /**************************************************************************
 	Local Function Prototypes
@@ -591,7 +592,7 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 /*
  * file_read_mailbox - ファイルからメールアイテムの作成
  */
-BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
+BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL CheckDup)
 {
 	MAILITEM *tpMailItem;
 #ifndef _NOFILEMAP
@@ -879,6 +880,45 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import)
 #endif	// _WCE_OLD
 #endif	// _NOFILEMAP
 	tpMailBox->Loaded = TRUE;
+	if (CheckDup) {
+		// check for duplicate messages created by BlindAppend
+		BOOL do_resize = FALSE;
+		for (i = tpMailBox->MailItemCnt -1; i > 0; i--) {
+			tpMailItem = *(tpMailBox->tpMailItem + i);
+			if (tpMailItem != NULL) {
+				TCHAR *mid = tpMailItem->MessageID;
+				if (mid != NULL) {
+					int j = item_find_thread(tpMailBox, mid, i);
+					while (j != -1) {
+						MAILITEM *dupItem = *(tpMailBox->tpMailItem + j);
+						if (tpMailItem->Download == TRUE) {
+							// tpMailItem is complete, so delete dupItem (may also be complete)
+							item_free(&dupItem, 1);
+							*(tpMailBox->tpMailItem + j) = NULL;
+						} else if (dupItem->Download == TRUE) {
+							// tpMailItem is incomplete
+							item_free(&tpMailItem, 1);
+							*(tpMailBox->tpMailItem + i) = NULL;
+						} else {
+							// neither is complete ...
+							if (tstrlen(tpMailItem->Body) >= tstrlen(dupItem->Body)) {
+								item_free(&dupItem, 1);
+								*(tpMailBox->tpMailItem + j) = NULL;
+							} else {
+								item_free(&tpMailItem, 1);
+								*(tpMailBox->tpMailItem + i) = NULL;
+							}
+						}
+						do_resize = TRUE;
+						j = item_find_thread(tpMailBox, mid, j);
+					}
+				}
+			}
+		}
+		if (do_resize) {
+			item_resize_mailbox(tpMailBox);
+		}
+	}
 	if (op.SocLog > 1) {
 		int pos = lstrlen(path);
 		if (pos > 242) pos = 242; // 242 = BUF_SIZE - strlen(" was loaded\r\n") - 1
@@ -1048,10 +1088,11 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 /*
  * file_save_mailbox - メールボックス内のメールを保存
  */
-BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL IsBackup, int SaveFlag)
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, int SaveFlag)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
+	MAILBOX *tpMailBox = MailBox + Index;
 	char *tmp, *p;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
@@ -1170,6 +1211,23 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, MAILBOX *tpMailBox, BOOL
 	if (IsBackup == FALSE) {
 		tpMailBox->NeedsSave = 0;
 	}
+	if (op.LazyLoadMailboxes != 0 && Index != MAILBOX_SEND && Index != RecvBox
+		&& Index != SelBox && Index != vSelBox) {
+		// unload
+		tpMailBox->Loaded = FALSE;
+		if(tpMailBox->tpMailItem != NULL){
+			item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
+			mem_free((void **)&tpMailBox->tpMailItem);
+		}
+		tpMailBox->tpMailItem = NULL;
+		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
+		if (op.SocLog > 1) {
+			int pos = lstrlen(path);
+			if (pos > 242) pos = 240; // 240 = BUF_SIZE - strlen(" was unloaded\r\n") - 1
+			wsprintf(path+pos, TEXT(" was unloaded\r\n"));
+			log_save(path);
+		}
+	}
 	return TRUE;
 }
 
@@ -1231,8 +1289,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	strcpy_s(pathBackup, BUF_SIZE-5, path);
 	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
-	DeleteFile(pathBackup);
-	MoveFile(path, pathBackup); // Create the backup file.
+	CopyFile(path, pathBackup, FALSE); // Create the backup file.
 	///////////// --- /////////////////////
 
 	//Retention
