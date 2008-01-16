@@ -3397,7 +3397,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
-							file_save_mailbox(fname, DataDir, MailBox+mbox, FALSE, 2);
+							file_save_mailbox(fname, DataDir, mbox, FALSE, 2);
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);

@@ -424,16 +424,21 @@ BEGIN
     LTEXT           "characters",IDC_STATIC,85,8,55,10
     CONTROL         "&Quoted lines do not word wrap",IDC_CHECK_QBREAK,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,22,112,10
-    CONTROL         "Send '&Message-Id'",IDC_CHECK_SENDMESSAGEID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,36,110,10
-    CONTROL         "Send '&Date'",IDC_CHECK_SENDDATE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,49,110,10
+    LTEXT           "Send:",IDC_STATIC,5,36,20,10
+    CONTROL         "'&Message-Id'",IDC_CHECK_SENDMESSAGEID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,30,36,55,10
+    CONTROL         "'&Date'",IDC_CHECK_SENDDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,90,36,60,10
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,62,124,10
+                    WS_TABSTOP,5,49,124,10
     CONTROL         "Send &attachments individually",
                     IDC_CHECK_ATTACHSEP,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,75,124,10
+                    WS_TABSTOP,5,62,124,10
+    CONTROL         "Check queued (",IDC_CHECK_QUEUE_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,75,65,10
+    CONTROL         "and failed) on exit",IDC_CHECK_SENDERR_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,75,75,10
     PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,95,65,15
 END
 

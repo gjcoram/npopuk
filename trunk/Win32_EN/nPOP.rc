@@ -627,7 +627,11 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,68,160,10
-    PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,94,80,15
+    CONTROL         "Check &queued (",IDC_CHECK_QUEUE_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,82,65,10
+    CONTROL         "and &failed send) on exit",IDC_CHECK_SENDERR_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,82,90,10
+    PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,110,80,15
 END
 
 IDD_DIALOG_CC DIALOG  0, 0, 254, 175
@@ -800,6 +804,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,115,147,10
     CONTROL         "&External viewer gets message source",IDC_VIEWAPP_MSGSRC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,132,187,10
+    CONTROL         "S&how cursor in view window",IDC_VIEWWND_CURSOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,149,187,10
 END
 
 IDD_DIALOG_OPTION_ETC DIALOGEX 0, 0, 217, 187

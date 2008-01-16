@@ -291,9 +291,11 @@
 #define IDC_EDIT_FWDHEAD                1206
 #define IDC_COMBO_REPLYTO               1207
 #define IDC_COMBO_FILT2BOX              1208
-#define ID_MENUITEM_MOVESAVE            1209
-#define IDC_RADIO_POOMLAST              1210
-#define IDC_RADIO_POOMFIRST             1211
+#define IDC_CHECK_QUEUE_EXIT            1209
+#define IDC_CHECK_SENDERR_EXIT          1210
+#define IDC_RADIO_POOMLAST              1211
+#define IDC_RADIO_POOMFIRST             1212
+#define ID_MENUITEM_MOVESAVE            1230
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002

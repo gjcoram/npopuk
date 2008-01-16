@@ -238,7 +238,7 @@ BOOL mailbox_read(void)
 {
 	//‘—M” 
 	(MailBox + MAILBOX_SEND)->Name = alloc_copy_t(STR_SENDBOX_NAME);
-	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE) == FALSE){
+	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE, FALSE) == FALSE){
 		return FALSE;
 	}
 
@@ -279,7 +279,7 @@ int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes)
 			lstrcpy(Name, tpMailBox->Filename);
 		}
 		SwitchCursor(FALSE);
-		if (file_read_mailbox(Name, tpMailBox, FALSE) == FALSE) {
+		if (file_read_mailbox(Name, tpMailBox, FALSE, (tpMailBox->Type == MAILBOX_TYPE_SAVE)) == FALSE) {
 			if (hWnd != NULL) {
 				wsprintf(msg, STR_ERR_LOADMAILBOX, Name);
 				ErrorMessage(hWnd, msg);

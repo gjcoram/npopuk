@@ -681,7 +681,7 @@ BOOL ini_read_setting(HWND hWnd)
 				} else {
 					lstrcpy(buf, (MailBox+num)->Filename);
 				}
-				if (file_read_mailbox(buf, (MailBox + num), FALSE) == FALSE) {
+				if (file_read_mailbox(buf, (MailBox + num), FALSE, TRUE) == FALSE) {
 					profile_free();
 					return FALSE;
 				}
@@ -848,7 +848,7 @@ BOOL ini_read_setting(HWND hWnd)
 			} else {
 				lstrcpy(buf, (MailBox+num)->Filename);
 			}
-			if (file_read_mailbox(buf, (MailBox + num), FALSE) == FALSE) {
+			if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 				profile_free();
 				return FALSE;
 			}
@@ -870,7 +870,7 @@ BOOL ini_read_setting(HWND hWnd)
 		ConvertName = (MailBox + num)->Name;
 		(MailBox + num)->Type = MAILBOX_TYPE_SAVE;
 		(MailBox + num)->CyclicFlag = 1;
-		if (file_read_mailbox(buf, (MailBox + num), FALSE) == FALSE) {
+		if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 			profile_free();
 			return FALSE;
 		}
@@ -944,7 +944,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
    strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
    strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
-	DeleteFile(app_pathBackup);
 	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
 	///////////// --- /////////////////////
 
@@ -1441,7 +1440,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		} else {
 			lstrcpy(buf, tpMailBox->Filename);
 		}
-		if (file_save_mailbox(buf, SaveDir, MailBox + j, is_backup,
+		if (file_save_mailbox(buf, SaveDir, j, is_backup,
 			(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode) == FALSE) {
 			rc = FALSE;
 		}

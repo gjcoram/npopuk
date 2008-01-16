@@ -237,8 +237,7 @@ BOOL item_resize_mailbox(MAILBOX *tpMailBox)
 {
 	MAILITEM **tpMailList;
 	int i, cnt = 0;
-
-	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+	BOOL do_it = FALSE;
 
 	if (tpMailBox->tpMailItem == NULL) {
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
@@ -247,10 +246,16 @@ BOOL item_resize_mailbox(MAILBOX *tpMailBox)
 
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
-			continue;
+			do_it = TRUE;
+		} else {
+			cnt++;
 		}
-		cnt++;
 	}
+	if (do_it == FALSE) {
+		// nothing to be done
+		return FALSE;
+	}
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 
 	tpMailList = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * cnt);
 	if (tpMailList == NULL) {
@@ -1733,32 +1738,47 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 			if (do_what[i] == FILTER_COPY || do_what[i] == FILTER_MOVE) {
 				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
 				if (sbox != -1) {
-					if ((MailBox + sbox)->Loaded == FALSE) {
+					if ((MailBox + sbox)->Loaded == FALSE && op.BlindAppend == 0) {
 						mailbox_load_now(NULL, sbox, FALSE, FALSE);
 					}
-					j = item_find_thread(MailBox + sbox, tpMailItem->MessageID, (MailBox + sbox)->MailItemCnt);
-					if (j == -1) {
-						item_to_mailbox(MailBox + sbox, tpMailItem, tpMailBox->Name, FALSE);
-						(MailBox + sbox)->NewMail = TRUE;
-						if (sbox == SelBox) {
-							ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + sbox), TRUE);
-						}
-					} else if (refilter == TRUE) {
-						MAILITEM *tpSboxItem = *((MailBox + sbox)->tpMailItem + j);
-						char *newbody = alloc_copy(tpMailItem->Body);
-						if (newbody != NULL) {
-							mem_free(&tpSboxItem->Body);
-							tpSboxItem->Body = newbody;
-							tpSboxItem->Download = TRUE;
-							if (sbox == SelBox) {
-								// GJC TODO: update icon
-							}
+					if ((MailBox + sbox)->Loaded == FALSE) {
+						TCHAR fname[BUF_SIZE];
+						if ((MailBox + sbox)->Filename == NULL) {
+							wsprintf(fname, TEXT("MailBox%d.dat"), sbox - MAILBOX_USER);
 						} else {
-							retval = FALSE;
+							lstrcpy(fname, (MailBox + sbox)->Filename);
 						}
-					}
-					if (do_what[i] == FILTER_MOVE) {
-						tpMailItem->Mark = ICON_DEL;
+						file_append_savebox(fname, MailBox + sbox, tpMailItem, 2);
+					} else {
+						j = item_find_thread(MailBox + sbox, tpMailItem->MessageID, (MailBox + sbox)->MailItemCnt);
+						if (j == -1) {
+							item_to_mailbox(MailBox + sbox, tpMailItem, tpMailBox->Name, FALSE);
+							(MailBox + sbox)->NewMail = TRUE;
+							if (sbox == SelBox) {
+								ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + sbox), TRUE);
+							}
+						} else if (refilter == TRUE) {
+							MAILITEM *tpSboxItem = *((MailBox + sbox)->tpMailItem + j);
+							char *newbody = alloc_copy(tpMailItem->Body);
+							if (newbody != NULL) {
+								mem_free(&tpSboxItem->Body);
+								tpSboxItem->Body = newbody;
+								tpSboxItem->Download = TRUE;
+								(MailBox + sbox)->NeedsSave |= MAILITEMS_CHANGED;
+								if (sbox == SelBox) {
+									// update icon
+									HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+									int num = ListView_GetMemToItem(hListView, tpSboxItem);
+									ListView_SetItemState(hListView, num, 0, LVIS_CUT);
+									ListView_RedrawItems(hListView, num, num);
+								}
+							} else {
+								retval = FALSE;
+							}
+						}
+						if (do_what[i] == FILTER_MOVE) {
+							tpMailItem->Mark = ICON_DEL;
+						}
 					}
 				}
 			} else if (do_what[i] == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {

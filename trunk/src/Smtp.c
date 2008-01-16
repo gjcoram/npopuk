@@ -1344,7 +1344,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, 2);
 		}
 
 		// 次の送信メールの取得
@@ -1403,7 +1403,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, DataDir, MailBox + MAILBOX_SEND, FALSE, 2);
+			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, 2);
 		}
 		command_status = SMTP_QUIT;
 		break;
