@@ -4179,10 +4179,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (SaveBoxesLoaded == FALSE) {
+				BOOL do_saveboxes = (op.BlindAppend == 0) ? TRUE : FALSE;
 				BOOL err = FALSE;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
-						if (mailbox_load_now(hWnd, i, FALSE, (op.BlindAppend == 0) ? TRUE : FALSE) != 1) {
+						if (mailbox_load_now(hWnd, i, FALSE, do_saveboxes) != 1) {
 							err = TRUE;
 							break;
 						}
@@ -4191,7 +4192,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (err == TRUE) {
 					break;
 				}
-				SaveBoxesLoaded = TRUE; // may become false if filter is added
+				SaveBoxesLoaded = do_saveboxes; // may become false if filter is added
 			}
 			if (op.SocLog > 1) log_save(TEXT("Check all\r\n"));
 			AutoCheckCnt = 0; // reset autocheck timer
@@ -4281,7 +4282,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (err == TRUE) {
 					break;
 				}
-				SaveBoxesLoaded = op.CheckAfterUpdate; // may become false if filter is added
+				SaveBoxesLoaded = (op.BlindAppend == 0) && op.CheckAfterUpdate; // may become false if filter is added
 			}
 			if (MailMarkCheck(hWnd, FALSE) == FALSE) {
 				break;

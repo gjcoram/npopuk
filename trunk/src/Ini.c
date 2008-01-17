@@ -885,16 +885,17 @@ BOOL ini_read_setting(HWND hWnd)
 
 	if (op.LazyLoadMailboxes != 0 && (op.AutoCheck == 1 || op.StartCheck == 1)) {
 		// need to load accounts + related saveboxes
+		BOOL do_saveboxes = (op.BlindAppend == 0) ? TRUE : FALSE;
 		BOOL err = FALSE;
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 			if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
-				if (mailbox_load_now(hWnd, i, FALSE, TRUE) != 1) {
+				if (mailbox_load_now(hWnd, i, FALSE, do_saveboxes) != 1) {
 					err = TRUE;
 				}
 			}
 		}
 		if (err == FALSE) {
-			SaveBoxesLoaded = TRUE; // may become false if filter is added
+			SaveBoxesLoaded = do_saveboxes; // may become false if filter is added
 		}
 	}
 

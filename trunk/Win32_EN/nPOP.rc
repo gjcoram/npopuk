@@ -793,7 +793,7 @@ BEGIN
                     BS_AUTOCHECKBOX,15,37,60,10
     CONTROL         "that is &unread",IDC_VIEWNEXTDEL_UNREAD,"Button",
                     BS_AUTOCHECKBOX,77,37,80,10
-    GROUPBOX        "Skip deleted messages",IDC_STATIC,5,55,205,50
+    GROUPBOX        "Skip messages marked for deletion",IDC_STATIC,5,55,205,50
     CONTROL         "Ne&ver",IDC_VIEWSKIPDEL_NEVER,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,10,67,110,10
     CONTROL         "&When moving (prev, next, next unread)",IDC_VIEWSKIPDEL_ALWAYS,
