@@ -38,6 +38,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
+extern BOOL SaveBoxesLoaded;
 extern int SelBox, vSelBox, RecvBox;
 
 /**************************************************************************
@@ -1215,6 +1216,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		&& Index != SelBox && Index != vSelBox) {
 		// unload
 		tpMailBox->Loaded = FALSE;
+		SaveBoxesLoaded = FALSE;
 		if(tpMailBox->tpMailItem != NULL){
 			item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
 			mem_free((void **)&tpMailBox->tpMailItem);

@@ -660,7 +660,7 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON,7,66,145,10
     CONTROL         "When &looking for next unread message",IDC_VIEWSKIPDEL_UNREAD,
                     "Button",BS_AUTORADIOBUTTON,7,78,145,10
-    GROUPBOX        "Skip deleted messages",IDC_STATIC,1,42,155,50
+    GROUPBOX        "Skip messages marked for deletion",IDC_STATIC,1,42,155,50
     CONTROL         "&Close window if no next message",IDC_VIEWCLOSENONEXT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,95,147,10
     CONTROL         "&External viewer gets message source",IDC_VIEWAPP_MSGSRC,
