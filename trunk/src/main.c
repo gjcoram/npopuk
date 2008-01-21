@@ -69,6 +69,7 @@ static TCHAR *CmdLine = NULL;				// コマンドライン
 static TCHAR *InitialAccount = NULL;
 BOOL gSendAndQuit = FALSE;
 BOOL gCheckAndQuit = FALSE;
+BOOL gDoingQuit = FALSE;
 BOOL first_start;							// 初回起動フラグ
 BOOL SaveBoxesLoaded = FALSE;
 BOOL PPCFlag;								// PsPCフラグ
@@ -3302,6 +3303,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef _WIN32_WCE_PPC
 	case WM_SETTINGCHANGE:
+		if (gDoingQuit == TRUE && GetForegroundWindow() != hWnd) {
+			ShowWindow(hWnd, SW_SHOW);
+			_SetForegroundWindow(hWnd);
+			break;
+		}
 		if (SPI_SETSIPINFO == wParam && GetForegroundWindow() == hWnd) {
 			SHACTIVATEINFO sai;
 
@@ -3385,6 +3391,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 
 	case WM_CLOSE:
+#ifdef _WIN32_WCE_PPC
+		// some task managers send both in succession
+		if (gDoingQuit == TRUE) {
+			break;
+		}
+#endif
 		if (op.ShowTrayIcon == 1 && op.CloseHide == 1) {
 			ShowWindow(hWnd, SW_HIDE);
 #ifdef _WIN32_WCE
@@ -3962,14 +3974,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//End
 		case ID_MENUITEM_QUIT:
+			gDoingQuit = TRUE;
 			if (op.CheckQueuedOnExit > 0
 				&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
 				if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_YESNO) == IDNO) {
 					mailbox_select(hWnd, MAILBOX_SEND);
+					gDoingQuit = FALSE;
 					break;
 				}
 			}
 			if (SaveWindow(hWnd, FALSE, TRUE, FALSE) == FALSE) {
+				gDoingQuit = FALSE;
 				break;
 			}
 			save_flag = TRUE;
@@ -3977,6 +3992,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SipFlag = FALSE;
 #endif
 			EndWindow(hWnd);
+			gDoingQuit = FALSE;
 			break;
 
 #ifdef _WIN32_WCE_LAGENDA
