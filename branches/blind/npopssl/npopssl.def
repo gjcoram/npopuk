@@ -1,8 +1,0 @@
-EXETYPE WINDOWS
-
-EXPORTS
-	ssl_init
-	ssl_send
-	ssl_recv
-	ssl_close
-	ssl_free
