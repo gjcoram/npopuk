@@ -1,1 +1,0 @@
-For PocketPC (2000 version), see the project file "nPOPuk_PPC_EN.vcp" in the PocketPC2002_EN subdirectory.  All the files are the same (nPOP.rc, resource.h, etc.) so this saves having to edit duplicate copies.
