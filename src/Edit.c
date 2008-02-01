@@ -57,7 +57,6 @@ extern OPTION op;
 extern BOOL gSendAndQuit;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
-extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern HWND MainWnd;
 extern HWND FocusWnd;
