@@ -5667,6 +5667,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 {
 	ADDRESSBOOK *tpTmpAddressBook;
 	HWND hListView;
+	DWORD hiw;
 	TCHAR *StrAddr;
 	TCHAR buf[BUF_SIZE];
 	int SelectItem, i, move = 1;
@@ -5954,7 +5955,8 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 
 		case IDC_ADDR_GRP_COMBOL:
-			if (HIWORD(wParam) == CBN_CLOSEUP) {
+			hiw = HIWORD(wParam);
+			if (hiw == CBN_CLOSEUP || hiw == CBN_SELCHANGE) {
 				hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 				ListView_SetRedraw(hListView, FALSE);
 				SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
@@ -5963,7 +5965,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				SetAddressList(hDlg, tpTmpAddressBook, buf);
 				ListView_SetRedraw(hListView, TRUE);
 				SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
-				SetFocus(hListView); 
+				if (hiw == CBN_CLOSEUP) {
+					SetFocus(hListView);
+				}
 			}
 			break;
 
