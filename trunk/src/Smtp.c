@@ -58,7 +58,6 @@ static int send_end_cmd;						// メール送信完了時のコマンド
 // 外部参照
 extern OPTION op;
 extern BOOL gSendAndQuit;
-extern TCHAR *AppDir;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;

@@ -18,7 +18,6 @@
 #include "code.h"
 #include "mime.h"
 #include "multipart.h"
-extern TCHAR *AppDir;
 
 /* Define */
 

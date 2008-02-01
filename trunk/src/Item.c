@@ -29,7 +29,6 @@
 
 /* Global Variables */
 extern HWND MainWnd;
-extern TCHAR *AppDir;
 extern OPTION op;
 extern BOOL KeyShowHeader;
 extern BOOL ImportRead;

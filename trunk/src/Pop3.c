@@ -79,7 +79,6 @@ extern OPTION op;
 extern int command_status;
 extern int NewMailCnt;
 extern TCHAR *g_Pass;
-extern TCHAR *AppDir;
 extern HWND hViewWnd;						// 表示ウィンドウ
 
 extern BOOL ShowMsgFlag;
