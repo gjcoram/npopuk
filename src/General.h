@@ -44,8 +44,8 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b2")
-#define APP_VERSION_NUM			2007
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b4")
+#define APP_VERSION_NUM			2008
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
@@ -733,6 +733,8 @@ BOOL log_header(TCHAR *buf);
 BOOL dir_check(const TCHAR *path);
 BOOL dir_create(TCHAR *path);
 BOOL dir_delete(TCHAR *Path, TCHAR *file);
+void trunc_to_dirname(TCHAR *path);
+BOOL trunc_to_parent_dir(TCHAR *path);
 void filename_conv(TCHAR *buf);
 BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR **opptr);
 long file_get_size(TCHAR *FileName);

@@ -32,6 +32,7 @@ extern HINSTANCE hInst;
 extern TCHAR *g_Pass;
 extern int gPassSt;
 extern TCHAR *AppDir;
+extern TCHAR *DefaultDataDir;
 extern TCHAR *IniFile;
 extern TCHAR *DataDir;
 extern MAILBOX *MailBox;
@@ -65,15 +66,15 @@ BOOL ini_start_auth_check(void)
 			return FALSE;
 		}
 	} else {
-		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 		if (file_get_size(app_path) == -1) {
 			DWORD DirInfo;
-			DirInfo = GetFileAttributes(AppDir);
+			DirInfo = GetFileAttributes(DefaultDataDir);
 			if (DirInfo & FILE_ATTRIBUTE_READONLY) {
 				ErrorMessage(NULL, STR_ERR_READONLY);
 			}
 			// GJC - check if upgrading from original nPOP
-			str_join_t(app_path_old, AppDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
+			str_join_t(app_path_old, DefaultDataDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
 			if (file_get_size(app_path_old) != -1) {
 				if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
 					ConvertFromNPOP = TRUE;
@@ -82,15 +83,7 @@ BOOL ini_start_auth_check(void)
 			}
 		}
 	}
-	{
-		char *start = file_read(app_path, 10);
-		if (str_cmp_n(start, "AppDir=", strlen("AppDir=")) == 0) {
-			mem_free(&start);
-			MessageBox(NULL, TEXT("AppDir not supported in this version"), WINDOW_TITLE, MB_OK);
-			return FALSE;
-		}
-		mem_free(&start);
-	}
+
 	profile_initialize(app_path, TRUE);
 
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0, app_path);
@@ -213,7 +206,7 @@ BOOL ini_read_setting(HWND hWnd)
 			return FALSE;
 		}
 	} else {
-		str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	}
 	if (profile_initialize(app_path, FALSE) == FALSE) {
 		return FALSE;
@@ -222,7 +215,10 @@ BOOL ini_read_setting(HWND hWnd)
 	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1, app_path);
 
 	if (*op.DataFileDir == TEXT('\0')) {
-		DataDir = AppDir;
+		DataDir = DefaultDataDir;
+//GJC } else if (*op.DataFileDir == TEXT('.')) {
+		// relative path
+// look out: DataDir shouldn't be freed in the other two cases ...
 	} else {
 		DataDir = op.DataFileDir;
 		for (p = r = DataDir; *p != TEXT('\0'); p++) {
@@ -928,7 +924,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 	if (SaveDir == NULL) {
 		if (IniFile == NULL) {
-			str_join_t(app_path, AppDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+			str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 		} else {
 			str_cpy_n_t(app_path, IniFile, BUF_SIZE);
 		}
