@@ -116,7 +116,6 @@ extern HFONT hViewFont;
 extern int font_charset;
 
 extern TCHAR *DataDir;
-extern TCHAR *AppDir;
 
 /* Local Function Prototypes */
 static void SetWindowString(HWND hWnd, TCHAR *MailBoxName, TCHAR *MailBoxName2, int No);
