@@ -331,7 +331,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else
 	OPENFILENAME of;
-	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
+	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE], CurDir[BUF_SIZE];
 	TCHAR *ph, *qh;
 	BOOL is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
 
@@ -382,6 +382,9 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.Flags |= OFN_ENABLEHOOK | OFN_EXPLORER | OFN_ENABLESIZING;
 		of.lpfnHook = (LPOFNHOOKPROC)OpenFileHook;
 	}
+
+	// save (then restore) current directory
+	GetCurrentDirectory(BUF_SIZE-1, CurDir);
 #endif
 
 	//File selective dialogue is indicated
@@ -417,6 +420,11 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		mem_free(opptr);
 		*opptr = ph;
 	}
+
+#ifndef _WIN32_WCE
+	// restore current directory
+	SetCurrentDirectory(CurDir);
+#endif
 
 #ifdef _WIN32_WCE
 	ph = path;
