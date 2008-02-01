@@ -219,6 +219,56 @@ BOOL dir_delete(TCHAR *Path, TCHAR *file)
 }
 
 /*
+ * trunc_to_dirname - truncate filename to directory part only
+ */
+void trunc_to_dirname(TCHAR *fname)
+{
+	TCHAR *p, *r;
+	for (p = r = fname; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			p++;
+			continue;
+		}
+#endif
+		if (*p == TEXT('\\') || *p == TEXT('/')) {
+			r = p;
+		}
+	}
+	*(r++) = TEXT('\\');
+	*r = TEXT('\0');
+}
+
+/*
+ * trunc_to_parent_dir - truncate at parent dir of fname
+ */
+BOOL trunc_to_parent_dir(TCHAR *fname)
+{
+	TCHAR *p, *r, *s;
+	BOOL ret = FALSE;
+	for (p = r = fname; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			p++;
+			continue;
+		}
+#endif
+		if (*p == TEXT('\\') || *p == TEXT('/')) {
+			s = r;
+			r = p;
+			if (s == fname) {
+				s = r;
+			} else {
+				ret = TRUE;
+			}
+		}
+	}
+	*(s++) = TEXT('\\');
+	*s = TEXT('\0');
+	return ret;
+}
+
+/*
  * filename_conv - ƒtƒ@ƒCƒ‹–¼‚É‚Å‚«‚È‚¢•¶Žš‚ð _ ‚É•ÏŠ·‚·‚é
  */
 void filename_conv(TCHAR *buf)

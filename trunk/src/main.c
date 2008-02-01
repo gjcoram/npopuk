@@ -60,6 +60,7 @@ UINT nBroadcastMsg = 0;
 /* Global Variables */
 HINSTANCE hInst;							// Local copy of hInstance
 TCHAR *AppDir = NULL;						// アプリケーションパス
+TCHAR *DefaultDataDir = NULL;
 TCHAR *DataDir = NULL;						// データ保存先のパス
 TCHAR *IniFile = NULL;						// ini file specified by /y:
 TCHAR *g_Pass = NULL;						// 一時パスワード
@@ -219,7 +220,16 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	CreateDirectory(AppDir, NULL);
 #else
 	TCHAR *p, *r;
-	TCHAR name[BUF_SIZE];
+	TCHAR fname[BUF_SIZE];
+	int len;
+
+	AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
+	if (AppDir == NULL) {
+		return FALSE;
+	}
+	//Pass of application acquisition
+	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
+	trunc_to_dirname(AppDir);
 
 	if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
 
@@ -264,53 +274,54 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 				}
 			}
 			if (slash_y) {
-#ifdef _WIN32_WCE
-				WIN32_FIND_DATA FindData;
-				HANDLE hFindFile;
-				TCHAR *q, *s;
-#else
-				DWORD ret;
-#endif
+				TCHAR fullname[BUF_SIZE];
 				BOOL Found = TRUE;
-				int len;
 
 				len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
-#ifdef _WIN32_WCE
-				if (*p != TEXT('\\') && *p != TEXT('/')) {
-					GetModuleFileName(hinst, name, BUF_SIZE - 1);
-					for (q = s = name; *q != TEXT('\0'); q++) {
-						if (*q == TEXT('\\') || *q == TEXT('/')) {
-							s = q + 1;
-						}
-					}
-					if ((len + (s - name)) > BUF_SIZE) {
-						len = BUF_SIZE + (s - name);
-					}
-				} else {
-					s = name;
-				}
-				str_cpy_n_t(s, p, len);
-				if ((hFindFile = FindFirstFile(name, &FindData)) == INVALID_HANDLE_VALUE) {
-					Found = FALSE;
-				}
-				FindClose(hFindFile);
-#else
-				str_cpy_n_t(name, p, len);
-				{
-					TCHAR fullname[BUF_SIZE];
-					if ((ret = GetFullPathName(name, BUF_SIZE, fullname, NULL)) == 0) {
+				if (*p == TEXT('.')) {
+					if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
+						str_cpy_n_t(fname, p+3, len-3); // take off ../
+						wsprintf(fullname, TEXT("%s"), AppDir);
+						trunc_to_parent_dir(fullname);
+						wsprintf(fullname, TEXT("%s%s"), fullname, fname);
+					} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
+						str_cpy_n_t(fname, p+2, len-2); // take off ./
+						wsprintf(fullname, TEXT("%s%s"), AppDir, fname);
+					} else {
+						str_cpy_n_t(fullname, p, len);
 						Found = FALSE;
 					}
-				}
+#ifdef _WIN32_WCE
+				} else if (*p == TEXT('\\') || *p == TEXT('/')) {
+					// full pathname
+					str_cpy_n_t(fullname, p, len);
+				} else {
+					// file in AppDir
+					str_cpy_n_t(fname, p, len);
+					wsprintf(fullname, TEXT("%s%s"), AppDir, fname);
+#else
+				} else {
+					DWORD ret;
+					str_cpy_n_t(fname, p, len);
+					ret = GetFullPathName(fname, BUF_SIZE, fullname, NULL);
+					if (ret == 0 || ret >= BUF_SIZE) {
+						Found = FALSE;
+					}
 #endif
+				}
+				if (Found == TRUE && file_get_size(fullname) <= 0) {
+					Found = FALSE;
+				}
 				if (Found == FALSE) {
 					TCHAR buf[BUF_SIZE];
-					wsprintf(buf, STR_ERR_INIFILE, name);
+					wsprintf(buf, STR_ERR_INIFILE, fullname);
+					ErrorMessage(NULL, buf);
+					mem_free(&AppDir);
 					return FALSE;
 				}
-				IniFile = alloc_copy_t(name);
+				IniFile = alloc_copy_t(fullname);
 			} else if (slash_a) {
-				int len = (r - p + 1);
+				len = (r - p + 1);
 				InitialAccount = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 				str_cpy_n_t(InitialAccount, p, len);
 			}
@@ -329,32 +340,98 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	}
 
 	if (IniFile == NULL) {
-		AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
-		if (AppDir == NULL) {
-			return FALSE;
-		}
-		//Pass of application acquisition
-		GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
+		DefaultDataDir = alloc_copy_t(AppDir);
 	} else {
-		AppDir = alloc_copy_t(IniFile);
-		if (AppDir == NULL) {
+		DefaultDataDir = alloc_copy_t(IniFile);
+		if (DefaultDataDir == NULL) {
+			mem_free(&IniFile);
+			mem_free(&InitialAccount);
+			mem_free(&AppDir);
 			return FALSE;
 		}
+		trunc_to_dirname(DefaultDataDir);
 	}
-	for (p = r = AppDir; *p != TEXT('\0'); p++) {
-#ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-			p++;
-			continue;
-		}
-#endif	// UNICODE
-		if (*p == TEXT('\\') || *p == TEXT('/')) {
-			r = p;
-		}
-	}
-	*r = TEXT('\0');
 
-	lstrcat(AppDir, TEXT("\\"));
+	// check for IniFile specification in ini file
+	if (IniFile != NULL) {
+		str_cpy_n_t(fname, IniFile, BUF_SIZE);
+	} else {
+		str_join_t(fname, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	}
+	len = file_get_size(fname);
+	if (len > 10+MAX_PATH) len = 10+MAX_PATH;
+	if (len > 0) {
+		char *buf, *s, *t;
+		buf = file_read(fname, len);
+		buf[len-1] = '\0';
+		if (buf != NULL) {
+			if (str_cmp_n(buf, "IniFile=", strlen("IniFile=")) == 0) {
+				s = buf + strlen("IniFile=");
+				if (*s == '\"') {
+					s++;
+				}
+				for (t = s; *t != '\r' && *t != '\n' && *t != '\0'; t++) {
+#ifndef UNICODE
+					if (IsDBCSLeadByte((BYTE)*t) == TRUE && *(t + 1) != TEXT('\0')) {
+						t++;
+					}
+#endif
+				}
+				if (*t == '\"') {
+					t--;
+				}
+				*t = '\0';
+				if (strlen(s) > 0) {
+					TCHAR fullname[BUF_SIZE];
+#ifdef UNICODE
+					p = alloc_char_to_tchar(s);
+#else
+					p = alloc_copy(s);
+#endif
+					if (p == NULL) {
+						mem_free(&IniFile);
+						mem_free(&InitialAccount);
+						mem_free(&AppDir);
+						mem_free(&DefaultDataDir);
+						return FALSE;
+					}
+					if (*p == TEXT('.')) {
+						if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
+							wsprintf(fname, TEXT("%s"), DefaultDataDir);
+							trunc_to_parent_dir(fname);
+							wsprintf(fullname, TEXT("%s%s"), fname, p+3);
+						} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
+							wsprintf(fullname, TEXT("%s%s"), DefaultDataDir, p+2);
+						} else {
+							fullname[0] = TEXT('\0');
+						}
+					} else {
+						str_cpy_t(fullname, p);
+					}
+					if (lstrlen(fullname) == 0 || file_get_size(fullname) <= 0) {
+						TCHAR msg[BUF_SIZE];
+						wsprintf(msg, STR_ERR_INIFILE, p);
+						ErrorMessage(NULL, msg);
+						mem_free(&p);
+						p = NULL;
+					}
+					mem_free(&IniFile);
+					mem_free(&DefaultDataDir);
+					if (p == NULL) {
+						mem_free(&InitialAccount);
+						mem_free(&AppDir);
+						return FALSE;
+					}
+					IniFile = alloc_copy_t(fullname);
+					DefaultDataDir = alloc_copy_t(IniFile);
+					trunc_to_dirname(DefaultDataDir);
+					mem_free(&p);
+				}
+			}
+			mem_free(&buf);
+		}
+	}
+
 #endif	// _WIN32_WCE_LAGENDA
 
 	return TRUE;
@@ -5179,7 +5256,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (ini_start_auth_check() == FALSE) {
 			mem_free(&CmdLine);
 			mem_free(&AppDir);
+			mem_free(&DefaultDataDir);
 			mem_free(&IniFile);
+			mem_free(&InitialAccount);
 			mem_free(&g_Pass);
 			if (hMutex != NULL) {
 				CloseHandle(hMutex);
@@ -5195,7 +5274,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (WSAStartup(0x101, &WsaData) != 0) {
 		mem_free(&CmdLine);
 		mem_free(&AppDir);
+		mem_free(&DefaultDataDir);
 		mem_free(&IniFile);
+		mem_free(&InitialAccount);
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -5217,7 +5298,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		|| !Edit_InitApplication(hInstance)) {
 		mem_free(&CmdLine);
 		mem_free(&AppDir);
+		mem_free(&DefaultDataDir);
 		mem_free(&IniFile);
+		mem_free(&InitialAccount);
 		WSACleanup();
 		FreeRas();
 #ifndef _WCE_OLD
@@ -5245,7 +5328,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FreeAllMailBox();
 		mem_free(&CmdLine);
 		mem_free(&AppDir);
+		mem_free(&DefaultDataDir);
 		mem_free(&IniFile);
+		mem_free(&InitialAccount);
 		WSACleanup();
 		FreeRas();
 #ifndef _WCE_OLD
@@ -5282,7 +5367,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	mem_free(&CmdLine);
 	mem_free(&AppDir);
+	mem_free(&DefaultDataDir);
 	mem_free(&IniFile);
+	mem_free(&InitialAccount);
 	DestroyMenu(hPOPUP);
 	UnregisterClass(MAIN_WND_CLASS, hInstance);
 	UnregisterClass(VIEW_WND_CLASS, hInstance);
