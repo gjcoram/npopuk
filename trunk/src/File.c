@@ -333,7 +333,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	OPENFILENAME of;
 	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE], CurDir[BUF_SIZE];
 	TCHAR *ph, *qh;
-	BOOL is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
+	BOOL bret = TRUE, is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
@@ -383,7 +383,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.lpfnHook = (LPOFNHOOKPROC)OpenFileHook;
 	}
 
-	// save (then restore) current directory
+	// save (then restore) current working directory, GetOpen/SaveFileName changes it
 	GetCurrentDirectory(BUF_SIZE-1, CurDir);
 #endif
 
@@ -394,13 +394,12 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 			if (Action == FILE_OPEN_MULTI && lstrcmp(path, ret) != 0) {
 				ErrorMessage(hWnd, STR_ERR_TOOMANYFILES); 
 			}
-			return FALSE;
+			bret = FALSE;
 		}
 	} else {
 		if (GetSaveFileName((LPOPENFILENAME)&of) == FALSE) {
-			return FALSE;
-		}
-		if (Action == FILE_CHOOSE_DIR) {
+			bret = FALSE;
+		} else if (Action == FILE_CHOOSE_DIR) {
 			ph = qh = path;
 			while (*ph != TEXT('\0')) {
 				if (*ph == TEXT('\\')) {
@@ -412,35 +411,37 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		}
 	}
 
-	if (opptr) {
-		// wastes a bit of space (length of file name part) when only
-		// one file returned, but simplifies the coding significantly.
-		ph = alloc_copy_t(of.lpstrFile);
-		ph[ of.nFileOffset - 1 ] = TEXT('\0');
-		mem_free(opptr);
-		*opptr = ph;
-	}
-
 #ifndef _WIN32_WCE
-	// restore current directory
+	// restore working directory
 	SetCurrentDirectory(CurDir);
 #endif
 
+	if (bret == TRUE) {
+		if (opptr) {
+			// wastes a bit of space (length of file name part) when only
+			// one file returned, but simplifies the coding significantly.
+			ph = alloc_copy_t(of.lpstrFile);
+			ph[ of.nFileOffset - 1 ] = TEXT('\0');
+			mem_free(opptr);
+			*opptr = ph;
+		}
+
 #ifdef _WIN32_WCE
-	ph = path;
-	if (*ph == TEXT('\\') && *(ph + 1) == TEXT('\\')) {
-		ph++;
-	}
-	if (*(ph + lstrlen(ph)) == TEXT('.')) {
-		*(ph + lstrlen(ph)) = TEXT('\0');
-	}
-	lstrcpy(ret, ph);
+		ph = path;
+		if (*ph == TEXT('\\') && *(ph + 1) == TEXT('\\')) {
+			ph++;
+		}
+		if (*(ph + lstrlen(ph)) == TEXT('.')) {
+			*(ph + lstrlen(ph)) = TEXT('\0');
+		}
+		lstrcpy(ret, ph);
 #else	// _WIN32_WCE
-	if (Action != FILE_OPEN_MULTI) {
-		lstrcpy(ret, path);
-	}
+		if (Action != FILE_OPEN_MULTI) {
+			lstrcpy(ret, path);
+		}
 #endif	// _WIN32_WCE
-	return TRUE;
+	}
+	return ret;
 #endif	// _WIN32_WCE_PPC
 }
 
