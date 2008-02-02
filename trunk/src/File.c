@@ -441,7 +441,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		}
 #endif	// _WIN32_WCE
 	}
-	return ret;
+	return bret;
 #endif	// _WIN32_WCE_PPC
 }
 
