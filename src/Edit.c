@@ -2018,6 +2018,65 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			break;
 
+		case ID_MENUITEM_REFLOW:
+			{
+				TCHAR *buf, *p, *q, *repl;
+				TCHAR qchar[10];
+				int i, j, len;
+				BOOL skip = FALSE;
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+				if (j < i) break;
+				repl = (TCHAR *)mem_alloc(sizeof(TCHAR) * (j-i+1));
+				if (repl == NULL) {
+					break;
+				}
+				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+				if (buf == NULL) {
+					mem_free(&repl);
+					break;
+				}
+				len = lstrlen(op.QuotationChar);
+				if (len > 5) {
+					wsprintf(qchar, TEXT("\r\n> "));
+				} else {
+					wsprintf(qchar, TEXT("\r\n%s"), op.QuotationChar);
+				}
+				len = lstrlen(qchar);
+				for (p = (buf+i), q=repl; *p != TEXT('\0') && p < (buf + j); p++) {
+#ifndef UNICODE
+					if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+						p++;
+						continue;
+					}
+#endif
+					if (str_cmp_n_t(p, qchar, len) == 0) {
+						if (skip == TRUE) {
+							skip = FALSE;
+						} else if (*(p+len) == TEXT('\r')) {
+							skip = TRUE;
+						} else {
+							if ( *(p-1) != TEXT(' ') && *(p+len+1) != TEXT(' ') ) {
+								*(q++) = TEXT(' ');
+							}
+							p += len;
+						}
+					}
+					*(q++) = *p;
+				}
+				*q = TEXT('\0');
+				mem_free(&buf);
+				len = op.WordBreakSize - lstrlen(op.QuotationChar);
+				buf = (TCHAR *)mem_alloc(sizeof(TCHAR)
+					* (WordBreakStringSize(repl, op.QuotationChar, op.WordBreakSize, op.QuotationBreak) + 1));
+				if (buf != NULL) {
+					WordBreakString(repl, buf, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
+					mem_free(&repl);
+					SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
+					mem_free(&buf);
+				}
+			}
+			break;
+
 		case ID_MENUITEM_ALLSELECT:
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, 0, -1);
 			break;

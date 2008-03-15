@@ -48,7 +48,7 @@ static char *StrNextContent(char *p);
 #endif
 static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
 static void sReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
-static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf);
+static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep);
 static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr);
 
 /*
@@ -1793,7 +1793,7 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 /*
  * URLHeadToItem - URL中のヘッダ項目をアイテムに設定
  */
-static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf)
+static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep)
 {
 	TCHAR *p;
 
@@ -1808,9 +1808,23 @@ static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf)
 	p++;
 	for (; *p == TEXT(' '); p++);
 	if (*buf != NULL) {
-		mem_free(&*buf);
+		if (sep == TEXT('\0')) {
+			mem_free(&*buf);
+		} else {
+			TCHAR *tmp = AllocURLDecode(p);
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + lstrlen(*buf) + 2));
+			if (p != NULL) {
+				wsprintf(p, TEXT("%s%c%s"), *buf, sep, tmp);
+			} else {
+				p = tmp;
+			}
+			mem_free(&*buf);
+			*buf = p;
+			mem_free(&tmp);
+		}
+	} else {
+		*buf = AllocURLDecode(p);
 	}
-	*buf = AllocURLDecode(p);
 	return TRUE;
 }
 
@@ -1868,21 +1882,21 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 		}
 		*s = TEXT('\0');
 
-		URLHeadToItem(tmp, TEXT("to"), &tpMailItem->To);
-		URLHeadToItem(tmp, TEXT("cc"), &tpMailItem->Cc);
-		URLHeadToItem(tmp, TEXT("bcc"), &tpMailItem->Bcc);
-		URLHeadToItem(tmp, TEXT("replyto"), &tpMailItem->ReplyTo);
-		URLHeadToItem(tmp, TEXT("subject"), &tpMailItem->Subject);
+		URLHeadToItem(tmp, TEXT("to"), &tpMailItem->To, TEXT(','));
+		URLHeadToItem(tmp, TEXT("cc"), &tpMailItem->Cc, TEXT(','));
+		URLHeadToItem(tmp, TEXT("bcc"), &tpMailItem->Bcc, TEXT(','));
+		URLHeadToItem(tmp, TEXT("replyto"), &tpMailItem->ReplyTo, TEXT('\0'));
+		URLHeadToItem(tmp, TEXT("subject"), &tpMailItem->Subject, TEXT('\0'));
 #ifdef UNICODE
-		if (URLHeadToItem(tmp, TEXT("body"), &body) == TRUE) {
+		if (URLHeadToItem(tmp, TEXT("body"), &body, TEXT('\0')) == TRUE) {
 			tpMailItem->Body = alloc_tchar_to_char(body);
 			mem_free(&body);
 		}
 #else
-		URLHeadToItem(tmp, TEXT("body"), &tpMailItem->Body);
+		URLHeadToItem(tmp, TEXT("body"), &tpMailItem->Body, TEXT('\0'));
 #endif
-		URLHeadToItem(tmp, TEXT("mailbox"), &tpMailItem->MailBox);
-		URLHeadToItem(tmp, TEXT("attach"), &tpMailItem->Attach);
+		URLHeadToItem(tmp, TEXT("mailbox"), &tpMailItem->MailBox, TEXT('\0'));
+		URLHeadToItem(tmp, TEXT("attach"), &tpMailItem->Attach, ATTACH_SEP);
 	}
 	mem_free(&tmp);
 	return TRUE;
