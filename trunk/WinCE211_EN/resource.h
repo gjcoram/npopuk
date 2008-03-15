@@ -296,6 +296,7 @@
 #define IDC_RADIO_POOMLAST              1211
 #define IDC_RADIO_POOMFIRST             1212
 #define ID_MENUITEM_MOVESAVE            1230
+#define ID_MENUITEM_REFLOW              1231
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002

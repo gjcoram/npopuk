@@ -1404,12 +1404,13 @@ BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_MENUITEM_PASTE
         MENUITEM "Paste as &quotation",         ID_MENUITEM_PASTEQUOT
+        MENUITEM "&Reflow quotes",              ID_MENUITEM_REFLOW
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
         MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
         MENUITEM SEPARATOR
-        MENUITEM "Paste from &file...",         ID_MENUITEM_FILEOPEN
+        MENUITEM "Paste fro&m file...",         ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
     END

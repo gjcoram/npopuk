@@ -293,6 +293,7 @@
 #define IDC_NEWDIRNAME                  1213
 #define IDD_DIALOG_NEWDIR               1220
 #define ID_MENUITEM_MOVESAVE            1230
+#define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
