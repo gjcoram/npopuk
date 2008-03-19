@@ -471,12 +471,13 @@ long file_get_size(TCHAR *FileName)
 static int file_get_mail_count(char *buf, long Size, int MboxFormat)
 {
 	char *p, *r, *t;
-	int ret = 0, len;
+	int ret = 0, len, max;
 
 	if (MboxFormat) {
-		ret = 1;
+		ret = 1; /* won't match first "From " because match string includes prior "\r\n" */
 		len = tstrlen(MBOX_DELIMITER);
-		for (p = buf; Size > p - buf && *p != '\0'; p++) {
+		max = buf + Size - len;
+		for (p = buf; p < max; p++) {
 			if (str_cmp_n(p, MBOX_DELIMITER, len) == 0) {
 				ret++;
 				p += len;
@@ -666,7 +667,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	///////////// --- /////////////////////
 	char *FileBuf;
 	long FileSize;
-	int i, cnt, len = 7; // len = tstrlen(MBOX_DELIMITER);
+	int i, cnt, len = 7, max; // len = tstrlen(MBOX_DELIMITER);
 	int MboxFormat = 0;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
@@ -821,15 +822,16 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 
 		// Find end of message
 		if (MboxFormat) {
-			for (t = r = p; *r != '\0'; r++) {
+			max = FileBuf + FileSize - len;
+			for (t = r = p; r < max; r++) {
 				if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
 					t = r;
 					r += 2;
 					break;
 				}
 			}
-			if (*r == '\0') {
-				t = r;
+			if ( r == max ) {
+				t = r = r + len;
 			}
 		} else {
 			for (t = r = p; *r != '\0'; r++) {
