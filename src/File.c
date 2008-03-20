@@ -470,8 +470,8 @@ long file_get_size(TCHAR *FileName)
  */
 static int file_get_mail_count(char *buf, long Size, int MboxFormat)
 {
-	char *p, *r, *t;
-	int ret = 0, len, max;
+	char *p, *r, *t, *max;
+	int ret = 0, len;
 
 	if (MboxFormat) {
 		ret = 1; /* won't match first "From " because match string includes prior "\r\n" */
@@ -661,13 +661,13 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	HANDLE hMapFile;
 #endif
 	TCHAR path[BUF_SIZE];
-	char *p, *r, *s, *t;
+	char *p, *r, *s, *t, *max;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
 	char *FileBuf;
 	long FileSize;
-	int i, cnt, len = 7, max; // len = tstrlen(MBOX_DELIMITER);
+	int i, cnt, len = 7; // len = tstrlen(MBOX_DELIMITER);
 	int MboxFormat = 0;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
