@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b5p2")
 #define APP_VERSION_NUM			2008
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -857,6 +857,7 @@ void SetDot(TCHAR *buf, TCHAR *ret);
 void DelDot(TCHAR *buf, TCHAR *ret);
 int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag);
+BOOL GetQuoteString(TCHAR *str, TCHAR *prefix, int maxlen);
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem);
 TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, TCHAR *comment, BOOL quote);
 TCHAR *GetMailString(TCHAR *buf, TCHAR *ret);

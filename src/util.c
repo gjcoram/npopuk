@@ -1791,6 +1791,30 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 }
 
 /*
+ * GetQuoteString - get quote prefix (GJC)
+ */
+BOOL GetQuoteString(TCHAR *str, TCHAR *prefix, int maxlen) {
+	// assumes '>' and '|' are only quote characters ...
+	if (*str == TEXT('>') || *str == TEXT('|')) {
+		TCHAR *p, *q, *m;
+		q = prefix;
+		m = prefix + maxlen - 1;
+		for (p = str; (*p == TEXT('>') || *p == TEXT('|') || *p == TEXT(' ')) && q < m; p++, q++) {
+			*q = *p;
+		}
+		// remove extra spaces from end
+		while (*(q-1) == TEXT(' ') && *(q-2) == TEXT(' ')) {
+			q--;
+		}
+		*q = TEXT('\0');
+		return TRUE;
+	} else {
+		*prefix = TEXT('\0');
+		return FALSE;
+	}
+}
+
+/*
  * URLHeadToItem - URL中のヘッダ項目をアイテムに設定
  */
 static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep)
@@ -1840,7 +1864,9 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 	TCHAR *p, *r, *s;
 
 	for (p = buf; *p == TEXT(' '); p++);
-	if (str_cmp_ni_t(p, URL_MAILTO, lstrlen(URL_MAILTO)) != 0) {
+	r = p;
+	if (*r == TEXT('"')) r++;
+	if (str_cmp_ni_t(r, URL_MAILTO, lstrlen(URL_MAILTO)) != 0) {
 		// メールアドレスのみ
 		tpMailItem->To = alloc_copy_t(p);
 		s = tpMailItem->To + lstrlen(tpMailItem->To) - 1;
@@ -1851,6 +1877,12 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 			s--;
 		}
 		return TRUE;
+	}
+	if (r > p) {
+		if (*(p+lstrlen(p)-1) == TEXT('"')) {
+			*(p+lstrlen(p)-1) = TEXT('\0');
+		}
+		p++;
 	}
 
 	// メールアドレスの取得
