@@ -647,6 +647,7 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			return 0;
 
 		case ID_MENUITEM_PASTEQUOT:
+		case ID_MENUITEM_REFLOW:
 			return 0;
 		}
 	}
@@ -1224,6 +1225,7 @@ static void SetEditMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_CUT, (editable && (i < j)) ? MF_ENABLED : MF_GRAYED);
 	EnableMenuItem(hMenu, ID_MENUITEM_COPY, (i < j) ? MF_ENABLED : MF_GRAYED);
 	EnableMenuItem(hMenu, ID_MENUITEM_PASTEQUOT, (editable) ? MF_ENABLED : MF_GRAYED);
+	EnableMenuItem(hMenu, ID_MENUITEM_REFLOW, (editable && (i < j)) ? MF_ENABLED : MF_GRAYED);
 }
 
 /*
@@ -2020,60 +2022,156 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_REFLOW:
 			{
-				TCHAR *buf, *p, *q, *repl;
-				TCHAR qchar[10];
-				int i, j, len;
-				BOOL skip = FALSE;
-				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
-				if (j < i) break;
-				repl = (TCHAR *)mem_alloc(sizeof(TCHAR) * (j-i+1));
+#define MAX_QUOTE_LEN 40
+				TCHAR *buf, *repl, *tmp, *ls, *p, *q, *r, *s;
+				TCHAR qchar[MAX_QUOTE_LEN+1];
+				int ss, se, len;
+				BOOL skip = FALSE, quoting = FALSE;
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&ss, (LPARAM)&se);
+				if (se < ss) break;
+				len = (se-ss+1);
+				if (op.WordBreakSize > 0) {
+					len += (len/op.WordBreakSize) * MAX_QUOTE_LEN;
+				}
+				repl = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 				if (repl == NULL) {
 					break;
 				}
-				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
-				if (buf == NULL) {
+				*repl = TEXT('\0');
+				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+				if (tmp == NULL) {
 					mem_free(&repl);
 					break;
 				}
-				len = lstrlen(op.QuotationChar);
-				if (len > 5) {
-					wsprintf(qchar, TEXT("\r\n> "));
-				} else {
-					wsprintf(qchar, TEXT("\r\n%s"), op.QuotationChar);
+				*tmp = TEXT('\0');
+				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+				if (buf == NULL) {
+					mem_free(&repl);
+					mem_free(&tmp);
+					break;
 				}
+				// search backwards for \n (ls = line start)
+				ls = (buf+ss);
+				while (ls >= buf && *ls != TEXT('\n')) {
+					ls--;
+				}
+				ls++;
+				quoting = GetQuoteString(ls, qchar, MAX_QUOTE_LEN);
 				len = lstrlen(qchar);
-				for (p = (buf+i), q=repl; *p != TEXT('\0') && p < (buf + j); p++) {
+
+				// copy beginning of line (for linebreaking purposes)
+				for (p = ls, r = repl; p < buf + ss; p++, r++) {
+				  *r = *p;
+				}
+				*r = TEXT('\0');
+
+				s = tmp;
+				for (p = buf+ss; *p != TEXT('\0') && p < buf + se; p++) {
 #ifndef UNICODE
 					if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-						p++;
+						*(s++) = *(p++);
+						*(s++) = *p;
 						continue;
 					}
 #endif
-					if (str_cmp_n_t(p, qchar, len) == 0) {
-						if (skip == TRUE) {
-							skip = FALSE;
-						} else if (*(p+len) == TEXT('\r')) {
-							skip = TRUE;
-						} else {
-							if ( *(p-1) != TEXT(' ') && *(p+len+1) != TEXT(' ') ) {
-								*(q++) = TEXT(' ');
+					if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+						BOOL newq, wrapit = FALSE;
+						TCHAR newqc[MAX_QUOTE_LEN+1];
+						int newlen;
+#ifndef UNICODE
+						if (IsDBCSLeadByte((BYTE)*(p+2)) == TRUE) {
+							newq = FALSE;
+							*newqc = TEXT('\0');
+							newlen = 0;
+						} else 
+#endif
+						{
+							newq = GetQuoteString(p+2, newqc, MAX_QUOTE_LEN);
+							newlen = lstrlen(newqc);
+						}
+
+						if (newq != quoting || newlen > len) {
+							// done with this block
+							wrapit = TRUE;
+						} else if (newlen < len) {
+							q = p + 2 + newlen;
+							if (*q == TEXT('\r')) {
+								skip = TRUE;
 							}
-							p += len;
+							while (*q != TEXT('\r') && *q != TEXT('\0') && q < buf + se) {
+#ifndef UNICODE
+								if (IsDBCSLeadByte((BYTE)*q) == TRUE && *(q + 1) != TEXT('\0')) {
+									q++;
+								}
+#endif
+								q++;
+							}
+							if (*q == TEXT('\r') && *(q+1) == TEXT('\n') && str_cmp_ni_t(q+2, qchar, len) == 0) {
+								// > > blah blah
+								// > blah
+								// > > blah blah
+								if ( p > buf && *(p-1) != TEXT(' ') && *(p+2+newlen) != TEXT(' ')) {
+									*(s++) = TEXT(' ');
+								}
+								p += (2 + newlen);
+							} else {
+								wrapit = TRUE;
+							}
+						} else {
+							if (skip == TRUE) {
+								skip = FALSE;
+							} else if ( *(p+2+newlen) == TEXT('\r')) {
+								skip = TRUE;
+							} else {
+								if ( p > buf && *(p-1) != TEXT(' ') && *(p+2+newlen) != TEXT(' ')) {
+									*(s++) = TEXT(' ');
+								}
+								p += (2 + newlen);
+							}
+						}
+				
+						if (wrapit) {
+							TCHAR *wrap = NULL;
+							*s = TEXT('\0');
+							if (op.WordBreakSize > 0) {
+								wrap = (TCHAR *)mem_alloc(sizeof(TCHAR)
+									* (WordBreakStringSize(tmp, qchar, op.WordBreakSize, op.QuotationBreak) + 1));
+							}
+							if (wrap != NULL) {
+								WordBreakString(tmp, wrap, qchar, op.WordBreakSize, op.QuotationBreak);
+								r = str_join_t(r, wrap, (TCHAR*)-1);
+								mem_free(&wrap);
+							} else {
+								r = str_join_t(r, tmp, (TCHAR*)-1);
+							}
+							lstrcpy(qchar, newqc);
+							len = newlen;
+							quoting = newq;
+							s = tmp;
 						}
 					}
-					*(q++) = *p;
+
+					*(s++) = *p;
 				}
-				*q = TEXT('\0');
+				*s = TEXT('\0');
+				if (op.WordBreakSize > 0) {
+					TCHAR *wrap = (TCHAR *)mem_alloc(sizeof(TCHAR)
+						* (WordBreakStringSize(tmp, qchar, op.WordBreakSize, op.QuotationBreak) + 1));
+					if (wrap != NULL) {
+						WordBreakString(tmp, wrap, qchar, op.WordBreakSize, op.QuotationBreak);
+						r = str_join_t(r, wrap, (TCHAR*)-1);
+						mem_free(&wrap);
+						mem_free(&tmp);
+						tmp = NULL;
+					}
+				}
+				if (tmp != NULL) {
+					r = str_join_t(r, tmp, (TCHAR*)-1);
+					mem_free(&tmp);
+				}
 				mem_free(&buf);
-				len = op.WordBreakSize - lstrlen(op.QuotationChar);
-				buf = (TCHAR *)mem_alloc(sizeof(TCHAR)
-					* (WordBreakStringSize(repl, op.QuotationChar, op.WordBreakSize, op.QuotationBreak) + 1));
-				if (buf != NULL) {
-					WordBreakString(repl, buf, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
-					mem_free(&repl);
-					SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
-					mem_free(&buf);
-				}
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)repl);
+				mem_free(&repl);
 			}
 			break;
 
@@ -2225,6 +2323,8 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 		EnableMenuItem(hMenu, ID_MENUITEM_UNDO, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_CUT, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_PASTE, menu_state);
+		EnableMenuItem(hMenu, ID_MENUITEM_PASTEQUOT, menu_state);
+		EnableMenuItem(hMenu, ID_MENUITEM_REFLOW, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_FILEOPEN, menu_state);
 #ifdef _WIN32_WCE_PPC
 	}
