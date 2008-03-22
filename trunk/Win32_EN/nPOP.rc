@@ -303,7 +303,7 @@ BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_MENUITEM_PASTE
         MENUITEM "Paste as &quotation",         ID_MENUITEM_PASTEQUOT
-        MENUITEM "&Reflow quotes",              ID_MENUITEM_REFLOW
+        MENUITEM "&Reflow selection",           ID_MENUITEM_REFLOW
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND

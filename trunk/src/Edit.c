@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -2023,58 +2023,64 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_MENUITEM_REFLOW:
 			{
 #define MAX_QUOTE_LEN 40
-				TCHAR *buf, *repl, *tmp, *ls, *p, *q, *r, *s;
+				TCHAR *buf, *repl, *tmp, *end, *p, *r, *t;
 				TCHAR qchar[MAX_QUOTE_LEN+1];
-				int ss, se, len;
+				int ss, se, ls, len;
 				BOOL skip = FALSE, quoting = FALSE;
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&ss, (LPARAM)&se);
 				if (se < ss) break;
-				len = (se-ss+1);
+				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+				if (buf == NULL) {
+					break;
+				}
+				end = (buf+se);
+
+				// search backwards for \n (ls = line start)
+				p = (buf+ss);
+				ls = -1;
+				while (p >= buf && *p != TEXT('\n')) {
+					p--;
+					ls++;
+				}
+				len = (se-ss+ls+1);
 				if (op.WordBreakSize > 0) {
 					len += (len/op.WordBreakSize) * MAX_QUOTE_LEN;
 				}
 				repl = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 				if (repl == NULL) {
+					mem_free(&buf);
 					break;
 				}
 				*repl = TEXT('\0');
+				r = repl;
 				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 				if (tmp == NULL) {
+					mem_free(&buf);
 					mem_free(&repl);
 					break;
 				}
 				*tmp = TEXT('\0');
-				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
-				if (buf == NULL) {
-					mem_free(&repl);
-					mem_free(&tmp);
-					break;
-				}
-				// search backwards for \n (ls = line start)
-				ls = (buf+ss);
-				while (ls >= buf && *ls != TEXT('\n')) {
-					ls--;
-				}
-				ls++;
-				quoting = GetQuoteString(ls, qchar, MAX_QUOTE_LEN);
+				t = tmp;
+
+				if (len > MAX_QUOTE_LEN) len = MAX_QUOTE_LEN;
+				quoting = GetQuoteString(buf+(ss-ls), qchar, len);
 				len = lstrlen(qchar);
 
 				// copy beginning of line (for linebreaking purposes)
-				for (p = ls, r = repl; p < buf + ss; p++, r++) {
-				  *r = *p;
+				for (p = buf+(ss-ls); p < buf+ss; p++, t++) {
+				  *t = *p;
 				}
-				*r = TEXT('\0');
+				*t = TEXT('\0');
 
-				s = tmp;
-				for (p = buf+ss; *p != TEXT('\0') && p < buf + se; p++) {
+				for (p = buf+ss; *p != TEXT('\0') && p < end; p++) {
 #ifndef UNICODE
-					if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-						*(s++) = *(p++);
-						*(s++) = *p;
+					if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p+1) != TEXT('\0')) {
+						*(t++) = *(p++);
+						*(t++) = *p;
 						continue;
 					}
 #endif
-					if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+					if (*p == TEXT('\r') && *(p+1) == TEXT('\n') && (p+2 < end)) {
 						BOOL newq, wrapit = FALSE;
 						TCHAR newqc[MAX_QUOTE_LEN+1];
 						int newlen;
@@ -2086,32 +2092,38 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						} else 
 #endif
 						{
-							newq = GetQuoteString(p+2, newqc, MAX_QUOTE_LEN);
+							newlen = (end - p) - 2;
+							if (newlen > MAX_QUOTE_LEN) newlen = MAX_QUOTE_LEN;
+							newq = GetQuoteString(p+2, newqc, newlen);
 							newlen = lstrlen(newqc);
 						}
 
 						if (newq != quoting || newlen > len) {
 							// done with this block
 							wrapit = TRUE;
+							skip = FALSE;
 						} else if (newlen < len) {
+							TCHAR *q;
 							q = p + 2 + newlen;
 							if (*q == TEXT('\r')) {
 								skip = TRUE;
 							}
-							while (*q != TEXT('\r') && *q != TEXT('\0') && q < buf + se) {
+							while (*q != TEXT('\r') && *q != TEXT('\0') && q < end) {
 #ifndef UNICODE
-								if (IsDBCSLeadByte((BYTE)*q) == TRUE && *(q + 1) != TEXT('\0')) {
+								if (IsDBCSLeadByte((BYTE)*q) == TRUE && *(q+1) != TEXT('\0')) {
 									q++;
 								}
 #endif
 								q++;
 							}
-							if (*q == TEXT('\r') && *(q+1) == TEXT('\n') && str_cmp_ni_t(q+2, qchar, len) == 0) {
+							if (*q == TEXT('\r') && *(q+1) == TEXT('\n') && (q+2 < end)
+								&& str_cmp_ni_t(q+2, qchar, len) == 0) {
 								// > > blah blah
 								// > blah
 								// > > blah blah
-								if ( p > buf && *(p-1) != TEXT(' ') && *(p+2+newlen) != TEXT(' ')) {
-									*(s++) = TEXT(' ');
+								if ( p > buf && *(p-1) != TEXT(' ') && (p+2+newlen < end)
+									&& *(p+2+newlen) != TEXT(' ')) {
+									*(t++) = TEXT(' ');
 								}
 								p += (2 + newlen);
 							} else {
@@ -2123,8 +2135,9 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 							} else if ( *(p+2+newlen) == TEXT('\r')) {
 								skip = TRUE;
 							} else {
-								if ( p > buf && *(p-1) != TEXT(' ') && *(p+2+newlen) != TEXT(' ')) {
-									*(s++) = TEXT(' ');
+								if ( p > buf && *(p-1) != TEXT(' ') && (p+2+newlen < end)
+									&& *(p+2+newlen) != TEXT(' ')) {
+									*(t++) = TEXT(' ');
 								}
 								p += (2 + newlen);
 							}
@@ -2132,7 +2145,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				
 						if (wrapit) {
 							TCHAR *wrap = NULL;
-							*s = TEXT('\0');
+							*t = TEXT('\0');
 							if (op.WordBreakSize > 0) {
 								wrap = (TCHAR *)mem_alloc(sizeof(TCHAR)
 									* (WordBreakStringSize(tmp, qchar, op.WordBreakSize, op.QuotationBreak) + 1));
@@ -2147,13 +2160,14 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 							lstrcpy(qchar, newqc);
 							len = newlen;
 							quoting = newq;
-							s = tmp;
+							t = tmp;
 						}
 					}
-
-					*(s++) = *p;
+					if (p < end) {
+						*(t++) = *p;
+					}
 				}
-				*s = TEXT('\0');
+				*t = TEXT('\0');
 				if (op.WordBreakSize > 0) {
 					TCHAR *wrap = (TCHAR *)mem_alloc(sizeof(TCHAR)
 						* (WordBreakStringSize(tmp, qchar, op.WordBreakSize, op.QuotationBreak) + 1));
@@ -2170,7 +2184,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					mem_free(&tmp);
 				}
 				mem_free(&buf);
-				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)repl);
+				r = repl + ls;
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)r);
 				mem_free(&repl);
 			}
 			break;
