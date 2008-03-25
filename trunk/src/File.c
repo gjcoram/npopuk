@@ -830,8 +830,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					break;
 				}
 			}
-			if ( r == max ) {
-				t = r = r + len;
+			if ( r >= max ) {
+				t = r = max + len;
 			}
 		} else {
 			for (t = r = p; *r != '\0'; r++) {
