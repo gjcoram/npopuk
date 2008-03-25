@@ -646,6 +646,7 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			View_FindMail(hWnd, FALSE);
 			return 0;
 
+		case ID_MENUITEM_REPLACE:
 		case ID_MENUITEM_PASTEQUOT:
 		case ID_MENUITEM_REFLOW:
 			return 0;
@@ -1219,6 +1220,8 @@ static void SetEditMenu(HWND hWnd)
 	} else {
 		editable = FALSE;
 	}
+		DeleteMenu(hMenu, ID_MENUITEM_REPLACE, MF_BYCOMMAND);
+//GJC	}
 
 	//of the EDIT control which Acquisition
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -1938,6 +1941,10 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			View_FindMail(hWnd, FALSE);
 			break;
 
+		case ID_MENUITEM_REPLACE:
+			//View_FindMail(hWnd, 2);
+			break;
+
 		case ID_MENUITEM_ENCODE:
 			// エンコード設定
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -2214,14 +2221,37 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_WORDBREAK:
+			{
+				POINT caret;
+				BOOL sent = FALSE;
+				GetCaretPos(&caret);
+				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+				if (tpMailItem != NULL) {
+					sent = (tpMailItem->Mark == ICON_SENTMAIL);
+				}
+				if (sent) {
+					DelSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+				}
 #ifdef _WIN32_WCE_PPC
-			op.EditWordBreakFlag = SetWordBreak(hWnd, hEditToolBar);
+				if (!sent) {
+					DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+				}
+				op.EditWordBreakFlag = SetWordBreak(hWnd, hEditToolBar);
 #elif defined(_WIN32_WCE_LAGENDA)
-			op.EditWordBreakFlag = SetWordBreak(hWnd, hViewMenu);
+				op.EditWordBreakFlag = SetWordBreak(hWnd, hViewMenu);
 #else
-			op.EditWordBreakFlag = SetWordBreak(hWnd);
+				op.EditWordBreakFlag = SetWordBreak(hWnd);
 #endif
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
+				if (sent) {
+					SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+#ifdef _WIN32_WCE_PPC
+				} else {
+					SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+#endif
+				}
+				sent = SetCaretPos(caret.x, caret.y);
+			}
 			break;
 
 #ifndef _WIN32_WCE
