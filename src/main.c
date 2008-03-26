@@ -3957,7 +3957,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
-			if (Edit_InitInstance(hInst, hWnd, -1, NULL, EDIT_NEW, NULL) == EDIT_INSIDEEDIT) {
+			if (Edit_InitInstance(hInst, hWnd, SelBox, NULL, EDIT_NEW, NULL) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 				ShowWindow(hWnd, SW_HIDE);
 #endif
