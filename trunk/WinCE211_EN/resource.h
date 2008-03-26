@@ -146,6 +146,9 @@
 #define IDC_RADIO_DIGEST_ALL            269
 #define IDC_RADIO_GROUP_ADD             270
 #define IDC_RADIO_GROUP_DEL             271
+#define IDC_REPLACE_LABEL               272
+#define IDC_EDIT_REPLACE                273
+#define IDC_REPLACE                     274
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
@@ -363,6 +366,7 @@
 #define ID_MENUITEM_FILEOPEN            40086
 #define ID_MENUITEM_PROP                40087
 #define ID_MENUITEM_FIND                40088
+#define ID_MENUITEM_REPLACE             40089
 #define ID_MENUITEM_NEXTFIND            40090
 #define IDS_MENUITEM40092               40093
 #define IDS_MENUITEM40095               40096

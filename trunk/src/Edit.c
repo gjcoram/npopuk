@@ -1219,9 +1219,8 @@ static void SetEditMenu(HWND hWnd)
 		editable = TRUE;
 	} else {
 		editable = FALSE;
-	}
 		DeleteMenu(hMenu, ID_MENUITEM_REPLACE, MF_BYCOMMAND);
-//GJC	}
+	}
 
 	//of the EDIT control which Acquisition
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -1942,7 +1941,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_REPLACE:
-			//View_FindMail(hWnd, 2);
+			View_FindMail(hWnd, 2);
 			break;
 
 		case ID_MENUITEM_ENCODE:
@@ -2222,9 +2221,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_WORDBREAK:
 			{
-				POINT caret;
 				BOOL sent = FALSE;
-				GetCaretPos(&caret);
 				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 				if (tpMailItem != NULL) {
 					sent = (tpMailItem->Mark == ICON_SENTMAIL);
@@ -2250,7 +2247,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #endif
 				}
-				sent = SetCaretPos(caret.x, caret.y);
 			}
 			break;
 
@@ -2454,6 +2450,10 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 		if (tpReMailItem != NULL) {
 			item_copy(tpReMailItem, tpMailItem, TRUE);
+		} else if ((MailBox+rebox)->Type == MAILBOX_TYPE_SAVE 
+			&& (MailBox+rebox)->DefAccount != NULL
+			&& *(MailBox+rebox)->DefAccount != TEXT('\0')) {
+			tpMailItem->MailBox = alloc_copy_t((MailBox+rebox)->DefAccount);
 		}
 		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
