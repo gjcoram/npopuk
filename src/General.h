@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b5p5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b6")
 #define APP_VERSION_NUM			2008
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -874,6 +874,7 @@ int remove_duplicate_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 
 // View
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #ifdef _WIN32_WCE_PPC
 int SetWordBreak(HWND hWnd, HWND hToolBar);
@@ -882,7 +883,7 @@ int SetWordBreak(HWND hWnd, HMENU hMenu);
 #else
 int SetWordBreak(HWND hWnd);
 #endif
-void View_FindMail(HWND hWnd, int FindSet);
+void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);

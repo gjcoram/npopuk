@@ -149,6 +149,8 @@
 #define IDC_REPLACE_LABEL               272
 #define IDC_EDIT_REPLACE                273
 #define IDC_REPLACE                     274
+#define IDC_REPLACE_ALL                 275
+#define IDC_REPLACE_AGAIN               276
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451

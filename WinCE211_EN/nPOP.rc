@@ -844,7 +844,7 @@ CAPTION "Find"
 FONT 8, "Tahoma"
 BEGIN
     LTEXT           "Find &text:",IDC_STATIC,5,5,40,10
-    EDITTEXT        IDC_EDIT_FIND,5,18,150,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_FIND,5,18,150,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,40,80,10
     CONTROL         "Search &all mail in folder",IDC_CHECK_ALL,"Button",
@@ -856,6 +856,10 @@ BEGIN
     DEFPUSHBUTTON   "&Find next",IDOK,100,40,55,12
     PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,100,55,55,12
     PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,100,70,55,12
+    LTEXT           "Re&place with:",IDC_REPLACE_LABEL,5,57,43,10
+    EDITTEXT        IDC_EDIT_REPLACE,5,70,90,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Replace",IDC_REPLACE,100,55,55,12
+    PUSHBUTTON      "Replace &all",IDC_REPLACE_ALL,100,70,55,12
     PUSHBUTTON      "Cancel",IDCANCEL,100,85,55,12
 END
 

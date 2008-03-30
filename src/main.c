@@ -143,7 +143,7 @@ BOOL g_bTimedOut;
 // ŠO•”QÆ
 extern OPTION op;
 
-extern TCHAR *FindStr;						//Searching character string
+extern TCHAR *FindStr, *ReplaceStr;			//Search, replace character strings
 extern HWND hViewWnd;
 extern HWND hEditWnd;
 extern HWND MsgWnd;							//Mail arrival message
@@ -1500,8 +1500,8 @@ static BOOL InitWindow(HWND hWnd)
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
 		NULL, // menu skipping
-		NULL, // menu skipping
 #endif	// _WIN32_WCE_PPC
+		NULL, // menu skipping
 		STR_CMDBAR_RECV,
 		STR_CMDBAR_ALLCHECK,
 		STR_CMDBAR_EXEC,
@@ -1581,7 +1581,13 @@ static BOOL InitWindow(HWND hWnd)
 #else
 	// H/PC & PsPC
 	hToolBar = CommandBar_Create(hInst, hWnd, IDC_CB);
-    CommandBar_AddToolTips(hToolBar, 9, szTips);
+	if (op.osMajorVer >= 4) {
+		// CE.net 4.2 and higher (MobilePro 900c)
+		CommandBar_AddToolTips(hToolBar, 9, (szTips+1));
+	} else {
+		// HPC2000 (Jornada 690, 720)
+		CommandBar_AddToolTips(hToolBar, 9, szTips);
+	}
 	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, 8, TB_ICONSIZE, TB_ICONSIZE);
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
@@ -1949,6 +1955,8 @@ static BOOL EndWindow(HWND hWnd)
 	// ŒŸõ•¶š—ñ‚Ì‰ğ•ú
 	mem_free(&FindStr);
 	FindStr = NULL;
+	mem_free(&ReplaceStr);
+	ReplaceStr = NULL;
 
 	//in searching character string Release
 	FreeAllMailBox();

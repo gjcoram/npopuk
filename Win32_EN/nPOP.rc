@@ -152,8 +152,8 @@ BEGIN
     "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    "H",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
-    "R",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
     VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
@@ -309,7 +309,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
         MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
-        MENUITEM "&Replace\tCtrl+R",            ID_MENUITEM_REPLACE
+        MENUITEM "&Replace\tCtrl+H",            ID_MENUITEM_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Paste fro&m file...",         ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
@@ -1004,6 +1004,7 @@ BEGIN
     PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,200,28,55,14
     PUSHBUTTON      "&Replace",IDC_REPLACE,200,28,55,14
     PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,200,46,55,14
+    PUSHBUTTON      "Replace &all",IDC_REPLACE_ALL,200,46,55,14
     PUSHBUTTON      "Cancel",IDCANCEL,200,64,55,14
 END
 
