@@ -144,6 +144,8 @@
 #define IDC_REPLACE_LABEL               272
 #define IDC_EDIT_REPLACE                273
 #define IDC_REPLACE                     274
+#define IDC_REPLACE_ALL                 275
+#define IDC_REPLACE_AGAIN               276
 
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_NAME                   1002

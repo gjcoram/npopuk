@@ -67,6 +67,7 @@
 #define STR_ERR_NOSAVEBOX			TEXT("No Savebox selected")
 #define STR_ERR_NOSAVEBOXES			TEXT("No Savebox account found")
 #define STR_ERR_INPUTFINDSTRING		TEXT("No 'Find' string entered")
+#define STR_ERR_FINDISREPLACE		TEXT("'Find' and 'Replace' strings identical!")
 #define STR_ERR_NOMAIL				TEXT("No Mail in the list")
 #define STR_ERR_SENDLOCK			TEXT("Sending barred! Transmission in progress")
 #define STR_ERR_FILTBOX				TEXT("A filter for %s has been disabled because it refers to an invalid SaveBox")
@@ -166,6 +167,7 @@
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
+#define STR_REPLACED_N				TEXT("Replaced %d instances")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
 #define STR_RADIO_RENAMESBOX		TEXT("Rename &savebox")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
@@ -192,6 +194,7 @@
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")
 #define STR_TITLE_FIND				TEXT("Find")
+#define STR_TITLE_REPLACE			TEXT("Replace")
 #define STR_TITLE_ALLFIND			TEXT("Look up \"%s\"")
 #define STR_TITLE_ATTACH_MSG		TEXT("Open")
 #define STR_TITLE_COPY2				TEXT("Copy to:")
@@ -288,6 +291,7 @@
 #define STR_EDIT_HEAD_MAILBOX		TEXT("Account: ")
 #define STR_EDIT_HEAD_TO			TEXT("\r\nTo: ")
 #define STR_EDIT_HEAD_SUBJECT		TEXT("\r\nSubject: ")
+#define STR_REPLACE_DONE			TEXT("Done")
 
 // SSL, SMTP-AUTH
 #define STR_SSL_AUTO				TEXT("Auto")

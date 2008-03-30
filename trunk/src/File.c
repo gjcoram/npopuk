@@ -331,7 +331,10 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else
 	OPENFILENAME of;
-	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE], CurDir[BUF_SIZE];
+	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
+#ifndef _WIN32_WCE
+	TCHAR CurDir[BUF_SIZE];
+#endif
 	TCHAR *ph, *qh;
 	BOOL bret = TRUE, is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
 

@@ -84,7 +84,7 @@ TCHAR *FindStr = NULL;
 static DWORD FindPos;
 MAILITEM *FindMailItem = NULL;
 static int FindBox = 0, FindStartBox = 0, FindStartItem = 0;
-int FindNext = 0;
+int FindNext = 0, FindOrReplace = 0;
 
 static BOOL ESCFlag = FALSE;
 static BOOL UnicodeEdit = 0;
@@ -125,7 +125,6 @@ static void SetHeaderSize(HWND hWnd);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam);
 #endif
-static BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag);
 static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
 static void SetEditSubClass(HWND hWnd);
 static void DelEditSubClass(HWND hWnd);
@@ -364,7 +363,7 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 /*
  * FindEditString - EDIT“à‚Ì•¶Žš—ñ‚ðŒŸõ‚·‚é
  */
-static BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
 {
 	DWORD dwStart;
 	DWORD dwEnd;
@@ -753,8 +752,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
 		NULL, // menu skipping
-		NULL, // menu skipping
 #endif	// _WIN32_WCE_PPC
+		NULL, // menu skipping
 		STR_CMDBAR_PREVMAIL,
 		STR_CMDBAR_NEXTMAIL,
 		STR_CMDBAR_NEXTUNREAD,
@@ -819,7 +818,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-    CommandBar_AddToolTips(hViewToolBar, 9, szTips);
+	if (op.osMajorVer >= 4) {
+		// CE.net 4.2 and higher (MobilePro 900c)
+		CommandBar_AddToolTips(hViewToolBar, 9, szTips+1);
+	} else {
+		// HPC2000 (Jornada 690, 720)
+		CommandBar_AddToolTips(hViewToolBar, 9, szTips);
+	}
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
 	} else {
@@ -1572,9 +1577,10 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	BOOL Init = FALSE, FirstLoop = TRUE, Done = FALSE;
 	int i = 0;
 
+	FindOrReplace = 1;
 	if (hWnd != MainWnd) {
 		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY); // used here & far below
-		if (FindSet == TRUE || FindStr == NULL) {
+		if (FindSet != FALSE || FindStr == NULL) {
 #ifdef UNICODE
 			// ‘I‘ð•¶Žš—ñ‚ðŽæ“¾
 			SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
@@ -1639,7 +1645,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		}
 	}
 	
-	if (FindSet == TRUE || FindStr == NULL) {
+	if (FindSet != FALSE || FindStr == NULL) {
 		if (DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_FIND), hWnd, SetFindProc) == FALSE) {
 			return;
 		}

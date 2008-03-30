@@ -33,11 +33,13 @@
 #define ID_LV_EDIT					(WM_APP + 200)
 #define ID_LV_DELETE				(WM_APP + 201)
 #define ID_LV_ALLSELECT				(WM_APP + 202)
+#define IDC_EDIT_BODY				2003
 
 /* Global Variables */
 HWND MsgWnd = NULL;
 BOOL ImportRead = TRUE;
 BOOL ImportDown = TRUE;
+int ReplaceCnt = 0;
 
 extern OPTION op;
 extern TCHAR *DataDir;
@@ -78,8 +80,9 @@ extern int vSelBox;
 extern ADDRESSBOOK *AddressBook;
 extern BOOL SaveBoxesLoaded;
 
+TCHAR *ReplaceStr;
 extern TCHAR *FindStr;
-extern int FindNext;
+extern int FindNext, FindOrReplace;
 
 /* Local Function Prototypes */
 static void SetControlFont(HWND pWnd);
@@ -6033,22 +6036,47 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_FIND);
+		if (FindOrReplace >= 2) {
+			InitDlg(hDlg, STR_TITLE_REPLACE);
+		} else {
+			InitDlg(hDlg, STR_TITLE_FIND);
+		}
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
+#endif
+#ifndef _WIN32_WCE_PPC
+		if (FindOrReplace >= 2) {
+			SetWindowText(hDlg, STR_TITLE_REPLACE);
+		}
 #endif
 		SetControlFont(hDlg);
 		if (FindStr != NULL) {
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_SETTEXT, 0, (LPARAM)FindStr);
 		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, op.MatchCase, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_SETCHECK, op.AllMsgFind, 0);
-		SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_SETCHECK, op.AllBoxFind, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_SETCHECK, op.SubjectFind, 0);
-		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), op.AllMsgFind);
-		EnableWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), op.AllMsgFind);
-		EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), op.AllMsgFind);
-		EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), op.AllBoxFind);
+		if (FindOrReplace >= 2) { // Replace
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ALL), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), SW_HIDE);
+			SetWindowText(GetDlgItem(hDlg, IDCANCEL), STR_REPLACE_DONE);
+			if (ReplaceStr != NULL) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_REPLACE, WM_SETTEXT, 0, (LPARAM)ReplaceStr);
+			}
+		} else { // Find
+			SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_SETCHECK, op.AllMsgFind, 0);
+			SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_SETCHECK, op.AllBoxFind, 0);
+			SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_SETCHECK, op.SubjectFind, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), op.AllMsgFind);
+			EnableWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), op.AllMsgFind);
+			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), op.AllMsgFind);
+			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), op.AllBoxFind);
+			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_LABEL), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_REPLACE), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_ALL), SW_HIDE);
+		}
 		break;
 
 	case WM_CLOSE:
@@ -6065,46 +6093,124 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 		case IDC_CHECK_ALL:
-			enable = SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_GETCHECK, 0, 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), enable);
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), enable);
-			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), enable);
-			if (enable) {
-				enable = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
+			if (FindOrReplace == 1) {
+				enable = SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_GETCHECK, 0, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), enable);
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), enable);
+				EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), enable);
+				if (enable) {
+					enable = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
+				}
+				EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), enable);
 			}
-			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), enable);
 			break;
 
 		case IDC_FIND_ALLBOXES:
-			enable = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), enable);
+			if (FindOrReplace == 1) {
+				enable = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), enable);
+			}
+			break;
+
+		case IDC_REPLACE_ALL:
+			if (FindOrReplace >= 2) {
+				FindOrReplace = 3;
+				ReplaceCnt = 0;
+			}
+		case IDC_REPLACE:
+			if (FindOrReplace >= 2) {
+				if (command == IDC_REPLACE) {
+					FindOrReplace = 2;
+				}
+				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
+				if (FindStr == NULL || *FindStr == TEXT('\0')) {
+					ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
+					break;
+				}
+				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_REPLACE), &ReplaceStr);
+				if (lstrcmp(FindStr, ReplaceStr) == 0) {
+					ErrorMessage(hDlg, STR_ERR_FINDISREPLACE);
+					break;
+				}
+			}
+			// fall through
+		case IDC_REPLACE_AGAIN:
+			if (FindOrReplace >= 2) {
+				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
+				if (hEdit != NULL && ReplaceStr != NULL) {
+					int i, j;
+					SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+					if (i < j) {
+						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
+						ReplaceCnt++;
+					} else if (FindOrReplace == 2) {
+						FindOrReplace = 4;
+					}
+					SendMessage(hDlg, WM_COMMAND, IDOK, 0);
+				}
+			}
 			break;
 
 		case IDC_FIND_NEXT_MESSAGE:
 		case IDC_FIND_NEXT_MAILBOX:
+			if (FindOrReplace >= 2) {
+				break;
+			}
 		case IDOK:
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
 			if (FindStr == NULL || *FindStr == TEXT('\0')) {
 				ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
 				break;
 			}
+			FindNext = 0;
 			op.MatchCase = SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0);
-			op.AllMsgFind = SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_GETCHECK, 0, 0);
-			op.AllBoxFind = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
-			op.SubjectFind = SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_GETCHECK, 0, 0);
-			if (command == IDC_FIND_NEXT_MESSAGE) {
-				FindNext = 1;
-			} else if (command == IDC_FIND_NEXT_MAILBOX) {
-				FindNext = 2;
+			if (FindOrReplace >= 2) {
+				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
+				if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
+					EnableWindow(GetDlgItem(hDlg, IDC_REPLACE), TRUE);
+					if (FindOrReplace >= 3) {
+						if (FindOrReplace == 4) {
+							FindOrReplace = 2;
+						}
+						SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
+					}
+				} else {
+					TCHAR *msg, *title;
+					if (FindOrReplace == 3 && ReplaceCnt > 0) {
+						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_REPLACED_N) + 7));
+					} else {
+						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) + lstrlen(STR_MSG_NOFIND) + 1));
+					}
+					if (msg == NULL) {
+						EndDialog(hDlg, FALSE);
+					}
+					if (FindOrReplace == 3 && ReplaceCnt > 0) {
+						if (ReplaceCnt > 999999) ReplaceCnt = 999999;
+						wsprintf(msg, STR_REPLACED_N, ReplaceCnt);
+						title = STR_TITLE_FIND;
+					} else {
+						wsprintf(msg, STR_MSG_NOFIND, FindStr);
+						title = STR_TITLE_REPLACE;
+					}
+					MessageBox(hDlg, msg, title, MB_ICONINFORMATION);
+					mem_free(&msg);
+				}
 			} else {
-				FindNext = 0;
-			}
+				op.AllMsgFind = SendDlgItemMessage(hDlg, IDC_CHECK_ALL, BM_GETCHECK, 0, 0);
+				op.AllBoxFind = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
+				op.SubjectFind = SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_GETCHECK, 0, 0);
+				if (command == IDC_FIND_NEXT_MESSAGE) {
+					FindNext = 1;
+				} else if (command == IDC_FIND_NEXT_MAILBOX) {
+					FindNext = 2;
+				}
 #ifdef _WIN32_WCE_PPC
-			SHSipPreference(hDlg, SIP_DOWN);
+				SHSipPreference(hDlg, SIP_DOWN);
 #elif defined _WIN32_WCE_LAGENDA
-			SipShowIM(SIPF_OFF);
+				SipShowIM(SIPF_OFF);
 #endif
-			EndDialog(hDlg, TRUE);
+				EndDialog(hDlg, TRUE);
+			}
 			break;
 
 		case IDCANCEL:

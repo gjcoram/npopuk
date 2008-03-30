@@ -64,6 +64,7 @@ extern HFONT hListFont;
 extern HWND hViewWnd;
 extern HFONT hViewFont;
 extern int font_charset;
+extern int FindOrReplace;
 
 extern MAILBOX *MailBox;
 extern int SelBox;
@@ -826,8 +827,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
 		NULL, // menu skipping
-		NULL, // menu skipping
 #endif	// _WIN32_WCE_PPC
+		NULL, // menu skipping
 		STR_CMDBAR_SEND,
 		STR_CMDBAR_SBOXMARK,
 		STR_CMDBAR_SENDBOX,
@@ -885,7 +886,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hEditToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-    CommandBar_AddToolTips(hEditToolBar, 6, szTips);
+		if (op.osMajorVer >= 4) {
+		// CE.net 4.2 and higher (MobilePro 900c)
+		CommandBar_AddToolTips(hEditToolBar, 6, szTips+1);
+	} else {
+		// HPC2000 (Jornada 690, 720)
+		CommandBar_AddToolTips(hEditToolBar, 6, szTips);
+	}
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hEditToolBar, hInst, IDR_MENU_EDIT_HPC, 0);
 	} else {
@@ -969,7 +976,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #ifdef _WIN32_WCE_PPC
 		WS_BORDER |
 #endif
-		WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ((op.EditWordBreakFlag == 1) ? 0 : WS_HSCROLL),
+		WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL |
+		ES_NOHIDESEL | ((op.EditWordBreakFlag == 1) ? 0 : WS_HSCROLL),
 		0, Height, rcClient.right, rcClient.bottom - Height,
 		hWnd, (HMENU)IDC_EDIT_BODY, hInst, NULL);
 #else
@@ -1941,7 +1949,10 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_REPLACE:
-			View_FindMail(hWnd, 2);
+			{
+				FindOrReplace = 2;
+				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_FIND), hWnd, SetFindProc);
+			}
 			break;
 
 		case ID_MENUITEM_ENCODE:
