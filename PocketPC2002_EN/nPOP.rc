@@ -149,6 +149,7 @@ BEGIN
     "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    "H",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
@@ -398,8 +399,9 @@ BEGIN
         MENUITEM "&Reflow selection",           ID_MENUITEM_REFLOW
         MENUITEM "Select &all",                 ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
-        MENUITEM "&Find\tCtrl+F",               ID_MENUITEM_FIND
-        MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
+        MENUITEM "&Find",                       ID_MENUITEM_FIND
+        MENUITEM "Find &next",                  ID_MENUITEM_NEXTFIND
+        MENUITEM "&Replace",                    ID_MENUITEM_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Paste fro&m file",            ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR

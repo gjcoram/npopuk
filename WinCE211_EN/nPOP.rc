@@ -153,6 +153,7 @@ BEGIN
     "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
     "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    "H",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
@@ -1413,6 +1414,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
         MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
+        MENUITEM "&Replace\tCtrl+H",            ID_MENUITEM_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Paste fro&m file...",         ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
