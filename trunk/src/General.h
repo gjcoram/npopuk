@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b6")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b6p2")
 #define APP_VERSION_NUM			2008
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -874,7 +874,7 @@ int remove_duplicate_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 
 // View
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag);
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #ifdef _WIN32_WCE_PPC
 int SetWordBreak(HWND hWnd, HWND hToolBar);

@@ -81,7 +81,7 @@ static MULTIPART **tpMultiPart;
 static int MultiPartCnt, MultiPartTextIndex;
 
 TCHAR *FindStr = NULL;
-static DWORD FindPos;
+DWORD FindPos;
 MAILITEM *FindMailItem = NULL;
 static int FindBox = 0, FindStartBox = 0, FindStartItem = 0;
 int FindNext = 0, FindOrReplace = 0;
@@ -363,7 +363,7 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 /*
  * FindEditString - EDIT内の文字列を検索する
  */
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 {
 	DWORD dwStart;
 	DWORD dwEnd;
@@ -381,6 +381,9 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
 	// エディットから文字列を取得する
 	AllocGetText(hEdit, &buf);
 	p = str_find(strFind, buf + FindPos, CaseFlag);
+	if (Loop == TRUE && *p == TEXT('\0')) {
+		p = str_find(strFind, buf, CaseFlag);
+	}
 
 	// 検索文字列が見つからなかった場合
 	if (*p == TEXT('\0')) {
@@ -418,6 +421,9 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
 			FindPos = st;
 		}
 		p = str_find(strFind, buf + FindPos, CaseFlag);
+		if (Loop == TRUE && *p == TEXT('\0')) {
+			p = str_find(strFind, buf, CaseFlag);
+		}
 		// 検索文字列が見つからなかった場合
 		if (*p == TEXT('\0')) {
 			mem_free(&buf);
@@ -436,6 +442,9 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag)
 			FindPos = dwStart;
 		}
 		p = str_find(strFind, buf + FindPos, CaseFlag);
+		if (Loop == TRUE && *p == TEXT('\0')) {
+			p = str_find(strFind, buf, CaseFlag);
+		}
 		// 検索文字列が見つからなかった場合
 		if (*p == TEXT('\0')) {
 			mem_free(&buf);
@@ -1695,7 +1704,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	while (Done == FALSE) {
 		if (FirstLoop == TRUE && hWnd != MainWnd) {
 			// 本文から検索して見つかった位置を選択状態にする
-			if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
+			if (FindEditString(hEdit, FindStr, op.MatchCase, FALSE) == TRUE) {
 				break;
 			}
 
@@ -1703,7 +1712,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			if (op.AllMsgFind == 0) {
 				// clear selection and search again
 				SendMessage(hEdit, EM_SETSEL, 0, 0);
-				if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
+				if (FindEditString(hEdit, FindStr, op.MatchCase, FALSE) == TRUE) {
 					break;
 				}
 			}
@@ -1785,7 +1794,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					hEdit = GetDlgItem(hViewWnd, IDC_EDIT_BODY);
 				}
 				if (hEdit != NULL) {
-					FindEditString(hEdit, FindStr, op.MatchCase);
+					FindEditString(hEdit, FindStr, op.MatchCase, FALSE);
 				}
 				break;
 			}

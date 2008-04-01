@@ -1025,7 +1025,7 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "Find &text:",IDC_STATIC,5,12,60,10
     EDITTEXT        IDC_EDIT_FIND,5,25,150,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Find",IDOK,100,10,55,12
+    PUSHBUTTON      "&Find",IDC_FIND,100,10,55,12
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,43,90,10
     CONTROL         "Search all &mail in folder",IDC_CHECK_ALL,"Button",
