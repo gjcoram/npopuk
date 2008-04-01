@@ -83,6 +83,7 @@ extern BOOL SaveBoxesLoaded;
 TCHAR *ReplaceStr;
 extern TCHAR *FindStr;
 extern int FindNext, FindOrReplace;
+extern DWORD FindPos;
 
 /* Local Function Prototypes */
 static void SetControlFont(HWND pWnd);
@@ -6088,6 +6089,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (command) {
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 		case IDC_EDIT_FIND:
+		case IDC_EDIT_REPLACE:
 			SetSip(hDlg, HIWORD(wParam));
 			break;
 #endif
@@ -6117,11 +6119,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				FindOrReplace = 3;
 				ReplaceCnt = 0;
 			}
+			// fall through
 		case IDC_REPLACE:
 			if (FindOrReplace >= 2) {
-				if (command == IDC_REPLACE) {
-					FindOrReplace = 2;
-				}
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
 				if (FindStr == NULL || *FindStr == TEXT('\0')) {
 					ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
@@ -6132,31 +6132,43 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ErrorMessage(hDlg, STR_ERR_FINDISREPLACE);
 					break;
 				}
-			}
-			// fall through
-		case IDC_REPLACE_AGAIN:
-			if (FindOrReplace >= 2) {
-				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
-				if (hEdit != NULL && ReplaceStr != NULL) {
-					int i, j;
-					SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
-					if (i < j) {
-						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
-						ReplaceCnt++;
-					} else if (FindOrReplace == 2) {
-						FindOrReplace = 4;
+				{
+					HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
+					if (hEdit != NULL) {
+						int i, j;
+						SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+						if (i < j) {
+							TCHAR *buf;
+							AllocGetText(hEdit, &buf);
+							if (buf != NULL) {
+								int len = lstrlen(FindStr);
+								if ( ((j-i) == len) && (command == IDC_REPLACE) &&
+									(op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
+									|| (op.MatchCase == TRUE && str_cmp_n_t(FindStr, buf+i, len) == 0)) {
+									FindOrReplace = 4;
+								}
+								mem_free(&buf);
+							}
+						}
+						SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
 					}
-					SendMessage(hDlg, WM_COMMAND, IDOK, 0);
 				}
 			}
 			break;
 
 		case IDC_FIND_NEXT_MESSAGE:
 		case IDC_FIND_NEXT_MAILBOX:
+			// above two commands shouldn't be accessible in Replace
+		case IDOK:
 			if (FindOrReplace >= 2) {
+				SendMessage(hDlg, WM_COMMAND, IDCANCEL, 0);
 				break;
 			}
-		case IDOK:
+		case IDC_FIND:
+			if (FindOrReplace > 2) {
+				FindOrReplace = 2;
+			}
+		case IDC_REPLACE_AGAIN:
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
 			if (FindStr == NULL || *FindStr == TEXT('\0')) {
 				ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
@@ -6166,15 +6178,22 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			op.MatchCase = SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0);
 			if (FindOrReplace >= 2) {
 				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
-				if (FindEditString(hEdit, FindStr, op.MatchCase) == TRUE) {
-					EnableWindow(GetDlgItem(hDlg, IDC_REPLACE), TRUE);
+				BOOL did = FALSE;
+				if (FindOrReplace == 4) {
+					SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
+					FindOrReplace = 2;
+					did = TRUE;
+				}
+				if (FindEditString(hEdit, FindStr, op.MatchCase, TRUE) == TRUE) {
 					if (FindOrReplace >= 3) {
-						if (FindOrReplace == 4) {
-							FindOrReplace = 2;
+						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
+						if (FindOrReplace == 3) {
+							ReplaceCnt++;
+							// ReplaceAll -- do it again
+							SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
 						}
-						SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
 					}
-				} else {
+				} else if (did == FALSE) {
 					TCHAR *msg, *title;
 					if (FindOrReplace == 3 && ReplaceCnt > 0) {
 						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_REPLACED_N) + 7));

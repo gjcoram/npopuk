@@ -854,7 +854,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,15,70,80,10
     CONTROL         "Search in &subject",IDC_CHECK_SUBJECT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,15,85,80,10
-    DEFPUSHBUTTON   "&Find next",IDOK,100,40,55,12
+    DEFPUSHBUTTON   "&Find next",IDC_FIND,100,40,55,12
     PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,100,55,55,12
     PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,100,70,55,12
     LTEXT           "Re&place with:",IDC_REPLACE_LABEL,5,57,43,10
