@@ -6037,9 +6037,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		if (FindOrReplace >= 2) {
-			InitDlg(hDlg, STR_TITLE_REPLACE);
-		} else {
+		if (FindOrReplace < 2) {
 			InitDlg(hDlg, STR_TITLE_FIND);
 		}
 #elif defined(_WIN32_WCE)
@@ -6056,11 +6054,13 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, op.MatchCase, 0);
 		if (FindOrReplace >= 2) { // Replace
+#ifndef _WIN32_WCE_PPC
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ALL), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), SW_HIDE);
+#endif
 			SetWindowText(GetDlgItem(hDlg, IDCANCEL), STR_REPLACE_DONE);
 			if (ReplaceStr != NULL) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_REPLACE, WM_SETTEXT, 0, (LPARAM)ReplaceStr);
@@ -6073,10 +6073,12 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), op.AllMsgFind);
 			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), op.AllMsgFind);
 			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), op.AllBoxFind);
+#ifndef _WIN32_WCE_PPC
 			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_LABEL), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_REPLACE), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_ALL), SW_HIDE);
+#endif
 		}
 		break;
 

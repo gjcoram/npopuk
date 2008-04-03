@@ -66,6 +66,7 @@
 #define IDD_DIALOG_ATTACH               171
 #define IDD_DIALOG_MAILPROP             173
 #define IDD_DIALOG_FIND                 174
+#define IDD_DIALOG_REPLACE              175
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_ATTACH_NOTICE        181

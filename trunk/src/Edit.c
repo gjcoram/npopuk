@@ -1951,7 +1951,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_MENUITEM_REPLACE:
 			{
 				FindOrReplace = 2;
+#ifdef _WIN32_WCE_PPC
+				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_REPLACE), hWnd, SetFindProc);
+#else
 				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_FIND), hWnd, SetFindProc);
+#endif
 			}
 			break;
 
