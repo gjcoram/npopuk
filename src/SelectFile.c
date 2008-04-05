@@ -460,7 +460,7 @@ static BOOL CmboBox_GetPath(HWND hCombo, int sel, TCHAR *fpath)
 static BOOL CALLBACK NewDirProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	TCHAR buf[BUF_SIZE];
-	TCHAR *newdirname;
+	TCHAR *newdirname = NULL;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
