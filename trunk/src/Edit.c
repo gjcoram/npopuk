@@ -2050,6 +2050,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				BOOL skip = FALSE, quoting = FALSE;
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&ss, (LPARAM)&se);
 				if (se < ss) break;
+				buf = NULL;
 				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
 				if (buf == NULL) {
 					break;

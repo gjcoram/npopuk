@@ -80,7 +80,7 @@ extern int vSelBox;
 extern ADDRESSBOOK *AddressBook;
 extern BOOL SaveBoxesLoaded;
 
-TCHAR *ReplaceStr;
+TCHAR *ReplaceStr = NULL;
 extern TCHAR *FindStr;
 extern int FindNext, FindOrReplace;
 extern DWORD FindPos;
@@ -148,12 +148,15 @@ static int CALLBACK PropSheetCallback(HWND hwndDlg, UINT message, LPARAM lParam)
  * InitDlg - ダイアログの初期化
  */
 #ifdef _WIN32_WCE_PPC
-static void InitDlg(HWND hDlg, TCHAR *str)
+static void InitDlg(HWND hDlg, TCHAR *str, BOOL full)
 {
 	SHINITDLGINFO shidi;
 
 	shidi.dwMask = SHIDIM_FLAGS;
-	shidi.dwFlags = SHIDIF_DONEBUTTON | SHIDIF_SIPDOWN | SHIDIF_SIZEDLGFULLSCREEN;
+	shidi.dwFlags = SHIDIF_SIPDOWN;
+	if (full) {
+		shidi.dwFlags |= SHIDIF_DONEBUTTON | SHIDIF_SIZEDLGFULLSCREEN;
+	}
 	shidi.hDlg = hDlg;
 	SHInitDialog(&shidi);
 
@@ -393,7 +396,7 @@ static BOOL CALLBACK SetSSLProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_SETSSL);
+		InitDlg(hDlg, STR_TITLE_SETSSL, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -553,7 +556,7 @@ static BOOL CALLBACK SetSmtpAuthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_SMTPAUTH);
+		InitDlg(hDlg, STR_TITLE_SMTPAUTH, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -837,7 +840,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_FILTER);
+		InitDlg(hDlg, STR_TITLE_FILTER, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -1521,7 +1524,7 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_NEWMBOX);
+		InitDlg(hDlg, STR_TITLE_NEWMBOX, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -1999,7 +2002,7 @@ BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_ENCODE);
+		InitDlg(hDlg, STR_TITLE_ENCODE, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -3172,7 +3175,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_INITMAILBOX);
+		InitDlg(hDlg, STR_TITLE_INITMAILBOX, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -3328,7 +3331,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_CCBCC);
+		InitDlg(hDlg, STR_TITLE_CCBCC, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -3681,7 +3684,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_ATTACH);
+		InitDlg(hDlg, STR_TITLE_ATTACH, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -4052,7 +4055,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_SENDINFO);
+		InitDlg(hDlg, STR_TITLE_SENDINFO, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -4927,7 +4930,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_ADDRESSINFO);
+		InitDlg(hDlg, STR_TITLE_ADDRESSINFO, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -5353,7 +5356,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_EDITADDRESS);
+		InitDlg(hDlg, STR_TITLE_EDITADDRESS, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -5680,7 +5683,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_ADDRESSLIST);
+		InitDlg(hDlg, STR_TITLE_ADDRESSLIST, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
@@ -6038,7 +6041,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
 		if (FindOrReplace < 2) {
-			InitDlg(hDlg, STR_TITLE_FIND);
+			InitDlg(hDlg, STR_TITLE_FIND, TRUE);
+		} else {
+			InitDlg(hDlg, STR_TITLE_REPLACE, FALSE);
 		}
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
@@ -6127,20 +6132,25 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
 				if (FindStr == NULL || *FindStr == TEXT('\0')) {
 					ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
+					SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
 					break;
 				}
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_REPLACE), &ReplaceStr);
 				if (lstrcmp(FindStr, ReplaceStr) == 0) {
 					ErrorMessage(hDlg, STR_ERR_FINDISREPLACE);
+					SetFocus(GetDlgItem(hDlg, IDC_EDIT_REPLACE));
 					break;
 				}
 				{
 					HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
 					if (hEdit != NULL) {
 						int i, j;
+						if (command == IDC_REPLACE) {
+							FindOrReplace = 2;
+						}
 						SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
 						if (i < j) {
-							TCHAR *buf;
+							TCHAR *buf = NULL;
 							AllocGetText(hEdit, &buf);
 							if (buf != NULL) {
 								int len = lstrlen(FindStr);
@@ -6174,6 +6184,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
 			if (FindStr == NULL || *FindStr == TEXT('\0')) {
 				ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
+				SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
 				break;
 			}
 			FindNext = 0;
@@ -6374,7 +6385,7 @@ BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE_PPC
-		InitDlg(hDlg, STR_TITLE_ATTACH);
+		InitDlg(hDlg, STR_TITLE_ATTACH, TRUE);
 #elif defined(_WIN32_WCE)
 		InitDlg(hDlg);
 #endif
