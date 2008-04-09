@@ -6147,20 +6147,22 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						int i, j;
 						if (command == IDC_REPLACE) {
 							FindOrReplace = 2;
-						}
-						SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
-						if (i < j) {
-							TCHAR *buf = NULL;
-							AllocGetText(hEdit, &buf);
-							if (buf != NULL) {
-								int len = lstrlen(FindStr);
-								if ( ((j-i) == len) && (command == IDC_REPLACE) &&
-									(op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
-									|| (op.MatchCase == TRUE && str_cmp_n_t(FindStr, buf+i, len) == 0)) {
-									FindOrReplace = 4;
+							SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+							if (i < j) {
+								TCHAR *buf = NULL;
+								AllocGetText(hEdit, &buf);
+								if (buf != NULL) {
+									int len = lstrlen(FindStr);
+									if ( ((j-i) == len) &&
+										(op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
+										|| (op.MatchCase == TRUE && str_cmp_n_t(FindStr, buf+i, len) == 0)) {
+										FindOrReplace = 4;
+									}
+									mem_free(&buf);
 								}
-								mem_free(&buf);
 							}
+						} else {
+							SendMessage(hEdit, EM_SETSEL, 0, 0);
 						}
 						SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
 					}
@@ -6197,7 +6199,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					FindOrReplace = 2;
 					did = TRUE;
 				}
-				if (FindEditString(hEdit, FindStr, op.MatchCase, TRUE) == TRUE) {
+				if (FindEditString(hEdit, FindStr, op.MatchCase, (FindOrReplace == 3) ? FALSE : TRUE) == TRUE) {
 					if (FindOrReplace >= 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
 						if (FindOrReplace == 3) {
