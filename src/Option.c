@@ -6193,22 +6193,23 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			op.MatchCase = SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0);
 			if (FindOrReplace >= 2) {
 				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
-				BOOL did = FALSE;
+				BOOL show_msg = TRUE, done = FALSE;
 				if (FindOrReplace == 4) {
 					SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
 					FindOrReplace = 2;
-					did = TRUE;
+					show_msg = FALSE;
 				}
-				if (FindEditString(hEdit, FindStr, op.MatchCase, (FindOrReplace == 3) ? FALSE : TRUE) == TRUE) {
-					if (FindOrReplace >= 3) {
+				while (done == FALSE) {
+					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase,
+							(FindOrReplace == 3) ? FALSE : TRUE);
+					if (found && FindOrReplace == 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
-						if (FindOrReplace == 3) {
-							ReplaceCnt++;
-							// ReplaceAll -- do it again
-							SendMessage(hDlg, WM_COMMAND, IDC_REPLACE_AGAIN, 0);
-						}
+						ReplaceCnt++;
+					} else {
+						done = TRUE;
 					}
-				} else if (did == FALSE) {
+				}
+				if (show_msg == TRUE) {
 					TCHAR *msg, *title;
 					if (FindOrReplace == 3 && ReplaceCnt > 0) {
 						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_REPLACED_N) + 7));
