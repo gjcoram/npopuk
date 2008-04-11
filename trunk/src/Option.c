@@ -6207,6 +6207,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						ReplaceCnt++;
 					} else {
 						done = TRUE;
+						if (found) {
+							show_msg = FALSE;
+						}
 					}
 				}
 				if (show_msg == TRUE) {
