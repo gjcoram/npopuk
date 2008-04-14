@@ -662,9 +662,9 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "Forward message:",IDC_STATIC,5,5,65,10
     CONTROL         "&Quoted",IDC_QUOTSTYLE_0,"Button",BS_AUTORADIOBUTTON,70,
-                    5,35,10
+                    5,40,10
     CONTROL         "&In-line",IDC_QUOTSTYLE_1,"Button",BS_AUTORADIOBUTTON,
-                    110,5,35,10
+                    115,5,35,10
     CONTROL         "As &Attachment",IDC_QUOTSTYLE_2,"Button",BS_AUTORADIOBUTTON,
                     70,15,70,10
     CONTROL         "Use &signature for forwarded mail",IDC_SIGNFWD,"Button",

@@ -363,8 +363,8 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	if (len > 0) {
 		char *buf, *s, *t;
 		buf = file_read(fname, len);
-		buf[len-1] = '\0';
 		if (buf != NULL) {
+			buf[len] = '\0';
 			if (str_cmp_n(buf, "IniFile=", strlen("IniFile=")) == 0) {
 				s = buf + strlen("IniFile=");
 				if (*s == '\"') {
@@ -377,7 +377,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 					}
 #endif
 				}
-				if (*t == '\"') {
+				if (*(t-1) == '\"') {
 					t--;
 				}
 				*t = '\0';
@@ -423,7 +423,15 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 						return FALSE;
 					}
 					IniFile = alloc_copy_t(fullname);
-					DefaultDataDir = alloc_copy_t(IniFile);
+					DefaultDataDir = alloc_copy_t(fullname);
+					if (IniFile == NULL || DefaultDataDir == NULL) {
+						mem_free(&p);
+						mem_free(&IniFile);
+						mem_free(&DefaultDataDir);
+						mem_free(&InitialAccount);
+						mem_free(&AppDir);
+						return FALSE;
+					}
 					trunc_to_dirname(DefaultDataDir);
 					mem_free(&p);
 				}
