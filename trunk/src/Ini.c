@@ -177,7 +177,6 @@ static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
 BOOL ini_read_setting(HWND hWnd)
 {
 	DWORD DirInfo;
-	FILTER *tpFilter;
 	HDC hdc;
 	TCHAR app_path[BUF_SIZE];
 	TCHAR buf[BUF_SIZE];
@@ -637,6 +636,43 @@ BOOL ini_read_setting(HWND hWnd)
 		(*(op.RasInfo + j))->RasPass = alloc_copy_t(tmp);
 	}
 
+	op.GlobalFilterEnable = profile_get_int(GENERAL, TEXT("GlobalFilterEnable"), 0, app_path);
+	op.GlobalFilterCnt = profile_get_int(GENERAL, TEXT("GlobalFilterCnt"), 0, app_path);
+
+	op.tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * op.GlobalFilterCnt);
+	if (op.tpFilter == NULL) {
+		op.GlobalFilterCnt = 0;
+	}
+	for (t = 0; t < op.GlobalFilterCnt; t++) {
+		FILTER *tpFilter = *(op.tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
+		if (tpFilter == NULL) {
+			continue;
+		}
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Enable"));
+		tpFilter->Enable = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
+		tpFilter->Action = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+		tpFilter->SaveboxName = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
+		tpFilter->Header1 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
+		tpFilter->Content1 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+		tpFilter->Boolean = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
+		tpFilter->Header2 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
+		tpFilter->Content2 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+	}
+
 	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
 	if (cnt == 0) {
 		mailbox_create(hWnd, 1, FALSE, FALSE);
@@ -799,7 +835,7 @@ BOOL ini_read_setting(HWND hWnd)
 			(MailBox + num)->FilterCnt = 0;
 		}
 		for (t = 0; t < (MailBox + num)->FilterCnt; t++) {
-			tpFilter = *((MailBox + num)->tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
+			FILTER *tpFilter = *((MailBox + num)->tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
 			if (tpFilter == NULL) {
 				continue;
 			}
@@ -904,7 +940,6 @@ BOOL ini_read_setting(HWND hWnd)
  */
 BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir)
 {
-	FILTER *tpFilter;
 	TCHAR app_path[BUF_SIZE];
 	///////////// MRP /////////////////////
 	TCHAR app_pathBackup[BUF_SIZE];
@@ -1186,6 +1221,70 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	}
 	profile_write_int(GENERAL, TEXT("RasInfoCnt"), t, app_path);
 
+	profile_write_int(GENERAL, TEXT("GlobalFilterEnable"), op.GlobalFilterEnable, app_path);
+	profile_write_int(GENERAL, TEXT("GlobalFilterCnt"), op.GlobalFilterCnt, app_path);
+
+	for (t = 0; op.tpFilter != NULL && t < op.GlobalFilterCnt; t++) {
+		FILTER *tpFilter = *(op.tpFilter + t);
+		if (tpFilter == NULL) {
+			continue;
+		}
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Enable"));
+		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->Enable, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
+		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->Action, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->SaveboxName, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Header1, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Content1, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->Boolean, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Header2, app_path);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Content2, app_path);
+	}
+
+	// GJC clear any further filter keys
+	found = TRUE;
+	while (found) {
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Enable"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+		profile_delete_key(GENERAL, key_buf); // may not exist in old versions
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+		profile_delete_key(GENERAL, key_buf); // may not exist in old versions
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
+		found &= profile_delete_key(GENERAL, key_buf);
+
+		t++;
+	}
+
 	// Retention
 	profile_write_int(GENERAL, TEXT("MailBoxCnt"), MailBoxCnt - MAILBOX_USER, app_path);
 
@@ -1320,7 +1419,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_int(buf, TEXT("FilterCnt"), (MailBox + j)->FilterCnt, app_path);
 
 		for (t = 0; (MailBox + j)->tpFilter != NULL && t < (MailBox + j)->FilterCnt; t++) {
-			tpFilter = *((MailBox + j)->tpFilter + t);
+			FILTER *tpFilter = *((MailBox + j)->tpFilter + t);
 			if (tpFilter == NULL) {
 				continue;
 			}

@@ -77,7 +77,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern SOCKET g_soc;
 extern MAILBOX *MailBox;
 extern BOOL AutoCheckFlag;
-extern int command_status, SelBox, RecvBox;
+extern int command_status, SelBox, RecvBox, MailBoxCnt;
 
 /* Local Function Prototypes */
 static BOOL RasConnectStart(HWND hWnd, int BoxIndex);
@@ -723,7 +723,7 @@ static BOOL RasConnectStart(HWND hWnd, int BoxIndex)
  */
 BOOL RasMailBoxStart(HWND hWnd, int BoxIndex)
 {
-	BOOL ret;
+	BOOL ret = TRUE;
 
 	if (op.EnableLAN == 1) {
 		// LAN接続オプションが有効
@@ -733,7 +733,22 @@ BOOL RasMailBoxStart(HWND hWnd, int BoxIndex)
 	g_soc = 0;
 	SetMailMenu(hWnd);
 
-	ret = RasConnectStart(hWnd, BoxIndex);
+	if (BoxIndex == MAILBOX_SEND) {
+		// find the next queued message, use its dial-up setting
+		BoxIndex = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, MAILBOX_SEND);
+		// if that doesn't work, look for the first mailbox with Ras enabled
+		if (BoxIndex < MAILBOX_USER || (MailBox + BoxIndex)->RasMode == 0) {
+			for (BoxIndex = MAILBOX_USER; BoxIndex < MailBoxCnt; BoxIndex++) {
+				if ((MailBox + BoxIndex)->RasMode) {
+					break;
+				}
+			}
+		}
+	}
+
+	if (BoxIndex < MailBoxCnt) {
+		ret = RasConnectStart(hWnd, BoxIndex);
+	}
 
 	g_soc = -1;
 	SetMailMenu(hWnd);

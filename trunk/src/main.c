@@ -1101,7 +1101,7 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
-		!(SocFlag & (MailBox + SelBox)->RasMode & !op.EnableLAN));
+		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
 
 #ifdef _WIN32_WCE_PPC
@@ -1972,6 +1972,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	// 設定の解放
 	ini_free();
+	filter_free(NULL); // global filters
 	FreeRasInfo();
 
 	// タスクトレイのアイコンの除去
@@ -3642,12 +3643,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SmtpWait--;
 				break;
 			}
-			if (CheckBox >= MAILBOX_USER &&
-				item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox) != -1) {
-				// メールの送信
-				SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +
-					item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox)), SMTP_NEXTSEND);
-				break;
+			if (CheckBox >= MAILBOX_USER) {
+				int next = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox);
+				if (next != -1) {
+					// メールの送信
+					SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem + next), SMTP_NEXTSEND);
+					break;
+				}
 			}
 
 			CheckBox++;
@@ -3726,12 +3728,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SmtpWait--;
 				break;
 			}
-			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 &&
-				item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox) != -1) {
-				//Execution of transmission mail (POP before SMTP)
-				SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +
-					item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox)), SMTP_NEXTSEND);
-				break;
+			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0) {
+				int next = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox);
+				if (next != -1) {
+					//Execution of transmission mail (POP before SMTP)
+					SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +	next), SMTP_NEXTSEND);
+					break;
+				}
 			}
 			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 &&
 				op.CheckAfterUpdate == 1 && ExecCheckFlag == FALSE) {
@@ -4381,7 +4384,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				BOOL err = FALSE;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->CyclicFlag == 0) {
-						BOOL do_saveboxes =  (op.BlindAppend == 0) && (op.CheckAfterUpdate || (MailBox+i)->FilterEnable == 2);
+						BOOL do_saveboxes =  (op.BlindAppend == 0) && (op.CheckAfterUpdate || ((MailBox+i)->FilterEnable & FILTER_REFILTER));
 						if (mailbox_load_now(hWnd, i, FALSE, do_saveboxes) != 1) {
 							err = TRUE;
 							break;

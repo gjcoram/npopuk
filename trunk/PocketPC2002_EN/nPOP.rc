@@ -908,10 +908,12 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Filter"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "Enable &filters",IDC_CHECK_FILTER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,56,10
-    CONTROL         "&Refilter on download",IDC_CHECK_REFILTER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,65,2,80,10
+    CONTROL         "E&nable",IDC_CHECK_FILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,33,10
+    CONTROL         "&Refilter on RETR",IDC_CHECK_REFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,2,65,10
+    CONTROL         "Use &globals",IDC_CHECK_GBLFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,110,2,50,10
     CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
                     WS_BORDER | WS_TABSTOP,0,15,150,72
@@ -1371,7 +1373,7 @@ BEGIN
     IDD_DIALOG_FILTER, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 131
+        RIGHTMARGIN, 157
         TOPMARGIN, 7
         BOTTOMMARGIN, 105
     END

@@ -49,7 +49,9 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, BOOL download);
 static int item_save_header_size(TCHAR *header, TCHAR *buf);
 static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret);
 static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *filter_content);
+static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int flag_in);
 static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what);
+static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL refilter, int dw, int sbox);
 static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fret, int *do_what, BOOL refilter);
 
 /*
@@ -658,6 +660,8 @@ int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIn
 		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox);
 		if (MailBoxIndex == BoxIndex) {
 			return i;
+		} else if (MailBoxIndex == MAILBOX_SEND) {
+			return BoxIndex;
 		}
 	}
 	return -1;
@@ -993,9 +997,9 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 	mem_free(&msgid1);
 	mem_free(&msgid2);
 
-	if (tpMailBox != NULL && tpMailBox->FilterEnable == 2) {
+	if (tpMailBox != NULL && (tpMailBox->FilterEnable & FILTER_REFILTER)) {
 		//GJC refilter on full download
-		do_what = (int *)mem_calloc(sizeof(int) * tpMailBox->FilterCnt);
+		do_what = (int *)mem_calloc(sizeof(int) * (op.GlobalFilterCnt + tpMailBox->FilterCnt));
 
 		// フィルタをチェック
 		fret = item_filter_check(tpMailBox, buf, do_what);
@@ -1004,7 +1008,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 	// Body
 	item_set_body(tpMailItem, buf, download);
 
-	if (tpMailBox != NULL && tpMailBox->FilterEnable == 2) {
+	if (tpMailBox != NULL && (tpMailBox->FilterEnable & 0x02)) {
 		if (fret > FILTER_RECV) {
 			retval = item_filter_execute(tpMailBox, tpMailItem, fret, do_what, TRUE);
 		}
@@ -1022,7 +1026,7 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size)
 	MAILITEM *tpMailItem;
 	int fret;
 	int *do_what;
-	do_what = (int *)mem_calloc(sizeof(int) * tpMailBox->FilterCnt);
+	do_what = (int *)mem_calloc(sizeof(int) * (op.GlobalFilterCnt + tpMailBox->FilterCnt));
 
 	// フィルタをチェック
 	fret = item_filter_check(tpMailBox, buf, do_what);
@@ -1639,84 +1643,106 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 }
 
 /*
+ * item_check_filter
+ */
+static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int flag_in)
+{
+	int RetFlag = flag_in;
+	BOOL match1 = FALSE, match2 = FALSE, BoolOp, DoFilter = FALSE;
+	if (tpFilter == NULL || tpFilter->Enable == 0) {
+		return RetFlag;
+	}
+	BoolOp = tpFilter->Boolean;
+	if (tpFilter->Header1 != NULL && *tpFilter->Header1 != TEXT('\0')) {
+		match1 = item_filter_check_content(buf, tpFilter->Header1, tpFilter->Content1);
+	}
+	if (match1 == FALSE &&  BoolOp != FILTER_BOOL_OR) {
+		return RetFlag;
+	}
+	if (tpFilter->Header2 != NULL && *tpFilter->Header2 != TEXT('\0')) {
+		match2 = item_filter_check_content(buf, tpFilter->Header2, tpFilter->Content2);
+	} else if (BoolOp == FILTER_BOOL_AND) {
+		// header2 not required for AND
+		match2 = TRUE;
+	}
+	switch (BoolOp) {
+		case FILTER_BOOL_OR:
+			DoFilter = match1 || match2;
+			break;
+		case FILTER_BOOL_UNLESS:
+			DoFilter = match1 && (!match2);
+			break;
+		default:
+			DoFilter = match1 && match2;
+			break;
+	}
+	if (DoFilter) {
+		int j, fret;
+		j = tpFilter->Action;
+		for (fret = 1; j > 0; j--) {
+			fret *= 2;
+		}
+		if (do_what_i != NULL) {
+			*do_what_i = fret;
+		}
+		switch (fret) {
+		case FILTER_UNRECV:
+		case FILTER_RECV:
+			RetFlag |= fret;
+			break;
+
+		case FILTER_DOWNLOADMARK:
+		case FILTER_DELETEMARK:
+			// マークフラグ
+			if (!(RetFlag & (FILTER_DOWNLOADMARK | FILTER_DELETEMARK))) {
+				RetFlag |= fret;
+			}
+			break;
+
+		case FILTER_COPY:
+		case FILTER_MOVE:
+			if (!(RetFlag & FILTER_MOVE)) {
+				RetFlag |= fret;
+			}
+			break;
+
+		default:  // FILTER_READICON
+			RetFlag |= fret;
+			break;
+		}
+	}
+	return RetFlag;
+}
+
+/*
  * item_filter_check - フィルタ文字列のチェック
  */
 static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 {
 	int RetFlag = 0;
-	int fret, done = 0;
-	int i, j;
+	int i;
+	int *dwi = NULL;
+	BOOL DoGlobal = op.GlobalFilterEnable && !(tpMailBox->FilterEnable & FILTER_NOGLOBAL)
+					&& (op.tpFilter != NULL);
 
-	if (tpMailBox->FilterEnable == 0 || tpMailBox->tpFilter == NULL ||
-		buf == NULL || *buf == '\0') {
+	if (tpMailBox->FilterEnable == 0 || buf == NULL || *buf == '\0' || 
+		(tpMailBox->tpFilter == NULL && DoGlobal == FALSE)) {
 		return FILTER_RECV;
 	}
-	for (i = 0; i < tpMailBox->FilterCnt && !done; i++) {
-		BOOL match1 = FALSE, match2 = FALSE, BoolOp, DoFilter = FALSE;
-		if (*(tpMailBox->tpFilter + i) == NULL ||
-			(*(tpMailBox->tpFilter + i))->Enable == 0) {
-			continue;
-		}
-		BoolOp = (*(tpMailBox->tpFilter + i))->Boolean;
-		if ((*(tpMailBox->tpFilter + i))->Header1 != NULL &&
-			*(*(tpMailBox->tpFilter + i))->Header1 != TEXT('\0')) {
-			match1 = item_filter_check_content(buf, (*(tpMailBox->tpFilter + i))->Header1,
-				(*(tpMailBox->tpFilter + i))->Content1);
-		}
-		if (match1 == FALSE &&  BoolOp != FILTER_BOOL_OR) {
-			continue;
-		}
-		if ((*(tpMailBox->tpFilter + i))->Header2 != NULL &&
-			*(*(tpMailBox->tpFilter + i))->Header2 != TEXT('\0')) {
-			match2 = item_filter_check_content(buf, (*(tpMailBox->tpFilter + i))->Header2,
-				(*(tpMailBox->tpFilter + i))->Content2);
-		} else if (BoolOp == FILTER_BOOL_AND) {
-			// header2 not required for AND
-			match2 = TRUE;
-		}
-		switch (BoolOp) {
-			case FILTER_BOOL_OR:
-				DoFilter = match1 || match2;
+	if (DoGlobal) {
+		for (i = 0; i < op.GlobalFilterCnt; i++) {
+			if (do_what != NULL) dwi = do_what + i;
+			RetFlag = item_check_filter(*(op.tpFilter+i), buf, dwi, RetFlag);
+			if (RetFlag & (FILTER_RECV | FILTER_UNRECV)) {
 				break;
-			case FILTER_BOOL_UNLESS:
-				DoFilter = match1 && (!match2);
-				break;
-			default:
-				DoFilter = match1 && match2;
-				break;
-		}
-		if (DoFilter) {
-			j = (*(tpMailBox->tpFilter + i))->Action;
-			for (fret = 1; j > 0; j--) {
-				fret *= 2;
 			}
-			if (do_what != NULL) {
-				do_what[i] = fret;
-			}
-			switch (fret) {
-			case FILTER_UNRECV:
-			case FILTER_RECV:
-				RetFlag |= fret;
-				done = 1;
-				break;
-
-			case FILTER_DOWNLOADMARK:
-			case FILTER_DELETEMARK:
-				// マークフラグ
-				if (!(RetFlag & (FILTER_DOWNLOADMARK | FILTER_DELETEMARK))) {
-					RetFlag |= fret;
-				}
-				break;
-
-			case FILTER_COPY:
-			case FILTER_MOVE:
-				if (!(RetFlag & FILTER_MOVE)) {
-					RetFlag |= fret;
-				}
-				break;
-
-			default:  // FILTER_READICON
-				RetFlag |= fret;
+		}
+	}
+	if (tpMailBox->tpFilter != NULL) {
+		for (i = 0; i < tpMailBox->FilterCnt; i++) {
+			if (do_what != NULL) dwi = do_what + op.GlobalFilterCnt + i;
+			RetFlag = item_check_filter(*(tpMailBox->tpFilter+i), buf, dwi, RetFlag);
+			if (RetFlag & (FILTER_RECV | FILTER_UNRECV)) {
 				break;
 			}
 		}
@@ -1725,62 +1751,85 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 }
 
 /*
- * item_filter_check_execute - handle move/copy and mark
+ * item_filter_domovecopy
+ */
+static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL refilter, int dw, int sbox)
+{
+	BOOL error = FALSE;
+	MAILBOX *TargetBox = MailBox + sbox;
+	if (TargetBox->Loaded == FALSE && op.BlindAppend == 0) {
+		mailbox_load_now(NULL, sbox, FALSE, FALSE);
+	}
+	if (TargetBox->Loaded == FALSE) {
+		TCHAR fname[BUF_SIZE];
+		if (TargetBox->Filename == NULL) {
+			wsprintf(fname, TEXT("MailBox%d.dat"), sbox - MAILBOX_USER);
+		} else {
+			lstrcpy(fname, TargetBox->Filename);
+		}
+		file_append_savebox(fname, TargetBox, tpMailItem, 2);
+	} else {
+		int j = item_find_thread(TargetBox, tpMailItem->MessageID, TargetBox->MailItemCnt);
+		if (j == -1) {
+			item_to_mailbox(TargetBox, tpMailItem, tpMailBox->Name, FALSE);
+			TargetBox->NewMail = TRUE;
+			if (sbox == SelBox) {
+				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE);
+			}
+		} else if (refilter == TRUE) {
+			MAILITEM *tpSboxItem = *(TargetBox->tpMailItem + j);
+			char *newbody = alloc_copy(tpMailItem->Body);
+			if (newbody != NULL) {
+				mem_free(&tpSboxItem->Body);
+				tpSboxItem->Body = newbody;
+				tpSboxItem->Download = TRUE;
+				TargetBox->NeedsSave |= MAILITEMS_CHANGED;
+				if (sbox == SelBox) {
+					// update icon
+					HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+					int num = ListView_GetMemToItem(hListView, tpSboxItem);
+					ListView_SetItemState(hListView, num, 0, LVIS_CUT);
+					ListView_RedrawItems(hListView, num, num);
+				}
+			} else {
+				error = TRUE;
+			}
+		}
+		if (dw == FILTER_MOVE) {
+			tpMailItem->Mark = ICON_DEL;
+		}
+	}
+	return error;
+}
+
+/*
+ * item_filter_execute - handle move/copy and mark
  */
 static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fret, int *do_what, BOOL refilter)
 {
-	BOOL retval = TRUE;
+	BOOL error = FALSE;
 	// Move or Copy to SaveBox
 	if ((fret & (FILTER_COPY | FILTER_MOVE)) && tpMailItem->MailStatus != ICON_NON) {
-		int i, j, sbox;
+		int i, dw, sbox;
+		for (i = 0; i < op.GlobalFilterCnt; i++) {
+			dw = do_what[i];
+			if (dw == FILTER_COPY || dw == FILTER_MOVE) {
+				sbox = mailbox_name_to_index((*(op.tpFilter + i))->SaveboxName);
+				if (sbox != -1) {
+					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
+				}
+			} else if (dw == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
+				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+			}
+		}
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
-			if (do_what[i] == FILTER_COPY || do_what[i] == FILTER_MOVE) {
+			dw = do_what[op.GlobalFilterCnt + i];
+			if (dw == FILTER_COPY || dw == FILTER_MOVE) {
 				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
 				if (sbox != -1) {
-					if ((MailBox + sbox)->Loaded == FALSE && op.BlindAppend == 0) {
-						mailbox_load_now(NULL, sbox, FALSE, FALSE);
-					}
-					if ((MailBox + sbox)->Loaded == FALSE) {
-						TCHAR fname[BUF_SIZE];
-						if ((MailBox + sbox)->Filename == NULL) {
-							wsprintf(fname, TEXT("MailBox%d.dat"), sbox - MAILBOX_USER);
-						} else {
-							lstrcpy(fname, (MailBox + sbox)->Filename);
-						}
-						file_append_savebox(fname, MailBox + sbox, tpMailItem, 2);
-					} else {
-						j = item_find_thread(MailBox + sbox, tpMailItem->MessageID, (MailBox + sbox)->MailItemCnt);
-						if (j == -1) {
-							item_to_mailbox(MailBox + sbox, tpMailItem, tpMailBox->Name, FALSE);
-							(MailBox + sbox)->NewMail = TRUE;
-							if (sbox == SelBox) {
-								ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + sbox), TRUE);
-							}
-						} else if (refilter == TRUE) {
-							MAILITEM *tpSboxItem = *((MailBox + sbox)->tpMailItem + j);
-							char *newbody = alloc_copy(tpMailItem->Body);
-							if (newbody != NULL) {
-								mem_free(&tpSboxItem->Body);
-								tpSboxItem->Body = newbody;
-								tpSboxItem->Download = TRUE;
-								(MailBox + sbox)->NeedsSave |= MAILITEMS_CHANGED;
-								if (sbox == SelBox) {
-									// update icon
-									HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-									int num = ListView_GetMemToItem(hListView, tpSboxItem);
-									ListView_SetItemState(hListView, num, 0, LVIS_CUT);
-									ListView_RedrawItems(hListView, num, num);
-								}
-							} else {
-								retval = FALSE;
-							}
-						}
-						if (do_what[i] == FILTER_MOVE) {
-							tpMailItem->Mark = ICON_DEL;
-						}
-					}
+					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
 				}
-			} else if (do_what[i] == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
+			} else if (dw == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
 				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
 			}
 		}
@@ -1801,7 +1850,7 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 		tpMailItem->Mark = ICON_DEL;
 	}
 
-	return retval;
+	return !(error);
 }
 
 /*

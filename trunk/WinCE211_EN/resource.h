@@ -222,7 +222,6 @@
 #define IDC_COMBO_ENTRY                 1048
 #define IDC_BUTTON_UPDATEOPTS           1049
 #define IDC_BUTTON_NUM                  1050
-#define IDC_CHECK_REFILTER              1051
 #define IDC_BUTTON_UP10                 1051
 #define IDC_BUTTON_UP                   1052
 #define IDC_CHECK_CHENDDISCON           1052
@@ -299,8 +298,10 @@
 #define IDC_COMBO_FILT2BOX              1208
 #define IDC_CHECK_QUEUE_EXIT            1209
 #define IDC_CHECK_SENDERR_EXIT          1210
-#define IDC_RADIO_POOMLAST              1211
-#define IDC_RADIO_POOMFIRST             1212
+#define IDC_CHECK_REFILTER              1211
+#define IDC_CHECK_GBLFILTER             1212
+#define IDC_RADIO_POOMLAST              1220
+#define IDC_RADIO_POOMFIRST             1221
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
 #define LVS_NOSORTHEADER                0x8000

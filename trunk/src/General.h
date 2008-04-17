@@ -44,8 +44,8 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10rc1")
-#define APP_VERSION_NUM			2008
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b7")
+#define APP_VERSION_NUM			2009
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
@@ -225,6 +225,8 @@
 #define MULTIPART_CONTENT		2
 #define MULTIPART_HTML			3
 
+#define FILTER_REFILTER			0x02
+#define FILTER_NOGLOBAL			0x04
 #define FILTER_UNRECV			1					//Filter type
 #define FILTER_RECV				2
 #define FILTER_DOWNLOADMARK		4
@@ -478,8 +480,8 @@ typedef struct _OPTION {
 	int RasEndDisCon;
 	int RasNoCheck;
 	int RasWaitSec;
-	struct _RASINFO **RasInfo;
 	int RasInfoCnt;
+	struct _RASINFO **RasInfo;
 #ifdef _WIN32_WCE
 ///////////// MRP /////////////////////
 	int	UsePOOMAddressBook;
@@ -489,6 +491,11 @@ typedef struct _OPTION {
 #ifdef _WIN32_WCE_PPC
 	int UseBuiltinSSL;
 #endif
+
+	int GlobalFilterEnable;
+	int GlobalFilterCnt;
+	struct _FILTER **tpFilter;
+
 } OPTION;
 
 typedef struct _SSL_INFO {
@@ -558,8 +565,8 @@ typedef struct _MAILBOX {
 
 	// Filter
 	int FilterEnable;
-	struct _FILTER **tpFilter;
 	int FilterCnt;
+	struct _FILTER **tpFilter;
 
 	// Ras
 	int RasMode;

@@ -764,25 +764,45 @@ void filter_sbox_check(HWND hWnd, TCHAR *ConvertName) {
  */
 void filter_free(MAILBOX *tpMailBox)
 {
-	int i;
+	int i, cnt;
+	if (tpMailBox == NULL) {
+		cnt = op.GlobalFilterCnt;
+	} else {
+		cnt = tpMailBox->FilterCnt;
+	}
 
-	//ƒtƒBƒ‹ƒ^î•ñ‚Ì‰ğ•ú
-	for(i = 0; i < tpMailBox->FilterCnt; i++){
-		if(*(tpMailBox->tpFilter + i) == NULL){
+	for (i = 0; i < cnt; i++) {
+		FILTER *tpFilter;
+		if (tpMailBox == NULL) {
+			tpFilter = *(op.tpFilter + i);
+		} else {
+			tpFilter = *(tpMailBox->tpFilter + i);
+		}
+
+		if (tpFilter == NULL){
 			continue;
 		}
-		mem_free(&(*(tpMailBox->tpFilter + i))->SaveboxName);
+		mem_free(&tpFilter->SaveboxName);
 
-		mem_free(&(*(tpMailBox->tpFilter + i))->Header1);
-		mem_free(&(*(tpMailBox->tpFilter + i))->Content1);
+		mem_free(&tpFilter->Header1);
+		mem_free(&tpFilter->Content1);
 
-		mem_free(&(*(tpMailBox->tpFilter + i))->Header2);
-		mem_free(&(*(tpMailBox->tpFilter + i))->Content2);
+		mem_free(&tpFilter->Header2);
+		mem_free(&tpFilter->Content2);
 
-		mem_free(&*(tpMailBox->tpFilter + i));
+		if (tpMailBox == NULL) {
+			mem_free(&*(op.tpFilter + i));
+		} else {
+			mem_free(&*(tpMailBox->tpFilter + i));
+		}
 	}
-	mem_free((void **)&tpMailBox->tpFilter);
-	tpMailBox->tpFilter = NULL;
+	if (tpMailBox == NULL) {
+		mem_free((void **)&op.tpFilter);
+		op.tpFilter = NULL;
+	} else {
+		mem_free((void **)&tpMailBox->tpFilter);
+		tpMailBox->tpFilter = NULL;
+	}
 }
 
 /*
