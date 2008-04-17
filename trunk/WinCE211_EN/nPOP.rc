@@ -721,9 +721,9 @@ CAPTION "Filter"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "E&nable",IDC_CHECK_FILTER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,33,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,2,35,10
     CONTROL         "&Refilter on RETR",IDC_CHECK_REFILTER,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,40,2,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,41,2,67,10
     CONTROL         "Use &globals",IDC_CHECK_GBLFILTER,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,110,2,50,10
     CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
