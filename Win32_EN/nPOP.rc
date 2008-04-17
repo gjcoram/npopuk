@@ -863,6 +863,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,4,4,56,10
     CONTROL         "&Refilter on download",IDC_CHECK_REFILTER,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,65,4,80,10
+    CONTROL         "Use &globals",IDC_CHECK_GBLFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,150,4,80,10
     CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
                     WS_BORDER | WS_TABSTOP,2,20,190,95

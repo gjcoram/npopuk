@@ -1072,6 +1072,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 static void EnableFilterButton(HWND hDlg, BOOL EnableFlag)
 {
 	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_REFILTER), EnableFlag);
+	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_LIST_FILTER), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), EnableFlag);
@@ -1166,30 +1167,39 @@ static void SetFilterList(HWND hListView)
 {
 	TCHAR buf[BUF_SIZE];
 	int ItemIndex;
-	int i, j;
+	int i, j, cnt;
+	if (tpOptionMailBox == NULL) {
+		cnt = op.GlobalFilterCnt;
+	} else {
+		cnt = tpOptionMailBox->FilterCnt;
+	}
 
-	for (i = 0; i < tpOptionMailBox->FilterCnt; i++) {
-		if (*(tpOptionMailBox->tpFilter + i) == NULL) {
+	for (i = 0; i < cnt; i++) {
+		FILTER *tpFilter;
+		if (tpOptionMailBox == NULL) {
+			tpFilter = *(op.tpFilter + i);
+		} else {
+			tpFilter = *(tpOptionMailBox->tpFilter + i);
+		}
+		if (tpFilter == NULL) {
 			continue;
 		}
 
 		ItemIndex = ListView_AddOptionItem(hListView,
-			((*(tpOptionMailBox->tpFilter + i))->Enable == 0) ? STR_FILTER_NOUSE : STR_FILTER_USE, 0);
+			(tpFilter->Enable == 0) ? STR_FILTER_NOUSE : STR_FILTER_USE, 0);
 
-		j = (*(tpOptionMailBox->tpFilter + i))->Action;
+		j = tpFilter->Action;
 		if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
-			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), (*(tpOptionMailBox->tpFilter + i))->SaveboxName);
+			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), tpFilter->SaveboxName);
 		} else {
 			wsprintf(buf, TEXT("%s"), GetFilterActionString(j));
 		}
 		ListView_SetItemText(hListView, ItemIndex, 1, buf);
 
-		ListView_SetItemText(hListView, ItemIndex, 2,
-			(*(tpOptionMailBox->tpFilter + i))->Header1);
-		ListView_SetItemText(hListView, ItemIndex, 3,
-			(*(tpOptionMailBox->tpFilter + i))->Content1);
+		ListView_SetItemText(hListView, ItemIndex, 2, tpFilter->Header1);
+		ListView_SetItemText(hListView, ItemIndex, 3, tpFilter->Content1);
 
-		j = (*(tpOptionMailBox->tpFilter + i))->Boolean;
+		j = tpFilter->Boolean;
 		switch (j) {
 			case FILTER_BOOL_OR:
 				lstrcpy(buf, STR_FILTER_OR);
@@ -1203,10 +1213,8 @@ static void SetFilterList(HWND hListView)
 		}
 		ListView_SetItemText(hListView, ItemIndex, 4, buf);
 
-		ListView_SetItemText(hListView, ItemIndex, 5,
-			(*(tpOptionMailBox->tpFilter + i))->Header2);
-		ListView_SetItemText(hListView, ItemIndex, 6,
-			(*(tpOptionMailBox->tpFilter + i))->Content2);
+		ListView_SetItemText(hListView, ItemIndex, 5, tpFilter->Header2);
+		ListView_SetItemText(hListView, ItemIndex, 6, tpFilter->Content2);
 	}
 }
 
@@ -1217,8 +1225,9 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	HWND hListView;
 	TCHAR buf[BUF_SIZE];
+	FILTER **tpFilter;
 	int SelectItem;
-	int i, oper;
+	int i, cnt, oper;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -1236,12 +1245,22 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-		if (tpOptionMailBox->FilterEnable == 0) {
+		if ((tpOptionMailBox == NULL && op.GlobalFilterEnable == 0)
+			|| (tpOptionMailBox != NULL && tpOptionMailBox->FilterEnable == 0)) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_SETCHECK, 1, 0);
 			EnableFilterButton(hDlg, FALSE);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_CHECK_FILTER, BM_SETCHECK, 1, 0);
-			if (tpOptionMailBox->FilterEnable > 1) {
-				SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_SETCHECK, 1, 0);
+			if (tpOptionMailBox == NULL) {
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_REFILTER), SW_HIDE);
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), SW_HIDE);
+			} else {
+				if (tpOptionMailBox->FilterEnable & FILTER_REFILTER) {
+					SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_SETCHECK, 1, 0);
+				}
+				if (!(tpOptionMailBox->FilterEnable & FILTER_NOGLOBAL)) {
+					SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_SETCHECK, 1, 0);
+				}
 			}
 		}
 		SetFilterList(GetDlgItem(hDlg, IDC_LIST_FILTER));
@@ -1319,49 +1338,67 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 		case IDOK:
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_FILTER, BM_GETCHECK, 0, 0) == 1) {
-				tpOptionMailBox->FilterEnable = 1;
-				if (SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_GETCHECK, 0, 0) == 1) {
-					tpOptionMailBox->FilterEnable = 2;
+				if (tpOptionMailBox == NULL) {
+					op.GlobalFilterEnable = 1;
+				} else {
+					tpOptionMailBox->FilterEnable = 1;
+					if (SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_GETCHECK, 0, 0) == 1) {
+						tpOptionMailBox->FilterEnable |= FILTER_REFILTER;
+					}
+					if (SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_GETCHECK, 0, 0) == 0) {
+						tpOptionMailBox->FilterEnable |= FILTER_NOGLOBAL;
+					}
 					if (op.LazyLoadMailboxes != 0) {
 						// need to re-check that all saveboxes are loaded
 						SaveBoxesLoaded = FALSE;
 					}
 				}
 			} else {
-				tpOptionMailBox->FilterEnable = 0;
+				if (tpOptionMailBox == NULL) {
+					op.GlobalFilterEnable = 0;
+				} else {
+					tpOptionMailBox->FilterEnable = 0;
+				}
 			}
-			if (tpOptionMailBox->tpFilter != NULL) {
+			cnt = ListView_GetItemCount(GetDlgItem(hDlg, IDC_LIST_FILTER));
+			if (tpOptionMailBox == NULL) {
+				if (op.tpFilter != NULL) {
+					filter_free(NULL);
+				}
+				op.GlobalFilterCnt = cnt;
+				tpFilter = op.tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * cnt);
+			} else if (tpOptionMailBox->tpFilter != NULL) {
 				filter_free(tpOptionMailBox);
+				tpOptionMailBox->FilterCnt = cnt;
+				tpFilter = tpOptionMailBox->tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * cnt);
 			}
-			tpOptionMailBox->FilterCnt = ListView_GetItemCount(GetDlgItem(hDlg, IDC_LIST_FILTER));
-			tpOptionMailBox->tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * tpOptionMailBox->FilterCnt);
-			if (tpOptionMailBox->tpFilter == NULL) {
+			if (tpFilter == NULL) {
 				ErrorMessage(hDlg, STR_ERR_MEMALLOC);
 				break;
 			}
-			for (i = 0; i < tpOptionMailBox->FilterCnt; i++) {
-				*(tpOptionMailBox->tpFilter + i) = (FILTER *)mem_calloc(sizeof(FILTER));
-				if (*(tpOptionMailBox->tpFilter + i) == NULL) {
+			for (i = 0; i < cnt; i++) {
+				*(tpFilter + i) = (FILTER *)mem_calloc(sizeof(FILTER));
+				if (*(tpFilter + i) == NULL) {
 					continue;
 				}
 				hListView = GetDlgItem(hDlg, IDC_LIST_FILTER);
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 0, buf, BUF_SIZE - 1);
-				(*(tpOptionMailBox->tpFilter + i))->Enable = (lstrcmp(buf, STR_FILTER_USE) == 0) ? 1 : 0;
+				(*(tpFilter + i))->Enable = (lstrcmp(buf, STR_FILTER_USE) == 0) ? 1 : 0;
 
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 1, buf, BUF_SIZE - 1);
 				if (str_cmp_ni_t(buf, STR_FILTER_COPY, lstrlen(STR_FILTER_COPY)) == 0) {
-					(*(tpOptionMailBox->tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_COPY));
+					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_COPY));
 				    *(buf + lstrlen(STR_FILTER_COPY)) = TEXT('\0');
 				} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lstrlen(STR_FILTER_MOVE)) == 0) {
-					(*(tpOptionMailBox->tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_MOVE));
+					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_MOVE));
 					*(buf + lstrlen(STR_FILTER_MOVE)) = TEXT('\0');
 				}
-				(*(tpOptionMailBox->tpFilter + i))->Action = GetFilterActionInt(buf);
+				(*(tpFilter + i))->Action = GetFilterActionInt(buf);
 
-				(*(tpOptionMailBox->tpFilter + i))->Header1 = ListView_AllocGetText(hListView, i, 2);
-				(*(tpOptionMailBox->tpFilter + i))->Content1 = ListView_AllocGetText(hListView, i, 3);
+				(*(tpFilter + i))->Header1 = ListView_AllocGetText(hListView, i, 2);
+				(*(tpFilter + i))->Content1 = ListView_AllocGetText(hListView, i, 3);
 
 				*buf = TEXT('\0');
 				ListView_GetItemText(hListView, i, 4, buf, BUF_SIZE - 1);
@@ -1372,10 +1409,10 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				} else {
 					oper = FILTER_BOOL_AND;
 				}
-				(*(tpOptionMailBox->tpFilter + i))->Boolean = oper;
+				(*(tpFilter + i))->Boolean = oper;
 
-				(*(tpOptionMailBox->tpFilter + i))->Header2 = ListView_AllocGetText(hListView, i, 5);
-				(*(tpOptionMailBox->tpFilter + i))->Content2 = ListView_AllocGetText(hListView, i, 6);
+				(*(tpFilter + i))->Header2 = ListView_AllocGetText(hListView, i, 5);
+				(*(tpFilter + i))->Content2 = ListView_AllocGetText(hListView, i, 6);
 			}
 			break;
 		}
@@ -2987,8 +3024,9 @@ BOOL SetOption(HWND hWnd)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
-	HPROPSHEETPAGE hpsp[10];
+	HPROPSHEETPAGE hpsp[11];
 
+	tpOptionMailBox = NULL;
 	psp.dwSize = sizeof(PROPSHEETPAGE);
 	psp.dwFlags = PSP_DEFAULT;
 	psp.hInstance = hInst;
@@ -3023,35 +3061,40 @@ BOOL SetOption(HWND hWnd)
 	psp.pfnDlgProc = SetForwardOptionProc;
 	hpsp[3] = CreatePropertySheetPage(&psp);
 
+	//Filter
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_FILTER);
+	psp.pfnDlgProc = FilterSetProc;
+	hpsp[4] = CreatePropertySheetPage(&psp);
+
 	//Control
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_VIEW);
 	psp.pfnDlgProc = SetViewOptionProc;
-	hpsp[4] = CreatePropertySheetPage(&psp);
+	hpsp[5] = CreatePropertySheetPage(&psp);
 
 	//Check
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_CHECK);
 	psp.pfnDlgProc = SetCheckOptionProc;
-	hpsp[5] = CreatePropertySheetPage(&psp);
+	hpsp[6] = CreatePropertySheetPage(&psp);
 
 	//Dial up
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RAS);
 	psp.pfnDlgProc = SetRasOptionProc;
-	hpsp[6] = CreatePropertySheetPage(&psp);
+	hpsp[7] = CreatePropertySheetPage(&psp);
 
 	//Sort
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_SORT);
 	psp.pfnDlgProc = SetSortOptionProc;
-	hpsp[7] = CreatePropertySheetPage(&psp);
+	hpsp[8] = CreatePropertySheetPage(&psp);
 
 	//In addition
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_ETC);
 	psp.pfnDlgProc = SetEtcOptionProc;
-	hpsp[8] = CreatePropertySheetPage(&psp);
+	hpsp[9] = CreatePropertySheetPage(&psp);
 
 	//Advanced
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_ADV);
 	psp.pfnDlgProc = SetAdvOptionProc;
-	hpsp[9] = CreatePropertySheetPage(&psp);
+	hpsp[10] = CreatePropertySheetPage(&psp);
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof_PROPSHEETHEADER;
@@ -5388,8 +5431,8 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_COMMENT), 0);
 		} else {
-			ShowWindow(GetDlgItem(hDlg, IDC_RADIO_GROUP_ADD), FALSE);
-			ShowWindow(GetDlgItem(hDlg, IDC_RADIO_GROUP_DEL), FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_RADIO_GROUP_ADD), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_RADIO_GROUP_DEL), SW_HIDE);
 		}
 
 		SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBO, CB_ADDSTRING, 0, (LPARAM)TEXT(""));
@@ -5706,9 +5749,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		///////////// MRP /////////////////////
 		if (op.UsePOOMAddressBook != 0) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), FALSE);
-			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), FALSE);
-			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), FALSE);
-			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), SW_HIDE);
 		}
 		///////////// --- /////////////////////
 #endif
