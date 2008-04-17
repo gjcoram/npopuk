@@ -71,6 +71,7 @@
 #define STR_ERR_NOMAIL				TEXT("No Mail in the list")
 #define STR_ERR_SENDLOCK			TEXT("Sending barred! Transmission in progress")
 #define STR_ERR_FILTBOX				TEXT("A filter for %s has been disabled because it refers to an invalid SaveBox")
+#define STR_ERR_GBLFILTBOX			TEXT("A global filter has been disabled because it refers to an invalid SaveBox")
 #define STR_ERR_CANTDELETE			TEXT("Error deleting old backup file %s; please delete manually.")
 #define STR_ERR_LOADMAILBOX			TEXT("Error loading %s")
 #define STR_ERR_FILEEXIST			TEXT("Can't find file %s")

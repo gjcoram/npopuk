@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -718,10 +718,33 @@ void filter_sbox_check(HWND hWnd, TCHAR *ConvertName) {
 	int i, j, t;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p;
+        BOOL filter_error = FALSE;
 
+	for (t = 0; t < op.GlobalFilterCnt; t++) {
+		tpFilter = *(op.tpFilter + t);
+		if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
+			BOOL found = FALSE;
+			if (tpFilter->SaveboxName != NULL) {
+				for (j = 0; j < MailBoxCnt; j++) {
+					if ((MailBox+j)->Type == MAILBOX_TYPE_SAVE && (MailBox+j)->Name != NULL
+						&& lstrcmp(tpFilter->SaveboxName, (MailBox+j)->Name) == 0) {
+						found = TRUE;
+						break;
+					}
+				}
+			}
+			if (found == FALSE) {
+				filter_error = TRUE;
+				tpFilter->Enable = 0;
+			}
+		}
+	}
+	if (filter_error == TRUE) {
+		ErrorMessage(hWnd, STR_ERR_GBLFILTBOX);
+	}
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->FilterCnt > 0) {
-			BOOL filter_error = FALSE;
+			filter_error = FALSE;
 			for (t = 0; t < (MailBox+i)->FilterCnt; t++) {
 				tpFilter = *((MailBox+i)->tpFilter + t);
 				if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
@@ -753,7 +776,7 @@ void filter_sbox_check(HWND hWnd, TCHAR *ConvertName) {
 					p = (MailBox+i)->Name;
 				}
 				wsprintf(buf, STR_ERR_FILTBOX, p);
-				MessageBox(hWnd, buf, STR_TITLE_ERROR, MB_OK);
+				ErrorMessage(hWnd, buf);
 			}
 		}
 	}

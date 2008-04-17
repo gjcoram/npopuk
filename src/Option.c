@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -1072,7 +1072,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 static void EnableFilterButton(HWND hDlg, BOOL EnableFlag)
 {
 	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_REFILTER), EnableFlag);
-	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), EnableFlag);
+	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), EnableFlag && op.GlobalFilterEnable);
 	EnableWindow(GetDlgItem(hDlg, IDC_LIST_FILTER), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), EnableFlag);
@@ -1251,17 +1251,19 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			EnableFilterButton(hDlg, FALSE);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_CHECK_FILTER, BM_SETCHECK, 1, 0);
-			if (tpOptionMailBox == NULL) {
-				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_REFILTER), SW_HIDE);
-				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), SW_HIDE);
-			} else {
+			if (tpOptionMailBox != NULL) {
 				if (tpOptionMailBox->FilterEnable & FILTER_REFILTER) {
 					SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_SETCHECK, 1, 0);
 				}
 				if (!(tpOptionMailBox->FilterEnable & FILTER_NOGLOBAL)) {
 					SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_SETCHECK, 1, 0);
 				}
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), op.GlobalFilterEnable);
 			}
+		}
+		if (tpOptionMailBox == NULL) {
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_REFILTER), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), SW_HIDE);
 		}
 		SetFilterList(GetDlgItem(hDlg, IDC_LIST_FILTER));
 		break;
