@@ -3,7 +3,7 @@
  *
  * Ras.c
  *
- * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ * Copyright (C) 1996-2008 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
  */
