@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -27,7 +27,7 @@
 
 /* Define */
 #define MBOX_DELIMITER		"\r\nFrom "
-#define ENCRYPT_PREAMBLE	TEXT("NPOPUK_ENCRYPT")
+#define ENCRYPT_PREAMBLE	"NPOPUK_ENCRYPT 0\r\n"
 
 /* Global Variables */
 HANDLE hLogFile;
@@ -664,14 +664,14 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	HANDLE hMapFile;
 #endif
 	TCHAR path[BUF_SIZE];
-	char *p, *r, *s, *t, *max;
+	char *p, *q, *r, *s, *t, *max;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
-	char *FileBuf;
+	char *FileBuf, *MsgStart;
 	long FileSize;
-	int i, cnt, len = 7; // len = tstrlen(MBOX_DELIMITER);
-	int MboxFormat = 0;
+	int i, cnt, len;
+	int MboxFormat = 0, encrypted = 0;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -743,14 +743,21 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		MboxFormat = 1;
 	}
 	tpMailBox->WasMbox = (MboxFormat == 0) ? FALSE : TRUE;
-	cnt = file_get_mail_count(FileBuf, FileSize, MboxFormat);
+	MsgStart = FileBuf;
+	len = strlen(ENCRYPT_PREAMBLE);
+	if (FileSize > len && str_cmp_n(FileBuf, ENCRYPT_PREAMBLE, len) == 0) {
+		encrypted = 1;
+		MsgStart += len;
+		FileSize -= len;
+	}
+	cnt = file_get_mail_count(MsgStart, FileSize, MboxFormat);
 	// check for confused file format: mbox-format mailbox was opened&saved by
 	// previous version of npop/npopuk
 	if (cnt == 1 && MboxFormat == 0) {
-		int cnt2 = file_get_mail_count(FileBuf, FileSize, 1);
+		int cnt2 = file_get_mail_count(MsgStart, FileSize, 1);
 		if (cnt2 > 1) {
 			TCHAR *temp;
-			item_get_content_t(FileBuf, HEAD_X_STATUS, &temp);
+			item_get_content_t(MsgStart, HEAD_X_STATUS, &temp);
 			if (temp != NULL) {
 				int rev = _ttoi(temp)/100000;
 				if (rev == 1) {
@@ -788,10 +795,23 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	}
 
 	i = 0;
-	p = FileBuf;
-	while (FileSize > p - FileBuf && *p != '\0') {
+	len = 7; // = strlen(MBOX_DELIMITER);
+	p = MsgStart;
+	while (FileSize > p - MsgStart && *p != '\0') {
+		if (encrypted) {
+			r = GetBodyPointa(p);
+			if (r == NULL) break;
+			q = (char *)mem_alloc(sizeof(char) * (r - p + 1));
+			if (q == NULL) break;
+			rot13_cpy(q, p, r);
+		} else {
+			q = p;
+		}
 		// From header mail item acquisition
-		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, p, Import);
+		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, q, Import);
+		if (encrypted) {
+			mem_free(&q);
+		}
 
 		// Body position Position of end of mail acquisition
 		if (MboxFormat) {
@@ -817,7 +837,11 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			}
 		} else {
 			// discard all header lines
-			p = GetBodyPointa(p);
+			if (encrypted) {
+				p = r;
+			} else {
+				p = GetBodyPointa(p);
+			}
 			if (p == NULL) {
 				break;
 			}
@@ -825,7 +849,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 
 		// Find end of message
 		if (MboxFormat) {
-			max = FileBuf + FileSize - len;
+			max = MsgStart + FileSize - len;
 			for (t = r = p; r < max; r++) {
 				if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
 					t = r;
@@ -841,7 +865,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 				if (*r == '\r' && *(r + 1) == '\n') {
 					if (*t == '.' && (r - t) == 1) {
 						t -= 2;
-						for (; FileSize > r - FileBuf && (*r == '\r' || *r == '\n'); r++);
+						for (; FileSize > r - MsgStart && (*r == '\r' || *r == '\n'); r++);
 						break;
 					}
 					t = r + 2;
@@ -860,6 +884,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 						*s = *p;
 					}
 					*s = '\0';
+					if (encrypted) {
+						rot13(tpMailItem->Body, s);
+					}
 // GJC: now, multipart/alternative <==> MULTIPART_HTML
 #ifdef DO_MULTIPART_SCAN
 					if (tpMailItem->Multipart == MULTIPART_CONTENT && tpMailItem->Download == TRUE
@@ -1158,18 +1185,16 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	MAILBOX *tpMailBox = MailBox + Index;
-	char *tmp, *p;
+	char *tmp, *p, *s;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
 
-//	TCHAR encrypt_header[80];
 	int len = 0;
 	int i;
-//	if (op.ScrambleMailboxes) {
-//		wsprintf(encrypt_header, TEXT("%s %d.\r\n"), ENCRYPT_PREAMBLE, tpMailBox->MailItemCnt);
-//		len = lstrlen(encrypt_header);
-//	}
+	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+		len = strlen(ENCRYPT_PREAMBLE);
+	}
 
 	i = lstrlen(SaveDir) + lstrlen(FileName) + 5; // .bak\0
 	if (i >= BUF_SIZE) {
@@ -1195,20 +1220,23 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		len += item_to_string_size(*(tpMailBox->tpMailItem + i), 
 			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	}
-	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
+	p = s = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (tmp == NULL) {
 		return FALSE;
 	}
 	*p = '\0';
-//	if (op.ScrambleMailboxes) {
-//		p = str_cpy_t(p, encrypt_header);
-//	}
+	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+		p = s = str_cpy(p, ENCRYPT_PREAMBLE);
+	}
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
 		}
 		p = item_to_string(p, *(tpMailBox->tpMailItem + i), 
 			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+	}
+	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+		rot13(s,p);
 	}
 #endif	// DIV_SAVE
 
@@ -1239,12 +1267,12 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	}
 	mem_free(&tmp);
 #else	// DIV_SAVE
-//	if (op.ScrambleMailboxes) {
-//		if (file_write(hFile, encrypt_header, len) == FALSE) {
-//			CloseHandle(hFile);
-//			return FALSE;
-//		}
-//	}
+	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+		if (file_write(hFile, encrypt_header, len) == FALSE) {
+			CloseHandle(hFile);
+			return FALSE;
+		}
+	}
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		if (*(tpMailBox->tpMailItem + i) == NULL) {
 			continue;
@@ -1259,6 +1287,9 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		}
 		item_to_string(tmp, *(tpMailBox->tpMailItem + i), 
 			op.WriteMbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+		if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+			rot13(tmp, tmp+len);
+		}
 		if (file_write(hFile, tmp, len) == FALSE) {
 			mem_free(&tmp);
 			CloseHandle(hFile);
@@ -1304,48 +1335,60 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
-	char *tmp, *p;
+	char *tmp, *p, *s;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
-//	TCHAR encrypt_header[80];
-	int write_mbox = 0;
-	int len = 0;
-
-//	if (op.ScrambleMailboxes) {
-//		wsprintf(encrypt_header, TEXT("%s %d.\r\n"), ENCRYPT_PREAMBLE, tpMailBox->MailItemCnt);
-//		len = lstrlen(encrypt_header);
-//	}
+	int write_mbox = 0, encrypt = 0;
+	int len = 0, hlen;
+	long fsize;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+	hlen = strlen(ENCRYPT_PREAMBLE);
 
 	// check existing file to see what format (npop/mbox) to write
 	if (tpMailBox->WasMbox == -1) {
-		if (file_get_size(path) <= 0) {
+		fsize = file_get_size(path);
+		if (fsize <= 6) {
 			// no file -- use global option
 			tpMailBox->WasMbox = (op.WriteMbox == 1) ? TRUE : FALSE;
+			if (op.ScrambleMailboxes && op.WriteMbox == 0) {
+				encrypt = 2;
+			}
 		} else {
-			tmp = file_read(path, 7);
+			len = (fsize < hlen) ? fsize : hlen;
+			tmp = file_read(path, len);
 			if (str_cmp_n(tmp, "From ", 5) == 0) {
 				tpMailBox->WasMbox = TRUE;
 			} else {
 				tpMailBox->WasMbox = FALSE;
 			}
+			if (fsize > hlen && str_cmp_n(tmp, ENCRYPT_PREAMBLE, hlen) == 0) {
+				encrypt = 1;
+			}
 			mem_free(&tmp);
 		}
 	}
 	write_mbox = (tpMailBox->WasMbox == TRUE) ? 1 : 0;
+	if (encrypt == 2) {
+		len = hlen;
+	} else {
+		len = 0;
+	}
 
 	len += item_to_string_size(tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
-	p = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
+	p = s = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
 	if (tmp == NULL) {
 		return FALSE;
 	}
 	*p = '\0';
-//	if (op.ScrambleMailboxes) {
-//		p = str_cpy_t(p, encrypt_header);
-//	}
+	if (encrypt == 2) {
+		p = s = str_cpy(p, ENCRYPT_PREAMBLE);
+	}
 	item_to_string(p, tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
+	if (encrypt) {
+		rot13(s, p);
+	}
 
 	///////////// MRP /////////////////////
 #ifdef UNICODE
@@ -1364,7 +1407,9 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 		mem_free(&tmp);
 		return FALSE;
 	}
-	SetFilePointer(hFile, 0, NULL, FILE_END);
+	if (fsize > 6) {
+		SetFilePointer(hFile, 0, NULL, FILE_END);
+	}
 	if (file_write(hFile, tmp, len) == FALSE) {
 		mem_free(&tmp);
 		return FALSE;

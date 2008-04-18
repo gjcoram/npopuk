@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -346,7 +346,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
-//	op.ScrambleMailboxes = profile_get_int(GENERAL, TEXT("ScrambleMailboxes"), 0, app_path);
+	op.ScrambleMailboxes = profile_get_int(GENERAL, TEXT("ScrambleMailboxes"), 0, app_path);
 	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
 	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
 	op.Password = alloc_copy_t(tmp);
@@ -1046,7 +1046,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("BlindAppend"), op.BlindAppend, app_path);
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass, app_path);
-//	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes, app_path);
+	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes, app_path);
 	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
 	profile_write_string(GENERAL, TEXT("pw"), tmp, app_path);
 

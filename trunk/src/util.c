@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -2744,6 +2744,55 @@ BOOL item_in_list(TCHAR *item, TCHAR *list)
 	}
 	mem_free(&buf);
 	return FALSE;
+}
+
+/*
+ * rot13_cpy - convert and copy
+ */
+void rot13_cpy(char *dest, char *start, char *end) {
+	char *p, *q;
+	for (p = dest, q = start; q < end; p++, q++) {
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*q) == TRUE && (q+1) < end) {
+			*(p++) = *(q++);
+			*p = *q;
+			continue;
+		}
+#endif
+		if (*q >= 'a' && *q <= 'm')
+			*p = (*q) + 13;
+		else if (*q >= 'n' && *q <= 'z')
+			*p = (*q) - 13;
+		else if (*q >= 'A' && *q <= 'M')
+			*p = (*q) + 13;
+		else if (*q >= 'N' && *q <= 'Z')
+			*p = (*q) - 13;
+		else
+			*p = *q;
+	}
+}
+
+/*
+ * rot13 - in-place conversion
+ */
+void rot13(char *start, char *end)
+{
+	char *p;
+	for (p = start; p < end; p++) {
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && (p+1) < end) {
+			p+=2;
+		}
+#endif
+		if (*p >= 'a' && *p <= 'm') 
+			*p += 13;
+		else if (*p >= 'n' && *p <= 'z')
+			*p -= 13;
+		else if (*p >= 'A' && *p <= 'M')
+			*p += 13;
+		else if (*p >= 'N' && *p <= 'Z')
+			*p -= 13;
+	}
 }
 
 /* End of source */

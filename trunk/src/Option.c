@@ -1247,7 +1247,6 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 		if ((tpOptionMailBox == NULL && op.GlobalFilterEnable == 0)
 			|| (tpOptionMailBox != NULL && tpOptionMailBox->FilterEnable == 0)) {
-			SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_SETCHECK, 1, 0);
 			EnableFilterButton(hDlg, FALSE);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_CHECK_FILTER, BM_SETCHECK, 1, 0);
@@ -1255,7 +1254,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				if (tpOptionMailBox->FilterEnable & FILTER_REFILTER) {
 					SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_SETCHECK, 1, 0);
 				}
-				if (!(tpOptionMailBox->FilterEnable & FILTER_NOGLOBAL)) {
+				if (op.GlobalFilterEnable && !(tpOptionMailBox->FilterEnable & FILTER_NOGLOBAL)) {
 					SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_SETCHECK, 1, 0);
 				}
 				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), op.GlobalFilterEnable);
@@ -1347,8 +1346,10 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 					if (SendDlgItemMessage(hDlg, IDC_CHECK_REFILTER, BM_GETCHECK, 0, 0) == 1) {
 						tpOptionMailBox->FilterEnable |= FILTER_REFILTER;
 					}
-					if (SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_GETCHECK, 0, 0) == 0) {
-						tpOptionMailBox->FilterEnable |= FILTER_NOGLOBAL;
+					if (op.GlobalFilterEnable) {
+						if (SendDlgItemMessage(hDlg, IDC_CHECK_GBLFILTER, BM_GETCHECK, 0, 0) == 0) {
+							tpOptionMailBox->FilterEnable |= FILTER_NOGLOBAL;
+						}
 					}
 					if (op.LazyLoadMailboxes != 0) {
 						// need to re-check that all saveboxes are loaded
@@ -2972,6 +2973,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	BOOL retval = TRUE;
+	BOOL enable;
 	switch (uMsg) {
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE
@@ -2981,8 +2983,12 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		if (op.WriteMbox == 1) {
 			SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_MBOX, BM_SETCHECK, 1, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SCRAMBLE), FALSE);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_NPOP, BM_SETCHECK, 1, 0);
+			if (op.ScrambleMailboxes == 1) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_SCRAMBLE, BM_SETCHECK, 1, 0);
+			}
 		}
 		SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_ADDSTRING, 0, (LPARAM)STR_LAZYLOAD_STARTUP);
 		SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_ADDSTRING, 0, (LPARAM)STR_LAZYLOAD_AUTO);
@@ -3002,12 +3008,24 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			break;
 #endif
 
+		case IDC_RADIO_FORMAT_NPOP:
+		case IDC_RADIO_FORMAT_MBOX:
+			enable = SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_NPOP, BM_GETCHECK, 0, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SCRAMBLE), enable);
+			if (enable && op.ScrambleMailboxes == 1) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_SCRAMBLE, BM_SETCHECK, 1, 0);
+			}
+			break;
+
 		case IDOK:
 #ifdef _WIN32_WCE
 			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
 #endif
 			op.WriteMbox = SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_MBOX, BM_GETCHECK, 0, 0);
+			if (op.WriteMbox == 0) {
+				op.ScrambleMailboxes = SendDlgItemMessage(hDlg, IDC_CHECK_SCRAMBLE, BM_GETCHECK, 0, 0);
+			}
 			op.LazyLoadMailboxes = SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_GETCURSEL, 0, 0);
 			break;
 		}
