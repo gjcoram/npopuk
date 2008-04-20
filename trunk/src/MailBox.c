@@ -586,7 +586,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	LV_COLUMN lvc;
 	int colno;
 
-	if(Sel == -1){
+	if (Sel == -1) {
 		return;
 	}
 
@@ -718,7 +718,7 @@ void filter_sbox_check(HWND hWnd, TCHAR *ConvertName) {
 	int i, j, t;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p;
-        BOOL filter_error = FALSE;
+	BOOL filter_error = FALSE;
 
 	for (t = 0; t < op.GlobalFilterCnt; t++) {
 		tpFilter = *(op.tpFilter + t);

@@ -1051,13 +1051,19 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 /*
  * convert_cid
  */
-char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt)
+char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BOOL open)
 {
 	//<img width=574 height=155 id="Picture_x0020_1"
 	//src="cid:image001.gif@01C8A151.8C0E4EF0" alt=Image>
 	// Content-ID: <image001.gif@01C8A151.8C0E4EF0>
-	int id, cnt = 0, maxlen = 0;
+	int id, cnt = 0;
+#ifdef _WIN32_WCE
+	unsigned int maxlen = 0;
+#else
+	int maxlen = 0;
+#endif
 	char *p, *q, *ret = NULL;
+	BOOL add_prefix = (open && op.AttachDelete != 0);
 
 	for (p = start; p < end; p++) {
 		if (str_cmp_ni(p, "<img", 4) == 0 && is_white(*(p+4))) {
@@ -1081,6 +1087,9 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt)
 				maxlen = tstrlen(q);
 			}
 		}
+	}
+	if (add_prefix) {
+		maxlen += lstrlen(ATTACH_FILE);
 	}
 
 	ret = (char *)mem_alloc(sizeof(char) * (tstrlen(start) + cnt*maxlen + 1));
@@ -1122,7 +1131,11 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt)
 								(*(tpMultiPart + id))->EmbeddedImage = TRUE;
 								s = (*(tpMultiPart + id))->Filename;
 								if (s != NULL) {
-									q = str_join(q, s, (char *)-1);
+									if (add_prefix) {
+										q = str_join(q, ATTACH_FILE, s, (char *)-1);
+									} else {
+										q = str_join(q, s, (char *)-1);
+									}
 									*q = '\"';
 									p = r;
 									break;
@@ -1152,6 +1165,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt)
 			*(q++) = *(p++);
 		}
 	}
+	*q = '\0';
 	return ret;
 }
 

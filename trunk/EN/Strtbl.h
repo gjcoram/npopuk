@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 
@@ -162,7 +162,8 @@
 #define STR_Q_LOADMAILBOX			TEXT("Load mailbox \"%s\"?")
 #define STR_Q_LOADASMBOX			TEXT("Load %s as MBOX (%d messages) instead of nPOP format (1 message)?")
 #define STR_Q_NOBODYDELATT			TEXT("Message has no text part; deleting attachments\nwill leave nothing.  Proceed?")
-
+#define STR_Q_SAVE_EMBEDDED			TEXT("Convert embedded image names?")
+#define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\nSkip this one?")
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
@@ -197,7 +198,7 @@
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_REPLACE			TEXT("Replace")
 #define STR_TITLE_ALLFIND			TEXT("Look up \"%s\"")
-#define STR_TITLE_ATTACH_MSG		TEXT("Open")
+#define STR_TITLE_ATTACHED			TEXT("Attachment")
 #define STR_TITLE_COPY2				TEXT("Copy to:")
 #define STR_TITLE_MOVE2				TEXT("Move to:")
 #define STR_TITLE_RENAMESBOX		TEXT("Rename SaveBox")
