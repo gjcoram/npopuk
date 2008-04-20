@@ -744,7 +744,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	}
 	tpMailBox->WasMbox = (MboxFormat == 0) ? FALSE : TRUE;
 	MsgStart = FileBuf;
-	len = strlen(ENCRYPT_PREAMBLE);
+	len = tstrlen(ENCRYPT_PREAMBLE);
 	if (FileSize > len && str_cmp_n(FileBuf, ENCRYPT_PREAMBLE, len) == 0) {
 		encrypted = 1;
 		MsgStart += len;
@@ -795,7 +795,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	}
 
 	i = 0;
-	len = 7; // = strlen(MBOX_DELIMITER);
+	len = 7; // = tstrlen(MBOX_DELIMITER);
 	p = MsgStart;
 	while (FileSize > p - MsgStart && *p != '\0') {
 		if (encrypted) {
@@ -1066,12 +1066,12 @@ BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len)
 /*
  * file_save - ファイルの保存
  */
-BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi)
+BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, int do_what)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	DWORD ret;
-	int SaveAction = (Multi == FALSE) ? FILE_SAVE_SINGLE : FILE_SAVE_MULTI;
+	int SaveAction = (do_what == DECODE_SAVE_ALL) ? FILE_SAVE_MULTI : FILE_SAVE_SINGLE;
 
 	// ファイルに保存
 	if (FileName == NULL) {
@@ -1080,8 +1080,14 @@ BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int le
 		lstrcpy(path, FileName);
 	}
 
-	if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
-		return TRUE;
+	if (do_what == DECODE_SAVE_EMBED) {
+		wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
+		dir_create(path);
+		wsprintf(path, TEXT("%s%s\\%s"), DataDir, op.AttachPath, FileName);
+	} else {
+		if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
+			return TRUE; // user cancelled, not an error
+		}
 	}
 
 	// 保存するファイルを開く
@@ -1193,7 +1199,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	int len = 0;
 	int i;
 	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
-		len = strlen(ENCRYPT_PREAMBLE);
+		len = tstrlen(ENCRYPT_PREAMBLE);
 	}
 
 	i = lstrlen(SaveDir) + lstrlen(FileName) + 5; // .bak\0
@@ -1344,7 +1350,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	long fsize;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
-	hlen = strlen(ENCRYPT_PREAMBLE);
+	hlen = tstrlen(ENCRYPT_PREAMBLE);
 
 	// check existing file to see what format (npop/mbox) to write
 	if (tpMailBox->WasMbox == -1) {

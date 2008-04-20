@@ -220,6 +220,12 @@
 #define FILE_SAVE_MSG			4
 #define FILE_CHOOSE_DIR			5
 
+#define DECODE_ASK					0
+#define DECODE_AUTO_OPEN			1
+#define DECODE_SAVE_ALL				2
+#define DECODE_OPEN_IF_MSG			3
+#define DECODE_SAVE_EMBED			4
+
 #define MULTIPART_NONE			0
 #define MULTIPART_ATTACH		1
 #define MULTIPART_CONTENT		2
@@ -253,6 +259,7 @@
 #define HEAD_REFERENCES			"References:"
 #define HEAD_MIMEVERSION		"MIME-Version:"
 #define HEAD_CONTENTTYPE		"Content-Type:"
+#define HEAD_CONTENTID			"Content-ID:"
 #define HEAD_ENCODING			"Content-Transfer-Encoding:"
 #define HEAD_DISPOSITION		"Content-Disposition:"
 #define HEAD_X_MAILER			"X-Mailer:"
@@ -753,7 +760,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
 BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
-BOOL file_save_message(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, BOOL Multi);
+BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, int do_what);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
 BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, int SaveFlag);
 BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int SaveFlag);

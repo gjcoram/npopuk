@@ -55,10 +55,6 @@
 #define ID_VIEW_SAVE_ATTACH			403
 #define ID_ATTACH					500
 #define ID_RETURN_TO_MASTER			404
-#define DECODE_ASK					0
-#define DECODE_AUTO_OPEN			1
-#define DECODE_SAVE_ALL				2
-#define DECODE_OPEN_IF_MSG			3
 
 #define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\n{Cc: %c\r\n}Subject: %s\r\nDate: %D\r\nMessage-ID: %i\r\n\r\n")
 
@@ -2187,10 +2183,10 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *r;
 	TCHAR *str;
-	char *b64str, *dstr, *endpoint;
+	char *b64str, *ctype, *dstr, *endpoint;
 	int len;
 	int EncodeFlag = 0;
-	BOOL is_digest = FALSE, is_msg = FALSE;
+	BOOL is_digest = FALSE, is_msg = FALSE, save_embed = FALSE;
 	BOOL ret = TRUE;
 
 	if (DoWhat == DECODE_SAVE_ALL && (*(tpMultiPart + id))->ePos == NULL) {
@@ -2251,16 +2247,35 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 		break;
 	}
 
-	str = alloc_char_to_tchar((*(tpMultiPart + id))->ContentType);
+	ctype = (*(tpMultiPart + id))->ContentType;
+	str = alloc_char_to_tchar(ctype);
 	if (str != NULL) {
 		for (r = str; *r != TEXT('\0') && *r != TEXT(';'); r++);
 		*r = TEXT('\0');
 
-		if (str_cmp_ni((*(tpMultiPart + id))->ContentType, "message/rfc822", tstrlen("message/rfc822")) == 0) {
+		if (str_cmp_ni(ctype, "message/rfc822", tstrlen("message/rfc822")) == 0) {
 			p = alloc_copy_t(TEXT(".eml"));
 			is_msg = TRUE;
 		} else {
 			p = GetMIME2Extension(str, NULL);
+			if (str_cmp_ni(ctype, "text/html", tstrlen("text/html")) == 0) {
+				char *tmp;
+				int found = 0;
+				for (tmp = dstr; tmp < endpoint && found != 2; tmp++) {
+					if (str_cmp_ni(tmp, "<img ", 5) == 0) {
+						for ( ; tmp < endpoint; tmp++) {
+							if (*tmp == '>') break;
+							if (str_cmp_ni(tmp, "src=\"cid:", 9) == 0) {
+								found = 2;
+								break;
+							}
+						}
+					}
+				}
+				if (found == 2) {
+					save_embed = TRUE;
+				}
+			}
 		}
 	} else if (is_digest) {
 		str = alloc_copy_t(TEXT("digest message"));
@@ -2293,8 +2308,26 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			fname = alloc_copy_t(str);
 		}
 	} else {
+		char *tmp = (*(tpMultiPart + id))->Filename;
+		int i;
 		mem_free(&p);
-		fname = alloc_char_to_tchar((*(tpMultiPart + id))->Filename);
+		fname = alloc_char_to_tchar(tmp);
+		for (i = id+1; i < MultiPartCnt; i++) {
+			if (tstrcmp(tmp, (*(tpMultiPart + i))->Filename) == 0) {
+				if ((*(tpMultiPart + i))->ePos != NULL) {
+					int len2 = (*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->sPos;
+					if (len2 > len) {
+						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACH, MB_YESNOCANCEL);
+						if (ans == IDCANCEL) {
+							return FALSE;
+						} else if (ans == IDYES) {
+							return TRUE;
+						}
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	if (fname != NULL) {
@@ -2309,7 +2342,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 
 	// 確認ダイアログ
 	AttachProcess = 0;
-	if (DoWhat != DECODE_SAVE_ALL) {
+	if (DoWhat != DECODE_SAVE_ALL && DoWhat != DECODE_SAVE_EMBED) {
 		if (DoWhat == DECODE_AUTO_OPEN
 			|| (is_msg == TRUE && (DoWhat == DECODE_OPEN_IF_MSG || op.AutoOpenAttachMsg == 1))) {
 			AttachProcess = 1;
@@ -2323,9 +2356,22 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			}
 		}
 	}
+	if (save_embed) {
+		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACH, MB_YESNO) == IDYES) {
+			char *tmp = convert_cid(dstr, endpoint, tpMultiPart, MultiPartCnt);
+			if (tmp == NULL) {
+				ErrorMessage(hWnd, TEXT("Content-ID conversion error"));
+				save_embed = 0;
+			} else {
+				mem_free(&dstr);
+				dstr = tmp;
+				endpoint = dstr + tstrlen(dstr);
+			}
+		}
+	}
 	if (AttachProcess == 0) {
 		// save it
-		ret = file_save_message(hWnd, fname, ext, dstr, endpoint - dstr, (DoWhat==DECODE_SAVE_ALL));
+		ret = file_save_attach(hWnd, fname, ext, dstr, endpoint - dstr, (DoWhat == DECODE_SAVE_ALL));
 	} else if (AttachProcess == 1 && is_msg == TRUE) {
 		item_free(&AttachMailItem, 1);
 		AttachMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
@@ -2353,9 +2399,18 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			}
 		}
 	} else if (AttachProcess == 1) {
+		if (save_embed) {
+			int i;
+			for (i = 0; i < MultiPartCnt; i++) {
+				if ((*(tpMultiPart + i))->EmbeddedImage == TRUE) {
+					Decode(hWnd, i, DECODE_SAVE_EMBED);
+					//(*(tpMultiPart + i))->EmbeddedImage = FALSE;
+				}
+			}
+		}
 		// 保存して実行
 //		if (op.AttachWarning == 0 ||
-//			MessageBox(hWnd, STR_Q_ATTACH, STR_TITLE_ATTACH_MSG, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDYES) {
+//			MessageBox(hWnd, STR_Q_ATTACH, STR_TITLE_OPEN, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDYES) {
 			if (op.AttachDelete != 0) {
 				wsprintf(buf, TEXT("%s%s"), ATTACH_FILE, fname);
 				p = buf;

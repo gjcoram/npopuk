@@ -897,6 +897,8 @@ BEGIN
     CONTROL         "&MBOX (not backwards",IDC_RADIO_FORMAT_MBOX,
                     "Button",BS_AUTORADIOBUTTON,50,65,100,10
     LTEXT           "compatible)",IDC_STATIC,86,75,50,10
+    CONTROL         "&Scramble",IDC_CHECK_SCRAMBLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,75,60,10
     GROUPBOX        "File format",IDC_STATIC,5,55,150,33
     COMBOBOX        IDC_COMBO_LAZYLOAD,11,100,135,95,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
