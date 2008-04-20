@@ -2371,7 +2371,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	}
 	if (AttachProcess == 0) {
 		// save it
-		ret = file_save_attach(hWnd, fname, ext, dstr, endpoint - dstr, (DoWhat == DECODE_SAVE_ALL));
+		ret = file_save_attach(hWnd, fname, ext, dstr, endpoint - dstr, DoWhat);
 	} else if (AttachProcess == 1 && is_msg == TRUE) {
 		item_free(&AttachMailItem, 1);
 		AttachMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));

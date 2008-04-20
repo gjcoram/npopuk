@@ -1056,75 +1056,103 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt)
 	//<img width=574 height=155 id="Picture_x0020_1"
 	//src="cid:image001.gif@01C8A151.8C0E4EF0" alt=Image>
 	// Content-ID: <image001.gif@01C8A151.8C0E4EF0>
-	char *ret = alloc_copy(start);
-	int retval = 0;
-	char *p, *q;
-	p = q = start;
-	while (p < end && retval != -1) {
-		while (p < end && retval != -1) {
-			if (str_cmp_ni(p, "<img", 4) == 0 && is_white(*(p+4))) {
-				int i;
-				for (i = 0; i < 5; i++) {
-					*(q++) = *(p++);
+	int id, cnt = 0, maxlen = 0;
+	char *p, *q, *ret = NULL;
+
+	for (p = start; p < end; p++) {
+		if (str_cmp_ni(p, "<img", 4) == 0 && is_white(*(p+4))) {
+			p += 4;
+			while (p < end && *p != '>') {
+				if (str_cmp_ni(p, "src=\"cid:", 9) == 0) {
+					cnt++;
+					p += 9;
 				}
-				while (p < end && *p != '>' && retval != -1) {
-					if (str_cmp_ni(p, "src=\"cid:", 9) == 0) {
-						char *r, *s;
-						for (i = 0; i < 5; i++) {
-							*(q++) = *(p++);
-						}
-						r = s = p + 4;
-						while (r < end && *r != '\"') {
-							r++;
-						}
-						if (*r == '\"') {
-							int id, len = r - s + 1;
-							char *cid = (char *)mem_alloc(sizeof(char) * (len + 2));
-							if (cid == NULL) {
-								retval = -1;
-								break;
-							}
-							*cid = '<';
-							str_cpy_n(cid+1, s, len);
-							*(cid + len) = '>';
-							*(cid + len + 1) = '\0';
-							for (id = 0; id < mpcnt; id++) {
-								char *t = (*(tpMultiPart + id))->ContentID;
-								if (t != NULL && str_cmp_i(cid, t) == 0) {
-									(*(tpMultiPart + id))->EmbeddedImage = TRUE;
-									retval = 1;
-									s = (*(tpMultiPart + id))->Filename;
-									if (s != NULL && tstrlen(s) < len) {
-										q = str_join(q, s, (char *)-1);
-										*q = '\"';
-										p = r;
-										break;
-									} else {
-										retval = -1;
-										break;
-									}
-								}
-							}
-							mem_free(&cid);
-							if (id >= mpcnt) {
-								// didn't find a match
-								retval = -1;
-								break;
-							}
-						} else {
-							// no closing quote?
-							retval = -1;
-						}
-					} else {
-						*(q++) = *(p++);
-					}
-				}
-			} else {
-				*(q++) = *(p++);
+				p++;
 			}
 		}
 	}
-	return retval;
+	if (cnt == 0) {
+		return NULL;
+	}
+	for (id = 0; id < mpcnt; id++) {
+		if ((*(tpMultiPart + id))->ContentID != NULL) {
+			q = (*(tpMultiPart + id))->Filename;
+			if (q != NULL && tstrlen(q) > maxlen) {
+				maxlen = tstrlen(q);
+			}
+		}
+	}
+
+	ret = (char *)mem_alloc(sizeof(char) * (tstrlen(start) + cnt*maxlen + 1));
+	if (ret == NULL) {
+		return NULL;
+	}
+	p = start;
+	q = ret;
+	while (p < end) {
+		if (str_cmp_ni(p, "<img", 4) == 0 && is_white(*(p+4))) {
+			int i;
+			for (i = 0; i < 5; i++) {
+				*(q++) = *(p++);
+			}
+			while (p < end && *p != '>') {
+				if (str_cmp_ni(p, "src=\"cid:", 9) == 0) {
+					char *r, *s;
+					for (i = 0; i < 5; i++) {
+						*(q++) = *(p++);
+					}
+					r = s = p + 4;
+					while (r < end && *r != '\"') {
+						r++;
+					}
+					if (*r == '\"') {
+						int id, len = r - s + 1;
+						char *cid = (char *)mem_alloc(sizeof(char) * (len + 2));
+						if (cid == NULL) {
+							mem_free(&ret);
+							return NULL;
+						}
+						*cid = '<';
+						str_cpy_n(cid+1, s, len);
+						*(cid + len) = '>';
+						*(cid + len + 1) = '\0';
+						for (id = 0; id < mpcnt; id++) {
+							char *t = (*(tpMultiPart + id))->ContentID;
+							if (t != NULL && str_cmp_i(cid, t) == 0) {
+								(*(tpMultiPart + id))->EmbeddedImage = TRUE;
+								s = (*(tpMultiPart + id))->Filename;
+								if (s != NULL) {
+									q = str_join(q, s, (char *)-1);
+									*q = '\"';
+									p = r;
+									break;
+								} else {
+									mem_free(&cid);
+									mem_free(&ret);
+									return NULL;
+								}
+							}
+						}
+						mem_free(&cid);
+						if (id >= mpcnt) {
+							// didn't find a match
+							mem_free(&ret);
+							return NULL;
+						}
+					} else {
+						// no closing quote?
+						mem_free(&ret);
+						return NULL;
+					}
+				} else {
+					*(q++) = *(p++);
+				}
+			}
+		} else {
+			*(q++) = *(p++);
+		}
+	}
+	return ret;
 }
 
 /* End of source */
