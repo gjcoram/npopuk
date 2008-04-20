@@ -21,11 +21,13 @@ typedef struct _MULTIPART {
 	char *ContentType;
 	char *Filename;
 	char *Encoding;
+	char *ContentID;
 	char *hPos;
 	char *sPos;
 	char *ePos;
 	BOOL Forwardable;
 	BOOL IsDigestMsg;
+	BOOL EmbeddedImage;
 } MULTIPART;
 
 /* Function Prototypes */
@@ -40,6 +42,7 @@ int multipart_scan(char *ContentType, char *buf);
 #endif
 int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART ***tpMultiPart, int cnt);
 int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody, int *num_att, char ***EncAtt);
+char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt);
 
 #endif
 /* End of source */
