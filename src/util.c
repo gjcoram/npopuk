@@ -1066,12 +1066,12 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 	}
 
     // XOR
-    for (i = 0, j = 0; i < len; i++, j++) {
+	for (i = 0, j = 0; i < len; i++, j++) {
 		if (j >= 16) {
 			j = 0;
 		}
 		*(p + i) = *(p + i) ^ digest[j];
-    }
+	}
 	*(p + i) = '\0';
 
 	if (decode == TRUE) {

@@ -1029,7 +1029,7 @@ static void EndWindow(HWND hWnd)
 	DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-    DestroyWindow(hViewToolBar);
+	DestroyWindow(hViewToolBar);
 #elif defined _WIN32_WCE_LAGENDA
 	DestroyMenu(hViewMenu);
 #else
@@ -2317,7 +2317,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 				if ((*(tpMultiPart + i))->ePos != NULL) {
 					int len2 = (*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->sPos;
 					if (len2 > len) {
-						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACH, MB_YESNOCANCEL);
+						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACHED, MB_YESNOCANCEL);
 						if (ans == IDCANCEL) {
 							return FALSE;
 						} else if (ans == IDYES) {
@@ -2356,9 +2356,9 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			}
 		}
 	}
-	if (save_embed) {
-		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACH, MB_YESNO) == IDYES) {
-			char *tmp = convert_cid(dstr, endpoint, tpMultiPart, MultiPartCnt);
+	if (save_embed && AttachProcess >= 0) {
+		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACHED, MB_YESNO) == IDYES) {
+			char *tmp = convert_cid(dstr, endpoint, tpMultiPart, MultiPartCnt, (AttachProcess == 1));
 			if (tmp == NULL) {
 				ErrorMessage(hWnd, TEXT("Content-ID conversion error"));
 				save_embed = 0;

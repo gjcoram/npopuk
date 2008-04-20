@@ -4158,7 +4158,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1 && SelBox < RecvBox) {
 				RecvBox--;
 			}
-			mailbox_select(hWnd, mailbox_delete(hWnd, SelBox, TRUE));
+			if (op.LazyLoadMailboxes > 0) {
+				// make sure SelBox-1 is loaded before deleting
+				int DelBox = SelBox;
+				mailbox_select(hWnd, SelBox-1);
+				mailbox_delete(hWnd, DelBox, TRUE);
+			} else {
+				mailbox_select(hWnd, mailbox_delete(hWnd, SelBox, TRUE));
+			}
 			if (op.AutoSave == 1) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, TRUE, FALSE, NULL);

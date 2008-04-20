@@ -1083,7 +1083,7 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 	if (do_what == DECODE_SAVE_EMBED) {
 		wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
 		dir_create(path);
-		wsprintf(path, TEXT("%s%s\\%s"), DataDir, op.AttachPath, FileName);
+		wsprintf(path, TEXT("%s%s\\%s%s"), DataDir, op.AttachPath, ATTACH_FILE, FileName);
 	} else {
 		if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
 			return TRUE; // user cancelled, not an error
