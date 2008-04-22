@@ -2313,11 +2313,18 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 		mem_free(&p);
 		fname = alloc_char_to_tchar(tmp);
 		for (i = id+1; i < MultiPartCnt; i++) {
-			if (tstrcmp(tmp, (*(tpMultiPart + i))->Filename) == 0) {
+			char *tmp2 = (*(tpMultiPart + i))->Filename;
+			if (tmp2 != NULL && tstrcmp(tmp, tmp2) == 0) {
 				if ((*(tpMultiPart + i))->ePos != NULL) {
 					int len2 = (*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->sPos;
 					if (len2 > len) {
-						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACHED, MB_YESNOCANCEL);
+						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACHED, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+						if (ans != IDNO) {
+							mem_free(&str);
+							mem_free(&ext);
+							mem_free(&fname);
+							mem_free(&dstr);
+						}
 						if (ans == IDCANCEL) {
 							return FALSE;
 						} else if (ans == IDYES) {
@@ -2357,7 +2364,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 		}
 	}
 	if (save_embed && AttachProcess >= 0) {
-		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACHED, MB_YESNO) == IDYES) {
+		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 			char *tmp = convert_cid(dstr, endpoint, tpMultiPart, MultiPartCnt, (AttachProcess == 1));
 			if (tmp == NULL) {
 				ErrorMessage(hWnd, TEXT("Content-ID conversion error"));
@@ -2463,7 +2470,7 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 		}
 	}
 	if (TextIndex == -1) {
-		if (MessageBox(hWnd, STR_Q_NOBODYDELATT, STR_TITLE_DELETE, MB_YESNO) == IDNO) {
+		if (MessageBox(hWnd, STR_Q_NOBODYDELATT, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 			multipart_free(&tpPart, cnt);
 			return FALSE;
 		} else {

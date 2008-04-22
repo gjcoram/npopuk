@@ -3022,9 +3022,33 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
 #endif
-			op.WriteMbox = SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_MBOX, BM_GETCHECK, 0, 0);
-			if (op.WriteMbox == 0) {
-				op.ScrambleMailboxes = SendDlgItemMessage(hDlg, IDC_CHECK_SCRAMBLE, BM_GETCHECK, 0, 0);
+			{
+				int scramble = 0;
+				op.WriteMbox = SendDlgItemMessage(hDlg, IDC_RADIO_FORMAT_MBOX, BM_GETCHECK, 0, 0);
+				if (op.WriteMbox == 0) {
+					scramble = SendDlgItemMessage(hDlg, IDC_CHECK_SCRAMBLE, BM_GETCHECK, 0, 0);
+				}
+				if (scramble != op.ScrambleMailboxes) {
+					op.ScrambleMailboxes = scramble;
+					if (MessageBox(hDlg, STR_Q_SCRAMBLE_SAVE, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
+						int mbox;
+						for (mbox = 0; mbox < MailBoxCnt; mbox++) {
+							MAILBOX *tpMailBox = MailBox + mbox;
+							if (tpMailBox->Loaded == TRUE || mailbox_load_now(hDlg, mbox, FALSE, FALSE) == 1) {
+								TCHAR fname[BUF_SIZE];
+								if (mbox == MAILBOX_SEND) {
+									lstrcpy(fname, SENDBOX_FILE);
+								} else if (tpMailBox->Filename == NULL) {
+									wsprintf(fname, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
+								} else {
+									lstrcpy(fname, tpMailBox->Filename);
+								}
+								file_save_mailbox(fname, DataDir, mbox, FALSE,
+									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+							}
+						}
+					}
+				}
 			}
 			op.LazyLoadMailboxes = SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_GETCURSEL, 0, 0);
 			break;

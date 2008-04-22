@@ -767,7 +767,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 						title = STR_MAILBOX_NONAME;
 					}
 					wsprintf(msg, STR_Q_LOADASMBOX, FileName, cnt2);
-					if (MessageBox(NULL, msg, title, MB_YESNO) == IDYES) {
+					if (MessageBox(NULL, msg, title, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 						cnt = cnt2;
 						MboxFormat = 1;
 					}

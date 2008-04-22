@@ -1057,7 +1057,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 	//src="cid:image001.gif@01C8A151.8C0E4EF0" alt=Image>
 	// Content-ID: <image001.gif@01C8A151.8C0E4EF0>
 	int id, cnt = 0;
-#ifdef _WIN32_WCE
+#ifdef UNICODE
 	unsigned int maxlen = 0;
 #else
 	int maxlen = 0;
@@ -1089,7 +1089,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 		}
 	}
 	if (add_prefix) {
-		maxlen += lstrlen(ATTACH_FILE);
+		maxlen += tstrlen(ATTACH_FILE_A);
 	}
 
 	ret = (char *)mem_alloc(sizeof(char) * (tstrlen(start) + cnt*maxlen + 1));
@@ -1132,7 +1132,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 								s = (*(tpMultiPart + id))->Filename;
 								if (s != NULL) {
 									if (add_prefix) {
-										q = str_join(q, ATTACH_FILE, s, (char *)-1);
+										q = str_join(q, ATTACH_FILE_A, s, (char *)-1);
 									} else {
 										q = str_join(q, s, (char *)-1);
 									}

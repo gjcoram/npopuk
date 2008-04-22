@@ -1869,7 +1869,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 
 	// Give user the option of not saving
 	if (PromptSave == TRUE && op.PromptSaveOnExit != 0) {
-		unsigned type = MB_YESNO;
+		unsigned type = MB_ICONQUESTION | MB_YESNO;
 		SwitchCursor(TRUE);
 		if (op.PromptSaveOnExit == 2) {
 			type |= MB_DEFBUTTON2;
@@ -3505,7 +3505,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (op.CheckQueuedOnExit > 0 
 			&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
 			_SetForegroundWindow(hWnd);
-			if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_YESNO) == IDNO) {
+			if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				mailbox_select(hWnd, MAILBOX_SEND);
 				break;
 			}
@@ -4073,7 +4073,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			gDoingQuit = TRUE;
 			if (op.CheckQueuedOnExit > 0
 				&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
-				if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_YESNO) == IDNO) {
+				if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 					mailbox_select(hWnd, MAILBOX_SEND);
 					gDoingQuit = FALSE;
 					break;
