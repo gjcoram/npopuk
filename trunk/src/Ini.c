@@ -76,7 +76,7 @@ BOOL ini_start_auth_check(void)
 			// GJC - check if upgrading from original nPOP
 			str_join_t(app_path_old, DefaultDataDir, TEXT("nPOP.ini"),  (TCHAR *)-1);
 			if (file_get_size(app_path_old) != -1) {
-				if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_YESNO) == IDYES) {
+				if (MessageBox(NULL, STR_Q_UPGRADE, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 					ConvertFromNPOP = TRUE;
 					CopyFile(app_path_old, app_path, FALSE);
 				}

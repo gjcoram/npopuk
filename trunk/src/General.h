@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b8")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b8p1")
 #define APP_VERSION_NUM			2009
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -66,6 +66,7 @@
 
 #define STR_MUTEX				TEXT("_nPOP_Mutex_")
 #define ATTACH_FILE				TEXT("_attach_")
+#define ATTACH_FILE_A			"_attach_"
 #define ATTACH_SEP				TEXT('|')
 
 #ifdef _WIN32_WCE

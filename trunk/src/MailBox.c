@@ -265,7 +265,7 @@ int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes)
 				(tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
 				? STR_MAILBOX_NONAME : tpMailBox->Name);
 			SwitchCursor(TRUE);
-			retval = MessageBox(NULL, msg, WINDOW_TITLE, MB_YESNOCANCEL);
+			retval = MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNOCANCEL);
 			if (retval == IDNO) {
 				return 0;
 			} else if (retval == IDCANCEL) {

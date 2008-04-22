@@ -161,9 +161,11 @@
 #define STR_Q_USEPOOM				TEXT("Using PocketContacts will replace existing items in Address book.\nProceed anyway?")
 #define STR_Q_LOADMAILBOX			TEXT("Load mailbox \"%s\"?")
 #define STR_Q_LOADASMBOX			TEXT("Load %s as MBOX (%d messages) instead of nPOP format (1 message)?")
+#define STR_Q_SCRAMBLE_SAVE			TEXT("Save all mailboxes with new settings?")
 #define STR_Q_NOBODYDELATT			TEXT("Message has no text part; deleting attachments\nwill leave nothing.  Proceed?")
 #define STR_Q_SAVE_EMBEDDED			TEXT("Convert embedded image names?")
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\nSkip this one?")
+
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
