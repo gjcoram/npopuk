@@ -1778,6 +1778,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_TIMER:
 		switch (wParam) {
+
 		case ID_APP_TIMER:
 			KillTimer(hWnd, wParam);
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -1949,14 +1950,22 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_REPLACE:
-			{
-				FindOrReplace = 2;
+			FindOrReplace = 2;
 #ifdef _WIN32_WCE_PPC
+			{
+				BOOL sipup = FALSE;
+				if (SipFlag) {
+					sipup = TRUE;
+					SHSipPreference(hWnd, SIP_FORCEDOWN);
+				}
 				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_REPLACE), hWnd, SetFindProc);
-#else
-				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_FIND), hWnd, SetFindProc);
-#endif
+				if (sipup) {
+					SHSipPreference(hWnd, SIP_UP);
+				}
 			}
+#else
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_FIND), hWnd, SetFindProc);
+#endif
 			break;
 
 		case ID_MENUITEM_ENCODE:
