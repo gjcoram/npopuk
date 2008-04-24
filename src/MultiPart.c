@@ -937,8 +937,25 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 					fname = (*(tpMultiPart + i))->Filename;
 #endif
 					if (fname != NULL && lstrcmp(fname, fpath) == 0) {
-						int ptlen = ((*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->hPos);
+						int j, ptlen = ((*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->hPos);
 						found = TRUE;
+						// forward only the largest with this name
+						for (j = i+1; j < cnt; j++) {
+							TCHAR *fn2;
+#ifdef UNICODE
+							fn2 = alloc_char_to_tchar((*(tpMultiPart + j))->Filename);
+#else
+							fn2 = (*(tpMultiPart + j))->Filename;
+#endif
+							if (fn2 != NULL && lstrcmp(fn2, fpath) == 0) {
+								int ptlen2 = ((*(tpMultiPart + j))->ePos - (*(tpMultiPart + j))->hPos);
+								if (ptlen2 > ptlen) {
+									ptlen = ptlen2;
+									i = j;
+								}
+
+							}
+						}
 						buf = (char *)mem_alloc(sizeof(char) * (ptlen + 1));
 						if (buf == NULL) {
 							status = MP_ERROR_ALLOC;
