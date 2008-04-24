@@ -2163,14 +2163,18 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						} else {
 							if (skip == TRUE) {
 								skip = FALSE;
-							} else if ( *(p+2+newlen) == TEXT('\r')) {
-								skip = TRUE;
 							} else {
-								if ( p > buf && *(p-1) != TEXT(' ') && (p+2+newlen < end)
-									&& *(p+2+newlen) != TEXT(' ')) {
-									*(t++) = TEXT(' ');
+								TCHAR *w = p + 2 + newlen;
+								while (*w == TEXT(' ') || *w == TEXT('\t')) w++;
+								if ( *w == TEXT('\r')) {
+									skip = TRUE;
+								} else {
+									if ( p > buf && *(p-1) != TEXT(' ') && (p+2+newlen < end)
+										&& *(p+2+newlen) != TEXT(' ')) {
+										*(t++) = TEXT(' ');
+									}
+									p += (2 + newlen);
 								}
-								p += (2 + newlen);
 							}
 						}
 				
