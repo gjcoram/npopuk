@@ -1211,9 +1211,12 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	str_join_t(path, SaveDir, FileName, (TCHAR *)-1);
 	tpMailBox->DiskSize = 0;
 
-	if (SaveFlag == 0 && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+	if (tpMailBox->MailItemCnt == 0 || (SaveFlag == 0 && tpMailBox->Type != MAILBOX_TYPE_SAVE)) {
 		//When it does not retain, deletion
 		DeleteFile(path);
+		if (IsBackup == FALSE) {
+			tpMailBox->NeedsSave = 0;
+		}
 		return TRUE;
 	}
 
@@ -1364,7 +1367,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 		} else {
 			len = (fsize < hlen) ? fsize : hlen;
 			tmp = file_read(path, len);
-			if (str_cmp_n(tmp, "From ", 5) == 0) {
+			if (tmp != NULL && str_cmp_n(tmp, "From ", 5) == 0) {
 				tpMailBox->WasMbox = TRUE;
 			} else {
 				tpMailBox->WasMbox = FALSE;

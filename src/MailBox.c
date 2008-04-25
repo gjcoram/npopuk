@@ -238,7 +238,10 @@ BOOL mailbox_read(void)
 {
 	//‘—M” 
 	(MailBox + MAILBOX_SEND)->Name = alloc_copy_t(STR_SENDBOX_NAME);
-	if(file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE, FALSE) == FALSE){
+	if (file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE, FALSE) == FALSE) {
+		TCHAR tmp[BUF_SIZE];
+		wsprintf(tmp, STR_ERR_OPENMAILBOX, SENDBOX_FILE);
+		ErrorMessage(NULL, tmp);
 		return FALSE;
 	}
 
