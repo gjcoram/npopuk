@@ -715,6 +715,8 @@ BOOL ini_read_setting(HWND hWnd)
 				}
 				if (file_read_mailbox(buf, (MailBox + num), FALSE, TRUE) == FALSE) {
 					profile_free();
+					wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
+					ErrorMessage(hWnd, tmp);
 					return FALSE;
 				}
 			} else {
@@ -882,6 +884,8 @@ BOOL ini_read_setting(HWND hWnd)
 			}
 			if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 				profile_free();
+				wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
+				ErrorMessage(hWnd, tmp);
 				return FALSE;
 			}
 		} else {
@@ -904,6 +908,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->CyclicFlag = 1;
 		if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 			profile_free();
+			wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
+			ErrorMessage(hWnd, tmp);
 			return FALSE;
 		}
 	}
