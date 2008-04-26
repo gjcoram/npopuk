@@ -1173,8 +1173,12 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 			break;
 
 		case TEXT('n'):
+		case TEXT('r'):
 			*(r++) = TEXT('\r');
 			*(r++) = TEXT('\n');
+			if (*p == TEXT('r') && *(p+1) == TEXT('\\') && *(p+2) == TEXT('n')) {
+				p+=2;
+			}
 			break;
 
 		case TEXT('\\'):

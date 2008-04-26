@@ -6223,6 +6223,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_REPLACE), &ReplaceStr);
+				DecodeCtrlChar(ReplaceStr, ReplaceStr);
 				if (lstrcmp(FindStr, ReplaceStr) == 0) {
 					ErrorMessage(hDlg, STR_ERR_FINDISREPLACE);
 					SetFocus(GetDlgItem(hDlg, IDC_EDIT_REPLACE));

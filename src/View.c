@@ -1125,15 +1125,22 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	}
 
 	for (i = 0; i < MultiPartCnt; i++) {
-		BOOL part_is_text = (*(tpMultiPart + i))->ContentType == NULL ||
-			str_cmp_ni((*(tpMultiPart + i))->ContentType, "text", tstrlen("text")) == 0;
-		if (ret == -1 && part_is_text == TRUE) {
+		int part_is_text = 0;
+		if ((*(tpMultiPart + i))->ContentType == NULL) {
+			part_is_text = 1;
+		} else if (str_cmp_ni((*(tpMultiPart + i))->ContentType, "text/html", tstrlen("text/html")) == 0) {
+			part_is_text = 2;
+		} else if (str_cmp_ni((*(tpMultiPart + i))->ContentType, "text", tstrlen("text")) == 0) {
+			part_is_text = 1;
+		}
+		if (ret == -1 && part_is_text != 0) {
 			// 一番目に出現したテキストデータは本文にする
 			ret = i;
 			if (MultiPartCnt == 1 && tpMailItem->Multipart > MULTIPART_ATTACH) {
 				AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
 			}
-		} else {
+		}
+		if (part_is_text != 1 || ret != i) {
 			if (AppendFlag == FALSE) {
 				if (MultiPartCnt > 1 || (MultiPartCnt == 1 && part_is_text == FALSE)) {
 					AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
@@ -2364,7 +2371,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 		}
 	}
 	if (save_embed && AttachProcess >= 0) {
-		if (MessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_YESNO) == IDYES) {
+		if (ParanoidMessageBox(hWnd, STR_Q_SAVE_EMBEDDED, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 			char *tmp = convert_cid(dstr, endpoint, tpMultiPart, MultiPartCnt, (AttachProcess == 1));
 			if (tmp == NULL) {
 				ErrorMessage(hWnd, TEXT("Content-ID conversion error"));
