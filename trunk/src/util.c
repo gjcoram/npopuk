@@ -2799,4 +2799,53 @@ void rot13(char *start, char *end)
 	}
 }
 
+/*
+ * replace_env_var - replace %ENVVAR% with value of environment variable ENVVAR
+ */
+#ifndef _WIN32_WCE
+TCHAR *replace_env_var(TCHAR *buf) {
+	TCHAR *p, *q, *ret;
+	TCHAR ev[BUF_SIZE];
+	BOOL found = FALSE;
+	int len = lstrlen(buf);
+	size_t req_size;
+
+	for (p = buf; *p != TEXT('\0') && *p != TEXT('%'); p++) {
+		;
+	}
+	if (*p == TEXT('\0')) {
+		return buf;
+	}
+	p++;
+	for (q = p; *q != TEXT('\0') && *q != TEXT('%'); q++) {
+		;
+	}
+	if (*q == TEXT('\0')) {
+		return buf;
+	}
+	*q = TEXT('\0');
+#ifdef UNICODE
+	_wgetenv_s(&req_size, ev, BUF_SIZE, p);
+#else
+	getenv_s(&req_size, ev, BUF_SIZE, p);
+#endif
+	*q = TEXT('%');
+	if (ev == NULL && req_size > BUF_SIZE) {
+		return buf;
+	}
+	len += req_size - (q-p);
+	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (ret == NULL) {
+		return buf;
+	}
+	len = (p - buf);
+	str_cpy_n_t(ret, buf, len);
+	p = ret + len - 1;
+	p = str_cpy_t(p, ev);
+	p = str_cpy_t(p, q+1);
+	mem_free(&buf);
+	return ret;
+}
+#endif
+
 /* End of source */

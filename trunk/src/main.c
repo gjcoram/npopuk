@@ -395,7 +395,9 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 						mem_free(&DefaultDataDir);
 						return FALSE;
 					}
-					//%ENVVAR% getenv("ENVVAR");
+#ifndef _WIN32_WCE
+					p = replace_env_var(p);
+#endif
 					if (*p == TEXT('.')) {
 						if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
 							wsprintf(fname, TEXT("%s"), DefaultDataDir);
@@ -421,7 +423,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 					if (p == NULL) {
 						mem_free(&InitialAccount);
 						mem_free(&AppDir);
-						return FALSE;
+						return -1;
 					}
 					IniFile = alloc_copy_t(fullname);
 					DefaultDataDir = alloc_copy_t(fullname);
@@ -5199,6 +5201,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	WSADATA WsaData;
 	HANDLE hMutex = NULL;
 	TCHAR *lptCmdLine = (TCHAR *)lpCmdLine;
+	BOOL ret;
 
 	hInst = hInstance;
 
@@ -5262,14 +5265,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 //	lptCmdLine = alloc_copy_t(GetCommandLineW()); // gets program name also
 #endif
 	// Sets AppDir and parses lpCmdLine to set IniFile and static CmdLine
-	if (GetAppPath(hInstance, lptCmdLine) == FALSE) {
+	ret = GetAppPath(hInstance, lptCmdLine);
+	if (ret != TRUE) {
 #if defined(UNICODE) && !defined(_WIN32_WCE)
 		mem_free(&lptCmdLine);
 #endif
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
-		ErrorMessage(NULL, STR_ERR_MEMALLOC);
+		if (ret == FALSE) {
+			ErrorMessage(NULL, STR_ERR_MEMALLOC);
+		}
 		return 0;
 	}
 #if defined(UNICODE) && !defined(_WIN32_WCE)
