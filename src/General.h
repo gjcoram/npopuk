@@ -44,7 +44,7 @@
 #include "font.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b8p5")
+#define APP_NAME				TEXT("nPOPuk Ver 2.10b8p6")
 #define APP_VERSION_NUM			2009
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
@@ -889,6 +889,9 @@ int remove_duplicate_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 void rot13_cpy(char *dest, char *start, char *end);
 void rot13(char *start, char *end);
+#ifndef _WIN32_WCE
+TCHAR *replace_env_var(TCHAR *buf);
+#endif
 
 // View
 BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop);
