@@ -395,6 +395,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 						mem_free(&DefaultDataDir);
 						return FALSE;
 					}
+					//%ENVVAR% getenv("ENVVAR");
 					if (*p == TEXT('.')) {
 						if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
 							wsprintf(fname, TEXT("%s"), DefaultDataDir);
