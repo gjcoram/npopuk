@@ -311,6 +311,24 @@
 #define URL_FTP					TEXT("ftp://")
 #define URL_MAILTO				TEXT("mailto:")
 
+/* no value parameters */
+#define PARM_S					TEXT("/s")
+#define PARM_Q					TEXT("/q")
+
+/* parameters with values */
+#define PARM_Y					TEXT("/y:")
+#define PARM_A					TEXT("/a:")
+#define PARM_MAILBOX			TEXT("/mailbox:")
+#define PARM_TO					TEXT("/to:")
+#define PARM_CC					TEXT("/cc:")
+#define PARM_BCC				TEXT("/bcc:")
+#define PARM_REPLY_TO			TEXT("/reply-to:")
+#define PARM_SUBJECT			TEXT("/subject:")
+#define PARM_BODY				TEXT("/body:")
+#define PARM_ATTACH				TEXT("/attach:")
+#define PARM_MAILTO				TEXT("mailto:")
+
+
 #define ABS(n)					((n < 0) ? (-n) : n)				// â‘Î’l
 
 /* Struct */

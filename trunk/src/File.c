@@ -241,12 +241,14 @@ void trunc_to_dirname(TCHAR *fname)
 
 /*
  * trunc_to_parent_dir - truncate at parent dir of fname
+ * input fname ends with \ or / if it is a dir (see trunc_to_dirname above)
  */
 BOOL trunc_to_parent_dir(TCHAR *fname)
 {
 	TCHAR *p, *r, *s;
-	BOOL ret = FALSE;
-	for (p = r = fname; *p != TEXT('\0'); p++) {
+	BOOL ret = TRUE;
+	r = s = NULL;
+	for (p = fname; *p != TEXT('\0'); p++) {
 #ifndef UNICODE
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
@@ -256,12 +258,13 @@ BOOL trunc_to_parent_dir(TCHAR *fname)
 		if (*p == TEXT('\\') || *p == TEXT('/')) {
 			s = r;
 			r = p;
-			if (s == fname) {
-				s = r;
-			} else {
-				ret = TRUE;
-			}
 		}
+	}
+	if (s == NULL) {
+		s = fname;
+		if (*s  &&  *(s+1) == TEXT(':'))
+			s += 2;
+		ret = FALSE;
 	}
 	*(s++) = TEXT('\\');
 	*s = TEXT('\0');
