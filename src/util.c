@@ -1861,11 +1861,13 @@ static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep)
  */
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 {
-#ifdef UNICODE
-	TCHAR *body;
-#endif
 	TCHAR *tmp;
 	TCHAR *p, *r, *s;
+#ifdef UNICODE
+	TCHAR *body;
+
+	body = 0;
+#endif
 
 	for (p = buf; *p == TEXT(' '); p++);
 	r = p;

@@ -465,4 +465,75 @@ void URL_encode(unsigned char *buf, char *ret)
 	}
 	*r = '\0';
 }
+
+
+#ifdef UNICODE
+/*
+ * These next two functions are non-standard.  They are used to create fake
+ * URL encode/decode operations for TCHAR data, but they really only encode
+ * the non-alphanumeric characters < 128 ... this avoids URL parsing problems
+ * when URL-reserved punctuation is used in filenames, email addresses, and
+ * other parameter values that want to get embedded into the URL, but the
+ * result is suitable only for passing around inside nPOPuk,
+ * not for use on an actual web page as an actual URL.
+ */
+
+/*
+ * URL_decode_t - URL encoding (RFC 2396)
+ */
+TCHAR *URL_decode_t(TCHAR *buf, TCHAR *ret)
+{
+	TCHAR *p, *r;
+	int hextmp;
+
+	p = buf;
+	r = ret;
+
+	while (*p) {
+		if (*p == '%') {
+			hextmp = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
+			if (hextmp > 255) { // preserve bad "digits"
+				*(r++) = *p;
+				*(r++) = *(p + 1);
+				hextmp = *(p + 2);
+			}
+			*(r++) = hextmp;
+			p += 2;
+		} else if (*p == '+') {
+			*(r++) = ' ';
+		} else {
+			*(r++) = *p;
+		}
+		p++;
+	}
+	*r = '\0';
+	return r;
+}
+
+/*
+ * URL_encode_t - URL encoding (RFC 2396)
+ */
+void URL_encode_t(TCHAR *buf, TCHAR *ret)
+{
+	TCHAR *p;
+	TCHAR *r;
+
+	for (p = buf, r = ret; *p != '\0'; p++) {
+		if (*p < 128 ) {
+			if ((*p >= 'A' && *p <= 'Z') ||
+			    (*p >= 'a' && *p <= 'z') ||
+			    (*p>= '0' && *p <= '9')) {
+				*(r++) = *p;
+			} else {
+				*(r++) = '%';
+				*(r++) = cHex[*p >> 4];
+				*(r++) = cHex[*p & 0xF];
+			}
+		} else {
+			*(r++) = *p;
+		}
+	}
+	*r = '\0';
+}
+#endif
 /* End of source */

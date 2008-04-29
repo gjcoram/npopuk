@@ -35,5 +35,13 @@ void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const
 char *URL_decode(char *buf, char *ret);
 void URL_encode(unsigned char *buf, char *ret);
 
+#ifdef UNICODE
+TCHAR *URL_decode_t(TCHAR *buf, TCHAR *ret);
+void URL_encode_t(TCHAR *buf, TCHAR *ret);
+#else
+#define URL_decode_t URL_decode
+#define URL_encode_t URL_encode
+#endif
+
 #endif
 /* End of source */

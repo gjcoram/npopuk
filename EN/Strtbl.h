@@ -81,6 +81,8 @@
 #define STR_ERR_NOFILENAME			TEXT("No file name specified")
 #define STR_ERR_NOSBOXNAME			TEXT("No name specified for savebox")
 #define STR_ERR_NOUIDLNOFILL		TEXT("Cannot fill-in messages because 'NoUIDL=1' for this account")
+#define STR_ERR_DUPPARAM			TEXT("Duplicate parameter '%s'")
+
 
 // Socket error
 #define STR_ERR_SOCK_SELECT			TEXT("Selection error")
@@ -166,6 +168,7 @@
 #define STR_Q_NOBODYDELATT			TEXT("Message has no text part; deleting attachments\nwill leave nothing.  Proceed?")
 #define STR_Q_SAVE_EMBEDDED			TEXT("Convert embedded image names?")
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\nSkip this one?")
+#define STR_Q_CREATE_INIFILE		TEXT("Create INIFILE at '%s'?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")

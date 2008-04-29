@@ -20,6 +20,7 @@
 #ifdef USE_NEDIT
 #include "nEdit.h"
 #endif
+#include "code.h"
 
 /* Define */
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ
@@ -198,13 +199,140 @@ void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime)
 static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout);
 static void PlayMarkSound(int mark);
 
-/*
- * GetAppPath - ユーザディレクトリの作成
- */
 #ifdef _WIN32_WCE_LAGENDA
 int GetUserDiskName(HINSTANCE hInstance, LPTSTR lpDiskName, int nMaxCount);
+#else
+
+/* OP is index into parms; duplicate syntax at end with duplicate op value.
+ * OP_MAX_NO_VALUE discriminates between OP without value, and op with value.
+ * value accumulates the parsed value of the OP
+ * concat: if zero, only one instance allowed; non-zero is multi-value delim.
+ *
+ * compatibility issues:
+ *   OPs 3-10 are redundant with mailto: URL -- no need for both, but if both
+ *   exist, 3-10 get concatenated to end of URL
+ *
+ *   If email adress provided, it is converted to OP_TO.
+ *
+ *   At end, OPs 3-10 are converted to mailto: URL for use by the rest of the
+ *   program.  Means reparsing, but this syntax is only for Windows command
+ *   line; the URL parsing code has to exist anyway.
+ *
+ *   /a: parameter is redundant with /mailbox: for URL use, either accepted
+ *   for standalone use.
+ */
+#define OP_S 0
+#define OP_Q 1
+#define OP_MAX_NO_VALUE 1
+#define OP_Y 2
+#define OP_MAILTO 3
+#define OP_TO 4
+#define OP_CC 5
+#define OP_BCC 6
+#define OP_REPLY_TO 7
+#define OP_SUBJECT 8
+#define OP_ATTACH 9
+#define OP_BODY 10
+#define OP_MAILBOX 11
+struct parmdef {
+	TCHAR *param;
+	TCHAR *value;
+	TCHAR concat;
+	char op;
+	char encode;
+} parms [] = {
+	{ PARM_S,        NULL, 0,         OP_S,        1 },
+	{ PARM_Q,        NULL, 0,         OP_Q,        1 },
+	{ PARM_Y,        NULL, 0,         OP_Y,        1 },
+	{ PARM_MAILTO,   NULL, 0,         OP_MAILTO,   1 },
+	{ PARM_TO,       NULL, TEXT(','), OP_TO,       3 },
+	{ PARM_CC,       NULL, TEXT(','), OP_CC,       3 },
+	{ PARM_BCC,      NULL, TEXT(','), OP_BCC,      3 },
+	{ PARM_REPLY_TO, NULL, TEXT(','), OP_REPLY_TO, 3 },
+	{ PARM_SUBJECT,  NULL, TEXT(' '), OP_SUBJECT,  3 },
+	{ PARM_ATTACH,   NULL, TEXT('|'), OP_ATTACH,   3 },
+	{ PARM_BODY,     NULL, TEXT('+'), OP_BODY,     3 },
+	{ PARM_MAILBOX,  NULL, 0,         OP_MAILBOX,  3 },
+	{ PARM_A,        NULL, 0,         OP_MAILBOX,  3 }
+};
+#define NUMPARMDEF (sizeof(parms)/sizeof(struct parmdef))
+
+static void FreeParms(void)
+{
+	int parmix;
+	for (parmix=0; parmix < NUMPARMDEF; parmix++) {
+		if (parms[parmix].value) {
+			mem_free(&parms[parmix].value);
+		}
+	}
+	return;
+}
+
+// returns false for error, true for success
+static BOOL MergePath(TCHAR path[BUF_SIZE], TCHAR *file)
+{
+	TCHAR *p;
+	int flen, plen;
+	BOOL found, loop;
+
+	found = FALSE;
+
+	p = file;
+	flen = lstrlen(p);
+	if (flen >= BUF_SIZE)
+		flen = BUF_SIZE;
+
+	// Detect fully qualified file name
+#ifdef _WIN32_WCE
+	if (*p == TEXT('\\') || *p == TEXT('/')) {
+		str_cpy_n_t(path, p, flen);
+		return TRUE;
+	}
+#else
+	// How to detect drive letter on PC?  Do that first
+	// Don't permit drive letter without following \ or /
+	if (flen >= 3  &&  *(p+1) == TEXT(':')) {
+		if (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/')) {
+			str_cpy_n_t(path, p, BUF_SIZE);
+			return TRUE;
+		} else {
+			// drive letter not followed by \ or /
+			return FALSE;
+		}
+	}
+	if (*p == TEXT('\\') || *p == TEXT('/')) {
+		while(trunc_to_parent_dir(path));
+	}
 #endif
 
+	loop = TRUE;
+	while (loop  &&  *p == TEXT('.')) {
+		loop = FALSE;
+		if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
+			loop = TRUE;
+			if (trunc_to_parent_dir(path)) {
+				p += 3;
+				flen -= 3;
+			} else {
+				// too many .. for available path
+				return FALSE;
+			}
+		} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
+			loop = TRUE;
+			p += 2;
+			flen -= 2;
+		}
+	}
+
+	plen = lstrlen(path);
+	str_cpy_n_t(&path[plen], p, BUF_SIZE - plen);
+	return TRUE;
+}
+#endif // _WIN32_WCE_LAGENDA
+
+/*
+ * GetAppPath - parse parameters, and figure out where we are running
+ */
 static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 {
 #ifdef _WIN32_WCE_LAGENDA
@@ -219,9 +347,9 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	}
 	CreateDirectory(AppDir, NULL);
 #else
-	TCHAR *p, *r;
+	TCHAR *p, *r, *vp;
 	TCHAR fname[BUF_SIZE];
-	int len;
+	int len, parmix, parmlen, vallen, oldlen;
 
 	AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
 	if (AppDir == NULL) {
@@ -231,218 +359,325 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
 	trunc_to_dirname(AppDir);
 
-	if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
+	for(p = lpCmdLine; p && *p == TEXT(' '); p++); // remove spaces
 
-		for (p = lpCmdLine; *p == TEXT(' '); p++); // remove spaces
-		// command-line options should preceed any mailto: arguments
-		// /y:inifile
-		// /a:account
-		// /s - send and quit
-		// /q - quit after running check all
-		while (*p == TEXT('/')) {
-			BOOL slash_y = FALSE, slash_a = FALSE;
-			p++;
-			if (*p == TEXT('s') || *p == TEXT('S')) {
+	// command-line options should preceed any mailto: arguments
+	// valid options listed in parms structure array
+	// parsing loop
+	while (p && *p) {
+		for (parmix = 0; parmix < NUMPARMDEF; parmix++) {
+			parmlen = lstrlen(parms[parmix].param);
+			if (str_cmp_ni_t(p, parms[parmix].param, parmlen) == 0) {
+				if (parmix > OP_MAX_NO_VALUE || *(p+parmlen) == TEXT('\0') || *(p+parmlen) == TEXT(' '))
+					break;
+			}
+		}
+		if (parmix >= NUMPARMDEF ) {
+			// anything not recognized is implicit /to:
+			parmix = OP_TO;
+			parmlen = 0;
+		}
+		// found parameter
+		if (parmix < OP_MAX_NO_VALUE) {
+			// Followed by end of cmdline or space, so no parameter.
+			// These are special cases, and are handled right here.
+			// Don't matter if seen/done twice.
+			if (parmix == OP_S) {
 				gSendAndQuit = TRUE;
-				p++;
-				while (*p == TEXT(' ')) p++;
-				continue;
-			} else if (*p == TEXT('q') || *p == TEXT('Q')) {
+			} else if (parmix == OP_Q) {
 				gCheckAndQuit = TRUE;
-				p++;
-				while (*p == TEXT(' ')) p++;
-				continue;
-			} else if (*(p+1) != TEXT(':')) {
-				break;
 			}
-			
-			if (*p == TEXT('y') || *p == TEXT('Y')) {
-				slash_y = TRUE;
-			} else if (*p == TEXT('a') || *p == TEXT('A')) {
-				slash_a = TRUE;
+			p += parmlen;
+			while (*p == TEXT(' ')) p++;
+			continue;
+		} else {
+			TCHAR parse_temp;
+			parmix = parms[parmix].op;
+			if (parms[parmix].value && !parms[parmix].concat) {
+				// Error, parameter specified twice
+				TCHAR msg[BUF_SIZE];	
+				wsprintf(msg,STR_ERR_DUPPARAM,parms[parmix].param);
+				ErrorMessage(NULL, msg);
+				mem_free(&AppDir);
+				FreeParms();
+				return FALSE;
+			}
+			// must parse value
+			if (parmix == OP_MAILTO) {
+				// last parameter, no quotes, includes spaces and param name
+				for (r = p; *r != TEXT('\0'); r++);
 			} else {
-				// unknown switch
-			}
-
-			if (slash_y || slash_a) {
-				p += 2;
-				if (*p == TEXT('\"')) { // Collect everything between double quotes
+				p += parmlen; // skip param name
+				while (*p == TEXT(' ')) p++; // skip any leading spaces
+				if (*p == TEXT('"')) { // has quotes
 					p++;
-					for (r = p; *r != TEXT('\0') && *r != TEXT('\"'); r++);
-				} else { // otherwise collect up to the end of the word
+					for (r = p; *r != TEXT('\0') && *r != TEXT('"'); r++);
+				} else { // no quotes
 					for (r = p; *r != TEXT('\0') && *r != TEXT(' '); r++);
 				}
 			}
-			if (slash_y) {
-				TCHAR fullname[BUF_SIZE];
-				BOOL Found = TRUE;
-
-				len = ((r - p + 1) >= BUF_SIZE) ? BUF_SIZE : (r - p + 1);
-				if (*p == TEXT('.')) {
-					if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
-						str_cpy_n_t(fname, p+3, len-3); // take off ../
-						wsprintf(fullname, TEXT("%s"), AppDir);
-						trunc_to_parent_dir(fullname);
-						wsprintf(fullname, TEXT("%s%s"), fullname, fname);
-					} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
-						str_cpy_n_t(fname, p+2, len-2); // take off ./
-						wsprintf(fullname, TEXT("%s%s"), AppDir, fname);
-					} else {
-						str_cpy_n_t(fullname, p, len);
-						Found = FALSE;
-					}
-#ifdef _WIN32_WCE
-				} else if (*p == TEXT('\\') || *p == TEXT('/')) {
-					// full pathname
-					str_cpy_n_t(fullname, p, len);
-				} else {
-					// file in AppDir
-					str_cpy_n_t(fname, p, len);
-					wsprintf(fullname, TEXT("%s%s"), AppDir, fname);
-#else
-				} else {
-					DWORD ret;
-					str_cpy_n_t(fname, p, len);
-					ret = GetFullPathName(fname, BUF_SIZE, fullname, NULL);
-					if (ret == 0 || ret >= BUF_SIZE) {
-						Found = FALSE;
-					}
-#endif
-				}
-				if (Found == TRUE && file_get_size(fullname) <= 0) {
-					Found = FALSE;
-				}
-				if (Found == FALSE) {
-					TCHAR buf[BUF_SIZE];
-					wsprintf(buf, STR_ERR_INIFILE, fullname);
-					ErrorMessage(NULL, buf);
+			// new value between p and r, not including r
+			parse_temp = *r;
+			*r = TEXT('\0'); // temporarily terminate value
+			if (parms[parmix].value) {
+				oldlen = lstrlen(parms[parmix].value);
+				vallen = (r - p) * parms[parmix].encode;
+				vp = (TCHAR *) mem_calloc((oldlen + vallen + 2) * sizeof(TCHAR));
+				if (vp == NULL) {
 					mem_free(&AppDir);
+					FreeParms();
 					return FALSE;
 				}
-				IniFile = alloc_copy_t(fullname);
-			} else if (slash_a) {
-				len = (r - p + 1);
-				InitialAccount = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-				str_cpy_n_t(InitialAccount, p, len);
+				str_cpy_n_t(vp, parms[parmix].value, oldlen + 1);
+				vp[oldlen] = parms[parmix].concat;
+				if (parms[parmix].encode > 1) {
+					URL_encode_t(p, vp + oldlen + 1);
+				} else {
+					str_cpy_n_t(vp + oldlen + 1, p, vallen + 1);
+				}
+				mem_free(&parms[parmix].value);
+			} else {
+				vallen = (r - p) * parms[parmix].encode;
+				vp = (TCHAR *) mem_calloc((vallen + 1) * sizeof(TCHAR));
+				if (vp == NULL) {
+					mem_free(&AppDir);
+					FreeParms();
+					return FALSE;
+				}
+				if (parms[parmix].encode > 1) {
+					URL_encode_t(p, vp);
+				} else {
+					str_cpy_n_t(vp, p, vallen + 1);
+				}
 			}
-			if (*r == TEXT('\"')) {
+			parms[parmix].value = vp;
+			*r = parse_temp;
+			if (*r == TEXT('"'))
 				r++;
-			}
-			for (p = r; *p == TEXT(' '); p++); // remove spaces
-		}
-		if (*p != TEXT('\0')) {
-#ifdef UNICODE
-			CmdLine = alloc_copy_t(p);
-#else
-			CmdLine = alloc_char_to_tchar(p);
-#endif
+			for (p = r; *p == TEXT(' '); p++); // skip spaces
 		}
 	}
 
-	if (IniFile == NULL) {
-		DefaultDataDir = alloc_copy_t(AppDir);
-	} else {
-		DefaultDataDir = alloc_copy_t(IniFile);
-		if (DefaultDataDir == NULL) {
-			mem_free(&IniFile);
-			mem_free(&InitialAccount);
+	// processing steps
+
+	// if any mailto: type new parameters, bundle them into
+	// the "CmdLine" variable in the form of a mailto: URL
+	oldlen = 0;
+	for(parmix=OP_MAILTO; parmix < NUMPARMDEF; parmix++) {
+		if (parms[parmix].value != NULL)
+			oldlen += lstrlen(parms[parmix].value) + lstrlen(parms[parmix].param);
+	}
+	if (oldlen > 0) {
+		oldlen++;
+		if (parms[OP_MAILTO].value == NULL) {
+			oldlen += lstrlen(PARM_MAILTO) + 1;
+		}
+		
+		p = mem_calloc(oldlen * sizeof(TCHAR));
+		if (p == NULL) {
 			mem_free(&AppDir);
+			FreeParms();
 			return FALSE;
 		}
+
+		if (parms[OP_MAILTO].value == NULL) {
+			str_cpy_n_t(p, PARM_MAILTO, oldlen);
+			*(p+lstrlen(p)) = TEXT('?');
+		} else {
+			str_cpy_n_t(p, parms[OP_MAILTO].value, oldlen);
+			mem_free(&parms[OP_MAILTO].value);
+		}
+		parms[OP_MAILTO].value = p;
+		
+		oldlen -= lstrlen(p);
+		p += lstrlen(p);
+		for(parmix=OP_MAILTO + 1; parmix < NUMPARMDEF; parmix++) {
+			if (parms[parmix].value != NULL) {
+				parmlen = lstrlen(parms[parmix].param);
+				vallen = lstrlen(parms[parmix].value);
+				str_cpy_n_t(p, parms[parmix].param, oldlen);
+				*p = TEXT('&');
+				p += parmlen;
+				*(p - 1) = TEXT('=');
+				oldlen -= parmlen;
+				str_cpy_n_t(p, parms[parmix].value, oldlen);
+				p += vallen;
+				oldlen -= vallen;
+			}
+		}
+		*p = TEXT('\0');
+		oldlen--;
+	}
+
+	if (parms[OP_Y].value) {
+		TCHAR fullname[BUF_SIZE];
+		BOOL Found = TRUE;
+
+		p = parms[OP_Y].value;
+		str_cpy_n_t(fullname, AppDir, BUF_SIZE);
+		Found = MergePath(fullname, p);
+		if (!Found) {
+			// Error: can't make INI file name
+			TCHAR msg[BUF_SIZE+50];
+			wsprintf(msg,STR_ERR_INIFILE,p);
+			ErrorMessage(NULL, msg);
+			mem_free(&AppDir);
+			FreeParms();
+			return -1;
+		}
+		mem_free(&parms[OP_Y].value);
+		parms[OP_Y].value = alloc_copy_t(fullname);
+		if (parms[OP_Y].value == NULL) {
+			mem_free(&AppDir);
+			FreeParms();
+			return FALSE;
+		}
+	}
+
+	p = parms[OP_Y].value;
+	DefaultDataDir = alloc_copy_t((p != NULL) ? p : AppDir);
+	if (DefaultDataDir == NULL) {
+		mem_free(&AppDir);
+		FreeParms();
+		return FALSE;
+	}
+	if (p == NULL) {
+		str_join_t(fname, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	} else {
 		trunc_to_dirname(DefaultDataDir);
+		str_cpy_n_t(fname, p, BUF_SIZE);
 	}
 
 	// check for IniFile specification in ini file
-	if (IniFile != NULL) {
-		str_cpy_n_t(fname, IniFile, BUF_SIZE);
-	} else {
-		str_join_t(fname, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-	}
 	len = file_get_size(fname);
-	if (len > 10+MAX_PATH) len = 10+MAX_PATH;
-	if (len > 0) {
+	if (len > 8) { // no point to read, unless room for "IniFile=" and more
 		char *buf, *s, *t;
+		// no point to read more than needed
+		if (len > 10+MAX_PATH) len = 10+MAX_PATH;
 		buf = file_read(fname, len);
-		if (buf != NULL) {
-			buf[len] = '\0';
-			if (str_cmp_n(buf, "IniFile=", strlen("IniFile=")) == 0) {
-				s = buf + strlen("IniFile=");
-				if (*s == '\"') {
-					s++;
-				}
-				for (t = s; *t != '\r' && *t != '\n' && *t != '\0'; t++) {
+		if (buf == NULL) {
+			// Error: can't read file
+			TCHAR msg[BUF_SIZE+50];
+			wsprintf(msg,STR_ERR_INIFILE,fname);
+			ErrorMessage(NULL, msg);
+			mem_free(&AppDir);
+			mem_free(&DefaultDataDir);
+			FreeParms();
+			return -1;
+		}
+		if (str_cmp_n(buf, "IniFile=", strlen("IniFile=")) == 0) {
+			s = buf + strlen("IniFile=");
+			if (*s == '\"') {
+				s++;
+			}
+			for (t = s; *t != '\"' && *t != '\r' && *t != '\n' && *t != '\0'; t++) {
 #ifndef UNICODE
-					if (IsDBCSLeadByte((BYTE)*t) == TRUE && *(t + 1) != TEXT('\0')) {
-						t++;
-					}
+				if (IsDBCSLeadByte((BYTE)*t) == TRUE && *(t + 1) != TEXT('\0')) {
+					t++;
+				}
 #endif
-				}
-				if (*(t-1) == '\"') {
-					t--;
-				}
-				*t = '\0';
-				if (strlen(s) > 0) {
-					TCHAR fullname[BUF_SIZE];
+			}
+			*t = '\0';
+			if (strlen(s) > 0) {
+				TCHAR fullname[BUF_SIZE];
+				BOOL Found;
 #ifdef UNICODE
-					p = alloc_char_to_tchar(s);
+				p = alloc_char_to_tchar(s);
 #else
-					p = alloc_copy(s);
+				p = alloc_copy(s);
 #endif
-					if (p == NULL) {
-						mem_free(&IniFile);
-						mem_free(&InitialAccount);
-						mem_free(&AppDir);
-						mem_free(&DefaultDataDir);
-						return FALSE;
-					}
-#ifndef _WIN32_WCE
-					p = replace_env_var(p);
-#endif
-					if (*p == TEXT('.')) {
-						if (*(p+1) == TEXT('.') && (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/'))) {
-							wsprintf(fname, TEXT("%s"), DefaultDataDir);
-							trunc_to_parent_dir(fname);
-							wsprintf(fullname, TEXT("%s%s"), fname, p+3);
-						} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
-							wsprintf(fullname, TEXT("%s%s"), DefaultDataDir, p+2);
-						} else {
-							fullname[0] = TEXT('\0');
-						}
-					} else {
-						str_cpy_t(fullname, p);
-					}
-					if (lstrlen(fullname) == 0 || file_get_size(fullname) <= 0) {
-						TCHAR msg[BUF_SIZE];
-						wsprintf(msg, STR_ERR_INIFILE, p);
-						ErrorMessage(NULL, msg);
-						mem_free(&p);
-						p = NULL;
-					}
-					mem_free(&IniFile);
+				mem_free(&buf);
+				if (p == NULL) {
+					mem_free(&AppDir);
 					mem_free(&DefaultDataDir);
-					if (p == NULL) {
-						mem_free(&InitialAccount);
-						mem_free(&AppDir);
-						return -1;
-					}
-					IniFile = alloc_copy_t(fullname);
-					DefaultDataDir = alloc_copy_t(fullname);
-					if (IniFile == NULL || DefaultDataDir == NULL) {
-						mem_free(&p);
-						mem_free(&IniFile);
-						mem_free(&DefaultDataDir);
-						mem_free(&InitialAccount);
-						mem_free(&AppDir);
-						return FALSE;
-					}
-					trunc_to_dirname(DefaultDataDir);
+					FreeParms();
+					return FALSE;
+				}
+#ifndef _WIN32_WCE
+				p = replace_env_var(p);
+#endif
+				str_cpy_n_t(fullname, DefaultDataDir, BUF_SIZE);
+				Found = MergePath(fullname, p);
+				if (!Found) {
+					// Error: can't make INI file name
+					TCHAR msg[BUF_SIZE+50];
+					wsprintf(msg,STR_ERR_INIFILE,p);
+					ErrorMessage(NULL, msg);
 					mem_free(&p);
+					mem_free(&AppDir);
+					mem_free(&DefaultDataDir);
+					FreeParms();
+					return -1;
+				}
+				mem_free(&p);
+				mem_free(&DefaultDataDir);
+				mem_free(&parms[OP_Y].value);
+				parms[OP_Y].value = alloc_copy_t(fullname);
+				trunc_to_dirname(fullname);
+				DefaultDataDir = alloc_copy_t(fullname);
+				if (parms[OP_Y].value == NULL || DefaultDataDir == NULL) {
+					mem_free(&AppDir);
+					mem_free(&DefaultDataDir);
+					FreeParms();
+					return FALSE;
 				}
 			}
-			mem_free(&buf);
 		}
+		mem_free(&buf);
 	}
 
+	if (parms[OP_Y].value) {
+		IniFile = parms[OP_Y].value;
+		parms[OP_Y].value = NULL;
+		if (file_get_size(IniFile) == -1) {
+			TCHAR msg[BUF_SIZE+50];
+			HANDLE hFile;
+			wsprintf(msg, STR_Q_CREATE_INIFILE, IniFile);
+			if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
+				BOOL hasdir;
+				hasdir = dir_create(DefaultDataDir);
+				hFile = CreateFile(IniFile, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				if (hFile == NULL || hFile == (HANDLE)-1) {
+					wsprintf(msg, STR_ERR_INIFILE, IniFile);
+					ErrorMessage(NULL, msg);
+					mem_free(&IniFile);
+					mem_free(&AppDir);
+					mem_free(&DefaultDataDir);
+					FreeParms();
+					return -1;
+				}
+				CloseHandle(hFile);
+			}
+		}
+	}
+	if (parms[OP_MAILTO].value) {
+#ifdef UNICODE
+		CmdLine = parms[OP_MAILTO].value;
+		parms[OP_MAILTO].value = NULL;
+#else
+		CmdLine = alloc_char_to_tchar(parms[OP_MAILTO].value);
+		if (CmdLine == NULL) {
+			mem_free(&IniFile);
+			mem_free(&AppDir);
+			mem_free(&DefaultDataDir);
+			FreeParms();
+			return FALSE;
+		}
+#endif
+	}
+	if (parms[OP_MAILBOX].value) {
+		InitialAccount = mem_alloc((lstrlen(parms[OP_MAILBOX].value)+1)*sizeof(TCHAR));
+		if (InitialAccount == NULL) {
+			mem_free(&CmdLine);
+			mem_free(&IniFile);
+			mem_free(&AppDir);
+			mem_free(&DefaultDataDir);
+			FreeParms();
+			return FALSE;
+		}
+		URL_decode_t(parms[OP_MAILBOX].value, InitialAccount);
+	}
+	FreeParms();
 #endif	// _WIN32_WCE_LAGENDA
 
 	return TRUE;
