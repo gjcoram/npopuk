@@ -240,20 +240,23 @@ struct parmdef {
 	TCHAR concat;
 	char op;
 	char encode;
+	char mailto;
 } parms [] = {
-	{ PARM_S,        NULL, 0,         OP_S,        1 },
-	{ PARM_Q,        NULL, 0,         OP_Q,        1 },
-	{ PARM_Y,        NULL, 0,         OP_Y,        1 },
-	{ PARM_MAILTO,   NULL, 0,         OP_MAILTO,   1 },
-	{ PARM_TO,       NULL, TEXT(','), OP_TO,       3 },
-	{ PARM_CC,       NULL, TEXT(','), OP_CC,       3 },
-	{ PARM_BCC,      NULL, TEXT(','), OP_BCC,      3 },
-	{ PARM_REPLY_TO, NULL, TEXT(','), OP_REPLY_TO, 3 },
-	{ PARM_SUBJECT,  NULL, TEXT(' '), OP_SUBJECT,  3 },
-	{ PARM_ATTACH,   NULL, TEXT('|'), OP_ATTACH,   3 },
-	{ PARM_BODY,     NULL, TEXT('+'), OP_BODY,     3 },
-	{ PARM_MAILBOX,  NULL, 0,         OP_MAILBOX,  3 },
-	{ PARM_A,        NULL, 0,         OP_MAILBOX,  3 }
+	{ PARM_S,        NULL, 0,         OP_S,        1, 0 },
+	{ PARM_Q,        NULL, 0,         OP_Q,        1, 0 },
+	{ PARM_Y,        NULL, 0,         OP_Y,        1, 0 },
+	{ PARM_MAILTO,   NULL, 0,         OP_MAILTO,   1, 1 },
+	{ PARM_TO,       NULL, TEXT(','), OP_TO,       3, 1 },
+	{ PARM_CC,       NULL, TEXT(','), OP_CC,       3, 1 },
+	{ PARM_BCC,      NULL, TEXT(','), OP_BCC,      3, 1 },
+	{ PARM_REPLY_TO, NULL, TEXT(','), OP_REPLY_TO, 3, 1 },
+	{ PARM_SUBJECT,  NULL, TEXT(' '), OP_SUBJECT,  3, 1 },
+	{ PARM_ATTACH,   NULL, TEXT('|'), OP_ATTACH,   3, 1 },
+	{ PARM_BODY,     NULL, TEXT('+'), OP_BODY,     3, 1 },
+	{ PARM_MAILBOX,  NULL, 0,         OP_MAILBOX,  3, 0 },
+
+	// The rest are old aliases for newer options.
+	{ PARM_A,        NULL, 0,         OP_MAILBOX,  3, 0 }
 };
 #define NUMPARMDEF (sizeof(parms)/sizeof(struct parmdef))
 
@@ -463,11 +466,14 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	// if any mailto: type new parameters, bundle them into
 	// the "CmdLine" variable in the form of a mailto: URL
 	oldlen = 0;
+	len = 0;
 	for(parmix=OP_MAILTO; parmix < NUMPARMDEF; parmix++) {
-		if (parms[parmix].value != NULL)
+		if (parms[parmix].value != NULL) {
+			len += parms[parmix].mailto;
 			oldlen += lstrlen(parms[parmix].value) + lstrlen(parms[parmix].param);
+		}
 	}
-	if (oldlen > 0) {
+	if (len) {
 		oldlen++;
 		if (parms[OP_MAILTO].value == NULL) {
 			oldlen += lstrlen(PARM_MAILTO) + 1;

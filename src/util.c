@@ -1924,6 +1924,7 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 		URLHeadToItem(tmp, TEXT("cc"), &tpMailItem->Cc, TEXT(','));
 		URLHeadToItem(tmp, TEXT("bcc"), &tpMailItem->Bcc, TEXT(','));
 		URLHeadToItem(tmp, TEXT("replyto"), &tpMailItem->ReplyTo, TEXT('\0'));
+		URLHeadToItem(tmp, TEXT("reply-to"), &tpMailItem->ReplyTo, TEXT('\0'));
 		URLHeadToItem(tmp, TEXT("subject"), &tpMailItem->Subject, TEXT('\0'));
 #ifdef UNICODE
 		if (URLHeadToItem(tmp, TEXT("body"), &body, TEXT('\0')) == TRUE) {
