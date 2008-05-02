@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Glenn Linderman. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2008 by Glenn Linderman. All rights reserved.
  * Info at http://www.npopsupport.org.uk
  */
 

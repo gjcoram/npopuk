@@ -189,11 +189,9 @@ char *GetHeaderStringPoint(char *buf, char *str)
  */
 int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag)
 {
-	TCHAR *p;
-	int i;
+	TCHAR *p = buf;
+	int i = 0;
 
-	p = buf;
-	i = 0;
 	while (*p != TEXT('\0')) {
 		if (*p == TEXT('\r') && *(p + 1) == TEXT('\n')) {
 			p += 2;
@@ -219,11 +217,9 @@ int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag)
 #ifdef UNICODE
 int GetHeaderStringSize(char *buf, BOOL CrLfFlag)
 {
-	char *p;
-	int i;
+	char *p = buf;
+	int i = 0;
 
-	p = buf;
-	i = 0;
 	while (*p != '\0') {
 		if (*p == '\r' && *(p + 1) == '\n') {
 			p += 2;
@@ -1861,13 +1857,11 @@ static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep)
  */
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 {
+#ifdef UNICODE
+	TCHAR *body = NULL;
+#endif
 	TCHAR *tmp;
 	TCHAR *p, *r, *s;
-#ifdef UNICODE
-	TCHAR *body;
-
-	body = 0;
-#endif
 
 	for (p = buf; *p == TEXT(' '); p++);
 	r = p;
