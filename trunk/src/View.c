@@ -1320,12 +1320,8 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 	// –{•¶‚Ì•\Ž¦
 	if (buf != NULL) {
-#ifdef _WIN32_WCE
+#ifdef _WCE_OLD
 		if (lstrlen(buf) > EDITMAXSIZE) {
-			*(buf + EDITMAXSIZE) = TEXT('\0');
-		}
-#else
-		if (op.osPlatformId != VER_PLATFORM_WIN32_NT && lstrlen(buf) > EDITMAXSIZE) {
 			*(buf + EDITMAXSIZE) = TEXT('\0');
 		}
 #endif

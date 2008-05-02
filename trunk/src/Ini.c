@@ -245,7 +245,7 @@ BOOL ini_read_setting(HWND hWnd)
 
 	op.BackupDir = profile_alloc_string(GENERAL, TEXT("BackupDir"), TEXT(""), app_path);
 
-	op.Version = profile_get_int(GENERAL, TEXT("Version"), APP_VERSION_NUM, app_path);
+	op.Version = profile_get_int(GENERAL, TEXT("Version"), 0, app_path);
 	if (op.Version > APP_VERSION_NUM) {
 		wsprintf(tmp, STR_MSG_NEWVERSION, app_path, KEY_NAME);
 		if (MessageBox(hWnd, tmp, WINDOW_TITLE, MB_YESNO) == IDNO) {
@@ -594,15 +594,11 @@ BOOL ini_read_setting(HWND hWnd)
 #endif
 
 
-#ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_LAGENDA
 	op.URLApp = profile_alloc_string(GENERAL, TEXT("URLApp"), TEXT("internet.exe"), app_path);
 #else	// _WIN32_WCE_LAGENDA
-	op.URLApp = profile_alloc_string(GENERAL, TEXT("URLApp"), TEXT("iexplore.exe"), app_path);
-#endif	// _WIN32_WCE_LAGENDA
-#else	// _WIN32_WCE
 	op.URLApp = profile_alloc_string(GENERAL, TEXT("URLApp"), TEXT(""), app_path);
-#endif	// _WIN32_WCE
+#endif	// _WIN32_WCE_LAGENDA
 	op.URLAppCmdLine = profile_alloc_string(GENERAL, TEXT("URLAppCmdLine"), TEXT(""), app_path);
 
 	op.EnableLAN = profile_get_int(GENERAL, TEXT("EnableLAN"), 0, app_path);

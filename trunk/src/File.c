@@ -262,7 +262,7 @@ BOOL trunc_to_parent_dir(TCHAR *fname)
 	}
 	if (s == NULL) {
 		s = fname;
-		if (*s  &&  *(s+1) == TEXT(':'))
+		if (*s && *(s+1) == TEXT(':'))
 			s += 2;
 		ret = FALSE;
 	}
