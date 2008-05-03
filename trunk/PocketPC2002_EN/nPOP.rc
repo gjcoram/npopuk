@@ -1,5 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include "..\src\npop_ver.h"
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -1555,8 +1556,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,0,0
- PRODUCTVERSION 2,0,0,0
+ FILEVERSION NPOPVER
+ PRODUCTVERSION NPOPVER
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -1571,17 +1572,17 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "nPOPuk 2.10 based on nPOP 1.0.9\0"
+            VALUE "Comments", "nPOPuk " NPOPVERSTR " based on nPOP 1.0.9\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "nPOPuk\0"
-            VALUE "FileVersion", "2, 1, 0, 0\0"
+            VALUE "FileVersion", NPOPVERLNG "\0"
             VALUE "InternalName", "nPOPuk\0"
             VALUE "LegalCopyright", "Copyright ©2008 by Nakashima Tomoaki, Geoffrey Coram\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "nPOPuk.exe\0"
-            VALUE "PrivateBuild", "nPOPuk Ver 2.1\0"
+            VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR "\0"
             VALUE "ProductName", "nPOPuk\0"
-            VALUE "ProductVersion", "2, 1\0"
+            VALUE "ProductVersion", NPOPVERSTR "\0"
             VALUE "SpecialBuild", "Pocket PC 2002 (ARM)\0"
         END
     END
