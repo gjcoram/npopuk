@@ -42,9 +42,10 @@
 #include "resource.h"
 #include "Strtbl.h"
 #include "font.h"
+#include "npop_ver.h"
 
 /* Define */
-#define APP_NAME				TEXT("nPOPuk Ver 2.10b9p3")
+#define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
 #define APP_VERSION_NUM			2009
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
