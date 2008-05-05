@@ -40,6 +40,7 @@
 HWND hEditWnd = NULL;
 HWND hEditToolBar = NULL;
 TCHAR *tmp_attach;
+static int EditMaxLength;
 static BOOL ProcessFlag;
 
 #ifdef _WIN32_WCE
@@ -1003,10 +1004,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #ifdef _WIN32_WCE
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_SENTMAIL), IMAGE_ICON, 16, 16, 0));
+	EditMaxLength = EDITMAXSIZE;
+#else
+	EditMaxLength = (op.osPlatformId == VER_PLATFORM_WIN32_NT) ? 0 : EDITMAXSIZE;
 #endif
-#ifdef _WCE_OLD
-	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EDITMAXSIZE, 0);
-#endif
+	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	if (tpMailItem->Body != NULL) {
@@ -1027,12 +1029,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 			buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tmp) + 1));
 			if (buf != NULL) {
 				DelDot(tmp, buf);
-#ifdef _WCE_OLD
-				// not entirely sure this is necessary
-				if ((int)lstrlen(buf) > EDITMAXSIZE) {
-					*(buf + EDITMAXSIZE) = TEXT('\0');
+				if (EditMaxLength != 0 && (int)lstrlen(buf) > EditMaxLength) {
+					*(buf + EditMaxLength) = TEXT('\0');
 				}
-#endif
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
 				mem_free(&buf);
 			}
@@ -2269,9 +2268,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #else
 				op.EditWordBreakFlag = SetWordBreak(hWnd);
 #endif
-#ifdef _WCE_OLD
-				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EDITMAXSIZE, 0);
-#endif
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 				if (sent) {
 					SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
