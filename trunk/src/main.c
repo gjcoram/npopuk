@@ -5441,10 +5441,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND hWnd;
 	WSADATA WsaData;
 	HANDLE hMutex = NULL;
-	TCHAR *lptCmdLine = (TCHAR *)lpCmdLine;
+	TCHAR *lptCmdLine;
 	BOOL ret;
 
 	hInst = hInstance;
+
+#if defined(UNICODE) && !defined(_WIN32_WCE)
+	// Win32 Unicode has char* lpCmdLine!
+	lptCmdLine = alloc_char_to_tchar(lpCmdLine);
+//	lptCmdLine = alloc_copy_t(GetCommandLineW()); // gets program name also
+#else
+	lptCmdLine = lpCmdLine;
+#endif
+	// Sets AppDir and parses lpCmdLine to set IniFile and static CmdLine
+	ret = GetAppPath(hInstance, lptCmdLine);
+	if (ret != TRUE) {
+#if defined(UNICODE) && !defined(_WIN32_WCE)
+		mem_free(&lptCmdLine);
+#endif
+		if (ret == FALSE) {
+			ErrorMessage(NULL, STR_ERR_MEMALLOC);
+		}
+		return 0;
+	}
+#if defined(UNICODE) && !defined(_WIN32_WCE)
+	mem_free(&lptCmdLine);
+#endif
 
 #ifndef _DEBUG
 #ifdef _WCE_OLD
@@ -5467,31 +5489,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (GetLastError() == ERROR_ALREADY_EXISTS) {
 		hWnd = FindWindow(MAIN_WND_CLASS, NULL);
 		if (hWnd != NULL) {
-			if (lpCmdLine != NULL && *lpCmdLine != TEXT('\0')) {
+			if (CmdLine != NULL) {
 
-				if (*lpCmdLine == TEXT('/') && *(lpCmdLine+1) == TEXT('q') ) {
+				if (gCheckAndQuit) {
 					SendMessage(hWnd, WM_CLOSE, 0, 0);
 				} else {
 					COPYDATASTRUCT cpdata;
 
-#ifdef _WIN32_WCE
-					CmdLine = alloc_copy_t(lpCmdLine);
-#else
-					CmdLine = alloc_char_to_tchar(lpCmdLine);
-#endif
 					cpdata.lpData = CmdLine;
 #ifdef _WIN32_WCE
-					cpdata.cbData = sizeof(TCHAR) * (lstrlen(lpCmdLine) + 1);
+					cpdata.cbData = sizeof(TCHAR) * (lstrlen(CmdLine) + 1);
 #else
-					cpdata.cbData = sizeof(TCHAR) * (tstrlen(lpCmdLine) + 1);
+					cpdata.cbData = sizeof(TCHAR) * (tstrlen(CmdLine) + 1);
 #endif
 					SendMessage(hWnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cpdata);
-					mem_free(&CmdLine);
 				}
 			} else {
 				SendMessage(hWnd, WM_SHOWLASTWINDOW, 0, 0);
 			}
 		}
+		mem_free(&CmdLine);
+		mem_free(&AppDir);
+		mem_free(&DefaultDataDir);
+		mem_free(&IniFile);
+		mem_free(&InitialAccount);
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -5500,40 +5521,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif	// _WCE_OLD
 #endif	// _DEBUG
 
-#if defined(UNICODE) && !defined(_WIN32_WCE)
-	// Win32 Unicode has char* lpCmdLine!
-	lptCmdLine = alloc_char_to_tchar(lpCmdLine);
-//	lptCmdLine = alloc_copy_t(GetCommandLineW()); // gets program name also
-#endif
-	// Sets AppDir and parses lpCmdLine to set IniFile and static CmdLine
-	ret = GetAppPath(hInstance, lptCmdLine);
-	if (ret != TRUE) {
-#if defined(UNICODE) && !defined(_WIN32_WCE)
-		mem_free(&lptCmdLine);
-#endif
-		if (hMutex != NULL) {
-			CloseHandle(hMutex);
-		}
-		if (ret == FALSE) {
-			ErrorMessage(NULL, STR_ERR_MEMALLOC);
-		}
-		return 0;
-	}
-#if defined(UNICODE) && !defined(_WIN32_WCE)
-		mem_free(&lptCmdLine);
-#endif
-
 	{
 		int TmpCmdShow;
 		//of job pass of application Check
 		TmpCmdShow = CmdShow;
 		if (ini_start_auth_check() == FALSE) {
+			mem_free(&g_Pass);
 			mem_free(&CmdLine);
 			mem_free(&AppDir);
 			mem_free(&DefaultDataDir);
 			mem_free(&IniFile);
 			mem_free(&InitialAccount);
-			mem_free(&g_Pass);
 			if (hMutex != NULL) {
 				CloseHandle(hMutex);
 			}
@@ -5546,6 +5544,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//of starting password Initialization
 	if (WSAStartup(0x101, &WsaData) != 0) {
+		ErrorMessage(NULL, STR_ERR_INIT);
 		mem_free(&CmdLine);
 		mem_free(&AppDir);
 		mem_free(&DefaultDataDir);
@@ -5554,7 +5553,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
-		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
 	}
 #ifndef _WCE_OLD
@@ -5819,6 +5817,7 @@ static void PlayMarkSound(int mark)
  * Console startup
  */
 
+#if 0  // eliminate this optimization, so that getenv_s will work
 #ifndef _WIN32_WCE
 #ifndef UNICODE
 #ifndef _DEBUG
@@ -5851,6 +5850,7 @@ void __cdecl WinMainCRTStartup(void)
 int main(void) {
 	return 0;
 }
+#endif
 #endif
 #endif
 #endif
