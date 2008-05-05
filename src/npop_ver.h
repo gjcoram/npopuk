@@ -8,7 +8,7 @@
 #define NPOPMAJOR  2
 #define NPOPMINOR 10
 #define NPOPBETA   9
-#define NPOPPATCH  5
+#define NPOPPATCH  6
 
 
 #if NPOPPATCH
