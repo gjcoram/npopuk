@@ -100,7 +100,11 @@
 #define BUF_SIZE				256					//of process Buffer size
 #define MULTI_BUF_SIZE			1024
 #define MAXSIZE					32768
+#if defined(_WIN32_WCE) && !defined(_WCE_OLD)
+#define EDITMAXSIZE				60000
+#else
 #define EDITMAXSIZE				30000
+#endif
 
 #define MAX_MAILBOX_CNT			1000				// see ID_MENUITEM_COPY2MBOX
 
@@ -901,7 +905,7 @@ TCHAR *SetCcAddress(TCHAR *Type, TCHAR *To, TCHAR *r);
 TCHAR *GetFileNameString(TCHAR *p);
 int SetAttachListSize(TCHAR *buf);
 TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret);
-TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename);
+char *GetMIME2Extension(char *MIMEStr, char *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice);
 int remove_duplicate_headers(char *buf);

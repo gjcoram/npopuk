@@ -479,10 +479,30 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 		// ファイル名の取得
 		if ((tpMultiPartItem->Filename = multipart_get_filename_rfc2231(Content)) == NULL &&
 			(tpMultiPartItem->Filename = multipart_get_filename(Content, "filename")) == NULL &&
-			(tpMultiPartItem->Filename = multipart_get_filename(tpMultiPartItem->ContentType, "name")) == NULL) {
+			(tpMultiPartItem->Filename = multipart_get_filename(tpMultiPartItem->ContentType, "name")) == NULL &&
+			tpMultiPartItem->ContentType != NULL && tpMultiPartItem->ContentID != NULL) {
+			char *c, *ctype, *ext;
+			ctype = alloc_copy(tpMultiPartItem->ContentType);
+			for (c = ctype; *c != '\0' && *c != ';'; c++)
+				/**/;
+			*c = '\0';
+			ext = GetMIME2Extension(ctype, NULL);
+			c = (char *)mem_alloc(sizeof(char) * (tstrlen(ctype) + tstrlen(tpMultiPartItem->ContentID) + 1));
+			if (c != NULL) {
+				tpMultiPartItem->Filename = c;
+				str_join(c, tpMultiPartItem->ContentID, ext, (char *)-1);
+				for ( ; *c != '\0'; c++) {
+					if (*c == '\\' || *c == '/' || *c == ':' || *c == '*' || *c == '?' ||
+						*c == '\"' || *c == '>' || *c == '<' || *c == '|' ) {
+						*c = '_';
+					}
+				}
+			}
+			mem_free(&ext);
+			mem_free(&ctype);
 		}
 		mem_free(&Content);
-
+		
 		// 本文の位置の取得
 		tpMultiPartItem->hPos = p;
 		tpMultiPartItem->sPos = GetBodyPointa(p);
@@ -535,7 +555,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 	char **tpEncAtt = NULL;
 	BOOL have_file, have_fwdatt;
 #ifdef UNICODE
-	char *cp, *cr;
+	char *cp, *cr, *ftmp;
 	TCHAR *wtmp;
 	TCHAR dtmp[3];
 	char ctmp[3];
@@ -699,9 +719,9 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 
 			// MIME typeの取得
 #ifdef UNICODE
-			wtmp = GetMIME2Extension(NULL, fname);
-			ctype = alloc_tchar_to_char(wtmp);
-			mem_free(&wtmp);
+			ftmp = alloc_tchar_to_char(fname);
+			ctype = GetMIME2Extension(NULL, ftmp);
+			mem_free(&ftmp);
 #else
 			ctype = GetMIME2Extension(NULL, fname);
 #endif
@@ -1097,6 +1117,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 	if (cnt == 0) {
 		return NULL;
 	}
+	maxlen = 14; // 8.3\0
 	for (id = 0; id < mpcnt; id++) {
 		if ((*(tpMultiPart + id))->ContentID != NULL) {
 			q = (*(tpMultiPart + id))->Filename;
@@ -1116,6 +1137,20 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 	p = start;
 	q = ret;
 	while (p < end) {
+		if (str_cmp_ni(p, "<base", 5) == 0) {
+			BOOL found = FALSE;
+			char *r;
+			for (r = p; r < end && *r != '>'; r++) {
+				if (found == FALSE && str_cmp_ni(r, "file:", 5) == 0) {
+					found = TRUE;
+					r += 5;
+				}
+			}
+			r++;
+			if (found && r < end) {
+				p = r;
+			}
+		}
 		if (str_cmp_ni(p, "<img", 4) == 0 && is_white(*(p+4))) {
 			int i;
 			for (i = 0; i < 5; i++) {
@@ -1146,8 +1181,7 @@ char *convert_cid(char *start, char *end, MULTIPART **tpMultiPart, int mpcnt, BO
 							char *t = (*(tpMultiPart + id))->ContentID;
 							if (t != NULL && str_cmp_i(cid, t) == 0) {
 								(*(tpMultiPart + id))->EmbeddedImage = TRUE;
-								s = (*(tpMultiPart + id))->Filename;
-								if (s != NULL) {
+								if ((s = (*(tpMultiPart + id))->Filename) != NULL) {
 									if (add_prefix) {
 										q = str_join(q, ATTACH_FILE_A, s, (char *)-1);
 									} else {
