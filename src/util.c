@@ -2312,77 +2312,71 @@ TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret)
 /*
  * GetMIME2Extension - MIMEとファイルタイプの変換 (RFC 2046)
  */
-TCHAR *GetMIME2Extension(TCHAR *MIMEStr, TCHAR *Filename)
+char *GetMIME2Extension(char *MIMEStr, char *Filename)
 {
-	const TCHAR *MIME_list[] = {
-		TEXT("application/mac-binhex40"), TEXT(".hqx"),
-		TEXT("application/postscript"), TEXT(".eps"),
-		TEXT("application/postscript"), TEXT(".ps"),
-		TEXT("application/postscript"), TEXT(".ai"),
-		TEXT("application/rtf"), TEXT(".rtf"),
-		TEXT("application/x-stuffit"), TEXT(".sit"),
-		TEXT("application/x-uuencode"), TEXT(".uue"),
-		TEXT("application/x-uuencode"), TEXT(".uu"),
-		TEXT("application/x-zip-compressed"), TEXT(".zip"),
-		TEXT("audio/basic"), TEXT(".au"),
-		TEXT("audio/basic"), TEXT(".snd"),
-		TEXT("audio/x-aiff"), TEXT(".aiff"),
-		TEXT("audio/x-aiff"), TEXT(".aif"),
-		TEXT("audio/x-pn-realaudio"), TEXT(".ra"),
-		TEXT("audio/x-pn-realaudio"), TEXT(".ram"),
-		TEXT("audio/x-wav"), TEXT(".wav"),
-		TEXT("image/gif"), TEXT(".gif"),
-		TEXT("image/jpeg"), TEXT(".jpg"),
-		TEXT("image/jpeg"), TEXT(".jpeg"),
-		TEXT("image/png"), TEXT(".png"),
-		TEXT("image/tiff"), TEXT(".tiff"),
-		TEXT("image/tiff"), TEXT(".tif"),
-		TEXT("message/rfc822"), TEXT(".eml"),
-		TEXT("text/html"), TEXT(".html"),
-		TEXT("text/html"), TEXT(".htm"),
-		TEXT("text/plain"), TEXT(".txt"),
-		TEXT("text/x-vcard"), TEXT(".vcf"),
-		TEXT("video/mpeg"), TEXT(".mpg"),
-		TEXT("video/mpeg"), TEXT(".mpeg"),
-		TEXT("video/quicktime"), TEXT(".qt"),
-		TEXT("video/quicktime"), TEXT(".mov"),
-		TEXT("video/x-msvideo"), TEXT(".avi"),
+	const char *MIME_list[] = {
+		"application/mac-binhex40",".hqx",
+		"application/postscript", ".eps",
+		"application/postscript", ".ps",
+		"application/postscript", ".ai",
+		"application/rtf", ".rtf",
+		"application/x-stuffit", ".sit",
+		"application/x-uuencode", ".uue",
+		"application/x-uuencode", ".uu",
+		"application/x-zip-compressed", ".zip",
+		"audio/basic", ".au",
+		"audio/basic", ".snd",
+		"audio/x-aiff", ".aif",
+		"audio/x-aiff", ".aiff",
+		"audio/x-pn-realaudio", ".ra",
+		"audio/x-pn-realaudio", ".ram",
+		"audio/x-wav", ".wav",
+		"image/gif", ".gif",
+		"image/jpeg", ".jpg",
+		"image/jpeg", ".jpeg",
+		"image/png", ".png",
+		"image/tiff", ".tif",
+		"image/tiff", ".tiff",
+		"message/rfc822", ".eml",
+		"text/html", ".htm",
+		"text/html", ".html",
+		"text/plain", ".txt",
+		"text/x-vcard", ".vcf",
+		"video/mpeg", ".mpg",
+		"video/mpeg", ".mpeg",
+		"video/quicktime", ".qt",
+		"video/quicktime", ".mov",
+		"video/x-msvideo", ".avi",
 	};
 
-	TCHAR *ret, *p, *r;
+	char *ret, *p, *r;
 	int i;
 
 	if (MIMEStr != NULL) {
 		// Content type からファイルタイプを取得
-		for (i = 0; i < (sizeof(MIME_list) / sizeof(TCHAR *)); i += 2) {
-			if (lstrcmpi(MIMEStr, MIME_list[i]) == 0) {
-				ret = alloc_copy_t(MIME_list[i + 1]);
-				for (p = ret + 1; *p != TEXT('\0') && *p != TEXT('.'); p++);
-				*p = TEXT('\0');
+		for (i = 0; i < (sizeof(MIME_list) / sizeof(char *)); i += 2) {
+			if (str_cmp_i(MIMEStr, MIME_list[i]) == 0) {
+				ret = alloc_copy(MIME_list[i + 1]);
+				for (p = ret + 1; *p != '\0' && *p != '.'; p++);
+				*p = '\0';
 				return ret;
 			}
 		}
 	} else if (Filename != NULL) {
 		// ファイル名から Content type を取得
-		for (r = p = Filename; *p != TEXT('\0'); p++) {
-#ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-				p++;
-				continue;
-			}
-#endif
-			if (*p == TEXT('.')) {
+		for (r = p = Filename; *p != '\0'; p++) {
+			if (*p == '.') {
 				r = p;
 			}
 		}
-		if (lstrcmpi(r, TEXT(".txt")) != 0) {
-			for (i = 1; i < (sizeof(MIME_list) / sizeof(TCHAR *)); i += 2) {
-				if (lstrcmpi(r, MIME_list[i]) == 0) {
-					return alloc_copy_t(MIME_list[i - 1]);
+		if (str_cmp_i(r, ".txt") != 0) {
+			for (i = 1; i < (sizeof(MIME_list) / sizeof(char *)); i += 2) {
+				if (str_cmp_i(r, MIME_list[i]) == 0) {
+					return alloc_copy(MIME_list[i - 1]);
 				}
 			}
 		}
-		return alloc_copy_t(TEXT("application/octet-stream"));
+		return alloc_copy("application/octet-stream");
 	}
 	return NULL;
 }

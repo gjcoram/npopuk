@@ -2188,8 +2188,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	ATTACHINFO ai;
 	TCHAR *fname, *ext = NULL;
 	TCHAR buf[BUF_SIZE];
-	TCHAR *p, *r;
-	TCHAR *str;
+	TCHAR *p, *str;
 	char *b64str, *ctype, *dstr, *endpoint;
 	int len;
 	int EncodeFlag = 0;
@@ -2254,19 +2253,22 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 		break;
 	}
 
-	ctype = (*(tpMultiPart + id))->ContentType;
-	str = alloc_char_to_tchar(ctype);
-	if (str != NULL) {
-		for (r = str; *r != TEXT('\0') && *r != TEXT(';'); r++);
-		*r = TEXT('\0');
+	ctype = alloc_copy((*(tpMultiPart + id))->ContentType);
+	if (ctype != NULL) {
+		char *tmp;
+		for (tmp = ctype; *tmp != '\0' && *tmp != ';'; tmp++)
+			/**/;
+		*tmp = TEXT('\0');
+		str = alloc_char_to_tchar(ctype);
 
 		if (str_cmp_ni(ctype, "message/rfc822", tstrlen("message/rfc822")) == 0) {
 			p = alloc_copy_t(TEXT(".eml"));
 			is_msg = TRUE;
 		} else {
-			p = GetMIME2Extension(str, NULL);
+			tmp = GetMIME2Extension(ctype, NULL);
+			p = alloc_char_to_tchar(tmp);
+			mem_free(&tmp);
 			if (str_cmp_ni(ctype, "text/html", tstrlen("text/html")) == 0) {
-				char *tmp;
 				int found = 0;
 				for (tmp = dstr; tmp < endpoint && found != 2; tmp++) {
 					if (str_cmp_ni(tmp, "<img ", 5) == 0) {
@@ -2284,6 +2286,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 				}
 			}
 		}
+		mem_free(&ctype);
 	} else if (is_digest) {
 		str = alloc_copy_t(TEXT("digest message"));
 		p = alloc_copy_t(TEXT(".eml"));
