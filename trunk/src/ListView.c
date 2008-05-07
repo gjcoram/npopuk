@@ -127,19 +127,20 @@ HWND CreateListView(HWND hWnd, int Top, int bottom)
 	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL);
 	ImageListIconAdd(IconList, IDI_ICON_SEND);
 	ImageListIconAdd(IconList, IDI_ICON_ERROR);
+	ImageListIconAdd(IconList, IDI_ICON_FLAG);
 
 	//Overlay
 	ImageListIconAdd(IconList, IDI_ICON_NEW);
-	ImageList_SetOverlayImage(IconList, 8, ICON_NEW_MASK);
+	ImageList_SetOverlayImage(IconList, 9, ICON_NEW_MASK);
 
 	// GJC overlays for replied, forwarded
 	ImageListIconAdd(IconList, IDI_ICON_REPL);
-	ImageList_SetOverlayImage(IconList, 9, ICON_REPL_MASK);
+	ImageList_SetOverlayImage(IconList, 10, ICON_REPL_MASK);
 	ImageListIconAdd(IconList, IDI_ICON_FWD);
-	ImageList_SetOverlayImage(IconList, 10, ICON_FWD_MASK);
+	ImageList_SetOverlayImage(IconList, 11, ICON_FWD_MASK);
 	// could do this with ImageList_Merge
 	ImageListIconAdd(IconList, IDI_ICON_REPLFWD);
-	ImageList_SetOverlayImage(IconList, 11, (ICON_REPL_MASK | ICON_FWD_MASK));
+	ImageList_SetOverlayImage(IconList, 12, (ICON_REPL_MASK | ICON_FWD_MASK));
 
 	ListView_SetImageList(hListView, IconList, LVSIL_SMALL);
 
@@ -587,14 +588,15 @@ static int GetIconSortStatus(MAILITEM *tpMailItem)
 {
 	int retval = 0;
 	switch (tpMailItem->Mark) {
-		case ICON_MAIL:     retval = 100; break;
-		case ICON_READ:     retval = 200; break;
-		case ICON_SENTMAIL:	retval = 300; break;
-		case ICON_ERROR:	retval = 400; break;
-		case ICON_DOWN:		retval = 500; break;
-		case ICON_DEL:		retval = 600; break;
-		case ICON_SEND:		retval = 700; break;
-		case ICON_NON:		retval = 800; break;
+		case ICON_FLAG:		retval = 100; break;
+		case ICON_MAIL:     retval = 200; break;
+		case ICON_READ:     retval = 300; break;
+		case ICON_SENTMAIL:	retval = 400; break;
+		case ICON_ERROR:	retval = 500; break;
+		case ICON_DOWN:		retval = 600; break;
+		case ICON_DEL:		retval = 700; break;
+		case ICON_SEND:		retval = 800; break;
+		case ICON_NON:		retval = 900; break;
 		default:            retval = 0; break;
 	}
 	retval += tpMailItem->Priority * 1000;

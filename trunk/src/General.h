@@ -209,6 +209,7 @@
 #define ICON_SENTMAIL			5
 #define ICON_SEND				6
 #define ICON_ERROR				7
+#define ICON_FLAG				8
 // overlays -- INDEXTOOVERLAYMASK(i) is ((i) << 8)
 #define ICON_NEW_MASK			0x04
 #define ICON_REPL_MASK			0x01
@@ -463,6 +464,7 @@ typedef struct _OPTION {
 	TCHAR *ItemSendSoundFile;
 	TCHAR *ItemSentSoundFile;
 	TCHAR *ItemErrorSoundFile;
+	TCHAR *ItemFlagSoundFile;
 
 	int AutoCheck;
 	int AutoCheckTime;

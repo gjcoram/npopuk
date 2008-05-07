@@ -83,7 +83,6 @@
 #define STR_ERR_NOUIDLNOFILL		TEXT("Cannot fill-in messages because 'NoUIDL=1' for this account")
 #define STR_ERR_DUPPARAM			TEXT("Duplicate parameter '%s'")
 
-
 // Socket error
 #define STR_ERR_SOCK_SELECT			TEXT("Selection error")
 #define STR_ERR_SOCK_DISCONNECT		TEXT("Server disconnected")
@@ -389,6 +388,7 @@
 #define STR_CMDBAR_DOWNMARK			TEXT("Mark for download")
 #define STR_CMDBAR_DELMARK			TEXT("Mark for delete")
 #define STR_CMDBAR_UNREADMARK		TEXT("Mark as read")
+#define STR_CMDBAR_FLAGMARK			TEXT("Flag for follow-up")
 #define STR_CMDBAR_FORWARD			TEXT("Forward")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")

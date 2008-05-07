@@ -751,7 +751,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{6,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{7,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{8,	ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{8,	ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{9,	ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -793,8 +794,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = mbi.hwndMB;
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		CommandBar_AddToolTips(hViewToolBar, 11, szTips);
-		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
+		CommandBar_AddToolTips(hViewToolBar, 12, szTips);
+		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
 		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	} else {
 		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
@@ -825,23 +826,23 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
 	if (op.osMajorVer >= 4) {
 		// CE.net 4.2 and higher (MobilePro 900c)
-		CommandBar_AddToolTips(hViewToolBar, 9, szTips+1);
+		CommandBar_AddToolTips(hViewToolBar, 10, szTips+1);
 	} else {
 		// HPC2000 (Jornada 690, 720)
-		CommandBar_AddToolTips(hViewToolBar, 9, szTips);
+		CommandBar_AddToolTips(hViewToolBar, 10, szTips);
 	}
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
 	} else {
 		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW, 0);
 	}
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 9, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hViewToolBar, 0, 0);
 #endif
 #else
 	// Win32
-	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 9, hInst, IDB_TOOLBAR_VIEW,
+	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 10, hInst, IDB_TOOLBAR_VIEW,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hViewToolBar, GWL_STYLE, GetWindowLong(hViewToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hViewToolBar, TB_SETINDENT, 5, 0);
@@ -2801,6 +2802,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND); // may have been there already
 		DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
 		DeleteMenu(hMenu, ID_MENUITEM_DELMARK, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_FLAGMARK, MF_BYCOMMAND);
 		if (IsAttach == TRUE) {
 			EnableMenuItem(hMenu, ID_MENUITEM_READMAIL, MF_GRAYED);
 			EnableMenuItem(hMenu, ID_MENUITEM_UNREADMAIL, MF_GRAYED);
@@ -2818,6 +2820,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		}
 	} else {
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
+		CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
 		CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Mark == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
 		CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Mark == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);
 		EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !enable);
@@ -2828,6 +2831,9 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 #if defined(_WIN32_WCE_PPC)
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 #endif
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
+
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
 
@@ -2837,6 +2843,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
 
+	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM)MAKELONG(enable, 0));
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(enable, 0));
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(enable, 0));
 	if (IsAttach == TRUE) {
@@ -3124,6 +3131,19 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_FORWARD:
 			SetReMessage(hWnd, EDIT_FORWARD);
+			break;
+
+		case ID_MENUITEM_FLAGMARK:
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
+				ErrorMessage(hWnd, STR_ERR_NOMAIL);
+				break;
+			}
+			if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				break;
+			}
+			SetMark(hWnd, tpMailItem, ICON_FLAG);
+			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
 		// 受信用にマーク

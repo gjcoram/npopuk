@@ -83,7 +83,7 @@ IDI_ICON_ERROR          ICON                    "..\\res\\icon_err.ico"
 IDI_ICON_HTML           ICON                    "..\\res\\ico_html.ico"
 IDI_ICON_HTML_HIGH      ICON                    "..\\res\\ico_h_hi.ico"
 IDI_ICON_HTML_LOW       ICON                    "..\\res\\ico_h_lo.ico"
-
+IDI_ICON_FLAG           ICON                    "..\\res\\ico_flag.ico"
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
@@ -105,6 +105,7 @@ BEGIN
     "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
     "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
@@ -155,6 +156,7 @@ BEGIN
                                                     NOINVERT
     "H",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REFLOW,     VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
@@ -248,6 +250,7 @@ BEGIN
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM "Address &information...\tCtrl+I", ID_MENUITEM_PROP
         MENUITEM SEPARATOR
+        MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
         MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM SEPARATOR
@@ -391,6 +394,7 @@ BEGIN
         MENUITEM "Repl&y to all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM SEPARATOR
+        MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
         MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
@@ -1477,6 +1481,7 @@ BEGIN
     ID_MENUITEM_ALLCHECK    "Check all accounts"
     ID_MENUITEM_ALLEXEC     "Update all accounts"
     ID_MENUITEM_STOP        "Stop"
+	ID_MENUITEM_FLAGMARK    "Flag for follow-up"
     ID_MENUITEM_DOWNMARK    "Mark for download"
     ID_MENUITEM_DELMARK     "Mark for delete"
     ID_MENUITEM_UNREADMARK  "Mark as read"
