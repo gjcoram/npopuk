@@ -528,6 +528,7 @@ BOOL ini_read_setting(HWND hWnd)
 		get_sound_file(op.SoundDirectory, TEXT("SEND.WAV"), &op.ItemSendSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("SENT.WAV"), &op.ItemSentSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("F:AG.WAV"), &op.ItemFlagSoundFile);
 	}
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0, app_path);
@@ -1649,6 +1650,7 @@ void ini_free(void)
 	mem_free(&op.ItemSendSoundFile);
 	mem_free(&op.ItemSentSoundFile);
 	mem_free(&op.ItemErrorSoundFile);
+	mem_free(&op.ItemFlagSoundFile);
 	mem_free(&op.ViewApp);
 	mem_free(&op.ViewAppCmdLine);
 	mem_free(&op.ViewFileSuffix);

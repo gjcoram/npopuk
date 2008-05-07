@@ -1250,10 +1250,10 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 
 		// Mark
 		mrk = i / 10;
-		tpMailItem->Mark = (mrk <= ICON_ERROR) ? mrk : ICON_NON;
+		tpMailItem->Mark = (mrk <= ICON_FLAG) ? mrk : ICON_NON;
 		// Status
 		stat = i % 10;
-		tpMailItem->MailStatus = (stat <= ICON_ERROR) ? stat : ICON_NON;
+		tpMailItem->MailStatus = (stat <= ICON_FLAG) ? stat : ICON_NON;
 		
 	} else if (Import == TRUE) {
 		tpMailItem->MailStatus = tpMailItem->Mark = (ImportRead == TRUE) ? ICON_READ : ICON_MAIL;

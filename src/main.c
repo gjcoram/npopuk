@@ -184,7 +184,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag);
 static void ListDeleteItem(HWND hWnd, BOOL Ask);
 static void ListDeleteAttach(HWND hWnd);
 static void SetDownloadMark(HWND hWnd, BOOL Flag);
-static void SetDeleteMark(HWND hWnd);
+static void SetFlagOrDeleteMark(HWND hWnd, int Mark);
 static void UnMark(HWND hWnd);
 static void SetMailStats(HWND hWnd, int St);
 static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
@@ -1389,9 +1389,10 @@ int SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_STOP, (LPARAM)MAKELONG(!SocFlag, 0));
 #endif
 
+	EnableMenuItem(hMenu, ID_MENUITEM_FLAGMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 	EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 	EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !(SelFlag & SaveTypeFlag & SendBoxFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
-	EnableMenuItem(hMenu, ID_MENUITEM_UNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+	EnableMenuItem(hMenu, ID_MENUITEM_UNMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
 	}
@@ -2976,9 +2977,9 @@ static void SetDownloadMark(HWND hWnd, BOOL Flag)
 }
 
 /*
- * SetDeleteMark - アイテムに削除マークを付加
+ * SetFlagOrDeleteMark - アイテムに削除マークを付加
  */
-static void SetDeleteMark(HWND hWnd)
+static void SetFlagOrDeleteMark(HWND hWnd, int Mark)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
@@ -2996,7 +2997,7 @@ static void SetDeleteMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		tpMailItem->Mark = ICON_DEL;
+		tpMailItem->Mark = Mark;
 		ListView_SetItemState(hListView, i, 0, LVIS_CUT);
 		ListView_RedrawItems(hListView, i, i);
 	}
@@ -4755,20 +4756,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ReMessageItem(hWnd, EDIT_FORWARD);
 			break;
 
-		//Change
-		case ID_KEY_CTRLENTER:
+		// flag for follow-up
+		case ID_MENUITEM_FLAGMARK:
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
 			}
-			SetDownloadMark(hWnd, TRUE);
+			SetFlagOrDeleteMark(hWnd, ICON_FLAG);
 			break;
 
-		//of mark for reception In one for reception mark
-		case ID_MENUITEM_DOWNMARK:
+		case ID_MENUITEM_DOWNMARK:	// set download mark
+		case ID_KEY_CTRLENTER:		// toggle download mark
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
 			}
-			SetDownloadMark(hWnd, FALSE);
+			SetDownloadMark(hWnd, (command_id == ID_KEY_CTRLENTER));
 			break;
 
 		//In one for deletion mark
@@ -4776,7 +4777,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
 			}
-			SetDeleteMark(hWnd);
+			SetFlagOrDeleteMark(hWnd, ICON_DEL);
 			break;
 
 		//Mark cancellation
@@ -4842,7 +4843,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
 								ListDeleteItem(hWnd, FALSE);
 							} else {
-								SetDeleteMark(hWnd);
+								SetFlagOrDeleteMark(hWnd, ICON_DEL);
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+Target)->Loaded == TRUE) {
@@ -4983,7 +4984,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
 								ListDeleteItem(hWnd, FALSE);
 							} else {
-								SetDeleteMark(hWnd);
+								SetFlagOrDeleteMark(hWnd, ICON_DEL);
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
@@ -5770,6 +5771,10 @@ static void PlayMarkSound(int mark)
 	if (lowbits == ICON_ERROR) {
 		if (op.ItemErrorSoundFile != NULL) {
 			sndPlaySound(op.ItemErrorSoundFile, SND_ASYNC | SND_NODEFAULT);
+		}
+	} else if (lowbits == ICON_FLAG) {
+		if (op.ItemFlagSoundFile != NULL) {
+			sndPlaySound(op.ItemFlagSoundFile, SND_ASYNC | SND_NODEFAULT);
 		}
 	} else if ((mark & 0x10) && op.ItemNewSoundFile != NULL) {
 		sndPlaySound(op.ItemNewSoundFile, SND_ASYNC | SND_NODEFAULT);

@@ -82,6 +82,7 @@ IDI_ICON_ERROR          ICON    DISCARDABLE     "..\\res\\icon_err.ico"
 IDI_ICON_HTML           ICON    DISCARDABLE     "..\\res\\ico_html.ico"
 IDI_ICON_HTML_HIGH      ICON    DISCARDABLE     "..\\res\\ico_h_hi.ico"
 IDI_ICON_HTML_LOW       ICON    DISCARDABLE     "..\\res\\ico_h_lo.ico"
+IDI_ICON_FLAG           ICON    DISCARDABLE     "..\\res\\ico_flag.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -104,6 +105,7 @@ BEGIN
     "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
     "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "Q",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
@@ -171,6 +173,7 @@ BEGIN
     "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
     "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MENUITEM_PROP,       VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT

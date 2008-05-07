@@ -49,6 +49,7 @@
 #define IDR_MENU_WINDOW_HPC             153
 #define IDD_DIALOG_FILTER               154
 #define IDD_DIALOG_FILTER_EDIT          155
+#define IDI_ICON_FLAG                   156
 #define IDD_DIALOG_INITMAILBOX          160
 #define IDI_ICON_ERROR                  161
 #define IDI_ICON_CHECK                  162
@@ -298,6 +299,7 @@
 #define IDC_CHECK_GBLFILTER             1212
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
+#define ID_MENUITEM_FLAGMARK            1232
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
