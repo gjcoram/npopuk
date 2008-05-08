@@ -682,8 +682,10 @@ DEP_CPP_EDIT_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -725,8 +727,10 @@ DEP_CPP_EDIT_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -752,8 +756,10 @@ DEP_CPP_EDIT_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -832,8 +838,10 @@ DEP_CPP_FILE_=\
 	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_FILE_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -876,8 +884,10 @@ DEP_CPP_FILE_=\
 	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_FILE_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -902,8 +912,10 @@ DEP_CPP_FILE_=\
 	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_FILE_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1112,8 +1124,10 @@ DEP_CPP_INI_C=\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_INI_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1156,8 +1170,10 @@ DEP_CPP_INI_C=\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_INI_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1182,8 +1198,10 @@ DEP_CPP_INI_C=\
 	"..\src\General.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_INI_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1270,8 +1288,10 @@ DEP_CPP_ITEM_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_ITEM_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1320,8 +1340,10 @@ DEP_CPP_ITEM_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_ITEM_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1350,8 +1372,10 @@ DEP_CPP_ITEM_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_ITEM_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1438,8 +1462,10 @@ DEP_CPP_JP_Ce=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_JP_Ce=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1477,8 +1503,10 @@ DEP_CPP_JP_Ce=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_JP_Ce=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1500,8 +1528,10 @@ DEP_CPP_JP_Ce=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_JP_Ce=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1578,8 +1608,10 @@ DEP_CPP_LISTV=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_LISTV=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1617,8 +1649,10 @@ DEP_CPP_LISTV=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_LISTV=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1640,8 +1674,10 @@ DEP_CPP_LISTV=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_LISTV=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1718,8 +1754,10 @@ DEP_CPP_MAILB=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAILB=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1757,8 +1795,10 @@ DEP_CPP_MAILB=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAILB=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1780,8 +1820,10 @@ DEP_CPP_MAILB=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAILB=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -1860,8 +1902,10 @@ DEP_CPP_MAIN_=\
 	"..\src\General.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAIN_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -1901,8 +1945,10 @@ DEP_CPP_MAIN_=\
 	"..\src\General.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAIN_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -1926,8 +1972,10 @@ DEP_CPP_MAIN_=\
 	"..\src\General.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MAIN_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -2131,8 +2179,10 @@ DEP_CPP_MIME_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MIME_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -2193,8 +2243,10 @@ DEP_CPP_MIME_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MIME_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -2227,8 +2279,10 @@ DEP_CPP_MIME_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MIME_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -2338,8 +2392,10 @@ DEP_CPP_MULTI=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MULTI=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -2380,8 +2436,10 @@ DEP_CPP_MULTI=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MULTI=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -2406,8 +2464,10 @@ DEP_CPP_MULTI=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_MULTI=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -2519,8 +2579,10 @@ DEP_CPP_OPTIO=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_OPTIO=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -2562,8 +2624,10 @@ DEP_CPP_OPTIO=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_OPTIO=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -2589,8 +2653,10 @@ DEP_CPP_OPTIO=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_OPTIO=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -2669,8 +2735,10 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_POP3_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -2716,8 +2784,10 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_POP3_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -2743,8 +2813,10 @@ DEP_CPP_POP3_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_POP3_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -2828,7 +2900,9 @@ SOURCE=..\src\ppcpoom.cpp
 
 DEP_CPP_PPCPO=\
 	"..\src\ppcpoom.h"\
-	{$(INCLUDE)}"pimstore.h"\
+	
+NODEP_CPP_PPCPO=\
+	".\imstore.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -2862,7 +2936,9 @@ NODEP_CPP_PPCPO=\
 
 DEP_CPP_PPCPO=\
 	"..\src\ppcpoom.h"\
-	{$(INCLUDE)}"pimstore.h"\
+	
+NODEP_CPP_PPCPO=\
+	".\imstore.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -2878,7 +2954,9 @@ NODEP_CPP_PPCPO=\
 
 DEP_CPP_PPCPO=\
 	"..\src\ppcpoom.h"\
-	{$(INCLUDE)}"pimstore.h"\
+	
+NODEP_CPP_PPCPO=\
+	".\imstore.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3019,8 +3097,10 @@ DEP_CPP_RAS_C=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_RAS_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3058,8 +3138,10 @@ DEP_CPP_RAS_C=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_RAS_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3081,8 +3163,10 @@ DEP_CPP_RAS_C=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_RAS_C=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3159,8 +3243,10 @@ DEP_CPP_SELEC=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SELEC=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3192,8 +3278,10 @@ DEP_CPP_SELEC=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SELEC=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3213,8 +3301,10 @@ DEP_CPP_SELEC=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SELEC=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3286,8 +3376,10 @@ DEP_CPP_SMTP_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SMTP_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3336,8 +3428,10 @@ DEP_CPP_SMTP_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SMTP_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3366,8 +3460,10 @@ DEP_CPP_SMTP_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_SMTP_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3588,8 +3684,10 @@ DEP_CPP_UTIL_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_UTIL_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3636,8 +3734,10 @@ DEP_CPP_UTIL_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_UTIL_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3664,8 +3764,10 @@ DEP_CPP_UTIL_=\
 	"..\src\global.h"\
 	"..\src\md5.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_UTIL_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3758,8 +3860,10 @@ DEP_CPP_VIEW_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3809,8 +3913,10 @@ DEP_CPP_VIEW_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3840,8 +3946,10 @@ DEP_CPP_VIEW_=\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -3928,9 +4036,11 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\ipapi.h"\
+	".\slsock.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE MIPS) Debug"
@@ -3968,9 +4078,11 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\ipapi.h"\
+	".\slsock.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE SH3) Debug"
@@ -3992,9 +4104,11 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\ipapi.h"\
+	".\slsock.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC_EN - Win32 (WCE ARM) Debug"
@@ -4106,6 +4220,10 @@ SOURCE=..\src\multipart.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\npop_ver.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\ppcpoom.h
 # End Source File
 # Begin Source File
@@ -4143,6 +4261,10 @@ SOURCE=..\res\ico_cllo.ico
 # Begin Source File
 
 SOURCE=..\res\ico_down.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_flag.ico
 # End Source File
 # Begin Source File
 
