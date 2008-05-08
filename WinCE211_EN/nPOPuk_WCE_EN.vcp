@@ -3246,7 +3246,9 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
@@ -3256,7 +3258,9 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -3274,7 +3278,9 @@ DEP_CPP_WINSO=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
@@ -3342,6 +3348,10 @@ SOURCE=..\src\multipart.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\npop_ver.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\pimstore.h
 # End Source File
 # Begin Source File
@@ -3379,6 +3389,10 @@ SOURCE=..\res\ico_cllo.ico
 # Begin Source File
 
 SOURCE=..\res\ico_down.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_flag.ico
 # End Source File
 # Begin Source File
 
