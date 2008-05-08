@@ -768,7 +768,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_FORWARD,
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
-		STR_CMDBAR_UNREADMARK
+		STR_CMDBAR_UNREADMARK,
+		STR_CMDBAR_FLAGMARK
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
@@ -800,7 +801,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	} else {
 		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
 		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 3, tbButton);
+		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 4, tbButton);
 	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -1261,7 +1262,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 			// ˆê——‚ÌƒAƒCƒRƒ“‚ÌÝ’è
 			if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL
-				&& tpMailItem->Mark != tpMailItem->MailStatus) {
+				&& tpMailItem->Mark != ICON_FLAG && tpMailItem->Mark != tpMailItem->MailStatus) {
 				(MailBox + vSelBox)->NeedsSave |= MARKS_CHANGED;
 				tpMailItem->Mark = tpMailItem->MailStatus;
 				redraw = TRUE;
@@ -2783,7 +2784,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_FILE);
-	htv = NULL;
+	htv = hViewToolBar;
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 0);
 	htv = NULL;
@@ -2802,8 +2803,8 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND); // may have been there already
 		DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
 		DeleteMenu(hMenu, ID_MENUITEM_DELMARK, MF_BYCOMMAND);
-		DeleteMenu(hMenu, ID_MENUITEM_FLAGMARK, MF_BYCOMMAND);
 		if (IsAttach == TRUE) {
+			DeleteMenu(hMenu, ID_MENUITEM_FLAGMARK, MF_BYCOMMAND);
 			EnableMenuItem(hMenu, ID_MENUITEM_READMAIL, MF_GRAYED);
 			EnableMenuItem(hMenu, ID_MENUITEM_UNREADMAIL, MF_GRAYED);
 		} else {
@@ -2817,6 +2818,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
 				STR_LIST_MENU_DELLIST);
 #endif
+			CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
 		}
 	} else {
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
@@ -2843,10 +2845,10 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
 
-	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM)MAKELONG(enable, 0));
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(enable, 0));
 	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(enable, 0));
 	if (IsAttach == TRUE) {
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM)MAKELONG(enable, 0));
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(enable, 0));
 	}
 #if defined(_WIN32_WCE_PPC)
@@ -3139,7 +3141,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+			if (vSelBox == MAILBOX_SEND) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_FLAG);
