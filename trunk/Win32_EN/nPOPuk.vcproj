@@ -1465,6 +1465,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\npop_ver.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\Profile.h"
 				>
 			</File>
@@ -1495,6 +1499,10 @@
 			</File>
 			<File
 				RelativePath="..\res\ico_down.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\res\ico_flag.ico"
 				>
 			</File>
 			<File
