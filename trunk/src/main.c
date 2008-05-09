@@ -1379,6 +1379,8 @@ int SetMailMenu(HWND hWnd)
 	SendBoxFlag = (SelBox == MAILBOX_SEND) ? 0 : 1;
 	MoveBoxFlag = (MailBoxCnt <= 3) ? 0 : 1;
 
+	EnableMenuItem(hMenu, ID_MENUITEM_BACKUP, !SocFlag);
+
 	EnableMenuItem(hMenu, ID_MENUITEM_SETMAILBOX, !(RecvBoxFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_DELETEMAILBOX, !(RecvBoxFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_LISTINIT, !(SaveTypeFlag & SendBoxFlag));
@@ -4352,7 +4354,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	///////////// --- /////////////////////
 
 		case ID_MENUITEM_BACKUP:
-			SaveWindow(hWnd, TRUE, FALSE, FALSE);
+			if (g_soc == -1) {
+				SaveWindow(hWnd, TRUE, FALSE, FALSE);
+			}
 			break;
 
 		//End

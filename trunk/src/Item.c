@@ -1706,7 +1706,7 @@ static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int fl
 			}
 			break;
 
-		default:  // FILTER_READICON
+		default:  // FILTER_READICON, FILTER_PRIORITY
 			RetFlag |= fret;
 			break;
 		}
@@ -1809,7 +1809,7 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 {
 	BOOL error = FALSE;
 	// Move or Copy to SaveBox
-	if ((fret & (FILTER_COPY | FILTER_MOVE)) && tpMailItem->MailStatus != ICON_NON) {
+	if ((fret & (FILTER_COPY | FILTER_MOVE | FILTER_PRIORITY)) && tpMailItem->MailStatus != ICON_NON) {
 		int i, dw, sbox;
 		for (i = 0; i < op.GlobalFilterCnt; i++) {
 			dw = do_what[i];
@@ -1818,8 +1818,18 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
 				}
+			} else if (dw == FILTER_PRIORITY) {
+				if ((*(op.tpFilter + i))->Priority == 0) {
+					tpMailItem->Mark = ICON_FLAG;
+				} else {
+					tpMailItem->Priority = (*(op.tpFilter + i))->Priority;
+				}
 			} else if (dw == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+				tpMailItem->MailStatus = ICON_READ;
+				if (tpMailItem->Mark != ICON_FLAG) {
+					tpMailItem->Mark = ICON_READ;
+				}
+
 			}
 		}
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
@@ -1829,8 +1839,17 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
 				}
+			} else if (dw == FILTER_PRIORITY) {
+				if ((*(tpMailBox->tpFilter + i))->Priority == 0) {
+					tpMailItem->Mark = ICON_FLAG;
+				} else {
+					tpMailItem->Priority = (*(tpMailBox->tpFilter + i))->Priority;
+				}
 			} else if (dw == FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-				tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+				tpMailItem->MailStatus = ICON_READ;
+				if (tpMailItem->Mark != ICON_FLAG) {
+					tpMailItem->Mark = ICON_READ;
+				}
 			}
 		}
 	}
@@ -1838,7 +1857,10 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 	//Filter operation setting
 	//Opening being completed setting
 	if (fret & FILTER_READICON && tpMailItem->MailStatus != ICON_NON) {
-		tpMailItem->Mark = tpMailItem->MailStatus = ICON_READ;
+		tpMailItem->MailStatus = ICON_READ;
+		if (tpMailItem->Mark != ICON_FLAG) {
+			tpMailItem->Mark = ICON_READ;
+		}
 	}
 
 	//Macro description

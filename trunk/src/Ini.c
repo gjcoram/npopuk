@@ -654,6 +654,8 @@ BOOL ini_read_setting(HWND hWnd)
 		tpFilter->Enable = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 		tpFilter->Action = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+		tpFilter->Priority = profile_get_int(TEXT("FILTER"), key_buf, 0, app_path);
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 		tpFilter->SaveboxName = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
@@ -853,6 +855,9 @@ BOOL ini_read_setting(HWND hWnd)
 				tpFilter->Action = fDef;
 			}
 
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+			tpFilter->Priority = profile_get_int(buf, key_buf, 0, app_path);
+
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 			tpFilter->SaveboxName = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
 
@@ -958,7 +963,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 #ifdef UNICODE
 	TCHAR ret[BUF_SIZE];
 #endif
-	TCHAR *p;
 	int j, t;
 	BOOL rc = TRUE;
 	BOOL found;
@@ -972,7 +976,23 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		}
 	} else {
 		is_backup = TRUE;
-		str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		if (IniFile == NULL) {
+			str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		} else {
+			TCHAR *p, *q;
+			for (p = q = IniFile; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p+1) != TEXT('\0')) {
+					p++;
+					continue;
+				}
+#endif
+				if (*p == TEXT('\\') || *p == TEXT('/')) {
+					q = p+1;
+				}
+			}
+			wsprintf(app_path, TEXT("%s%s"), SaveDir, q);
+		}
 	}
 
 	///////////// MRP /////////////////////
@@ -1243,6 +1263,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->Action, app_path);
 
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->Priority, app_path);
+
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->SaveboxName, app_path);
 
@@ -1380,7 +1403,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(buf, TEXT("MailAddress"), (MailBox + j)->MailAddress, app_path);
 		// Signature
 		if ((MailBox + j)->Signature != NULL) {
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + j)->Signature) * 2 + 1));
+			TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + j)->Signature) * 2 + 1));
 			if (p != NULL) {
 				EncodeCtrlChar((MailBox + j)->Signature, p);
 				profile_write_string(buf, TEXT("Signature"), p, app_path);
@@ -1436,6 +1459,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 			profile_write_int(buf, key_buf, tpFilter->Action, app_path);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+			profile_write_int(buf, key_buf, tpFilter->Priority, app_path);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 			profile_write_string(buf, key_buf, tpFilter->SaveboxName, app_path);

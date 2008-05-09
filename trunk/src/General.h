@@ -51,6 +51,7 @@
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
 #define LOW_PRIORITY			TEXT("Low")
+#define FLAG_PRIORITY			TEXT("Flag")
 
 #define PRIORITY_NUMBER1		TEXT("1")
 #define PRIORITY_NUMBER2		TEXT("2")
@@ -247,6 +248,7 @@
 #define FILTER_READICON			16
 #define FILTER_COPY				32
 #define FILTER_MOVE				64
+#define FILTER_PRIORITY			128
 
 #define MP_ERROR_FILE			-2					//Is not the return value
 #define MP_ERROR_ALLOC			-1
@@ -680,8 +682,9 @@ typedef struct _FILTER {
 	int Enable;
 	int Action;
 	int Boolean;
+	int Priority;
 	TCHAR *SaveboxName;
-
+	
 	TCHAR *Header1;
 	TCHAR *Content1;
 
@@ -696,7 +699,8 @@ typedef enum {
 	FILTER_DELETEMARK_INDEX,
 	FILTER_READICON_INDEX,
 	FILTER_COPY_INDEX,
-	FILTER_MOVE_INDEX
+	FILTER_MOVE_INDEX,
+	FILTER_PRIORITY_INDEX
 };
 #define FILTER_BOOL_AND 0
 #define FILTER_BOOL_OR 1
