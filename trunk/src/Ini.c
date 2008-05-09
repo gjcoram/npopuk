@@ -165,7 +165,7 @@ static void ini_get_encode_info(void)
 static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
 {
 	TCHAR buf[BUF_SIZE];
-	wsprintf(buf, TEXT("%s%s"), dir, name);
+	wsprintf(buf, TEXT("%s\\%s"), dir, name);
 	if (file_get_size(buf) > 0) {
 		*ret = alloc_copy_t(buf);
 	}
@@ -500,7 +500,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0, app_path);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""), app_path);
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0, app_path);
-	op.SoundDirSetting = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), TEXT("DataFileDir\\SOUNDS"), app_path);
+	op.SoundDirSetting = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), TEXT("DataFileDir\\SOUNDS\\"), app_path);
 	len = lstrlen(TEXT("DataFileDir\\"));
 	if (str_cmp_n_t(op.SoundDirSetting, TEXT("DataFileDir\\"), len) == 0) {
 		wsprintf(tmp, TEXT("%s%s"), DataDir, op.SoundDirSetting + len);
@@ -513,6 +513,10 @@ BOOL ini_read_setting(HWND hWnd)
 		} else {
 			op.SoundDirectory = alloc_copy_t(op.SoundDirSetting);
 		}
+	}
+	len = lstrlen(op.SoundDirectory) - 1;
+	if ( *(op.SoundDirectory + len) == TEXT('\\') ) {
+		*(op.SoundDirectory + len) = TEXT('\0');
 	}
 	if (op.ItemPlaySound > 0 && op.SoundDirectory != NULL) {
 		get_sound_file(op.SoundDirectory, TEXT("NEW.WAV"), &op.ItemNewSoundFile);
@@ -528,7 +532,7 @@ BOOL ini_read_setting(HWND hWnd)
 		get_sound_file(op.SoundDirectory, TEXT("SEND.WAV"), &op.ItemSendSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("SENT.WAV"), &op.ItemSentSoundFile);
 		get_sound_file(op.SoundDirectory, TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("F:AG.WAV"), &op.ItemFlagSoundFile);
+		get_sound_file(op.SoundDirectory, TEXT("FLAG.WAV"), &op.ItemFlagSoundFile);
 	}
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0, app_path);
