@@ -811,6 +811,31 @@ static void SetComboItem(HWND hCombo)
 	SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)TEXT("X-ML-Name:"));
 }
 
+static void SetComboSaveboxes(HWND hCombo)
+{
+	int i;
+	SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
+	for (i=0; i<MailBoxCnt; i++) {
+		if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
+			if ((MailBox+i)->Name != NULL && *(MailBox+i)->Name != TEXT('\0')) {
+				SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
+			} else {
+				SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
+			}
+		}
+	}
+}
+
+static void SetComboPriorities(HWND hCombo)
+{
+	SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
+	SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)FLAG_PRIORITY);
+	SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
+	SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
+	SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
+	SendMessage(hCombo, CB_SETCURSEL, 0, 0);
+}
+
 /*
  * EnableFilterEditButton - É{É^ÉìÇÃäàê´Å^îÒäàê´ÇÃêÿÇËë÷Ç¶
  */
@@ -834,8 +859,8 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 {
 	TCHAR buf[BUF_SIZE], Name[BUF_SIZE];
 	TCHAR *p, *nptr;
-	int i, j;
-	BOOL enabled = TRUE;
+	int i, j, len, lenc, lenm;
+	BOOL enabled = TRUE, is_copy = FALSE, is_move = FALSE;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -853,19 +878,8 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_READICON);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_COPY);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_MOVE);
+		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_PRIORITY);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, 0, 0);
-
-		SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_ADDSTRING, 0, (LPARAM)TEXT(""));
-		for (i=0; i<MailBoxCnt; i++) {
-			if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
-				if ((MailBox+i)->Name != NULL && *(MailBox+i)->Name != TEXT('\0')) {
-					SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
-				} else {
-					SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
-				}
-			}
-		}
-		SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_SETCURSEL, 0, 0);
 
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD1));
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD2));
@@ -890,21 +904,45 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 1, buf, BUF_SIZE - 1);
-		if (str_cmp_ni_t(buf, STR_FILTER_COPY, lstrlen(STR_FILTER_COPY)) == 0) {
-			nptr = buf + lstrlen(STR_FILTER_COPY);
+		lenc = lstrlen(STR_FILTER_COPY);
+		lenm = lstrlen(STR_FILTER_MOVE);
+		if (str_cmp_ni_t(buf, STR_FILTER_COPY, lenc) == 0) {
+			is_copy = TRUE;
+			len = lenc;
+		} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lenm) == 0) {
+			is_move = TRUE;
+			len = lenm;
+		}
+		SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_ADDSTRING, 0, (LPARAM)TEXT(""));
+		if (is_copy || is_move) {
+			SetComboSaveboxes(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX));
+			nptr = buf + len;
 			SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_SETCURSEL, GetSaveboxNum(nptr), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), enabled);
-			*(buf + lstrlen(STR_FILTER_COPY)) = TEXT('\0');
-			SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
-		} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lstrlen(STR_FILTER_MOVE)) == 0) {
-			nptr = buf + lstrlen(STR_FILTER_MOVE);
-			SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_SETCURSEL, GetSaveboxNum(nptr), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), enabled);
-			*(buf + lstrlen(STR_FILTER_MOVE)) = TEXT('\0');
+			*(buf + len) = TEXT('\0');
 			SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
 		} else {
-			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
-			SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+			len = lstrlen(STR_FILTER_PRIORITY);
+			if (str_cmp_ni_t(buf, STR_FILTER_PRIORITY, len) == 0) {
+				int sel;
+				SetComboPriorities(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX));
+				nptr = buf + len;
+				if (lstrcmp(nptr, HIGH_PRIORITY) == 0) {
+					sel = 1;
+				} else if (lstrcmp(nptr, NORMAL_PRIORITY) == 0) {
+					sel = 2;
+				} else if (lstrcmp(nptr, LOW_PRIORITY) == 0) {
+					sel = 3;
+				} else {
+					sel = 0;
+				}
+				SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_SETCURSEL, sel, 0);
+				*(buf + len) = TEXT('\0');
+				SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+			} else {
+				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
+				SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+			}
 		}
 
 		*buf = TEXT('\0');
@@ -956,7 +994,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			EnableFilterEditButton(hDlg, enabled);
 			if (enabled) {
 				j = SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_GETCURSEL, 0, 0);
-				if (j != FILTER_COPY_INDEX && j != FILTER_MOVE_INDEX) {
+				if (j != FILTER_COPY_INDEX && j != FILTER_MOVE_INDEX  && j != FILTER_PRIORITY_INDEX) {
 					enabled = FALSE;
 				}
 			}
@@ -966,6 +1004,10 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		case IDC_COMBO_ACTION:
 			j = SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_GETCURSEL, 0, 0);
 			if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
+				SetComboSaveboxes(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX));
+				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), TRUE);
+			} else if (j == FILTER_PRIORITY_INDEX) {
+				SetComboPriorities(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX));
 				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), TRUE);
 			} else {
 				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
@@ -998,13 +1040,13 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 			*Name = TEXT('\0');
 			j = SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_GETCURSEL, 0, 0);
-			if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
+			if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX || j == FILTER_PRIORITY_INDEX) {
 				SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
 				if (*Name == TEXT('\0') && p == STR_FILTER_USE) {
-					ErrorMessage(hDlg, STR_ERR_NOSAVEBOX);
+					ErrorMessage(hDlg, (j == FILTER_PRIORITY_INDEX) ? STR_ERR_NOPRIORITY : STR_ERR_NOSAVEBOX);
 					break;
 				}
-				if (op.LazyLoadMailboxes != 0) {
+				if (j != FILTER_PRIORITY_INDEX && op.LazyLoadMailboxes != 0) {
 					// need to re-check that all saveboxes are loaded
 					SaveBoxesLoaded = FALSE;
 				}
@@ -1016,7 +1058,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				ListView_SetItemText(hLvFilter, i, 0, p);
 			}
 
-			if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
+			if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX || j == FILTER_PRIORITY_INDEX) {
 				wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), Name);
 			} else {
 				wsprintf(buf, TEXT("%s"), GetFilterActionString(j));
@@ -1128,6 +1170,9 @@ static int GetFilterActionInt(TCHAR *buf)
 	} else if (lstrcmp(buf, STR_FILTER_MOVE) == 0) {
 		return FILTER_MOVE_INDEX;
 
+	} else if (lstrcmp(buf, STR_FILTER_PRIORITY) == 0) {
+		return FILTER_PRIORITY_INDEX;
+
 	}
 	return FILTER_UNRECV_INDEX;
 }
@@ -1155,6 +1200,9 @@ static TCHAR *GetFilterActionString(int i)
 
 	case FILTER_MOVE_INDEX:
 		return STR_FILTER_MOVE;
+
+	case FILTER_PRIORITY_INDEX:
+		return STR_FILTER_PRIORITY;
 
 	}
 	return STR_FILTER_UNRECV;
@@ -1191,6 +1239,26 @@ static void SetFilterList(HWND hListView)
 		j = tpFilter->Action;
 		if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
 			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), tpFilter->SaveboxName);
+		} else if (j == FILTER_PRIORITY_INDEX) {
+			TCHAR *p;
+			switch (tpFilter->Priority) {
+				case 1:
+				case 2:
+					p = HIGH_PRIORITY;
+					break;
+				case 3:
+					p = NORMAL_PRIORITY;
+					break;
+				case 4:
+				case 5:
+					p = LOW_PRIORITY;
+					break;
+				default:
+					p = FLAG_PRIORITY;
+					break;
+
+			}
+			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), p);
 		} else {
 			wsprintf(buf, TEXT("%s"), GetFilterActionString(j));
 		}
@@ -1397,6 +1465,21 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lstrlen(STR_FILTER_MOVE)) == 0) {
 					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_MOVE));
 					*(buf + lstrlen(STR_FILTER_MOVE)) = TEXT('\0');
+				} else {
+					int len = lstrlen(STR_FILTER_PRIORITY);
+					if (str_cmp_ni_t(buf, STR_FILTER_PRIORITY, len) == 0) {
+						TCHAR *p = buf + len;
+						int prio = 0;
+						if (lstrcmp(p, HIGH_PRIORITY) == 0) {
+							prio = 1;
+						} else if (lstrcmp(p, NORMAL_PRIORITY) == 0) {
+							prio = 3;
+						} else if (lstrcmp(p, LOW_PRIORITY) == 0) {
+							prio = 5;
+						}
+						(*(tpFilter + i))->Priority = prio;
+						*(buf + len) = TEXT('\0');
+					}
 				}
 				(*(tpFilter + i))->Action = GetFilterActionInt(buf);
 
