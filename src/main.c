@@ -4795,7 +4795,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// flag for follow-up
 		case ID_MENUITEM_FLAGMARK:
-			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || (SelBox == RecvBox && ExecFlag == TRUE)) {
+			if (SelBox == RecvBox && ExecFlag == TRUE) {
 				break;
 			}
 			SetFlagOrDeleteMark(hWnd, ICON_FLAG);
