@@ -377,6 +377,7 @@ typedef struct _OPTION {
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
 	int ScanAllForUnread;
+	int DelIsMarkDel;
 	int RecvScroll;
 	int SaveMsg;
 	int AutoSave;

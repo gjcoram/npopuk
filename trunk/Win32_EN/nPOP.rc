@@ -123,7 +123,7 @@ BEGIN
     "U",            ID_MENUITEM_UNMARK,     VIRTKEY, CONTROL, NOINVERT
     VK_APPS,        ID_KEY_SHOWMENU,        VIRTKEY, NOINVERT
     VK_DELETE,      ID_MENUITEM_DELETE,     VIRTKEY, NOINVERT
-    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_KEY_CTRLDEL,         VIRTKEY, CONTROL, NOINVERT
     VK_DOWN,        ID_KEY_ALTDOWN,         VIRTKEY, ALT, NOINVERT
     VK_ESCAPE,      ID_KEY_ESC,             VIRTKEY, NOINVERT
     VK_F10,         ID_KEY_SHOWMENU,        VIRTKEY, SHIFT, NOINVERT
@@ -894,7 +894,7 @@ BEGIN
     LTEXT           "&Action:",IDC_STATIC,15,23,30,10
     COMBOBOX        IDC_COMBO_ACTION,55,20,130,110,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Savebox:",IDC_STATIC,15,40,30,10
+    LTEXT           "",IDC_SBOX_OR_PRIO,15,40,30,10
     COMBOBOX        IDC_COMBO_FILT2BOX,55,37,130,110,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Conditions",IDC_STATIC,5,57,190,115
@@ -1481,7 +1481,9 @@ BEGIN
     ID_MENUITEM_ALLCHECK    "Check all accounts"
     ID_MENUITEM_ALLEXEC     "Update all accounts"
     ID_MENUITEM_STOP        "Stop"
-	ID_MENUITEM_FLAGMARK    "Flag for follow-up"
+    ID_MENUITEM_RAS_CONNECT "Dial-up Connect"
+    ID_MENUITEM_RAS_DISCONNECT "Dial-up Disconnect"
+    ID_MENUITEM_FLAGMARK    "Flag for follow-up"
     ID_MENUITEM_DOWNMARK    "Mark for download"
     ID_MENUITEM_DELMARK     "Mark for delete"
     ID_MENUITEM_UNREADMARK  "Mark as read"
