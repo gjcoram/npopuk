@@ -101,11 +101,7 @@
 #define BUF_SIZE				256					//of process Buffer size
 #define MULTI_BUF_SIZE			1024
 #define MAXSIZE					32768
-#if defined(_WIN32_WCE) && !defined(_WCE_OLD)
 #define EDITMAXSIZE				60000
-#else
-#define EDITMAXSIZE				30000
-#endif
 
 #define MAX_MAILBOX_CNT			1000				// see ID_MENUITEM_COPY2MBOX
 
