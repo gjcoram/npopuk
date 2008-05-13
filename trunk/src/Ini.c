@@ -677,6 +677,10 @@ BOOL ini_read_setting(HWND hWnd)
 		tpFilter->Content2 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
 	}
 
+	if (op.Version < APP_VERSION_NUM) {
+		op.Version = APP_VERSION_NUM;
+	}
+
 	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
 	if (cnt == 0) {
 		mailbox_create(hWnd, 1, FALSE, FALSE);
@@ -919,10 +923,6 @@ BOOL ini_read_setting(HWND hWnd)
 			ErrorMessage(hWnd, tmp);
 			return FALSE;
 		}
-	}
-
-	if (op.Version < APP_VERSION_NUM) {
-		op.Version = APP_VERSION_NUM;
 	}
 
 	// check that Saveboxes for filters are valid

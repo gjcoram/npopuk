@@ -4866,7 +4866,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case ID_KEY_CTRLDEL:
 		case ID_MENUITEM_DELETE:
-			if ((command_id == ID_KEY_CTRLDEL && op.DelIsMarkDel == TRUE)
+			if ( (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND
+				|| (command_id == ID_KEY_CTRLDEL && op.DelIsMarkDel == TRUE)
 				|| (command_id == ID_MENUITEM_DELETE && op.DelIsMarkDel == FALSE) ) {
 				ListDeleteItem(hWnd, TRUE);
 				break;
