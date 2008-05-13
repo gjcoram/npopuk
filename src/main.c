@@ -516,6 +516,9 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		if (parms[OP_MAILTO].value == NULL) {
 			oldlen += lstrlen(PARM_MAILTO) + 1;
 		}
+		if (gSendAndQuit) {
+			oldlen += 4; // lstrlen(TEXT("&s=1"));
+		}
 		
 		p = mem_calloc(oldlen * sizeof(TCHAR));
 		if (p == NULL) {
@@ -552,6 +555,11 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 				p += vallen;
 				oldlen -= vallen;
 			}
+		}
+		if (gSendAndQuit) {
+			str_cpy_n_t(p, TEXT("&s=1"), oldlen);
+			p += 4; // lstrlen(TEXT("&s=1"));
+			oldlen -= 4; // lstrlen(TEXT("&s=1"));
 		}
 		*p = TEXT('\0');
 		oldlen--;
