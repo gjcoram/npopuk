@@ -392,6 +392,7 @@
 #define STR_CMDBAR_UNREADMARK		TEXT("Mark as read")
 #define STR_CMDBAR_FLAGMARK			TEXT("Flag for follow-up")
 #define STR_CMDBAR_FORWARD			TEXT("Forward")
+#define STR_CMDBAR_NEXTFIND			TEXT("Find next")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")
 #define STR_CMDBAR_SBOXMARK			TEXT("Save and Mark")

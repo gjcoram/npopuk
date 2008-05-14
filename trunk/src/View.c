@@ -749,10 +749,12 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{4,	ID_MENUITEM_ALLREMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{5,	ID_MENUITEM_FORWARD,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{6,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{7,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{8,	ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{9,	ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{6,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
+		{7,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{8,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{9,	ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{10,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -765,6 +767,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_NEXTUNREAD,
 		STR_CMDBAR_REMESSEGE,
 		STR_CMDBAR_ALLREMESSEGE,
+		STR_CMDBAR_NEXTFIND,
 		STR_CMDBAR_FORWARD,
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
@@ -794,14 +797,14 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
 		CommandBar_AddToolTips(hViewToolBar, 12, szTips);
 		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
 		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	} else {
 		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
 		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 4, tbButton);
+		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 5, tbButton);
 	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -2900,7 +2903,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 {
 	MAILITEM *tpMailItem, *tpNextMail;
 	int key, i, command_id;
-	BOOL ret;
+	BOOL ret, del_it;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = FALSE;
 #endif
@@ -3162,30 +3165,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
-		// 削除用にマーク
-		case ID_MENUITEM_DELMARK:
-			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
-				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
-				break;
-			}
-			SetMark(hWnd, tpMailItem, ICON_DEL);
-			GetMarkStatus(hWnd, tpMailItem);
-			if (tpMailItem->Mark == ICON_DEL) {
-				if (op.ViewNextAfterDel == 1) {
-					tpMailItem = View_NextMail(hWnd);
-				} else if (op.ViewNextAfterDel == 2) {
-					tpMailItem = View_NextUnreadMail(hWnd);
-				}
-				if (tpMailItem == NULL && op.ViewCloseNoNext == 1) {
-					SendMessage(hWnd, WM_CLOSE, 0, 0);
-				}
-			}
-			break;
-
 		case ID_MENUITEM_UNREADMARK:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
@@ -3200,33 +3179,66 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
+		case ID_KEY_CTRLDEL:
+		case ID_MENUITEM_DELMARK:
 		case ID_MENUITEM_DELETE:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE) {
-				break;
+			if (command_id == ID_MENUITEM_DELMARK) {
+				del_it = FALSE;
+			} else if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				del_it = TRUE;
+			} else if ((command_id == ID_MENUITEM_DELETE && op.DelIsMarkDel == TRUE)
+					|| (command_id == ID_KEY_CTRLDEL && op.DelIsMarkDel == FALSE)) {
+				del_it = FALSE;
+			} else {
+				del_it = TRUE;
 			}
-			if (op.ExpertMode != 1 || key >=0) {
-				TCHAR buf[BUF_SIZE];
-				wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));
-				if (MessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+			if (del_it == FALSE) {
+				// mark for delete
+
+				if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 					break;
 				}
-			}
-			tpNextMail = ViewDeleteItem(hWnd, tpMailItem);
-			if (op.ViewNextAfterDel == 0) {
-				tpNextMail = NULL;
-			} else if (op.ViewNextAfterDel == 2 && (tpNextMail == NULL || tpMailItem->MailStatus != ICON_MAIL)) {
-				tpNextMail = View_NextUnreadMail(hWnd);
-			}
-			if (tpNextMail == NULL && op.ViewCloseNoNext == 1) {
-				SendMessage(hWnd, WM_CLOSE, 0, 0);
-			} else if (tpNextMail != NULL) {
-				SetWindowLong(hWnd, GWL_USERDATA, (long)tpNextMail);
-				ModifyWindow(hWnd, tpNextMail, FALSE, FALSE);
+				SetMark(hWnd, tpMailItem, ICON_DEL);
+				GetMarkStatus(hWnd, tpMailItem);
+				if (tpMailItem->Mark == ICON_DEL) {
+					if (op.ViewNextAfterDel == 1) {
+						tpMailItem = View_NextMail(hWnd);
+					} else if (op.ViewNextAfterDel == 2) {
+						tpMailItem = View_NextUnreadMail(hWnd);
+					}
+					if (tpMailItem == NULL && op.ViewCloseNoNext == 1) {
+						SendMessage(hWnd, WM_CLOSE, 0, 0);
+					}
+				}
+			} else {
+				// delete from list
+				if ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE) {
+					break;
+				}
+				if (op.ExpertMode != 1 || key >=0) {
+					TCHAR buf[BUF_SIZE];
+					wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));
+					if (MessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+						break;
+					}
+				}
+				tpNextMail = ViewDeleteItem(hWnd, tpMailItem);
+				if (op.ViewNextAfterDel == 0) {
+					tpNextMail = NULL;
+				} else if (op.ViewNextAfterDel == 2 && (tpNextMail == NULL || tpMailItem->MailStatus != ICON_MAIL)) {
+					tpNextMail = View_NextUnreadMail(hWnd);
+				}
+				if (tpNextMail == NULL && op.ViewCloseNoNext == 1) {
+					SendMessage(hWnd, WM_CLOSE, 0, 0);
+				} else if (tpNextMail != NULL) {
+					SetWindowLong(hWnd, GWL_USERDATA, (long)tpNextMail);
+					ModifyWindow(hWnd, tpNextMail, FALSE, FALSE);
+				}
 			}
 			break;
 

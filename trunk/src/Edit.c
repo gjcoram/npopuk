@@ -2358,6 +2358,9 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 	}
 	ExistFlag = TRUE;
 	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL);
+	if (ret == EDIT_INSIDEEDIT && tpMailItem->Mark == ICON_SEND) {
+		ret = ICON_SEND;
+	}
 	item_free(&tpMailItem, 1);
 	ExistFlag = FALSE;
 	return ret;
@@ -2478,6 +2481,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			return EDIT_NONEDIT;
 		}
 		if (tpReMailItem != NULL) {
+			// from mailto: URL
 			item_copy(tpReMailItem, tpMailItem, TRUE);
 		} else if ((MailBox+rebox)->Type == MAILBOX_TYPE_SAVE 
 			&& (MailBox+rebox)->DefAccount != NULL
@@ -2663,7 +2667,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		ErrorMessage(hWnd, STR_ERR_INIT);
 		return EDIT_NONEDIT;
 	}
-	if ((op.DefEditApp == 1 && key >= 0) || (op.DefEditApp == 0 && key < 0)) {
+	if ( (OpenFlag != EDIT_NEW || (gSendAndQuit == FALSE && tpMailItem->Mark != ICON_SEND))
+		&& ((op.DefEditApp == 1 && key >= 0) || (op.DefEditApp == 0 && key < 0))) {
 		ShowWindow(hEditWnd, SW_HIDE);
 		SetTimer(hEditWnd, ID_APP_TIMER, 1, NULL);
 		return EDIT_OUTSIDEEDIT;

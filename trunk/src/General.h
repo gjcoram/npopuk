@@ -154,6 +154,7 @@
 #define EDIT_NONEDIT			0					//of transmission mail compilation Return value
 #define EDIT_INSIDEEDIT			1
 #define EDIT_OUTSIDEEDIT		2
+#define EDIT_SEND				3
 
 #define SELECT_MEM_ERROR		-2					//of transmission mail compilation Return value
 #define SELECT_SOC_ERROR		-1
