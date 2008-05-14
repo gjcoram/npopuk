@@ -1930,6 +1930,9 @@ BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem)
 #endif
 		URLHeadToItem(tmp, TEXT("mailbox"), &tpMailItem->MailBox, TEXT('\0'));
 		URLHeadToItem(tmp, TEXT("attach"), &tpMailItem->Attach, ATTACH_SEP);
+		if (str_cmp_n_t(tmp, TEXT("s=1"), 3) == 0) {
+			tpMailItem->Mark = ICON_SEND;
+		}
 	}
 	mem_free(&tmp);
 	return TRUE;

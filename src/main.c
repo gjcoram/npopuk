@@ -1812,7 +1812,7 @@ static BOOL InitWindow(HWND hWnd)
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{8,	ID_MENUITEM_DOWNMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{9,	ID_MENUITEM_DELMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{10,	ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{10,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -1853,7 +1853,7 @@ static BOOL InitWindow(HWND hWnd)
 	SHCreateMenuBar(&mbi);
 
 	hMainToolBar = mbi.hwndMB;
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
 	    CommandBar_AddToolTips(hMainToolBar, 14, szTips);
 		CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 11, 16, 16);
 		CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
@@ -3703,9 +3703,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		FocusWnd = hWnd;
 		ShowWindow(hWnd, SW_SHOW);
 		if (CommandLine(hWnd, ((PCOPYDATASTRUCT)lParam)->lpData) == TRUE) {
+			int ret;
 			_SetForegroundWindow(hWnd);
-			if (Edit_MailToSet(hInst, hWnd, ((PCOPYDATASTRUCT)lParam)->lpData, -1) == EDIT_INSIDEEDIT) {
+			ret = Edit_MailToSet(hInst, hWnd, ((PCOPYDATASTRUCT)lParam)->lpData, -1);
+			if (ret == EDIT_INSIDEEDIT) {
 				ShowWindow(hWnd, SW_HIDE);
+			} else if (ret == EDIT_SEND) {
+				SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
 			}
 		}
 #else
@@ -3716,7 +3720,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 		}
 		if (CommandLine(hWnd, ((PCOPYDATASTRUCT)lParam)->lpData) == TRUE) {
-			Edit_MailToSet(hInst, hWnd, ((PCOPYDATASTRUCT)lParam)->lpData, -1);
+			int ret = Edit_MailToSet(hInst, hWnd, ((PCOPYDATASTRUCT)lParam)->lpData, -1);
+			if (ret == EDIT_SEND) {
+				SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
+			}
 		}
 #endif
 		break;
@@ -3736,8 +3743,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			FocusWnd = hWnd;
 			ShowWindow(hWnd, SW_SHOW);
 			_SetForegroundWindow(hWnd);
-			if (CommandLine(hWnd, buf) == TRUE && Edit_MailToSet(hInst, hWnd, buf, -1) == EDIT_INSIDEEDIT) {
-				ShowWindow(hWnd, SW_HIDE);
+			if (CommandLine(hWnd, buf) == TRUE) {
+				int ret = Edit_MailToSet(hInst, hWnd, buf, -1);
+				if (ret == EDIT_INSIDEEDIT) {
+					ShowWindow(hWnd, SW_HIDE);
+				} else if (ret == EDIT_SEND) {
+					SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
+				}
 			}
 		}
 		break;
