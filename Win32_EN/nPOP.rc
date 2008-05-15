@@ -252,7 +252,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM "Mark for &delete\tDel",       ID_MENUITEM_DELMARK
         MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShft+Ctrl+B", ID_MENUITEM_UNREADMAIL
@@ -396,7 +396,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM "Mark for &delete\tDel",       ID_MENUITEM_DELMARK
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
         MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
@@ -410,7 +410,7 @@ BEGIN
         BEGIN
             MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
         END
-        MENUITEM "Delete from &list\tDel",      ID_MENUITEM_DELETE
+        MENUITEM "Delete from &list\tCtrl+Del", ID_MENUITEM_DELETE
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
