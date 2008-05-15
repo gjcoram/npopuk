@@ -767,8 +767,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_NEXTUNREAD,
 		STR_CMDBAR_REMESSEGE,
 		STR_CMDBAR_ALLREMESSEGE,
-		STR_CMDBAR_NEXTFIND,
 		STR_CMDBAR_FORWARD,
+		STR_CMDBAR_NEXTFIND,
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
 		STR_CMDBAR_UNREADMARK,
@@ -797,14 +797,14 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
-		CommandBar_AddToolTips(hViewToolBar, 12, szTips);
+	if (GetSystemMetrics(SM_CXSCREEN) >= 320) {
+		CommandBar_AddToolTips(hViewToolBar, 13, szTips);
 		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
 		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	} else {
 		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
 		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 5, tbButton);
+		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 7, tbButton);
 	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -830,10 +830,10 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
 	if (op.osMajorVer >= 4) {
 		// CE.net 4.2 and higher (MobilePro 900c)
-		CommandBar_AddToolTips(hViewToolBar, 10, szTips+1);
+		CommandBar_AddToolTips(hViewToolBar, 12, szTips+1);
 	} else {
 		// HPC2000 (Jornada 690, 720)
-		CommandBar_AddToolTips(hViewToolBar, 10, szTips);
+		CommandBar_AddToolTips(hViewToolBar, 12, szTips);
 	}
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
@@ -3191,11 +3191,8 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				del_it = FALSE;
 			} else if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				del_it = TRUE;
-			} else if ((command_id == ID_MENUITEM_DELETE && op.DelIsMarkDel == TRUE)
-					|| (command_id == ID_KEY_CTRLDEL && op.DelIsMarkDel == FALSE)) {
-				del_it = FALSE;
 			} else {
-				del_it = TRUE;
+				del_it = FALSE;
 			}
 			if (del_it == FALSE) {
 				// mark for delete
