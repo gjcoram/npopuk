@@ -835,10 +835,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_SBOXMARK,
 		STR_CMDBAR_SENDBOX,
 		STR_CMDBAR_SENDINFO,
-		STR_CMDBAR_NEXTFIND
+		STR_CMDBAR_NEXTFIND,
+		NULL // extra for CE.net
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
+#else	// _WIN32_WCE_PPC
+	WORD idMenu;
 #endif	// _WIN32_WCE_PPC
 #else	// _WIN32_WCE
 	RECT ToolbarRect;
@@ -889,18 +892,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hEditToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-		if (op.osMajorVer >= 4) {
-		// CE.net 4.2 and higher (MobilePro 900c)
-		CommandBar_AddToolTips(hEditToolBar, 7, szTips+1);
-	} else {
-		// HPC2000 (Jornada 690, 720)
-		CommandBar_AddToolTips(hEditToolBar, 7, szTips);
-	}
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		CommandBar_InsertMenubar(hEditToolBar, hInst, IDR_MENU_EDIT_HPC, 0);
-	} else {
-		CommandBar_InsertMenubar(hEditToolBar, hInst, IDR_MENU_EDIT, 0);
-	}
+	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
+	// else HPC2000 (Jornada 690, 720)
+	CommandBar_AddToolTips(hEditToolBar, 12, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
+	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_EDIT_HPC : (WORD)IDR_MENU_EDIT;
+	CommandBar_InsertMenubar(hEditToolBar, hInst, idMenu, 0);
 	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 5, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hEditToolBar, 0, 0);
