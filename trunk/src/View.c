@@ -772,10 +772,14 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
 		STR_CMDBAR_UNREADMARK,
-		STR_CMDBAR_FLAGMARK
+		STR_CMDBAR_FLAGMARK,
+		NULL // extra for CE.net
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
+	int num_tips = 13, num_bmps = 11, num_btns = sizeof(tbButton) / sizeof(TBBUTTON);
+#else	// _WIN32_WCE_PPC
+	WORD idMenu;
 #endif	// _WIN32_WCE_PPC
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
@@ -797,15 +801,16 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	if (GetSystemMetrics(SM_CXSCREEN) >= 320) {
-		CommandBar_AddToolTips(hViewToolBar, 13, szTips);
-		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
-	} else {
-		CommandBar_AddToolTips(hViewToolBar, 8, szTips);
-		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 6, TB_ICONSIZE, TB_ICONSIZE);
-		CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 7, tbButton);
+	if (GetSystemMetrics(SM_CXSCREEN) < 300) {
+		// take off 5 buttons plus 2 separators
+		num_tips = 8;
+		num_bmps = 6;
+		num_btns -= 7;
 	}
+	CommandBar_AddToolTips(hViewToolBar, num_tips, szTips);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, num_bmps, 16, 16);
+	CommandBar_AddButtons(hViewToolBar, num_btns, tbButton);
+
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
 	hCSOBar = CSOBar_Create(hInst, hWnd, 1, BaseInfo);
@@ -828,19 +833,12 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	// H/PC & PsPC
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
-	if (op.osMajorVer >= 4) {
-		// CE.net 4.2 and higher (MobilePro 900c)
-		CommandBar_AddToolTips(hViewToolBar, 12, szTips+1);
-	} else {
-		// HPC2000 (Jornada 690, 720)
-		CommandBar_AddToolTips(hViewToolBar, 12, szTips);
-	}
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW_HPC, 0);
-	} else {
-		CommandBar_InsertMenubar(hViewToolBar, hInst, IDR_MENU_VIEW, 0);
-	}
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 10, TB_ICONSIZE, TB_ICONSIZE);
+	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
+	// else HPC2000 (Jornada 690, 720)
+	CommandBar_AddToolTips(hViewToolBar, 12, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
+	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_VIEW_HPC : (WORD)IDR_MENU_VIEW;
+	CommandBar_InsertMenubar(hViewToolBar, hInst, idMenu, 0);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 11, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hViewToolBar, 0, 0);
 #endif
@@ -2834,7 +2832,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 
 #if !defined(_WIN32_WCE) || (defined(_WIN32_WCE) && !defined(_WIN32_WCE_LAGENDA))
 #if defined(_WIN32_WCE_PPC)
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
 #endif
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
@@ -2855,6 +2853,9 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(enable, 0));
 	}
 #if defined(_WIN32_WCE_PPC)
+		if (GetSystemMetrics(SM_CXSCREEN) < 350) {
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(1, 0));
+		}
 	}
 #endif
 #endif
@@ -3525,7 +3526,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						SwitchCursor(TRUE);
 						SetItemCntStatusText(MainWnd, NULL, FALSE);
 					}
-					if (tpNextMail == NULL && op.ViewCloseNoNext == 1) {
+					if (mark_del == TRUE && tpNextMail == NULL && op.ViewCloseNoNext == 1) {
 						SendMessage(hWnd, WM_CLOSE, 0, 0);
 					}
 				}

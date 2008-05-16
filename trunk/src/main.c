@@ -1442,8 +1442,10 @@ int SetMailMenu(HWND hWnd)
 		(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & SendBoxFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
+#if !defined(_WIN32_WCE) || defined(_WIN32_WCE_PPC)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    (LPARAM)MAKELONG(op.EnableLAN, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, (LPARAM)MAKELONG(op.EnableLAN, 0));
+#endif
 #endif
 
 	EnableMenuItem(hMenu, ID_MENUITEM_FLAGMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
@@ -1827,14 +1829,17 @@ static BOOL InitWindow(HWND hWnd)
 		STR_CMDBAR_ALLEXEC,
 		STR_CMDBAR_STOP,
 		STR_CMDBAR_NEWMAIL,
-		STR_CMDBAR_RAS_CONNECT,
-		STR_CMDBAR_RAS_DISCONNECT,
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
-		STR_CMDBAR_FLAGMARK
+		STR_CMDBAR_FLAGMARK,
+		STR_CMDBAR_RAS_CONNECT,
+		STR_CMDBAR_RAS_DISCONNECT,
+		NULL // extra for CE.net
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
+	int xsize = GetSystemMetrics(SM_CXSCREEN);
+	int num_tips = 13, num_bmps = 11, num_btns = sizeof(tbButton) / sizeof(TBBUTTON);
 #endif	// _WIN32_WCE_PPC
 #else	// _WIN32_WCE
 	RECT ToolbarRect;
@@ -1854,15 +1859,21 @@ static BOOL InitWindow(HWND hWnd)
 	SHCreateMenuBar(&mbi);
 
 	hMainToolBar = mbi.hwndMB;
-	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
-	    CommandBar_AddToolTips(hMainToolBar, 14, szTips);
-		CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 11, 16, 16);
-		CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
-	} else {
-	    CommandBar_AddToolTips(hMainToolBar, 11, szTips);
-		CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 11, 16, 16);
-		CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 7, tbButton);
+
+	if (xsize < 200) {
+		// take off 5 buttons plus 2 separators
+		num_tips = 8;
+		num_bmps = 6;
+		num_btns -= 7;
+	} else if (xsize < 350) {
+		// take off 2 buttons plus a separator
+		num_tips = 11;
+		num_bmps = 9;
+		num_btns -= 3;
 	}
+	CommandBar_AddToolTips(hMainToolBar, num_tips, szTips);
+	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, num_bmps, 16, 16);
+	CommandBar_AddButtons(hMainToolBar, num_btns, tbButton);
 
 	Height = 0;
 	i = 0;
@@ -1900,25 +1911,21 @@ static BOOL InitWindow(HWND hWnd)
 #else
 	// H/PC & PsPC
 	hToolBar = CommandBar_Create(hInst, hWnd, IDC_CB);
-	if (op.osMajorVer >= 4) {
-		// CE.net 4.2 and higher (MobilePro 900c)
-		CommandBar_AddToolTips(hToolBar, 12, (szTips+1));
-	} else {
-		// HPC2000 (Jornada 690, 720)
-		CommandBar_AddToolTips(hToolBar, 12, szTips);
-	}
+	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
+	// else HPC2000 (Jornada 690, 720)
+	CommandBar_AddToolTips(hToolBar, 12, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, 11, TB_ICONSIZE, TB_ICONSIZE);
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW_HPC, 0);
 		MailMenuPos = 3;
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) -
-			((GetSystemMetrics(SM_CXSCREEN) >= 640) ? 0 : 6), tbButton);
+			((GetSystemMetrics(SM_CXSCREEN) >= 640) ? 0 : 7), tbButton);
 	} else {
 		PPCFlag = TRUE;
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW, 0);
 		MailMenuPos = 1;
-		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 8, tbButton);
+		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 12, tbButton);
 	}
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	Height = CommandBar_Height(hToolBar);
@@ -1929,7 +1936,7 @@ static BOOL InitWindow(HWND hWnd)
 #else
 	// Win32
 	MailMenuPos = 3;
-	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, 9, hInst, IDB_TOOLBAR,
+	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, 11, hInst, IDB_TOOLBAR,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hToolBar, GWL_STYLE,
 		GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
