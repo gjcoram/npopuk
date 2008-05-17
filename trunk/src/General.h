@@ -523,6 +523,7 @@ typedef struct _OPTION {
 #endif
 #ifdef _WIN32_WCE_PPC
 	int UseBuiltinSSL;
+	int ShowNavButtons;
 #endif
 
 	int GlobalFilterEnable;

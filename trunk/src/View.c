@@ -2855,18 +2855,31 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 	}
 #ifdef _WIN32_WCE_PPC
-	} else {
-		// xsize < 300: hide mark buttons
-		lp = (LPARAM)MAKELONG(1, 0);
+		lp = (LPARAM)MAKELONG(0, 0);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,    lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
+	} else {
+		// xsize < 300: hide some buttons
+		lp = (LPARAM)MAKELONG(1, 0);
+		if (op.ShowNavButtons) {
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,    lp);
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
+		} else {
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
+		}
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 	}
-	if (xsize < 350) {
-		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(1, 0));
-	}
+	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG((xsize < 350), 0));
 #endif
 #endif
 }

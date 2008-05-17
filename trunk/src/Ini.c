@@ -494,6 +494,7 @@ BOOL ini_read_setting(HWND hWnd)
 #endif
 #ifdef _WIN32_WCE_PPC
 	op.UseBuiltinSSL = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 1, app_path);
+	op.ShowNavButtons = profile_get_int(GENERAL, TEXT("ShowNavButtons"), 1, app_path);
 #endif
 
 	op.NewMailSound = profile_get_int(GENERAL, TEXT("NewMailSound"), 1, app_path);
@@ -1160,6 +1161,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 #endif
 #ifdef _WIN32_WCE_PPC
 	profile_write_int(GENERAL, TEXT("UseBuiltinSSL"), op.UseBuiltinSSL, app_path);
+	profile_write_int(GENERAL, TEXT("ShowNavButtons"), op.ShowNavButtons, app_path);
 #endif
 
 	profile_write_int(GENERAL, TEXT("NewMailSound"), op.NewMailSound, app_path);
