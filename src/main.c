@@ -1350,6 +1350,8 @@ int SetMailMenu(HWND hWnd)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
+	LPARAM lp1, lp2;
+	int xsize = GetSystemMetrics(SM_CXSCREEN);
 	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 	hToolBar = hMainToolBar;
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -1426,7 +1428,7 @@ int SetMailMenu(HWND hWnd)
 		(SocFlag) ? CSO_BUTTON_DISP : CSO_BUTTON_GRAYED);
 	CSOBar_SetButtonState(hCSOBar, TRUE, ID_MENUITEM_STOP, 1,
 		(!SocFlag) ? CSO_BUTTON_DISP : CSO_BUTTON_GRAYED);
-#else
+#else	//_WIN32_WCE_LAGENDA
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RECV,
 		(LPARAM)MAKELONG(SocFlag & SaveTypeFlag & SendBoxFlag, 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_ALLCHECK, (LPARAM)MAKELONG(SocFlag, 0));
@@ -1442,11 +1444,31 @@ int SetMailMenu(HWND hWnd)
 		(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & SendBoxFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
-#if !defined(_WIN32_WCE) || defined(_WIN32_WCE_PPC)
+#if !defined(_WIN32_WCE)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    (LPARAM)MAKELONG(op.EnableLAN, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, (LPARAM)MAKELONG(op.EnableLAN, 0));
 #endif
-#endif
+#ifdef _WIN32_WCE_PPC
+	if (xsize < 300) {
+		// hide MARK and RAS
+		lp1 = (LPARAM)MAKELONG(1,0);
+		lp2 = (LPARAM)MAKELONG(1,0);
+	} else if (xsize < 350) {
+		// show MARK, hide RAS
+		lp1 = (LPARAM)MAKELONG(0,0);
+		lp2 = (LPARAM)MAKELONG(1,0);
+	} else {
+		// show MARK, hide RAS if LAN enabled
+		lp1 = (LPARAM)MAKELONG(0,0);
+		lp2 = (LPARAM)MAKELONG(op.EnableLAN,0);
+	}
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK, lp1);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,  lp1);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, lp1);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lp2);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lp2);
+#endif	// _WIN32_WCE
+#endif	//_WIN32_WCE_LAGENDA
 
 	EnableMenuItem(hMenu, ID_MENUITEM_FLAGMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 	EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
@@ -1838,8 +1860,6 @@ static BOOL InitWindow(HWND hWnd)
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
-	int xsize = GetSystemMetrics(SM_CXSCREEN);
-	int num_tips = 13, num_bmps = 11, num_btns = sizeof(tbButton) / sizeof(TBBUTTON);
 #endif	// _WIN32_WCE_PPC
 #else	// _WIN32_WCE
 	RECT ToolbarRect;
@@ -1860,20 +1880,9 @@ static BOOL InitWindow(HWND hWnd)
 
 	hMainToolBar = mbi.hwndMB;
 
-	if (xsize < 200) {
-		// take off 5 buttons plus 2 separators
-		num_tips = 8;
-		num_bmps = 6;
-		num_btns -= 7;
-	} else if (xsize < 350) {
-		// take off 2 buttons plus a separator
-		num_tips = 11;
-		num_bmps = 9;
-		num_btns -= 3;
-	}
-	CommandBar_AddToolTips(hMainToolBar, num_tips, szTips);
-	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, num_bmps, 16, 16);
-	CommandBar_AddButtons(hMainToolBar, num_btns, tbButton);
+	CommandBar_AddToolTips(hMainToolBar, 13, szTips);
+	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 11, 16, 16);
+	CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 
 	Height = 0;
 	i = 0;
@@ -4892,11 +4901,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetDownloadMark(hWnd);
 			break;
 
+		case ID_KEY_DELETE:
 		case ID_KEY_CTRLDEL:
 		case ID_MENUITEM_DELETE:
-			if ( (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND
+			if ( command_id == ID_MENUITEM_DELETE || (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND
 				|| (command_id == ID_KEY_CTRLDEL && op.DelIsMarkDel == TRUE)
-				|| (command_id == ID_MENUITEM_DELETE && op.DelIsMarkDel == FALSE) ) {
+				|| (command_id == ID_KEY_DELETE && op.DelIsMarkDel == FALSE) ) {
 				ListDeleteItem(hWnd, TRUE);
 				break;
 			} // else fall through: Del is mark for delete

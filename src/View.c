@@ -777,7 +777,6 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
-	int num_tips = 13, num_bmps = 11, num_btns = sizeof(tbButton) / sizeof(TBBUTTON);
 #else	// _WIN32_WCE_PPC
 	WORD idMenu;
 #endif	// _WIN32_WCE_PPC
@@ -801,15 +800,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	if (GetSystemMetrics(SM_CXSCREEN) < 300) {
-		// take off 5 buttons plus 2 separators
-		num_tips = 8;
-		num_bmps = 6;
-		num_btns -= 7;
-	}
-	CommandBar_AddToolTips(hViewToolBar, num_tips, szTips);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, num_bmps, 16, 16);
-	CommandBar_AddButtons(hViewToolBar, num_btns, tbButton);
+	CommandBar_AddToolTips(hViewToolBar, 13, szTips);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 11, 16, 16);
+	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
@@ -2781,9 +2774,13 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	HWND htv;
 	int enable;
 	BOOL IsAttach = (tpMailItem == AttachMailItem) ? TRUE : FALSE;
+#ifndef _WIN32_WCE_LAGENDA
+	LPARAM lp;
+#endif
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
+	int xsize = GetSystemMetrics(SM_CXSCREEN);
 	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_FILE);
 	htv = hViewToolBar;
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -2830,32 +2827,45 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !enable);
 	}
 
-#if !defined(_WIN32_WCE) || (defined(_WIN32_WCE) && !defined(_WIN32_WCE_LAGENDA))
-#if defined(_WIN32_WCE_PPC)
-	if (GetSystemMetrics(SM_CXSCREEN) >= 300) {
+#ifndef _WIN32_WCE_LAGENDA
+#ifdef _WIN32_WCE_PPC
+	if (xsize >= 300) {
 #endif
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0));
+	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0);
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_FLAGMARK, lp);
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_FLAGMARK, lp);
 
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0));
+	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0);
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, lp);
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, lp);
 
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DELMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0));
+	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0);
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DELMARK, lp);
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DELMARK, lp);
 
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0));
+	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0);
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_UNREADMARK, lp);
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_UNREADMARK, lp);
 
-	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(enable, 0));
-	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(enable, 0));
+	lp = (LPARAM)MAKELONG(enable, 0);
+	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, lp);
+	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, lp);
 	if (IsAttach == TRUE) {
-		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, (LPARAM)MAKELONG(enable, 0));
-		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(enable, 0));
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, lp);
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 	}
-#if defined(_WIN32_WCE_PPC)
-		if (GetSystemMetrics(SM_CXSCREEN) < 350) {
-			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(1, 0));
-		}
+#ifdef _WIN32_WCE_PPC
+	} else {
+		// xsize < 300: hide mark buttons
+		lp = (LPARAM)MAKELONG(1, 0);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,    lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
+	}
+	if (xsize < 350) {
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG(1, 0));
 	}
 #endif
 #endif
@@ -3180,6 +3190,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
+		case ID_KEY_DELETE:
 		case ID_KEY_CTRLDEL:
 		case ID_MENUITEM_DELMARK:
 		case ID_MENUITEM_DELETE:
@@ -3190,7 +3201,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			if (command_id == ID_MENUITEM_DELMARK) {
 				del_it = FALSE;
-			} else if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+			} else if (command_id == ID_MENUITEM_DELETE || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				del_it = TRUE;
 			} else {
 				del_it = FALSE;
@@ -3215,9 +3226,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				}
 			} else {
 				// delete from list
-				if ((MailBox + vSelBox)->Type != MAILBOX_TYPE_SAVE) {
-					break;
-				}
 				if (op.ExpertMode != 1 || key >=0) {
 					TCHAR buf[BUF_SIZE];
 					wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));

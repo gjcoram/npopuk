@@ -357,6 +357,7 @@
 #define ID_MENUITEM_RESTORE             40054
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
+#define ID_KEY_DELETE                   40065
 #define ID_KEY_CTRLDEL                  40066
 #define ID_KEY_SHOWMENU                 40067
 #define ID_MENUITEM_ALLREMESSEGE        40068
