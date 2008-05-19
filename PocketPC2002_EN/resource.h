@@ -339,8 +339,9 @@
 #define ID_MENUITEM_SENDBOX             40033
 #define ID_MENUITEM_SBOXMARK            40034
 #define ID_MENUITEM_SENDINFO            40035
-#define ID_KEY_ALTUP                    40036
-#define ID_KEY_ALTDOWN                  40037
+#define ID_MENUITEM_SENDMARK            40036
+#define ID_KEY_ALTUP                    40037
+#define ID_KEY_ALTDOWN                  40038
 #define ID_KEY_UP                       40039
 #define ID_KEY_DOWN                     40040
 #define ID_KEY_LEFT                     40041
@@ -358,7 +359,6 @@
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_DELETE                   40065
-#define ID_KEY_CTRLDEL                  40066
 #define ID_KEY_SHOWMENU                 40067
 #define ID_MENUITEM_ALLREMESSEGE        40068
 #define ID_MENUITEM_MOVEUPMAILBOX       40069
