@@ -2828,32 +2828,38 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	}
 
 #ifndef _WIN32_WCE_LAGENDA
+	lp = (LPARAM)MAKELONG(enable, 0);
+	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, lp);
+	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, lp);
+
+	if (IsAttach == TRUE) {
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, lp);
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
+	}
+
 #ifdef _WIN32_WCE_PPC
-	if (xsize >= 300) {
+	if (xsize >= 300 || op.ShowNavButtons == 0) {
 #endif
 	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_FLAG) ? 1 : 0, 0);
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_FLAGMARK, lp);
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_FLAGMARK, lp);
 
-	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0);
-	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, lp);
-	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, lp);
-
 	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DEL) ? 1 : 0, 0);
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DELMARK, lp);
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DELMARK, lp);
+
+#ifdef _WIN32_WCE_PPC
+	}
+	if (xsize >= 300) {
+#endif
+	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_DOWN) ? 1 : 0, 0);
+	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_DOWNMARK, lp);
+	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_DOWNMARK, lp);
 
 	lp = (LPARAM) MAKELONG((tpMailItem->Mark == ICON_READ) ? 1 : 0, 0);
 	SendMessage(htv, TB_CHECKBUTTON, ID_MENUITEM_UNREADMARK, lp);
 	SendMessage(htv, TB_PRESSBUTTON, ID_MENUITEM_UNREADMARK, lp);
 
-	lp = (LPARAM)MAKELONG(enable, 0);
-	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK, lp);
-	SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, lp);
-	if (IsAttach == TRUE) {
-		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, lp);
-		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
-	}
 #ifdef _WIN32_WCE_PPC
 		lp = (LPARAM)MAKELONG(0, 0);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
@@ -2862,7 +2868,6 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,    lp);
-		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
 	} else {
 		// xsize < 300: hide some buttons
@@ -2877,7 +2882,6 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
 		}
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
-		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 	}
 	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG((xsize < 350), 0));
 #endif
@@ -3204,7 +3208,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_KEY_DELETE:
-		case ID_KEY_CTRLDEL:
 		case ID_MENUITEM_DELMARK:
 		case ID_MENUITEM_DELETE:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
