@@ -63,6 +63,7 @@ static WNDPROC EditWindowProcedure;
 HWND hViewWnd = NULL;
 #ifdef _WIN32_WCE_PPC
 HWND hViewToolBar;
+int LastXSize_V = 0;
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -2749,6 +2750,9 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 	if (mark == ICON_MAIL && (tpMailItem->MailStatus == ICON_READ || tpMailItem->MailStatus == ICON_MAIL)) {
 		tpMailItem->MailStatus = (tpMailItem->MailStatus == ICON_READ) ? ICON_MAIL : ICON_READ;
 		tpMailItem->Mark = tpMailItem->MailStatus;
+		if (tpMailItem->MailStatus == ICON_MAIL) {
+			tpMailItem->ReFwd = ICON_NON;
+		}
 	} else if (tpMailItem->Mark == mark) {
 		tpMailItem->Mark = tpMailItem->MailStatus;
 	} else if (tpMailItem->MailStatus == ICON_NON) {
@@ -2764,6 +2768,7 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 			cut = 0;
 		}
 		ListView_SetItemState(hListView, i, cut, LVIS_CUT);
+		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
@@ -3007,6 +3012,10 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SipFlag = sai.fSipUp;
 			SetWindowSize(hWnd, 0, 0);
 		}
+		if (LastXSize_V != GetSystemMetrics(SM_CXSCREEN)) {
+			SendMessage(hWnd, WM_CHANGE_MARK, 0, 0);
+			LastXSize_V = GetSystemMetrics(SM_CXSCREEN);
+		}
 		break;
 #elif defined _WIN32_WCE_LAGENDA
 	case WM_SETTINGCHANGE:
@@ -3217,7 +3226,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_MAIL);
-			tpMailItem->ReFwd = ICON_NON;
 			GetMarkStatus(hWnd, tpMailItem);
 			break;
 
