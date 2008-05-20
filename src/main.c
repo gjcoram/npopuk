@@ -92,6 +92,7 @@ static HMENU hPOPUP;						// タスクトレイアイコン用のポップアップメニュー
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
+int LastXSize = 0;
 #endif
 #ifdef _WIN32_WCE_LAGENDA
 static HWND hCSOBar;						// CSOバー (l'agenda)
@@ -3827,6 +3828,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 			ListView_EnsureVisible(GetDlgItem(hWnd, IDC_LISTVIEW),
 				ListView_GetNextItem(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVNI_FOCUSED), TRUE);
+		}
+		if (LastXSize != GetSystemMetrics(SM_CXSCREEN)) {
+			SetMailMenu(hWnd);
+			LastXSize = GetSystemMetrics(SM_CXSCREEN);
 		}
 		break;
 #elif defined _WIN32_WCE_LAGENDA
