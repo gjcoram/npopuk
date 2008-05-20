@@ -1343,15 +1343,15 @@ int SetMailMenu(HWND hWnd)
 {
 	HMENU hMenu;
 	HWND hToolBar, hListView;
-	int SelFlag, SocFlag, FlagFlag;
+	int SelFlag, SocFlag, Markable;
 	int RecvBoxFlag, SaveTypeFlag, SendBoxFlag;
 	int MoveBoxFlag;
 	int i, retval = -1;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	LPARAM lp1, lp2;
-	int xsize = GetSystemMetrics(SM_CXSCREEN);
+	LPARAM lpras;
+	int xflag, xsize = GetSystemMetrics(SM_CXSCREEN);
 	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 	hToolBar = hMainToolBar;
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -1389,13 +1389,13 @@ int SetMailMenu(HWND hWnd)
 	SendBoxFlag = (SelBox == MAILBOX_SEND) ? 0 : 1;
 	MoveBoxFlag = (MailBoxCnt <= 3) ? 0 : 1;
 
-	FlagFlag = SendBoxFlag;
+	Markable = SendBoxFlag;
 	i = -1;
 	if (SelBox == MAILBOX_SEND) {
 		while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 			if (tpMailItem != NULL && tpMailItem->Mark != ICON_SENTMAIL) {
-				FlagFlag = 1;
+				Markable = 1;
 				break;
 			}
 		}
@@ -1448,46 +1448,58 @@ int SetMailMenu(HWND hWnd)
 		(LPARAM)MAKELONG(SocFlag & SaveTypeFlag, 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_ALLEXEC, (LPARAM)MAKELONG(SocFlag, 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_STOP, (LPARAM)MAKELONG(!SocFlag, 0));
+
+	if (SelBox == MAILBOX_SEND) {
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SENDMARK,
+			(LPARAM)MAKELONG((SelFlag & Markable & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+	} else {
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK,
+			(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+	}
+
+	if (SendBoxFlag & SaveTypeFlag) {
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK,
+			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+	} else {
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELETE,
+			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+	}
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK,
-		(LPARAM)MAKELONG((FlagFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
-	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SENDMARK,
-		(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
-	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DOWNMARK,
-		(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
-	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK,
-		(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & SendBoxFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
-	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELETE,
-		(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+		(LPARAM)MAKELONG((Markable & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
+
+#ifdef _WIN32_WCE_PPC
+	xflag = (xsize < 300) ? 1 : 0;
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,
+		(LPARAM)MAKELONG(!SendBoxFlag || xflag, 0));
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_SENDMARK,
+		(LPARAM)MAKELONG(SendBoxFlag || xflag, 0));
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,
+		(LPARAM)MAKELONG(!(SendBoxFlag && SaveTypeFlag) || xflag, 0));
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELETE,
+		(LPARAM)MAKELONG((SendBoxFlag && SaveTypeFlag) || xflag, 0));
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, xflag);
+	if (xsize < 350) {
+		lpras = (LPARAM)MAKELONG(1,0);
+	} else {
+		lpras = (LPARAM)MAKELONG(op.EnableLAN,0);
+	}
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lpras);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lpras);
+#else	// _WIN32_WCE_PPC
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(!SendBoxFlag, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_SENDMARK, (LPARAM)MAKELONG(SendBoxFlag, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(!(SendBoxFlag && SaveTypeFlag), 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELETE, (LPARAM)MAKELONG(SendBoxFlag && SaveTypeFlag, 0));
-#if !defined(_WIN32_WCE) || defined(_WIN32_WCE_PPC)
+#endif	// _WIN32_WCE_PPC
+
+#if !defined(_WIN32_WCE)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    (LPARAM)MAKELONG(op.EnableLAN, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, (LPARAM)MAKELONG(op.EnableLAN, 0));
 #endif
-#ifdef _WIN32_WCE_PPC
-	if (xsize < 300) {
-		// hide MARK and RAS
-		lp1 = (LPARAM)MAKELONG(1,0);
-		lp2 = (LPARAM)MAKELONG(1,0);
-	} else if (xsize < 350) {
-		// show MARK, hide RAS
-		lp1 = (LPARAM)MAKELONG(0,0);
-		lp2 = (LPARAM)MAKELONG(1,0);
-	} else {
-		// show MARK, hide RAS if LAN enabled
-		lp1 = (LPARAM)MAKELONG(0,0);
-		lp2 = (LPARAM)MAKELONG(op.EnableLAN,0);
-	}
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK, lp1);
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELMARK,  lp1);
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, lp1);
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lp2);
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lp2);
-#endif	// _WIN32_WCE
+
 #endif	//_WIN32_WCE_LAGENDA
 
 	EnableMenuItem(hMenu, ID_MENUITEM_FLAGMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
@@ -1876,10 +1888,13 @@ static BOOL InitWindow(HWND hWnd)
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_SENDMARK,
 		STR_CMDBAR_DELMARK,
+		STR_CMDBAR_DELETE,
 		STR_CMDBAR_FLAGMARK,
 		STR_CMDBAR_RAS_CONNECT,
-		STR_CMDBAR_RAS_DISCONNECT,
-		NULL // extra for CE.net
+		STR_CMDBAR_RAS_DISCONNECT
+#ifndef _WIN32_WCE_PPC
+		,NULL // extra for CE.net
+#endif
 	};
 #ifdef _WIN32_WCE_PPC
 	SHMENUBARINFO mbi;
@@ -3060,7 +3075,6 @@ static void SetDownloadMark(HWND hWnd)
 			break;
 		}
 	}
-
 	i = -1;
 	while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
