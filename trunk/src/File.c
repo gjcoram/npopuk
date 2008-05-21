@@ -1348,12 +1348,14 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	char *tmp, *p, *s;
+#if 0
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
+#endif
 	int write_mbox = 0, encrypt = 0;
 	int len = 0, hlen;
-	long fsize;
+	long fsize = 10;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 	hlen = tstrlen(ENCRYPT_PREAMBLE);
@@ -1402,6 +1404,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 		rot13(s, p);
 	}
 
+#if 0
 	///////////// MRP /////////////////////
 #ifdef UNICODE
 	wcscpy(pathBackup, path);
@@ -1412,6 +1415,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 #endif
 	CopyFile(path, pathBackup, FALSE); // Create the backup file.
 	///////////// --- /////////////////////
+#endif
 
 	//Retention
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1430,9 +1434,11 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	CloseHandle(hFile);
 	tpMailBox->DiskSize += len;
 
+#if 0
 	///////////// MRP /////////////////////
 	DeleteFile(pathBackup);
 	///////////// --- /////////////////////
+#endif
 	return TRUE;
 }
 
