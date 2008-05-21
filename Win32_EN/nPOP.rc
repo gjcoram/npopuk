@@ -252,8 +252,8 @@ BEGIN
         MENUITEM "Address &information...\tCtrl+I", ID_MENUITEM_PROP
         MENUITEM SEPARATOR
         MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
-        MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShft+Ctrl+B", ID_MENUITEM_UNREADMAIL
@@ -396,8 +396,8 @@ BEGIN
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM SEPARATOR
         MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
-        MENUITEM "&Mark for download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark for &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
         MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
@@ -1485,8 +1485,8 @@ BEGIN
     ID_MENUITEM_RAS_CONNECT "Dial-up Connect"
     ID_MENUITEM_RAS_DISCONNECT "Dial-up Disconnect"
     ID_MENUITEM_FLAGMARK    "Flag for follow-up"
-    ID_MENUITEM_DOWNMARK    "Mark for download"
-    ID_MENUITEM_DELMARK     "Mark for delete"
+    ID_MENUITEM_DOWNMARK    "Mark to download"
+    ID_MENUITEM_DELMARK     "Mark to delete"
     ID_MENUITEM_DELETE      "Delete from list"
     ID_MENUITEM_UNREADMARK  "Mark as read"
     ID_MENUITEM_NEXTMAIL    "Next mail"
