@@ -77,6 +77,7 @@
 #define STR_ERR_CANTDELETE			TEXT("Error deleting old backup file %s; please delete manually.")
 #define STR_ERR_LOADMAILBOX			TEXT("Error loading %s")
 #define STR_ERR_FILEEXIST			TEXT("Can't find file %s")
+#define STR_ERR_FILE_TOO_LARGE		TEXT("File %s too large")
 #define STR_ERR_FILENAME			TEXT("Invalid character in filename")
 #define STR_ERR_FILECONFLICT		TEXT("\"%s\" conflicts with filename for %s")
 #define STR_ERR_NOFILENAME			TEXT("No file name specified")

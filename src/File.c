@@ -465,6 +465,9 @@ long file_get_size(TCHAR *FileName)
 	FindClose(hFindFile);
 
 	if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+		if (FindData.nFileSizeHigh != 0) {
+			return -2;
+		}
 		// ディレクトリではない場合はサイズを返す
 		return (long)FindData.nFileSizeLow;
 	}
@@ -562,7 +565,11 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 
 	//Acquisition size of file
 	FileSize = file_get_size(path);
-	if (FileSize <= 0) {
+	if (FileSize == -2) {
+		TCHAR msg[MSG_SIZE];
+		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, path);
+		ErrorMessage(hWnd, msg);
+	} else if (FileSize <= 0) {
 		return TRUE;
 	}
 
@@ -600,7 +607,7 @@ BOOL file_savebox_convert(TCHAR *NewFileName)
 
 	str_join_t(path, DataDir, SAVEBOX_FILE, (TCHAR *)-1);
 
-	if(file_get_size(path) == -1) {
+	if(file_get_size(path) < 0) {
 		ret = FALSE;
 	} else {
 		str_join_t(newpath, DataDir, NewFileName, (TCHAR *)-1);
@@ -697,7 +704,16 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	///////////// --- /////////////////////
 
 	tpMailBox->DiskSize = FileSize = file_get_size(path);
-	if (FileSize <= 0) {
+	if (FileSize == -2) {
+		tpMailBox->Loaded = FALSE;
+		if (op.SocLog > 1) {
+			int pos = lstrlen(path);
+			if (pos > 236) pos = 236; // 242 = BUF_SIZE - strlen(" too large!\r\n") - 1
+			wsprintf(path+pos, TEXT(" too large!\r\n"));
+			log_save(path);
+		}
+		return FALSE;
+	} else if (FileSize <= 0) {
 		tpMailBox->Loaded = TRUE;
 		if (op.SocLog > 1) {
 			int pos = lstrlen(path);
@@ -1348,22 +1364,21 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	char *tmp, *p, *s;
-#if 0
-	///////////// MRP /////////////////////
-	TCHAR pathBackup[BUF_SIZE];
-	///////////// --- /////////////////////
-#endif
 	int write_mbox = 0, encrypt = 0;
 	int len = 0, hlen;
-	long fsize = 10;
+	BOOL add_sep = FALSE;
+	long fsize;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+	fsize = file_get_size(path);
 	hlen = tstrlen(ENCRYPT_PREAMBLE);
 
 	// check existing file to see what format (npop/mbox) to write
 	if (tpMailBox->WasMbox == -1) {
-		fsize = file_get_size(path);
-		if (fsize <= 6) {
+		if (fsize == -2) {
+			// too large
+			return FALSE;
+		} else if (fsize <= 6) {
 			// no file -- use global option
 			tpMailBox->WasMbox = (op.WriteMbox == 1) ? TRUE : FALSE;
 			if (op.ScrambleMailboxes && op.WriteMbox == 0) {
@@ -1389,6 +1404,30 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	} else {
 		len = 0;
 	}
+	if (fsize > 0) {
+		//Check for proper termination
+		hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile != NULL && hFile != (HANDLE)-1) {
+			char end[6];
+			int numread;
+			SetFilePointer(hFile, -5, NULL, FILE_END);
+			ReadFile(hFile, end, 5, &numread, NULL);
+			if (numread > 0) {
+				if (write_mbox) {
+					if (str_cmp_n(end+3, "\r\n", 2) != 0) {
+						add_sep = TRUE;
+						len += 2;
+					}
+				} else {
+					if (str_cmp_n(end, "\r\n.\r\n", 5) != 0) {
+						add_sep = TRUE;
+						len += 5;
+					}
+				}
+			}
+			CloseHandle(hFile);
+		}
+	}
 
 	len += item_to_string_size(tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	p = s = tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
@@ -1398,24 +1437,20 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	*p = '\0';
 	if (encrypt == 2) {
 		p = s = str_cpy(p, ENCRYPT_PREAMBLE);
+	} else if (add_sep) {
+		if (write_mbox == 0) {
+			*(p++) = '\r';
+			*(p++) = '\n';
+			*(p++) = '.';
+		}
+		*(p++) = '\r';
+		*(p++) = '\n';
+		*p = '\0';
 	}
 	item_to_string(p, tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
 	if (encrypt) {
 		rot13(s, p);
 	}
-
-#if 0
-	///////////// MRP /////////////////////
-#ifdef UNICODE
-	wcscpy(pathBackup, path);
-	wcscat(pathBackup, TEXT(".bak"));
-#else
-	strcpy_s(pathBackup, BUF_SIZE-5, path);
-	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
-#endif
-	CopyFile(path, pathBackup, FALSE); // Create the backup file.
-	///////////// --- /////////////////////
-#endif
 
 	//Retention
 	hFile = CreateFile(path, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1423,9 +1458,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 		mem_free(&tmp);
 		return FALSE;
 	}
-	if (fsize > 6) {
-		SetFilePointer(hFile, 0, NULL, FILE_END);
-	}
+	SetFilePointer(hFile, 0, NULL, FILE_END);
 	if (file_write(hFile, tmp, len) == FALSE) {
 		mem_free(&tmp);
 		return FALSE;
@@ -1434,11 +1467,6 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	CloseHandle(hFile);
 	tpMailBox->DiskSize += len;
 
-#if 0
-	///////////// MRP /////////////////////
-	DeleteFile(pathBackup);
-	///////////// --- /////////////////////
-#endif
 	return TRUE;
 }
 

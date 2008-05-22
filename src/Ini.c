@@ -53,21 +53,33 @@ static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
 BOOL ini_start_auth_check(void)
 {
 	TCHAR app_path[BUF_SIZE], app_path_old[BUF_SIZE];
-	TCHAR ret[BUF_SIZE];
+	TCHAR tmp[MSG_SIZE];
 	TCHAR pass[BUF_SIZE];
 	BOOL retval = FALSE;
 
 	ConvertFromNPOP = FALSE;
 	if (IniFile != NULL) {
+		long fsize;
 		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
-		if (file_get_size(app_path) == -1) {
-			wsprintf(ret, STR_ERR_INIFILE, IniFile);
-			ErrorMessage(NULL, ret);
+		fsize = file_get_size(app_path);
+		if (fsize == -2) {
+			wsprintf(tmp, STR_ERR_FILE_TOO_LARGE, app_path);
+			ErrorMessage(NULL, tmp);
+			return FALSE;
+		} else if (fsize == -1) {
+			wsprintf(tmp, STR_ERR_INIFILE, app_path);
+			ErrorMessage(NULL, tmp);
 			return FALSE;
 		}
 	} else {
+		long fsize;
 		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-		if (file_get_size(app_path) == -1) {
+		fsize = file_get_size(app_path);
+		if (fsize == -2) {
+			wsprintf(tmp, STR_ERR_FILE_TOO_LARGE, app_path);
+			ErrorMessage(NULL, tmp);
+			return FALSE;
+		} else if (fsize == -1) {
 			DWORD DirInfo;
 			DirInfo = GetFileAttributes(DefaultDataDir);
 			if (DirInfo & FILE_ATTRIBUTE_READONLY) {
@@ -88,8 +100,8 @@ BOOL ini_start_auth_check(void)
 
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0, app_path);
 	if (op.StartPass == 1) {
-		profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1, app_path);
-		EncodePassword(TEXT("_pw_"), ret, pass, BUF_SIZE - 1, TRUE);
+		profile_get_string(GENERAL, TEXT("pw"), TEXT(""), tmp, BUF_SIZE - 1, app_path);
+		EncodePassword(TEXT("_pw_"), tmp, pass, BUF_SIZE - 1, TRUE);
 		if (*pass == TEXT('\0')) {
 			profile_free();
 			return TRUE;
@@ -199,9 +211,17 @@ BOOL ini_read_setting(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 
 	if (IniFile != NULL) {
+		TCHAR msg[MSG_SIZE];
+		long fsize;
 		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
-		if (file_get_size(app_path) == -1) {
-			ErrorMessage(NULL, STR_ERR_INIFILE);
+		fsize = file_get_size(app_path);
+		if (fsize == -2) {
+			wsprintf(msg, STR_ERR_FILE_TOO_LARGE, app_path);
+			ErrorMessage(hWnd, msg);
+			return FALSE;
+		} else if (fsize == -1) {
+			wsprintf(msg, STR_ERR_INIFILE, app_path);
+			ErrorMessage(NULL, msg);
 			return FALSE;
 		}
 	} else {

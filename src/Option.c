@@ -1744,10 +1744,11 @@ static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 {
 	TCHAR *Filename;
 	TCHAR *p, *r, *tmp;
-	TCHAR msg[BUF_SIZE];
+	TCHAR msg[MSG_SIZE];
 	MAILBOX *tpMailBox;
 	BOOL breakout = FALSE;
 	BOOL ret = TRUE;
+	long fsize;
 	int i;
 
 	switch (uMsg) {
@@ -1806,7 +1807,13 @@ static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 			Filename = NULL;
 			AllocGetText(GetDlgItem(hDlg, IDC_IMPORT_FILE), &Filename);
-			if (file_get_size(Filename) == -1) {
+			fsize = file_get_size(Filename);
+			if (fsize == -2) {
+				wsprintf(msg, STR_ERR_FILE_TOO_LARGE, Filename);
+				mem_free(&Filename);
+				ErrorMessage(hDlg, msg);
+				break;
+			} else if (fsize == -1) {
 				wsprintf(msg, STR_ERR_FILEEXIST, Filename);
 				mem_free(&Filename);
 				ErrorMessage(hDlg, msg);
@@ -3018,7 +3025,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							MessageBox(hDlg, STR_ERR_POOM, WINDOW_TITLE, MB_OK);
 							read += 100;
 						}
-						if (read == -1) {
+						if (read < 0) {
 							addressbook_free(tpTmpAddressBook);
 						} else {
 							addressbook_free(AddressBook);
