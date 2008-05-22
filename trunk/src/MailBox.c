@@ -175,7 +175,7 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 		i = file_get_size(path);
 		if (i == 0) {
 			file_delete(hWnd, name1);
-		} else if (i > 0) {
+		} else if (i > 0 || i == -2) {
 			wsprintf(name2, TEXT("MailBox%d.old"), DelIndex - MAILBOX_USER);
 			file_delete(hWnd, name2);
 			file_rename(hWnd, name1, name2);
@@ -246,7 +246,7 @@ BOOL mailbox_read(void)
 	}
 
 	//ƒAƒhƒŒƒX’ 
-	if(file_read_address_book(ADDRESS_FILE, AddressBook) == -1){
+	if(file_read_address_book(ADDRESS_FILE, AddressBook) < 0){
 		return FALSE;
 	}
 	return TRUE;

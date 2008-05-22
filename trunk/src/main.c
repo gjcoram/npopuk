@@ -575,7 +575,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		Found = MergePath(fullname, p);
 		if (!Found) {
 			// Error: can't make INI file name
-			TCHAR msg[BUF_SIZE+50];
+			TCHAR msg[MSG_SIZE];
 			wsprintf(msg,STR_ERR_INIFILE,p);
 			ErrorMessage(NULL, msg);
 			mem_free(&AppDir);
@@ -614,7 +614,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		buf = file_read(fname, len);
 		if (buf == NULL) {
 			// Error: can't read file
-			TCHAR msg[BUF_SIZE+50];
+			TCHAR msg[MSG_SIZE];
 			wsprintf(msg,STR_ERR_INIFILE,fname);
 			ErrorMessage(NULL, msg);
 			mem_free(&AppDir);
@@ -657,8 +657,8 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 				Found = MergePath(fullname, p);
 				if (!Found) {
 					// Error: can't make INI file name
-					TCHAR msg[BUF_SIZE+50];
-					wsprintf(msg,STR_ERR_INIFILE,p);
+					TCHAR msg[MSG_SIZE];
+					wsprintf(msg, STR_ERR_INIFILE, p);
 					ErrorMessage(NULL, msg);
 					mem_free(&p);
 					mem_free(&AppDir);
@@ -687,7 +687,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		IniFile = parms[OP_Y].value;
 		parms[OP_Y].value = NULL;
 		if (file_get_size(IniFile) == -1) {
-			TCHAR msg[BUF_SIZE+50];
+			TCHAR msg[MSG_SIZE];
 			HANDLE hFile;
 			wsprintf(msg, STR_Q_CREATE_INIFILE, IniFile);
 			if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
@@ -1962,7 +1962,7 @@ static BOOL InitWindow(HWND hWnd)
 	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
 	// else HPC2000 (Jornada 690, 720)
 	CommandBar_AddToolTips(hToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, 12, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, 13, TB_ICONSIZE, TB_ICONSIZE);
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW_HPC, 0);

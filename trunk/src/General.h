@@ -99,6 +99,7 @@
 #define ID_RASWAIT_TIMER		10
 
 #define BUF_SIZE				256					//of process Buffer size
+#define MSG_SIZE				300					//BUF_SIZE + some text
 #define MULTI_BUF_SIZE			1024
 #define MAXSIZE					32768
 #define EDITMAXSIZE				60000

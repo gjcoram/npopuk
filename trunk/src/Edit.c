@@ -1583,6 +1583,9 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 	}
 
 	len = file_get_size(path);
+	if (len < 0) {
+		return FALSE;
+	}
 	fbuf = file_read(path, len);
 #ifdef UNICODE
 	//UNICODE
