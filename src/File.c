@@ -465,7 +465,7 @@ long file_get_size(TCHAR *FileName)
 	FindClose(hFindFile);
 
 	if ((FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-		if (FindData.nFileSizeHigh != 0) {
+		if (FindData.nFileSizeHigh != 0 || (FindData.nFileSizeLow >> 31) != 0 ) {
 			return -2;
 		}
 		// ディレクトリではない場合はサイズを返す
@@ -548,6 +548,7 @@ char *file_read(TCHAR *path, long FileSize)
 BOOL file_read_select(HWND hWnd, TCHAR **buf)
 {
 	TCHAR path[BUF_SIZE];
+	TCHAR msg[MSG_SIZE];
 	char *cBuf;
 	long FileSize;
 
@@ -565,12 +566,15 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 
 	//Acquisition size of file
 	FileSize = file_get_size(path);
-	if (FileSize == -2) {
-		TCHAR msg[MSG_SIZE];
-		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, path);
-		ErrorMessage(hWnd, msg);
-	} else if (FileSize <= 0) {
-		return TRUE;
+	if (FileSize <= 0) {
+		if (FileSize == -2) {
+			wsprintf(msg, STR_ERR_FILE_TOO_LARGE, path);
+			ErrorMessage(hWnd, msg);
+		} else if (FileSize == -1) {
+			wsprintf(msg, STR_ERR_FILEEXIST, path);
+			ErrorMessage(hWnd, msg);
+		} // else if (FileSize == 0), empty file, don't need to read it
+		return TRUE; // so no error message will be shown by calling function
 	}
 
 	//Conversion to
@@ -626,6 +630,7 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 	TCHAR path[BUF_SIZE];
 	TCHAR pathBackup[BUF_SIZE];
 	TCHAR msg[BUF_SIZE];
+	long fsize;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -651,7 +656,8 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 		// what if one uses 8.3 filenames?
 		return TRUE;
 	}
-	if (file_get_size(path) != -1) {
+	fsize = file_get_size(path);
+	if (fsize != -1 && fsize != 0) {
 		wsprintf(msg, STR_Q_DELSBOXFILE, FileName, TEXT(""));
 		if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 			return FALSE;
@@ -697,6 +703,12 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	FileSize = file_get_size(pathBackup);
 	if (FileSize == 0) {
 		DeleteFile(pathBackup); // GJC
+	} else if (FileSize == -2) {
+		TCHAR msg[MSG_SIZE];
+		tpMailBox->Loaded = FALSE;
+		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, pathBackup);
+		ErrorMessage(NULL, msg);
+		return FALSE;
 	} else if (FileSize != -1) { // Backup File exists
 		DeleteFile(path);  // delete the current file
 		MoveFile(pathBackup, path); // replace the the current file with the backup file.
@@ -1328,6 +1340,11 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 #endif	// DIV_SAVE
 	CloseHandle(hFile);
 	tpMailBox->DiskSize = file_get_size(path);
+	if (tpMailBox->DiskSize == -2) {
+		TCHAR msg[MSG_SIZE];
+		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, path);
+		ErrorMessage(NULL, msg);
+	}
 
 	///////////// MRP /////////////////////
 	DeleteFile(pathBackup);
@@ -1378,7 +1395,7 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 		if (fsize == -2) {
 			// too large
 			return FALSE;
-		} else if (fsize <= 6) {
+		} else if (fsize == 0) {
 			// no file -- use global option
 			tpMailBox->WasMbox = (op.WriteMbox == 1) ? TRUE : FALSE;
 			if (op.ScrambleMailboxes && op.WriteMbox == 0) {
@@ -1386,7 +1403,11 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 			}
 		} else {
 			len = (fsize < hlen) ? fsize : hlen;
-			tmp = file_read(path, len);
+			if (len > 5) {
+				tmp = file_read(path, len);
+			} else {
+				tmp = NULL;
+			}
 			if (tmp != NULL && str_cmp_n(tmp, "From ", 5) == 0) {
 				tpMailBox->WasMbox = TRUE;
 			} else {
@@ -1404,11 +1425,11 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 	} else {
 		len = 0;
 	}
-	if (fsize > 0) {
+	if (fsize > 6) {
 		//Check for proper termination
 		hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile != NULL && hFile != (HANDLE)-1) {
-			char end[6];
+			char end[6] = {'\0','\0','\0','\0','\0','\0'};
 			int numread;
 			SetFilePointer(hFile, -5, NULL, FILE_END);
 			ReadFile(hFile, end, 5, &numread, NULL);
@@ -1427,6 +1448,9 @@ BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailIt
 			}
 			CloseHandle(hFile);
 		}
+	} else if (fsize > 0) {
+		add_sep = TRUE;
+		len += (write_mbox) ? 2 : 5;
 	}
 
 	len += item_to_string_size(tpMailItem, write_mbox, (SaveFlag == 1) ? FALSE : TRUE, TRUE);
@@ -1589,6 +1613,11 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 	FileSize = file_get_size(pathBackup);
 	if (FileSize == 0) {
 		DeleteFile(pathBackup); // GJC
+	} else if (FileSize == -2) {
+		TCHAR msg[MSG_SIZE];
+		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, pathBackup);
+		ErrorMessage(NULL, msg);
+		return -2;
 	} else if (FileSize != -1) { // Backup File exists
 		DeleteFile(path);  // delete the current file
 		MoveFile(pathBackup, path); // replace the the current file with the backup file.

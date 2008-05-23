@@ -1569,7 +1569,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 	TCHAR path[BUF_SIZE];
 	TCHAR *tmp, *p;
 	char *fbuf;
-	int len;
+	long len;
 
 #ifdef _WIN32_WCE
 	str_join_t(path, DataDir, EDIT_FILE, TEXT("."), op.EditFileSuffix, (TCHAR *)-1);

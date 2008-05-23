@@ -1466,7 +1466,7 @@ int SetMailMenu(HWND hWnd)
 			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 	}
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK,
-		(LPARAM)MAKELONG((Markable & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+		(LPARAM)MAKELONG((Markable & SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
