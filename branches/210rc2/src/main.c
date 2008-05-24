@@ -1395,7 +1395,7 @@ int SetMailMenu(HWND hWnd)
 	if (SelBox == MAILBOX_SEND) {
 		while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
-			if (tpMailItem != NULL && tpMailItem->Mark != ICON_SENTMAIL) {
+			if (tpMailItem != NULL && tpMailItem->MailStatus != ICON_SENTMAIL) {
 				Markable = 1;
 				break;
 			}
@@ -1466,7 +1466,7 @@ int SetMailMenu(HWND hWnd)
 			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 	}
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK,
-		(LPARAM)MAKELONG((Markable & SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+		(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
@@ -2756,7 +2756,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 	if (SelBox == MAILBOX_SEND) {
 		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL) == EDIT_INSIDEEDIT) {
 			// GJC: don't edit sent mail
-			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
+			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 #ifdef _WIN32_WCE
 			ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -3071,7 +3071,7 @@ static void SetDownloadMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Mark != SendOrDownIcon && (SelBox != MAILBOX_SEND || tpMailItem->Mark != ICON_SENTMAIL)) {
+		if (tpMailItem->Mark != SendOrDownIcon && (SelBox != MAILBOX_SEND || tpMailItem->MailStatus != ICON_SENTMAIL)) {
 			set = TRUE;
 			break;
 		}
@@ -3082,7 +3082,7 @@ static void SetDownloadMark(HWND hWnd)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (SelBox != MAILBOX_SEND || tpMailItem->Mark != ICON_SENTMAIL) {
+		if (SelBox != MAILBOX_SEND || tpMailItem->MailStatus != ICON_SENTMAIL) {
 			if (set == TRUE) {
 				tpMailItem->Mark = SendOrDownIcon;
 				MarkedOne = TRUE;
@@ -3130,7 +3130,7 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Mark != Mark && (SelBox != MAILBOX_SEND || tpMailItem->Mark != ICON_SENTMAIL)) {
+		if (tpMailItem->Mark != Mark) {
 			set = TRUE;
 			break;
 		}
@@ -3142,18 +3142,16 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (SelBox != MAILBOX_SEND || tpMailItem->Mark != ICON_SENTMAIL) {
-			if (set == TRUE) {
-				tpMailItem->Mark = Mark;
-				ListView_SetItemState(hListView, i, 0, LVIS_CUT);
-			} else {
-				tpMailItem->Mark = tpMailItem->MailStatus;
-				if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
-					ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
-				}
+		if (set == TRUE) {
+			tpMailItem->Mark = Mark;
+			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
+		} else {
+			tpMailItem->Mark = tpMailItem->MailStatus;
+			if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
+				ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 			}
-			ListView_RedrawItems(hListView, i, i);
 		}
+		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
 
