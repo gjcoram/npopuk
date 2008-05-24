@@ -13,13 +13,10 @@
  * For a patched beta, use Beta between 1 and 98, with Patch > 0
  */
 
-#define NPOPBETA_REAL_RELEASE 100
-#define NPOPBETA_RELEASE_CAND (NPOPBETA_REAL_RELEASE-1)
-
 #define NPOPMAJOR  2
 #define NPOPMINOR 10
-#define NPOPBETA  10
-#define NPOPPATCH 19
+#define NPOPBETA  99
+#define NPOPPATCH 2
 
 
 // convert text, blanks, or zeroes to zeroes
