@@ -1,5 +1,5 @@
-nPOPuk v2.10rc1                            readme-210uk.txt
-                                                12 Apr 2008
+nPOPuk v2.10rc2                            readme-210uk.txt
+                                                24 May 2008
 -----------------------------------------------------------
 
 
@@ -66,6 +66,15 @@ include the following features:
 
 * Reflow selection - to correct bad linebreaks, especially
   in quoted text
+
+* Ability to Flag messages for follow-up
+
+* Global filters - applied to all accounts
+
+* Scrambling (ROT-13) to obscure mail data from prying eyes
+
+* Ability to handle embedded images when opening text/html
+  messages in a web browser
 
 * Auto-complete of addresses
 
