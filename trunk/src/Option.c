@@ -1729,9 +1729,9 @@ int SetMailBoxType(HWND hWnd, int Type)
 		return -1;
 	} else {
 		mailbox_menu_rebuild(hWnd, FALSE);
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
-			(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+		DeleteMBMenu(SelBox);
+		InsertMBMenu(SelBox,
+			(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 		return (MailBox + SelBox)->Type;
 	}
@@ -1932,9 +1932,9 @@ BOOL SetSaveBoxName(HWND hWnd)
 		}
 		if (lstrcmp(old_name, new_name) != 0) {
 			// update MailBox list and move/copy filters
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)new_name);
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+			DeleteMBMenu(SelBox);
+			InsertMBMenu(SelBox, new_name);
+			SelectMBMenu(SelBox);
 			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 				if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->FilterCnt > 0) {
 					for (j = 0; j < (MailBox+i)->FilterCnt; j++) {
@@ -2037,8 +2037,8 @@ BOOL SetMailBoxOption(HWND hWnd)
 		wsprintf(new_name, TEXT("%s"), STR_MAILBOX_NONAME);
 	}
 	if (lstrcmp(old_name, new_name) != 0) {
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)new_name);
+		DeleteMBMenu(SelBox);
+		InsertMBMenu(SelBox, new_name);
 	}
 	mailbox_select(hWnd, SelBox);
 	return TRUE;
@@ -2883,7 +2883,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 			//GJC redraw window if sort order changed
 			if (redraw) {
-				mailbox_select(MainWnd, SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
+				mailbox_select(MainWnd, GetSelectedMBMenu());
 			}
 
 			break;

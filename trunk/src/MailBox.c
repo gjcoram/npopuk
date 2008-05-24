@@ -126,13 +126,13 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 	if (ShowFlag == TRUE) {
 		int i;
 
-		//Adding the mailbox to the ?, it selects the
-		i = SendDlgItemMessage(hWnd, IDC_COMBO, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
+		//Adding the mailbox to the menu, to obtain the index
+		i = AddMBMenu(STR_MAILBOX_NONAME);
 		if (i == CB_ERR) {
 			return -1;
 		}
 		if (SelFlag == TRUE) {
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, i, 0);
+			SelectMBMenu(i);
 			index = i;
 			mailbox_menu_rebuild(hWnd, FALSE);
 		}
@@ -225,8 +225,8 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 	}
 
 	//Deleting from the drop-down combo, it selects the mailbox of one ago the
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, DelIndex, 0);
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, DelIndex - 1, 0);
+	DeleteMBMenu(DelIndex);
+	SelectMBMenu(DelIndex - 1);
 	mailbox_menu_rebuild(hWnd, FALSE);
 	return DelIndex - 1;
 }
@@ -392,12 +392,12 @@ void mailbox_move_up(HWND hWnd)
 	MailBox = TmpMailBox;
 
 	//Change the position where it is indicated in the drop-down combo
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+	DeleteMBMenu(SelBox);
 	SelBox--;
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
-		(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+	InsertMBMenu(SelBox,
+		(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+	SelectMBMenu(SelBox);
 	mailbox_menu_rebuild(hWnd, FALSE);
 }
 
@@ -432,12 +432,12 @@ void mailbox_move_down(HWND hWnd)
 	MailBox = TmpMailBox;
 
 	//Change the position where it is indicated in the drop-down combo
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+	DeleteMBMenu(SelBox);
 	SelBox++;
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
-		(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+	InsertMBMenu(SelBox,
+		(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+	SelectMBMenu(SelBox);
 	mailbox_menu_rebuild(hWnd, FALSE);
 }
 
@@ -600,7 +600,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	}
 
 	SelBox = Sel;
-	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+	SelectMBMenu(SelBox);
 
 	//Acquisition
 #ifdef _WIN32_WCE

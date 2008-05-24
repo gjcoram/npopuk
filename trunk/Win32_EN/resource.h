@@ -324,7 +324,7 @@
 #define ID_MENUITEM_ICONSORT            40021
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
-#define ID_MENUITEM_CHANGEMAILBOX       40024
+// #define  unused                      40024
 #define ID_MENUITEM_SAVECOPY            40025
 #define ID_MENUITEM_WORDBREAK           40026
 #define ID_MENUITEM_OPTION              40027

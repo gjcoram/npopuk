@@ -78,6 +78,7 @@ BOOL PPCFlag;								// PsPCフラグ
 #ifndef _WIN32_WCE
 static int confirm_flag;					// 認証フラグ
 #endif
+int MBMenuWidth = 0;
 
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
@@ -172,7 +173,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
-static int CreateComboBox(HWND hWnd, int Top);
+static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right);
 static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatus);
@@ -199,6 +200,8 @@ static HWND InitInstance(HINSTANCE hInstance, int CmdShow);
 void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
 static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout);
 static void PlayMarkSound(int mark);
+static BOOL GetDroppedStateMBMenu(void);
+static void DropMBMenu(BOOL drop);
 
 #ifdef _WIN32_WCE_LAGENDA
 int GetUserDiskName(HINSTANCE hInstance, LPTSTR lpDiskName, int nMaxCount);
@@ -1049,16 +1052,10 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		}
 	}
 	if (UnsentCnt > 0) {
-		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
+		SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
 	} else {
-#ifdef _WIN32_WCE
-		unsigned int len;
-#else
-		int len;
-#endif
-		len = SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
-		if (len > lstrlen(STR_SENDBOX_NAME)) {
-			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		if (GetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME)) {
+			SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
 		}
 	}
 	if (SelBox == MAILBOX_SEND) {
@@ -1093,9 +1090,9 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : tpMailBox->Name;
 
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)p);
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+		DeleteMBMenu(SelBox);
+		InsertMBMenu(SelBox, p);
+		SelectMBMenu(SelBox);
 		tpMailBox->NewMail = FALSE;
 		SetUnreadCntTitle(MainWnd, FALSE);
 	}
@@ -1772,43 +1769,55 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*
- * CreateComboBox - コンボボックスの作成
+ * CreateMBMenu - コンボボックスの作成
  */
-static int CreateComboBox(HWND hWnd, int Top)
+static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right)
 {
 	HWND hCombo;
 	RECT rcClient, comboRect;
 	int i;
+	DWORD style;
 
 	GetClientRect(hWnd, &rcClient);
+	if (MBMenuWidth) {
+		style = WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | LBS_NOTIFY;
+		bottom = rcClient.bottom - Top - bottom;
+	} else {
+		// compatibility mode, drop down combo at top
+		bottom = 200;
+		if (rcClient.bottom > bottom) {
+			bottom = rcClient.bottom;
+		}
+		right = rcClient.right;
+		style = WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST;
+	}
 
-	hCombo = CreateWindow(TEXT("COMBOBOX"), TEXT(""),
-		WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
-		0, Top, rcClient.right, (rcClient.bottom < 200) ? 200 : rcClient.bottom,
-		hWnd, (HMENU)IDC_COMBO, hInst, NULL);
+	hCombo = CreateWindow(MBMenuWidth ? TEXT("LISTBOX") : TEXT("COMBOBOX"), TEXT(""), style,
+		0, Top, right, bottom,
+		hWnd, (HMENU)IDC_MBMENU, hInst, NULL);
 	if (hCombo == NULL) {
 		return -1;
 	}
 
 #ifndef _WIN32_WCE
-	SendDlgItemMessage(hWnd, IDC_COMBO, WM_SETFONT,
+	SendDlgItemMessage(hWnd, IDC_MBMENU, WM_SETFONT,
 		(WPARAM)((hListFont != NULL) ? hListFont : GetStockObject(DEFAULT_GUI_FONT)),
 		MAKELPARAM(TRUE,0));
 #endif
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETEXTENDEDUI, TRUE, 0);
+	if (MBMenuWidth == 0) {
+		SendDlgItemMessage(hWnd, IDC_MBMENU, CB_SETEXTENDEDUI, TRUE, 0);
+	}
 
 	{
 		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_ADDSTRING, 0, 
-			((next==-1) ? (LPARAM)STR_SENDBOX_NAME : (LPARAM)STR_SENDBOX_NAME TEXT(" *")));
+		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : STR_SENDBOX_NAME TEXT(" *"));
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_ADDSTRING, 0,
-			(LPARAM)(((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
-			? STR_MAILBOX_NONAME : (MailBox + i)->Name));
+		AddMBMenu(((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
+			? STR_MAILBOX_NONAME : (MailBox + i)->Name);
 	}
-	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
+	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 	return (comboRect.bottom - comboRect.top);
 }
 
@@ -2024,12 +2033,6 @@ static BOOL InitWindow(HWND hWnd)
 		SelectObject(hdc, hFont);
 	}
 
-	// コンボボックス
-	if ((j = CreateComboBox(hWnd, Height)) == -1) {
-		return FALSE;
-	}
-	Height += j;
-
 	//Status bar
 	CreateWindowEx(0, STATUSCLASSNAME, TEXT(""),
 		WS_VISIBLE | WS_CHILD | i,
@@ -2048,8 +2051,29 @@ static BOOL InitWindow(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
 		(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
 
+#ifdef _WIN32_WCE
+	// It is assumed that the option setting for MBMenuWidth should not
+	// apply to WinCE devices because of their small screnn, but should
+	// also not be turned off in the INI file for portable users that
+	// set up the feature for their PC usage.  So it is conditionally
+	// copied to a global, which controls the real behavior.
+	// CE devices with large enough screens could be included?
+	// This gets into device-specific configuration, though.
+	MBMenuWidth = 0;
+#else
+	MBMenuWidth = op.MBMenuWidth;
+#endif
+
+	// コンボボックス
+	if ((j = CreateMBMenu(hWnd, Height, StatusRect.bottom - StatusRect.top, MBMenuWidth)) == -1) {
+		return FALSE;
+	}
+	if (MBMenuWidth == 0) {
+		Height += j;
+	}
+
 	//List view
-	if (CreateListView(hWnd, Height, StatusRect.bottom - StatusRect.top) == NULL) {
+	if (CreateListView(hWnd, Height, StatusRect.bottom - StatusRect.top, MBMenuWidth) == NULL) {
 		return FALSE;
 	}
 	SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
@@ -2081,12 +2105,12 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	GetClientRect(hWnd, &rcClient);
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
+	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 
 #ifndef _WIN32_WCE_PPC
 	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
 #endif
-	MoveWindow(GetDlgItem(hWnd, IDC_COMBO), 0, Height,
+	MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
 		rcClient.right, comboRect.bottom - comboRect.top, TRUE);
 
 	Height += (comboRect.bottom - comboRect.top);
@@ -2127,7 +2151,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	GetClientRect(hWnd, &rcClient);
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
+	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 	Height = (comboRect.bottom - comboRect.top) + g_menu_height;
 
 	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
@@ -2150,17 +2174,27 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	GetClientRect(hWnd, &rcClient);
 	GetWindowRect(GetDlgItem(hWnd, IDC_TB), &ToolbarRect);
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_COMBO), &comboRect);
+	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 
 	Height = ToolbarRect.bottom - ToolbarRect.top;
-	MoveWindow(GetDlgItem(hWnd, IDC_COMBO), 0, Height,
-		rcClient.right, comboRect.bottom - comboRect.top, TRUE);
+	if (MBMenuWidth) {
+		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
+			   MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 
-	Height += comboRect.bottom - comboRect.top;
-	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
-		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), MBMenuWidth, Height,
+			   rcClient.right - MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 
-	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
+		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
+	} else {
+		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
+			   rcClient.right, comboRect.bottom - comboRect.top, TRUE);
+
+		Height += comboRect.bottom - comboRect.top;
+		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
+			   rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+
+		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
+	}
 	return TRUE;
 }
 #endif
@@ -2372,7 +2406,7 @@ static BOOL EndWindow(HWND hWnd)
 #else
 	DestroyWindow(GetDlgItem(hWnd, IDC_TB));
 #endif
-	DestroyWindow(GetDlgItem(hWnd, IDC_COMBO));
+	DestroyWindow(GetDlgItem(hWnd, IDC_MBMENU));
 	DestroyWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	DestroyWindow(GetDlgItem(hWnd, IDC_STATUS));
 
@@ -3444,13 +3478,13 @@ static void Init_NewMailFlag(HWND hWnd)
 			TCHAR *p;
 			p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, i, 0);
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i, (LPARAM)p);
+			DeleteMBMenu(i);
+			InsertMBMenu(i, p);
 			(MailBox + i)->NewMail = FALSE;
 		}
 	}
 
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
+	SelectMBMenu(SelBox);
 }
 
 /*
@@ -3462,7 +3496,7 @@ void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
 	int i, j;
 	int UnreadMailBox = 0;
 
-	j = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0);
+	j = GetSelectedMBMenu();
 	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
 		if((MailBox + i)->NewMail == TRUE) {
 			TCHAR *p;
@@ -3470,29 +3504,24 @@ void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
 				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 			// GJC - check if there still is new mail; if not, update drop-down list
 			if (CheckMsgs == TRUE && item_get_next_new((MailBox + i), -1, NULL) == -1) {
-				SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, i, 0);
-				SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i, (LPARAM)p);
+				DeleteMBMenu(i);
+				InsertMBMenu(i, p);
 				(MailBox + i)->NewMail = FALSE;
 			} else {
-#ifdef _WIN32_WCE
-				unsigned int len;
-#else
-				int len;
-#endif
 				UnreadMailBox++;
-				len = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETLBTEXTLEN, i, 0);
-				if (len == lstrlen(p)) {
+				if (GetStarMBMenu(i, p)) {
 					// * is missing, add it
+					int len = lstrlen(p);
 					TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
 					str_join_t(q, p, TEXT(" *"), (TCHAR *)-1);
-					SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, i, 0);
-					SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i, (LPARAM)q);
+					DeleteMBMenu(i);
+					InsertMBMenu(i, q);
 					mem_free(&q);
 				}
 			}
 		}
 	}
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, j, 0);
+	SelectMBMenu(j);
 
 	//未読アカウント数をタイトルバーに設定
 	if(UnreadMailBox == 0){
@@ -3542,7 +3571,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	}
 
 	// There is a new arrival in the message box; add the " *" in the drop-down combo
-	j = SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0);
+	j = GetSelectedMBMenu();
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox + i)->NewMail == FALSE || (MailBox + i)->Loaded == FALSE ||
 			((op.ListGetLine > 0 || op.ShowHeader == 1 || op.ListDownload == 1) &&
@@ -3552,21 +3581,19 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		if (SelBox != i) {
 			(MailBox + i)->NewMail = TRUE;
 		}
-		SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, i, 0);
+		DeleteMBMenu(i);
 		if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i,
-				(LPARAM)STR_MAILBOX_NONAME\
-				TEXT(" *"));
+			InsertMBMenu(i, STR_MAILBOX_NONAME TEXT(" *"));
 		} else {
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + i)->Name) + 3));
 			if (p != NULL) {
 				str_join_t(p, (MailBox + i)->Name, TEXT(" *"), (TCHAR *)-1);
-				SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, i, (LPARAM)p);
+				InsertMBMenu(i, p);
 				mem_free(&p);
 			}
 		}
 	}
-	SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, j, 0);
+	SelectMBMenu(j);
 
 	SetUnreadCntTitle(hWnd, FALSE);
 
@@ -4297,13 +4324,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		int mbox, command_id = GET_WM_COMMAND_ID(wParam, lParam);
 		switch (command_id) {
 		//of message compilation
-		case IDC_COMBO:
-			if (HIWORD(wParam) == CBN_CLOSEUP) {
-				if (SelBox == SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0)) {
+		case IDC_MBMENU:
+			if ((MBMenuWidth == 0 && HIWORD(wParam) == CBN_CLOSEUP)
+			    || (MBMenuWidth != 0 && HIWORD(wParam) == LBN_SELCHANGE)) {
+				if (SelBox == GetSelectedMBMenu()) {
 					break;
 				}
 				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-				mailbox_select(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
+				mailbox_select(hWnd, GetSelectedMBMenu());
 				SwitchCursor(TRUE);
 			}
 			break;
@@ -4326,14 +4354,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, i);
 			break;
 
-		//Focusing the drop-down combo and the list view is changed
+		// Toggle focus between combo and the list view
 		case ID_KEY_TAB:
 			if (GetFocus() == GetDlgItem(hWnd, IDC_LISTVIEW)) {
-				SetFocus(GetDlgItem(hWnd, IDC_COMBO));
+				SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
 			} else {
 				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-				if (SelBox != SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0)) {
-					mailbox_select(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
+				if (SelBox != GetSelectedMBMenu()) {
+					mailbox_select(hWnd, GetSelectedMBMenu());
 				}
 			}
 			break;
@@ -4348,11 +4376,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				GetForegroundWindow() != hWnd) {
 				break;
 			}
-			if (GetFocus() == GetDlgItem(hWnd, IDC_COMBO)) {
-				if (SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETDROPPEDSTATE, 0, 0) == FALSE) {
+			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
+				if (GetDroppedStateMBMenu() == FALSE) {
 					SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 				} else {
-					SendDlgItemMessage(hWnd, IDC_COMBO, CB_SHOWDROPDOWN, FALSE, 0);
+					DropMBMenu(TRUE);
 				}
 				break;
 			}
@@ -4529,7 +4557,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			old_selbox = SelBox;
 			mailbox_select(hWnd, mailbox_create(hWnd, 1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
-			(MailBox+SelBox)->NewMail = TRUE; // hack to force correct name into IDC_COMBO
+			(MailBox+SelBox)->NewMail = TRUE; // hack to force correct name into IDC_MBMENU
 			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
 				mailbox_delete(hWnd, SelBox, FALSE);
 				mailbox_select(hWnd, old_selbox);
@@ -4895,11 +4923,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		//====== mail =========
-		//You open the
+		//Open the dropdown menu if focus on combobox
 		case ID_KEY_ENTER:
-			if (GetFocus() == GetDlgItem(hWnd, IDC_COMBO)) {
-				SendDlgItemMessage(hWnd, IDC_COMBO, CB_SHOWDROPDOWN,
-					!SendDlgItemMessage(hWnd, IDC_COMBO, CB_GETDROPPEDSTATE, 0, 0), 0);
+			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
+				DropMBMenu(!GetDroppedStateMBMenu());
 				break;
 			}
 			// else fall through
@@ -5049,12 +5076,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_ALLSELECT:
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 			ListView_SetItemState(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
-			break;
-
-		//Change
-		case ID_MENUITEM_CHANGEMAILBOX:
-			SetFocus(GetDlgItem(hWnd, IDC_COMBO));
-			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SHOWDROPDOWN, TRUE, 0);
 			break;
 
 #ifdef _WIN32_WCE_PPC
@@ -5867,9 +5888,96 @@ int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int n
 }
 
 /*
- * SetMenuStar - add * to IDC_COMBO drop-down
+ * MsgMBMenu
  */
-void SetMenuStar(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
+#define MB_GETSEL		0
+#define MB_SETSEL		1
+#define MB_GETTXTLEN	2
+#define MB_ADD			3
+#define MB_INSERT		4
+#define MB_DELETE		5
+int MsgMBMenu(int msg)
+{
+	static CB_msgs[] = {
+		CB_GETCURSEL, CB_SETCURSEL, CB_GETLBTEXTLEN, CB_ADDSTRING, CB_INSERTSTRING, CB_DELETESTRING };
+	static LB_msgs[] = {
+		LB_GETCURSEL, LB_SETCURSEL, LB_GETTEXTLEN, LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING };
+	
+	if (MBMenuWidth) {
+		return LB_msgs[ msg ];
+	} else {
+		return CB_msgs[ msg ];
+	}
+}
+
+/*
+ * GetSelectedMBMenu
+ */
+int GetSelectedMBMenu(void)
+{
+	int index;
+	index = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETSEL), 0, 0);
+	return index;
+}
+
+/*
+ * SelectMBMenu
+ */
+void SelectMBMenu(int index)
+{
+	index = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_SETSEL), index, 0);
+}
+
+/*
+ * GetTxtLenMBMenu
+ */
+int GetTxtLenMBMenu(int index)
+{
+	int len;
+	len = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETTXTLEN), index, 0);
+	return len;
+}
+
+/*
+ * AddMBMenu
+ */
+int AddMBMenu(TCHAR *Name)
+{
+	int index;
+	index = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_ADD), 0, (LPARAM) Name);
+	return index;
+}
+
+/*
+ * InsertMBMenu
+ */
+void InsertMBMenu(int index, TCHAR *Name)
+{
+	index = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_INSERT), index, (LPARAM) Name);
+}
+
+/*
+ * DeleteMBMenu
+ */
+void DeleteMBMenu(int index)
+{
+	index = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_DELETE), index, 0);
+}
+
+/*
+ * GetStarMBMenu - add * to IDC_MBMENU drop-down
+ */
+BOOL GetStarMBMenu(int index, TCHAR *Name)
+{
+	int len;
+	len = GetTxtLenMBMenu(index);
+	return len > lstrlen(Name);
+}
+
+/*
+ * SetStarMBMenu - add * to IDC_MBMENU drop-down
+ */
+void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
 {
 	TCHAR buf[BUF_SIZE], *p;
 
@@ -5879,10 +5987,32 @@ void SetMenuStar(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
 		wsprintf(buf, TEXT("%s *"), Name);
 		p = buf;
 	}
-	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, EntryNum, 0);
-	SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, EntryNum, (LPARAM)p);
+	DeleteMBMenu(EntryNum);
+	InsertMBMenu(EntryNum, p);
 	if (SetCurSel) {
-		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_SETCURSEL, EntryNum, 0);
+		SelectMBMenu(EntryNum);
+	}
+}
+
+/*
+ * GetDroppedStateMBMenu()
+ */
+BOOL GetDroppedStateMBMenu(void)
+{
+	if (MBMenuWidth == 0) {
+		return SendDlgItemMessage(MainWnd, IDC_MBMENU, CB_GETDROPPEDSTATE, 0, 0);
+	} else {
+		return FALSE;
+	}
+}
+
+/*
+ * DropMBMenu()
+ */
+void DropMBMenu(BOOL drop)
+{
+	if (MBMenuWidth == 0) {
+		SendDlgItemMessage(MainWnd, IDC_MBMENU, CB_SHOWDROPDOWN, drop, 0);
 	}
 }
 
