@@ -69,6 +69,9 @@ include the following features:
 
 * Ability to Flag messages for follow-up
 
+* Changes to the toolbars to replace grayed icons with
+  ones that are applicable for the current mailbox
+
 * Global filters - applied to all accounts
 
 * Scrambling (ROT-13) to obscure mail data from prying eyes
