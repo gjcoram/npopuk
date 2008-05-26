@@ -368,9 +368,11 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
 	trunc_to_dirname(AppDir);
 
+#ifdef _DEBUG 
 	// Put command line prefix in the log file
 	wsprintf(fname,TEXT("cmd: %.248s%s"), lpCmdLine, TEXT("\r\n"));
 	log_save(fname);
+#endif
 	for(p = lpCmdLine; p && *p == TEXT(' '); p++); // remove spaces
 
 	// command-line options should preceed any mailto: arguments
