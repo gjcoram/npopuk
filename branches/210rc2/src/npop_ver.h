@@ -18,8 +18,8 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 10
-#define NPOPBETA  10
-#define NPOPPATCH 21
+#define NPOPBETA  NPOPBETA_REAL_RELEASE
+#define NPOPPATCH 0
 
 
 // convert text, blanks, or zeroes to zeroes
@@ -39,7 +39,7 @@
 #define NPOPPATCH 0
 #endif
 
-#if nPOPBETA == NPOPBETA_REAL_RELEASE
+#if NPOPBETA == NPOPBETA_REAL_RELEASE
 #if NPOPPATCH
 // Re-released (patched) version
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "p" #d
