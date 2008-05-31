@@ -1729,9 +1729,9 @@ int SetMailBoxType(HWND hWnd, int Type)
 		return -1;
 	} else {
 		mailbox_menu_rebuild(hWnd, FALSE);
-		DeleteMBMenu(SelBox);
-		InsertMBMenu(SelBox,
-			(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+		SendDlgItemMessage(MainWnd, IDC_COMBO, CB_INSERTSTRING, SelBox,
+			(LPARAM)(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 		return (MailBox + SelBox)->Type;
 	}
@@ -1932,9 +1932,9 @@ BOOL SetSaveBoxName(HWND hWnd)
 		}
 		if (lstrcmp(old_name, new_name) != 0) {
 			// update MailBox list and move/copy filters
-			DeleteMBMenu(SelBox);
-			InsertMBMenu(SelBox, new_name);
-			SelectMBMenu(SelBox);
+			SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+			SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)new_name);
+			SendDlgItemMessage(hWnd, IDC_COMBO, CB_SETCURSEL, SelBox, 0);
 			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 				if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->FilterCnt > 0) {
 					for (j = 0; j < (MailBox+i)->FilterCnt; j++) {
@@ -2037,8 +2037,8 @@ BOOL SetMailBoxOption(HWND hWnd)
 		wsprintf(new_name, TEXT("%s"), STR_MAILBOX_NONAME);
 	}
 	if (lstrcmp(old_name, new_name) != 0) {
-		DeleteMBMenu(SelBox);
-		InsertMBMenu(SelBox, new_name);
+		SendDlgItemMessage(hWnd, IDC_COMBO, CB_DELETESTRING, SelBox, 0);
+		SendDlgItemMessage(hWnd, IDC_COMBO, CB_INSERTSTRING, SelBox, (LPARAM)new_name);
 	}
 	mailbox_select(hWnd, SelBox);
 	return TRUE;
@@ -2883,7 +2883,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 			//GJC redraw window if sort order changed
 			if (redraw) {
-				mailbox_select(MainWnd, GetSelectedMBMenu());
+				mailbox_select(MainWnd, SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETCURSEL, 0, 0));
 			}
 
 			break;
@@ -3532,7 +3532,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-		if (tpMailItem->Mark == ICON_SENTMAIL) {
+		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS), 0);
 		}
@@ -3567,7 +3567,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				EndDialog(hDlg, FALSE);
 				break;
 			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				break;
 			}
 			hListView = GetDlgItem(hDlg, IDC_LIST_CC);
@@ -3591,6 +3591,23 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 		cmd = LOWORD(wParam);
+		tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
+		if (tpMailItem == NULL) {
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		if (cmd == IDCANCEL) {
+#ifdef _WIN32_WCE_PPC
+			SHSipPreference(hDlg, SIP_DOWN);
+#elif defined(_WIN32_WCE_LAGENDA)
+			SipShowIM(SIPF_OFF);
+#endif
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		if (cmd != IDOK && tpMailItem->MailStatus == ICON_SENTMAIL) {
+			break;
+		}
 		switch (cmd) {
 		case IDC_BUTTON_ADD:
 			i = -1;
@@ -3639,14 +3656,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_LV_EDIT:
-			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
-			if (tpMailItem == NULL) {
-				EndDialog(hDlg, FALSE);
-				break;
-			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
-				break;
-			}
 			hListView = GetDlgItem(hDlg, IDC_LIST_CC);
 			if ((SelectItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED)) == -1) {
 				break;
@@ -3660,14 +3669,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case IDC_BUTTON_DELETE:
 		case ID_LV_DELETE:
-			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
-			if (tpMailItem == NULL) {
-				EndDialog(hDlg, FALSE);
-				break;
-			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
-				break;
-			}
 			hListView = GetDlgItem(hDlg, IDC_LIST_CC);
 			if ((SelectItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED)) == -1) {
 				break;
@@ -3737,12 +3738,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #endif
 			ToLen = CcLen = BccLen = 0;
 
-			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
-			if (tpMailItem == NULL) {
-				EndDialog(hDlg, FALSE);
-				break;
-			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				EndDialog(hDlg, TRUE);
 				break;
 			}
@@ -3824,15 +3820,6 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			}
 			EndDialog(hDlg, TRUE);
 			break;
-
-		case IDCANCEL:
-#ifdef _WIN32_WCE_PPC
-			SHSipPreference(hDlg, SIP_DOWN);
-#elif defined(_WIN32_WCE_LAGENDA)
-			SipShowIM(SIPF_OFF);
-#endif
-			EndDialog(hDlg, FALSE);
-			break;
 		}
 		break;
 
@@ -3905,7 +3892,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_SETHORIZONTALEXTENT,
 			MAX_PATH * 9 + GetSystemMetrics(SM_CXVSCROLL), 0);
-		if (tpMailItem->Mark == ICON_SENTMAIL) {
+		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 0);
 		}
@@ -3922,7 +3909,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, FALSE);
 			break;
 		}
-		if (tpMailItem->Mark == ICON_SENTMAIL) {
+		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			break;
 		}
 		len = DragQueryFile((HANDLE)wParam, 0xFFFFFFFF, NULL, 0);
@@ -3989,7 +3976,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				EndDialog(hDlg, FALSE);
 				break;
 			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				break;
 			}
 			if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETSELCOUNT, 0, 0) <= 0) {
@@ -4012,7 +3999,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				EndDialog(hDlg, FALSE);
 				break;
 			}
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				EndDialog(hDlg, TRUE);
 				break;
 			}
@@ -4421,7 +4408,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ATT_MSG), SW_HIDE);
 		}
 
-		if (tpMailItem->Mark == ICON_SENTMAIL) {
+		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SMTP), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_REPLYTO), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_PRIORITY), 0);
@@ -4459,6 +4446,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->ReplyTo = alloc_copy_t(tpMailItem->ReplyTo);
 		tpTmpMailItem->DefReplyTo = tpMailItem->DefReplyTo;
 		tpTmpMailItem->References = alloc_copy_t(tpMailItem->References);
+		tpTmpMailItem->MailStatus = tpMailItem->MailStatus;
 		tpTmpMailItem->Mark = tpMailItem->Mark;
 		SetEditToSubClass(GetDlgItem(hDlg, IDC_EDIT_TO), FALSE);
 		break;
@@ -4688,7 +4676,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			tpMailItem = *tpSendMailIList;
 			tpTmpMailItem = *(tpSendMailIList + 1);
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				if (tpTmpMailItem != NULL) {
 					item_free(&tpTmpMailItem, 1);
 				}

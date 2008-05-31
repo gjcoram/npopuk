@@ -2793,6 +2793,34 @@ void rot13(char *start, char *end)
 	}
 }
 
+#if defined( _MSC_VER) && (_MSC_VER <= 1200)  && !defined(_WIN32_WCE)
+#ifdef UNICODE
+void _wgetenv_s(size_t *rsz, TCHAR *ret, int len, TCHAR *name)
+{
+	TCHAR *s = _wgetenv(name);
+	*ret = TEXT('\0');
+	if (s) {
+		*rsz = lstrlen(s);
+		str_cpy_n_t(ret, s, len-1);
+	} else {
+		*rsz = 0;
+	}
+}
+#else
+void getenv_s(size_t *rsz, char *ret, int len, char *name)
+{
+	char *s = getenv(name);
+	*ret = '\0';
+	if (s) {
+		*rsz = strlen(s);
+		str_cpy_n(ret, s, len-1);
+	} else {
+		*rsz = 0;
+	}
+}
+#endif
+#endif
+
 /*
  * replace_env_var - replace %ENVVAR% with value of environment variable ENVVAR
  */

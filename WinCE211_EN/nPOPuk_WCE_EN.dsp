@@ -3696,6 +3696,10 @@ SOURCE=..\Res\Ico_down.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\Res\Ico_flag.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\Res\Ico_high.ico
 # End Source File
 # Begin Source File

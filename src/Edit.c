@@ -852,7 +852,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		return FALSE;
 	}
 	SetWindowString(hWnd, tpMailItem->Subject,
-		(tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
+		(tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -1042,7 +1042,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	tpMailItem->BodyEncoding = op.BodyEncoding;
 
 	tpMailItem->hEditWnd = hWnd;
-	if (tpMailItem->Mark == ICON_SENTMAIL) {
+	if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 		// GJC don't edit sent mail
 		SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
@@ -1141,7 +1141,7 @@ BOOL EndEditWindow(HWND hWnd, BOOL sent)
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem != NULL) {
-		sent = (tpMailItem->Mark == ICON_SENTMAIL);
+		sent = (tpMailItem->MailStatus == ICON_SENTMAIL);
 		if (sent == FALSE && SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETMODIFY, 0, 0) == TRUE) {
 #ifdef _WIN32_WCE
 			FocusWnd = hEditWnd;
@@ -1221,7 +1221,7 @@ static void SetEditMenu(HWND hWnd)
 	hMenu = GetMenu(hWnd);
 #endif
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-	if (tpMailItem == NULL || tpMailItem->Mark != ICON_SENTMAIL) {
+	if (tpMailItem == NULL || tpMailItem->MailStatus != ICON_SENTMAIL) {
 		// GJC don't edit sent mail
 		editable = TRUE;
 	} else {
@@ -1350,13 +1350,14 @@ static BOOL SetItemToSendBox(HWND hWnd, BOOL BodyFlag, int EndFlag, BOOL MarkFla
 
 	if (MarkFlag == TRUE) {
 		tpMailItem->Mark = ICON_SEND;
-		SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
+		SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
 	} else {
 		if (tpMailItem->Mark != ICON_FLAG) {
 			tpMailItem->Mark = ICON_NON;
 		}
-		if (GetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
-			SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		len = SendDlgItemMessage(MainWnd, IDC_COMBO, CB_GETLBTEXTLEN, MAILBOX_SEND, 0);
+		if (len > lstrlen(STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
+			SetMenuStar(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
 		}
 
 	}
@@ -1414,7 +1415,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 	tpMailItem->hEditWnd = NULL;
 	tpMailItem->hProcess = NULL;
 	// GJC don't edit sent mail
-	sent = (tpMailItem->Mark == ICON_SENTMAIL) ? TRUE : FALSE;
+	sent = (tpMailItem->MailStatus == ICON_SENTMAIL) ? TRUE : FALSE;
 	(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 
 	if (op.AutoSave == 1 && sent == FALSE) {
@@ -1474,7 +1475,7 @@ static void ShowSendInfo(HWND hWnd)
 	}
 	(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 	SetWindowString(hWnd, tpMailItem->Subject,
-		(tpMailItem->Mark == ICON_SENTMAIL) ? FALSE : TRUE);
+		(tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 }
 
@@ -1748,7 +1749,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			} else {
 				ShowFlag = FALSE;
 			}
-			if ((tpMailItem != NULL && tpMailItem->Mark == ICON_SENTMAIL)
+			if ((tpMailItem != NULL && tpMailItem->MailStatus == ICON_SENTMAIL)
 				|| SetItemToSendBox(hWnd, BodyFlag, wParam, FALSE)) {
 				CloseEditMail(hWnd, FALSE, ShowFlag);
 #ifdef _WIN32_WCE_LAGENDA
@@ -1820,7 +1821,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			KillTimer(hWnd, wParam);
 			tpMailItem->hProcess = NULL;
 
-			if (tpMailItem->Mark == ICON_SENTMAIL) {
+			if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 				// this actually just deletes the temporary file
 				ReadEditMail(hWnd, (long)hWnd, tpMailItem, FALSE);
 #ifdef _WIN32_WCE
@@ -2256,7 +2257,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				BOOL sent = FALSE;
 				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 				if (tpMailItem != NULL) {
-					sent = (tpMailItem->Mark == ICON_SENTMAIL);
+					sent = (tpMailItem->MailStatus == ICON_SENTMAIL);
 				}
 				if (sent) {
 					DelSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));

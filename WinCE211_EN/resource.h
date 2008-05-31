@@ -392,7 +392,7 @@
 #define ID_MENUITEM_MAILBOX             40122
 #define ID_MENUITEM_MAIL                40123
 #define ID_MENUITEM_EDIT                40124
-// #define unused                       40125
+#define ID_MENUITEM_CHANGEMAILBOX       40125
 #define ID_MENUITEM_VIEW                40129
 #define ID_MENUITEM_ICONSORT            40135
 #define ID_MENUITEM_TRAY                40137

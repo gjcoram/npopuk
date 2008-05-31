@@ -124,7 +124,7 @@
 #define MARKS_CHANGED			2
 #define MBOX_FORMAT_CHANGED		4
 
-#define IDC_MBMENU				400					//Control ID
+#define IDC_COMBO				400					//Control ID
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
 
@@ -374,7 +374,6 @@ typedef struct _OPTION {
 	int LvStyle;
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
-	int MBMenuWidth;
 	int ScanAllForUnread;
 	int DelIsMarkDel;
 	int RecvScroll;
@@ -974,7 +973,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
-HWND CreateListView(HWND hWnd, int Top, int bottom, int left);
+HWND CreateListView(HWND hWnd, int Top, int bottom);
 void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
 int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem);
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);
@@ -1020,13 +1019,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
-void DeleteMBMenu(int EntryNum);
-void SelectMBMenu(int EntryNum);
-int GetSelectedMBMenu(void);
-int AddMBMenu(TCHAR *Name);
-void InsertMBMenu(int EntryNum, TCHAR *Name);
-BOOL GetStarMBMenu(int EntryNum, TCHAR *Name);
-void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel);
+void SetMenuStar(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel);
 
 #endif
 /* End of source */

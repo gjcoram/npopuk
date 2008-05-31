@@ -69,7 +69,7 @@ void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubIte
 /*
  * CreateListView - リストビューの作成と初期化
  */
-HWND CreateListView(HWND hWnd, int Top, int bottom, int left)
+HWND CreateListView(HWND hWnd, int Top, int bottom)
 {
 	HIMAGELIST IconList;
 	RECT rcClient;
@@ -92,7 +92,7 @@ HWND CreateListView(HWND hWnd, int Top, int bottom, int left)
 		WS_VISIBLE | WS_CHILD | WS_TABSTOP | op.LvStyle,
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
-		left, Top,
+		0, Top,
 		rcClient.right, rcClient.bottom - Top - bottom, hWnd,
 		(HMENU)IDC_LISTVIEW, hInst, NULL);
 	if (hListView == NULL) {

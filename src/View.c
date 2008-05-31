@@ -754,7 +754,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{7,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{8,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{9,	ID_MENUITEM_DELETE,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{9,	ID_MENUITEM_DELETE,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{10,ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{11,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
@@ -1696,7 +1696,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		i = 0; // shouldn't happen ...
 	}
 
-	if (Init == TRUE) {
+	if (Init == TRUE || (op.AllBoxFind == FALSE && FindStartBox != SelBox)) {
 		FindStartBox = FindBox;
 		FindStartItem = i;
 	}

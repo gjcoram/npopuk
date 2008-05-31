@@ -17,8 +17,8 @@
 #define NPOPBETA_RELEASE_CAND (NPOPBETA_REAL_RELEASE-1)
 
 #define NPOPMAJOR  2
-#define NPOPMINOR 11
-#define NPOPBETA  1
+#define NPOPMINOR 10
+#define NPOPBETA  NPOPBETA_REAL_RELEASE
 #define NPOPPATCH 0
 
 
@@ -39,7 +39,7 @@
 #define NPOPPATCH 0
 #endif
 
-#if nPOPBETA == NPOPBETA_REAL_RELEASE
+#if NPOPBETA == NPOPBETA_REAL_RELEASE
 #if NPOPPATCH
 // Re-released (patched) version
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "p" #d

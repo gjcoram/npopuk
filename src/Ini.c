@@ -344,7 +344,6 @@ BOOL ini_read_setting(HWND hWnd)
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT, app_path);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, app_path);
 	op.LvColumnOrder = profile_alloc_string(GENERAL, TEXT("LvColumnOrder"), TEXT("SFDZ"), app_path);
-	op.MBMenuWidth = profile_get_int(GENERAL, TEXT("MBMenuWidth"), 0, app_path);
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t, app_path);
 
@@ -1085,7 +1084,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("LvStyle"), op.LvStyle, app_path);
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx, app_path);
 	profile_write_string(GENERAL, TEXT("LvColumnOrder"), op.LvColumnOrder, app_path);
-	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth, app_path);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread, app_path);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel, app_path);
 	profile_write_int(GENERAL, TEXT("RecvScroll"), op.RecvScroll, app_path);
