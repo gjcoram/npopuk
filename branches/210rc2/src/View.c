@@ -1696,7 +1696,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		i = 0; // shouldn't happen ...
 	}
 
-	if (Init == TRUE) {
+	if (Init == TRUE || (op.AllBoxFind == FALSE && FindStartBox != SelBox)) {
 		FindStartBox = FindBox;
 		FindStartItem = i;
 	}
