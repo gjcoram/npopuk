@@ -64,7 +64,11 @@ BOOL log_open(void)
 	if (gLogOpened) create = OPEN_ALWAYS;
 
 	// create the name
-	wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
+	if (DataDir != NULL) {
+		wsprintf(path, TEXT("%s%s"), DataDir, LOG_FILE);
+	} else {
+		wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
+	}
 
 	// create or open the file
 	hLogFile = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, 0, create, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
