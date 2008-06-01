@@ -1078,11 +1078,11 @@ CAPTION "Attached file"
 FONT 8, "MS Sans Serif"
 BEGIN
     RTEXT           "From:",IDC_STATIC,0,10,30,10
-    LTEXT           "",IDC_STATIC_FROM,35,10,180,10
-    RTEXT           "Type:",IDC_STATIC,10,25,20,10
-    LTEXT           "",IDC_STATIC_TYPE,35,25,180,10
-    RTEXT           "Name:",IDC_STATIC,0,40,30,10
-    LTEXT           "",IDC_STATIC_FILENAME,35,40,180,21
+    LTEXT           "",IDC_STATIC_FROM,35,10,180,17
+    RTEXT           "Type:",IDC_STATIC,10,30,20,10
+    LTEXT           "",IDC_STATIC_TYPE,35,30,180,10
+    RTEXT           "Name:",IDC_STATIC,0,45,30,10
+    LTEXT           "",IDC_STATIC_FILENAME,35,45,180,21
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,65,210,1
     CONTROL         "&Open",IDC_RADIO_OPEN,"Button",BS_AUTORADIOBUTTON,15,75,
                     120,10
