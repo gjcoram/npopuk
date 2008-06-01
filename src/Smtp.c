@@ -886,7 +886,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
  */
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag)
 {
-	static TCHAR *To, *Cc, *Bcc, *MyBcc;
+	static TCHAR *To, *Cc, *Bcc;
 	static int auth_type;
 	HWND hListView;
 	TCHAR *wbuf;
@@ -1242,12 +1242,6 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		To = tpMailItem->To;
 		Cc = tpMailItem->Cc;
 		Bcc = tpMailItem->Bcc;
-		// 自分宛てに送信
-		MyBcc = NULL;
-		if (send_mail_box->MyAddr2Bcc == 1) {
-			MyBcc = (send_mail_box->BccAddr != NULL && *send_mail_box->BccAddr != TEXT('\0')) ?
-				send_mail_box->BccAddr : send_mail_box->MailAddress;
-		}
 		command_status = SMTP_RCPTTO;
 		return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
 
@@ -1277,14 +1271,6 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		// Bcc に指定されたメールアドレスの送信
 		if (Bcc != NULL && *Bcc != TEXT('\0')) {
 			if ((Bcc = send_rcpt_to(hWnd, soc, Bcc, ErrStr)) == (TCHAR *)-1) {
-				return FALSE;
-			}
-			command_status = SMTP_RCPTTO;
-			break;
-		}
-		// 自分宛て
-		if (MyBcc != NULL && *MyBcc != TEXT('\0')) {
-			if ((MyBcc = send_rcpt_to(hWnd, soc, MyBcc, ErrStr)) == (TCHAR *)-1) {
 				return FALSE;
 			}
 			command_status = SMTP_RCPTTO;
