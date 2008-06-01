@@ -4211,7 +4211,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	ADDRESSBOOK *tpTmpAddressBook;
 	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
-	TCHAR *mb_replyto;
+	TCHAR *mb_replyto, *mb_autobcc;
 	int len;
 	int i, j, st, mb, cnt, sel;
 	BOOL BtnFlag, found, ret, ReDoAttachButton = FALSE;
@@ -4253,14 +4253,24 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		cnt = 0;
 		mb = -1;
 		mb_replyto = NULL;
+		mb_autobcc = NULL;
 		/* of control Initialization */
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 			if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
 				continue;
 			}
 			if ((mb == -1 && SelBox == i) || (tpMailItem->MailBox != NULL && mailbox_name_to_index(tpMailItem->MailBox) == i)) {
+				j = i;
 				mb = cnt;
 				mb_replyto = (MailBox + i)->ReplyTo;
+				if ((MailBox + i)->MyAddr2Bcc) {
+					mb_autobcc = (MailBox + i)->BccAddr;
+					if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
+						mb_autobcc = (MailBox + i)->MailAddress;
+					}
+				} else {
+					mb_autobcc = NULL;
+				}
 			}
 			if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
 				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
@@ -4270,6 +4280,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			cnt++;
 		}
 		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETCURSEL, (mb>=0) ? mb : 0, 0);
+		mb = j;
 
 		// GJC ReplyTo options: global replyto and replyto/address for each mailbox
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
@@ -4381,7 +4392,8 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		if ((tpMailItem->Cc != NULL && *tpMailItem->Cc != TEXT('\0')) ||
-			(tpMailItem->Bcc != NULL && *tpMailItem->Bcc != TEXT('\0'))) {
+			(tpMailItem->Bcc != NULL && *tpMailItem->Bcc != TEXT('\0')) ||
+			(mb_autobcc != NULL && *mb_autobcc != TEXT('\0'))) {
 			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, TRUE);
 		}
 		if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
@@ -4430,6 +4442,35 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		tpTmpMailItem->Cc = alloc_copy_t(tpMailItem->Cc);
 		tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
+		if (tpMailItem->MailStatus != ICON_SENTMAIL &&
+			mb_autobcc != NULL && *mb_autobcc != TEXT('\0')) {
+			if (tpTmpMailItem->Bcc == NULL) {
+				tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
+			} else {
+				TCHAR *tmp;
+				BOOL found = FALSE;
+				p = tpTmpMailItem->Bcc;
+				len = lstrlen(p) + 1;
+				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+				while (tmp != NULL && *p != TEXT('\0')) {
+					p = str_cpy_f_t(tmp, p, TEXT(','));
+					if (lstrcmp(mb_autobcc, p) == 0) {
+						found = TRUE;
+						break;
+					}
+				}
+				mem_free(&tmp);
+				if (found == FALSE) {
+					len += lstrlen(mb_autobcc) + 2; // ", "
+					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					if (tmp != NULL) {
+						wsprintf(tmp, TEXT("%s, %s"), tpTmpMailItem->Bcc, mb_autobcc);
+						mem_free(&tpTmpMailItem->Bcc);
+						tpTmpMailItem->Bcc = tmp;
+					}
+				}
+			}
+		}
 		tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
 		if (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) {
 			// GJC forward entire message as attachment
@@ -4448,6 +4489,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->References = alloc_copy_t(tpMailItem->References);
 		tpTmpMailItem->MailStatus = tpMailItem->MailStatus;
 		tpTmpMailItem->Mark = tpMailItem->Mark;
+		tpTmpMailItem->No = mb; // hack
 		SetEditToSubClass(GetDlgItem(hDlg, IDC_EDIT_TO), FALSE);
 		break;
 
@@ -4590,22 +4632,112 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 				tpTmpMailItem = *(tpSendMailIList + 1);
-				if (tpTmpMailItem->DefReplyTo == TRUE) {
-					sel = 0;
-					// GJC update reply-to
-					i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
-					if (i != CB_ERR) {
-						int real=0, sbox=0;
-						i += MAILBOX_USER;
-						// smtp drop-down only has "real" accounts, increment i by the number of saveboxes below it
-						for (j = MAILBOX_USER; j < MailBoxCnt && real < i; j++) {
-							if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
-								sbox++;
-							} else {
-								real++;
+				if (tpTmpMailItem == NULL) {
+					EndDialog(hDlg, FALSE);
+					break;
+				}
+				i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
+				if (i != CB_ERR) {
+					TCHAR *tmp, *q;
+					int real=0, sbox=0;
+					i += MAILBOX_USER;
+					// smtp drop-down only has "real" accounts, increment i by the number of saveboxes below it
+					for (j = MAILBOX_USER; j < MailBoxCnt && real < i; j++) {
+						if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
+							sbox++;
+						} else {
+							real++;
+						}
+					}
+					i += sbox;
+					mb = tpTmpMailItem->No;
+					if ((MailBox + mb)->MyAddr2Bcc) {
+						// remove bcc of old account
+						BOOL found = FALSE;
+						mb_autobcc = (MailBox + mb)->BccAddr;
+						if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
+							mb_autobcc = (MailBox + mb)->MailAddress;
+						}
+						if (lstrcmp(mb_autobcc, tpTmpMailItem->Bcc) == 0) {
+							mem_free(&tpTmpMailItem->Bcc);
+							tpTmpMailItem->Bcc = NULL;
+						} else {
+							p = tpTmpMailItem->Bcc;
+							len = lstrlen(p) + 1;
+							while (*p != TEXT('\0')) {
+								if (*p == TEXT(',')) len +=3;
+								p++;
+							}
+							tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+							if (tmp != NULL) {
+								q = tmp;
+								*q = TEXT('\0');
+								p = tpTmpMailItem->Bcc;
+								while (*p != TEXT('\0')) {
+									p = str_cpy_f_t(buf, p, TEXT(','));
+									if (lstrcmp(mb_autobcc, buf) == 0) {
+										found = TRUE;
+									} else {
+										if (q == tmp) {
+											q = str_join_t(q, buf, (TCHAR *)-1);
+										} else {
+											q = str_join_t(q, TEXT(",\r\n "), buf, (TCHAR *)-1);
+										}
+									}
+									while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
+										p++;
+									}
+								}
 							}
 						}
-						i += sbox;
+						if (found == TRUE) {
+							mem_free(&tpTmpMailItem->Bcc);
+							tpTmpMailItem->Bcc = tmp;
+						} else {
+							mem_free(&tmp);
+						}
+					}
+					if ((MailBox + i)->MyAddr2Bcc) {
+						// add bcc of new account
+						mb_autobcc = (MailBox + i)->BccAddr;
+						if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
+							mb_autobcc = (MailBox + i)->MailAddress;
+						}
+						if (tpTmpMailItem->Bcc == NULL) {
+							tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
+						} else {
+							BOOL found = FALSE;
+							p = tpTmpMailItem->Bcc;
+							while (*p != TEXT('\0')) {
+								p = str_cpy_f_t(buf, p, TEXT(','));
+								if (lstrcmp(mb_autobcc, buf) == 0) {
+									found = TRUE;
+									break;
+								}
+								while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
+									p++;
+								}
+
+							}
+							if (found == FALSE) {
+								len = lstrlen(tpTmpMailItem->Bcc) + lstrlen(mb_autobcc) + 5;
+								tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+								if (tmp != NULL) {
+									wsprintf(tmp, TEXT("%s,\r\n %s"), tpTmpMailItem->Bcc, mb_autobcc);
+									mem_free(&tpTmpMailItem->Bcc);
+									tpTmpMailItem->Bcc = tmp;
+								}
+							}
+						}
+					}
+					tpTmpMailItem->No = i; // hack
+					BtnFlag = ((tpTmpMailItem->Cc != NULL && *tpTmpMailItem->Cc != TEXT('\0')) ||
+						(tpTmpMailItem->Bcc != NULL && *tpTmpMailItem->Bcc != TEXT('\0'))) ? TRUE : FALSE;
+					SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, BtnFlag);
+
+					// GJC update reply-to
+					if (tpTmpMailItem->DefReplyTo == TRUE) {
+						sel = 0;
 						p = (MailBox + i)->ReplyTo;
 						if (p != NULL && *p != TEXT('\0')) {
 							for (j=0; j < SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0); j++) {
@@ -4616,8 +4748,8 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 								}
 							}
 						}
+						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
 					}
-					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
 				}
 			}
 			break;
