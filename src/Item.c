@@ -1772,7 +1772,7 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 		int j = item_find_thread(TargetBox, tpMailItem->MessageID, TargetBox->MailItemCnt);
 		if (j == -1) {
 			item_to_mailbox(TargetBox, tpMailItem, tpMailBox->Name, FALSE);
-			TargetBox->NewMail = TRUE;
+			TargetBox->NewMail++;
 			if (sbox == SelBox) {
 				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE);
 			}

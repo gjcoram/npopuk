@@ -113,6 +113,7 @@
 
 #define LV_COL_CNT				4					//ListView of tool bar Fixed mailbox
 #define AD_COL_CNT				3					// ListView Addressbook
+#define MB_COL_CNT				5					// ListView Mailboxes
 
 #define MAILBOX_SEND			0
 #define MAILBOX_USER			1
@@ -387,6 +388,7 @@ typedef struct _OPTION {
 	int BlindAppend;
 	int LvColSize[LV_COL_CNT];
 	int AddColSize[AD_COL_CNT];
+	int MblColSize[MB_COL_CNT];
 	int AddressSort;
 	int AddressJumpKey;
 	TCHAR *AddressShowGroup;
@@ -565,7 +567,7 @@ typedef struct _MAILBOX {
 	int NoUIDL;
 	unsigned long PopIP;
 
-	int MailCnt;
+	int MailCnt; // count on server
 	unsigned int MailSize; // size on server
 	long DiskSize;
 
@@ -595,7 +597,8 @@ typedef struct _MAILBOX {
 	unsigned long SmtpIP;
 
 	// Check
-	BOOL NewMail;
+	int NewMail;
+	int UnreadCnt;
 	BOOL ListInitMsg;
 	int CyclicFlag;
 
@@ -832,12 +835,12 @@ void item_create_thread(MAILBOX *tpMailBox);
 
 // MailBox
 BOOL mailbox_init(void);
-int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag);
-int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt);
+int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag);
+int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select);
 BOOL mailbox_read(void);
 int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes);
-void mailbox_move_up(HWND hWnd);
-void mailbox_move_down(HWND hWnd);
+void mailbox_move_up(HWND hWnd, BOOL select);
+void mailbox_move_down(HWND hWnd, BOOL select);
 BOOL mailbox_unread_check(int index, BOOL NewFlag);
 int mailbox_next_unread(HWND hWnd, int index, int endindex);
 void mailbox_select(HWND hWnd, int Sel);
@@ -956,6 +959,7 @@ int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);
 BOOL SetSaveBoxName(HWND hWnd);
 BOOL SetMailBoxOption(HWND hWnd);
+BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL SetOption(HWND hWnd);

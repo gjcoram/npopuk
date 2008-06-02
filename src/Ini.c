@@ -411,6 +411,19 @@ BOOL ini_read_setting(HWND hWnd)
 	op.AddressJumpKey = profile_get_int(GENERAL, TEXT("AddressJumpKey"), 0, app_path);
 	op.AddressShowGroup = profile_alloc_string(GENERAL, TEXT("AddressShowGroup"), TEXT(""), app_path);
 
+	op.MblColSize[0] = profile_get_int(GENERAL, TEXT("MblColSize-0"), 110, app_path);
+	op.MblColSize[1] = profile_get_int(GENERAL, TEXT("MblColSize-1"), 110, app_path);
+	op.MblColSize[2] = profile_get_int(GENERAL, TEXT("MblColSize-2"), 70, app_path);
+	op.MblColSize[3] = profile_get_int(GENERAL, TEXT("MblColSize-3"), 60, app_path);
+	op.MblColSize[4] = profile_get_int(GENERAL, TEXT("MblColSize-4"), 50, app_path);
+	for (i = 0; i < MB_COL_CNT; i++) {
+		if (op.MblColSize[i] > 1000) {
+			op.MblColSize[i] = 1000;
+		} else if (op.MblColSize[i] < 0) {
+			op.MblColSize[i] = 10;	
+		}
+	}
+
 #ifndef _WIN32_WCE
 	op.ViewRect.left = profile_get_int(GENERAL, TEXT("viewleft"), 0, app_path);
 	op.ViewRect.top = profile_get_int(GENERAL, TEXT("viewtop"), 0, app_path);
@@ -705,12 +718,12 @@ BOOL ini_read_setting(HWND hWnd)
 
 	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0, app_path);
 	if (cnt == 0) {
-		mailbox_create(hWnd, 1, FALSE, FALSE);
+		mailbox_create(hWnd, 1, -1, FALSE, FALSE);
 		first_start = TRUE;
 		profile_free();
 		return TRUE;
 	}
-	if (mailbox_create(hWnd, cnt, FALSE, FALSE) == -1) {
+	if (mailbox_create(hWnd, cnt, -1, FALSE, FALSE) == -1) {
 		profile_free();
 		return FALSE;
 	}
@@ -750,6 +763,12 @@ BOOL ini_read_setting(HWND hWnd)
 					return FALSE;
 				}
 			} else {
+				if ((MailBox+num)->Filename == NULL) {
+					wsprintf(buf, TEXT("%sMailBox%d.dat"), DataDir, i);
+				} else {
+					wsprintf(buf, TEXT("%s%s"), DataDir, (MailBox+num)->Filename);
+				}
+				(MailBox + num)->DiskSize = file_get_size(buf);
 				(MailBox + num)->Loaded = FALSE;
 			}
 			continue;
@@ -922,6 +941,12 @@ BOOL ini_read_setting(HWND hWnd)
 				return FALSE;
 			}
 		} else {
+			if ((MailBox+num)->Filename == NULL) {
+				wsprintf(buf, TEXT("%sMailBox%d.dat"), DataDir, i);
+			} else {
+				wsprintf(buf, TEXT("%s%s"), DataDir, (MailBox+num)->Filename);
+			}
+			(MailBox + num)->DiskSize = file_get_size(buf);
 			(MailBox + num)->Loaded = FALSE;
 		}
 	}
@@ -930,7 +955,7 @@ BOOL ini_read_setting(HWND hWnd)
 	wsprintf(buf, TEXT("MailBox%d.dat"), MailBoxCnt);
 	if (ConvertFromNPOP && file_savebox_convert(buf)) {
 		MessageBox(NULL, TEXT("Converting [Savebox]"), WINDOW_TITLE, MB_OK);
-		num = mailbox_create(hWnd, 1, FALSE, FALSE);
+		num = mailbox_create(hWnd, 1, -1, FALSE, FALSE);
 		if (num == -1) {
 			profile_free();
 			return FALSE;
@@ -1113,6 +1138,12 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("AddressSort"), op.AddressSort, app_path);
 	profile_write_int(GENERAL, TEXT("AddressJumpKey"), op.AddressJumpKey, app_path);
 	profile_write_string(GENERAL, TEXT("AddressShowGroup"), op.AddressShowGroup, app_path);
+
+	profile_write_int(GENERAL, TEXT("MblColSize-0"), op.MblColSize[0], app_path);
+	profile_write_int(GENERAL, TEXT("MblColSize-1"), op.MblColSize[1], app_path);
+	profile_write_int(GENERAL, TEXT("MblColSize-2"), op.MblColSize[2], app_path);
+	profile_write_int(GENERAL, TEXT("MblColSize-3"), op.MblColSize[3], app_path);
+	profile_write_int(GENERAL, TEXT("MblColSize-4"), op.MblColSize[4], app_path);
 
 #ifndef _WIN32_WCE
 	profile_write_int(GENERAL, TEXT("viewleft"), op.ViewRect.left, app_path);

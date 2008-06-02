@@ -847,23 +847,26 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		if (encrypted) {
 			mem_free(&q);
 		}
+		if (tpMailItem != NULL && tpMailItem->MailStatus == ICON_MAIL) {
+			tpMailBox->UnreadCnt++;
+		}
 
 		// Body position Position of end of mail acquisition
 		if (MboxFormat) {
 			tpMailItem->HasHeader = 1;
 			r = GetHeaderStringPoint(p, HEAD_X_STATUS); // X-Status is always the last header written by nPOPuk
 			if (r != NULL && r > p) {
-				tpMailItem->HasHeader = 2;
+				if (tpMailItem != NULL) tpMailItem->HasHeader = 2;
 				while (*r != '\0' && (*(r-1) != '\r' || *r != '\n')) {
 					r++;
 				}
 				if (*r == '\n') {
 					r++;
 					if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
-						tpMailItem->HasHeader = 0;
+						if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
 					} else if (*r == '\r' && *(r+1) == '\n') {
 						r += 2;
-						tpMailItem->HasHeader = 0;
+						if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
 					}
 					p = r;
 				} else if (*r == '\0') {

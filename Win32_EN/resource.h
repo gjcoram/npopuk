@@ -63,6 +63,7 @@
 #define IDD_DIALOG_MAILPROP             173
 #define IDD_DIALOG_FIND                 174
 #define IDD_DIALOG_OPTION_RAS           177
+#define IDD_DIALOG_MAILBOXES            179
 #define IDB_TOOLBAR_CE                  180
 #define IDR_MENU_EDIT_HPC               181
 #define IDR_MENU_VIEW_HPC               182
@@ -301,6 +302,9 @@
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
+#define ID_MENUITEM_MAILBOXES           1233
+#define IDC_LIST_MAILBOXES              1234
+#define IDC_BUTTON_SAVE                 1235
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

@@ -1956,6 +1956,356 @@ BOOL SetSaveBoxName(HWND hWnd)
 }
 
 /*
+ * MailBoxSummaryProc
+ */
+BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND hListView;
+	MAILBOX *tpMailBox;
+	TCHAR buf[BUF_SIZE];
+	TCHAR *p;
+	int i, sel, oldsel, move = 1;
+	BOOL ret = FALSE;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_MAILBOXLIST, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+
+		hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[0], STR_MAILBOXES_NAME, 0);
+		ListView_AddColumn(hListView, LVCFMT_RIGHT, op.MblColSize[1], 
+			((op.MblColSize[1] > 105) ? STR_MAILBOXES_MAILCOUNT : STR_MAILBOXES_MAILCNT), 1);
+		ListView_AddColumn(hListView, LVCFMT_RIGHT, op.MblColSize[2], STR_MAILBOXES_DISKSIZE, 2);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[3], STR_MAILBOXES_NEEDS_SAVE, 3);
+		if (op.LazyLoadMailboxes > 0) {
+			ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[4], STR_MAILBOXES_LOADED, 4);
+		}
+		ListView_SetExtendedListViewStyle(hListView,
+			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+
+		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+			int ItemIndex;
+			tpMailBox = MailBox + i;
+			p = tpMailBox->Name;
+			if (p == NULL) {
+				p = STR_MAILBOX_NONAME;
+			}
+			ItemIndex = ListView_AddOptionItem(hListView, p, 0);
+			if (tpMailBox->Loaded) {
+				wsprintf(buf, TEXT("%d/%d/%d"), tpMailBox->NewMail, tpMailBox->UnreadCnt, tpMailBox->MailItemCnt);
+			} else {
+				wsprintf(buf, TEXT("?"));
+			}
+			ListView_SetItemText(hListView, ItemIndex, 1, buf);
+			if (tpMailBox->DiskSize >= 0) {
+				wsprintf(buf, TEXT("%d"), tpMailBox->DiskSize);
+			} else {
+				wsprintf(buf, TEXT("?"));
+			}
+			ListView_SetItemText(hListView, ItemIndex, 2, buf);
+			ListView_SetItemText(hListView, ItemIndex, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
+			if (op.LazyLoadMailboxes > 0) {
+				ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
+			}
+		}
+		if (SelBox >= MAILBOX_USER) {
+			ListView_SetItemState(hListView, SelBox - MAILBOX_USER, LVIS_SELECTED, LVIS_SELECTED);
+		} else {
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SAVE), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 0);
+			EnableWindow(GetDlgItem(hDlg, IDOK), 0);
+		}
+		break;
+
+#ifndef _WIN32_WCE
+	case WM_DRAWITEM:
+		switch ((UINT)wParam) {
+		case IDC_BUTTON_UP:
+			DrawScrollControl((LPDRAWITEMSTRUCT)lParam, DFCS_SCROLLUP);
+			break;
+		case IDC_BUTTON_DOWN:
+			DrawScrollControl((LPDRAWITEMSTRUCT)lParam, DFCS_SCROLLDOWN);
+			break;
+		default:
+			return FALSE;
+		}
+		break;
+#endif
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_NOTIFY:
+		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_MAILBOXES));
+		{
+			LV_DISPINFO *plv = (LV_DISPINFO *)lParam;
+			if (plv->hdr.code == LVN_ITEMCHANGED) {
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SAVE), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 1);
+				EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+				EnableWindow(GetDlgItem(hDlg, IDOK), 1);
+			}
+		}
+		break;
+
+	case WM_LV_EVENT:
+		if (wParam == NM_CLICK) {
+			BOOL en, en1 = FALSE;
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			sel = ListView_GetSelectedCount(hListView);
+			if (sel <= 0) {
+				en = FALSE;
+			} else {
+				en = TRUE;
+			}
+			if (sel == 1) {
+				en1 = TRUE;
+			}
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), en);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), en);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SAVE), en);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), en);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), en1);
+			EnableWindow(GetDlgItem(hDlg, IDOK), en1);
+		}
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case ID_LV_ALLSELECT:
+			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_MAILBOXES), -1, LVIS_SELECTED, LVIS_SELECTED);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SAVE), 1);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 1);
+			EnableWindow(GetDlgItem(hDlg, IDOK), 0);
+			break;
+
+		case IDC_BUTTON_UP10:
+			move = 10;
+		case IDC_BUTTON_UP:
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			if (ListView_GetSelectedCount(hListView) <= 0) {
+				break;
+			}
+			sel = -1;
+			oldsel = SelBox;
+			while ( (sel = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
+				SelBox = sel + 1;
+				mailbox_move_up(hDlg, FALSE);
+				ListView_MoveItem(hListView, sel, -1 * move, (op.LazyLoadMailboxes > 0) ? 5 : 4);
+			}
+			SelBox = oldsel;
+			break;
+
+		case IDC_BUTTON_DOWN10:
+			move = 10;
+		case IDC_BUTTON_DOWN:
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			if (ListView_GetSelectedCount(hListView) <= 0) {
+				break;
+			}
+			sel = -1;
+			oldsel = SelBox;
+			for (sel = ListView_GetItemCount(hListView) - 1; sel >= 0; sel--) {
+				if (ListView_GetItemState(hListView, sel, LVNI_SELECTED) == LVNI_SELECTED) {
+					SelBox = sel + 1;
+					mailbox_move_down(hDlg, FALSE);
+					ListView_MoveItem(hListView, sel, move, (op.LazyLoadMailboxes > 0) ? 5 : 4);
+				}
+			}
+			SelBox = oldsel;
+			break;
+
+		case IDC_BUTTON_ADD:
+			if (MailBoxCnt >= MAX_MAILBOX_CNT) {
+				MessageBox(hDlg, TEXT("Too many accounts"), WINDOW_TITLE, MB_OK);
+				break;
+			}
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			sel = -1;
+			while( (i = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
+				sel = i;
+			}
+			oldsel = SelBox;
+			SelBox = mailbox_create(hDlg, 1, sel + 1 + MAILBOX_USER, FALSE, FALSE);
+			i = SetMailBoxType(hDlg, 0);
+			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
+			ret = TRUE;
+			if (i == -1 || (i == 0 && SetMailBoxOption(hDlg) == FALSE)) {
+				mailbox_delete(hDlg, SelBox, FALSE, FALSE);
+				ret = FALSE;
+			} else if (i == MAILBOX_IMPORT_SAVE) {
+				if (ImportSavebox(hDlg) == FALSE) {
+					mailbox_delete(hDlg, SelBox, FALSE, FALSE);
+					ret = FALSE;
+				}
+				(MailBox+SelBox)->Type = MAILBOX_TYPE_SAVE;
+				(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
+			}
+			if (ret == TRUE) {
+				tpMailBox = MailBox + SelBox;
+				p = tpMailBox->Name;
+				if (p == NULL) {
+					p = STR_MAILBOX_NONAME;
+				}
+				if (i == MAILBOX_IMPORT_SAVE) {
+					wsprintf(buf, TEXT("%d/%d/%d"), 0, tpMailBox->UnreadCnt, tpMailBox->MailItemCnt);
+				} else {
+					wsprintf(buf, TEXT("0/0/0"));
+				}
+				i = ListView_InsertItemEx(hListView, p, BUF_SIZE - 1, 0, 0, sel+1);
+				ListView_SetItemText(hListView, i, 1, buf);
+				if (tpMailBox->DiskSize >= 0) {
+					wsprintf(buf, TEXT("%d"), tpMailBox->DiskSize);
+				} else {
+					wsprintf(buf, TEXT("?"));
+				}
+				ListView_SetItemText(hListView, i, 2, buf);
+				ListView_SetItemText(hListView, i, 3, TEXT("YES"));
+				if (op.LazyLoadMailboxes > 0) {
+					ListView_SetItemText(hListView, i, 4, TEXT("YES"));
+				}
+			}
+			SelBox = oldsel;
+			if (ret == TRUE && op.AutoSave == 1) {
+				SwitchCursor(FALSE);
+				ini_save_setting(hDlg, FALSE, FALSE, NULL);
+				SwitchCursor(TRUE);
+			}
+			break;
+
+		case IDC_BUTTON_SAVE:
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			if (ListView_GetSelectedCount(hListView) <= 0) {
+				break;
+			}
+			sel = -1;
+			while( (sel = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
+				int mbox = sel + MAILBOX_USER;
+				MAILBOX *tpMailBox = MailBox + mbox;
+				if (tpMailBox->Filename == NULL) {
+					wsprintf(buf, TEXT("MailBox%d.dat"), sel);
+				} else {
+					lstrcpy(buf, tpMailBox->Filename);
+				}
+				file_save_mailbox(buf, DataDir, mbox, FALSE,
+					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+				ListView_SetItemText(hListView, sel, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
+				if (op.LazyLoadMailboxes > 0) {
+					ListView_SetItemText(hListView, sel, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
+				}
+			}
+			break;
+
+		case IDC_BUTTON_EDIT:
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			if (ListView_GetSelectedCount(hListView) != 1) {
+				break;
+			}
+			sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
+			oldsel = SelBox;
+			SelBox = sel + MAILBOX_USER;
+			tpMailBox = MailBox + SelBox;
+			if (tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+				ret = SetSaveBoxName(hDlg);
+			} else {
+				ret = SetMailBoxOption(hDlg);
+			}
+			if (ret == TRUE) {
+				p = tpMailBox->Name;
+				if (p == NULL) {
+					p = STR_MAILBOX_NONAME;
+				}
+				ListView_SetItemText(hListView, sel, 0, p);
+				SelBox = oldsel;
+				SelectMBMenu(SelBox);
+				if (op.AutoSave == 1) {
+					SwitchCursor(FALSE);
+					ini_save_setting(hDlg, FALSE, FALSE, NULL);
+					SwitchCursor(TRUE);
+				}
+			}
+			break;
+
+		case IDC_BUTTON_DELETE:
+		case ID_LV_DELETE:
+			oldsel = SelBox;
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+			sel = ListView_GetSelectedCount(hListView);
+			if (sel <= 0) {
+				break;
+			} else {
+				if (sel == 1) {
+					lstrcpy(buf, STR_Q_DELMAILBOX);
+				} else {
+					wsprintf(buf, STR_Q_DELMAILBOXES, sel);
+				}
+				if (MessageBox(hDlg, buf, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+					break;
+				}
+			}
+			while( (sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED)) >= 0) {
+				if (oldsel == sel + MAILBOX_USER) {
+					oldsel = -1;
+				}
+				mailbox_delete(hDlg, sel + MAILBOX_USER, TRUE, FALSE);
+				ListView_DeleteItem(hListView, sel);
+			}
+			if (oldsel >= 0) {
+				SelectMBMenu(oldsel);
+			}
+			// update button status
+			SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
+			break;
+
+		case ID_LV_EDIT:
+			if (ListView_GetNextItem(GetDlgItem(hDlg, IDC_LIST_MAILBOXES), -1,
+				LVNI_FOCUSED | LVIS_SELECTED) == -1) {
+				break;
+			} // fall through
+		case IDOK: // Go to - select mailbox
+			ret = TRUE;
+			// fall through
+		case IDCANCEL: // Done
+			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
+
+			for (i = 0; i < MB_COL_CNT-1; i++) {
+				op.MblColSize[i] = ListView_GetColumnWidth(hListView, i);
+			}
+			if (op.LazyLoadMailboxes > 0) {
+				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT);
+			}
+
+			if (ret == TRUE) {
+				sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
+				mailbox_select(hDlg, sel + MAILBOX_USER);
+			}
+
+			EndDialog(hDlg, TRUE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
  * SetMailBoxOption - アカウントの設定を行う
  */
 BOOL SetMailBoxOption(HWND hWnd)

@@ -142,6 +142,7 @@
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
 #define STR_Q_DELMAILBOX			TEXT("Delete mailbox?")
+#define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
 #define STR_Q_DELSBOXFILE			TEXT("Delete existing file \"%s%s\" from DataFileDir?")
 #define STR_Q_OVERWRITE				TEXT("\"%s\" \nMessage already in Savebox\nOverwrite?")
@@ -354,6 +355,14 @@
 #define STR_MAILPROP_HEADER			TEXT("Header")
 #define STR_MAILPROP_MAILADDRESS	TEXT("Mail address")
 
+// Mailbox list
+#define STR_MAILBOXES_NAME			TEXT("Name")
+#define STR_MAILBOXES_MAILCOUNT		TEXT("New/Unread/Total")
+#define STR_MAILBOXES_MAILCNT		TEXT("N/U/T")
+#define STR_MAILBOXES_DISKSIZE		TEXT("Disk Size")
+#define STR_MAILBOXES_NEEDS_SAVE	TEXT("Changed")
+#define STR_MAILBOXES_LOADED		TEXT("Loaded")
+
 // Address list
 #define STR_ADDRESSLIST_MAILADDRESS	TEXT("Mail address")
 #define STR_ADDRESS_SELECT			TEXT("&Select")
@@ -427,6 +436,7 @@
 #define STR_TITLE_ADDRESSINFO		TEXT("Address information")
 #define STR_TITLE_EDITADDRESS		TEXT("Address")
 #define STR_TITLE_ADDRESSLIST		TEXT("Address book")
+#define STR_TITLE_MAILBOXLIST		TEXT("Mailboxes")
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ENCODE			TEXT("Encoding")
 #define STR_TITLE_NEWMBOX			TEXT("Create mailbox")

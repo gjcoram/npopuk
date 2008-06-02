@@ -2848,6 +2848,8 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, lp);
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELETE, lp);
+	} else if (IsSaveBox) {
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELETE, (LPARAM)MAKELONG(1, 0));
 	}
 
 #ifdef _WIN32_WCE_PPC
@@ -3494,9 +3496,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				// GJC - copy to new SaveBox
 				int old_selbox, newbox;
 				old_selbox = SelBox;
-				SelBox = newbox = mailbox_create(hWnd, 1, TRUE, FALSE);
+				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
-					mailbox_delete(hWnd, newbox, FALSE);
+					mailbox_delete(hWnd, newbox, FALSE, TRUE);
 					command_id = 0;
 				} else {
 					command_id = newbox + ID_MENUITEM_COPY2MBOX;
@@ -3507,9 +3509,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				// GJC - move to new SaveBox
 				int old_selbox, newbox;
 				old_selbox = SelBox;
-				SelBox = newbox = mailbox_create(hWnd, 1, TRUE, FALSE);
+				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
-					mailbox_delete(hWnd, newbox, FALSE);
+					mailbox_delete(hWnd, newbox, FALSE, TRUE);
 					command_id = 0;
 				} else {
 					command_id = newbox + ID_MENUITEM_MOVE2MBOX;
