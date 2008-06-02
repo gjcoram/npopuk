@@ -1210,7 +1210,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 		// 新着カウント
 		NewMailCnt++;
-		tpMailBox->NewMail = TRUE;
+		tpMailBox->NewMail++;
 		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;		
 	}
 	 

@@ -70,13 +70,15 @@ BOOL mailbox_init(void)
 /*
  * mailbox_create - メールボックスの追加
  */
-int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
+int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 {
 	MAILBOX *TmpMailBox;
-	int count, index;
+	int count, i;
 
 	//It adds to the list of the mailbox
-	index = MailBoxCnt;
+	if (Index == -1) {
+		Index = MailBoxCnt;
+	}
 	count = MailBoxCnt + Add;
 
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * count);
@@ -84,42 +86,51 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 		return -1;
 	}
 
-	CopyMemory(TmpMailBox, MailBox, sizeof(MAILBOX) * MailBoxCnt);
+	CopyMemory(TmpMailBox, MailBox, sizeof(MAILBOX) * Index);
+	if (Index < MailBoxCnt) {
+		CopyMemory(TmpMailBox + Index + 1, MailBox + Index, sizeof(MAILBOX) * (MailBoxCnt - Index));
+	}
 
-	// initialize settings only for index
-	(TmpMailBox + index)->Type = 0;
-	(TmpMailBox + index)->Loaded = 1;
-	(TmpMailBox + index)->Port = POP_PORT;
-	(TmpMailBox + index)->SmtpPort = SMTP_PORT;
+	// initialize settings only for Index
+	(TmpMailBox + Index)->Type = 0;
+	(TmpMailBox + Index)->Loaded = 1;
+	(TmpMailBox + Index)->Port = POP_PORT;
+	(TmpMailBox + Index)->SmtpPort = SMTP_PORT;
 
-	(TmpMailBox + index)->PopSSLInfo.Verify = 1;
-	(TmpMailBox + index)->PopSSLInfo.Depth = -1;
-	(TmpMailBox + index)->SmtpSSLInfo.Verify = 1;
-	(TmpMailBox + index)->SmtpSSLInfo.Depth = -1;
+	(TmpMailBox + Index)->PopSSLInfo.Verify = 1;
+	(TmpMailBox + Index)->PopSSLInfo.Depth = -1;
+	(TmpMailBox + Index)->SmtpSSLInfo.Verify = 1;
+	(TmpMailBox + Index)->SmtpSSLInfo.Depth = -1;
 
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 	MailBoxCnt = count;
 
-	{
-		// check if MailBox?.dat is Filename for another mailbox
-		TCHAR defname[BUF_SIZE];
-		BOOL found = FALSE;
-		int k;
-		wsprintf(defname, TEXT("MailBox%d.dat"), index - MAILBOX_USER);
-
-		k = MAILBOX_USER;
-		while(k < MailBoxCnt) {
-			if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
-				&& lstrcmp(defname, (MailBox+k)->Filename) == 0) {
+	// rename files above Index, watching out for collisions
+	for (i = MailBoxCnt-1; Add == 1 && i >= Index; i--) {
+		if ((MailBox + i)->Filename == NULL) {
+			TCHAR defname[BUF_SIZE], oldname[BUF_SIZE];
+			BOOL found = FALSE;
+			int k;
+			wsprintf(oldname, TEXT("MailBox%d.dat"), i - MAILBOX_USER - 1);
+			wsprintf(defname, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
+			k = MAILBOX_USER;
+			while (k < MailBoxCnt) {
+				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
+					&& lstrcmp(defname, (MailBox+k)->Filename) == 0) {
 					found = TRUE;
 					wsprintf(defname, TEXT("MailBox%d.dat"), k - MAILBOX_USER);
-					k = 0; // start over, looking for this Filename
+					k = MAILBOX_USER; // start over, looking for this Filename
+				}
+				k++;
 			}
-			k++;
-		}
-		if (found) {
-			(MailBox+index)->Filename = alloc_copy_t(defname);
+			if (found) {
+				(MailBox+i)->Filename = alloc_copy_t(defname);
+			}
+			if (i > Index) {
+				file_delete(hWnd, defname);
+				file_rename(hWnd, oldname, defname);
+			}
 		}
 	}
 
@@ -133,18 +144,18 @@ int mailbox_create(HWND hWnd, int Add, BOOL ShowFlag, BOOL SelFlag)
 		}
 		if (SelFlag == TRUE) {
 			SelectMBMenu(i);
-			index = i;
+			Index = i;
 			mailbox_menu_rebuild(hWnd, FALSE);
 		}
 	}
 	//Only guaranty of memory
-	return index;
+	return Index;
 }
 
 /*
  * mailbox_delete - メールボックスの削除
  */
-int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
+int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 {
 	MAILBOX *TmpMailBox;
 	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
@@ -226,8 +237,10 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt)
 
 	//Deleting from the drop-down combo, it selects the mailbox of one ago the
 	DeleteMBMenu(DelIndex);
-	SelectMBMenu(DelIndex - 1);
-	mailbox_menu_rebuild(hWnd, FALSE);
+	if (Select) {
+		SelectMBMenu(DelIndex - 1);
+		mailbox_menu_rebuild(hWnd, FALSE);
+	}
 	return DelIndex - 1;
 }
 
@@ -364,7 +377,7 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 /*
  * mailbox_move_up - メールボックスの位置を上に移動する
  */
-void mailbox_move_up(HWND hWnd)
+void mailbox_move_up(HWND hWnd, BOOL select)
 {
 	MAILBOX *TmpMailBox;
 	int i;
@@ -397,14 +410,16 @@ void mailbox_move_up(HWND hWnd)
 	InsertMBMenu(SelBox,
 		(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
-	SelectMBMenu(SelBox);
-	mailbox_menu_rebuild(hWnd, FALSE);
+	if (select) {
+		SelectMBMenu(SelBox);
+		mailbox_menu_rebuild(hWnd, FALSE);
+	}
 }
 
 /*
  * mailbox_move_down - メールボックスの位置を下に移動する
  */
-void mailbox_move_down(HWND hWnd)
+void mailbox_move_down(HWND hWnd, BOOL select)
 {
 	MAILBOX *TmpMailBox;
 	int i;
@@ -437,8 +452,10 @@ void mailbox_move_down(HWND hWnd)
 	InsertMBMenu(SelBox,
 		(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
-	SelectMBMenu(SelBox);
-	mailbox_menu_rebuild(hWnd, FALSE);
+	if (select) {
+		SelectMBMenu(SelBox);
+		mailbox_menu_rebuild(hWnd, FALSE);
+	}
 }
 
 /*

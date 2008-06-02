@@ -70,6 +70,7 @@
 #define IDD_DIALOG_FIND                 174
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
+#define IDD_DIALOG_MAILBOXES            179
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDR_MENU_EDIT_HPC               181
 #define IDD_DIALOG_SETSSL               182
@@ -308,6 +309,9 @@
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
+#define ID_MENUITEM_MAILBOXES           1233
+#define IDC_LIST_MAILBOXES              1234
+#define IDC_BUTTON_SAVE                 1235
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
@@ -392,7 +396,7 @@
 #define ID_MENUITEM_MAILBOX             40122
 #define ID_MENUITEM_MAIL                40123
 #define ID_MENUITEM_EDIT                40124
-// #define unused                       40125
+#define ID_MENUITEM_CHANGEMAILBOX       40125
 #define ID_MENUITEM_VIEW                40129
 #define ID_MENUITEM_ICONSORT            40135
 #define ID_MENUITEM_TRAY                40137

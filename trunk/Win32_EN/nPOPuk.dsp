@@ -298,6 +298,10 @@ SOURCE=..\src\multipart.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\npop_ver.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\Profile.h
 # End Source File
 # Begin Source File
@@ -333,7 +337,6 @@ SOURCE=..\Res\Ico_cllo.ico
 SOURCE=..\Res\Ico_down.ico
 # End Source File
 # Begin Source File
-
 
 SOURCE=..\Res\Ico_flag.ico
 # End Source File

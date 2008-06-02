@@ -70,6 +70,7 @@
 #define IDD_DIALOG_REPLACE              175
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
+#define IDD_DIALOG_MAILBOXES            179
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDD_DIALOG_SETSSL               182
 #define IDD_DIALOG_ENCODE               183
@@ -306,6 +307,9 @@
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
+#define ID_MENUITEM_MAILBOXES           1233
+#define IDC_LIST_MAILBOXES              1234
+#define IDC_BUTTON_SAVE                 1235
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

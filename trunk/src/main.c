@@ -1085,7 +1085,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 	}
 	SetStatusTextT(MainWnd, wbuf, 1);
 
-	if (tpMailBox->NewMail == TRUE && NewCnt == 0) {
+	if (tpMailBox->NewMail > 0 && NewCnt == 0) {
 		// GJC - remove * from drop-down list
 		TCHAR *p;
 
@@ -1095,9 +1095,10 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		DeleteMBMenu(SelBox);
 		InsertMBMenu(SelBox, p);
 		SelectMBMenu(SelBox);
-		tpMailBox->NewMail = FALSE;
 		SetUnreadCntTitle(MainWnd, FALSE);
 	}
+	tpMailBox->NewMail = NewCnt;
+	tpMailBox->UnreadCnt = UnreadCnt;
 
 	// Notify programs of new count
 	if (bNotify)
@@ -3473,14 +3474,14 @@ static void Init_NewMailFlag(HWND hWnd)
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		if ((MailBox + i)->NewMail == TRUE) {
+		if ((MailBox + i)->NewMail > 0) {
 			// GJC - remove * from drop-down list
 			TCHAR *p;
 			p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 			DeleteMBMenu(i);
 			InsertMBMenu(i, p);
-			(MailBox + i)->NewMail = FALSE;
+			(MailBox + i)->NewMail = 0;
 		}
 	}
 
@@ -3498,7 +3499,7 @@ void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
 
 	j = GetSelectedMBMenu();
 	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
-		if((MailBox + i)->NewMail == TRUE) {
+		if((MailBox + i)->NewMail > 0) {
 			TCHAR *p;
 			p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
@@ -3506,7 +3507,7 @@ void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
 			if (CheckMsgs == TRUE && item_get_next_new((MailBox + i), -1, NULL) == -1) {
 				DeleteMBMenu(i);
 				InsertMBMenu(i, p);
-				(MailBox + i)->NewMail = FALSE;
+				(MailBox + i)->NewMail = 0;
 			} else {
 				UnreadMailBox++;
 				if (GetStarMBMenu(i, p)) {
@@ -3573,13 +3574,13 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	// There is a new arrival in the message box; add the " *" in the drop-down combo
 	j = GetSelectedMBMenu();
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		if ((MailBox + i)->NewMail == FALSE || (MailBox + i)->Loaded == FALSE ||
+		if ((MailBox + i)->NewMail == 0 || (MailBox + i)->Loaded == FALSE ||
 			((op.ListGetLine > 0 || op.ShowHeader == 1 || op.ListDownload == 1) &&
 			mailbox_unread_check(i, FALSE) == FALSE)) {
 			continue;
 		}
 		if (SelBox != i) {
-			(MailBox + i)->NewMail = TRUE;
+			(MailBox + i)->NewMail++;
 		}
 		DeleteMBMenu(i);
 		if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
@@ -3599,7 +3600,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 
 	//Index of mailbox of new arrival acquisition
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		if ((MailBox + i)->NewMail == TRUE) {
+		if ((MailBox + i)->NewMail > 0) {
 			break;
 		}
 	}
@@ -4555,18 +4556,18 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			old_selbox = SelBox;
-			mailbox_select(hWnd, mailbox_create(hWnd, 1, TRUE, TRUE));
+			mailbox_select(hWnd, mailbox_create(hWnd, 1, -1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
-			(MailBox+SelBox)->NewMail = TRUE; // hack to force correct name into IDC_MBMENU
+			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
-				mailbox_delete(hWnd, SelBox, FALSE);
+				mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 				mailbox_select(hWnd, old_selbox);
 				break;
 			} else if (i == MAILBOX_TYPE_SAVE) {
 				mailbox_select(hWnd, SelBox);
 			} else if (i == MAILBOX_IMPORT_SAVE) {
 				if (ImportSavebox(hWnd) == FALSE) {
-					mailbox_delete(hWnd, SelBox, FALSE);
+					mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 					mailbox_select(hWnd, old_selbox);
 					break;
 				}
@@ -4597,6 +4598,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
+		case ID_MENUITEM_MAILBOXES:
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd,
+				MailBoxSummaryProc, 0);
+			break;
+
 		//of account Deletion
 		case ID_MENUITEM_DELETEMAILBOX:
 			if (SelBox == MAILBOX_SEND || SelBox == RecvBox) {
@@ -4612,9 +4618,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// make sure SelBox-1 is loaded before deleting
 				int DelBox = SelBox;
 				mailbox_select(hWnd, SelBox-1);
-				mailbox_delete(hWnd, DelBox, TRUE);
+				mailbox_delete(hWnd, DelBox, TRUE, FALSE);
 			} else {
-				mailbox_select(hWnd, mailbox_delete(hWnd, SelBox, TRUE));
+				mailbox_select(hWnd, mailbox_delete(hWnd, SelBox, TRUE, FALSE));
 			}
 			if (op.AutoSave == 1) {
 				SwitchCursor(FALSE);
@@ -4625,7 +4631,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//of account Account on portable
 		case ID_MENUITEM_MOVEUPMAILBOX:
-			mailbox_move_up(hWnd);
+			mailbox_move_up(hWnd, TRUE);
 			if (op.AutoSave == 1) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
@@ -4635,7 +4641,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Account under portable
 		case ID_MENUITEM_MOVEDOWNMAILBOX:
-			mailbox_move_down(hWnd);
+			mailbox_move_down(hWnd, TRUE);
 			if (op.AutoSave == 1) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
@@ -5135,9 +5141,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// GJC - copy to new SaveBox
 				int old_selbox, newbox;
 				old_selbox = SelBox;
-				SelBox = newbox = mailbox_create(hWnd, 1, TRUE, FALSE);
+				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
-					mailbox_delete(hWnd, newbox, FALSE);
+					mailbox_delete(hWnd, newbox, FALSE, TRUE);
 					command_id = 0;
 				} else {
 					command_id = newbox + ID_MENUITEM_COPY2MBOX;
@@ -5148,9 +5154,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				// GJC - move to new SaveBox
 				int old_selbox, newbox;
 				old_selbox = SelBox;
-				SelBox = newbox = mailbox_create(hWnd, 1, TRUE, FALSE);
+				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
-					mailbox_delete(hWnd, newbox, FALSE);
+					mailbox_delete(hWnd, newbox, FALSE, TRUE);
 					command_id = 0;
 				} else {
 					command_id = newbox + ID_MENUITEM_MOVE2MBOX;
@@ -5969,7 +5975,11 @@ void DeleteMBMenu(int index)
  */
 BOOL GetStarMBMenu(int index, TCHAR *Name)
 {
+#ifdef _WIN32_WCE_PPC
+	unsigned int len;
+#else
 	int len;
+#endif
 	len = GetTxtLenMBMenu(index);
 	return len > lstrlen(Name);
 }
