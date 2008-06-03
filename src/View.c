@@ -2848,6 +2848,8 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, lp);
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_UNREADMARK, lp);
 		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELETE, lp);
+	} else if (IsSaveBox) {
+		SendMessage(htv, TB_ENABLEBUTTON, ID_MENUITEM_DELETE, (LPARAM)MAKELONG(1, 0));
 	}
 
 #ifdef _WIN32_WCE_PPC
