@@ -138,7 +138,11 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 		int i;
 
 		//Adding the mailbox to the menu, to obtain the index
-		i = AddMBMenu(STR_MAILBOX_NONAME);
+		if (Index < MailBoxCnt-1) {
+			InsertMBMenu(Index, STR_MAILBOX_NONAME);
+		} else {
+			i = AddMBMenu(STR_MAILBOX_NONAME);
+		}
 		if (i == CB_ERR) {
 			return -1;
 		}
