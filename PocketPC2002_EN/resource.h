@@ -71,6 +71,7 @@
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_MAILBOXES            179
+#define IDD_DIALOG_MAILBOXES_BIG        180
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDD_DIALOG_SETSSL               182
 #define IDD_DIALOG_ENCODE               183

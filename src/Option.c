@@ -2040,6 +2040,19 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 #endif
 
+#ifdef NOTYET
+	case WM_SIZE:
+		if (hDlg != NULL && IsIconic(hDlg) == 0) {
+			RECT rcClient;
+// what about buttons??
+			GetClientRect(hDlg, &rcClient);
+			MoveWindow(GetDlgItem(hDlg, IDC_LIST_MAILBOXES), 0, 0,
+			   rcClient.right, rcClient.bottom, TRUE);
+			UpdateWindow(GetDlgItem(hDlg, IDC_LIST_MAILBOXES));
+		}
+		break;
+#endif
+
 	case WM_CLOSE:
 		EndDialog(hDlg, FALSE);
 		break;
@@ -2140,7 +2153,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				sel = i;
 			}
 			oldsel = SelBox;
-			SelBox = mailbox_create(hDlg, 1, sel + 1 + MAILBOX_USER, FALSE, FALSE);
+			SelBox = mailbox_create(hDlg, 1, sel + 1 + MAILBOX_USER, TRUE, FALSE);
 			i = SetMailBoxType(hDlg, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			ret = TRUE;
