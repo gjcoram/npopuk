@@ -4817,7 +4817,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 				while (tmp != NULL && *p != TEXT('\0')) {
 					p = str_cpy_f_t(tmp, p, TEXT(','));
-					if (lstrcmp(mb_autobcc, p) == 0) {
+					if (lstrcmp(mb_autobcc, tmp) == 0) {
 						found = TRUE;
 						break;
 					}
