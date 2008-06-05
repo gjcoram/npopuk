@@ -1360,7 +1360,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		tpMailBox->NeedsSave = 0;
 	}
 	if (op.LazyLoadMailboxes != 0 && Index != MAILBOX_SEND && Index != RecvBox
-		&& Index != SelBox && Index != vSelBox) {
+		&& Index != SelBox && Index != vSelBox && tpMailBox->NewMail == 0) {
 		// unload
 		tpMailBox->Loaded = FALSE;
 		SaveBoxesLoaded = FALSE;

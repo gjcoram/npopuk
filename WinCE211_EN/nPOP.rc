@@ -1384,6 +1384,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
+        MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
         MENUITEM SEPARATOR
         MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
         MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW
