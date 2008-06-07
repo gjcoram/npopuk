@@ -796,7 +796,7 @@ BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
 BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, int do_what);
 BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len);
-BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, int SaveFlag);
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, BOOL IsAutosave, int SaveFlag);
 BOOL file_append_savebox(TCHAR *FileName, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int SaveFlag);
 BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddrBook);
 BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin);
