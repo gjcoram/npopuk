@@ -1127,7 +1127,7 @@ static void EnableFilterButton(HWND hDlg, BOOL EnableFlag)
  * GetSaveboxNum - get combobox index to savebox with this name
  */
 static int GetSaveboxNum(TCHAR *name) {
-	int i, j = 0, ret=0;
+	int i, j = -1, ret=0;
 	for (i=0; i<MailBoxCnt; i++) {
 		if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 			j++;
@@ -2044,7 +2044,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_SIZE:
 		if (hDlg != NULL && IsIconic(hDlg) == 0) {
 			RECT rcClient;
-// what about buttons??
+// GJC what about buttons??
 			GetClientRect(hDlg, &rcClient);
 			MoveWindow(GetDlgItem(hDlg, IDC_LIST_MAILBOXES), 0, 0,
 			   rcClient.right, rcClient.bottom, TRUE);
@@ -2214,7 +2214,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				} else {
 					lstrcpy(buf, tpMailBox->Filename);
 				}
-				file_save_mailbox(buf, DataDir, mbox, FALSE,
+				file_save_mailbox(buf, DataDir, mbox, FALSE, FALSE,
 					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
 				ListView_SetItemText(hListView, sel, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
 				if (op.LazyLoadMailboxes > 0) {
@@ -3496,7 +3496,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 								} else {
 									lstrcpy(fname, tpMailBox->Filename);
 								}
-								file_save_mailbox(fname, DataDir, mbox, FALSE,
+								file_save_mailbox(fname, DataDir, mbox, FALSE, FALSE,
 									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
 							}
 						}
@@ -6955,7 +6955,7 @@ BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		_SetForegroundWindow(hDlg);
 
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			if ((MailBox + i)->NewMail == TRUE) {
+			if ((MailBox + i)->NewMail > 0) {
 				sBox = i;
 				break;
 			}
@@ -6978,7 +6978,7 @@ BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			_SetForegroundWindow(hDlg);
 		}
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			if ((MailBox + i)->NewMail == TRUE) {
+			if ((MailBox + i)->NewMail > 0) {
 				sBox = i;
 				break;
 			}

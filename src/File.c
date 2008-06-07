@@ -1224,7 +1224,7 @@ BOOL file_save_exec(HWND hWnd, TCHAR *FileName, char *buf, int len)
 /*
  * file_save_mailbox - メールボックス内のメールを保存
  */
-BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, int SaveFlag)
+BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup, BOOL IsAutosave, int SaveFlag)
 {
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
@@ -1360,7 +1360,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		tpMailBox->NeedsSave = 0;
 	}
 	if (op.LazyLoadMailboxes != 0 && Index != MAILBOX_SEND && Index != RecvBox
-		&& Index != SelBox && Index != vSelBox && tpMailBox->NewMail == 0) {
+		&& Index != SelBox && Index != vSelBox && (IsAutosave == FALSE || tpMailBox->NewMail == 0)) {
 		// unload
 		tpMailBox->Loaded = FALSE;
 		SaveBoxesLoaded = FALSE;
