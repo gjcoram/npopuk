@@ -124,6 +124,7 @@ static BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag);
 static int SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type);
 static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static void SetButtonText(HWND hButton, TCHAR *title, BOOL UseFlag);
+static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right);
 static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter);
 static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static TCHAR *AddressGetWholeGroup(TCHAR *groupname);
@@ -2040,18 +2041,14 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 #endif
 
-#ifdef NOTYET
 	case WM_SIZE:
 		if (hDlg != NULL && IsIconic(hDlg) == 0) {
 			RECT rcClient;
-// GJC what about buttons??
 			GetClientRect(hDlg, &rcClient);
-			MoveWindow(GetDlgItem(hDlg, IDC_LIST_MAILBOXES), 0, 0,
-			   rcClient.right, rcClient.bottom, TRUE);
-			UpdateWindow(GetDlgItem(hDlg, IDC_LIST_MAILBOXES));
+			SetWindowSize(hDlg, IDC_LIST_MAILBOXES, rcClient.top, rcClient.bottom,
+				rcClient.left, rcClient.right);
 		}
 		break;
-#endif
 
 	case WM_CLOSE:
 		EndDialog(hDlg, FALSE);
@@ -3922,7 +3919,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_NOTIFY:
 		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_CC));
 		break;
-	
+
 	case WM_LV_EVENT:
 		if (wParam == NM_CLICK) {
 			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
@@ -5867,6 +5864,85 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
+/*
+ * SetWindowSize - for Address List and Mailbox Summary
+ */
+static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right)
+{
+	HWND hItem;
+	int width, height, midy, ypos, extra = 0;
+
+	width = right - left;
+	height = bottom - top;
+	midy = (top + bottom - 30) / 2;
+
+	if (ListID == IDC_LIST_ADDRESS) {
+		extra = 24;
+	}
+
+	ypos = (midy > 56) ? midy - 56 : 0;
+	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP),
+		right-36, ypos, 33, 24, TRUE);
+	ypos = (midy < bottom - 66) ? midy + 12 : bottom - 66;
+	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN),
+		right-36, ypos, 33, 24, TRUE);
+
+#ifndef _WIN32_WCE
+	hItem = GetDlgItem(hDlg, IDC_BUTTON_UP10);
+	ShowWindow(hItem, (height > 230));
+	MoveWindow(hItem, right-36, top+35, 33, 24, TRUE);
+	hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN10);
+	ShowWindow(hItem, (height > 230));
+	MoveWindow(hItem, right-36, bottom-93, 33, 24, TRUE);
+#endif
+
+	if (ListID == IDC_LIST_ADDRESS) {
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_NUM);
+		MoveWindow(hItem, right-36, top, 33, 24, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+		ShowWindow(hItem, (width > 280));
+		MoveWindow(hItem,left+75, bottom-66, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+		ShowWindow(hItem, (width > 350));
+		MoveWindow(hItem, left+144, bottom-66, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+		ShowWindow(hItem, (width > 420));
+		MoveWindow(hItem, right-135, bottom-66, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
+		ShowWindow(hItem, (width > 420));
+		MoveWindow(hItem, right-66, bottom-66, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
+		ShowWindow(hItem, (width > 400));
+		MoveWindow(hItem, left+15, bottom-30, 66, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
+		ShowWindow(hItem, (width > 400));
+		MoveWindow(hItem, left+80, bottom-30, 150, 21, TRUE);
+		ypos = height-69;
+	} else {
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+		ShowWindow(hItem, (width > 210));
+		MoveWindow(hItem, left+6, bottom-30, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
+		ShowWindow(hItem, (width > 280));
+		MoveWindow(hItem,left+75, bottom-30, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+		ShowWindow(hItem, (width > 350));
+		MoveWindow(hItem, left+144, bottom-30, 60, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+		ShowWindow(hItem, (width > 420));
+		MoveWindow(hItem, left+213, bottom-30, 60, 21, TRUE);
+		ypos = height-39;
+	}
+
+	hItem = GetDlgItem(hDlg, IDCANCEL);
+	MoveWindow(hItem, right-66, bottom-30, 60, 21, TRUE);
+	hItem = GetDlgItem(hDlg, IDOK);
+	MoveWindow(hItem, right-135, bottom-30, 60, 21, TRUE);
+
+	hItem = GetDlgItem(hDlg, ListID);
+	MoveWindow(hItem, 3, 3, width-42, ypos, TRUE);
+	UpdateWindow(hItem);
+}
 
 /*
  * SetAddressList - リストビューにアドレス帳のリストを表示する
@@ -6411,6 +6487,15 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		break;
 #endif
+
+	case WM_SIZE:
+		if (hDlg != NULL && IsIconic(hDlg) == 0) {
+			RECT rcClient;
+			GetClientRect(hDlg, &rcClient);
+			SetWindowSize(hDlg, IDC_LIST_ADDRESS, rcClient.top, rcClient.bottom,
+				rcClient.left, rcClient.right);
+		}
+		break;
 
 	case WM_CLOSE:
 		EndDialog(hDlg, FALSE);
