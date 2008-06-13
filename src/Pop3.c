@@ -45,9 +45,12 @@
 #define CMD_DELE				"DELE"
 #define CMD_RSET				"RSET"
 #define CMD_QUIT				"QUIT"
+// make this an INI setting?
+#define GMAIL_SYS_PROBLEM		"temporary system problem"
 
 /* Global Variables */
 static char *mail_buf = NULL;				// メール受信用バッファ
+static char *last_response = NULL;
 static unsigned int mail_buf_size;			// メール受信用バッファの実サイズ
 static unsigned int mail_buf_len;			// メール受信用バッファ内の文字列長
 static int mail_size = -1;					// メールサイズ
@@ -664,6 +667,10 @@ static int login_proc(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrSt
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return POP_ERR;
 		}
+		if (last_response != NULL) {
+			mem_free(&last_response);
+		}
+		last_response = alloc_copy(buf);
 		ret = POP_LOGIN;
 		break;
 	}
@@ -709,6 +716,14 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		tpMailBox->MailSize = a2i(t);
 	}
 	if (tpMailBox->MailCnt == 0) {
+		if (last_response != NULL) {
+			for (p = last_response + 4; p != '\0'; p++) {
+				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0) {
+					lstrcpy(ErrStr, last_response + 4);
+					return POP_ERR;
+				}
+			}
+		}
 		tpMailBox->ListInitMsg = TRUE;
 		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
@@ -1882,6 +1897,10 @@ void pop3_free(void)
 	if (mail_buf != NULL) {
 		mem_free(&mail_buf);
 		mail_buf = NULL;
+	}
+	if (last_response != NULL) {
+		mem_free(&last_response);
+		last_response = NULL;
 	}
 	uidl_free();
 }
