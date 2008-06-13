@@ -72,7 +72,7 @@ static int g_menu_height;
 #endif
 
 BOOL ViewWndViewSrc = FALSE;
-int vSelBox = 0;
+int vSelBox = -1;
 
 static MULTIPART **tpMultiPart;
 static int MultiPartCnt, MultiPartTextIndex;
@@ -1772,6 +1772,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 #endif
 					EndWindow(hViewWnd);
 					hViewWnd = NULL;
+					vSelBox = -1;
 				}
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
@@ -3060,6 +3061,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		EndWindow(hWnd);
 		hViewWnd = NULL;
+		vSelBox = -1;
 		break;
 
 	case WM_CLOSE:
@@ -3074,6 +3076,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		EndWindow(hWnd);
 		hViewWnd = NULL;
+		vSelBox = -1;
 		break;
 
 	case WM_INITMENUPOPUP:

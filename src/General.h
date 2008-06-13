@@ -356,6 +356,8 @@ typedef struct _OPTION {
 	RECT MainRect;
 	RECT ViewRect;
 	RECT EditRect;
+	RECT AddrRect;
+	RECT SummaryRect;
 	#endif
 
 	int Version;
