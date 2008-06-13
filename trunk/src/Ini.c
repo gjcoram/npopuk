@@ -322,6 +322,18 @@ BOOL ini_read_setting(HWND hWnd)
 	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 440, app_path);
 	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
 	ini_check_window_pos(&op.MainRect, 440, 320);
+
+	op.AddrRect.left = profile_get_int(GENERAL, TEXT("AddressLeft"), 0, app_path);
+	op.AddrRect.top = profile_get_int(GENERAL, TEXT("AddressTop"), 0, app_path);
+	op.AddrRect.right = profile_get_int(GENERAL, TEXT("AddressRight"), 400, app_path);
+	op.AddrRect.bottom = profile_get_int(GENERAL, TEXT("AddrBottom"), 300, app_path);
+	ini_check_window_pos(&op.AddrRect, 400, 300);
+
+	op.SummaryRect.left = profile_get_int(GENERAL, TEXT("SummaryLeft"), 0, app_path);
+	op.SummaryRect.top = profile_get_int(GENERAL, TEXT("SummaryTop"), 0, app_path);
+	op.SummaryRect.right = profile_get_int(GENERAL, TEXT("SummaryRight"), 400, app_path);
+	op.SummaryRect.bottom = profile_get_int(GENERAL, TEXT("SummaryBottom"), 300, app_path);
+	ini_check_window_pos(&op.AddrRect, 400, 300);
 #endif
 
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
@@ -1094,6 +1106,16 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("top"), op.MainRect.top, app_path);
 	profile_write_int(GENERAL, TEXT("right"), op.MainRect.right, app_path);
 	profile_write_int(GENERAL, TEXT("bottom"), op.MainRect.bottom, app_path);
+
+	profile_write_int(GENERAL, TEXT("AddressLeft"), op.AddrRect.left, app_path);
+	profile_write_int(GENERAL, TEXT("AddressTop"), op.AddrRect.top, app_path);
+	profile_write_int(GENERAL, TEXT("AddressRight"), op.AddrRect.right, app_path);
+	profile_write_int(GENERAL, TEXT("AddressBottom"), op.AddrRect.bottom, app_path);
+
+	profile_write_int(GENERAL, TEXT("SummaryLeft"), op.SummaryRect.left, app_path);
+	profile_write_int(GENERAL, TEXT("SummaryTop"), op.SummaryRect.top, app_path);
+	profile_write_int(GENERAL, TEXT("SummaryRight"), op.SummaryRect.right, app_path);
+	profile_write_int(GENERAL, TEXT("SummaryBottom"), op.SummaryRect.bottom, app_path);
 #endif
 
 	profile_write_int(GENERAL, TEXT("ShowTrayIcon"), op.ShowTrayIcon, app_path);
