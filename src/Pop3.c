@@ -717,7 +717,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 	if (tpMailBox->MailCnt == 0) {
 		if (last_response != NULL) {
-			for (p = last_response + 4; p != '\0'; p++) {
+			for (p = last_response + 4; *p != '\0'; p++) {
 				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0) {
 					lstrcpy(ErrStr, last_response + 4);
 					return POP_ERR;
