@@ -719,7 +719,14 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (last_response != NULL) {
 			for (p = last_response + 4; *p != '\0'; p++) {
 				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0) {
-					lstrcpy(ErrStr, last_response + 4);
+#ifdef UNICODE
+					int len = char_to_tchar_size(last_response+4);
+					if (len < BUF_SIZE) {
+						char_to_tchar(last_response+4, ErrStr, len);
+					}
+#else
+					strcpy_s(ErrStr, BUF_SIZE, last_response + 4);
+#endif
 					return POP_ERR;
 				}
 			}

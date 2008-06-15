@@ -38,6 +38,8 @@
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 #include "stdafx.h"
+#elif defined(_WIN32_WCE)
+#define MENU_HEIGHT 26
 #endif
 #include "resource.h"
 #include "Strtbl.h"
@@ -352,13 +354,13 @@ typedef struct _OPTION {
 	FONT_INFO lv_font;
 	int StatusBarCharWidth;
 
-	#ifndef _WIN32_WCE
+#ifndef _WIN32_WCE
 	RECT MainRect;
 	RECT ViewRect;
 	RECT EditRect;
+#endif
 	RECT AddrRect;
-	RECT SummaryRect;
-	#endif
+	RECT MblRect;
 
 	int Version;
 	int osPlatformId, osMajorVer, osMinorVer;

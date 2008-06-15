@@ -2025,23 +2025,27 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), 0);
 			EnableWindow(GetDlgItem(hDlg, IDOK), 0);
 		}
-#ifndef _WIN32_WCE
 		SetTimer(hDlg, ID_RESIZE_TIMER, 1, NULL);
-#endif
 		break;
 
-#ifndef _WIN32_WCE
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
+#ifdef _WIN32_WCE_PPC
 			RECT rcClient;
 			GetWindowRect(hDlg, &rcClient);
 			MoveWindow(hDlg, rcClient.left, rcClient.top, 
-				op.SummaryRect.right - op.SummaryRect.left,
-				op.SummaryRect.bottom - op.SummaryRect.top, TRUE);
+				op.MblRect.right - op.MblRect.left,
+				op.MblRect.bottom - op.MblRect.top, TRUE);
+#else
+			MoveWindow(hDlg, op.MblRect.left, op.MblRect.top, 
+				op.MblRect.right - op.MblRect.left,
+				op.MblRect.bottom - op.MblRect.top, TRUE);
+#endif
 		}
 		KillTimer(hDlg, wParam);
 		break;
 
+#ifndef _WIN32_WCE
 	case WM_DRAWITEM:
 		switch ((UINT)wParam) {
 		case IDC_BUTTON_UP:
@@ -2057,13 +2061,16 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_SIZE:
 		if (hDlg != NULL && IsIconic(hDlg) == 0) {
-			RECT rcClient;
-			GetClientRect(hDlg, &rcClient);
-			SetWindowSize(hDlg, IDC_LIST_MAILBOXES, rcClient.top, rcClient.bottom,
-				rcClient.left, rcClient.right);
+#else
+	case WM_SIZE:
+		if (hDlg != NULL) {
+#endif
+			RECT rcWin;
+			GetClientRect(hDlg, &rcWin);
+			SetWindowSize(hDlg, IDC_LIST_MAILBOXES, rcWin.top, rcWin.bottom,
+				rcWin.left, rcWin.right);
 		}
 		break;
-#endif
 
 	case WM_CLOSE:
 		EndDialog(hDlg, FALSE);
@@ -2310,9 +2317,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			for (i = 0; i < MB_COL_CNT-1; i++) {
 				op.MblColSize[i] = ListView_GetColumnWidth(hListView, i);
 			}
-#ifndef _WIN32_WCE
-			GetClientRect(hDlg, &op.SummaryRect);
-#endif
+			GetWindowRect(hDlg, &op.MblRect);
 			if (op.LazyLoadMailboxes > 0) {
 				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT);
 			}
@@ -5885,78 +5890,175 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /*
  * SetWindowSize - for Address List and Mailbox Summary
  */
+#ifdef _WIN32_WCE
 static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right)
 {
 	HWND hItem;
-	int width, height, midy, ypos, extra = 0;
+	int width, height, midy, ypos, tmp;
 
 	width = right - left;
 	height = bottom - top;
 	midy = (top + bottom - 30) / 2;
 
+	ypos = (midy > 46) ? midy - 46 : 0;
+	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP),
+		right-16, ypos, 15, 24, TRUE);
+
+	ypos = (midy < bottom - 100) ? midy + 12 : bottom - 100;
+	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN),
+		right-16, ypos, 15, 24, TRUE);
+
 	if (ListID == IDC_LIST_ADDRESS) {
-		extra = 24;
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_NUM);
+		ShowWindow(hItem, (midy - 46 > 30));
+		MoveWindow(hItem, right-16, top, 15, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+		ShowWindow(hItem, (width > 140));
+		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+		ShowWindow(hItem, (width > 186));
+		MoveWindow(hItem, left+47, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+		ShowWindow(hItem, (width > 232));
+		MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
+		ShowWindow(hItem, (width > 94));
+		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDCANCEL);
+		ShowWindow(hItem, (width > 70));
+		MoveWindow(hItem, right-47, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDOK);
+		ShowWindow(hItem, (width > 240));
+		MoveWindow(hItem, right-139, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
+		ShowWindow(hItem, (width > 142) && (height > 150));
+		MoveWindow(hItem, left, bottom-60, 50, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
+		ShowWindow(hItem, (width > 100) && (height > 150));
+		tmp = (width>142) ? 55 : 10;
+		MoveWindow(hItem, left + tmp, bottom-60, width-tmp-5, 21, TRUE);
+
+		ypos = height - ((height > 150) ? 69 : 39);
+	} else {
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+		ShowWindow(hItem, (width > 94));
+		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
+		ShowWindow(hItem, (width > 140));
+		MoveWindow(hItem,left+47, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+		ShowWindow(hItem, (width > 186));
+		MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+		ShowWindow(hItem, (width > 232));
+		MoveWindow(hItem, left+139, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDCANCEL);
+		ShowWindow(hItem, (width > 240));
+		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
+
+		hItem = GetDlgItem(hDlg, IDOK);
+		ShowWindow(hItem, (width > 70));
+		MoveWindow(hItem, right-47, bottom-30, 45, 21, TRUE);
+
+		ypos = height-39;
 	}
+
+	hItem = GetDlgItem(hDlg, ListID);
+	MoveWindow(hItem, left, top, width-17, ypos, TRUE);
+	UpdateWindow(hDlg);
+}
+#else
+static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right)
+{
+	HWND hItem;
+	int width, height, midy, ypos;
+
+	width = right - left;
+	height = bottom - top;
+	midy = (top + bottom - 30) / 2;
 
 	ypos = (midy > 46) ? midy - 46 : 0;
 	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP),
 		right-36, ypos, 33, 24, TRUE);
-#ifndef _WIN32_WCE
+
 	hItem = GetDlgItem(hDlg, IDC_BUTTON_UP10);
 	ShowWindow(hItem, (height > 230));
 	MoveWindow(hItem, right-36, ypos-30, 33, 24, TRUE);
-#endif
+
 	ypos = (midy < bottom - 100) ? midy + 12 : bottom - 100;
 	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN),
 		right-36, ypos, 33, 24, TRUE);
-#ifndef _WIN32_WCE
+
 	hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN10);
 	ShowWindow(hItem, (height > 230));
 	MoveWindow(hItem, right-36, ypos+30, 33, 24, TRUE);
-#endif
 
 	if (ListID == IDC_LIST_ADDRESS) {
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_NUM);
 		ShowWindow(hItem, (midy - 46 > 30));
 		MoveWindow(hItem, right-36, top, 33, 24, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
 		ShowWindow(hItem, (width > 400));
 		MoveWindow(hItem, right-273, bottom-60, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
 		ShowWindow(hItem, (width > 350));
 		MoveWindow(hItem, right-204, bottom-60, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
 		ShowWindow(hItem, (width > 140));
 		MoveWindow(hItem, right-135, bottom-60, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
 		ShowWindow(hItem, (width > 70));
 		MoveWindow(hItem, right-66, bottom-60, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
 		ShowWindow(hItem, (width > 350));
 		MoveWindow(hItem, left+15, bottom-30, 66, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
 		ShowWindow(hItem, (width > 350));
 		MoveWindow(hItem, left+80, bottom-30, width-224, 21, TRUE);
+
 		ypos = height-69;
 	} else {
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
 		ShowWindow(hItem, (width > 210));
 		MoveWindow(hItem, left+6, bottom-30, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
 		ShowWindow(hItem, (width > 280));
 		MoveWindow(hItem,left+75, bottom-30, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
 		ShowWindow(hItem, (width > 350));
 		MoveWindow(hItem, left+144, bottom-30, 60, 21, TRUE);
+
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
 		ShowWindow(hItem, (width > 420));
 		MoveWindow(hItem, left+213, bottom-30, 60, 21, TRUE);
+
 		ypos = height-39;
 	}
 
 	hItem = GetDlgItem(hDlg, IDCANCEL);
 	MoveWindow(hItem, right-66, bottom-30, 60, 21, TRUE);
 	ShowWindow(hItem, (width > 70));
+
 	hItem = GetDlgItem(hDlg, IDOK);
 	MoveWindow(hItem, right-135, bottom-30, 60, 21, TRUE);
 	ShowWindow(hItem, (width > 140));
@@ -5965,6 +6067,7 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 	MoveWindow(hItem, 3, 3, width-42, ypos, TRUE);
 	UpdateWindow(hDlg);
 }
+#endif
 
 /*
  * SetAddressList - リストビューにアドレス帳のリストを表示する
@@ -6493,12 +6596,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), enable);
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), enable);
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN10), enable);
-#ifndef _WIN32_WCE
 		SetTimer(hDlg, ID_RESIZE_TIMER, 1, NULL);
-#endif
 		break;
 
-#ifndef _WIN32_WCE
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
 			RECT rcClient;
@@ -6509,6 +6609,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		KillTimer(hDlg, wParam);
 		break;
 
+#ifndef _WIN32_WCE
 	case WM_DRAWITEM:
 		switch ((UINT)wParam) {
 		case IDC_BUTTON_UP:
@@ -6524,13 +6625,16 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_SIZE:
 		if (hDlg != NULL && IsIconic(hDlg) == 0) {
-			RECT rcClient;
-			GetClientRect(hDlg, &rcClient);
-			SetWindowSize(hDlg, IDC_LIST_ADDRESS, rcClient.top, rcClient.bottom,
-				rcClient.left, rcClient.right);
+#else
+	case WM_SIZE:
+		if (hDlg != NULL) {
+#endif
+			RECT rcWin;
+			GetClientRect(hDlg, &rcWin);
+			SetWindowSize(hDlg, IDC_LIST_ADDRESS, rcWin.top, rcWin.bottom,
+				rcWin.left, rcWin.right);
 		}
 		break;
-#endif
 
 	case WM_CLOSE:
 		EndDialog(hDlg, FALSE);
@@ -6795,9 +6899,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			for (i = 0; i < AD_COL_CNT; i++) {
 				op.AddColSize[i] = ListView_GetColumnWidth(hListView, i+1);
 			}
-#ifndef _WIN32_WCE
-			GetClientRect(hDlg, &op.AddrRect);
-#endif
+			GetWindowRect(hDlg, &op.AddrRect);
 			EndDialog(hDlg, TRUE);
 			break;
 
