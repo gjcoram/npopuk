@@ -4599,8 +4599,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		case ID_MENUITEM_MAILBOXES:
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd,
-				MailBoxSummaryProc, 0);
+			{
+				int mb_rs = IDD_DIALOG_MAILBOXES;
+				
+				if (GetSystemMetrics(SM_CXSCREEN) >= 330 && GetSystemMetrics(SM_CYSCREEN) >= 330) {
+					mb_rs = IDD_DIALOG_ADDRESS_BIG;
+				}
+				DialogBoxParam(hInst, MAKEINTRESOURCE(mb_rs), hWnd, MailBoxSummaryProc, 0);
+			}
 			break;
 
 		//of account Deletion
@@ -5975,7 +5981,7 @@ void DeleteMBMenu(int index)
  */
 BOOL GetStarMBMenu(int index, TCHAR *Name)
 {
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	unsigned int len;
 #else
 	int len;

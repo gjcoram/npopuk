@@ -43,9 +43,7 @@ extern BOOL SaveBoxesLoaded;
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
 static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret);
-#ifndef _WIN32_WCE
 static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
-#endif
 
 /*
  * ini_start_auth_check - Check Password
@@ -322,19 +320,27 @@ BOOL ini_read_setting(HWND hWnd)
 	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 440, app_path);
 	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
 	ini_check_window_pos(&op.MainRect, 440, 320);
-
-	op.AddrRect.left = profile_get_int(GENERAL, TEXT("AddressLeft"), 0, app_path);
-	op.AddrRect.top = profile_get_int(GENERAL, TEXT("AddressTop"), 0, app_path);
-	op.AddrRect.right = profile_get_int(GENERAL, TEXT("AddressRight"), 400, app_path);
-	op.AddrRect.bottom = profile_get_int(GENERAL, TEXT("AddrBottom"), 300, app_path);
-	ini_check_window_pos(&op.AddrRect, 400, 300);
-
-	op.SummaryRect.left = profile_get_int(GENERAL, TEXT("SummaryLeft"), 0, app_path);
-	op.SummaryRect.top = profile_get_int(GENERAL, TEXT("SummaryTop"), 0, app_path);
-	op.SummaryRect.right = profile_get_int(GENERAL, TEXT("SummaryRight"), 400, app_path);
-	op.SummaryRect.bottom = profile_get_int(GENERAL, TEXT("SummaryBottom"), 300, app_path);
-	ini_check_window_pos(&op.AddrRect, 400, 300);
 #endif
+
+	{
+		int top, left;
+#ifdef _WIN32_WCE
+		top = 0; left = 0;
+#else
+		top = op.MainRect.top; left = op.MainRect.left;
+#endif
+		op.AddrRect.left = profile_get_int(GENERAL, TEXT("AddressLeft"), left, app_path);
+		op.AddrRect.top = profile_get_int(GENERAL, TEXT("AddressTop"), top, app_path);
+		op.AddrRect.right = profile_get_int(GENERAL, TEXT("AddressRight"), left+400, app_path);
+		op.AddrRect.bottom = profile_get_int(GENERAL, TEXT("AddressBottom"), top+300, app_path);
+		ini_check_window_pos(&op.AddrRect, 400, 300);
+
+		op.MblRect.left = profile_get_int(GENERAL, TEXT("MblLeft"), left, app_path);
+		op.MblRect.top = profile_get_int(GENERAL, TEXT("MblTop"), top, app_path);
+		op.MblRect.right = profile_get_int(GENERAL, TEXT("MblRight"), left+400, app_path);
+		op.MblRect.bottom = profile_get_int(GENERAL, TEXT("MblBottom"), top+300, app_path);
+		ini_check_window_pos(&op.MblRect, 400, 300);
+	}
 
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
 	op.StartHide = profile_get_int(GENERAL, TEXT("StartHide"), 0, app_path);
@@ -1106,17 +1112,17 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("top"), op.MainRect.top, app_path);
 	profile_write_int(GENERAL, TEXT("right"), op.MainRect.right, app_path);
 	profile_write_int(GENERAL, TEXT("bottom"), op.MainRect.bottom, app_path);
+#endif
 
 	profile_write_int(GENERAL, TEXT("AddressLeft"), op.AddrRect.left, app_path);
 	profile_write_int(GENERAL, TEXT("AddressTop"), op.AddrRect.top, app_path);
 	profile_write_int(GENERAL, TEXT("AddressRight"), op.AddrRect.right, app_path);
 	profile_write_int(GENERAL, TEXT("AddressBottom"), op.AddrRect.bottom, app_path);
 
-	profile_write_int(GENERAL, TEXT("SummaryLeft"), op.SummaryRect.left, app_path);
-	profile_write_int(GENERAL, TEXT("SummaryTop"), op.SummaryRect.top, app_path);
-	profile_write_int(GENERAL, TEXT("SummaryRight"), op.SummaryRect.right, app_path);
-	profile_write_int(GENERAL, TEXT("SummaryBottom"), op.SummaryRect.bottom, app_path);
-#endif
+	profile_write_int(GENERAL, TEXT("MblLeft"), op.MblRect.left, app_path);
+	profile_write_int(GENERAL, TEXT("MblTop"), op.MblRect.top, app_path);
+	profile_write_int(GENERAL, TEXT("MblRight"), op.MblRect.right, app_path);
+	profile_write_int(GENERAL, TEXT("MblBottom"), op.MblRect.bottom, app_path);
 
 	profile_write_int(GENERAL, TEXT("ShowTrayIcon"), op.ShowTrayIcon, app_path);
 	profile_write_int(GENERAL, TEXT("StartHide"), op.StartHide, app_path);
@@ -1659,11 +1665,10 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 /*
  * ini_check_window_pos - check window isn't outside current screen (GJC)
  */
-#ifndef _WIN32_WCE
 static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 {
 	int s_left, s_top, s_right, s_bot;
-#if(WINVER >= 0x0500)
+#if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
 	if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
 		// Win98 or later
 		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
@@ -1677,6 +1682,9 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		s_top   = 0;
 		s_right = GetSystemMetrics(SM_CXSCREEN);
 		s_bot   = GetSystemMetrics(SM_CYSCREEN);
+#ifdef _WIN32_WCE
+		s_bot  -= MENU_HEIGHT; // ignoring sip status
+#endif
 	}
 
 	if (the_rect->left < s_left) {
@@ -1715,7 +1723,6 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		the_rect->bottom = s_bot;
 	}
 }
-#endif
 
 /*
  * ini_free - İ’èî•ñ‚ğ‰ğ•ú‚·‚é
