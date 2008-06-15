@@ -68,7 +68,6 @@ extern HWND FocusWnd;
 extern HFONT hListFont;
 extern TCHAR *g_Pass;
 extern int gPassSt;
-extern int gAddressDialogResource;
 extern BOOL ShowMsgFlag;
 extern BOOL PPCFlag;
 extern int AttachProcess;
@@ -2058,13 +2057,10 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			return FALSE;
 		}
 		break;
+#endif
 
 	case WM_SIZE:
-		if (hDlg != NULL && IsIconic(hDlg) == 0) {
-#else
-	case WM_SIZE:
 		if (hDlg != NULL) {
-#endif
 			RECT rcWin;
 			GetClientRect(hDlg, &rcWin);
 			SetWindowSize(hDlg, IDC_LIST_MAILBOXES, rcWin.top, rcWin.bottom,
@@ -3999,7 +3995,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			tpTmpAddressBook = addressbook_copy();
 			if (tpTmpAddressBook != NULL) {
 				tpTmpAddressBook->GetAddrList = TRUE;
-				if (DialogBoxParam(hInst, MAKEINTRESOURCE(gAddressDialogResource),
+				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS),
 					hDlg, AddressListProc, (LPARAM)tpTmpAddressBook) == TRUE
 					&& tpTmpAddressBook->AddrList != NULL) {
 					SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_SETTEXT, 0, (LPARAM)tpTmpAddressBook->AddrList);
@@ -4903,7 +4899,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpTmpAddressBook = addressbook_copy();
 			if (tpTmpAddressBook != NULL) {
 				tpTmpAddressBook->GetAddrList = TRUE;
-				if (DialogBoxParam(hInst, MAKEINTRESOURCE(gAddressDialogResource),
+				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS),
 					hDlg, AddressListProc, (LPARAM)tpTmpAddressBook) == TRUE
 					&& tpTmpAddressBook->AddrList != NULL) {
 					SendDlgItemMessage(hDlg, IDC_EDIT_TO, WM_SETTEXT, 0, (LPARAM)tpTmpAddressBook->AddrList);
@@ -5927,16 +5923,25 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
 		ShowWindow(hItem, (width > 94));
-		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
+		MoveWindow(hItem, right-((width>278)?139:93), bottom-30, 45, 21, TRUE);
 
+#ifdef _WIN32_WCE_PPC
 		hItem = GetDlgItem(hDlg, IDCANCEL);
 		ShowWindow(hItem, (width > 70));
 		MoveWindow(hItem, right-47, bottom-30, 45, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDOK);
-		ShowWindow(hItem, (width > 240));
-		MoveWindow(hItem, right-139, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 278));
+		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
+#else
+		hItem = GetDlgItem(hDlg, IDCANCEL);
+		ShowWindow(hItem, (width > 278));
+		MoveWindow(hItem, right-47, bottom-30, 45, 21, TRUE);
 
+		hItem = GetDlgItem(hDlg, IDOK);
+		ShowWindow(hItem, (width > 70));
+		MoveWindow(hItem, right - ((width>278)?93:47), bottom-30, 45, 21, TRUE);
+#endif
 		hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
 		ShowWindow(hItem, (width > 142) && (height > 150));
 		MoveWindow(hItem, left, bottom-60, 50, 21, TRUE);
@@ -5965,7 +5970,7 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		MoveWindow(hItem, left+139, bottom-30, 45, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDCANCEL);
-		ShowWindow(hItem, (width > 240));
+		ShowWindow(hItem, (width > 278));
 		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDOK);
@@ -6622,13 +6627,10 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return FALSE;
 		}
 		break;
+#endif
 
 	case WM_SIZE:
-		if (hDlg != NULL && IsIconic(hDlg) == 0) {
-#else
-	case WM_SIZE:
 		if (hDlg != NULL) {
-#endif
 			RECT rcWin;
 			GetClientRect(hDlg, &rcWin);
 			SetWindowSize(hDlg, IDC_LIST_ADDRESS, rcWin.top, rcWin.bottom,

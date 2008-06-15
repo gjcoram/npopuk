@@ -66,7 +66,6 @@ TCHAR *DataDir = NULL;						// データ保存先のパス
 TCHAR *IniFile = NULL;						// ini file specified by /y:
 TCHAR *g_Pass = NULL;						// 一時パスワード
 int gPassSt;								// 一時パスワード保存フラグ
-int gAddressDialogResource = IDD_DIALOG_ADDRESS;
 static TCHAR *CmdLine = NULL;				// コマンドライン
 static TCHAR *InitialAccount = NULL;
 BOOL gSendAndQuit = FALSE;
@@ -4439,7 +4438,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				ADDRESSBOOK *tpTmpAddressBook = addressbook_copy();
 				if (tpTmpAddressBook != NULL) {
 					tpTmpAddressBook->GetAddrList = FALSE;
-					DialogBoxParam(hInst, MAKEINTRESOURCE(gAddressDialogResource),
+					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS),
 						hWnd, AddressListProc, (LPARAM)tpTmpAddressBook);
 					addressbook_free(tpTmpAddressBook);
 				}
@@ -4599,14 +4598,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		case ID_MENUITEM_MAILBOXES:
-			{
-				int mb_rs = IDD_DIALOG_MAILBOXES;
-				
-				if (GetSystemMetrics(SM_CXSCREEN) >= 330 && GetSystemMetrics(SM_CYSCREEN) >= 330) {
-					mb_rs = IDD_DIALOG_ADDRESS_BIG;
-				}
-				DialogBoxParam(hInst, MAKEINTRESOURCE(mb_rs), hWnd, MailBoxSummaryProc, 0);
-			}
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
 			break;
 
 		//of account Deletion
@@ -5550,9 +5542,6 @@ static HWND InitInstance(HINSTANCE hInstance, int CmdShow)
 	hInst = hInstance;
 
 #ifdef _WIN32_WCE
-	if (GetSystemMetrics(SM_CXSCREEN) >= 330 && GetSystemMetrics(SM_CYSCREEN) >= 330) {
-		gAddressDialogResource = IDD_DIALOG_ADDRESS_BIG;
-	}
 #ifdef _WIN32_WCE_PPC
 	memset(&si, 0, sizeof(si));
 	si.cbSize = sizeof(si);
