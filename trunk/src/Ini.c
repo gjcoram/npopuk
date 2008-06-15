@@ -1683,7 +1683,8 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		s_right = GetSystemMetrics(SM_CXSCREEN);
 		s_bot   = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
-		s_bot  -= MENU_HEIGHT; // ignoring sip status
+		s_right -= 10; // so resize border is visible
+		s_bot   -= 10 + MENU_HEIGHT; // ignoring sip status
 #endif
 	}
 

@@ -42,7 +42,6 @@
 #define IDD_DIALOG_CC                   140
 #define IDD_DIALOG_ETCHEAD              141
 #define IDD_DIALOG_OPTION_CHECK         142
-#define IDD_DIALOG_ADDRESS_BIG          143
 #define IDD_DIALOG_ADDRESS              144
 #define IDD_DIALOG_ADDRESS_EDIT         145
 #define IDD_DIALOG_MSG                  146
@@ -71,7 +70,6 @@
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_MAILBOXES            179
-#define IDD_DIALOG_MAILBOXES_BIG        180
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDR_MENU_EDIT_HPC               181
 #define IDD_DIALOG_SETSSL               182
