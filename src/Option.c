@@ -5949,7 +5949,7 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
 		ShowWindow(hItem, (width > 100) && (height > 150));
 		tmp = (width>142) ? 55 : 10;
-		MoveWindow(hItem, left + tmp, bottom-60, width-tmp-5, 21, TRUE);
+		MoveWindow(hItem, left + tmp, bottom-60, width-tmp-5, 150, TRUE);
 
 		ypos = height - ((height > 150) ? 69 : 39);
 	} else {
@@ -6607,9 +6607,20 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
 			RECT rcClient;
+			int width, height;
+			width = op.AddrRect.right - op.AddrRect.left;
+			height = op.AddrRect.bottom - op.AddrRect.top;
+#ifdef _WIN32_WCE_PPC
+			// in case of landscape/portrait swap
+			if (width > GetSystemMetrics(SM_CXSCREEN)) {
+				width = GetSystemMetrics(SM_CXSCREEN) - 10;
+			}
+			if (height > GetSystemMetrics(SM_CYSCREEN)) {
+				height = GetSystemMetrics(SM_CYSCREEN) - 10 - MENU_HEIGHT;
+			}
+#endif
 			GetWindowRect(hDlg, &rcClient);
-			MoveWindow(hDlg, rcClient.left, rcClient.top, 
-				op.AddrRect.right - op.AddrRect.left, op.AddrRect.bottom - op.AddrRect.top, TRUE);
+			MoveWindow(hDlg, rcClient.left, rcClient.top, width, height, TRUE);
 		}
 		KillTimer(hDlg, wParam);
 		break;
