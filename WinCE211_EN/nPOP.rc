@@ -1313,7 +1313,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&New message...",             ID_MENUITEM_NEWMAIL
         MENUITEM SEPARATOR
-        MENUITEM "&Exit\tCtrl+Q",               ID_MENUITEM_QUIT
+        MENUITEM "E&xit\tCtrl+Q",               ID_MENUITEM_QUIT
     END
 END
 
@@ -1333,7 +1333,7 @@ BEGIN
         MENUITEM "&LAN",                        ID_MENUITEM_LAN
         MENUITEM SEPARATOR
         MENUITEM "Abou&t...",                   ID_MENUITEM_ABOUT
-        MENUITEM "&Exit",                       ID_MENUITEM_QUIT
+        MENUITEM "E&xit",                       ID_MENUITEM_QUIT
     END
     POPUP "Mail&box"
     BEGIN

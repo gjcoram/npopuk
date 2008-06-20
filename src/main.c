@@ -77,7 +77,6 @@ BOOL PPCFlag;								// PsPCフラグ
 #ifndef _WIN32_WCE
 static int confirm_flag;					// 認証フラグ
 #endif
-int MBMenuWidth = 0;
 
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
@@ -172,7 +171,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
-static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right);
+static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
 static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatus);
@@ -1410,6 +1409,8 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
+	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
+
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
 		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
@@ -1773,30 +1774,30 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 /*
  * CreateMBMenu - コンボボックスの作成
  */
-static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right)
+static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 {
 	HWND hCombo;
-	RECT rcClient, comboRect;
-	int i;
-	DWORD style;
+	RECT rcClient;
+	int i, width, height, ret = 0;
+	DWORD style = WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL;
 
 	GetClientRect(hWnd, &rcClient);
-	if (MBMenuWidth) {
-		style = WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | LBS_NOTIFY;
-		bottom = rcClient.bottom - Top - bottom;
+	if (op.MBMenuWidth > 0) {
+		style |= WS_HSCROLL | LBS_NOTIFY;
+		height = rcClient.bottom - Top - Bottom;
+		width = op.MBMenuWidth;
 	} else {
 		// compatibility mode, drop down combo at top
-		bottom = 200;
-		if (rcClient.bottom > bottom) {
-			bottom = rcClient.bottom;
+		height = 200;
+		if (rcClient.bottom > height) {
+			height = rcClient.bottom;
 		}
-		right = rcClient.right;
-		style = WS_VISIBLE | WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST;
+		width = rcClient.right;
+		style |= CBS_DROPDOWNLIST;
 	}
 
-	hCombo = CreateWindow(MBMenuWidth ? TEXT("LISTBOX") : TEXT("COMBOBOX"), TEXT(""), style,
-		0, Top, right, bottom,
-		hWnd, (HMENU)IDC_MBMENU, hInst, NULL);
+	hCombo = CreateWindow((op.MBMenuWidth>0) ? TEXT("LISTBOX") : TEXT("COMBOBOX"), TEXT(""), style,
+		0, Top, width, height, hWnd, (HMENU)IDC_MBMENU, hInst, NULL);
 	if (hCombo == NULL) {
 		return -1;
 	}
@@ -1806,8 +1807,10 @@ static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right)
 		(WPARAM)((hListFont != NULL) ? hListFont : GetStockObject(DEFAULT_GUI_FONT)),
 		MAKELPARAM(TRUE,0));
 #endif
-	if (MBMenuWidth == 0) {
+	if (op.MBMenuWidth <= 0) {
 		SendDlgItemMessage(hWnd, IDC_MBMENU, CB_SETEXTENDEDUI, TRUE, 0);
+		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &rcClient);
+		ret = rcClient.bottom - rcClient.top;
 	}
 
 	{
@@ -1819,8 +1822,8 @@ static int CreateMBMenu(HWND hWnd, int Top, int bottom, int right)
 		AddMBMenu(((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name);
 	}
-	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
-	return (comboRect.bottom - comboRect.top);
+
+	return ret;
 }
 
 /*
@@ -2053,29 +2056,15 @@ static BOOL InitWindow(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
 		(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
 
-#ifdef _WIN32_WCE
-	// It is assumed that the option setting for MBMenuWidth should not
-	// apply to WinCE devices because of their small screnn, but should
-	// also not be turned off in the INI file for portable users that
-	// set up the feature for their PC usage.  So it is conditionally
-	// copied to a global, which controls the real behavior.
-	// CE devices with large enough screens could be included?
-	// This gets into device-specific configuration, though.
-	MBMenuWidth = 0;
-#else
-	MBMenuWidth = op.MBMenuWidth;
-#endif
-
 	// コンボボックス
-	if ((j = CreateMBMenu(hWnd, Height, StatusRect.bottom - StatusRect.top, MBMenuWidth)) == -1) {
+	if ((j = CreateMBMenu(hWnd, Height, StatusRect.bottom - StatusRect.top)) == -1) {
 		return FALSE;
 	}
-	if (MBMenuWidth == 0) {
-		Height += j;
-	}
+	Height += j;
 
 	//List view
-	if (CreateListView(hWnd, Height, StatusRect.bottom - StatusRect.top, MBMenuWidth) == NULL) {
+	if (CreateListView(hWnd, Height, StatusRect.bottom - StatusRect.top,
+		((op.MBMenuWidth>0) ? op.MBMenuWidth : 0)) == NULL) {
 		return FALSE;
 	}
 	SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
@@ -2179,12 +2168,12 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 
 	Height = ToolbarRect.bottom - ToolbarRect.top;
-	if (MBMenuWidth) {
+	if (op.MBMenuWidth > 0) {
 		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
-			   MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+			   op.MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 
-		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), MBMenuWidth, Height,
-			   rcClient.right - MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), op.MBMenuWidth, Height,
+			   rcClient.right - op.MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 
 		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	} else {
@@ -4325,8 +4314,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		switch (command_id) {
 		//of message compilation
 		case IDC_MBMENU:
-			if ((MBMenuWidth == 0 && HIWORD(wParam) == CBN_CLOSEUP)
-			    || (MBMenuWidth != 0 && HIWORD(wParam) == LBN_SELCHANGE)) {
+			if ((op.MBMenuWidth <= 0 && HIWORD(wParam) == CBN_CLOSEUP)
+			    || (op.MBMenuWidth > 0 && HIWORD(wParam) == LBN_SELCHANGE)) {
 				if (SelBox == GetSelectedMBMenu()) {
 					break;
 				}
@@ -4599,6 +4588,32 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case ID_MENUITEM_MAILBOXES:
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
+			break;
+
+		case ID_MENUITEM_MBOXPANE:
+			{
+				RECT rcRect;
+				int dTop, dBottom, tmp, height, width;
+				op.MBMenuWidth = -op.MBMenuWidth;
+				DestroyWindow(GetDlgItem(hWnd, IDC_MBMENU));
+				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
+				dTop = rcRect.bottom - rcRect.top;
+				height = -rcRect.bottom;
+				GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &rcRect);
+				dBottom = rcRect.bottom - rcRect.top;
+				height += rcRect.top;
+				tmp = CreateMBMenu(hWnd, dTop, dBottom);
+				if (tmp > 0) {
+					dTop += tmp;
+					height -= tmp;
+				}
+				SelectMBMenu(SelBox);
+				GetWindowRect(GetDlgItem(hWnd, IDC_LISTVIEW), &rcRect);
+				width = rcRect.right - rcRect.left - op.MBMenuWidth;
+				MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW),
+					((op.MBMenuWidth>0) ? op.MBMenuWidth : 0), dTop, width, height, TRUE);
+				CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
+			}
 			break;
 
 		//of account Deletion
@@ -5904,7 +5919,7 @@ int MsgMBMenu(int msg)
 	static LB_msgs[] = {
 		LB_GETCURSEL, LB_SETCURSEL, LB_GETTEXTLEN, LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING };
 	
-	if (MBMenuWidth) {
+	if (op.MBMenuWidth > 0) {
 		return LB_msgs[ msg ];
 	} else {
 		return CB_msgs[ msg ];
@@ -6004,7 +6019,7 @@ void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
  */
 BOOL GetDroppedStateMBMenu(void)
 {
-	if (MBMenuWidth == 0) {
+	if (op.MBMenuWidth <= 0) {
 		return SendDlgItemMessage(MainWnd, IDC_MBMENU, CB_GETDROPPEDSTATE, 0, 0);
 	} else {
 		return FALSE;
@@ -6016,7 +6031,7 @@ BOOL GetDroppedStateMBMenu(void)
  */
 void DropMBMenu(BOOL drop)
 {
-	if (MBMenuWidth == 0) {
+	if (op.MBMenuWidth <= 0) {
 		SendDlgItemMessage(MainWnd, IDC_MBMENU, CB_SHOWDROPDOWN, drop, 0);
 	}
 }

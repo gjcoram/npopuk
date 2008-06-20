@@ -4104,7 +4104,15 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				ListView_SetItemText(hListView, SelectItem, 0, p);
 			}
 			mem_free(&p);
-			
+
+			SendMessage(hDlg, DM_SETDEFID, (WPARAM)cmd, 0);
+			Button_SetStyle(GetDlgItem(hDlg, IDC_BUTTON_TO),
+				((cmd==IDC_BUTTON_TO) ? BS_DEFPUSHBUTTON: BS_PUSHBUTTON), TRUE);
+			Button_SetStyle(GetDlgItem(hDlg, IDC_BUTTON_CC),
+				((cmd==IDC_BUTTON_CC) ? BS_DEFPUSHBUTTON: BS_PUSHBUTTON), TRUE);
+			Button_SetStyle(GetDlgItem(hDlg, IDC_BUTTON_BCC),
+				((cmd==IDC_BUTTON_BCC) ? BS_DEFPUSHBUTTON: BS_PUSHBUTTON), TRUE);
+
 			SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, WM_SETTEXT, 0, (LPARAM)TEXT(""));
 			SetFocus(GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS));
 			break;

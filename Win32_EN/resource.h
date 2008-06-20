@@ -305,6 +305,7 @@
 #define ID_MENUITEM_MAILBOXES           1233
 #define IDC_LIST_MAILBOXES              1234
 #define IDC_BUTTON_SAVE                 1235
+#define ID_MENUITEM_MBOXPANE            1236
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
