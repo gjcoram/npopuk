@@ -982,7 +982,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
-HWND CreateListView(HWND hWnd, int Top, int bottom, int left);
+HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left);
 void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
 int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem);
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);

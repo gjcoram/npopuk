@@ -367,6 +367,7 @@ BEGIN
         MENUITEM "&Next\tAlt+Up",               ID_KEY_ALTDOWN
         MENUITEM "&Previous\tAlt+Down",         ID_KEY_ALTUP
         MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
+        MENUITEM "&List pane",                  ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
         MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
         MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
