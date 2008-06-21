@@ -1674,25 +1674,28 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
  */
 static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 {
-	int s_left, s_top, s_right, s_bot;
+	static int s_left, s_right, s_top = 0, s_bot = 0;
+	// use "static" so we only have to make the system calls once
+	if (s_bot == 0 && s_top == 0) {
 #if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
-	if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
-		// Win98 or later
-		s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
-		s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
-		s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
-		s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
-	} else
+		if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
+			// Win98 or later
+			s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
+			s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
+			s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
+			s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
+		} else
 #endif
-	{
-		s_left  = 0;
-		s_top   = 0;
-		s_right = GetSystemMetrics(SM_CXSCREEN);
-		s_bot   = GetSystemMetrics(SM_CYSCREEN);
+		{
+			s_left  = 0;
+			s_top   = 0;
+			s_right = GetSystemMetrics(SM_CXSCREEN);
+			s_bot   = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
-		s_right -= 10; // so resize border is visible
-		s_bot   -= 10 + MENU_HEIGHT; // ignoring sip status
+			s_right -= 10; // so resize border is visible
+			s_bot   -= 10 + MENU_HEIGHT; // ignoring sip status
 #endif
+		}
 	}
 
 	if (the_rect->left < s_left) {

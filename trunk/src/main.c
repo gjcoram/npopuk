@@ -102,6 +102,7 @@ HMENU hMainMenu;							// ウィンドウメニューのハンドル (l'agenda)
 int MailMenuPos;							// メニュー位置
 
 static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
+static WNDPROC MBPaneWndProc = NULL;
 int LvSortFlag;								// ListViewのソートフラグ
 BOOL EndThreadSortFlag;						// 通信終了時の自動ソートフラグ(スレッド表示用)
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -171,6 +172,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
 static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -1409,7 +1411,9 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
+#ifndef _WIN32_WCE
 	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
+#endif
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
 		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
@@ -1772,7 +1776,28 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*
- * CreateMBMenu - コンボボックスの作成
+ * MBPaneSizeProc - resize handler
+ */
+static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (msg == WM_EXITSIZEMOVE) {
+		RECT paneRect;
+		POINT top;
+		HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+		GetWindowRect(hWnd, &paneRect);
+		op.MBMenuWidth = paneRect.right - paneRect.left;
+		GetWindowRect(hListView, &paneRect);
+		top.x = paneRect.left;
+		top.y = paneRect.top;
+		ScreenToClient(MainWnd, &top);
+		MoveWindow(hListView, op.MBMenuWidth, top.y,
+			paneRect.right-op.MBMenuWidth, paneRect.bottom-paneRect.top, TRUE);
+	}
+	return CallWindowProc(MBPaneWndProc, hWnd, msg, wParam, lParam);
+}
+
+/*
+ * CreateMBMenu - create mailbox combobox or listview
  */
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 {
@@ -1783,7 +1808,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 
 	GetClientRect(hWnd, &rcClient);
 	if (op.MBMenuWidth > 0) {
-		style |= WS_HSCROLL | LBS_NOTIFY;
+		style |= WS_HSCROLL | LBS_NOTIFY | WS_THICKFRAME;
 		height = rcClient.bottom - Top - Bottom;
 		width = op.MBMenuWidth;
 	} else {
@@ -1807,7 +1832,11 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		(WPARAM)((hListFont != NULL) ? hListFont : GetStockObject(DEFAULT_GUI_FONT)),
 		MAKELPARAM(TRUE,0));
 #endif
-	if (op.MBMenuWidth <= 0) {
+	if (op.MBMenuWidth > 0) {
+		// insert custom handler to deal with WM_SIZE
+		MBPaneWndProc = (WNDPROC)SetWindowLong(hCombo, GWL_WNDPROC, (DWORD)MBPaneSizeProc);
+	} else {
+		MBPaneWndProc = NULL;
 		SendDlgItemMessage(hWnd, IDC_MBMENU, CB_SETEXTENDEDUI, TRUE, 0);
 		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &rcClient);
 		ret = rcClient.bottom - rcClient.top;
@@ -4590,11 +4619,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
 			break;
 
+#ifndef _WIN32_WCE
 		case ID_MENUITEM_MBOXPANE:
 			{
 				RECT rcRect;
 				int dTop, dBottom, tmp, height, width;
 				op.MBMenuWidth = -op.MBMenuWidth;
+				if (MBPaneWndProc != NULL) {
+					SetWindowLong(GetDlgItem(hWnd, IDC_MBMENU), GWL_WNDPROC, (DWORD)MBPaneWndProc);
+				}
 				DestroyWindow(GetDlgItem(hWnd, IDC_MBMENU));
 				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
 				dTop = rcRect.bottom - rcRect.top;
@@ -4615,6 +4648,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;
+#endif
 
 		//of account Deletion
 		case ID_MENUITEM_DELETEMAILBOX:
