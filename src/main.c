@@ -1896,8 +1896,14 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		AddMBMenu(((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
-			? STR_MAILBOX_NONAME : (MailBox + i)->Name);
+		TCHAR buf[BUF_SIZE], *p;
+		p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
+			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
+		if ((MailBox + i)->NewMail) {
+			wsprintf(buf, TEXT("%s *"), p);
+			p = buf;
+		}
+		AddMBMenu(p);
 	}
 
 	return ret;
