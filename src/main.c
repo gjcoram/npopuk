@@ -87,7 +87,7 @@ static HICON TrayIcon_Main;					// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
-static HMENU hPOPUP;						// タスクトレイアイコン用のポップアップメニュー
+static HMENU hPOPUP, hMBPOPUP;				// pop-up menus for listview, mbpane
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
@@ -1411,7 +1411,7 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
-#ifndef _WIN32_WCE
+#ifndef _WIN32_WCE_PPC
 	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
 #endif
 
@@ -1780,19 +1780,66 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
  */
 static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (msg == WM_EXITSIZEMOVE) {
-		RECT paneRect;
-		POINT top;
-		HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-		GetWindowRect(hWnd, &paneRect);
-		op.MBMenuWidth = paneRect.right - paneRect.left;
-		GetWindowRect(hListView, &paneRect);
-		top.x = paneRect.left;
-		top.y = paneRect.top;
-		ScreenToClient(MainWnd, &top);
-		MoveWindow(hListView, op.MBMenuWidth, top.y,
-			paneRect.right-op.MBMenuWidth, paneRect.bottom-paneRect.top, TRUE);
+	switch (msg) {
+#ifndef _WIN32_WCE
+		case WM_EXITSIZEMOVE:
+#else
+		case WM_SIZE: 
+#endif
+		{
+			RECT paneRect;
+			POINT top;
+			HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+			GetWindowRect(hWnd, &paneRect);
+			top.x = paneRect.right;
+			top.y = paneRect.top;
+			ScreenToClient(MainWnd, &top);
+			op.MBMenuWidth = top.x;
+			GetWindowRect(hListView, &paneRect);
+			top.x = paneRect.left;
+			top.y = paneRect.top;
+			ScreenToClient(MainWnd, &top);
+			MoveWindow(hListView, op.MBMenuWidth, top.y,
+				paneRect.right-op.MBMenuWidth, paneRect.bottom-paneRect.top, TRUE);
+		}
+		break;
+
+#ifndef _WIN32_WCE
+		case WM_GETMINMAXINFO:
+		{
+			LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
+			minmax->ptMinTrackSize.y = op.MBMenuHeight;
+			minmax->ptMaxTrackSize.y = op.MBMenuHeight;
+		}
+		break;
+#endif
+
+		case WM_RBUTTONUP:
+			{
+				BOOL SocFlag, RecvBoxFlag, SaveTypeFlag, SendBoxFlag, MoveBoxFlag;
+				SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
+				RecvBoxFlag = (SelBox == RecvBox) ? 0 : 1;
+				SaveTypeFlag = ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) ? 0 : 1;
+				SendBoxFlag = (SelBox == MAILBOX_SEND) ? 0 : 1;
+				MoveBoxFlag = (MailBoxCnt <= 3) ? 0 : 1;
+
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_SETMAILBOX, !(RecvBoxFlag & SendBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_DELETEMAILBOX, !(RecvBoxFlag & SendBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_LISTINIT, !(SaveTypeFlag & SendBoxFlag));
+
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
+
+				ShowMenu(hWnd, hMBPOPUP, 0, 0, FALSE);
+			}
+			break;
+
+		case WM_COMMAND:
+			// pass mailbox commands to main window
+			SendMessage(GetParent(hWnd), msg, wParam, lParam);
+			return 0;
 	}
+
 	return CallWindowProc(MBPaneWndProc, hWnd, msg, wParam, lParam);
 }
 
@@ -1809,7 +1856,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 	GetClientRect(hWnd, &rcClient);
 	if (op.MBMenuWidth > 0) {
 		style |= WS_HSCROLL | LBS_NOTIFY | WS_THICKFRAME;
-		height = rcClient.bottom - Top - Bottom;
+		height = op.MBMenuHeight = rcClient.bottom - Top - Bottom;
 		width = op.MBMenuWidth;
 	} else {
 		// compatibility mode, drop down combo at top
@@ -1817,6 +1864,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		if (rcClient.bottom > height) {
 			height = rcClient.bottom;
 		}
+		op.MBMenuHeight = 0;
 		width = rcClient.right;
 		style |= CBS_DROPDOWNLIST;
 	}
@@ -2085,7 +2133,7 @@ static BOOL InitWindow(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
 		(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
 
-	// コンボボックス
+	// combobox or mailbox pane
 	if ((j = CreateMBMenu(hWnd, Height, StatusRect.bottom - StatusRect.top)) == -1) {
 		return FALSE;
 	}
@@ -4619,10 +4667,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
 			break;
 
-#ifndef _WIN32_WCE
+#ifndef _WIN32_WCE_PPC
 		case ID_MENUITEM_MBOXPANE:
 			{
 				RECT rcRect;
+				HMENU hMenu;
 				int dTop, dBottom, tmp, height, width;
 				op.MBMenuWidth = -op.MBMenuWidth;
 				if (MBPaneWndProc != NULL) {
@@ -4645,7 +4694,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
 				MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW),
 					((op.MBMenuWidth>0) ? op.MBMenuWidth : 0), dTop, width, height, TRUE);
-				CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
+#ifdef _WIN32_WCE_PPC
+				hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
+#elif defined(_WIN32_WCE)
+				hMenu = CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0);
+#else
+				hMenu = GetMenu(hWnd);
+#endif
+				CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;
 #endif
@@ -5867,6 +5923,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
@@ -5893,6 +5950,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	mem_free(&IniFile);
 	mem_free(&InitialAccount);
 	DestroyMenu(hPOPUP);
+	DestroyMenu(hMBPOPUP);
 	UnregisterClass(MAIN_WND_CLASS, hInstance);
 	UnregisterClass(VIEW_WND_CLASS, hInstance);
 	UnregisterClass(EDIT_WND_CLASS, hInstance);

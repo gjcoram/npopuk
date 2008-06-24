@@ -160,6 +160,8 @@ BEGIN
     "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REFLOW,     VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_MENUITEM_PASTEQUOT,  VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
     VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
 END
@@ -1347,6 +1349,7 @@ BEGIN
         MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
+        MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
         MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
         MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW

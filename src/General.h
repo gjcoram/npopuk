@@ -380,6 +380,7 @@ typedef struct _OPTION {
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
 	int MBMenuWidth;
+	int MBMenuHeight; // not saved in INI, for resizing
 	int ScanAllForUnread;
 	int DelIsMarkDel;
 	int RecvScroll;
