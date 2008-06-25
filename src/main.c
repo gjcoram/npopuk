@@ -1796,11 +1796,11 @@ static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 			ScreenToClient(MainWnd, &top);
 			op.MBMenuWidth = top.x;
 			GetWindowRect(hListView, &paneRect);
-			top.x = paneRect.left;
+			top.x = paneRect.right;
 			top.y = paneRect.top;
 			ScreenToClient(MainWnd, &top);
 			MoveWindow(hListView, op.MBMenuWidth, top.y,
-				paneRect.right-op.MBMenuWidth, paneRect.bottom-paneRect.top, TRUE);
+				top.x-op.MBMenuWidth, op.MBMenuHeight, TRUE);
 		}
 		break;
 

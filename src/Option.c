@@ -5917,6 +5917,9 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		ShowWindow(hItem, (midy - 46 > 30));
 		MoveWindow(hItem, right-16, top, 15, 21, TRUE);
 
+#ifdef _WIN32_WCE
+		if (op.UsePOOMAddressBook == 0) {
+#endif
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
 		ShowWindow(hItem, (width > 140));
 		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
@@ -5928,6 +5931,9 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
 		ShowWindow(hItem, (width > 232));
 		MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
+#ifdef _WIN32_WCE
+		}
+#endif
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
 		ShowWindow(hItem, (width > 94));

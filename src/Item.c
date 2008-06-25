@@ -1602,6 +1602,7 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 		return str_match_t(filter_content, TEXT(""));
 	}
 #define FILTER_IN_ADDRESSBOOK TEXT("**INADDRESSBOOK")
+#define FILTER_IN_GROUP TEXT("**INGROUP")
 // Important that the next two have the same length!
 #define FILTER_DATE_OLDER TEXT("**OLDERTHAN")
 #define FILTER_DATE_NEWER TEXT("**NEWERTHAN")
@@ -1611,6 +1612,10 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 		if (str_cmp_ni_t(filter_content, FILTER_IN_ADDRESSBOOK, len) == 0) {
 			comptype = 10;
 		}
+		len = lstrlen(FILTER_IN_GROUP);
+		if (str_cmp_ni_t(filter_content, FILTER_IN_GROUP, len) == 0) {
+			comptype = 100;
+		}
 	} else if (lstrcmpi(filter_header, TEXT("date:")) == 0) {
 		len = lstrlen(FILTER_DATE_OLDER);
 		if (str_cmp_ni_t(filter_content, FILTER_DATE_OLDER, len) == 0) {
@@ -1619,19 +1624,51 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 			comptype = 1;
 		}
 	}
-	if (comptype == 10) {
+	if (comptype == 10 || comptype == 100) {
 		int i;
-		TCHAR *fromaddr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Content) + 1));
+		TCHAR *fromaddr = NULL;
+		TCHAR *group = NULL;
+		if (comptype == 100) {
+			group = filter_content + lstrlen(FILTER_IN_GROUP);
+			while(*group == TEXT(' ')) group++;
+			if (lstrlen(group) == 0) {
+				return FALSE;
+			}
+		}
+		fromaddr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Content) + 1));
 		GetMailAddress(Content, fromaddr, NULL, FALSE);
 		ret = FALSE;
 		for (i = 0; i < AddressBook->ItemCnt; i++) {
 			ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
 			if (item != NULL && item->AddressOnly != NULL
 				&& lstrcmp(fromaddr, item->AddressOnly) == 0) {
-				ret = TRUE;
-				break;
+				if (comptype == 10) {
+					ret = TRUE;
+					break;
+				} else if (item->Group != NULL) {
+					len = lstrlen(item->Group);
+					if (lstrcmp(group, item->Group) == 0) {
+						ret = TRUE;
+						break;
+					} else if (len > (int)lstrlen(group)) {
+						TCHAR *p, *q, *tmp;
+						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+						p = item->Group;
+						q = tmp;
+						while (q && *p != TEXT('\0')) {
+							p = str_cpy_f_t(tmp, p, TEXT(','));
+							if (lstrcmp(tmp, group) == 0) {
+								ret = TRUE;
+								break;
+							}
+							while (*p == TEXT(' ')) p++;
+						}
+						mem_free(&tmp);
+					}
+				}
 			}
 		}
+		mem_free(&fromaddr);
 	} else if (comptype != 0) {
 		int days = _ttoi(filter_content + len);
 		ret = DateCompare(Content, days, (comptype==1) ? TRUE : FALSE);
