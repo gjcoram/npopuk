@@ -1462,7 +1462,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				ListView_GetItemText(hListView, i, 1, buf, BUF_SIZE - 1);
 				if (str_cmp_ni_t(buf, STR_FILTER_COPY, lstrlen(STR_FILTER_COPY)) == 0) {
 					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_COPY));
-				    *(buf + lstrlen(STR_FILTER_COPY)) = TEXT('\0');
+					*(buf + lstrlen(STR_FILTER_COPY)) = TEXT('\0');
 				} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lstrlen(STR_FILTER_MOVE)) == 0) {
 					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_MOVE));
 					*(buf + lstrlen(STR_FILTER_MOVE)) = TEXT('\0');
@@ -2030,11 +2030,28 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
 #ifdef _WIN32_WCE_PPC
-			RECT rcClient;
-			GetWindowRect(hDlg, &rcClient);
-			MoveWindow(hDlg, rcClient.left, rcClient.top, 
-				op.MblRect.right - op.MblRect.left,
-				op.MblRect.bottom - op.MblRect.top, TRUE);
+			RECT rcDlg;
+			int width, height, xsize, ysize;
+			width = op.MblRect.right - op.MblRect.left;
+			height = op.MblRect.bottom - op.MblRect.top;
+			xsize = GetSystemMetrics(SM_CXSCREEN);
+			ysize = GetSystemMetrics(SM_CYSCREEN);
+			// in case of landscape/portrait swap
+			if (width > xsize) {
+				width = xsize - 10;
+			}
+			if (height > ysize) {
+				height = ysize - 10 - MENU_HEIGHT;
+			}
+			GetWindowRect(hDlg, &rcDlg);
+			if (rcDlg.left > xsize) {
+				rcDlg.left = 5;
+			}
+			if (rcDlg.top > ysize) {
+				rcDlg.top = 5;
+			}
+			MoveWindow(hDlg, rcDlg.left, rcDlg.top,
+				width, height, TRUE);
 #else
 			MoveWindow(hDlg, op.MblRect.left, op.MblRect.top, 
 				op.MblRect.right - op.MblRect.left,
@@ -4428,7 +4445,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			if (cnt1 > 0) {
-				f1 = tpMailItem->Attach    = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len1 + 1));
+				f1 = tpMailItem->Attach = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len1 + 1));
 				if (f1 == NULL) {
 					EndDialog(hDlg, FALSE);
 					break;
@@ -5917,23 +5934,19 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		ShowWindow(hItem, (midy - 46 > 30));
 		MoveWindow(hItem, right-16, top, 15, 21, TRUE);
 
-#ifdef _WIN32_WCE
 		if (op.UsePOOMAddressBook == 0) {
-#endif
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-		ShowWindow(hItem, (width > 140));
-		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+			ShowWindow(hItem, (width > 140));
+			MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
-		ShowWindow(hItem, (width > 186));
-		MoveWindow(hItem, left+47, bottom-30, 45, 21, TRUE);
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+			ShowWindow(hItem, (width > 186));
+			MoveWindow(hItem, left+47, bottom-30, 45, 21, TRUE);
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
-		ShowWindow(hItem, (width > 232));
-		MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
-#ifdef _WIN32_WCE
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+			ShowWindow(hItem, (width > 232));
+			MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
 		}
-#endif
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
 		ShowWindow(hItem, (width > 94));
@@ -6621,16 +6634,18 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
 			RECT rcClient;
-			int width, height;
+			int width, height, xsize, ysize;
 			width = op.AddrRect.right - op.AddrRect.left;
 			height = op.AddrRect.bottom - op.AddrRect.top;
+			xsize = GetSystemMetrics(SM_CXSCREEN);
+			ysize = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE_PPC
 			// in case of landscape/portrait swap
-			if (width > GetSystemMetrics(SM_CXSCREEN)) {
-				width = GetSystemMetrics(SM_CXSCREEN) - 10;
+			if (width > xsize) {
+				width = xsize - 10;
 			}
-			if (height > GetSystemMetrics(SM_CYSCREEN)) {
-				height = GetSystemMetrics(SM_CYSCREEN) - 10 - MENU_HEIGHT;
+			if (height > ysize) {
+				height = ysize - 10 - MENU_HEIGHT;
 			}
 #endif
 			GetWindowRect(hDlg, &rcClient);
@@ -7480,7 +7495,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 		strcpy_s(logfont.lfFaceName, 32, TEXT("Tahoma"));
 #endif
-#else // Win32 - 8, "MS Sans Serif"         
+#else // Win32 - 8, "MS Sans Serif"
 #ifdef UNICODE
 		wcscpy(logfont.lfFaceName, TEXT("MS Sans Serif"));
 #else
@@ -7489,7 +7504,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 		hFont = CreateFontIndirect( &logfont );
 
-	    SendMessage(GetDlgItem(hDlg, IDC_ABOUT_TEXT), WM_SETFONT, (WPARAM) hFont, (LPARAM) TRUE);  
+		SendMessage(GetDlgItem(hDlg, IDC_ABOUT_TEXT), WM_SETFONT, (WPARAM) hFont, (LPARAM) TRUE);  
 
 		if(AboutWnd != NULL){
 			_SetForegroundWindow(AboutWnd);
