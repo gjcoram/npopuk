@@ -7042,6 +7042,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_REPLACE:
 			if (FindOrReplace >= 2) {
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
+				DecodeCtrlChar(FindStr, FindStr);
 				if (FindStr == NULL || *FindStr == TEXT('\0')) {
 					ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
 					SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
@@ -7097,6 +7098,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 		case IDC_REPLACE_AGAIN:
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_FIND), &FindStr);
+			DecodeCtrlChar(FindStr, FindStr);
 			if (FindStr == NULL || *FindStr == TEXT('\0')) {
 				ErrorMessage(hDlg, STR_ERR_INPUTFINDSTRING);
 				SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
