@@ -1641,11 +1641,12 @@ static BOOL item_filter_check_content(char *buf, TCHAR *filter_header, TCHAR *fi
 		for (i = 0; i < AddressBook->ItemCnt; i++) {
 			ADDRESSITEM *item = *(AddressBook->tpAddrItem + i);
 			if (item != NULL && item->AddressOnly != NULL
+				&& (comptype == 10 || item->Group != NULL)
 				&& lstrcmp(fromaddr, item->AddressOnly) == 0) {
 				if (comptype == 10) {
 					ret = TRUE;
 					break;
-				} else if (item->Group != NULL) {
+				} else {
 					len = lstrlen(item->Group);
 					if (lstrcmp(group, item->Group) == 0) {
 						ret = TRUE;
