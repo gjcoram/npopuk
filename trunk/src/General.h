@@ -896,6 +896,7 @@ void DateAdd(SYSTEMTIME *sTime, char *tz);
 int DateConv(char *buf, char *ret, BOOL for_sort);
 int DateUnConv(char *buf, char *ret);
 BOOL DateCompare(TCHAR *msg_date, int days, BOOL newer);
+void FormatNumberString(long num, TCHAR *fmtstring, TCHAR *decpt, TCHAR *ret);
 void GetTimeString(TCHAR *buf);
 void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decode);
 void EncodeCtrlChar(TCHAR *buf, TCHAR *ret);

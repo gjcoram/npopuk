@@ -241,6 +241,8 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
             MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
+            MENUITEM SEPARATOR
+            MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
             MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
             MENUITEM SEPARATOR
             MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT

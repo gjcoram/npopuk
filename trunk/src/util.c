@@ -906,6 +906,27 @@ BOOL DateCompare(TCHAR *msg_date, int days, BOOL newer)
 }
 
 /*
+ * FormatNumberString - for size (KB,MB,GB)
+ */
+void FormatNumberString(long num, TCHAR *fmtstring, TCHAR *decpt, TCHAR *ret)
+{
+	TCHAR tmp[20];
+	long div;
+
+	div = num/1024;
+	if (num < 10240) { // 1.23 MB
+		wsprintf(tmp, TEXT("%d%s%2.2d"), div, decpt, (100*(num-div*1024))/1024);
+		wsprintf(ret, fmtstring, tmp);
+	} else if (num < 102400) { // 12.3 MB
+		wsprintf(tmp, TEXT("%d%s%1.1d"), div, decpt, (10*(num-div*1024))/1024);
+		wsprintf(ret, fmtstring, tmp);
+	} else { // 123 MB
+		wsprintf(tmp, TEXT("%d"), div);
+		wsprintf(ret, fmtstring, tmp);
+	}
+}
+
+/*
  * GetTimeString - ŽžŠÔ•¶Žš—ñ‚ÌŽæ“¾ (RFC 822, RFC 2822)
  */
 void GetTimeString(TCHAR *buf)

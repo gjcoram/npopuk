@@ -141,7 +141,7 @@
 #define STR_Q_DELSERVERMAIL			TEXT("Warning! Messages are marked to\ndelete from server. Delete them?")
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
-#define STR_Q_DELMAILBOX			TEXT("Delete mailbox?")
+#define STR_Q_DELMAILBOX			TEXT("Delete mailbox \"%s\"?")
 #define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
 #define STR_Q_DELSBOXFILE			TEXT("Delete existing file \"%s%s\" from DataFileDir?")
