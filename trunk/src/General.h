@@ -348,6 +348,7 @@ typedef struct _OPTION {
 	TCHAR *Password;
 
 	TCHAR DataFileDir[BUF_SIZE];
+	TCHAR DecPt[5];
 	TCHAR *BackupDir;
 
 	FONT_INFO view_font;

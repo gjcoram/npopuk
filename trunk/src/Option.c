@@ -1963,10 +1963,9 @@ BOOL SetSaveBoxName(HWND hWnd)
 static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, int Num)
 {
 	TCHAR *p;
-	TCHAR buf[BUF_SIZE], decpt[5];
+	TCHAR buf[BUF_SIZE];
 	int ItemIndex, dsize;
 
-	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)decpt, 4);
 	p = tpMailBox->Name;
 	if (p == NULL) {
 		p = STR_MAILBOX_NONAME;
@@ -1992,14 +1991,14 @@ static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, 
 		wsprintf(buf, STR_STATUS_MAILSIZE_B, dsize);
 	} else {
 		if (dsize < 102400) {
-			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, decpt, buf);
+			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, op.DecPt, buf);
 		} else {
 			dsize /= 1024;
 			if (dsize < 102400) {
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, decpt, buf);
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, op.DecPt, buf);
 			} else {
 				dsize /= 1024;
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, decpt, buf);
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, op.DecPt, buf);
 			}
 		}
 	}
