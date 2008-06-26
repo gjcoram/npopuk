@@ -229,6 +229,9 @@ BOOL ini_read_setting(HWND hWnd)
 		return FALSE;
 	}
 
+	// cache at start-up
+	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)op.DecPt, 4);
+
 	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1, app_path);
 
 	if (*op.DataFileDir == TEXT('\0')) {

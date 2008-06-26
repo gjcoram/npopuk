@@ -958,7 +958,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 {
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
-	TCHAR wbuf[BUF_SIZE], dtmp[20], decpt[5];
+	TCHAR wbuf[BUF_SIZE], dtmp[20];
 	long dsize;
 	int ItemCnt;
 	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0;
@@ -970,7 +970,6 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 	}
 
 	ItemCnt = ListView_GetItemCount(GetDlgItem(MainWnd, IDC_LISTVIEW));
-	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)decpt, 4);
 	dsize = tpMailBox->DiskSize;
 	if (dsize < 0) {
 		wsprintf(dtmp, STR_STATUS_MAILSIZE_KB, TEXT("?"));
@@ -978,14 +977,14 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		wsprintf(dtmp, STR_STATUS_MAILSIZE_B, dsize);
 	} else {
 		if (dsize < 102400) {
-			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, decpt, dtmp);
+			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, op.DecPt, dtmp);
 		} else {
 			dsize /= 1024;
 			if (dsize < 102400) {
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, decpt, dtmp);
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, op.DecPt, dtmp);
 			} else {
 				dsize /= 1024;
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, decpt, dtmp);
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, op.DecPt, dtmp);
 			}
 		}
 	}
@@ -1004,14 +1003,14 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 			wsprintf(stmp, STR_STATUS_MAILSIZE_B, ssize);
 		} else {
 			if (ssize < 102400) {
-				FormatNumberString(ssize, STR_STATUS_MAILSIZE_KB, decpt, stmp);
+				FormatNumberString(ssize, STR_STATUS_MAILSIZE_KB, op.DecPt, stmp);
 			} else {
 				ssize /= 1024;
 				if (ssize < 102400) {
-					FormatNumberString(ssize, STR_STATUS_MAILSIZE_MB, decpt, stmp);
+					FormatNumberString(ssize, STR_STATUS_MAILSIZE_MB, op.DecPt, stmp);
 				} else {
 					ssize /= 1024;
-					FormatNumberString(ssize, STR_STATUS_MAILSIZE_GB, decpt, stmp);
+					FormatNumberString(ssize, STR_STATUS_MAILSIZE_GB, op.DecPt, stmp);
 				}
 			}
 		}
