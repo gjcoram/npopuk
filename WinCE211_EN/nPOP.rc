@@ -718,6 +718,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Load mailboxes",IDC_STATIC,5,90,150,28
 END
+
 IDD_DIALOG_FILTER DIALOG DISCARDABLE  0, 0, 162, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Filter"
@@ -1378,7 +1379,7 @@ BEGIN
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
         MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
-        MENUITEM "Mark as &unread\tShft+Ctrl+B", ID_MENUITEM_UNREADMAIL
+        MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
         POPUP "Copy to"
         BEGIN
@@ -1416,7 +1417,7 @@ BEGIN
         MENUITEM "Cu&t\tCtrl+X",                ID_MENUITEM_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_MENUITEM_PASTE
-        MENUITEM "Paste as &quotation",         ID_MENUITEM_PASTEQUOT
+        MENUITEM "Paste as &quotation\tShift+Ctrl+V", ID_MENUITEM_PASTEQUOT
         MENUITEM "&Reflow selection\tCtrl+R",   ID_MENUITEM_REFLOW
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
@@ -1464,7 +1465,7 @@ BEGIN
         MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
         MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
-        MENUITEM "Mark a&s unread\tShft+Ctrl+B", ID_MENUITEM_UNREADMAIL
+        MENUITEM "Mark a&s unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
         POPUP "Copy to"
         BEGIN

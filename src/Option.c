@@ -94,6 +94,7 @@ static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, int Num);
 static BOOL CALLBACK PopSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSmtpAuthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SmtpSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1957,6 +1958,60 @@ BOOL SetSaveBoxName(HWND hWnd)
 }
 
 /*
+ * MailboxSummaryAdd - add tpMailBox to summary list
+ */
+static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, int Num)
+{
+	TCHAR *p;
+	TCHAR buf[BUF_SIZE], decpt[5];
+	int ItemIndex, dsize;
+
+	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)decpt, 4);
+	p = tpMailBox->Name;
+	if (p == NULL) {
+		p = STR_MAILBOX_NONAME;
+	}
+	if (Num == 0) {
+		ItemIndex = ListView_AddOptionItem(hListView, p, 0);
+	} else {
+		ItemIndex = ListView_InsertItemEx(hListView, p, BUF_SIZE - 1, 0, 0, Num);
+	}
+	if (newSbox == TRUE) {
+		wsprintf(buf, TEXT("0/0/0"));
+	} else if (tpMailBox->Loaded) {
+		wsprintf(buf, TEXT("%d/%d/%d"), tpMailBox->NewMail, tpMailBox->UnreadCnt, tpMailBox->MailItemCnt);
+	} else {
+		wsprintf(buf, TEXT("?"));
+	}
+	ListView_SetItemText(hListView, ItemIndex, 1, buf);
+
+	dsize = tpMailBox->DiskSize;
+	if (dsize < 0) {
+		wsprintf(buf, STR_STATUS_MAILSIZE_KB, TEXT("?"));
+	} else if (dsize < 1000) {
+		wsprintf(buf, STR_STATUS_MAILSIZE_B, dsize);
+	} else {
+		if (dsize < 102400) {
+			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, decpt, buf);
+		} else {
+			dsize /= 1024;
+			if (dsize < 102400) {
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, decpt, buf);
+			} else {
+				dsize /= 1024;
+				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, decpt, buf);
+			}
+		}
+	}
+	ListView_SetItemText(hListView, ItemIndex, 2, buf);
+
+	ListView_SetItemText(hListView, ItemIndex, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
+	if (op.LazyLoadMailboxes > 0) {
+		ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
+	}
+}
+
+/*
  * MailBoxSummaryProc
  */
 BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1990,29 +2045,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			int ItemIndex;
-			tpMailBox = MailBox + i;
-			p = tpMailBox->Name;
-			if (p == NULL) {
-				p = STR_MAILBOX_NONAME;
-			}
-			ItemIndex = ListView_AddOptionItem(hListView, p, 0);
-			if (tpMailBox->Loaded) {
-				wsprintf(buf, TEXT("%d/%d/%d"), tpMailBox->NewMail, tpMailBox->UnreadCnt, tpMailBox->MailItemCnt);
-			} else {
-				wsprintf(buf, TEXT("?"));
-			}
-			ListView_SetItemText(hListView, ItemIndex, 1, buf);
-			if (tpMailBox->DiskSize >= 0) {
-				wsprintf(buf, TEXT("%d"), tpMailBox->DiskSize);
-			} else {
-				wsprintf(buf, TEXT("?"));
-			}
-			ListView_SetItemText(hListView, ItemIndex, 2, buf);
-			ListView_SetItemText(hListView, ItemIndex, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
-			if (op.LazyLoadMailboxes > 0) {
-				ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
-			}
+			MailboxSummaryAdd(MailBox + i, hListView, FALSE, 0);
 		}
 		if (SelBox >= MAILBOX_USER) {
 			ListView_SetItemState(hListView, SelBox - MAILBOX_USER, LVIS_SELECTED, LVIS_SELECTED);
@@ -2201,28 +2234,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
 			}
 			if (ret == TRUE) {
-				tpMailBox = MailBox + SelBox;
-				p = tpMailBox->Name;
-				if (p == NULL) {
-					p = STR_MAILBOX_NONAME;
-				}
-				if (i == MAILBOX_IMPORT_SAVE) {
-					wsprintf(buf, TEXT("%d/%d/%d"), 0, tpMailBox->UnreadCnt, tpMailBox->MailItemCnt);
-				} else {
-					wsprintf(buf, TEXT("0/0/0"));
-				}
-				i = ListView_InsertItemEx(hListView, p, BUF_SIZE - 1, 0, 0, sel+1);
-				ListView_SetItemText(hListView, i, 1, buf);
-				if (tpMailBox->DiskSize >= 0) {
-					wsprintf(buf, TEXT("%d"), tpMailBox->DiskSize);
-				} else {
-					wsprintf(buf, TEXT("?"));
-				}
-				ListView_SetItemText(hListView, i, 2, buf);
-				ListView_SetItemText(hListView, i, 3, TEXT("YES"));
-				if (op.LazyLoadMailboxes > 0) {
-					ListView_SetItemText(hListView, i, 4, TEXT("YES"));
-				}
+				MailboxSummaryAdd(MailBox + SelBox, hListView, (i != MAILBOX_IMPORT_SAVE), sel+1);
 			}
 			SelBox = oldsel;
 			if (ret == TRUE && op.AutoSave == 1) {
@@ -2294,7 +2306,8 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				break;
 			} else {
 				if (sel == 1) {
-					lstrcpy(buf, STR_Q_DELMAILBOX);
+					sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED) + MAILBOX_USER;
+					wsprintf(buf, STR_Q_DELMAILBOX, ((MailBox+sel)->Name) ? (MailBox+sel)->Name : STR_MAILBOX_NONAME);
 				} else {
 					wsprintf(buf, STR_Q_DELMAILBOXES, sel);
 				}

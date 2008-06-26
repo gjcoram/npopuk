@@ -172,7 +172,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
-static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
 static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -951,24 +951,6 @@ void SetSocStatusText(HWND hWnd, char *buf)
 }
 #endif
 
-void FormatNumberString(long num, TCHAR *fmtstring, TCHAR *decpt, TCHAR *ret)
-{
-	TCHAR tmp[20];
-	long div;
-
-	div = num/1024;
-	if (num < 10240) { // 1.23 MB
-		wsprintf(tmp, TEXT("%d%s%2.2d"), div, decpt, (100*(num-div*1024))/1024);
-		wsprintf(ret, fmtstring, tmp);
-	} else if (num < 102400) { // 12.3 MB
-		wsprintf(tmp, TEXT("%d%s%1.1d"), div, decpt, (10*(num-div*1024))/1024);
-		wsprintf(ret, fmtstring, tmp);
-	} else { // 123 MB
-		wsprintf(tmp, TEXT("%d"), div);
-		wsprintf(ret, fmtstring, tmp);
-	}
-}
-
 /*
  * SetItemCntStatusText - アイテム数の表示
  */
@@ -1095,6 +1077,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		DeleteMBMenu(SelBox);
 		InsertMBMenu(SelBox, p);
 		SelectMBMenu(SelBox);
+		tpMailBox->NewMail = NewCnt;
 		SetUnreadCntTitle(MainWnd, FALSE);
 	}
 	tpMailBox->NewMail = NewCnt;
@@ -1776,9 +1759,9 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*
- * MBPaneSizeProc - resize handler
+ * MBPaneProc - resize handler
  */
-static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 #ifndef _WIN32_WCE
@@ -1808,7 +1791,7 @@ static LRESULT CALLBACK MBPaneSizeProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 		case WM_GETMINMAXINFO:
 		{
 			LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
-			minmax->ptMinTrackSize.y = op.MBMenuHeight;
+			minmax->ptMinTrackSize.y = op.MBMenuHeight - 10;
 			minmax->ptMaxTrackSize.y = op.MBMenuHeight;
 		}
 		break;
@@ -1882,7 +1865,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 #endif
 	if (op.MBMenuWidth > 0) {
 		// insert custom handler to deal with WM_SIZE
-		MBPaneWndProc = (WNDPROC)SetWindowLong(hCombo, GWL_WNDPROC, (DWORD)MBPaneSizeProc);
+		MBPaneWndProc = (WNDPROC)SetWindowLong(hCombo, GWL_WNDPROC, (DWORD)MBPaneProc);
 	} else {
 		MBPaneWndProc = NULL;
 		SendDlgItemMessage(hWnd, IDC_MBMENU, CB_SETEXTENDEDUI, TRUE, 0);
@@ -2235,8 +2218,8 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 #else
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-	RECT rcClient, StatusRect, ToolbarRect, comboRect;
-	int Height = 0;
+	RECT rcClient, subwinRect;
+	int newTop, newHeight;
 
 	if (hWnd == NULL || IsIconic(hWnd) != 0) {
 		return FALSE;
@@ -2246,26 +2229,34 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, wParam, lParam);
 
 	GetClientRect(hWnd, &rcClient);
-	GetWindowRect(GetDlgItem(hWnd, IDC_TB), &ToolbarRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
+	newHeight = rcClient.bottom; // rcClient.top = 0 always
+	// Toolbar
+	GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
+	newTop = (subwinRect.bottom - subwinRect.top);
+	newHeight -= newTop;
+	// Status bar
+	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &subwinRect);
+	newHeight -= (subwinRect.bottom - subwinRect.top);
 
-	Height = ToolbarRect.bottom - ToolbarRect.top;
 	if (op.MBMenuWidth > 0) {
-		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
-			   op.MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+		op.MBMenuHeight = newHeight;
+		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, op.MBMenuWidth, newHeight, TRUE);
 
-		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), op.MBMenuWidth, Height,
-			   rcClient.right - op.MBMenuWidth, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), op.MBMenuWidth, newTop,
+			   rcClient.right - op.MBMenuWidth, newHeight, TRUE);
 
 		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	} else {
-		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
-			   rcClient.right, comboRect.bottom - comboRect.top, TRUE);
+		// combobar
+		int comboHeight;
+		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &subwinRect);
+		comboHeight = subwinRect.bottom - subwinRect.top;
 
-		Height += comboRect.bottom - comboRect.top;
-		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
-			   rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
+		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, rcClient.right, comboHeight, TRUE);
+
+		newTop += comboHeight;
+		newHeight -= comboHeight;
+		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, newTop, rcClient.right, newHeight, TRUE);
 
 		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	}
@@ -4712,13 +4703,32 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 #endif
 
+		// save mailbox
+		case ID_MENUITEM_SAVEMAILBOX:
+			if (SelBox != RecvBox) {
+				TCHAR buf[BUF_SIZE];
+				MAILBOX *tpMailBox = MailBox + SelBox;
+				if (tpMailBox->Filename == NULL) {
+					wsprintf(buf, TEXT("MailBox%d.dat"), SelBox - MAILBOX_USER);
+				} else {
+					lstrcpy(buf, tpMailBox->Filename);
+				}
+				file_save_mailbox(buf, DataDir, SelBox, FALSE, FALSE,
+					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+			}
+			break;
+
 		//of account Deletion
 		case ID_MENUITEM_DELETEMAILBOX:
 			if (SelBox == MAILBOX_SEND || SelBox == RecvBox) {
 				break;
 			}
-			if (MessageBox(hWnd, STR_Q_DELMAILBOX, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
-				break;
+			{
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+SelBox)->Name) ? (MailBox+SelBox)->Name : STR_MAILBOX_NONAME);
+				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+					break;
+				}
 			}
 			if (g_soc != -1 && SelBox < RecvBox) {
 				RecvBox--;
