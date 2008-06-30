@@ -239,7 +239,11 @@
 #define STR_STATUS_SENDBODY			TEXT("Sending body...")
 #define STR_STATUS_SEND_ATT			TEXT("Sending attachment %d...")
 #define STR_STATUS_ATT_END			TEXT("Done sending attachments")
-#define STR_STATUS_SOCKINFO			TEXT("%d byte %s")
+#ifdef WSAASYNC
+#define STR_STATUS_SOCKINFO			TEXT("[....................] %d bytes %s")
+#else
+#define STR_STATUS_SOCKINFO			TEXT("%d bytes %s")
+#endif
 #define STR_STATUS_SOCKINFO_RECV	TEXT("Recv")
 #define STR_STATUS_RECVDONE			TEXT("Recv done.")
 #define STR_STATUS_SOCKINFO_SEND	TEXT("Send")

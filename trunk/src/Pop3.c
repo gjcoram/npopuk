@@ -1412,7 +1412,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		recvcnt++;
 		if (recvcnt > REDRAWCNT) {
 			recvcnt = 0;
-			SetStatusRecvLen(hWnd, recvlen, STR_STATUS_SOCKINFO_RECV);
+			SetStatusRecvLen(hWnd, recvlen, mail_size, STR_STATUS_SOCKINFO_RECV);
 		}
 		return POP_RETR;
 	}
