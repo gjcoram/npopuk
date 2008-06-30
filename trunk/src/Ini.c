@@ -374,7 +374,6 @@ BOOL ini_read_setting(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
-	op.MBMenuWidth = 100;
 
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t, app_path);
