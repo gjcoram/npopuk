@@ -246,7 +246,7 @@
 #endif
 #define STR_STATUS_SOCKINFO_RECV	TEXT("Recv")
 #define STR_STATUS_RECVDONE			TEXT("Recv done.")
-#define STR_STATUS_SOCKINFO_SEND	TEXT("Send")
+#define STR_STATUS_SOCKINFO_SEND	TEXT("Sent")
 #define STR_STATUS_SEND_USER		TEXT("Send username")
 #define STR_STATUS_SEND_PASS		TEXT("Send password")
 
