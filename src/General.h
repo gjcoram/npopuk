@@ -1018,7 +1018,7 @@ void SetSocStatusText(HWND hWnd, char *buf);
 #define SetSocStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf)
 #endif
 void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify);
-void SetStatusRecvLen(HWND hWnd, int len, TCHAR *msg);
+void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);

@@ -1097,11 +1097,21 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 /*
  * SetStatusRecvLen - 送受信バイト数の表示
  */
-void SetStatusRecvLen(HWND hWnd, int len, TCHAR *msg)
+void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg)
 {
 	TCHAR wbuf[BUF_SIZE];
 
 	wsprintf(wbuf, STR_STATUS_SOCKINFO, len, msg);
+#ifdef WSAASYNC
+	// Progress bar - GJC
+	// [....................]
+	if (size > 0) {
+		int i;
+		for (i=0; i < (20 * len) / size; i++) {
+			wbuf[i+1] = TEXT('|');
+		}
+	}
+#endif
 	SetStatusTextT(hWnd, wbuf, 1);
 }
 
@@ -1229,28 +1239,28 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 	HWND hListView;
 	RECT WndRect;
 	RECT ItemRect;
+	POINT apos;
 	int i;
 	int x = 0, y = 0;
 	DWORD ret = 0;
-#ifndef _WIN32_WCE
-	POINT apos;
-#endif
 
 #ifndef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
 #endif
 	switch (PosFlag) {
-	case 0:
 		//of round Acquisition
 #ifdef _WIN32_WCE
+	case 0:
 		ret = GetMessagePos();
 		x = LOWORD(ret);
 		y = HIWORD(ret);
 #else
+	case 0:
+#endif
+	case 3:
 		GetCursorPos((LPPOINT)&apos);
 		x = apos.x;
 		y = apos.y;
-#endif
 		break;
 
 	case 1:
@@ -1768,23 +1778,23 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #else
 		case WM_SIZE: 
 #endif
-		{
-			RECT paneRect;
-			POINT top;
-			HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-			GetWindowRect(hWnd, &paneRect);
-			top.x = paneRect.right;
-			top.y = paneRect.top;
-			ScreenToClient(MainWnd, &top);
-			op.MBMenuWidth = top.x;
-			GetWindowRect(hListView, &paneRect);
-			top.x = paneRect.right;
-			top.y = paneRect.top;
-			ScreenToClient(MainWnd, &top);
-			MoveWindow(hListView, op.MBMenuWidth, top.y,
-				top.x-op.MBMenuWidth, op.MBMenuHeight, TRUE);
-		}
-		break;
+			{
+				RECT paneRect;
+				POINT top;
+				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+				GetWindowRect(hWnd, &paneRect);
+				top.x = paneRect.right;
+				top.y = paneRect.top;
+				ScreenToClient(MainWnd, &top);
+				op.MBMenuWidth = top.x;
+				GetWindowRect(hListView, &paneRect);
+				top.x = paneRect.right;
+				top.y = paneRect.top;
+				ScreenToClient(MainWnd, &top);
+				MoveWindow(hListView, op.MBMenuWidth, top.y,
+					top.x-op.MBMenuWidth, op.MBMenuHeight, TRUE);
+			}
+			break;
 
 #ifndef _WIN32_WCE
 		case WM_GETMINMAXINFO:
@@ -1796,8 +1806,31 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 #endif
 
-		case WM_RBUTTONUP:
+#ifdef _WIN32_WCE
+		case WM_LBUTTONDOWN:
 			{
+				SHRGINFO rg;
+
+				rg.cbSize = sizeof(SHRGINFO);
+				rg.hwndClient = hWnd;
+				rg.ptDown.x = LOWORD(lParam);
+				rg.ptDown.y = HIWORD(lParam);
+				rg.dwFlags = SHRG_RETURNCMD;
+
+				if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+					SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
+					return 0;
+				}
+			}
+			break;
+#else
+		case WM_RBUTTONUP:
+			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
+			return 0;
+#endif
+
+		case WM_COMMAND:
+			if (LOWORD(wParam) == ID_MENU) {
 				BOOL SocFlag, RecvBoxFlag, SaveTypeFlag, SendBoxFlag, MoveBoxFlag;
 				SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
 				RecvBoxFlag = (SelBox == RecvBox) ? 0 : 1;
@@ -1812,13 +1845,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
-				ShowMenu(hWnd, hMBPOPUP, 0, 0, FALSE);
+				SendMessage(hWnd, WM_NULL, 0, 0);
+				ShowMenu(hWnd, hMBPOPUP, 0, 3, FALSE);
+			} else {
+				// pass mailbox commands to main window
+				SendMessage(GetParent(hWnd), msg, wParam, lParam);
 			}
-			break;
-
-		case WM_COMMAND:
-			// pass mailbox commands to main window
-			SendMessage(GetParent(hWnd), msg, wParam, lParam);
 			return 0;
 	}
 
@@ -2151,31 +2183,7 @@ static BOOL InitWindow(HWND hWnd)
 /*
  * SetWindowSize - ウィンドウのサイズ変更
  */
-#ifdef _WIN32_WCE
-static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-	RECT rcClient, StatusRect, comboRect;
-	int Height = 0;
-
-	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, 0, 0);
-
-	GetClientRect(hWnd, &rcClient);
-	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &StatusRect);
-	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
-
-#ifndef _WIN32_WCE_PPC
-	Height = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
-#endif
-	MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, Height,
-		rcClient.right, comboRect.bottom - comboRect.top, TRUE);
-
-	Height += (comboRect.bottom - comboRect.top);
-	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
-		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
-	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
-	return TRUE;
-}
-#elif defined _WIN32_WCE_LAGENDA
+#ifdef _WIN32_WCE_LAGENDA
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	COSIPINFO CoSipInfo;
@@ -2210,6 +2218,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &comboRect);
 	Height = (comboRect.bottom - comboRect.top) + g_menu_height;
 
+	if (op.MBMenuWidth > 0) MessageBox(hWnd, TEXT("SetWindowSize not ready!"), TEXT("ERROR"), MB_OK);
 	MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, Height,
 		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 	return ret;
@@ -2220,19 +2229,32 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	RECT rcClient, subwinRect;
 	int newTop, newHeight;
 
+#ifdef _WIN32_WCE
+	if (hWnd == NULL) {
+#else
 	if (hWnd == NULL || IsIconic(hWnd) != 0) {
+#endif
 		return FALSE;
 	}
 
+#ifndef _WIN32_WCE
 	SendDlgItemMessage(hWnd, IDC_TB, WM_SIZE, wParam, lParam);
+#endif
 	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, wParam, lParam);
 
 	GetClientRect(hWnd, &rcClient);
 	newHeight = rcClient.bottom; // rcClient.top = 0 always
 	// Toolbar
+#ifdef _WIN32_WCE_PPC
+	newTop = 0;
+#elif defined _WIN32_WCE
+	newTop = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
+	newHeight -= newTop;
+#else
 	GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
 	newTop = (subwinRect.bottom - subwinRect.top);
 	newHeight -= newTop;
+#endif
 	// Status bar
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &subwinRect);
 	newHeight -= (subwinRect.bottom - subwinRect.top);
@@ -2243,8 +2265,6 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), op.MBMenuWidth, newTop,
 			   rcClient.right - op.MBMenuWidth, newHeight, TRUE);
-
-		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	} else {
 		// combobar
 		int comboHeight;
@@ -2256,9 +2276,8 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		newTop += comboHeight;
 		newHeight -= comboHeight;
 		MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW), 0, newTop, rcClient.right, newHeight, TRUE);
-
-		UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	}
+	UpdateWindow(GetDlgItem(hWnd, IDC_LISTVIEW));
 	return TRUE;
 }
 #endif
@@ -4663,7 +4682,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
 			break;
 
-#ifndef _WIN32_WCE_PPC
 		case ID_MENUITEM_MBOXPANE:
 			{
 				RECT rcRect;
@@ -4674,9 +4692,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					SetWindowLong(GetDlgItem(hWnd, IDC_MBMENU), GWL_WNDPROC, (DWORD)MBPaneWndProc);
 				}
 				DestroyWindow(GetDlgItem(hWnd, IDC_MBMENU));
+#ifdef _WIN32_WCE_PPC
+				dTop = 0;
+				height = -MENU_HEIGHT;
+#else
 				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
 				dTop = rcRect.bottom - rcRect.top;
 				height = -rcRect.bottom;
+#endif
 				GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &rcRect);
 				dBottom = rcRect.bottom - rcRect.top;
 				height += rcRect.top;
@@ -4700,7 +4723,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 			}
 			break;
-#endif
 
 		// save mailbox
 		case ID_MENUITEM_SAVEMAILBOX:

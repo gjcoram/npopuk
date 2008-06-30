@@ -1447,7 +1447,7 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 		return FALSE;
 	}
 	send_pt += len;
-	SetStatusRecvLen(hWnd, send_pt - send_body, STR_STATUS_SOCKINFO_SEND);
+	SetStatusRecvLen(hWnd, send_pt - send_body, send_len, STR_STATUS_SOCKINFO_SEND);
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
 		mem_free(&send_body);
 		send_body = NULL;

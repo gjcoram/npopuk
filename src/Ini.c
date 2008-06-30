@@ -198,7 +198,7 @@ BOOL ini_read_setting(HWND hWnd)
 	TCHAR *p, *r;
 	UINT char_set;
 	int i, j, t, cnt, num, len;
-	int fDef;
+	int fDef, width;
 
 	hdc = GetDC(hWnd);
 #ifndef _WIN32_WCE
@@ -365,12 +365,16 @@ BOOL ini_read_setting(HWND hWnd)
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT, app_path);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, app_path);
 	op.LvColumnOrder = profile_alloc_string(GENERAL, TEXT("LvColumnOrder"), TEXT("SFDZ"), app_path);
-	op.MBMenuWidth = profile_get_int(GENERAL, TEXT("MBMenuWidth"), -150, app_path);
+	op.MBMenuWidth = profile_get_int(GENERAL, TEXT("MBMenuWidth"), -120, app_path);
+	width = GetSystemMetrics(SM_CXSCREEN);
 	if (op.MBMenuWidth == 0) {
-		op.MBMenuWidth = -150; // upgrade from previous default
-	} else if (op.MBMenuWidth > GetSystemMetrics(SM_CXSCREEN) / 2) {
+		op.MBMenuWidth = -120; // upgrade from previous default
+	} else if (op.MBMenuWidth > width) {
+		op.MBMenuWidth = width / 2;
+	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
+	op.MBMenuWidth = 100;
 
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t, app_path);
