@@ -1403,10 +1403,6 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
 
-#ifndef _WIN32_WCE_PPC
-	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
-#endif
-
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
 		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
@@ -1806,7 +1802,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		break;
 #endif
 
-#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
 		case WM_LBUTTONDOWN:
 			{
 				SHRGINFO rg;
@@ -2063,6 +2059,7 @@ static BOOL InitWindow(HWND hWnd)
 	Height = g_menu_height = CSOBar_Height(hCSOBar);
 	i = 0;
 	CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(GetSubMenu(hMainMenu, 1), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
@@ -2091,6 +2088,7 @@ static BOOL InitWindow(HWND hWnd)
 	i = 0;
 	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 #endif
 #else
 	// Win32
@@ -2107,8 +2105,12 @@ static BOOL InitWindow(HWND hWnd)
 
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 
-	CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+	{
+		HMENU hMenu = GetMenu(hWnd);
+		CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+	}
 #endif
 
 	// ListViewƒtƒHƒ“ƒg
