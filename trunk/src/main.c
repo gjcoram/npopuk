@@ -1351,8 +1351,8 @@ int SetMailMenu(HWND hWnd)
 	hMenu = GetSubMenu(hMainMenu, 0);
 	hToolBar = NULL;
 #else
-	hMenu = CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0);
 	hToolBar = GetDlgItem(hWnd, IDC_CB);
+	hMenu = CommandBar_GetMenu(hToolBar, 0);
 #endif
 #else
 	hMenu = GetMenu(hWnd);
@@ -1779,10 +1779,14 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				POINT top;
 				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 				GetWindowRect(hWnd, &paneRect);
+#ifdef _WIN32_WCE
+				op.MBMenuWidth = paneRect.right;
+#else
 				top.x = paneRect.right;
 				top.y = paneRect.top;
 				ScreenToClient(MainWnd, &top);
 				op.MBMenuWidth = top.x;
+#endif
 				GetWindowRect(hListView, &paneRect);
 				top.x = paneRect.right;
 				top.y = paneRect.top;
@@ -1794,12 +1798,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 #ifndef _WIN32_WCE
 		case WM_GETMINMAXINFO:
-		{
-			LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
-			minmax->ptMinTrackSize.y = op.MBMenuHeight - 10;
-			minmax->ptMaxTrackSize.y = op.MBMenuHeight;
-		}
-		break;
+			{
+				LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
+				minmax->ptMinTrackSize.y = op.MBMenuHeight - 10;
+				minmax->ptMaxTrackSize.y = op.MBMenuHeight;
+			}
+			break;
 #endif
 
 #ifdef _WIN32_WCE_PPC
@@ -2086,9 +2090,12 @@ static BOOL InitWindow(HWND hWnd)
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	Height = CommandBar_Height(hToolBar);
 	i = 0;
-	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(CommandBar_GetMenu(hToolBar, 0), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
+	{
+		HMENU hMenu = CommandBar_GetMenu(hToolBar, 0);
+		CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+		CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
+	}
 #endif
 #else
 	// Win32
@@ -2262,6 +2269,11 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	newHeight -= (subwinRect.bottom - subwinRect.top);
 
 	if (op.MBMenuWidth > 0) {
+{
+	TCHAR msg[MSG_SIZE];
+	wsprintf(msg, TEXT("SetWindowSize has MBMenuWidth = %d\r\n"), op.MBMenuWidth);
+	log_save(msg);
+}
 		op.MBMenuHeight = newHeight;
 		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, op.MBMenuWidth, newHeight, TRUE);
 
@@ -4697,6 +4709,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef _WIN32_WCE_PPC
 				dTop = 0;
 				height = -MENU_HEIGHT;
+#elif defined(_WIN32_WCE)
+				dTop = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
+				height = -dTop;
 #else
 				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
 				dTop = rcRect.bottom - rcRect.top;
@@ -4712,6 +4727,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				SelectMBMenu(SelBox);
 				GetWindowRect(GetDlgItem(hWnd, IDC_LISTVIEW), &rcRect);
+				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
 				MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW),
 					((op.MBMenuWidth>0) ? op.MBMenuWidth : 0), dTop, width, height, TRUE);

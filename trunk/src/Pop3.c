@@ -1397,6 +1397,15 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		recvlen = 0;
 		recvcnt = REDRAWCNT;
 		SetSocStatusTextT(hWnd, STR_STATUS_RECV);
+#ifdef WSAASYNC
+		get_no = item_get_number_to_index(tpMailBox, download_get_no);
+		if (get_no != -1) {
+			tpMailItem = *(tpMailBox->tpMailItem + get_no);
+			if (tpMailItem != NULL && tpMailItem->Size != NULL) {
+				mail_size = a2i(tpMailItem->Size);
+			}
+		}
+#endif
 		receiving_data = TRUE;
 		return POP_RETR;
 	}
