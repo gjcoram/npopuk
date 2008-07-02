@@ -3648,7 +3648,7 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		}
 
 		// ˆê——‚ÌƒAƒCƒRƒ“‚Ìİ’è
-		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL) {
+		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL && ((MAILITEM *)lpParam)->Mark != ICON_FLAG) {
 			HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 			int LvFocus = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
 			((MAILITEM *)lpParam)->Mark = ((MAILITEM *)lpParam)->MailStatus;

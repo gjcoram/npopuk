@@ -1233,9 +1233,6 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
  */
 int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 {
-#ifndef _WIN32_WCE_PPC
-	HMENU hShowMenu;
-#endif
 	HWND hListView;
 	RECT WndRect;
 	RECT ItemRect;
@@ -1310,18 +1307,16 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
-	ret = TrackPopupMenu(hMenu,
+	ret = TrackPopupMenu((PosFlag == 3) ? GetSubMenu(hMenu, mpos): hMenu,
 		TPM_TOPALIGN | TPM_LEFTALIGN | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
 		x, y, 0, hWnd, NULL);
 #else
-	hShowMenu = GetSubMenu(hMenu, mpos);
-	ret = TrackPopupMenu(hShowMenu,
+	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos),
 		TPM_TOPALIGN | TPM_LEFTALIGN | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
 		x, y, 0, hWnd, NULL);
 #endif
 #else
-	hShowMenu = GetSubMenu(hMenu, mpos);
-	ret = TrackPopupMenu(hShowMenu,
+	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos),
 		TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
 		x, y, 0, hWnd, NULL);
 #endif
@@ -1400,8 +1395,8 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_DELETEMAILBOX, !(RecvBoxFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_LISTINIT, !(SaveTypeFlag & SendBoxFlag));
 
-	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
-	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
+	EnableMenuItem(hMenu, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox > MAILBOX_USER)));
+	EnableMenuItem(hMenu, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox < MailBoxCnt-1)));
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
 		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
@@ -1823,6 +1818,13 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				}
 			}
 			break;
+
+#elif defined (_WIN32_WCE)
+		case WM_LBUTTONUP:
+			if (GetKeyState(VK_MENU) < 0) {
+				SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
+				break;
+			}
 #else
 		case WM_RBUTTONUP:
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
@@ -1842,8 +1844,8 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_DELETEMAILBOX, !(RecvBoxFlag & SendBoxFlag));
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_LISTINIT, !(SaveTypeFlag & SendBoxFlag));
 
-				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
-				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox > MAILBOX_USER)));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox < MailBoxCnt-1)));
 
 				SendMessage(hWnd, WM_NULL, 0, 0);
 				ShowMenu(hWnd, hMBPOPUP, 0, 3, FALSE);
@@ -1869,7 +1871,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 
 	GetClientRect(hWnd, &rcClient);
 	if (op.MBMenuWidth > 0) {
-		style |= WS_HSCROLL | LBS_NOTIFY | WS_THICKFRAME;
+		style |= WS_HSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_THICKFRAME;
 		height = op.MBMenuHeight = rcClient.bottom - Top - Bottom;
 		width = op.MBMenuWidth;
 	} else {
@@ -2037,6 +2039,7 @@ static BOOL InitWindow(HWND hWnd)
 	Height = 0;
 	i = 0;
 	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
@@ -2269,11 +2272,6 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	newHeight -= (subwinRect.bottom - subwinRect.top);
 
 	if (op.MBMenuWidth > 0) {
-{
-	TCHAR msg[MSG_SIZE];
-	wsprintf(msg, TEXT("SetWindowSize has MBMenuWidth = %d\r\n"), op.MBMenuWidth);
-	log_save(msg);
-}
 		op.MBMenuHeight = newHeight;
 		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, op.MBMenuWidth, newHeight, TRUE);
 

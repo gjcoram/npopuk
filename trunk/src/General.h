@@ -392,6 +392,7 @@ typedef struct _OPTION {
 	int PromptSaveOnExit;
 	int LazyLoadMailboxes;
 	int BlindAppend;
+	int FixContentType;
 	int LvColSize[LV_COL_CNT];
 	int AddColSize[AD_COL_CNT];
 	int MblColSize[MB_COL_CNT];

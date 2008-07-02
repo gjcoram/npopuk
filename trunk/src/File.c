@@ -925,20 +925,6 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					if (encrypted) {
 						rot13(tpMailItem->Body, s);
 					}
-// GJC: now, multipart/alternative <==> MULTIPART_HTML
-#ifdef DO_MULTIPART_SCAN
-					if (tpMailItem->Multipart == MULTIPART_CONTENT && tpMailItem->Download == TRUE
-						&& tpMailItem->Attach == NULL && tpMailItem->FwdAttach == NULL) {
-						// is it text/plain and text/html with no real attachments
-#ifdef UNICODE
-						char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
-						tpMailItem->Multipart = multipart_scan(ContentType, tpMailItem->Body);
-						mem_free(&ContentType);
-#else
-						tpMailItem->Multipart = multipart_scan(tpMailItem->ContentType, tpMailItem->Body);
-#endif
-					}
-#endif
 					if (tpMailItem->HasHeader == 1 || (MboxFormat == 1 && tpMailItem->Encoding != NULL)) {
 						// strip duplicate headers and/or convert from foreign MBOX format
 						char *newbody;

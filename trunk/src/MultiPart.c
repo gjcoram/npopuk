@@ -340,16 +340,15 @@ char *multipart_get_filename(char *buf, char *Attribute)
 }
 
 /*
- * multipart_scan - quick check if mail has real attachments (GJC)
- *       OBSOLETE: now, multipart/alternative <==> MULTIPART_HTML
+ * multipart_verify - quick check if mail has real attachments (GJC)
+ *                    now used to fix AppleMail bug
  */
-#ifdef DO_MULTIPART_SCAN
-int multipart_scan(char *ContentType, char *buf) {
+int multipart_verify(char *ContentType, char *buf) {
 	char *Boundary, *Content = NULL, *p;
 
-	// Content-Type: multipart was found before calling this function,
-	// so default return value is MULTIPART_CONTENT
-	int retval = MULTIPART_CONTENT;
+	// Content-Type: multipart/alternative was found before calling this function,
+	// so default return value is MULTIPART_HTML
+	int retval = MULTIPART_HTML;
 
 	if (ContentType == NULL || buf == NULL) {
 		return retval;
@@ -375,8 +374,8 @@ int multipart_scan(char *ContentType, char *buf) {
 			}
 			get_content(p, HEAD_CONTENTTYPE, &Content);
 			if (Content == NULL) {
-				// imcomplete message -> assume has attachment
-				retval = MULTIPART_CONTENT;
+				// imcomplete message: assume mailer set the correct content-type
+				// retval = MULTIPART_HTML;
 				break;
 			}
 			if (get_content_value(Content, "name", NULL) == TRUE) {
@@ -393,9 +392,10 @@ int multipart_scan(char *ContentType, char *buf) {
 					break;
 				}
 				mem_free(&Dispo);
-				if (str_cmp_ni(Content, "text/html", tstrlen("text/html")) == 0) {
-					retval = MULTIPART_HTML;
-				}
+				// MULTIPART_HTML is the default
+				//if (str_cmp_ni(Content, "text/html", tstrlen("text/html")) == 0) {
+				//	retval = MULTIPART_HTML;
+				//}
 			}
 			mem_free(&Content);
 			p = GetBodyPointa(p);
@@ -410,7 +410,6 @@ int multipart_scan(char *ContentType, char *buf) {
 	mem_free(&Boundary);
 	return retval;
 }
-#endif
 
 /*
  * multipart_parse - PartÇâêÕÇ∑ÇÈ (RFC 2046)

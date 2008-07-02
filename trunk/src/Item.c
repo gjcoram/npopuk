@@ -810,24 +810,30 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 	if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), lstrlen(TEXT("multipart/alternative"))) == 0) {
 		tpMailItem->Multipart = MULTIPART_HTML;
+		if (op.FixContentType) {
+			// AppleMail sometimes does multipart/alternative where it should be multipart/mixed
+#ifdef UNICODE
+			char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
+			tpMailItem->Multipart = multipart_verify(ContentType, buf);
+			mem_free(&ContentType);
+#else
+			tpMailItem->Multipart = multipart_verify(tpMailItem->ContentType, buf);
+#endif
+			if (tpMailItem->Multipart != MULTIPART_HTML) {
+				TCHAR *p, *q;
+				//tpMailItem->OrigContentType = alloc_copy_t(tpMailItem->ContentType);
+				p = q = tpMailItem->ContentType + lstrlen(TEXT("multipart/"));
+				q += lstrlen(TEXT("alternative"));
+				lstrcpy(p, TEXT("mixed"));
+				p += lstrlen(TEXT("mixed"));
+				while (*q != TEXT('\0')) {
+					(*p++) = (*q++);
+				}
+			}
+		}
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		tpMailItem->Multipart = MULTIPART_CONTENT;
-#ifdef DO_MULTIPART_SCAN
-		if (tpMailItem->Download) {
-			// if fully downloaded, check if it is text/plain and text/html with no real attachments
-#ifdef UNICODE
-			char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
-			tpMailItem->Multipart = multipart_scan(ContentType, buf);
-			mem_free(&ContentType);
-#else
-			tpMailItem->Multipart = multipart_scan(tpMailItem->ContentType, buf);
-#endif
-		} else {
-			// if not fully downloaded, may be attachments in remainder
-			tpMailItem->Multipart = MULTIPART_CONTENT;
-		}
-#endif
 	} else {
 		// Content-Transfer-Encoding
 #ifdef UNICODE
@@ -1298,7 +1304,6 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		tpMailItem->Multipart = MULTIPART_HTML;
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
-		// multipart_scan *after* setting the body
 		tpMailItem->Multipart = MULTIPART_CONTENT;
 	//} else {
 	//	tpMailItem->Multipart = MULTIPART_NONE;
