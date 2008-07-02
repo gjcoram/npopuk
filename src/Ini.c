@@ -394,7 +394,8 @@ BOOL ini_read_setting(HWND hWnd)
 		SaveBoxesLoaded = TRUE;
 	}
 	op.BlindAppend = profile_get_int(GENERAL, TEXT("BlindAppend"), 0, app_path);
-
+	op.FixContentType = profile_get_int(GENERAL, TEXT("FixContentType"), 0, app_path);
+	
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0, app_path);
@@ -1161,6 +1162,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("PromptSaveOnExit"), op.PromptSaveOnExit, app_path);
 	profile_write_int(GENERAL, TEXT("LazyLoadMailboxes"), op.LazyLoadMailboxes, app_path);
 	profile_write_int(GENERAL, TEXT("BlindAppend"), op.BlindAppend, app_path);
+	profile_write_int(GENERAL, TEXT("FixContentType"), op.FixContentType, app_path);
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass, app_path);
 	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes, app_path);
