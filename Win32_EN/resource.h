@@ -390,6 +390,8 @@
 #define ID_MENUITEM_COPY2NEW            42999
 #define ID_MENUITEM_MOVE2MBOX           43000 // leave MAX_MAILBOX_CNT IDs free for move
 #define ID_MENUITEM_MOVE2NEW            43999
+#define ID_MENUITEM_TRAYCHECK           44000 // leave MAX_TRAY_CNT IDs free for check
+#define ID_MENUITEM_TRAYMAX             44010
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

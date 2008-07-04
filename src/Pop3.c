@@ -54,6 +54,8 @@ static char *last_response = NULL;
 static unsigned int mail_buf_size;			// メール受信用バッファの実サイズ
 static unsigned int mail_buf_len;			// メール受信用バッファ内の文字列長
 static int mail_size = -1;					// メールサイズ
+static int recvlen = 0;
+static int recvcnt = 0;
 static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
 static int delete_get_no;					// 削除メール位置
@@ -1094,6 +1096,8 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		// レスポンスの解析
 		if (check_response(buf) == TRUE) {
 			receiving_data = TRUE;
+			recvlen = 0;
+			recvcnt = REDRAWCNT;
 			return POP_TOP;
 		}
 		if (disable_top == FALSE && tpMailBox->NoRETR == 0) {
@@ -1114,6 +1118,12 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		if (mail_buf_set(buf, buflen) == FALSE) {
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return POP_ERR;
+		}
+		recvlen += buflen;
+		recvcnt++;
+		if (recvcnt > REDRAWCNT) {
+			recvcnt = 0;
+			SetStatusRecvLen(hWnd, recvlen, mail_size, STR_STATUS_SOCKINFO_RECV);
 		}
 		return POP_TOP;
 	}
@@ -1380,8 +1390,6 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	HWND hListView;
 	int i, size;
 	int get_no;
-	static int recvlen;
-	static int recvcnt;
 
 	if (receiving_data == FALSE) {
 		// 前コマンド結果に'.'が付いている場合はスキップする
@@ -1394,8 +1402,6 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return POP_ERR;
 		}
-		recvlen = 0;
-		recvcnt = REDRAWCNT;
 		SetSocStatusTextT(hWnd, STR_STATUS_RECV);
 #ifdef WSAASYNC
 		get_no = item_get_number_to_index(tpMailBox, download_get_no);
@@ -1407,6 +1413,8 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 #endif
 		receiving_data = TRUE;
+		recvlen = 0;
+		recvcnt = REDRAWCNT;
 		return POP_RETR;
 	}
 
@@ -1598,6 +1606,8 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			return exec_send_check_command(hWnd, soc, -1, ErrStr, tpMailBox);
 		}
 		receiving_data = TRUE;
+		recvlen = 0;
+		recvcnt = REDRAWCNT;
 		return POP_TOP;
 	}
 
@@ -1607,6 +1617,12 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		if (mail_buf_set(buf, buflen) == FALSE) {
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return POP_ERR;
+		}
+		recvlen += buflen;
+		recvcnt++;
+		if (recvcnt > REDRAWCNT) {
+			recvcnt = 0;
+			SetStatusRecvLen(hWnd, recvlen, mail_size, STR_STATUS_SOCKINFO_RECV);
 		}
 		return POP_TOP;
 	}

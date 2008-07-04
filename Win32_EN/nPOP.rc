@@ -332,8 +332,12 @@ BEGIN
     BEGIN
         MENUITEM "&Restore window",             ID_MENUITEM_RESTORE
         MENUITEM SEPARATOR
-        MENUITEM "Check &all accounts",         40050
-        MENUITEM "&Stop",                       40016
+        MENUITEM "Check &all accounts",         ID_MENUITEM_ALLCHECK
+        POPUP "&Check"
+        BEGIN
+        MENUITEM "&All",                        ID_MENUITEM_TRAYMAX
+        END
+        MENUITEM "&Stop",                       ID_MENUITEM_STOP
         MENUITEM SEPARATOR
         MENUITEM "&New message...",             ID_MENUITEM_NEWMAIL
         MENUITEM SEPARATOR
