@@ -5293,6 +5293,46 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		default:
+#ifndef _WIN32_WCE
+			if (command_id >= ID_MENUITEM_TRAYCHECK && command_id <= ID_MENUITEM_TRAYMAX) {
+				int cnt = command_id - ID_MENUITEM_TRAYCHECK + 1;
+				if (g_soc != -1) {
+					break;
+				}
+				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+						cnt--;
+						if (cnt == 0) {
+							if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
+								if (mailbox_load_now(hWnd, SelBox, FALSE, TRUE) != 1) {
+									break;
+								}
+							}
+							AutoCheckFlag = FALSE;
+			
+							if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
+								break;
+							}
+							if (op.SocLog > 1) {
+								TCHAR msg[BUF_SIZE];
+								wsprintf(msg, TEXT("Check: box=%d\r\n"), SelBox);
+								log_save(msg);
+							}
+							AllCheck = FALSE;
+							ExecFlag = FALSE;
+							KeyShowHeader = FALSE;
+							NewMailCnt = 0;
+							Init_NewMailFlag(hWnd);
+
+							//Mail reception start
+							RecvMailList(hWnd, i, FALSE);
+							break;
+						}
+					}
+				}
+				break;
+			}
+#endif
 			if (command_id == ID_MENUITEM_COPY2NEW) {
 				// GJC - copy to new SaveBox
 				int old_selbox, newbox;
@@ -5401,11 +5441,27 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		case WM_RBUTTONUP:
-			SetMenuDefaultItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_RESTORE, 0);
-			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
-			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_STOP, (g_soc == -1));
-			SendMessage(hWnd, WM_NULL, 0, 0);
-			ShowMenu(hWnd, hPOPUP, 0, 0, FALSE);
+			{
+				HMENU hSubMenu = GetSubMenu(hPOPUP, 0);
+				int i, cnt, flag = MF_STRING;
+				SetMenuDefaultItem(hSubMenu, ID_MENUITEM_RESTORE, 0);
+				EnableMenuItem(hSubMenu, ID_MENUITEM_ALLCHECK, !(g_soc == -1));
+				EnableMenuItem(hSubMenu, ID_MENUITEM_STOP, (g_soc == -1));
+				hSubMenu = GetSubMenu(hSubMenu, 3);
+				for (i = 0; i <= MAX_TRAY_CNT; i++) {
+					DeleteMenu(hSubMenu, ID_MENUITEM_TRAYCHECK + i, MF_BYCOMMAND);
+				}
+				flag |= ((g_soc == -1) ? MF_ENABLED : MF_GRAYED);
+				for (i = MAILBOX_USER, cnt = 0; i < MailBoxCnt && cnt < MAX_TRAY_CNT; i++) {
+					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+						TCHAR *p = ((MailBox + i)->Name != NULL) ? (MailBox + i)->Name : STR_MAILBOX_NONAME;
+						AppendMenu(hSubMenu, flag, ID_MENUITEM_TRAYCHECK + cnt, p);
+						cnt++;
+					}
+				}
+				SendMessage(hWnd, WM_NULL, 0, 0);
+				ShowMenu(hWnd, hPOPUP, 0, 0, FALSE);
+			}
 			break;
 #endif
 		}

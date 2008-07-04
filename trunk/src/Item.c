@@ -758,7 +758,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 #ifdef UNICODE
 	char *dcode;
 #endif
-	int fret;
+	int fret, len;
 	int *do_what = NULL;
 	BOOL retval = TRUE;
 
@@ -807,10 +807,30 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 	item_get_mime_content(buf, HEAD_REPLYTO, &tpMailItem->ReplyTo, FALSE);
 	// Content-Type
 	item_get_mime_content(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType, FALSE);
+	len = lstrlen(TEXT("multipart/alternative"));
 	if (tpMailItem->ContentType != NULL &&
-		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), lstrlen(TEXT("multipart/alternative"))) == 0) {
+		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), len) == 0) {
+		BOOL verify = FALSE;
+		TCHAR *p, *q;
 		tpMailItem->Multipart = MULTIPART_HTML;
-		if (op.FixContentType) {
+		if (op.FixContentType == 1) {
+			TCHAR *p = tpMailItem->ContentType + len;
+			len = lstrlen(TEXT("boundary="));
+			while (*p != TEXT('\0')) {
+				if (str_cmp_ni_t(p, TEXT("boundary="), len) == 0) {
+					p += len;
+					len = lstrlen(TEXT("Apple-Mail"));
+					if (str_cmp_n_t(p, TEXT("Apple-Mail"), len) == 0) {
+						verify = TRUE;
+					}
+					break;
+				}
+				p++;
+			}
+		} else if (op.FixContentType == 2) {
+			verify = TRUE;
+		}
+		if (verify) {
 			// AppleMail sometimes does multipart/alternative where it should be multipart/mixed
 #ifdef UNICODE
 			char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
@@ -820,7 +840,6 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 			tpMailItem->Multipart = multipart_verify(tpMailItem->ContentType, buf);
 #endif
 			if (tpMailItem->Multipart != MULTIPART_HTML) {
-				TCHAR *p, *q;
 				//tpMailItem->OrigContentType = alloc_copy_t(tpMailItem->ContentType);
 				p = q = tpMailItem->ContentType + lstrlen(TEXT("multipart/"));
 				q += lstrlen(TEXT("alternative"));

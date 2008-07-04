@@ -5657,13 +5657,9 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 
 		hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
-#ifdef _WIN32_WCE_PPC
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 70, STR_MAILPROP_HEADER, 0);
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 140, STR_MAILPROP_MAILADDRESS, 1);
-#else
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 70, STR_MAILPROP_HEADER, 0);
-		ListView_AddColumn(hListView, LVCFMT_LEFT, 330, STR_MAILPROP_MAILADDRESS, 1);
-#endif
+		// make this wide so the full address fits and a scrollbar appears
+		ListView_AddColumn(hListView, LVCFMT_LEFT, 400, STR_MAILPROP_MAILADDRESS, 1);
 		ListView_SetExtendedListViewStyle(hListView,
 			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
