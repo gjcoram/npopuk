@@ -917,6 +917,9 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 BOOL GetQuoteString(TCHAR *str, TCHAR *prefix, int maxlen);
 BOOL URLToMailItem(TCHAR *buf, MAILITEM *tpMailItem);
 TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, TCHAR *comment, BOOL quote);
+#ifdef _WIN32_WCE
+void GetNameFromComment(TCHAR *cmmt, TCHAR *fname, TCHAR *lname);
+#endif
 TCHAR *GetMailString(TCHAR *buf, TCHAR *ret);
 void SetUserName(TCHAR *buf, TCHAR *ret);
 int SetCcAddressSize(TCHAR *To);

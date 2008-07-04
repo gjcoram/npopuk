@@ -152,7 +152,8 @@
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
 #define STR_Q_ADDADDRESS			TEXT("Edit addresses (%d) when adding to the address book?")
 #ifdef _WIN32_WCE
-#define STR_Q_ADDPOOM				TEXT("Edit addresses (%d) when adding to PocketContacts?")
+#define STR_Q_EDITADDPOOM			TEXT("Edit addresses (%d) when adding to PocketContacts?")
+#define STR_Q_ADDPOOM				TEXT("Add address to PocketContacts?\n(Else lost on program exit)")
 #endif
 #define STR_Q_NEXTFIND				TEXT("Search completed!\nRedo from the start?")
 #define STR_Q_EDITCANCEL			TEXT("Cancel the edit?")
