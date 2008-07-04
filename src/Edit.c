@@ -2360,7 +2360,7 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 		return FALSE;
 	}
 	ExistFlag = TRUE;
-	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL);
+	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL, FALSE);
 	if (ret == EDIT_INSIDEEDIT && tpMailItem->Mark == ICON_SEND) {
 		ret = ICON_SEND;
 	}
@@ -2427,7 +2427,8 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 /*
  * Edit_InitInstance - of transmission mail Compilation
  */
-int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext)
+int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReMailItem,
+					  int OpenFlag, TCHAR *seltext, BOOL NoAppFlag)
 {
 	MAILITEM *tpMailItem;
 	int key;
@@ -2670,7 +2671,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		ErrorMessage(hWnd, STR_ERR_INIT);
 		return EDIT_NONEDIT;
 	}
-	if ( (OpenFlag != EDIT_NEW || (gSendAndQuit == FALSE && tpMailItem->Mark != ICON_SEND))
+	if ( (NoAppFlag == FALSE) && (OpenFlag != EDIT_NEW || (gSendAndQuit == FALSE && tpMailItem->Mark != ICON_SEND))
 		&& ((op.DefEditApp == 1 && key >= 0) || (op.DefEditApp == 0 && key < 0))) {
 		ShowWindow(hEditWnd, SW_HIDE);
 		SetTimer(hEditWnd, ID_APP_TIMER, 1, NULL);
