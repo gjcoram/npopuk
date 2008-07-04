@@ -2883,7 +2883,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 		return;
 	}
 	if (SelBox == MAILBOX_SEND) {
-		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL) == EDIT_INSIDEEDIT) {
+		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
 			// GJC: don't edit sent mail
 			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 #ifdef _WIN32_WCE
@@ -2950,7 +2950,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 		UpdateWindow(hListView);
 	} else {
 		if (Edit_InitInstance(hInst, hWnd, SelBox,
-			(MAILITEM *)ListView_GetlParam(hListView, i), ReplyFlag, NULL) == EDIT_INSIDEEDIT) {
+			(MAILITEM *)ListView_GetlParam(hListView, i), ReplyFlag, NULL, FALSE) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 			ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -4517,7 +4517,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
-			if (Edit_InitInstance(hInst, hWnd, SelBox, NULL, EDIT_NEW, NULL) == EDIT_INSIDEEDIT) {
+			if (Edit_InitInstance(hInst, hWnd, SelBox, NULL, EDIT_NEW, NULL, FALSE) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 				ShowWindow(hWnd, SW_HIDE);
 #endif

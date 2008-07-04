@@ -367,6 +367,7 @@
 #define STR_MAILBOXES_DISKSIZE		TEXT("Disk Size")
 #define STR_MAILBOXES_NEEDS_SAVE	TEXT("Changed")
 #define STR_MAILBOXES_LOADED		TEXT("Loaded")
+#define STR_MAILBOXES_FILENAME		TEXT("Filename")
 
 // Address list
 #define STR_ADDRESSLIST_MAILADDRESS	TEXT("Mail address")

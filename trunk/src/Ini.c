@@ -447,6 +447,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.MblColSize[2] = profile_get_int(GENERAL, TEXT("MblColSize-2"), 70, app_path);
 	op.MblColSize[3] = profile_get_int(GENERAL, TEXT("MblColSize-3"), 60, app_path);
 	op.MblColSize[4] = profile_get_int(GENERAL, TEXT("MblColSize-4"), 50, app_path);
+	op.MblColSize[5] = profile_get_int(GENERAL, TEXT("MblColSize-5"), 100, app_path);
 	for (i = 0; i < MB_COL_CNT; i++) {
 		if (op.MblColSize[i] > 1000) {
 			op.MblColSize[i] = 1000;
@@ -1186,6 +1187,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("MblColSize-2"), op.MblColSize[2], app_path);
 	profile_write_int(GENERAL, TEXT("MblColSize-3"), op.MblColSize[3], app_path);
 	profile_write_int(GENERAL, TEXT("MblColSize-4"), op.MblColSize[4], app_path);
+	profile_write_int(GENERAL, TEXT("MblColSize-5"), op.MblColSize[5], app_path);
 
 #ifndef _WIN32_WCE
 	profile_write_int(GENERAL, TEXT("viewleft"), op.ViewRect.left, app_path);

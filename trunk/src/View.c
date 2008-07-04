@@ -2157,7 +2157,7 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 		}
 	}
 
-	ret = Edit_InitInstance(hInst, hWnd, vSelBox, tpMailItem, ReplyFlag, seltext);
+	ret = Edit_InitInstance(hInst, hWnd, vSelBox, tpMailItem, ReplyFlag, seltext, FALSE);
 	if (DigestMaster != NULL) {
 		if (free_from) {
 			mem_free(&tpMailItem->From);

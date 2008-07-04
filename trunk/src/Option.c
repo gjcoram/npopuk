@@ -94,7 +94,7 @@ static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, int Num);
+static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos);
 static BOOL CALLBACK PopSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSmtpAuthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SmtpSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1960,8 +1960,9 @@ BOOL SetSaveBoxName(HWND hWnd)
 /*
  * MailboxSummaryAdd - add tpMailBox to summary list
  */
-static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, int Num)
+static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos)
 {
+	MAILBOX *tpMailBox = MailBox + Num;
 	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
 	int ItemIndex, dsize;
@@ -1970,10 +1971,10 @@ static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, 
 	if (p == NULL) {
 		p = STR_MAILBOX_NONAME;
 	}
-	if (Num == 0) {
+	if (Pos == 0) {
 		ItemIndex = ListView_AddOptionItem(hListView, p, 0);
 	} else {
-		ItemIndex = ListView_InsertItemEx(hListView, p, BUF_SIZE - 1, 0, 0, Num);
+		ItemIndex = ListView_InsertItemEx(hListView, p, BUF_SIZE - 1, 0, 0, Pos);
 	}
 	if (newSbox == TRUE) {
 		wsprintf(buf, TEXT("0/0/0"));
@@ -2008,6 +2009,12 @@ static void MailboxSummaryAdd(MAILBOX *tpMailBox, HWND hListView, BOOL newSbox, 
 	if (op.LazyLoadMailboxes > 0) {
 		ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
 	}
+	if (tpMailBox->Filename == NULL) {
+		wsprintf(buf, TEXT("MailBox%d.dat"), Num);
+	} else {
+		wsprintf(buf, tpMailBox->Filename);
+	}
+	ListView_SetItemText(hListView, ItemIndex, ((op.LazyLoadMailboxes > 0) ? 5 : 4), buf);
 }
 
 /*
@@ -2039,12 +2046,15 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[3], STR_MAILBOXES_NEEDS_SAVE, 3);
 		if (op.LazyLoadMailboxes > 0) {
 			ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[4], STR_MAILBOXES_LOADED, 4);
+			i = 5;
+		} else {
+			i = 4;
 		}
-		ListView_SetExtendedListViewStyle(hListView,
-			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, op.MblColSize[5], STR_MAILBOXES_FILENAME, i);
+		ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			MailboxSummaryAdd(MailBox + i, hListView, FALSE, 0);
+			MailboxSummaryAdd(i, hListView, FALSE, 0);
 		}
 		if (SelBox >= MAILBOX_USER) {
 			ListView_SetItemState(hListView, SelBox - MAILBOX_USER, LVIS_SELECTED, LVIS_SELECTED);
@@ -2233,7 +2243,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
 			}
 			if (ret == TRUE) {
-				MailboxSummaryAdd(MailBox + SelBox, hListView, (i != MAILBOX_IMPORT_SAVE), sel+1);
+				MailboxSummaryAdd(SelBox, hListView, (i != MAILBOX_IMPORT_SAVE), sel+1);
 			}
 			SelBox = oldsel;
 			if (ret == TRUE && op.AutoSave == 1) {
@@ -2339,13 +2349,17 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDCANCEL: // Done
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
 
-			for (i = 0; i < MB_COL_CNT-1; i++) {
+			for (i = 0; i < MB_COL_CNT-2; i++) {
 				op.MblColSize[i] = ListView_GetColumnWidth(hListView, i);
 			}
-			GetWindowRect(hDlg, &op.MblRect);
 			if (op.LazyLoadMailboxes > 0) {
+				op.MblColSize[MB_COL_CNT-1] = ListView_GetColumnWidth(hListView, MB_COL_CNT-1);
 				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT);
+			} else {
+				// op.MblColSize[MB_COL_CNT-1] unchanged
+				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT-1);
 			}
+			GetWindowRect(hDlg, &op.MblRect);
 
 			if (ret == TRUE) {
 				sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
@@ -5771,7 +5785,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpMailItem->ReplyTo = buf;
 
 			//of information of reply Setting
-			i = Edit_InitInstance(hInst, hDlg, vSelBox, tpMailItem, EDIT_REPLY, NULL);
+			i = Edit_InitInstance(hInst, hDlg, vSelBox, tpMailItem, EDIT_REPLY, NULL, FALSE);
 			item_free(&tpMailItem, 1);
 			if (i != EDIT_NONEDIT) {
 				EndDialog(hDlg, TRUE);

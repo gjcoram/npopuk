@@ -116,7 +116,7 @@
 
 #define LV_COL_CNT				4					//ListView of tool bar Fixed mailbox
 #define AD_COL_CNT				3					// ListView Addressbook
-#define MB_COL_CNT				5					// ListView Mailboxes
+#define MB_COL_CNT				6					// ListView Mailboxes
 
 #define MAILBOX_SEND			0
 #define MAILBOX_USER			1
@@ -963,7 +963,7 @@ BOOL Edit_InitApplication(HINSTANCE hInstance);
 int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
 void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
-					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext);
+					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext, BOOL NoAppFlag);
 
 // Option
 int AllocGetText(HWND hEdit, TCHAR **buf);
