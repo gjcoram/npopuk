@@ -5793,7 +5793,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendMessage(hDlg, WM_COMMAND, ID_LV_ALLSELECT, 0);
 			}
 #ifdef _WIN32_WCE
-			wsprintf(msg, (op.UsePOOMAddressBook == 0) ? STR_Q_ADDADDRESS : STR_Q_ADDPOOM,
+			wsprintf(msg, (op.UsePOOMAddressBook == 0) ? STR_Q_ADDADDRESS : STR_Q_EDITADDPOOM,
 				ListView_GetSelectedCount(hListView));
 #else
 			wsprintf(msg, STR_Q_ADDADDRESS,
@@ -5851,39 +5851,11 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				addr = tpAddrItem->MailAddress;
 				cmmt = tpAddrItem->Comment;
 				if (op.UsePOOMAddressBook != 0 && addr != NULL && cmmt != NULL) {
-					BOOL done = FALSE;
 					int len = lstrlen(cmmt) + 1;
 					if (len > 1) {
-						for (p = cmmt; *p != TEXT('\0'); p++) {
-							if (*p == TEXT(',')) {
-								*p = TEXT('\0');
-								lname = alloc_copy_t(cmmt);
-								*p = TEXT(',');
-								p++;
-								while (*p == TEXT(' ')) p++;
-								fname = alloc_copy_t(p);
-								done = TRUE;
-								break;
-							}
-						}
-						if (!done) {
-							for (p = cmmt; *p != TEXT('\0'); p++) {
-								if (*p == TEXT(' ')) {
-									*p = TEXT('\0');
-									fname = alloc_copy_t(cmmt);
-									*p = TEXT(' ');
-									p++;
-									while (*p == TEXT(' ')) p++;
-									lname = alloc_copy_t(p);
-									done = TRUE;
-									break;
-								}
-							}
-						}
-						if (!done) {
-							lname = alloc_copy_t(cmmt);
-							fname = NULL;
-						}
+						fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						lname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						GetNameFromComment(cmmt, fname, lname);
 					} else {
 						lname = fname = NULL;
 					}
@@ -5942,11 +5914,11 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		ShowWindow(hItem, (midy - 46 > 30));
 		MoveWindow(hItem, right-16, top, 15, 21, TRUE);
 
-		if (op.UsePOOMAddressBook == 0) {
-			hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-			ShowWindow(hItem, (width > 140));
-			MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+		ShowWindow(hItem, (width > 140));
+		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
 
+		if (op.UsePOOMAddressBook == 0) {
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
 			ShowWindow(hItem, (width > 186));
 			MoveWindow(hItem, left+47, bottom-30, 45, 21, TRUE);
@@ -6552,6 +6524,41 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					ListView_SetItemText(hAddrList, sel, 3, buf);
 				}
 			}
+#ifdef _WIN32_WCE
+			if (idx == -1) {
+				if (op.UsePOOMAddressBook != 0) {
+					if (MessageBox(hDlg, STR_Q_ADDPOOM, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
+						TCHAR *fname = NULL, *lname = NULL;
+						int len = lstrlen(AddrItem->MailAddress) + 1;
+						if (len > 1) {
+							TCHAR *addr, *cmmt;
+							addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+							cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+							*addr = *cmmt = TEXT('\0');
+							GetMailAddress(AddrItem->MailAddress, addr, cmmt, FALSE);
+							mem_free(&addr);
+							len = lstrlen(cmmt) + 1;
+							if (len <= 1) {
+								mem_free(&cmmt);
+								cmmt = alloc_copy_t(AddrItem->Comment);
+								len = lstrlen(cmmt) + 1;
+							}
+							if (len > 1) {
+								fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+								lname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+								*fname = *lname = TEXT('\0');
+								GetNameFromComment(cmmt, fname, lname);
+							}
+							mem_free(&cmmt);
+						}
+						AddPOOMContact(AddrItem->AddressOnly, fname, lname, AddrItem->Group);
+						mem_free(&fname);
+						mem_free(&lname);
+					}
+				}
+			}
+#endif
+
 
 			EndDialog(hDlg, TRUE);
 			break;
@@ -6606,8 +6613,8 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #ifdef _WIN32_WCE
 		///////////// MRP /////////////////////
 		if (op.UsePOOMAddressBook != 0) {
-			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), FALSE);
-			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), SW_HIDE);
+//			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), FALSE);
+//			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), SW_HIDE);
 		}

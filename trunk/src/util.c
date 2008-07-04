@@ -2110,6 +2110,47 @@ TCHAR *GetMailAddress(TCHAR *buf, TCHAR *ret, TCHAR *comment, BOOL quote)
 }
 
 /*
+ * GetNameFromComment - split comment into firstname lastname or lastname, firstname
+ */
+#ifdef _WIN32_WCE
+void GetNameFromComment(TCHAR *cmmt, TCHAR *fname, TCHAR *lname)
+{
+	TCHAR *p;
+	BOOL done = FALSE;
+	for (p = cmmt; *p != TEXT('\0'); p++) {
+		if (*p == TEXT(',')) {
+			*p = TEXT('\0');
+			str_cpy_t(lname, cmmt);
+			*p = TEXT(',');
+			p++;
+			while (*p == TEXT(' ')) p++;
+			str_cpy_t(fname, p);
+			done = TRUE;
+			break;
+		}
+	}
+	if (!done) {
+		for (p = cmmt; *p != TEXT('\0'); p++) {
+			if (*p == TEXT(' ')) {
+				*p = TEXT('\0');
+				str_cpy_t(fname, cmmt);
+				*p = TEXT(' ');
+				p++;
+				while (*p == TEXT(' ')) p++;
+				str_cpy_t(lname, p);
+				done = TRUE;
+				break;
+			}
+		}
+	}
+	if (!done) {
+		str_cpy_t(lname, cmmt);
+		*fname = TEXT('\0');
+	}
+}
+#endif
+
+/*
  * GetMailString - 文字列からメールアドレス(コメント含)の抽出
  */
 TCHAR *GetMailString(TCHAR *buf, TCHAR *ret)
