@@ -1283,7 +1283,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		mailbox_menu_rebuild(hWnd, IsAttach);
 
 		if (IsAttach == FALSE) {
-			SetItemCntStatusText(MainWnd, NULL, FALSE);
+			SetItemCntStatusText(NULL, FALSE);
 		}
 
 		// É}Å[ÉNèÛë‘éÊìæ
@@ -3575,7 +3575,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						SwitchCursor(FALSE);
 						ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
 						SwitchCursor(TRUE);
-						SetItemCntStatusText(MainWnd, NULL, FALSE);
+						SetItemCntStatusText(NULL, FALSE);
 					}
 					if (mark_del == TRUE && tpNextMail == NULL && op.ViewCloseNoNext == 1) {
 						SendMessage(hWnd, WM_CLOSE, 0, 0);

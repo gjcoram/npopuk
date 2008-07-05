@@ -727,6 +727,8 @@ BOOL ini_read_setting(HWND hWnd)
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 		tpFilter->SaveboxName = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+		tpFilter->FwdAddress = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 		tpFilter->Header1 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""), app_path);
@@ -938,6 +940,8 @@ BOOL ini_read_setting(HWND hWnd)
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 			tpFilter->SaveboxName = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+			tpFilter->FwdAddress = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 			tpFilter->Header1 = profile_alloc_string(buf, key_buf, TEXT(""), app_path);
@@ -1369,6 +1373,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->SaveboxName, app_path);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->FwdAddress, app_path);
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Header1, app_path);
@@ -1395,23 +1401,27 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 		found &= profile_delete_key(GENERAL, key_buf);
 
-		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
-		profile_delete_key(GENERAL, key_buf); // may not exist in old versions
-
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 		found &= profile_delete_key(GENERAL, key_buf);
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
 		found &= profile_delete_key(GENERAL, key_buf);
 
-		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
-		profile_delete_key(GENERAL, key_buf); // may not exist in old versions
-
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
 		found &= profile_delete_key(GENERAL, key_buf);
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 		found &= profile_delete_key(GENERAL, key_buf);
+
+		// may not exist in old versions, so don't &=
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+		profile_delete_key(GENERAL, key_buf);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+		profile_delete_key(GENERAL, key_buf);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+		profile_delete_key(GENERAL, key_buf);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+		profile_delete_key(GENERAL, key_buf);
 
 		t++;
 	}
@@ -1566,6 +1576,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 			profile_write_string(buf, key_buf, tpFilter->SaveboxName, app_path);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+			profile_write_string(buf, key_buf, tpFilter->FwdAddress, app_path);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 			profile_write_string(buf, key_buf, tpFilter->Header1, app_path);
@@ -1592,23 +1604,27 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Action"));
 			found &= profile_delete_key(buf, key_buf);
 
-			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
-			profile_delete_key(buf, key_buf); // may not exist in old versions
-
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header1"));
 			found &= profile_delete_key(buf, key_buf);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content1"));
 			found &= profile_delete_key(buf, key_buf);
 
-			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
-			profile_delete_key(buf, key_buf); // may not exist in old versions
-
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Header2"));
 			found &= profile_delete_key(buf, key_buf);
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 			found &= profile_delete_key(buf, key_buf);
+
+			// may not exist in old versions, so don't &=
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
+			profile_delete_key(buf, key_buf);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
+			profile_delete_key(GENERAL, key_buf);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
+			profile_delete_key(buf, key_buf);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+			profile_delete_key(buf, key_buf);
 
 			t++;
 		}

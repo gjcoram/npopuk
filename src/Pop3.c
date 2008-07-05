@@ -736,12 +736,12 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		tpMailBox->ListInitMsg = TRUE;
 		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
-		SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+		SetItemCntStatusText(tpMailBox, FALSE);
 		return POP_QUIT;
 	} else if (tpMailBox->LastNo == -1) {
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 	}
-	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE);
 
 	init_recv = FALSE;
 	mail_received = FALSE;
@@ -934,7 +934,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		ListView_SetRedraw(hListView, TRUE);
 	}
 	SwitchCursor(TRUE);
-	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE);
 
 	// 最後に受信したメールのメッセージIDを保存する
 	mem_free(&tpMailBox->LastMessageId);
@@ -1235,7 +1235,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			if (op.RecvScroll == 1) {
 				SendMessage(hListView, WM_VSCROLL, SB_LINEDOWN, 0);
 			}
-			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+			SetItemCntStatusText(tpMailBox, FALSE);
 			EndThreadSortFlag = TRUE;
 		}
 		mail_received = TRUE;
@@ -1488,7 +1488,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 				LVIS_CUT | LVIS_STATEIMAGEMASK);
 			ListView_RedrawItems(hListView, i, i);
 			UpdateWindow(hListView);
-			SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+			SetItemCntStatusText(tpMailBox, FALSE);
 		}
 	}
 	if (hViewWnd != NULL) {
@@ -1741,7 +1741,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 	item_resize_mailbox(tpMailBox);
-	SetItemCntStatusText(hWnd, tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE);
 	return POP_QUIT;
 }
 

@@ -213,6 +213,7 @@ static int hex_val(int c)
 
 /*
  * QuotedPrintable_decode - Quoted Printable‚ (RFC 2045)
+ *     '\r' = 13 = 0x0D, '\n' = 10 = 0x0A
  */
 char *QuotedPrintable_decode(char *buf, char *ret)
 {
@@ -242,11 +243,13 @@ char *QuotedPrintable_decode(char *buf, char *ret)
 				if (*r == '\n' && *(r-1) != '\r') {
 					*(r++) = '\r';
 					*r = '\n';
-#ifdef HANDLE_BARE_SLASH_R
-				} else if (*r == '\r' && *p != '\n' && *p != '=' && *(p+1) != '0' && *(p+2) != 'D') {
-					r++;
-					*r = '\n';
-#endif
+				} else if (*r == '\r') {
+					if (*(p+1) == '\r') {
+						r--; // discard the first \r
+					} else if (*(p+1) != '\n' && *(p+1) != '=' && *(p+2) != '0' && *(p+3) != 'D') {
+						r++;
+						*r = '\n';
+					}
 				}
 				r++;
 			}

@@ -954,7 +954,7 @@ void SetSocStatusText(HWND hWnd, char *buf)
 /*
  * SetItemCntStatusText - アイテム数の表示
  */
-void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
+void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 {
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
@@ -1077,7 +1077,7 @@ void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify)
 		InsertMBMenu(SelBox, p);
 		SelectMBMenu(SelBox);
 		tpMailBox->NewMail = NewCnt;
-		SetUnreadCntTitle(MainWnd, FALSE);
+		SetUnreadCntTitle(FALSE);
 	}
 	tpMailBox->NewMail = NewCnt;
 	tpMailBox->UnreadCnt = UnreadCnt;
@@ -2415,7 +2415,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		}
 	}
 	if (UpdateStatus == TRUE) {
-		SetItemCntStatusText(hWnd, NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE);
 	}
 	SwitchCursor(TRUE);
 	return TRUE;
@@ -3083,7 +3083,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	if (tpMailBox->Loaded) {
 		item_resize_mailbox(tpMailBox);
 	}
-	SetItemCntStatusText(hWnd, NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE);
 	if (SelPoint != -1) {
 		//of mail item The item which is added is selected the
 		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
@@ -3138,7 +3138,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	item_resize_mailbox(MailBox + SelBox);
 
 	ListView_SetRedraw(hListView, TRUE);
-	SetItemCntStatusText(hWnd, NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE);
 	SwitchCursor(TRUE);
 }
 /*
@@ -3228,7 +3228,7 @@ static void SetDownloadMark(HWND hWnd)
 	}
 	UpdateWindow(hListView);
 	if (SelBox == MAILBOX_SEND && MarkedOne == TRUE) {
-		SetItemCntStatusText(hWnd, NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE);
 	}
 
 	if (hViewWnd != NULL) {
@@ -3331,7 +3331,7 @@ static void UnMark(HWND hWnd)
 	UpdateWindow(hListView);
 
 	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
-		SetItemCntStatusText(hWnd, NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE);
 	}
 
 	if (hViewWnd != NULL) {
@@ -3422,7 +3422,7 @@ static void SetMailStats(HWND hWnd, int St)
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
-	SetItemCntStatusText(hWnd, NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE);
 }
 
 /*
@@ -3583,7 +3583,7 @@ static void Init_NewMailFlag(HWND hWnd)
 /*
  * SetUnreadCntTitle - count of mailboxes that have new mail
  */
-void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
+void SetUnreadCntTitle(BOOL CheckMsgs)
 {
 	TCHAR wbuf[BUF_SIZE];
 	int i, j;
@@ -3618,10 +3618,10 @@ void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs)
 
 	//未読アカウント数をタイトルバーに設定
 	if(UnreadMailBox == 0){
-		SetWindowText(hWnd, WINDOW_TITLE);
+		SetWindowText(MainWnd, WINDOW_TITLE);
 	}else{
 		wsprintf(wbuf, STR_TITLE_NEWMAILBOX, WINDOW_TITLE, UnreadMailBox);
-		SetWindowText(hWnd, wbuf);
+		SetWindowText(MainWnd, wbuf);
 	}
 }
 
@@ -3643,7 +3643,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 			MessageBox(hWnd, STR_MSG_NONEWMAIL, WINDOW_TITLE,
 				MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND);
 		}
-		SetUnreadCntTitle(hWnd, TRUE);
+		SetUnreadCntTitle(TRUE);
 		if (gCheckAndQuit == TRUE) {
 			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
 		}
@@ -3688,7 +3688,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	}
 	SelectMBMenu(j);
 
-	SetUnreadCntTitle(hWnd, FALSE);
+	SetUnreadCntTitle(FALSE);
 
 	//Index of mailbox of new arrival acquisition
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
@@ -4140,8 +4140,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					g_soc = -1;
 					if (op.SocLog > 0) log_flush();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
-					SetItemCntStatusText(hWnd, NULL, FALSE);
-					SetUnreadCntTitle(hWnd, TRUE);
+					SetItemCntStatusText(NULL, FALSE);
+					SetUnreadCntTitle(TRUE);
 				}
 				break;
 
@@ -5070,8 +5070,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
 				RecvBox = -1;
-				SetItemCntStatusText(hWnd, NULL, FALSE);
-				SetUnreadCntTitle(hWnd, TRUE);
+				SetItemCntStatusText(NULL, FALSE);
+				SetUnreadCntTitle(TRUE);
 				EndSocketFunc(hWnd, FALSE);
 				if (op.SocLog > 0) log_flush();
 				break;
@@ -5555,8 +5555,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				if (op.SocLog > 0) log_flush();
 				AutoSave_Mailboxes(hWnd);
-				SetItemCntStatusText(hWnd, NULL, FALSE);
-				SetUnreadCntTitle(hWnd, TRUE);
+				SetItemCntStatusText(NULL, FALSE);
+				SetUnreadCntTitle(TRUE);
 				if (AllCheck == FALSE) {
 					if (op.CheckEndExec == 1 &&
 						CheckEndAutoExec(hWnd, RecvBox, NewMailCnt, FALSE) == TRUE) {
