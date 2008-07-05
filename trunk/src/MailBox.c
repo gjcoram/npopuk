@@ -722,8 +722,8 @@ void mailbox_select(HWND hWnd, int Sel)
 	SwitchCursor(TRUE);
 
 	SetMailMenu(MainWnd);
-	SetItemCntStatusText(MainWnd, NULL, FALSE);
-	SetUnreadCntTitle(MainWnd, FALSE);
+	SetItemCntStatusText(NULL, FALSE);
+	SetUnreadCntTitle(FALSE);
 }
 
 /*
@@ -840,6 +840,7 @@ void filter_free(MAILBOX *tpMailBox)
 			continue;
 		}
 		mem_free(&tpFilter->SaveboxName);
+		mem_free(&tpFilter->FwdAddress);
 
 		mem_free(&tpFilter->Header1);
 		mem_free(&tpFilter->Content1);

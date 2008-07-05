@@ -881,6 +881,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_COPY);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_MOVE);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_PRIORITY);
+		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_ADDSTRING, 0, (LPARAM)STR_FILTER_FORWARD);
 		SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, 0, 0);
 
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD1));
@@ -942,8 +943,16 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				*(buf + len) = TEXT('\0');
 				SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
 			} else {
-				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
-				SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+				len = lstrlen(STR_FILTER_FORWARD);
+				if (str_cmp_ni_t(buf, STR_FILTER_FORWARD, len) == 0) {
+					nptr = buf + len;
+					SendDlgItemMessage(hDlg, IDC_COMBO_FILT2BOX, CB_ADDSTRING, 0, (LPARAM)nptr);
+					*(buf + len) = TEXT('\0');
+					SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+				} else {
+					EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
+					SendDlgItemMessage(hDlg, IDC_COMBO_ACTION, CB_SETCURSEL, GetFilterActionInt(buf), 0);
+				}
 			}
 		}
 
@@ -1175,6 +1184,8 @@ static int GetFilterActionInt(TCHAR *buf)
 	} else if (lstrcmp(buf, STR_FILTER_PRIORITY) == 0) {
 		return FILTER_PRIORITY_INDEX;
 
+	} else if (lstrcmp(buf, STR_FILTER_FORWARD) == 0) {
+		return FILTER_FORWARD_INDEX;
 	}
 	return FILTER_UNRECV_INDEX;
 }
@@ -1205,6 +1216,9 @@ static TCHAR *GetFilterActionString(int i)
 
 	case FILTER_PRIORITY_INDEX:
 		return STR_FILTER_PRIORITY;
+
+	case FILTER_FORWARD_INDEX:
+		return STR_FILTER_FORWARD;
 
 	}
 	return STR_FILTER_UNRECV;
@@ -1241,6 +1255,8 @@ static void SetFilterList(HWND hListView)
 		j = tpFilter->Action;
 		if (j == FILTER_COPY_INDEX || j == FILTER_MOVE_INDEX) {
 			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), tpFilter->SaveboxName);
+		} else if (j == FILTER_FORWARD_INDEX) {
+			wsprintf(buf, TEXT("%s%s"), GetFilterActionString(j), tpFilter->FwdAddress);
 		} else if (j == FILTER_PRIORITY_INDEX) {
 			TCHAR *p;
 			switch (tpFilter->Priority) {
@@ -1467,6 +1483,9 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				} else if (str_cmp_ni_t(buf, STR_FILTER_MOVE, lstrlen(STR_FILTER_MOVE)) == 0) {
 					(*(tpFilter + i))->SaveboxName = alloc_copy_t(buf + lstrlen(STR_FILTER_MOVE));
 					*(buf + lstrlen(STR_FILTER_MOVE)) = TEXT('\0');
+				} else if (str_cmp_ni_t(buf, STR_FILTER_FORWARD, lstrlen(STR_FILTER_FORWARD)) == 0) {
+					(*(tpFilter + i))->FwdAddress = alloc_copy_t(buf + lstrlen(STR_FILTER_FORWARD));
+					*(buf + lstrlen(STR_FILTER_FORWARD)) = TEXT('\0');
 				} else {
 					int len = lstrlen(STR_FILTER_PRIORITY);
 					if (str_cmp_ni_t(buf, STR_FILTER_PRIORITY, len) == 0) {

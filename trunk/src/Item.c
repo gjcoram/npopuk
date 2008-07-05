@@ -29,6 +29,7 @@
 
 /* Global Variables */
 extern HWND MainWnd;
+extern HINSTANCE hInst;
 extern OPTION op;
 extern BOOL KeyShowHeader;
 extern BOOL ImportRead;
@@ -1768,7 +1769,14 @@ static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int fl
 			}
 			break;
 
-		default:  // FILTER_READICON, FILTER_PRIORITY
+		case FILTER_PRIORITY:
+		case FILTER_FORWARD:
+			if (!(RetFlag * FILTER_UNRECV)) {
+				RetFlag |= fret;
+			}
+			break;
+
+		default:  // FILTER_READICON
 			RetFlag |= fret;
 			break;
 		}
@@ -1865,7 +1873,7 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 }
 
 /*
- * item_filter_execute - handle move/copy and mark
+ * item_filter_execute - handle move/copy, forward, and mark
  */
 static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fret, int *do_what, BOOL refilter)
 {
@@ -1879,6 +1887,11 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 				sbox = mailbox_name_to_index((*(op.tpFilter + i))->SaveboxName);
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
+				}
+			} else if (dw == FILTER_FORWARD) {
+				if (Edit_InitInstance(hInst, NULL, (tpMailBox - MailBox), tpMailItem,
+						EDIT_FILTERFORWARD, NULL, TRUE) != EDIT_SEND) {
+						error = TRUE;
 				}
 			} else if (dw == FILTER_PRIORITY) {
 				if ((*(op.tpFilter + i))->Priority == 0) {

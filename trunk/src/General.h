@@ -155,6 +155,7 @@
 #define EDIT_REPLY				2
 #define EDIT_REPLYALL			3
 #define EDIT_FORWARD			4					// Added PHH 4-Oct-2003
+#define EDIT_FILTERFORWARD		5					// Added GJC 5-Jul-2008
 
 #define EDIT_NONEDIT			0					//of transmission mail compilation Return value
 #define EDIT_INSIDEEDIT			1
@@ -251,6 +252,7 @@
 #define FILTER_COPY				32
 #define FILTER_MOVE				64
 #define FILTER_PRIORITY			128
+#define FILTER_FORWARD			256
 
 #define MP_ERROR_FILE			-2					//Is not the return value
 #define MP_ERROR_ALLOC			-1
@@ -696,6 +698,8 @@ typedef struct _FILTER {
 	int Boolean;
 	int Priority;
 	TCHAR *SaveboxName;
+	TCHAR *FwdAddress;
+	// TCHAR *TargetName; // for Savebox or Fwd?
 	
 	TCHAR *Header1;
 	TCHAR *Content1;
@@ -712,7 +716,8 @@ typedef enum {
 	FILTER_READICON_INDEX,
 	FILTER_COPY_INDEX,
 	FILTER_MOVE_INDEX,
-	FILTER_PRIORITY_INDEX
+	FILTER_PRIORITY_INDEX,
+	FILTER_FORWARD_INDEX
 };
 #define FILTER_BOOL_AND 0
 #define FILTER_BOOL_OR 1
@@ -1022,14 +1027,14 @@ void SetSocStatusText(HWND hWnd, char *buf);
 #else
 #define SetSocStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf)
 #endif
-void SetItemCntStatusText(HWND hWnd, MAILBOX *tpViewMailBox, BOOL bNotify);
+void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify);
 void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);
 int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag);
 int SetMailMenu(HWND hWnd);
-void SetUnreadCntTitle(HWND hWnd, BOOL CheckMsgs);
+void SetUnreadCntTitle(BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
 BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL delete);
