@@ -1078,7 +1078,7 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size)
 		return NULL;
 	}
 
-	// handle copy/move and mark
+	// handle copy/move, forward, and mark
 	if (item_filter_execute(tpMailBox, tpMailItem, fret, do_what, FALSE) == FALSE) {
 		item_free(&tpMailItem, 1);
 		mem_free(&do_what);
@@ -1879,7 +1879,8 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 {
 	BOOL error = FALSE;
 	// Move or Copy to SaveBox
-	if ((fret & (FILTER_COPY | FILTER_MOVE | FILTER_PRIORITY)) && tpMailItem->MailStatus != ICON_NON) {
+	if ((fret & (FILTER_COPY | FILTER_MOVE | FILTER_PRIORITY | FILTER_FORWARD)) 
+			&& tpMailItem->MailStatus != ICON_NON) {
 		int i, dw, sbox;
 		for (i = 0; i < op.GlobalFilterCnt; i++) {
 			dw = do_what[i];
@@ -1913,6 +1914,11 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
+				}
+			} else if (dw == FILTER_FORWARD) {
+				if (Edit_InitInstance(hInst, NULL, (tpMailBox - MailBox), tpMailItem,
+						EDIT_FILTERFORWARD, (*(tpMailBox->tpFilter + i))->FwdAddress, TRUE) != EDIT_SEND) {
+						error = TRUE;
 				}
 			} else if (dw == FILTER_PRIORITY) {
 				if ((*(tpMailBox->tpFilter + i))->Priority == 0) {

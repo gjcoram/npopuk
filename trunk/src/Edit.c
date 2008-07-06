@@ -263,7 +263,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	}
 
 	// Set the appropriate To/From settings
-	if(ReplyFlag == EDIT_FORWARD) {	// It's actually forwarding
+	if (ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD) {	// It's actually forwarding
 		tpMailItem->To = NULL;				// clear the To:
 		strPrefix = op.FwdSubject;
 		tpMailItem->AttachSize = 0;
@@ -271,8 +271,13 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT) {
+		} else if (ReplyFlag == EDIT_FILTERFORWARD
+				|| (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT)) {
 			// forward as attachment
+			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
+			//if (tpMailItem->FwdAttach != NULL) {
+			//	*tpMailItem->FwdAttach = ATTACH_SEP;
+			//}
 			tpMailItem->AttachSize = item_to_string_size(tpReMailItem, 2, TRUE, FALSE);
 		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
@@ -399,7 +404,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
 		// overrides forward as attachment
 		fwd_as_att = FALSE;
-	} else if (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD) {
+	} else if (ReplyFlag == EDIT_FILTERFORWARD || (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD)) {
 		fwd_as_att = TRUE;
 	} else {
 		fwd_as_att = FALSE;
@@ -500,7 +505,8 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		mem_free(&body);
 
 	} else {
-		if (ReplyFlag == EDIT_FORWARD && (op.SignForward == 0 || op.SignForward == 2)) {
+		if ((ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD)
+			&& (op.SignForward == 0 || op.SignForward == 2)) {
 			return;
 		}
 		i = mailbox_name_to_index(tpMailItem->MailBox);
@@ -2601,15 +2607,16 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
 
-		if (seltext != NULL) {
+		if (OpenFlag == EDIT_FORWARD && seltext != NULL) {
 			tpMailItem->Mark = MARK_REFWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
 			tpMailItem->Mark = MARK_FORWARDING;
 		}
 		if (tpReMailItem != NULL) {
 			// Forward settings
-			SetReplyMessage(tpMailItem, tpReMailItem, rebox, EDIT_FORWARD);
+			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
 		}
+		tpMailItem->To = alloc_copy_t(seltext);
 
 		if (OpenFlag != EDIT_FILTERFORWARD) {
 			//Transmission information setting
@@ -2630,7 +2637,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				return EDIT_NONEDIT;
 			}
 		}
-		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_FORWARD, seltext);
+		SetReplyMessageBody(tpMailItem, tpReMailItem, OpenFlag, seltext);
 		tpMailItem->Mark = 0;
 		if (rebox != MAILBOX_SEND && tpReMailItem != NULL) {
 			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
