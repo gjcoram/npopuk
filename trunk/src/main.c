@@ -173,6 +173,7 @@ static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK MBWidthProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
 static BOOL InitWindow(HWND hWnd);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -1759,7 +1760,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*
- * MBPaneProc - resize handler
+ * MBPaneProc - mailbox pane message handler
  */
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1772,7 +1773,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 			{
 				RECT paneRect;
 				POINT top;
-				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+				HWND hListView;
 				GetWindowRect(hWnd, &paneRect);
 #ifdef _WIN32_WCE
 				op.MBMenuWidth = paneRect.right;
@@ -1782,10 +1783,16 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				ScreenToClient(MainWnd, &top);
 				op.MBMenuWidth = top.x;
 #endif
+				hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+#ifdef _WIN32_WCE_PPC
+				top.x = GetSystemMetrics(SM_CXSCREEN);
+				top.y = 0;
+#else
 				GetWindowRect(hListView, &paneRect);
 				top.x = paneRect.right;
 				top.y = paneRect.top;
 				ScreenToClient(MainWnd, &top);
+#endif
 				MoveWindow(hListView, op.MBMenuWidth, top.y,
 					top.x-op.MBMenuWidth, op.MBMenuHeight, TRUE);
 			}
@@ -1849,6 +1856,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 				SendMessage(hWnd, WM_NULL, 0, 0);
 				ShowMenu(hWnd, hMBPOPUP, 0, 3, FALSE);
+#ifdef _WIN32_WCE
+			} else if (LOWORD(wParam) == ID_MENUITEM_MBP_SETSIZE) {
+				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBP_SIZE), hWnd, MBWidthProc, 0)) {
+					SetWindowSize(GetParent(hWnd), 0, 0);
+				}
+#endif
 			} else {
 				// pass mailbox commands to main window
 				SendMessage(GetParent(hWnd), msg, wParam, lParam);
@@ -1858,6 +1871,51 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	return CallWindowProc(MBPaneWndProc, hWnd, msg, wParam, lParam);
 }
+
+/*
+ * MBWidthProc - resize handler
+ */
+#ifdef _WIN32_WCE
+static LRESULT CALLBACK MBWidthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	TCHAR buf[BUF_SIZE];
+	int tmp;
+	switch (uMsg) {
+
+	case WM_INITDIALOG:
+		wsprintf(buf, TEXT("%d"), op.MBMenuWidth);
+		SendDlgItemMessage(hDlg, IDC_EDIT_MBP_SIZE, WM_SETTEXT, 0, (LPARAM)buf);
+		SendDlgItemMessage(hDlg, IDC_EDIT_MBP_SIZE, EM_SETSEL, 0, -1);
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+			SendDlgItemMessage(hDlg, IDC_EDIT_MBP_SIZE, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+			tmp = _ttoi(buf);
+			if (tmp >= 0 && tmp < GetSystemMetrics(SM_CXSCREEN)) {
+				op.MBMenuWidth = tmp;
+			}
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+
+	return TRUE;
+}
+#endif
 
 /*
  * CreateMBMenu - create mailbox combobox or listview
@@ -1906,6 +1964,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		ret = rcClient.bottom - rcClient.top;
 	}
 
+	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
 	{
 		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
 		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : STR_SENDBOX_NAME TEXT(" *"));
@@ -1921,6 +1980,8 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		}
 		AddMBMenu(p);
 	}
+	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)TRUE, 0);
+	UpdateWindow(hCombo);
 
 	return ret;
 }
@@ -4418,14 +4479,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		switch (command_id) {
 		//of message compilation
 		case IDC_MBMENU:
-			if ((op.MBMenuWidth <= 0 && HIWORD(wParam) == CBN_CLOSEUP)
-			    || (op.MBMenuWidth > 0 && HIWORD(wParam) == LBN_SELCHANGE)) {
+			if (op.MBMenuWidth <= 0 && HIWORD(wParam) == CBN_CLOSEUP) {
 				if (SelBox == GetSelectedMBMenu()) {
 					break;
 				}
 				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 				mailbox_select(hWnd, GetSelectedMBMenu());
 				SwitchCursor(TRUE);
+			} else if (op.MBMenuWidth > 0) {
+				if (HIWORD(wParam) == LBN_SELCHANGE) {
+					ListView_DeleteAllItems(GetDlgItem(hWnd, IDC_LISTVIEW));
+					SwitchCursor(TRUE);
+				} else if (HIWORD(wParam) == LBN_KILLFOCUS || HIWORD(wParam) == LBN_DBLCLK) {
+					mailbox_select(hWnd, GetSelectedMBMenu());
+				}
 			}
 			break;
 
@@ -4727,6 +4794,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				GetWindowRect(GetDlgItem(hWnd, IDC_LISTVIEW), &rcRect);
 				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
+#ifdef _WIN32_WCE
+				if (op.MBMenuWidth > 0) {
+					// IDC_LISTVIEW has already been resized by MBPaneProc
+					width = rcRect.right - rcRect.left;
+				}
+#endif
 				MoveWindow(GetDlgItem(hWnd, IDC_LISTVIEW),
 					((op.MBMenuWidth>0) ? op.MBMenuWidth : 0), dTop, width, height, TRUE);
 #ifdef _WIN32_WCE_PPC

@@ -2395,11 +2395,11 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				op.MblColSize[i] = ListView_GetColumnWidth(hListView, i);
 			}
 			if (op.LazyLoadMailboxes > 0) {
+				op.MblColSize[MB_COL_CNT-2] = ListView_GetColumnWidth(hListView, MB_COL_CNT-2);
 				op.MblColSize[MB_COL_CNT-1] = ListView_GetColumnWidth(hListView, MB_COL_CNT-1);
-				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT);
 			} else {
-				// op.MblColSize[MB_COL_CNT-1] unchanged
-				op.MblColSize[MB_COL_CNT] = ListView_GetColumnWidth(hListView, MB_COL_CNT-1);
+				// op.MblColSize[MB_COL_CNT-2] unchanged
+				op.MblColSize[MB_COL_CNT-1] = ListView_GetColumnWidth(hListView, MB_COL_CNT-2);
 			}
 			GetWindowRect(hDlg, &op.MblRect);
 

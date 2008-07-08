@@ -610,7 +610,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	LV_COLUMN lvc;
 	int colno;
 
-	if (Sel == -1) {
+	if (Sel == -1 || MailBox == NULL) {
 		return;
 	}
 
