@@ -448,6 +448,7 @@
 #define STR_TITLE_EDITADDRESS		TEXT("Address")
 #define STR_TITLE_ADDRESSLIST		TEXT("Address book")
 #define STR_TITLE_MAILBOXLIST		TEXT("Mailboxes")
+#define STR_TITLE_MAILBOXPANE		TEXT("Mailbox pane")
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ENCODE			TEXT("Encoding")
 #define STR_TITLE_NEWMBOX			TEXT("Create mailbox")
