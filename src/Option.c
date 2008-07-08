@@ -6053,6 +6053,25 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 	HWND hItem;
 	int width, height, midy, ypos;
 
+	// hide all windows initially, to avoid redraw problems
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_UP10), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN10), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), SW_HIDE);
+	if (ListID == IDC_LIST_ADDRESS) {
+		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_NUM), SW_HIDE);
+		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), SW_HIDE);
+		ShowWindow(GetDlgItem(hDlg, IDC_STATIC_TITLE), SW_HIDE);
+		ShowWindow(GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL), SW_HIDE);
+	} else {
+		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SAVE), SW_HIDE);
+	}
+	ShowWindow(GetDlgItem(hDlg, IDOK), SW_HIDE);
+	ShowWindow(GetDlgItem(hDlg, IDCANCEL), SW_HIDE);
+
 	width = right - left;
 	height = bottom - top;
 	midy = (top + bottom - 30) / 2;
@@ -6061,75 +6080,103 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP),
 		right-36, ypos, 33, 24, TRUE);
 
-	hItem = GetDlgItem(hDlg, IDC_BUTTON_UP10);
-	ShowWindow(hItem, (height > 230));
-	MoveWindow(hItem, right-36, ypos-30, 33, 24, TRUE);
+	if (height > 230) {
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_UP10);
+		MoveWindow(hItem, right-36, ypos-30, 33, 24, TRUE);
+		ShowWindow(hItem, SW_SHOW);
+	}
 
 	ypos = (midy < bottom - 100) ? midy + 12 : bottom - 100;
 	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN),
 		right-36, ypos, 33, 24, TRUE);
 
-	hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN10);
-	ShowWindow(hItem, (height > 230));
-	MoveWindow(hItem, right-36, ypos+30, 33, 24, TRUE);
+	if (height > 230) {
+		hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN10);
+		MoveWindow(hItem, right-36, ypos+30, 33, 24, TRUE);
+		ShowWindow(hItem, SW_SHOW);
+	}
 
 	if (ListID == IDC_LIST_ADDRESS) {
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_NUM);
-		ShowWindow(hItem, (midy - 46 > 30));
-		MoveWindow(hItem, right-36, top, 33, 24, TRUE);
+		if (midy - 46 > 30) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_NUM);
+			MoveWindow(hItem, right-36, top, 33, 24, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-		ShowWindow(hItem, (width > 400));
-		MoveWindow(hItem, right-273, bottom-60, 60, 21, TRUE);
+		if (width > 400) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+			MoveWindow(hItem, right-273, bottom-60, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
-		ShowWindow(hItem, (width > 350));
-		MoveWindow(hItem, right-204, bottom-60, 60, 21, TRUE);
+		if (width > 350) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+			MoveWindow(hItem, right-204, bottom-60, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
-		ShowWindow(hItem, (width > 140));
-		MoveWindow(hItem, right-135, bottom-60, 60, 21, TRUE);
+		if (width > 140) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+			MoveWindow(hItem, right-135, bottom-60, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
-		ShowWindow(hItem, (width > 70));
-		MoveWindow(hItem, right-66, bottom-60, 60, 21, TRUE);
+		if (width > 70) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
+			MoveWindow(hItem, right-66, bottom-60, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
-		ShowWindow(hItem, (width > 350));
-		MoveWindow(hItem, left+15, bottom-30, 66, 21, TRUE);
-
-		hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
-		ShowWindow(hItem, (width > 350));
-		MoveWindow(hItem, left+80, bottom-30, width-224, 21, TRUE);
+		if (width > 350) {
+			hItem = GetDlgItem(hDlg, IDC_STATIC_TITLE);
+			MoveWindow(hItem, left+15, bottom-30, 66, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		
+			hItem = GetDlgItem(hDlg, IDC_ADDR_GRP_COMBOL);
+			MoveWindow(hItem, left+80, bottom-30, width-224, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
 		ypos = height-69;
 	} else {
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-		ShowWindow(hItem, (width > 210));
-		MoveWindow(hItem, left+6, bottom-30, 60, 21, TRUE);
+		if (width > 210) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
+			MoveWindow(hItem, left+6, bottom-30, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
-		ShowWindow(hItem, (width > 280));
-		MoveWindow(hItem,left+75, bottom-30, 60, 21, TRUE);
+		if (width > 280) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
+			MoveWindow(hItem,left+75, bottom-30, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
-		ShowWindow(hItem, (width > 350));
-		MoveWindow(hItem, left+144, bottom-30, 60, 21, TRUE);
+		if (width > 350) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
+			MoveWindow(hItem, left+144, bottom-30, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
-		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
-		ShowWindow(hItem, (width > 420));
-		MoveWindow(hItem, left+213, bottom-30, 60, 21, TRUE);
+		if (width > 420) {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
+			MoveWindow(hItem, left+213, bottom-30, 60, 21, TRUE);
+			ShowWindow(hItem, SW_SHOW);
+		}
 
 		ypos = height-39;
 	}
 
-	hItem = GetDlgItem(hDlg, IDCANCEL);
-	MoveWindow(hItem, right-66, bottom-30, 60, 21, TRUE);
-	ShowWindow(hItem, (width > 70));
+	if (width > 70) {
+		hItem = GetDlgItem(hDlg, IDCANCEL);
+		MoveWindow(hItem, right-66, bottom-30, 60, 21, TRUE);
+		ShowWindow(hItem, SW_SHOW);
+	}
 
-	hItem = GetDlgItem(hDlg, IDOK);
-	MoveWindow(hItem, right-135, bottom-30, 60, 21, TRUE);
-	ShowWindow(hItem, (width > 140));
+	if (width > 140) {
+		hItem = GetDlgItem(hDlg, IDOK);
+		MoveWindow(hItem, right-135, bottom-30, 60, 21, TRUE);
+		ShowWindow(hItem, SW_SHOW);
+	}
 
 	hItem = GetDlgItem(hDlg, ListID);
 	MoveWindow(hItem, 3, 3, width-42, ypos, TRUE);
