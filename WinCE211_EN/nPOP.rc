@@ -1499,7 +1499,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Add...",                      ID_MENUITEM_ADDMAILBOX
         MENUITEM "Edit...",                     ID_MENUITEM_SETMAILBOX
-        MENUITEM "Save...",                     ID_MENUITEM_SAVEMAILBOX
+        MENUITEM "Save",                        ID_MENUITEM_SAVEMAILBOX
         MENUITEM "Delete...",                   ID_MENUITEM_DELETEMAILBOX
         MENUITEM SEPARATOR
         MENUITEM "Move up",                     ID_MENUITEM_MOVEUPMAILBOX

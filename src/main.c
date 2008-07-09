@@ -285,26 +285,21 @@ static void FreeParms(void)
 static BOOL MergePath(TCHAR path[BUF_SIZE], TCHAR *file)
 {
 	TCHAR *p;
-	int flen, plen;
-	BOOL found, loop;
-
-	found = FALSE;
+	int plen;
+	BOOL loop, found = FALSE;
 
 	p = file;
-	flen = lstrlen(p);
-	if (flen >= BUF_SIZE)
-		flen = BUF_SIZE;
 
 	// Detect fully qualified file name
 #ifdef _WIN32_WCE
 	if (*p == TEXT('\\') || *p == TEXT('/')) {
-		str_cpy_n_t(path, p, flen);
+		str_cpy_n_t(path, p, BUF_SIZE);
 		return TRUE;
 	}
 #else
 	// How to detect drive letter on PC?  Do that first
 	// Don't permit drive letter without following \ or /
-	if (flen >= 3  &&  *(p+1) == TEXT(':')) {
+	if (*p  &&  *(p+1) == TEXT(':')) {
 		if (*(p+2) == TEXT('\\') || *(p+2) == TEXT('/')) {
 			str_cpy_n_t(path, p, BUF_SIZE);
 			return TRUE;
@@ -325,7 +320,6 @@ static BOOL MergePath(TCHAR path[BUF_SIZE], TCHAR *file)
 			loop = TRUE;
 			if (trunc_to_parent_dir(path)) {
 				p += 3;
-				flen -= 3;
 			} else {
 				// too many .. for available path
 				return FALSE;
@@ -333,7 +327,6 @@ static BOOL MergePath(TCHAR path[BUF_SIZE], TCHAR *file)
 		} else if (*(p+1) == TEXT('\\') || *(p+1) == TEXT('/')) {
 			loop = TRUE;
 			p += 2;
-			flen -= 2;
 		}
 	}
 
@@ -1894,6 +1887,14 @@ static LRESULT CALLBACK MBWidthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
+
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_EDIT_MAILADDRESS:
+		case IDC_EDIT_COMMENT:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
 		case IDOK:
 			SendDlgItemMessage(hDlg, IDC_EDIT_MBP_SIZE, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			tmp = _ttoi(buf);
@@ -4480,19 +4481,24 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//of message compilation
 		case IDC_MBMENU:
 			if (op.MBMenuWidth <= 0 && HIWORD(wParam) == CBN_CLOSEUP) {
-				if (SelBox == GetSelectedMBMenu()) {
-					break;
+				if (SelBox != GetSelectedMBMenu()) {
+					mailbox_select(hWnd, GetSelectedMBMenu());	
 				}
 				SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+				SwitchCursor(TRUE);
+			} else if (op.MBMenuWidth > 0 && HIWORD(wParam) == LBN_SELCHANGE) {
 				mailbox_select(hWnd, GetSelectedMBMenu());
 				SwitchCursor(TRUE);
-			} else if (op.MBMenuWidth > 0) {
+#ifdef BAD_IDEA
+			if (op.MBMenuWidth > 0) {
 				if (HIWORD(wParam) == LBN_SELCHANGE) {
 					ListView_DeleteAllItems(GetDlgItem(hWnd, IDC_LISTVIEW));
 					SwitchCursor(TRUE);
 				} else if (HIWORD(wParam) == LBN_KILLFOCUS || HIWORD(wParam) == LBN_DBLCLK) {
 					mailbox_select(hWnd, GetSelectedMBMenu());
 				}
+			}
+#endif
 			}
 			break;
 
@@ -5161,7 +5167,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Open the dropdown menu if focus on combobox
 		case ID_KEY_ENTER:
 			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
-				DropMBMenu(!GetDroppedStateMBMenu());
+				if (op.MBMenuWidth > 0) {
+					SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+				} else {
+					DropMBMenu(!GetDroppedStateMBMenu());
+				}
 				break;
 			}
 			// else fall through

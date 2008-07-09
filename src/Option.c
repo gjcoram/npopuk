@@ -188,7 +188,7 @@ static void InitDlg(HWND hDlg)
  * SetSip - SIPÇÃê›íË
  */
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-static void SetSip(HWND hDlg, int edit_notify)
+void SetSip(HWND hDlg, int edit_notify)
 {
 #ifdef _WIN32_WCE_PPC
 	switch (edit_notify) {
