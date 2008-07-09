@@ -1889,8 +1889,7 @@ static LRESULT CALLBACK MBWidthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		switch (LOWORD(wParam)) {
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-		case IDC_EDIT_MAILADDRESS:
-		case IDC_EDIT_COMMENT:
+		case IDC_EDIT_MBP_SIZE:
 			SetSip(hDlg, HIWORD(wParam));
 			break;
 #endif
