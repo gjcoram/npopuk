@@ -971,6 +971,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext, BOOL NoAppFlag);
 
 // Option
+void SetSip(HWND hDlg, int edit_notify);
 int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);
