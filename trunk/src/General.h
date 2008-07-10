@@ -218,6 +218,9 @@
 #define ICON_NEW_MASK			0x04
 #define ICON_REPL_MASK			0x01
 #define ICON_FWD_MASK			0x02
+#define ICON_REFWD_MASK			0x03
+// for holding messages that are being forwarded
+#define REFWD_FWDHOLD			0x08
 
 // marks for forwarding/replying and the property dialog
 #define MARK_REPLYING			1

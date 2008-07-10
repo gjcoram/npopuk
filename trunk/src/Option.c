@@ -2030,20 +2030,13 @@ static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos)
 	dsize = tpMailBox->DiskSize;
 	if (dsize < 0) {
 		wsprintf(buf, STR_STATUS_MAILSIZE_KB, TEXT("?"));
-	} else if (dsize < 1000) {
-		wsprintf(buf, STR_STATUS_MAILSIZE_B, dsize);
 	} else {
-		if (dsize < 102400) {
-			FormatNumberString(dsize, STR_STATUS_MAILSIZE_KB, op.DecPt, buf);
+		if (dsize > 0 && dsize < 1000) {
+			dsize = 1;
 		} else {
 			dsize /= 1024;
-			if (dsize < 102400) {
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_MB, op.DecPt, buf);
-			} else {
-				dsize /= 1024;
-				FormatNumberString(dsize, STR_STATUS_MAILSIZE_GB, op.DecPt, buf);
-			}
 		}
+		wsprintf(buf, STR_STATUS_MAILSIZE_KB_d, dsize);
 	}
 	ListView_SetItemText(hListView, ItemIndex, 2, buf);
 
@@ -2052,7 +2045,7 @@ static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos)
 		ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
 	}
 	if (tpMailBox->Filename == NULL) {
-		wsprintf(buf, TEXT("MailBox%d.dat"), Num);
+		wsprintf(buf, TEXT("MailBox%d.dat"), Num - MAILBOX_USER);
 	} else {
 		wsprintf(buf, tpMailBox->Filename);
 	}

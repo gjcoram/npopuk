@@ -1788,6 +1788,8 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #endif
 				MoveWindow(hListView, op.MBMenuWidth, top.y,
 					top.x-op.MBMenuWidth, op.MBMenuHeight, TRUE);
+				MoveWindow(GetDlgItem(MainWnd, IDC_TB), op.MBMenuWidth, 0,
+					top.x-op.MBMenuWidth, TB_ICONSIZE, TRUE);
 			}
 			break;
 
@@ -2043,10 +2045,19 @@ static BOOL InitWindow(HWND hWnd)
 		{7,	ID_MENUITEM_SENDMARK,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{8,	ID_MENUITEM_DELMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{9,	ID_MENUITEM_DELETE,			TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
+#ifdef _WIN32_WCE
 		{10,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{11,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{12,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+#else
+		{10,ID_MENUITEM_READMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{11,ID_MENUITEM_UNREADMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{12,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
+		{13,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{14,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+#endif
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -2164,7 +2175,7 @@ static BOOL InitWindow(HWND hWnd)
 #else
 	// Win32
 	MailMenuPos = 3;
-	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, 13, hInst, IDB_TOOLBAR,
+	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, 15, hInst, IDB_TOOLBAR,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hToolBar, GWL_STYLE,
 		GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
@@ -3436,7 +3447,7 @@ void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox)
 		}
 	}
 	if (found == TRUE) {
-		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
+		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
@@ -3469,15 +3480,15 @@ static void SetMailStats(HWND hWnd, int St)
 			continue;
 		}
 		tpMailItem->MailStatus = St;
-		if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL) {
+		if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL && tpMailItem->Mark != ICON_FLAG) {
 			tpMailItem->Mark = St;
 		}
 		if (St == ICON_READ) {
 			tpMailItem->New = FALSE;
-			ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
+			ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 		} else if (St == ICON_MAIL) {
 			// also clear re/fwd overlay
-			tpMailItem->ReFwd = ICON_NON;
+			tpMailItem->ReFwd &= ~(ICON_REFWD_MASK);
 			ListView_SetItemState(hListView, i, 0, LVIS_OVERLAYMASK);
 		}
 		ListView_RedrawItems(hListView, i, i);

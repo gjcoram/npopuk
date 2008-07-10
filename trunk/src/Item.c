@@ -814,6 +814,8 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 		BOOL verify = FALSE;
 		TCHAR *p, *q;
 		tpMailItem->Multipart = MULTIPART_HTML;
+		// AppleMail sometimes does multipart/alternative where it should be multipart/mixed
+		// op.FixContentType == 1: fix only Apple-Mail; == 2: all multipart/alternative messages
 		if (op.FixContentType == 1) {
 			TCHAR *p = tpMailItem->ContentType + len;
 			len = lstrlen(TEXT("boundary="));
@@ -832,7 +834,6 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 			verify = TRUE;
 		}
 		if (verify) {
-			// AppleMail sometimes does multipart/alternative where it should be multipart/mixed
 #ifdef UNICODE
 			char *ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
 			tpMailItem->Multipart = multipart_verify(ContentType, buf);
@@ -1262,6 +1263,9 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		// Replied/Forwarded
 		refwd = i / 10000;
 		tpMailItem->ReFwd = (refwd <= 7) ? (char)(refwd/2) : 0;
+		if (refwd - 2 * tpMailItem->ReFwd) {
+			tpMailItem->ReFwd |= REFWD_FWDHOLD;
+		}
 		i = i % 10000;
 
 		// HasHeader
@@ -1482,7 +1486,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 
 	// GJC: order of codes must match item_string_to_item!
 	composite_status = STATUS_REVISION_NUMBER
-		+ 10000 * 2 * tpMailItem->ReFwd
+		+ 10000 * (2 * (tpMailItem->ReFwd & ICON_REFWD_MASK) + ((tpMailItem->ReFwd & REFWD_FWDHOLD) != 0))
 		+  1000 * tpMailItem->HasHeader * do_body
 		+   100 * ((tpMailItem->Download == TRUE) ? do_body : 0)
 		+    10 * tpMailItem->Mark

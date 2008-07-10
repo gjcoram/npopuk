@@ -255,6 +255,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	TCHAR *subject;
 	TCHAR *strPrefix;
 	int len = 0;
+	BOOL is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD;
 
 	if (rebox != MAILBOX_SEND && (MailBox + rebox)->Type != MAILBOX_TYPE_SAVE) {
 		tpMailItem->MailBox = alloc_copy_t((MailBox + rebox)->Name);
@@ -263,16 +264,15 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	}
 
 	// Set the appropriate To/From settings
-	if (ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD) {	// It's actually forwarding
-		tpMailItem->To = NULL;				// clear the To:
+	if (is_fwd) {	// It's actually forwarding
+		//tpMailItem->To = NULL;				// don't set the To:
 		strPrefix = op.FwdSubject;
 		tpMailItem->AttachSize = 0;
 
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (ReplyFlag == EDIT_FILTERFORWARD
-				|| (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT)) {
+		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT) {
 			// forward as attachment
 			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
 			//if (tpMailItem->FwdAttach != NULL) {
@@ -337,7 +337,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		}
 
 	} else {
-		//of MailBox of reply Setting
+		// Reply/ReplyAll Settings
 		if (tpReMailItem->ReplyTo != NULL) {
 			tpMailItem->To = alloc_copy_t(tpReMailItem->ReplyTo);
 		} else if (tpReMailItem->From != NULL) {
@@ -357,7 +357,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 	if(tpReMailItem->MessageID != NULL && *tpReMailItem->MessageID == TEXT('<')) {
 		//The setting
-		if (ReplyFlag == EDIT_FORWARD) {
+		if (is_fwd) {
 			tpMailItem->References = alloc_copy_t(tpReMailItem->MessageID);
 		} else {
 			tpMailItem->InReplyTo = alloc_copy_t(tpReMailItem->MessageID);
@@ -399,12 +399,13 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	TCHAR *quotchar = NULL;
 	int len, cnt, i, TextIndex;
 	int qlen = 0;
-	BOOL fwd_as_att, do_sig, do_sig_above;
+	BOOL is_fwd, fwd_as_att, do_sig, do_sig_above;
+	is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD;
 
 	if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
 		// overrides forward as attachment
 		fwd_as_att = FALSE;
-	} else if (ReplyFlag == EDIT_FILTERFORWARD || (op.FwdQuotation == 2 && ReplyFlag == EDIT_FORWARD)) {
+	} else if (op.FwdQuotation == 2 && is_fwd) {
 		fwd_as_att = TRUE;
 	} else {
 		fwd_as_att = FALSE;
@@ -433,11 +434,11 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			multipart_free(&tpMultiPart, cnt);
 		}
 
-		if (op.FwdQuotation != 0 || ReplyFlag != EDIT_FORWARD) {
+		if (op.FwdQuotation != 0 || !is_fwd) {
 			quotchar = op.QuotationChar;
 			qlen = lstrlen(quotchar);
 		}
-		if (ReplyFlag == EDIT_FORWARD) {
+		if (is_fwd) {
 			len = CreateHeaderStringSize(op.FwdHeader, tpReMailItem, quotchar) + 2;
 		} else {
 			len = CreateHeaderStringSize(op.ReHeader, tpReMailItem, NULL) + 2;
@@ -460,13 +461,12 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			sig = NULL;
 		}
 		do_sig = (sig != NULL) && (*sig != TEXT('\0'))
-			&& (ReplyFlag != EDIT_FORWARD || (op.SignForward == 1 || op.SignForward == 3));
+			&& (!is_fwd	|| (op.SignForward == 1 || op.SignForward == 3));
 		if (do_sig) {
 			len += lstrlen(sig) + 2;
 		}
 		do_sig_above = do_sig &&
-			((ReplyFlag == EDIT_FORWARD && op.SignForward == 3) || 
-			(ReplyFlag != EDIT_FORWARD && op.SignReplyAbove == 1));
+			((is_fwd && op.SignForward == 3) || (!is_fwd && op.SignReplyAbove == 1));
 
 		body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (body != NULL) {
@@ -474,7 +474,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			if (do_sig_above) {
 				p = str_join_t(p, sig, TEXT("\r\n"), (TCHAR *)-1);
 			}
-			if (ReplyFlag == EDIT_FORWARD) {
+			if (is_fwd) {
 				p = CreateHeaderString(op.FwdHeader, p, tpReMailItem, quotchar);
 			} else {
 				p = CreateHeaderString(op.ReHeader, p, tpReMailItem, NULL);
@@ -505,8 +505,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		mem_free(&body);
 
 	} else {
-		if ((ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD)
-			&& (op.SignForward == 0 || op.SignForward == 2)) {
+		if (is_fwd && (op.SignForward == 0 || op.SignForward == 2)) {
 			return;
 		}
 		i = mailbox_name_to_index(tpMailItem->MailBox);
@@ -2588,7 +2587,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 
 	case EDIT_FORWARD:
 	case EDIT_FILTERFORWARD:
-		// Forward
+		// Forward or forward by filter action
 
 		// Check if message is complete, give option to bail out here
 		if (tpReMailItem != NULL && tpReMailItem->Download == FALSE && OpenFlag != EDIT_FILTERFORWARD 
@@ -2616,9 +2615,9 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			// Forward settings
 			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
 		}
-		tpMailItem->To = alloc_copy_t(seltext);
-
-		if (OpenFlag != EDIT_FILTERFORWARD) {
+		if (OpenFlag == EDIT_FILTERFORWARD) {
+			tpMailItem->To = alloc_copy_t(seltext);
+		} else {
 			//Transmission information setting
 #ifdef _WIN32_WCE
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
@@ -2641,6 +2640,9 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->Mark = 0;
 		if (rebox != MAILBOX_SEND && tpReMailItem != NULL) {
 			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
+			if (tpMailItem->FwdAttach != NULL) {
+				tpReMailItem->ReFwd |= REFWD_FWDHOLD;
+			}
 		}
 		break;
 	}

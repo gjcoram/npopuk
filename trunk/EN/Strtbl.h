@@ -229,6 +229,7 @@
 #define STR_STATUS_UNSENT			TEXT("Unsent %d")
 #endif
 #define STR_STATUS_MAILSIZE_B		TEXT("%d B")
+#define STR_STATUS_MAILSIZE_KB_d	TEXT("%d KB")
 #define STR_STATUS_MAILSIZE_KB		TEXT("%s KB")
 #define STR_STATUS_MAILSIZE_MB		TEXT("%s MB")
 #define STR_STATUS_MAILSIZE_GB		TEXT("%s GB")

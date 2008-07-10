@@ -1267,7 +1267,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				redraw = TRUE;
 			}
 			if (redraw == TRUE) {
-				ListView_SetItemState(hListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
+				ListView_SetItemState(hListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 				ListView_RedrawItems(hListView, LvFocus, LvFocus);
 				UpdateWindow(hListView);
 			}
@@ -2752,7 +2752,7 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 		tpMailItem->MailStatus = (tpMailItem->MailStatus == ICON_READ) ? ICON_MAIL : ICON_READ;
 		tpMailItem->Mark = tpMailItem->MailStatus;
 		if (tpMailItem->MailStatus == ICON_MAIL) {
-			tpMailItem->ReFwd = ICON_NON;
+			tpMailItem->ReFwd &= ~(ICON_REFWD_MASK);
 		}
 	} else if (tpMailItem->Mark == mark) {
 		tpMailItem->Mark = tpMailItem->MailStatus;
@@ -2769,7 +2769,7 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 			cut = 0;
 		}
 		ListView_SetItemState(hListView, i, cut, LVIS_CUT);
-		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd), LVIS_OVERLAYMASK);
+		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 		ListView_RedrawItems(hListView, i, i);
 	}
 	UpdateWindow(hListView);
