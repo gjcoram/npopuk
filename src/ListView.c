@@ -600,7 +600,7 @@ static int GetIconSortStatus(MAILITEM *tpMailItem)
 	}
 	retval += tpMailItem->Priority * 1000;
 	retval += tpMailItem->Download * 10;
-	retval += tpMailItem->ReFwd;
+	retval += tpMailItem->ReFwd & ICON_REFWD_MASK;
 	return retval;
 }
 

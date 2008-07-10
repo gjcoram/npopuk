@@ -223,7 +223,7 @@ END
 
 IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view.bmp"
 IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit.bmp"
-IDB_TOOLBAR             BITMAP                  "..\\res\\toolbar.bmp"
+IDB_TOOLBAR             BITMAP                  "..\\res\\tbar_main.bmp"
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1539,6 +1539,8 @@ BEGIN
     ID_MENUITEM_DOWNMARK    "Mark to download"
     ID_MENUITEM_DELMARK     "Mark to delete"
     ID_MENUITEM_DELETE      "Delete from list"
+    ID_MENUITEM_UNREADMAIL  "Mark as unread"
+    ID_MENUITEM_READMAIL    "Mark as read"
     ID_MENUITEM_UNREADMARK  "Mark as read"
     ID_MENUITEM_NEXTMAIL    "Next mail"
     ID_MENUITEM_NEXTUNREAD  "Next unread mail"

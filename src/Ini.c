@@ -394,7 +394,7 @@ BOOL ini_read_setting(HWND hWnd)
 		SaveBoxesLoaded = TRUE;
 	}
 	op.BlindAppend = profile_get_int(GENERAL, TEXT("BlindAppend"), 0, app_path);
-	op.FixContentType = profile_get_int(GENERAL, TEXT("FixContentType"), 0, app_path);
+	op.FixContentType = profile_get_int(GENERAL, TEXT("FixContentType"), 1, app_path);
 	
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0, app_path);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass, app_path);
