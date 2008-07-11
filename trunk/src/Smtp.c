@@ -87,6 +87,7 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
+static void ClearFwdHold(MAILITEM *tpMailItem);
 
 /*
  * HMAC_MD5 - MD5のダイジェストを生成する
@@ -1331,6 +1332,9 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			// 送信箱をファイルに保存
 			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
 		}
+		if (tpMailItem->FwdAttach && tpMailItem->References) {
+			ClearFwdHold(tpMailItem);
+		}
 
 		// 次の送信メールの取得
 		i = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, mailbox_name_to_index(send_mail_box->Name));
@@ -1389,6 +1393,9 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (op.AutoSave == 1) {
 			// 送信箱をファイルに保存
 			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
+		}
+		if (tpMailItem->FwdAttach && tpMailItem->References) {
+			ClearFwdHold(tpMailItem);
 		}
 		command_status = SMTP_QUIT;
 		break;
@@ -1521,6 +1528,48 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 		return -1;
 	}
 	return soc;
+}
+
+/*
+ * ClearFwdHold
+ */
+static void ClearFwdHold(MAILITEM *tpSentItem)
+{
+	MAILBOX *tpMailBox = MailBox + MAILBOX_SEND;
+	MAILITEM *tpMailItem;
+	TCHAR *ref = tpSentItem->References;
+	int i, j;
+
+	if (tpMailBox && tpMailBox->Loaded && tpMailBox->HeldMail) {
+		for (j = 0; j < tpMailBox->MailItemCnt; j++) {
+			tpMailItem = *(tpMailBox->tpMailItem + j);
+			if (tpMailItem && tpMailItem->FwdAttach && tpMailItem->References 
+				&& tpMailItem->MailStatus != ICON_SENTMAIL) {
+				if (lstrcmp(ref, tpMailItem->References) == 0) {
+					// there's another unsent message that needs the hold
+					return;
+				}
+			}
+		}
+	}
+
+	for (i = MAILBOX_SEND; i < MailBoxCnt; i++) {
+		BOOL still_held = FALSE;
+		tpMailBox = MailBox + i;
+		if (tpMailBox && tpMailBox->Loaded && tpMailBox->HeldMail) {
+			for (j = 0; j < tpMailBox->MailItemCnt; j++) {
+				tpMailItem = *(tpMailBox->tpMailItem + j);
+				if (tpMailItem && tpMailItem->MessageID && (tpMailItem->ReFwd & REFWD_FWDHOLD)) {
+					if (lstrcmp(ref, tpMailItem->MessageID) == 0) {
+						tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
+					} else {
+						still_held = TRUE;
+					}
+				}
+			}
+			tpMailBox->HeldMail = still_held;
+		}
+	}
 }
 
 /*

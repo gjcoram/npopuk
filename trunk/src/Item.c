@@ -580,7 +580,7 @@ int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No)
 /*
  * item_get_next_delete_mark - find the next message marked for delete
  */
-int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No)
+int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No)
 {
 	MAILITEM *tpMailItem;
 	int i;
@@ -590,7 +590,7 @@ int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if (tpMailItem->Mark == ICON_DEL) {
+		if ((tpMailItem->Mark == ICON_DEL) && (hold == FALSE || (tpMailItem->ReFwd & REFWD_FWDHOLD) == 0)) {
 			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
@@ -1265,6 +1265,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		tpMailItem->ReFwd = (refwd <= 7) ? (char)(refwd/2) : 0;
 		if (refwd - 2 * tpMailItem->ReFwd) {
 			tpMailItem->ReFwd |= REFWD_FWDHOLD;
+			tpMailBox->HeldMail = TRUE;
 		}
 		i = i % 10000;
 
@@ -1990,6 +1991,9 @@ MAILITEM *item_find_thread_anywhere(TCHAR *p)
 {
 	MAILITEM *tmp;
 	int mbox, msg;
+	if (p == NULL) {
+		return NULL;
+	}
 	for (mbox = MAILBOX_USER; mbox < MailBoxCnt; mbox++) {
 		if ((MailBox+mbox)->Loaded == FALSE) {
 			continue;

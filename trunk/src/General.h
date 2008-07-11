@@ -612,6 +612,7 @@ typedef struct _MAILBOX {
 	// Check
 	int NewMail;
 	int UnreadCnt;
+	BOOL HeldMail;
 	BOOL ListInitMsg;
 	int CyclicFlag;
 
@@ -836,7 +837,7 @@ void item_get_content_t(char *buf, char *header, TCHAR **ret);
 char *item_get_message_id(char *buf);
 int item_get_number_to_index(MAILBOX *tpMailBox, int No);
 int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No);
-int item_get_next_delete_mark(MAILBOX *tpMailBox, int Index, int *No);
+int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No);
 int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors);
 int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
@@ -1041,7 +1042,7 @@ int SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
-BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL delete);
+BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL del);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
