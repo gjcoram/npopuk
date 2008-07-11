@@ -142,6 +142,7 @@
 #define STR_Q_DELSERVERMAIL			TEXT("Warning! Messages are marked to\ndelete from server. Delete them?")
 #define STR_Q_DELLISTMAIL			TEXT("Delete %d mail from the list?%s")
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
+#define STR_Q_DEL_FWDHOLD			TEXT("Message is held to forward attachment. Delete anyway?")
 #define STR_Q_DELMAILBOX			TEXT("Delete mailbox \"%s\"?")
 #define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
@@ -176,6 +177,9 @@
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
+#define STR_MSG_MARK_HELD			TEXT("Marked message is held for forwarding")
+#define STR_MSG_NOATT				TEXT("Attached file not found; verify attachment list")
+#define STR_MSG_NOFWD				TEXT("Original message not found to forward attachments")
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")

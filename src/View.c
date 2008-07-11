@@ -3269,7 +3269,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				}
 			} else {
 				// delete from list
-				if (op.ExpertMode != 1 || key >=0) {
+				if (tpMailItem->ReFwd & REFWD_FWDHOLD) {
+					if (MessageBox(hWnd, STR_Q_DEL_FWDHOLD, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+						break;
+					}
+				} else if (op.ExpertMode != 1 || key >=0) {
 					TCHAR buf[BUF_SIZE];
 					wsprintf(buf, STR_Q_DELLISTMAIL, 1, TEXT(""));
 					if (MessageBox(hWnd, buf, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {

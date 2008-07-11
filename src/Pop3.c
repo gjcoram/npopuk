@@ -896,7 +896,9 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 			// UIDLのリストに存在しないメールは解放する
 			if (ShowFlag == TRUE) {
 				No = ListView_GetMemToItem(hListView, tpMailItem);
-				ListView_DeleteItem(hListView, No);
+				if (tpMailItem != NULL && ((tpMailItem->ReFwd & REFWD_FWDHOLD) == 0)) {
+					ListView_DeleteItem(hListView, No);
+				}
 			}
 			item_free((tpMailBox->tpMailItem + i), 1);
 			break;
@@ -1350,7 +1352,7 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
-			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1501,7 +1503,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
-			get_no = item_get_next_delete_mark(tpMailBox, -1, &delete_get_no);
+			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1677,7 +1679,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
 		return POP_ERR;
 	}
-	get_no = item_get_next_delete_mark(tpMailBox, get_no, &delete_get_no);
+	get_no = item_get_next_delete_mark(tpMailBox, TRUE, get_no, &delete_get_no);
 	if (get_no != -1) {
 		// 削除メールの確認コマンドを送信
 		return exec_send_check_command(hWnd, soc, get_no, ErrStr, tpMailBox);
