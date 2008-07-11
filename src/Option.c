@@ -2296,6 +2296,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			sel = -1;
 			while( (sel = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
 				int mbox = sel + MAILBOX_USER;
+				int dsize;
 				MAILBOX *tpMailBox = MailBox + mbox;
 				if (tpMailBox->Filename == NULL) {
 					wsprintf(buf, TEXT("MailBox%d.dat"), sel);
@@ -2304,6 +2305,19 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				}
 				file_save_mailbox(buf, DataDir, mbox, FALSE, FALSE,
 					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+
+				dsize = tpMailBox->DiskSize;
+				if (dsize < 0) {
+					wsprintf(buf, STR_STATUS_MAILSIZE_KB, TEXT("?"));
+				} else {
+					if (dsize > 0 && dsize < 1000) {
+						dsize = 1;
+					} else {
+						dsize /= 1024;
+					}
+					wsprintf(buf, STR_STATUS_MAILSIZE_KB_d, dsize);
+				}
+				ListView_SetItemText(hListView, sel, 2, buf);
 				ListView_SetItemText(hListView, sel, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
 				if (op.LazyLoadMailboxes > 0) {
 					ListView_SetItemText(hListView, sel, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
