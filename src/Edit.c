@@ -2642,6 +2642,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
 			if (tpMailItem->FwdAttach != NULL) {
 				tpReMailItem->ReFwd |= REFWD_FWDHOLD;
+				(MailBox + rebox)->HeldMail = TRUE;
 			}
 		}
 		break;
