@@ -761,6 +761,13 @@ BOOL ini_read_setting(HWND hWnd)
 		profile_free();
 		return FALSE;
 	}
+
+	// load OutBox and Address book
+	if (mailbox_read() == FALSE) {
+		profile_free();
+		return FALSE;
+	}
+
 	for (i = 0; i < cnt; i++) {
 		num = i + MAILBOX_USER;
 		wsprintf(buf, TEXT("MAILBOX-%d"), i);

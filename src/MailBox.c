@@ -64,6 +64,7 @@ BOOL mailbox_init(void)
 	if(AddressBook == NULL){
 		return FALSE;
 	}
+
 	return TRUE;
 }
 
@@ -140,6 +141,7 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 		//Adding the mailbox to the menu, to obtain the index
 		if (Index < MailBoxCnt-1) {
 			InsertMBMenu(Index, STR_MAILBOX_NONAME);
+			i = Index;
 		} else {
 			i = AddMBMenu(STR_MAILBOX_NONAME);
 		}

@@ -455,7 +455,7 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 		if (tpMailItem->New == TRUE) {
 			lvi.state = INDEXTOOVERLAYMASK(ICON_NEW_MASK);
 		} else {
-			lvi.state = INDEXTOOVERLAYMASK(tpMailItem->ReFwd); // GJC
+			lvi.state = INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK); // GJC
 		}
 		state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 		lvi.state |= INDEXTOSTATEIMAGEMASK(state);
