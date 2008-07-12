@@ -2643,6 +2643,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			if (tpMailItem->FwdAttach != NULL) {
 				tpReMailItem->ReFwd |= REFWD_FWDHOLD;
 				(MailBox + rebox)->HeldMail = TRUE;
+				(MailBox + rebox)->NeedsSave |= MARKS_CHANGED;
 			}
 		}
 		break;

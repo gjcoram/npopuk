@@ -2769,7 +2769,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 {
 	HWND hListView;
-	int i;
+	int i, j;
 	BOOL ret = FALSE;
 	BOOL held = FALSE;
 	ServerDelete = TRUE;
@@ -2799,8 +2799,18 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 				break;
 			}
 		}
-		if (ServerDelete == TRUE && item_get_next_delete_mark((MailBox + i), FALSE, -1, NULL) != -1) {
-			held = TRUE; // message is marked for deletion, but held for forwarding
+		if (ServerDelete == TRUE && (j = item_get_next_delete_mark((MailBox + i), FALSE, -1, NULL)) != -1) {
+			TCHAR msg[MSG_SIZE];
+			wsprintf(msg, STR_Q_DEL_FWDHOLD_ACCT, ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
+				? STR_MAILBOX_NONAME :(MailBox + i)->Name);
+			if (MessageBox(hWnd, STR_Q_DEL_FWDHOLD, STR_TITLE_ALLEXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL) == IDNO) {
+				held = TRUE;
+			} else {
+				while (j != -1) {
+					(*((MailBox + i)->tpMailItem + j))->ReFwd &= ~(REFWD_FWDHOLD);
+					j = item_get_next_delete_mark((MailBox + i), FALSE, j, NULL);
+				}
+			}
 		}
 		if (ServerDelete == TRUE && item_get_next_delete_mark((MailBox + i), TRUE, -1, NULL) != -1) {
 			if ((IsAfterCheck == FALSE && op.ExpertMode == 1) ||
@@ -2837,11 +2847,8 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 	} else if (ret == FALSE && item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE) != -1) {
 		ret = TRUE;
 	} else if (IsAfterCheck == FALSE && ret == FALSE) {
-		if (held) {
-			MessageBox(hWnd, STR_MSG_MARK_HELD, STR_TITLE_ALLEXEC, MB_ICONEXCLAMATION | MB_OK);
-		} else {
-			MessageBox(hWnd, STR_MSG_NOMARK, STR_TITLE_ALLEXEC, MB_ICONEXCLAMATION | MB_OK);
-		}
+		MessageBox(hWnd, (held) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK, STR_TITLE_ALLEXEC,
+			MB_ICONEXCLAMATION | MB_OK);
 	}
 	return ret;
 }
@@ -3285,6 +3292,10 @@ static void ListDeleteAttach(HWND hWnd)
 	while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		if (tpMailItem != NULL && tpMailItem->Multipart > MULTIPART_ATTACH) {
+			if (tpMailItem->ReFwd & REFWD_FWDHOLD) {
+				MessageBox(hWnd, STR_MSG_ATT_HELD, STR_TITLE_DELETE, MB_OK);
+				continue;
+			}
 			DeleteAttachFile(hWnd, tpMailItem);
 			ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
 			did_one = TRUE;
@@ -3896,7 +3907,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	static BOOL SipFlag = FALSE;
 #endif
 	static BOOL save_flag = FALSE;
-	int i, old_selbox, ans;
+	int i, j, old_selbox, ans;
 	BOOL ret;
 
 	switch (msg) {
@@ -3915,18 +3926,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 		}
 
-		// INIファイルの読み込み
+		// read INI settings (op.???) and load mailboxes
 		if (ini_read_setting(hWnd) == FALSE) {
 			ErrorMessage(NULL, STR_ERR_INIT);
 			DestroyWindow(hWnd);
 			break;
 		}
 
-		if (mailbox_read() == FALSE) {
-			ErrorMessage(NULL, STR_ERR_INIT);
-			DestroyWindow(hWnd);
-			break;
-		}
 #ifndef _WIN32_WCE
 		SetWindowPos(hWnd, 0, op.MainRect.left, op.MainRect.top, 
 			op.MainRect.right - op.MainRect.left, op.MainRect.bottom - op.MainRect.top,
@@ -4776,11 +4782,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		// アカウントの追加
 		case ID_MENUITEM_ADDMAILBOX:
 			if (MailBoxCnt >= MAX_MAILBOX_CNT) {
-				MessageBox(hWnd, TEXT("Too many accounts"), WINDOW_TITLE, MB_OK);
+				ErrorMessage(hWnd, STR_ERR_TOOMANYMAILBOXES);
 				break;
 			}
 			old_selbox = SelBox;
-			mailbox_select(hWnd, mailbox_create(hWnd, 1, -1, TRUE, TRUE));
+			mailbox_select(hWnd, mailbox_create(hWnd, 1, old_selbox + 1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
@@ -5085,11 +5091,27 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			KeyShowHeader = (GetKeyState(VK_SHIFT) < 0) ? TRUE : FALSE;
 			ServerDelete = FALSE;
-			ans = -2;
+			ans = 0;
 
-			if (item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
-				ans = ParanoidMessageBox(hWnd, STR_Q_DELSERVERMAIL,
-					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+			j  = item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL);
+			if (j != -1) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, STR_Q_DEL_FWDHOLD_ACCT, ((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+					? STR_MAILBOX_NONAME :(MailBox + SelBox)->Name);
+				ans = MessageBox(hWnd, msg, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+				if (ans == IDYES) {
+					while (j != -1) {
+						(*((MailBox + SelBox)->tpMailItem + SelBox))->ReFwd &= ~(REFWD_FWDHOLD);
+						j = item_get_next_delete_mark((MailBox + SelBox), FALSE, j, NULL);
+					}
+				} else if (ans == IDCANCEL) {
+					ShowError = FALSE;
+					break;
+				} else {
+					ans = -2;
+				}
+			} else if (item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
+				ans = ParanoidMessageBox(hWnd, STR_Q_DELSERVERMAIL,	STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 				if (ans == IDYES) {
 					ServerDelete = TRUE;
 				} else if (ans == IDCANCEL) {
@@ -5101,11 +5123,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				item_get_next_download_mark((MailBox + SelBox), -1, NULL) == -1 &&
 				item_get_next_send_mark((MailBox + SelBox), FALSE) == -1) {
 
-				if (ans == -2 && item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL) != -1) {
-					MessageBox(hWnd, STR_MSG_MARK_HELD, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
-				} else {
-					MessageBox(hWnd, STR_MSG_NOMARK, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
-				}
+				MessageBox(hWnd, (ans == -2) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK,
+					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
 				break;
 			}
 			if (op.SocLog > 1) {

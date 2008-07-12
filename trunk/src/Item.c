@@ -590,7 +590,7 @@ int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No)
 		if (tpMailItem == NULL) {
 			continue;
 		}
-		if ((tpMailItem->Mark == ICON_DEL) && (hold == FALSE || (tpMailItem->ReFwd & REFWD_FWDHOLD) == 0)) {
+		if ((tpMailItem->Mark == ICON_DEL) && ((hold << 3) ^ (tpMailItem->ReFwd & REFWD_FWDHOLD))) {
 			if (No != NULL) {
 				*No = tpMailItem->No;
 			}
@@ -1262,10 +1262,24 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 
 		// Replied/Forwarded
 		refwd = i / 10000;
-		tpMailItem->ReFwd = (refwd <= 7) ? (char)(refwd/2) : 0;
+		tpMailItem->ReFwd = (refwd <= 9) ? (char)(refwd/2) : 0;
 		if (refwd - 2 * tpMailItem->ReFwd) {
-			tpMailItem->ReFwd |= REFWD_FWDHOLD;
-			tpMailBox->HeldMail = TRUE;
+			// check if message is still unsent
+			if ((MailBox + MAILBOX_SEND)->Loaded) {
+				int j;
+				for (j = 0; j < (MailBox + MAILBOX_SEND)->MailItemCnt; j++) {
+					MAILITEM *tpSendItem = *((MailBox + MAILBOX_SEND)->tpMailItem + j);
+					if (tpSendItem && tpSendItem->MailStatus != ICON_SENTMAIL && tpSendItem->FwdAttach != NULL
+						&& lstrcmp(tpMailItem->MessageID, tpSendItem->References) == 0) {
+						tpMailItem->ReFwd |= REFWD_FWDHOLD;
+						tpMailBox->HeldMail = TRUE;
+						break;
+					}
+				}
+			} else {
+				tpMailItem->ReFwd |= REFWD_FWDHOLD;
+				tpMailBox->HeldMail = TRUE;
+			}
 		}
 		i = i % 10000;
 

@@ -3456,6 +3456,10 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
+			if (tpMailItem->ReFwd & REFWD_FWDHOLD) {
+				MessageBox(hWnd, STR_MSG_ATT_HELD, STR_TITLE_DELETE, MB_OK);
+				break;
+			}
 			if (MessageBox(hWnd, STR_Q_DELATTACH, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 				break;
 			}

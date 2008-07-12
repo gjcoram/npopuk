@@ -2253,7 +2253,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case IDC_BUTTON_ADD:
 			if (MailBoxCnt >= MAX_MAILBOX_CNT) {
-				MessageBox(hDlg, TEXT("Too many accounts"), WINDOW_TITLE, MB_OK);
+				ErrorMessage(hDlg, STR_ERR_TOOMANYMAILBOXES);
 				break;
 			}
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
@@ -2263,6 +2263,10 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 			oldsel = SelBox;
 			SelBox = mailbox_create(hDlg, 1, sel + 1 + MAILBOX_USER, TRUE, FALSE);
+			if (SelBox == -1) {
+				ErrorMessage(hDlg, STR_ERR_MEMALLOC);
+				break;
+			}
 			i = SetMailBoxType(hDlg, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			ret = TRUE;
@@ -7504,6 +7508,7 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR Name[BUF_SIZE];
 	int i;
 	int *sel;
+	static int last_selected = 0;
 	
 	switch(uMsg)
 	{
@@ -7516,12 +7521,13 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
 			}
 		}
-		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, 0, 0);
+		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, last_selected, 0);
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK:
+			last_selected = SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_GETCURSEL, 0, 0);
 			SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
 			sel = (int*)GetWindowLong(hDlg, GWL_USERDATA);
 			*sel = mailbox_name_to_index(Name);
