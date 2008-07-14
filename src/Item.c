@@ -1910,7 +1910,7 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 				}
 			} else if (dw == FILTER_FORWARD) {
 				if (Edit_InitInstance(hInst, NULL, (tpMailBox - MailBox), tpMailItem,
-						EDIT_FILTERFORWARD, NULL, TRUE) != EDIT_SEND) {
+						EDIT_FILTERFORWARD, (*(op.tpFilter + i))->FwdAddress, TRUE) != EDIT_SEND) {
 						error = TRUE;
 				}
 			} else if (dw == FILTER_PRIORITY) {
