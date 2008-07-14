@@ -2617,6 +2617,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 		if (OpenFlag == EDIT_FILTERFORWARD) {
 			tpMailItem->To = alloc_copy_t(seltext);
+			tpMailItem->Mark = 1; // means quote entire message
 		} else {
 			//Transmission information setting
 #ifdef _WIN32_WCE
