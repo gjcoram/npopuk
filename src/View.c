@@ -2937,8 +2937,12 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 	}
 	// free item memory in mailbox
 	for (i = 0; i < (MailBox + vSelBox)->MailItemCnt; i++) {
-		if (*((MailBox + vSelBox)->tpMailItem + i) == delItem) {
-			item_free(((MailBox + vSelBox)->tpMailItem + i), 1);
+		MAILITEM *tpMailItem = *((MailBox + vSelBox)->tpMailItem + i);
+		if (tpMailItem == delItem) {
+			if (vSelBox == MAILBOX_SEND) {
+				ClearFwdHold(tpMailItem);
+			}
+			item_free(&tpMailItem, 1);
 			break;
 		}
 	}

@@ -2804,8 +2804,9 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 			wsprintf(msg, STR_Q_DEL_FWDHOLD_ACCT, ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 				? STR_MAILBOX_NONAME :(MailBox + i)->Name);
 			if (MessageBox(hWnd, STR_Q_DEL_FWDHOLD, STR_TITLE_ALLEXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL) == IDNO) {
-				held = TRUE;
+				held = TRUE; // "marked message is held" instead of "no marked mail"
 			} else {
+				ret = TRUE;
 				while (j != -1) {
 					(*((MailBox + i)->tpMailItem + j))->ReFwd &= ~(REFWD_FWDHOLD);
 					j = item_get_next_delete_mark((MailBox + i), FALSE, j, NULL);
@@ -2818,7 +2819,7 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 				ret = TRUE;
 				break;
 			} else {
-				int ans = MessageBox(hWnd, STR_Q_DELSERVERMAIL,
+				int ans = MessageBox(hWnd, (held == FALSE) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
 					(MailBox + i)->Name, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 				if (ans == IDYES) {
 					ret = TRUE;
@@ -3257,11 +3258,14 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	}
 	//As for memory in NULL setting
 	for (i = 0; i < (MailBox + SelBox)->MailItemCnt; i++) {
-		if (*((MailBox + SelBox)->tpMailItem + i) == NULL ||
-			(*((MailBox + SelBox)->tpMailItem + i))->Mark != -1) {
+		MAILITEM *tpMailItem = *((MailBox + SelBox)->tpMailItem + i);
+		if (tpMailItem == NULL || tpMailItem->Mark != -1) {
 			continue;
 		}
-		item_free(((MailBox + SelBox)->tpMailItem + i), 1);
+		if (SelBox == MAILBOX_SEND) {
+			ClearFwdHold(tpMailItem);
+		}
+		item_free(&tpMailItem, 1);
 	}
 	item_resize_mailbox(MailBox + SelBox);
 
@@ -5100,6 +5104,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					? STR_MAILBOX_NONAME :(MailBox + SelBox)->Name);
 				ans = MessageBox(hWnd, msg, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 				if (ans == IDYES) {
+					ServerDelete = TRUE;
 					while (j != -1) {
 						(*((MailBox + SelBox)->tpMailItem + SelBox))->ReFwd &= ~(REFWD_FWDHOLD);
 						j = item_get_next_delete_mark((MailBox + SelBox), FALSE, j, NULL);
@@ -5110,8 +5115,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				} else {
 					ans = -2;
 				}
-			} else if (item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
-				ans = ParanoidMessageBox(hWnd, STR_Q_DELSERVERMAIL,	STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+			}
+			if (ServerDelete == FALSE
+				&& item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
+				ans = ParanoidMessageBox(hWnd, (ans == 0) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
+					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 				if (ans == IDYES) {
 					ServerDelete = TRUE;
 				} else if (ans == IDCANCEL) {

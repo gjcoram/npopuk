@@ -788,6 +788,7 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr);
 #endif
 BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int EndMailFlag, TCHAR *ErrStr);
+void ClearFwdHold(MAILITEM *tpSentItem);
 void smtp_set_error(HWND hWnd);
 void smtp_free(void);
 
