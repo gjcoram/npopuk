@@ -87,7 +87,6 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
-static void ClearFwdHold(MAILITEM *tpMailItem);
 
 /*
  * HMAC_MD5 - MD5のダイジェストを生成する
@@ -1533,14 +1532,14 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 /*
  * ClearFwdHold
  */
-static void ClearFwdHold(MAILITEM *tpSentItem)
+void ClearFwdHold(MAILITEM *tpSentItem)
 {
 	MAILBOX *tpMailBox = MailBox + MAILBOX_SEND;
 	MAILITEM *tpMailItem;
 	TCHAR *ref = tpSentItem->References;
 	int i, j;
 
-	if (tpMailBox && tpMailBox->Loaded && tpMailBox->HeldMail) {
+	if (tpMailBox && tpMailBox->Loaded) {
 		for (j = 0; j < tpMailBox->MailItemCnt; j++) {
 			tpMailItem = *(tpMailBox->tpMailItem + j);
 			if (tpMailItem && tpMailItem->FwdAttach && tpMailItem->References 
@@ -1553,7 +1552,7 @@ static void ClearFwdHold(MAILITEM *tpSentItem)
 		}
 	}
 
-	for (i = MAILBOX_SEND; i < MailBoxCnt; i++) {
+	for (i = 0; i < MailBoxCnt; i++) {
 		BOOL still_held = FALSE;
 		tpMailBox = MailBox + i;
 		if (tpMailBox && tpMailBox->Loaded && tpMailBox->HeldMail) {
