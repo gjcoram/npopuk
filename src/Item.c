@@ -1265,11 +1265,12 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		tpMailItem->ReFwd = (refwd <= 9) ? (char)(refwd/2) : 0;
 		if (refwd - 2 * tpMailItem->ReFwd) {
 			// check if message is still unsent
-			if ((MailBox + MAILBOX_SEND)->Loaded) {
+			if ((MailBox + MAILBOX_SEND)->Loaded && tpMailItem->MessageID) {
 				int j;
 				for (j = 0; j < (MailBox + MAILBOX_SEND)->MailItemCnt; j++) {
 					MAILITEM *tpSendItem = *((MailBox + MAILBOX_SEND)->tpMailItem + j);
-					if (tpSendItem && tpSendItem->MailStatus != ICON_SENTMAIL && tpSendItem->FwdAttach != NULL
+					if (tpSendItem != NULL && tpSendItem->MailStatus != ICON_SENTMAIL
+						&& tpSendItem->FwdAttach != NULL && tpSendItem->References != NULL
 						&& lstrcmp(tpMailItem->MessageID, tpSendItem->References) == 0) {
 						tpMailItem->ReFwd |= REFWD_FWDHOLD;
 						tpMailBox->HeldMail = TRUE;

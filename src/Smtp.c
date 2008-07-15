@@ -1530,32 +1530,37 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 }
 
 /*
- * ClearFwdHold
+ * ClearFwdHold - clear REFWD_FWDHOLD bit when OutBox message is sent or deleted
  */
 void ClearFwdHold(MAILITEM *tpSentItem)
 {
 	MAILBOX *tpMailBox = MailBox + MAILBOX_SEND;
 	MAILITEM *tpMailItem;
-	TCHAR *ref = tpSentItem->References;
+	TCHAR *ref = NULL;
 	int i, j;
 
-	if (tpMailBox && tpMailBox->Loaded) {
+	if (tpSentItem != NULL) {
+		ref = tpSentItem->References;
+	}
+	if (ref == NULL) {
+		return;
+	}
+	if (tpMailBox != NULL && tpMailBox->Loaded) {
 		for (j = 0; j < tpMailBox->MailItemCnt; j++) {
 			tpMailItem = *(tpMailBox->tpMailItem + j);
-			if (tpMailItem && tpMailItem->FwdAttach && tpMailItem->References 
-				&& tpMailItem->MailStatus != ICON_SENTMAIL) {
-				if (lstrcmp(ref, tpMailItem->References) == 0) {
-					// there's another unsent message that needs the hold
-					return;
-				}
+			if (tpMailItem && tpMailItem != tpSentItem && tpMailItem->FwdAttach != NULL
+				&& tpMailItem->References != NULL && tpMailItem->MailStatus != ICON_SENTMAIL
+				&& lstrcmp(ref, tpMailItem->References) == 0) {
+				// there's another unsent message that needs the hold
+				return;
 			}
 		}
 	}
 
-	for (i = 0; i < MailBoxCnt; i++) {
+	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		BOOL still_held = FALSE;
 		tpMailBox = MailBox + i;
-		if (tpMailBox && tpMailBox->Loaded && tpMailBox->HeldMail) {
+		if (tpMailBox != NULL && tpMailBox->Loaded && tpMailBox->HeldMail) {
 			for (j = 0; j < tpMailBox->MailItemCnt; j++) {
 				tpMailItem = *(tpMailBox->tpMailItem + j);
 				if (tpMailItem && tpMailItem->MessageID && (tpMailItem->ReFwd & REFWD_FWDHOLD)) {
