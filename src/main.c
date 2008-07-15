@@ -3265,7 +3265,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 		if (SelBox == MAILBOX_SEND) {
 			ClearFwdHold(tpMailItem);
 		}
-		item_free(&tpMailItem, 1);
+		item_free(((MailBox + SelBox)->tpMailItem + i), 1);
 	}
 	item_resize_mailbox(MailBox + SelBox);
 

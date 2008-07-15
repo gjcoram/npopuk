@@ -2942,7 +2942,7 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 			if (vSelBox == MAILBOX_SEND) {
 				ClearFwdHold(tpMailItem);
 			}
-			item_free(&tpMailItem, 1);
+			item_free(((MailBox + vSelBox)->tpMailItem + i), 1);
 			break;
 		}
 	}
