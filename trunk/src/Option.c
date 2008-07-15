@@ -6114,13 +6114,13 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 			ShowWindow(hItem, SW_SHOW);
 		}
 
-		if (width > 400) {
+		if (width > 280) {
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
 			MoveWindow(hItem, right-273, bottom-60, 60, 21, TRUE);
 			ShowWindow(hItem, SW_SHOW);
 		}
 
-		if (width > 350) {
+		if (width > 210) {
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
 			MoveWindow(hItem, right-204, bottom-60, 60, 21, TRUE);
 			ShowWindow(hItem, SW_SHOW);
