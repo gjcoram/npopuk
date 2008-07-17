@@ -1044,6 +1044,138 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	return TRUE;
 }
 
+/*
+ * file_scan_mailbox - load only specified message-ID
+ */
+MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id)
+{
+	HANDLE hFile;
+	DWORD ret;
+	MAILITEM *tpMailItem = NULL;
+	TCHAR path[BUF_SIZE];
+	char FileBuf[MAXSIZE+1];
+	char *p, *r;
+	long FileSize, FilePtr, ReadSize;
+	int MsgStart, MsgEnd, MboxFormat = -1, encrypted = 0;
+	int len, hlen = tstrlen(HEAD_MESSAGEID), mlen = tstrlen(MBOX_DELIMITER), idlen = tstrlen(m_id);
+	BOOL Found = FALSE, InHeader = TRUE;
+
+	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
+	FileSize = file_get_size(path);
+	if (FileSize <= 0) {
+		return NULL;
+	}
+	FilePtr = 0;
+
+	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == (HANDLE)-1) {
+		return NULL;
+	}
+
+	// read MAXSIZE (32KB) chunks looking for m_id
+	while (FilePtr < FileSize) {
+		ReadSize = (FileSize - FilePtr < MAXSIZE) ? (FileSize - FilePtr) : MAXSIZE;
+		if (ReadFile(hFile, FileBuf, ReadSize, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			return NULL;
+		}
+		FileBuf[ReadSize] = '\0';
+		p = FileBuf;
+		if (MboxFormat == -1) {
+			if (str_cmp_n(FileBuf, "From ", 5) == 0) {
+				MboxFormat = 1;
+				while (*p != '\0' && *p != '\r' && *(p+1) != '\n') {
+					p++;
+				}
+			} else {
+				MboxFormat = 0;
+			}
+			len = tstrlen(ENCRYPT_PREAMBLE);
+			if (FileSize > len && str_cmp_n(FileBuf, ENCRYPT_PREAMBLE, len) == 0) {
+				encrypted = 1;
+				while (*p != '\0' && *p != '\r' && *(p+1) != '\n') {
+					p++;
+				}
+			}
+			MsgStart = (p - FileBuf) + ((MboxFormat == TRUE) ? 2 : 0);
+		}
+		if (encrypted) {
+			len = ReadSize + (p - FileBuf);
+			rot13(p, p + len);
+		}
+		while (*p != '\0') {
+			for (r = p + 1; *r != '\0'; r++) {
+				// check for full line
+				if (*r == '\r' && *(r+1) == '\n') {
+					break;
+				}
+			}
+			if (*r == '\0') {
+				// back up to just before the last \r\n
+				int rewind = ReadSize - (p - FileBuf);
+				FilePtr -= rewind;
+				SetFilePointer(hFile, -rewind, NULL, FILE_CURRENT);
+				break;
+			}
+			if (InHeader) {
+				if (str_cmp_ni(p+2, HEAD_MESSAGEID, hlen) == 0) {
+					p += hlen + 3;
+					if (str_cmp_n(p, m_id, idlen) == 0) {
+						Found = TRUE;
+					}
+				} else if (*(p+2) == '\r' && *(p+3) == '\n') {
+					InHeader = FALSE;
+				}
+			} else {
+				if (MboxFormat) {
+					if (str_cmp_n(p, MBOX_DELIMITER, mlen) == 0) {
+						MsgEnd = FilePtr + (p - FileBuf);
+						if (Found) {
+							break;
+						}
+						p += mlen;
+						while (*p != '\0' && (*p != '\r' || *(p+1) != '\n')) {
+							p++;
+						}
+						MsgStart = FilePtr + (p - FileBuf) + 2;
+						InHeader = TRUE;
+					}
+				} else {
+					if (str_cmp_n(p, "\r\n.\r\n", 5) == 0) {
+						MsgEnd = FilePtr + (p - FileBuf);
+						if (Found) {
+							break;
+						}
+						p += 3;
+						MsgStart = FilePtr + (p - FileBuf) + 2;
+						InHeader = TRUE;
+					}
+				}
+			}
+			p += 2;
+			// done with this line
+			while (*p != '\0' && (*p != '\r' || *(p+1) != '\n')) {
+				p++;
+			}
+		}
+		FilePtr += ReadSize;
+	}
+	if (Found == TRUE) {
+		char *tmp;
+		len = MsgEnd - MsgStart;
+		tmp = (char *)mem_alloc(sizeof(char) * (len + 1));
+		SetFilePointer(hFile, MsgStart, NULL, FILE_BEGIN);
+		if (ReadFile(hFile, tmp, len, &ret, NULL) == FALSE) {
+			CloseHandle(hFile);
+			return NULL;
+		}
+		tpMailItem = item_string_to_item(NULL, tmp, FALSE);
+		mem_free(&tmp);
+	}
+	CloseHandle(hFile);
+
+	return tpMailItem;
+}
 
 /*
  * file_write - マルチバイトに変換して保存

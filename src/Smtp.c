@@ -54,6 +54,7 @@ static BOOL starttls_flag;						// STARTTLS
 static char *send_body, *send_pt;				// 送信用本文
 static int send_len;							// 送信長
 static int send_end_cmd;						// メール送信完了時のコマンド
+MAILITEM *SmtpFwdMessage = NULL;
 
 // 外部参照
 extern OPTION op;
@@ -1608,6 +1609,7 @@ void smtp_set_error(HWND hWnd)
  */
 void smtp_free(void)
 {
+	item_free(&SmtpFwdMessage, 1);
 	mem_free(&send_body);
 	send_body = NULL;
 }

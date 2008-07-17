@@ -37,6 +37,7 @@ extern BOOL ImportDown;
 
 extern MAILBOX *MailBox;
 extern MAILITEM *AttachMailItem;
+extern MAILITEM *SmtpFwdMessage;
 extern int SelBox;
 extern int MailBoxCnt;
 extern ADDRESSBOOK *AddressBook;
@@ -1161,7 +1162,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	item_get_content_t(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType);
 	item_get_content_t(buf, HEAD_ENCODING, &tpMailItem->Encoding);
 	item_get_content_t(buf, HEAD_MESSAGEID, &tpMailItem->MessageID);
-	if (tpMailBox->WasMbox && tpMailBox != (MailBox + MAILBOX_SEND) && tpMailItem->MessageID == NULL) {
+	if (tpMailBox && tpMailBox->WasMbox && tpMailBox != (MailBox + MAILBOX_SEND) && tpMailItem->MessageID == NULL) {
 #ifdef UNICODE
 		char *Content;
 		Content = item_get_message_id(buf);
@@ -1228,7 +1229,9 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		&& (tpMailItem->References == NULL || *tpMailItem->FwdAttach == TEXT('\0'))) {
 		mem_free(&tpMailItem->FwdAttach);
 		tpMailItem->FwdAttach = NULL;
-		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+		if (tpMailBox) {
+			tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+		}
 	}
 	item_get_content_t(buf, HEAD_X_HEADCHARSET, &tpMailItem->HeadCharset);
 	tpMailItem->HeadEncoding = item_get_content_int(buf, HEAD_X_HEADENCODE, 0);
@@ -1255,7 +1258,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 
 		// STATUS_REVISION_NUMBER
 		rev = i / 100000;
-		if (rev != STATUS_REVISION_NUMBER/100000) {
+		if (tpMailBox && rev != STATUS_REVISION_NUMBER/100000) {
 			tpMailBox->NeedsSave |= MARKS_CHANGED;
 		}
 		i = i % 100000;
@@ -1263,9 +1266,9 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		// Replied/Forwarded
 		refwd = i / 10000;
 		tpMailItem->ReFwd = (refwd <= 9) ? (char)(refwd/2) : 0;
-		if (refwd - 2 * tpMailItem->ReFwd) {
-			// check if message is still unsent
-			if ((MailBox + MAILBOX_SEND)->Loaded && tpMailItem->MessageID) {
+		if ((refwd - 2 * tpMailItem->ReFwd) && tpMailItem->MessageID) {
+			// this message held for forwarding; check if outgoing message is still unsent
+			if ((MailBox + MAILBOX_SEND)->Loaded) {
 				int j;
 				for (j = 0; j < (MailBox + MAILBOX_SEND)->MailItemCnt; j++) {
 					MAILITEM *tpSendItem = *((MailBox + MAILBOX_SEND)->tpMailItem + j);
@@ -1273,13 +1276,17 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 						&& tpSendItem->FwdAttach != NULL && tpSendItem->References != NULL
 						&& lstrcmp(tpMailItem->MessageID, tpSendItem->References) == 0) {
 						tpMailItem->ReFwd |= REFWD_FWDHOLD;
-						tpMailBox->HeldMail = TRUE;
+						if (tpMailBox) {
+							tpMailBox->HeldMail = TRUE;
+						}
 						break;
 					}
 				}
 			} else {
 				tpMailItem->ReFwd |= REFWD_FWDHOLD;
-				tpMailBox->HeldMail = TRUE;
+				if (tpMailBox) {
+					tpMailBox->HeldMail = TRUE;
+				}
 			}
 		}
 		i = i % 10000;
@@ -1337,7 +1344,9 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		if (tpMailItem->ContentType != NULL) {
 			// fix bug in previous versions: forwarded messages copied Content-Type of original
 			mem_free(&tpMailItem->ContentType);
-			tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+			if (tpMailBox) {
+				tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+			}
 		}
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), lstrlen(TEXT("multipart/alternative"))) == 0) {
@@ -1887,6 +1896,7 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 		}
 		if (dw == FILTER_MOVE) {
 			tpMailItem->Mark = ICON_DEL;
+			tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
 		}
 	}
 	return error;
@@ -2002,26 +2012,44 @@ int item_find_thread(MAILBOX *tpMailBox, TCHAR *p, int Index)
 /*
  * item_find_thread_anywhere - find message with given MessageID
  */
-MAILITEM *item_find_thread_anywhere(TCHAR *p)
+MAILITEM *item_find_thread_anywhere(TCHAR *m_id)
 {
 	MAILITEM *tmp;
+	char *char_id;
 	int mbox, msg;
-	if (p == NULL) {
+	if (m_id == NULL) {
 		return NULL;
 	}
+	char_id = alloc_tchar_to_char(m_id);
 	for (mbox = MAILBOX_USER; mbox < MailBoxCnt; mbox++) {
 		if ((MailBox+mbox)->Loaded == FALSE) {
-			continue;
-		}
-		for (msg = 0; msg < (MailBox+mbox)->MailItemCnt; msg++) {
-			tmp = *((MailBox+mbox)->tpMailItem + msg);
-			if (tmp != NULL && tmp->MessageID != NULL &&
-				lstrcmp(tmp->MessageID, p) == 0) {
-					return tmp;
+			TCHAR fname[BUF_SIZE];
+			if ((MailBox+mbox)->Filename == NULL) {
+				wsprintf(fname, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
+			} else {
+				lstrcpy(fname, (MailBox+mbox)->Filename);
 			}
-
+			tmp = file_scan_mailbox(fname, char_id);
+			if (tmp != NULL) {
+				if (SmtpFwdMessage != NULL) {
+					item_free(&SmtpFwdMessage, 1);
+				}
+				SmtpFwdMessage = tmp;
+				mem_free(&char_id);
+				return tmp;
+			}
+		} else {
+			for (msg = 0; msg < (MailBox+mbox)->MailItemCnt; msg++) {
+				tmp = *((MailBox+mbox)->tpMailItem + msg);
+				if (tmp != NULL && tmp->MessageID != NULL &&
+					lstrcmp(tmp->MessageID, m_id) == 0) {
+						mem_free(&char_id);
+						return tmp;
+				}
+			}
 		}
 	}
+	mem_free(&char_id);
 	return NULL;
 }
 

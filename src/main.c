@@ -187,7 +187,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag);
 static void ListDeleteItem(HWND hWnd, BOOL Ask);
 static void ListDeleteAttach(HWND hWnd);
 static void SetDownloadMark(HWND hWnd);
-static void SetFlagOrDeleteMark(HWND hWnd, int Mark);
+static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear);
 static void UnMark(HWND hWnd);
 static void SetMailStats(HWND hWnd, int St);
 static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
@@ -3375,7 +3375,7 @@ static void SetDownloadMark(HWND hWnd)
 /*
  * SetFlagOrDeleteMark - アイテムに削除マークを付加
  */
-static void SetFlagOrDeleteMark(HWND hWnd, int Mark)
+static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
@@ -3410,6 +3410,9 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark)
 		if (set == TRUE) {
 			tpMailItem->Mark = Mark;
 			ListView_SetItemState(hListView, i, 0, LVIS_CUT);
+			if (Clear == TRUE) { // && Mark == ICON_DEL
+				tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
+			}
 		} else {
 			tpMailItem->Mark = tpMailItem->MailStatus;
 			if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
@@ -5296,7 +5299,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (SelBox == RecvBox && ExecFlag == TRUE) {
 				break;
 			}
-			SetFlagOrDeleteMark(hWnd, ICON_FLAG);
+			SetFlagOrDeleteMark(hWnd, ICON_FLAG, FALSE);
 			break;
 
 		case ID_MENUITEM_DOWNMARK:	// set download mark
@@ -5321,7 +5324,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND || (SelBox == RecvBox && ExecFlag == TRUE)) {
 				break;
 			}
-			SetFlagOrDeleteMark(hWnd, ICON_DEL);
+			SetFlagOrDeleteMark(hWnd, ICON_DEL, FALSE);
 			break;
 
 		//Mark cancellation
@@ -5387,7 +5390,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
 								ListDeleteItem(hWnd, FALSE);
 							} else {
-								SetFlagOrDeleteMark(hWnd, ICON_DEL);
+								SetFlagOrDeleteMark(hWnd, ICON_DEL, TRUE);
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+Target)->Loaded == TRUE) {
@@ -5557,7 +5560,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE || SelBox == MAILBOX_SEND) {
 								ListDeleteItem(hWnd, FALSE);
 							} else {
-								SetFlagOrDeleteMark(hWnd, ICON_DEL);
+								SetFlagOrDeleteMark(hWnd, ICON_DEL, TRUE);
 							}
 						}
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
