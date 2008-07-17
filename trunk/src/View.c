@@ -3568,6 +3568,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 									ModifyWindow(hWnd, tpNextMail, FALSE, FALSE);
 								}
 							} else {
+								tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
 								SetMark(hWnd, tpMailItem, ICON_DEL);
 								GetMarkStatus(hWnd, tpMailItem);
 								if (op.ViewNextAfterDel == 1) {

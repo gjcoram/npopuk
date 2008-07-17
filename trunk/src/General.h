@@ -810,6 +810,7 @@ BOOL file_savebox_convert(TCHAR *NewFileName);
 BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName);
 BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL CheckDup);
 int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
+MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id);
 BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);
 BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, int do_what);
