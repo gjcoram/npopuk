@@ -2015,41 +2015,51 @@ int item_find_thread(MAILBOX *tpMailBox, TCHAR *p, int Index)
 MAILITEM *item_find_thread_anywhere(TCHAR *m_id)
 {
 	MAILITEM *tmp;
-	char *char_id;
+	BOOL unloaded = FALSE;
 	int mbox, msg;
 	if (m_id == NULL) {
 		return NULL;
 	}
-	char_id = alloc_tchar_to_char(m_id);
+
+	// look in loaded mailboxes first
 	for (mbox = MAILBOX_USER; mbox < MailBoxCnt; mbox++) {
 		if ((MailBox+mbox)->Loaded == FALSE) {
-			TCHAR fname[BUF_SIZE];
-			if ((MailBox+mbox)->Filename == NULL) {
-				wsprintf(fname, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
-			} else {
-				lstrcpy(fname, (MailBox+mbox)->Filename);
-			}
-			tmp = file_scan_mailbox(fname, char_id);
-			if (tmp != NULL) {
-				if (SmtpFwdMessage != NULL) {
-					item_free(&SmtpFwdMessage, 1);
-				}
-				SmtpFwdMessage = tmp;
-				mem_free(&char_id);
-				return tmp;
-			}
-		} else {
-			for (msg = 0; msg < (MailBox+mbox)->MailItemCnt; msg++) {
-				tmp = *((MailBox+mbox)->tpMailItem + msg);
-				if (tmp != NULL && tmp->MessageID != NULL &&
-					lstrcmp(tmp->MessageID, m_id) == 0) {
-						mem_free(&char_id);
-						return tmp;
-				}
+			unloaded = TRUE;
+			continue;
+		}
+		for (msg = 0; msg < (MailBox+mbox)->MailItemCnt; msg++) {
+			tmp = *((MailBox+mbox)->tpMailItem + msg);
+			if (tmp != NULL && tmp->MessageID != NULL &&
+				lstrcmp(tmp->MessageID, m_id) == 0) {
+					return tmp;
 			}
 		}
 	}
-	mem_free(&char_id);
+
+	if (unloaded) {
+		char *char_id = alloc_tchar_to_char(m_id);
+
+		for (mbox = MAILBOX_USER; mbox < MailBoxCnt; mbox++) {
+			if ((MailBox+mbox)->Loaded == FALSE) {
+				TCHAR fname[BUF_SIZE];
+				if ((MailBox+mbox)->Filename == NULL) {
+					wsprintf(fname, TEXT("MailBox%d.dat"), mbox - MAILBOX_USER);
+				} else {
+					lstrcpy(fname, (MailBox+mbox)->Filename);
+				}
+				tmp = file_scan_mailbox(fname, char_id);
+				if (tmp != NULL) {
+					if (SmtpFwdMessage != NULL) {
+						item_free(&SmtpFwdMessage, 1);
+					}
+					SmtpFwdMessage = tmp;
+					mem_free(&char_id);
+					return tmp;
+				}
+			}
+		}
+		mem_free(&char_id);
+	}
 	return NULL;
 }
 
