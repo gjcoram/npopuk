@@ -5109,7 +5109,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (ans == IDYES) {
 					ServerDelete = TRUE;
 					while (j != -1) {
-						(*((MailBox + SelBox)->tpMailItem + SelBox))->ReFwd &= ~(REFWD_FWDHOLD);
+						(*((MailBox + SelBox)->tpMailItem + j))->ReFwd &= ~(REFWD_FWDHOLD);
 						j = item_get_next_delete_mark((MailBox + SelBox), FALSE, j, NULL);
 					}
 				} else if (ans == IDCANCEL) {

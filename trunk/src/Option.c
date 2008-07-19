@@ -2738,6 +2738,7 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_SETCHECK, op.SendDate, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_SETCHECK, op.EncodeType, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_SETCHECK, op.SelectSendBox, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, op.AutoAddRecipients, 0);
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_SETCHECK, op.SendAttachIndividually, 0);
 #endif
@@ -2777,6 +2778,7 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.SendDate = SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_GETCHECK, 0, 0);
 			op.EncodeType = SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_GETCHECK, 0, 0);
 			op.SelectSendBox = SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_GETCHECK, 0, 0);
+			op.AutoAddRecipients = SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_GETCHECK, 0, 0);
 #ifdef _WIN32_WCE
 			op.SendAttachIndividually = SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_GETCHECK, 0, 0);
 #endif
@@ -6087,9 +6089,10 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 	height = bottom - top;
 	midy = (top + bottom - 30) / 2;
 
+	hItem = GetDlgItem(hDlg, IDC_BUTTON_UP);
 	ypos = (midy > 46) ? midy - 46 : 0;
-	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP),
-		right-36, ypos, 33, 24, TRUE);
+	MoveWindow(hItem, right-36, ypos, 33, 24, TRUE);
+	ShowWindow(hItem, SW_SHOW);
 
 	if (height > 230) {
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_UP10);
@@ -6097,9 +6100,10 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		ShowWindow(hItem, SW_SHOW);
 	}
 
+	hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN);
 	ypos = (midy < bottom - 100) ? midy + 12 : bottom - 100;
-	MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN),
-		right-36, ypos, 33, 24, TRUE);
+	MoveWindow(hItem, right-36, ypos, 33, 24, TRUE);
+	ShowWindow(hItem, SW_SHOW);
 
 	if (height > 230) {
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_DOWN10);
