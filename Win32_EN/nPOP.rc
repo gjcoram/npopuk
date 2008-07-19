@@ -377,12 +377,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
         MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
-        MENUITEM "&Delete",                     ID_MENUITEM_DELETEMAILBOX
+        MENUITEM "&Delete...",                  ID_MENUITEM_DELETEMAILBOX
         MENUITEM SEPARATOR
         MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
+        MENUITEM "Su&mmary...",                 ID_MENUITEM_MAILBOXES
         MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
         MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
@@ -665,10 +665,13 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,68,160,10
+    CONTROL         "&Automatically add recipients to address book",
+                    IDC_CHECK_ADD_RECIP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,82,110,10
     CONTROL         "Check &queued (",IDC_CHECK_QUEUE_EXIT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,82,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,96,65,10
     CONTROL         "and &failed send) on exit",IDC_CHECK_SENDERR_EXIT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,70,82,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,96,90,10
     PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,110,80,15
 END
 

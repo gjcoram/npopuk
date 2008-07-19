@@ -300,6 +300,7 @@
 #define IDC_CHECK_SENDERR_EXIT          1212
 #define IDC_CHECK_REFILTER              1213
 #define IDC_CHECK_GBLFILTER             1214
+#define IDC_CHECK_ADD_RECIP             1215
 #define ID_MENUITEM_MOVESAVE            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
