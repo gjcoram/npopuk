@@ -404,7 +404,7 @@ typedef struct _OPTION {
 	int MblColSize[MB_COL_CNT];
 	int AddressSort;
 	int AddressJumpKey;
-	int AutoAddRecipients;
+//	int AutoAddRecipients;
 	TCHAR *AddressShowGroup;
 
 	int ListGetLine;

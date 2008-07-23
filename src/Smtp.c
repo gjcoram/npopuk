@@ -881,11 +881,11 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	tpMailItem->FmtDate = alloc_copy(buf);
 #endif
 
-	if (op.AutoAddRecipients) {
-		add_to_addressbook(tpMailItem->To);
-		add_to_addressbook(tpMailItem->Cc);
-		add_to_addressbook(tpMailItem->Bcc);
-	}
+//	if (op.AutoAddRecipients) {
+//		add_to_addressbook(tpMailItem->To);
+//		add_to_addressbook(tpMailItem->Cc);
+//		add_to_addressbook(tpMailItem->Bcc);
+//	}
 
 	return TRUE;
 }
@@ -1558,6 +1558,8 @@ static void add_to_addressbook(TCHAR *AddrList) {
 		BOOL addit = TRUE;
 		int i;
 
+		*addr = TEXT('\0');
+		*cmmt = TEXT('\0');
 		GetMailAddress(AddrList, addr, cmmt, FALSE);
 		for (i = 0; i < AddressBook->ItemCnt; i++) {
 			if (lstrcmp(addr, (*(AddressBook->tpAddrItem + i))->AddressOnly) == 0) {

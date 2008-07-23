@@ -440,7 +440,7 @@ BOOL ini_read_setting(HWND hWnd)
 	}
 	op.AddressSort = profile_get_int(GENERAL, TEXT("AddressSort"), 0, app_path);
 	op.AddressJumpKey = profile_get_int(GENERAL, TEXT("AddressJumpKey"), 0, app_path);
-	op.AutoAddRecipients = profile_get_int(GENERAL, TEXT("AutoAddRecipients"), 0, app_path);
+//	op.AutoAddRecipients = profile_get_int(GENERAL, TEXT("AutoAddRecipients"), 0, app_path);
 	op.AddressShowGroup = profile_alloc_string(GENERAL, TEXT("AddressShowGroup"), TEXT(""), app_path);
 
 	op.MblColSize[0] = profile_get_int(GENERAL, TEXT("MblColSize-0"), 110, app_path);
@@ -1192,7 +1192,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("AddColSize-2"), op.AddColSize[2], app_path);
 	profile_write_int(GENERAL, TEXT("AddressSort"), op.AddressSort, app_path);
 	profile_write_int(GENERAL, TEXT("AddressJumpKey"), op.AddressJumpKey, app_path);
-	profile_write_int(GENERAL, TEXT("AutoAddRecipients"), op.AutoAddRecipients, app_path);
+//	profile_write_int(GENERAL, TEXT("AutoAddRecipients"), op.AutoAddRecipients, app_path);
 	profile_write_string(GENERAL, TEXT("AddressShowGroup"), op.AddressShowGroup, app_path);
 
 	profile_write_int(GENERAL, TEXT("MblColSize-0"), op.MblColSize[0], app_path);
