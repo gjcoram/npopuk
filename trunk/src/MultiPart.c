@@ -456,6 +456,10 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 		if (Content != NULL && str_cmp_ni(Content, "multipart", tstrlen("multipart")) == 0) {
 			// ŠK‘w‚É‚È‚Á‚Ä‚¢‚éê‡‚ÍÄ‹A‚·‚é
 			sPos = GetBodyPointa(p);
+			if (sPos == NULL) {
+				mem_free(&Content);
+				break;
+			}
 			cnt = multipart_parse(Content, sPos, StopAtTextPart, tpMultiPart, cnt);
 			mem_free(&Content);
 			p = get_next_part(sPos, Boundary);
