@@ -300,6 +300,7 @@
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
 #define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
 #define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
+#define STR_LIST_MENU_SELSBOX		TEXT("Select...")
 
 // Mail view
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")

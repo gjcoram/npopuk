@@ -2117,6 +2117,9 @@ void GetNameFromComment(TCHAR *cmmt, TCHAR *fname, TCHAR *lname)
 {
 	TCHAR *p;
 	BOOL done = FALSE;
+	if (fname == NULL || lname == NULL) {
+		return;
+	}
 	for (p = cmmt; *p != TEXT('\0'); p++) {
 		if (*p == TEXT(',')) {
 			*p = TEXT('\0');
