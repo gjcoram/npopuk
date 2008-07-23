@@ -145,6 +145,7 @@
 #define STR_Q_DELLISTMAIL_NOSERVER	TEXT("\n(Is not deleted from the server)")
 #define STR_Q_DEL_FWDHOLD			TEXT("Message is held to forward attachment. Delete anyway?")
 #define STR_Q_DEL_FWDHOLD_ACCT		TEXT("Message(s) in account \"%s\" are held to forward attachment.\nDelete anyway?")
+#define STR_Q_DELSERVERNOHOLD		TEXT("Delete messages not being held for forwarding?")
 #define STR_Q_DELMAILBOX			TEXT("Delete mailbox \"%s\"?")
 #define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
@@ -188,8 +189,8 @@
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
 #define STR_REPLACED_N				TEXT("Replaced %d instances")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
-#define STR_RADIO_RENAMESBOX		TEXT("Rename &savebox")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
+#define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -219,7 +220,9 @@
 #define STR_TITLE_COPY2				TEXT("Copy to:")
 #define STR_TITLE_MOVE2				TEXT("Move to:")
 #define STR_TITLE_RENAMESBOX		TEXT("Rename SaveBox")
+#define STR_RADIO_RENAMESBOX		TEXT("Rename &savebox")
 #define STR_TITLE_ADDSBOX			TEXT("Add SaveBox")
+#define STR_TITLE_ADD_ADDR			TEXT("Add Addresses")
 
 // Window status
 #ifdef _WIN32_WCE
@@ -400,6 +403,7 @@
 #endif
 #define STR_MULTIPLE_ADDRESSES		TEXT("[Multiple addresses]")
 #define STR_EXAMPLE_ADDRESS			TEXT("\"Name\" <username@domain.com>")
+#define STR_AUTO_ADDED_ADDRESS		TEXT("Replied-to")
 
 // WindowsCE
 #ifdef _WIN32_WCE
