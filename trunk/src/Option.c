@@ -2738,8 +2738,6 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_SETCHECK, op.SendDate, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_SETCHECK, op.EncodeType, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_SETCHECK, op.SelectSendBox, 0);
-		ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
-//		SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, op.AutoAddRecipients, 0);
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_SETCHECK, op.SendAttachIndividually, 0);
 #endif
@@ -2779,7 +2777,6 @@ static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.SendDate = SendDlgItemMessage(hDlg, IDC_CHECK_SENDDATE, BM_GETCHECK, 0, 0);
 			op.EncodeType = SendDlgItemMessage(hDlg, IDC_CHECK_ENCODETYPE, BM_GETCHECK, 0, 0);
 			op.SelectSendBox = SendDlgItemMessage(hDlg, IDC_CHECK_SELECTSENDBOX, BM_GETCHECK, 0, 0);
-//			op.AutoAddRecipients = SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_GETCHECK, 0, 0);
 #ifdef _WIN32_WCE
 			op.SendAttachIndividually = SendDlgItemMessage(hDlg, IDC_CHECK_ATTACHSEP, BM_GETCHECK, 0, 0);
 #endif
@@ -4900,6 +4897,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 		}
+		if (tpMailItem->Mark != MARK_REPLYING) {
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
+		}
 		if (tpMailItem->Mark == MARK_FORWARDING) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_SETCHECK, (op.FwdQuotation == 2) ? 1 : 0, 0);
 		} else {
@@ -5415,6 +5415,12 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				
 				item_free(&tpTmpMailItem, 1);
 			}
+			if (tpMailItem->Mark == MARK_REPLYING
+				&& SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_GETCHECK, 0, 0)) {
+				addr_list_add(tpMailItem->To);
+				addr_list_add(tpMailItem->Cc);
+				addr_list_add(tpMailItem->Bcc);
+			}
 
 			//Quotation -- on exit from this dialog, ->Mark is 0, 1, or 2
 			// 0: no quoting
@@ -5862,12 +5868,46 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (ListView_GetSelectedCount(hListView) <= 0) {
 				SendMessage(hDlg, WM_COMMAND, ID_LV_ALLSELECT, 0);
 			}
+			i = -1;
+			while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
+				TCHAR *item, *addr;
+				int j;
+				item = ListView_AllocGetText(hListView, i, 1);
+				addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(item) + 1));
+				*addr = TEXT('\0');
+				GetMailAddress(item, addr, NULL, FALSE);
+				for (j = 0; j < AddressBook->ItemCnt; j++) {
+					if (lstrcmp(addr, (*(AddressBook->tpAddrItem + j))->AddressOnly) == 0) {
+						ListView_SetItemState(hListView, i, 0, LVNI_SELECTED);
+						break;
+					}
+				}
+				j = i;
+				while((j = ListView_GetNextItem(hListView, j, LVNI_SELECTED)) != -1) {
+					TCHAR *item2, *addr2;
+					item2 = ListView_AllocGetText(hListView, j, 1);
+					addr2 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(item2) + 1));
+					*addr2 = TEXT('\0');
+					GetMailAddress(item2, addr2, NULL, FALSE);
+					if (lstrcmp(addr, addr2) == 0) {
+						ListView_SetItemState(hListView, j, 0, LVNI_SELECTED);
+					}
+					mem_free(&item2);
+					mem_free(&addr2);
+				}
+				mem_free(&item);
+				mem_free(&addr);
+			}
+			i = ListView_GetSelectedCount(hListView);
+			if (i == 0) {
+				MessageBox(hDlg, STR_MSG_ADDR_ALREADY, STR_TITLE_ADD_ADDR, MB_OK);
+				break;
+			}
+
 #ifdef _WIN32_WCE
-			wsprintf(msg, (op.UsePOOMAddressBook == 0) ? STR_Q_ADDADDRESS : STR_Q_EDITADDPOOM,
-				ListView_GetSelectedCount(hListView));
+			wsprintf(msg, (op.UsePOOMAddressBook == 0) ? STR_Q_ADDADDRESS : STR_Q_EDITADDPOOM, i);
 #else
-			wsprintf(msg, STR_Q_ADDADDRESS,
-				ListView_GetSelectedCount(hListView));
+			wsprintf(msg, STR_Q_ADDADDRESS, i);
 #endif
 			ans = MessageBox(hDlg, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNOCANCEL);
 			if (ans == IDCANCEL) {
@@ -5906,6 +5946,10 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				//of information of transmission In address register mail address additional
 				if (addr_add(AddressBook, tpAddrItem) == FALSE) {
 					mem_free(&tpAddrItem->MailAddress);
+					mem_free(&tpAddrItem->AddressOnly);
+#ifdef _WIN32_WCE
+					mem_free(&tpAddrItem->Comment);
+#endif
 					mem_free(&tpAddrItem);
 					ErrorMessage(hDlg, STR_ERR_ADD);
 					return FALSE;
@@ -5925,6 +5969,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (len > 1) {
 						fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 						lname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						*fname = *lname = TEXT('\0');
 						GetNameFromComment(cmmt, fname, lname);
 					} else {
 						lname = fname = NULL;
@@ -6677,8 +6722,6 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 			}
 #endif
-
-
 			EndDialog(hDlg, TRUE);
 			break;
 

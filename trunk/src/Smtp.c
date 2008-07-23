@@ -89,7 +89,6 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
-static void add_to_addressbook(TCHAR *AddrList);
 
 /*
  * HMAC_MD5 - MD5のダイジェストを生成する
@@ -881,12 +880,6 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	tpMailItem->FmtDate = alloc_copy(buf);
 #endif
 
-//	if (op.AutoAddRecipients) {
-//		add_to_addressbook(tpMailItem->To);
-//		add_to_addressbook(tpMailItem->Cc);
-//		add_to_addressbook(tpMailItem->Bcc);
-//	}
-
 	return TRUE;
 }
 
@@ -1536,61 +1529,6 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 		return -1;
 	}
 	return soc;
-}
-
-/*
- * add_to_addressbook - add recipients to address book
- */
-static void add_to_addressbook(TCHAR *AddrList) {
-	TCHAR *addr, *cmmt;
-	if (AddrList == NULL) {
-		return;
-	}
-	addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(AddrList) + 1));
-	if (addr == NULL) {
-		return;
-	}
-	cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(AddrList) + 1));
-	if (cmmt == NULL) {
-		return;
-	}
-	while (*AddrList != TEXT('\0')) {
-		BOOL addit = TRUE;
-		int i;
-
-		*addr = TEXT('\0');
-		*cmmt = TEXT('\0');
-		GetMailAddress(AddrList, addr, cmmt, FALSE);
-		for (i = 0; i < AddressBook->ItemCnt; i++) {
-			if (lstrcmp(addr, (*(AddressBook->tpAddrItem + i))->AddressOnly) == 0) {
-				addit = FALSE;
-				break;
-			}
-		}
-		if (addit == TRUE) {
-			ADDRESSITEM *tpNewAddrItem = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
-			if (tpNewAddrItem == NULL) {
-				mem_free(&addr);
-				mem_free(&cmmt);
-				return;
-			}
-			tpNewAddrItem->AddressOnly = alloc_copy_t(addr);
-			tpNewAddrItem->Comment = alloc_copy_t(cmmt);
-			AddrList = GetMailString(AddrList, addr);
-			tpNewAddrItem->MailAddress = alloc_copy_t(addr);
-			//tpNewAddrItem->Group = alloc_copy_t(TEXT("auto-added"));
-			tpNewAddrItem->Num = AddressBook->ItemCnt;
-			addr_add(AddressBook, tpNewAddrItem);
-
-		} else {
-			// move to next item
-			AddrList = GetMailString(AddrList, addr);
-		}
-	}
-
-	mem_free(&addr);
-	mem_free(&cmmt);
-	return;
 }
 
 /*

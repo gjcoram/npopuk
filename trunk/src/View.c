@@ -2957,7 +2957,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 {
 	MAILITEM *tpMailItem, *tpNextMail;
 	int key, i, command_id;
-	BOOL ret, del_it;
+	BOOL ret, del_it = FALSE, ask = TRUE;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = FALSE;
 #endif
@@ -2993,23 +2993,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 
 #ifdef _WIN32_WCE_PPC
-/* GJCGJCnotyet
-	case WM_LBUTTONDOWN:
-		{
-			SHRGINFO rg;
-
-			rg.cbSize = sizeof(SHRGINFO);
-			rg.hwndClient = hWnd;
-			rg.ptDown.x = LOWORD(lParam);
-			rg.ptDown.y = HIWORD(lParam);
-			rg.dwFlags = SHRG_RETURNCMD;
-
-			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-				SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
-				return 0;
-			}
-		}
-*/
 	case WM_SETTINGCHANGE:
 		if (SPI_SETSIPINFO == wParam && GetForegroundWindow() == hWnd) {
 			SHACTIVATEINFO sai;
@@ -3533,7 +3516,35 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					// and fall through to do the move
 				}
 				SelBox = old_selbox;
+			} else if (command_id == ID_MENUITEM_MOVESAVE || command_id == ID_MENUITEM_SAVECOPY) {
+				int cnt = 0, Target = -1;
+				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+						Target = i;
+						cnt++;
+					}
+				}
+				if (cnt == 0) {
+					MessageBox(hWnd, STR_ERR_NOSAVEBOXES, WINDOW_TITLE, MB_OK);
+					Target = -1;
+				} else if (cnt > 1) {
+					Target = del_it;
+					ask = FALSE;
+					if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELSAVEBOX), hWnd, SelSaveBoxProc, (LPARAM)&Target) == FALSE) {
+						Target = -1;
+					}
+				}
+				if (Target != -1) {
+					if (command_id == ID_MENUITEM_MOVESAVE) {
+						command_id = ID_MENUITEM_MOVE2MBOX + Target;
+					} else {
+						command_id = ID_MENUITEM_COPY2MBOX + Target;
+					}
+				} else {
+					break;
+				}
 			}
+
 			if (command_id >= ID_MENUITEM_COPY2MBOX) {
 				// move or copy to SaveBox
 				BOOL mark_del = FALSE;
@@ -3553,7 +3564,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					} else {
 						lstrcpy(fname, (MailBox + mbox)->Filename);
 					}
-					if (ItemToSaveBox(hWnd, tpMailItem, mbox, fname, TRUE, mark_del) == TRUE) {
+					if (ItemToSaveBox(hWnd, tpMailItem, mbox, fname, ask, mark_del) == TRUE) {
 						if (mark_del == TRUE) {
 							// delete from list or mark for deletion
 							if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {

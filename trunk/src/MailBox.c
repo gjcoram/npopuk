@@ -15,6 +15,9 @@
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
+#ifdef _WIN32_WCE
+#include "ppcpoom.h"
+#endif
 
 /* Define */
 #define IDC_CB				2000
@@ -517,7 +520,7 @@ int mailbox_next_unread(HWND hWnd, int index, int endindex)
  * mailbox_menu_rebuild
  */
 BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
-	int i, this_id;
+	int i, cnt, this_id;
 	int last_copy_id, last_move_id, last_copy_idv, last_move_idv;
 	TCHAR *name;
 	HMENU hMenu = NULL, vMenu = NULL;
@@ -554,8 +557,8 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 #endif
 	}
 
-	// build in reverse order because InsertMenu puts item above
-	for (i = MailBoxCnt; i >= 0; i--) {
+	cnt = 0;
+	for (i = 0; i < MailBoxCnt; i++) {
 		// ModifyMenu not available for PPC2002, so delete all existing entries ...
 		if (hMenu != NULL) {
 			DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
@@ -565,32 +568,60 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 			DeleteMenu(vMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
 			DeleteMenu(vMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
 		}
-		// ... and repopulate those that are saveboxes
-		if (i < MailBoxCnt && (MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
-			if ((MailBox+i)->Name == NULL || *(MailBox+i)->Name == TEXT('\0')) {
-				name = STR_MAILBOX_NONAME;
-			} else {
-				name = (MailBox+i)->Name;
-			}
-			this_id = ID_MENUITEM_COPY2MBOX+i;
-			if (hMenu != NULL && InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
-				last_copy_id = this_id;
-			}
-			if (vMenu != NULL && InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
-				last_copy_idv = this_id;
-			}
-			this_id = ID_MENUITEM_MOVE2MBOX+i;
-			if (hMenu != NULL && InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
-				last_move_id = this_id;
-			}
-			if (vMenu != NULL && IsAttach == FALSE && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
-				last_move_idv = this_id;
-			}
+		if ((MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
+			cnt++;
 		}
 	}
-	if (hMenu != NULL && (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
-		EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, MF_GRAYED);
-		EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
+	if (hMenu != NULL) {
+		DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
+	}
+	if (vMenu != NULL) {
+		DeleteMenu(vMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
+		DeleteMenu(vMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
+	}
+
+	if (cnt < 10) {
+		// build in reverse order because InsertMenu puts item above
+		for (i = MailBoxCnt; i >= 0; i--) {
+			// ... and repopulate those that are saveboxes
+			if (i < MailBoxCnt && (MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
+				if ((MailBox+i)->Name == NULL || *(MailBox+i)->Name == TEXT('\0')) {
+					name = STR_MAILBOX_NONAME;
+				} else {
+					name = (MailBox+i)->Name;
+				}
+				this_id = ID_MENUITEM_COPY2MBOX+i;
+				if (hMenu != NULL && InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+					last_copy_id = this_id;
+				}
+				if (vMenu != NULL && InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+					last_copy_idv = this_id;
+				}
+				this_id = ID_MENUITEM_MOVE2MBOX+i;
+				if (hMenu != NULL && InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+					last_move_id = this_id;
+				}
+				if (vMenu != NULL && IsAttach == FALSE && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+					last_move_idv = this_id;
+				}
+			}
+		}
+		if (hMenu != NULL && (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
+			EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, MF_GRAYED);
+			EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
+		}
+	} else {
+		if (hMenu != NULL) {
+			InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
+			InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
+		}
+		if (vMenu != NULL) {
+			InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
+			if (IsAttach == FALSE) {
+				InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
+			}
+		}
 	}
 	if (vMenu != NULL) {
 		if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE && IsAttach == FALSE) {
@@ -961,6 +992,80 @@ void addr_delete(ADDRESSBOOK *tpAddrBook, int num)
 	}
 	tpAddrBook->ItemCnt--;
 	// tpAddrBook->tpAddrItem could be resized, but why bother?
+}
+
+/*
+ * add_to_addressbook - add recipients to address book
+ */
+void addr_list_add(TCHAR *AddrList) {
+	TCHAR *addr, *cmmt;
+	int len;
+	if (AddrList == NULL) {
+		return;
+	}
+	len = lstrlen(AddrList) + 1;
+	addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (addr == NULL) {
+		return;
+	}
+	cmmt = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (cmmt == NULL) {
+		return;
+	}
+	while (*AddrList != TEXT('\0')) {
+		BOOL addit = TRUE;
+		int i;
+
+		*addr = TEXT('\0');
+		*cmmt = TEXT('\0');
+		GetMailAddress(AddrList, addr, cmmt, FALSE);
+		for (i = 0; i < AddressBook->ItemCnt; i++) {
+			if (lstrcmp(addr, (*(AddressBook->tpAddrItem + i))->AddressOnly) == 0) {
+				addit = FALSE;
+				break;
+			}
+		}
+		if (addit == TRUE) {
+			ADDRESSITEM *tpNewAddrItem = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
+			if (tpNewAddrItem == NULL) {
+				mem_free(&addr);
+				mem_free(&cmmt);
+				return;
+			}
+			tpNewAddrItem->AddressOnly = alloc_copy_t(addr);
+			tpNewAddrItem->Comment = alloc_copy_t(cmmt);
+			AddrList = GetMailString(AddrList, addr);
+			tpNewAddrItem->MailAddress = alloc_copy_t(addr);
+			tpNewAddrItem->Group = alloc_copy_t(STR_AUTO_ADDED_ADDRESS);
+			tpNewAddrItem->Num = AddressBook->ItemCnt;
+			addr_add(AddressBook, tpNewAddrItem);
+#ifdef _WIN32_WCE
+			if (op.UsePOOMAddressBook != 0 && addr != NULL && cmmt != NULL) {
+				TCHAR *fname, *lname;
+				len = lstrlen(cmmt) + 1;
+				if (len > 1) {
+					fname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					lname = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					*fname = *lname = TEXT('\0');
+					GetNameFromComment(cmmt, fname, lname);
+				} else {
+					lname = fname = NULL;
+				}
+				AddPOOMContact(addr, fname, lname, tpNewAddrItem->Group);
+				mem_free(&fname);
+				mem_free(&lname);
+			}
+#endif
+
+		} else {
+			// move to next item
+			AddrList = GetMailString(AddrList, addr);
+		}
+	}
+
+	mem_free(&addr);
+	mem_free(&cmmt);
+	return;
 }
 
 /*

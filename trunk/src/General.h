@@ -404,7 +404,6 @@ typedef struct _OPTION {
 	int MblColSize[MB_COL_CNT];
 	int AddressSort;
 	int AddressJumpKey;
-//	int AutoAddRecipients;
 	TCHAR *AddressShowGroup;
 
 	int ListGetLine;
@@ -872,6 +871,7 @@ ADDRESSBOOK *addressbook_copy(void);
 BOOL addr_add(ADDRESSBOOK *tpAddrBook, ADDRESSITEM *tpNewAddrItem);
 void addr_move(ADDRESSBOOK *tpAddrBook, int num, int step);
 void addr_delete(ADDRESSBOOK *tpAddrBook, int num);
+void addr_list_add(TCHAR *AddrList);
 void addr_free(ADDRESSITEM **tpAddrItem, int cnt);
 void addressbook_free(ADDRESSBOOK *tpAddrBook);
 void mailbox_free(MAILBOX *tpMailBox);
