@@ -374,6 +374,7 @@ BOOL ini_read_setting(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
+	op.SaveboxListCount = profile_get_int(GENERAL, TEXT("SaveboxListCount"), 10, app_path);
 
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t, app_path);
@@ -1164,6 +1165,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx, app_path);
 	profile_write_string(GENERAL, TEXT("LvColumnOrder"), op.LvColumnOrder, app_path);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth, app_path);
+	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount, app_path);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread, app_path);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel, app_path);
 	profile_write_int(GENERAL, TEXT("RecvScroll"), op.RecvScroll, app_path);

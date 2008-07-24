@@ -100,7 +100,7 @@ BEGIN
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "Q",            ID_MENUITEM_QUIT,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
@@ -342,14 +342,7 @@ BEGIN
         END
         POPUP "&Transfer"
         BEGIN
-            POPUP "&Copy to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_COPY2NEW
-            END
-            POPUP "&Move to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_MOVE2NEW
-            END
+            MENUITEM "Dummy",                       ID_MENUITEM_COPY2NEW
         END
         MENUITEM SEPARATOR
         MENUITEM "&Save as",                    ID_MENUITEM_SAVE
@@ -437,6 +430,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Initialise...",               ID_MENUITEM_LISTINIT
     END
+END
+
+IDR_MENU_COPY_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW
+END
+
+IDR_MENU_MOVE_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_MOVE2NEW
 END
 
 /////////////////////////////////////////////////////////////////////////////

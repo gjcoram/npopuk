@@ -106,7 +106,7 @@ BEGIN
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
@@ -281,15 +281,18 @@ BEGIN
     END
     POPUP "&Transfer"
     BEGIN
-        POPUP "&Copy to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_COPY2NEW
-        END
-        POPUP "&Move to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
-        END
+        MENUITEM "Dummy"                        ID_MENUITEM_DUMMY
     END
+END
+
+IDR_MENU_COPY_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW
+END
+
+IDR_MENU_MOVE_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_MOVE2NEW
 END
 
 IDR_MENU_EDIT MENU 
@@ -414,14 +417,6 @@ BEGIN
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
-        POPUP "Copy to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_COPY2NEW
-        END
-        POPUP "Move to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
-        END
         MENUITEM "Delete from &list\tShift+Del", ID_MENUITEM_DELETE
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR

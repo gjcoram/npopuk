@@ -124,6 +124,8 @@
 #define MAILBOX_IMPORT_SAVE		2
 #define MAILBOX_ADD_SAVE		10
 
+#define VSELBOX_FLAG			100
+
 #define MAILITEMS_CHANGED		1					// for NeedsSave
 #define MARKS_CHANGED			2
 #define MBOX_FORMAT_CHANGED		4
@@ -388,6 +390,7 @@ typedef struct _OPTION {
 	TCHAR *LvColumnOrder;
 	int MBMenuWidth;
 	int MBMenuHeight; // not saved in INI, for resizing
+	int SaveboxListCount;
 	int ScanAllForUnread;
 	int DelIsMarkDel;
 	int RecvScroll;

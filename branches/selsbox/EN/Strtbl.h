@@ -298,9 +298,10 @@
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark to download\tCtrl+D")
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
-#define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
-#define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
-#define STR_LIST_MENU_SELSBOX		TEXT("Select...")
+#define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to ...")
+#define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to ...")
+#define STR_LIST_MENU_COPYSBOX		TEXT("&Copy to")
+#define STR_LIST_MENU_MOVESBOX		TEXT("&Move to")
 
 // Mail view
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")

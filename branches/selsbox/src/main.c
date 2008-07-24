@@ -88,6 +88,7 @@ static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hPOPUP, hMBPOPUP;				// pop-up menus for listview, mbpane
+HMENU hCOPYFLY, hMOVEFLY;					// fly-out menus for copy/move to savebox
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
@@ -5351,8 +5352,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetMailStats(hWnd, ICON_MAIL);
 			break;
 
-		case ID_MENUITEM_MOVESAVE:
+		case ID_MENUITEM_MOVESBOX:
 			mark_del = TRUE; // and fall through to do the move
+		case ID_MENUITEM_COPYSBOX:
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
@@ -6210,6 +6212,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
 	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
+
+	hCOPYFLY = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_COPY_FLYOUT));
+	hMOVEFLY = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MOVE_FLYOUT));
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
