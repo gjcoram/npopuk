@@ -47,6 +47,8 @@
 #define CMD_QUIT				"QUIT"
 // make this an INI setting?
 #define GMAIL_SYS_PROBLEM		"temporary system problem"
+#define GMAIL_EMPTY_2			"empty mailbox.  Sorry."
+#define GMAIL_EMPTY_3			"fake empty mailbox."
 
 /* Global Variables */
 static char *mail_buf = NULL;				// メール受信用バッファ
@@ -720,7 +722,9 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (tpMailBox->MailCnt == 0) {
 		if (last_response != NULL) {
 			for (p = last_response + 4; *p != '\0'; p++) {
-				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0) {
+				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0  ||
+				    str_cmp_n(p, GMAIL_EMPTY_2, strlen(GMAIL_EMPTY_2)) == 0  ||
+				    str_cmp_n(p, GMAIL_EMPTY_3, strlen(GMAIL_EMPTY_3)) == 0) {
 #ifdef UNICODE
 					int len = char_to_tchar_size(last_response+4);
 					if (len < BUF_SIZE) {
