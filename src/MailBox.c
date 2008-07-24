@@ -35,10 +35,10 @@ extern HMENU hViewMenu;
 #endif
 
 extern int MailMenuPos;
-extern HWND MainWnd;
-extern HWND hMainToolBar;
-extern HWND hViewWnd;
-extern HWND hViewToolBar;
+extern HWND MainWnd, hMainToolBar;
+extern HWND hViewWnd, hViewToolBar;
+
+extern HMENU hCOPYFLY, hMOVEFLY;
 
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -559,7 +559,7 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 
 	cnt = 0;
 	for (i = 0; i < MailBoxCnt; i++) {
-		// ModifyMenu not available for PPC2002, so delete all existing entries ...
+		// delete all existing entries
 		if (hMenu != NULL) {
 			DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
 			DeleteMenu(hMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
@@ -573,18 +573,39 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 		}
 	}
 	if (hMenu != NULL) {
-		DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
-		DeleteMenu(hMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
+// this is wrong, but how do I get the command-id of a popup?
+// and the position depends on what else got added/removed
+//		RemoveMenu(hMenu, hCOPYFLY, MF_BYCOMMAND);
+//		RemoveMenu(hMenu, hMOVEFLY, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_COPYSBOX, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_MOVESBOX, MF_BYCOMMAND);
+		DeleteMenu(hMenu, ID_MENUITEM_DUMMY, MF_BYCOMMAND);
 	}
 	if (vMenu != NULL) {
-		DeleteMenu(vMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
-		DeleteMenu(vMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
+		RemoveMenu(vMenu, 1, MF_BYPOSITION);
+		RemoveMenu(vMenu, 0, MF_BYPOSITION);
+		DeleteMenu(vMenu, ID_MENUITEM_COPYSBOX, MF_BYCOMMAND);
+		DeleteMenu(vMenu, ID_MENUITEM_MOVESBOX, MF_BYCOMMAND);
+		DeleteMenu(vMenu, ID_MENUITEM_DUMMY, MF_BYCOMMAND);
 	}
 
-	if (cnt < 10) {
+	if (cnt < 5) { //op.SaveboxListCount) {
+		// few enough saveboxes to list them on flyout submenus
+		if (hMenu != NULL) {
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)hCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)hMOVEFLY, STR_LIST_MENU_MOVESBOX);
+		}
+		if (vMenu != NULL) {
+			InsertMenu(vMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)hCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(vMenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)hMOVEFLY, STR_LIST_MENU_MOVESBOX);
+		}
 		// build in reverse order because InsertMenu puts item above
 		for (i = MailBoxCnt; i >= 0; i--) {
-			// ... and repopulate those that are saveboxes
+			// insert those that are saveboxes
 			if (i < MailBoxCnt && (MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 				if ((MailBox+i)->Name == NULL || *(MailBox+i)->Name == TEXT('\0')) {
 					name = STR_MAILBOX_NONAME;
@@ -612,14 +633,15 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 			EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
 		}
 	} else {
+		// non-flyout menu items to bring up select savebox dialog
 		if (hMenu != NULL) {
-			InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
-			InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_COPYSBOX, STR_LIST_MENU_SAVEBOXCOPY);
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESBOX, STR_LIST_MENU_SAVEBOXMOVE);
 		}
 		if (vMenu != NULL) {
-			InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
+			InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_COPYSBOX, STR_LIST_MENU_SAVEBOXCOPY);
 			if (IsAttach == FALSE) {
-				InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
+				InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESBOX, STR_LIST_MENU_SAVEBOXMOVE);
 			}
 		}
 	}

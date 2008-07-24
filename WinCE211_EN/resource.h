@@ -307,7 +307,11 @@
 #define IDC_CHECK_ADD_RECIP             1215
 #define IDC_RADIO_POOMLAST              1220
 #define IDC_RADIO_POOMFIRST             1221
-#define ID_MENUITEM_MOVESAVE            1230
+#define ID_MENUITEM_DUMMY               1226
+#define IDR_MENU_COPY_FLYOUT            1227
+#define IDR_MENU_MOVE_FLYOUT            1228
+#define ID_MENUITEM_COPYSBOX            1229
+#define ID_MENUITEM_MOVESBOX            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
 #define ID_MENUITEM_MAILBOXES           1233

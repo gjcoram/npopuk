@@ -3516,8 +3516,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					// and fall through to do the move
 				}
 				SelBox = old_selbox;
-			} else if (command_id == ID_MENUITEM_MOVESAVE || command_id == ID_MENUITEM_SAVECOPY) {
+			} else if (command_id == ID_MENUITEM_MOVESBOX || command_id == ID_MENUITEM_COPYSBOX) {
 				int cnt = 0, Target = -1;
+				if (command_id == ID_MENUITEM_MOVESBOX) {
+					del_it = TRUE;
+				}
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
 						Target = i;
@@ -3528,14 +3531,14 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					MessageBox(hWnd, STR_ERR_NOSAVEBOXES, WINDOW_TITLE, MB_OK);
 					Target = -1;
 				} else if (cnt > 1) {
-					Target = del_it;
+					Target = del_it + VSELBOX_FLAG;
 					ask = FALSE;
 					if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELSAVEBOX), hWnd, SelSaveBoxProc, (LPARAM)&Target) == FALSE) {
 						Target = -1;
 					}
 				}
 				if (Target != -1) {
-					if (command_id == ID_MENUITEM_MOVESAVE) {
+					if (del_it) {
 						command_id = ID_MENUITEM_MOVE2MBOX + Target;
 					} else {
 						command_id = ID_MENUITEM_COPY2MBOX + Target;
