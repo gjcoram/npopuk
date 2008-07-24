@@ -589,7 +589,7 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 		DeleteMenu(vMenu, ID_MENUITEM_DUMMY, MF_BYCOMMAND);
 	}
 
-	if (cnt < 5) { //op.SaveboxListCount) {
+	if (cnt < op.SaveboxListCount) {
 		// few enough saveboxes to list them on flyout submenus
 		if (hMenu != NULL) {
 			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
