@@ -5351,8 +5351,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetMailStats(hWnd, ICON_MAIL);
 			break;
 
-		case ID_MENUITEM_MOVESAVE:
+		case ID_MENUITEM_MOVESBOX:
 			mark_del = TRUE; // and fall through to do the move
+		case ID_MENUITEM_COPYSBOX:
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
@@ -5545,7 +5546,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					mbox = command_id - ID_MENUITEM_MOVE2MBOX;
 					mark_del = TRUE;
 				}
-				if (mbox >=0 && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
+				if (mbox >=0 && mbox != SelBox && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
 					TCHAR fname[BUF_SIZE];
 					if (mbox == MAILBOX_SEND) {
 						lstrcpy(fname, SENDBOX_FILE);

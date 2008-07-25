@@ -106,7 +106,7 @@ BEGIN
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "Q",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
@@ -1397,14 +1397,8 @@ BEGIN
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
-        POPUP "Copy to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_COPY2NEW
-        END
-        POPUP "Move to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
-        END
+        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
         MENUITEM "Delete from &list\tShift+Del", ID_MENUITEM_DELETE
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
@@ -1478,19 +1472,13 @@ BEGIN
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM "Address &info...\tCtrl+I",    ID_MENUITEM_PROP
         MENUITEM SEPARATOR
-        MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
-        MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
+        MENUITEM "&Mark to download\tCtrl+D",   ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",   ID_MENUITEM_DELMARK
+        MENUITEM "Mark as r&ead\tCtrl+B",       ID_MENUITEM_READMAIL
         MENUITEM "Mark a&s unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
-        POPUP "Copy to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_COPY2NEW
-        END
-        POPUP "Move to"
-        BEGIN
-            MENUITEM "(New)"                    ID_MENUITEM_MOVE2NEW
-        END
+        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
     END
 END
 
@@ -1511,6 +1499,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Initialise...",               ID_MENUITEM_LISTINIT
     END
+END
+
+IDR_MENU_COPY_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW
+END
+
+IDR_MENU_MOVE_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_MOVE2NEW
 END
 
 #endif    // English (U.S.) resources

@@ -298,9 +298,9 @@
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark to download\tCtrl+D")
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
-#define STR_LIST_MENU_SAVEBOXCOPY	TEXT("Copy to &Savebox\tCtrl+C")
-#define STR_LIST_MENU_SAVEBOXMOVE	TEXT("Move to &Savebox\tCtrl+M")
-#define STR_LIST_MENU_SELSBOX		TEXT("Select...")
+#define STR_LIST_MENU_COPYSBOX		TEXT("&Copy to")
+#define STR_LIST_MENU_MOVESBOX		TEXT("&Move to")
+#define STR_LIST_MENU_NEW			TEXT("(New)")
 
 // Mail view
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")
@@ -483,8 +483,8 @@
 
 ///////////// MRP /////////////////////
 #define STR_TITLE_ABOUT				TEXT("About")
-#define STR_WEB_ADDR			TEXT("http://www.npopsupport.org.uk")
-#define STR_ABOUT_TEXT           TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
+#define STR_WEB_ADDR				TEXT("http://www.npopsupport.org.uk")
+#define STR_ABOUT_TEXT				TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
 
 #endif	//_INC_STR_TBL_H

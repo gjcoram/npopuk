@@ -275,7 +275,7 @@
 #define IDC_STATIC_FILENAME             1093
 #define IDC_COMBO_ENCODE                1093
 #define IDC_RADIO_OPEN                  1094
-#define IDC_RADIO_SAVE                  1095 
+#define IDC_RADIO_SAVE                  1095
 #define IDC_PRIORITY                    1096
 #define IDC_APPNAME                     1097
 #define IDC_CHECK_USEPOOM               1098
@@ -305,7 +305,10 @@
 #define IDC_RADIO_POOMFIRST             1221
 #define IDC_NEWDIRNAME                  1222
 #define IDD_DIALOG_NEWDIR               1223
-#define ID_MENUITEM_MOVESAVE            1230
+#define IDR_MENU_COPY_FLYOUT            1227
+#define IDR_MENU_MOVE_FLYOUT            1228
+#define ID_MENUITEM_COPYSBOX            1229
+#define ID_MENUITEM_MOVESBOX            1230
 #define ID_MENUITEM_REFLOW              1231
 #define ID_MENUITEM_FLAGMARK            1232
 #define ID_MENUITEM_MAILBOXES           1233
