@@ -25,6 +25,9 @@
 #define POP_PORT			110
 #define SMTP_PORT			25
 
+static HMENU hCOPYFLY = NULL, hMOVEFLY = NULL;
+static HMENU vCOPYFLY = NULL, vMOVEFLY = NULL;
+
 /* Global Variables */
 extern OPTION op;
 extern TCHAR *DataDir;
@@ -35,10 +38,8 @@ extern HMENU hViewMenu;
 #endif
 
 extern int MailMenuPos;
-extern HWND MainWnd;
-extern HWND hMainToolBar;
-extern HWND hViewWnd;
-extern HWND hViewToolBar;
+extern HWND MainWnd, hMainToolBar;
+extern HWND hViewWnd, hViewToolBar;
 
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -520,13 +521,10 @@ int mailbox_next_unread(HWND hWnd, int index, int endindex)
  * mailbox_menu_rebuild
  */
 BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
-	int i, cnt, this_id;
-	int last_copy_id, last_move_id, last_copy_idv, last_move_idv;
-	TCHAR *name;
 	HMENU hMenu = NULL, vMenu = NULL;
-
-	last_copy_id = last_copy_idv = ID_MENUITEM_COPY2NEW;
-	last_move_id = last_move_idv = ID_MENUITEM_MOVE2NEW;
+	static BOOL hMenuDone = FALSE;
+	static HMENU vMenuDone = NULL;
+	static int first_cnt = -1;
 
 	if (hWnd == MainWnd) {
 #ifdef _WIN32_WCE
@@ -557,34 +555,94 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 #endif
 	}
 
-	cnt = 0;
-	for (i = 0; i < MailBoxCnt; i++) {
-		// ModifyMenu not available for PPC2002, so delete all existing entries ...
-		if (hMenu != NULL) {
-			DeleteMenu(hMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
-			DeleteMenu(hMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+	// on first entry, decide whether to make a flyout submenu or not
+	if (first_cnt == -1) {
+		int i;
+		for (i = 0; i < MailBoxCnt; i++) {
+			if ((MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
+				first_cnt++;
+			}
 		}
-		if (vMenu != NULL) {
-			DeleteMenu(vMenu, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
-			DeleteMenu(vMenu, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
-		}
-		if ((MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
-			cnt++;
-		}
-	}
-	if (hMenu != NULL) {
-		DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
-		DeleteMenu(hMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
-	}
-	if (vMenu != NULL) {
-		DeleteMenu(vMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
-		DeleteMenu(vMenu, ID_MENUITEM_MOVESAVE, MF_BYCOMMAND);
 	}
 
-	if (cnt < 10) {
+	if (hMenu != NULL && hMenuDone == FALSE) {
+		if (first_cnt < op.SaveboxListCount) {
+			hCOPYFLY = CreatePopupMenu();
+			hMOVEFLY = CreatePopupMenu();
+			AppendMenu(hCOPYFLY, MF_STRING, ID_MENUITEM_COPY2NEW, STR_LIST_MENU_NEW);
+			AppendMenu(hMOVEFLY, MF_STRING, ID_MENUITEM_MOVE2NEW, STR_LIST_MENU_NEW);
+		} else {
+			hCOPYFLY = NULL;
+			hMOVEFLY = NULL;
+		}
+	}
+	if (vMenu != NULL && vMenu != vMenuDone) {
+		if (first_cnt < op.SaveboxListCount) {
+			if (vCOPYFLY != NULL) {
+				DestroyMenu(vCOPYFLY);
+			}
+			if (vMOVEFLY != NULL) {
+				DestroyMenu(vMOVEFLY);
+			}
+			vCOPYFLY = CreatePopupMenu();
+			vMOVEFLY = CreatePopupMenu();
+			AppendMenu(vCOPYFLY, MF_STRING, ID_MENUITEM_COPY2NEW, STR_LIST_MENU_NEW);
+			AppendMenu(vMOVEFLY, MF_STRING, ID_MENUITEM_MOVE2NEW, STR_LIST_MENU_NEW);
+		} else {
+			vCOPYFLY = NULL;
+			vMOVEFLY = NULL;
+		}
+	}
+	if (first_cnt < op.SaveboxListCount) {
+		int i, this_id;
+		int last_copy_id, last_move_id, last_copy_idv, last_move_idv;
+		TCHAR *name;
+		last_copy_id = last_copy_idv = ID_MENUITEM_COPY2NEW,
+		last_move_id = last_move_idv = ID_MENUITEM_MOVE2NEW;
+
+		if (hMenu != NULL && hMenuDone == FALSE) {
+			DeleteMenu(hMenu, ID_MENUITEM_COPYSBOX, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_MOVESBOX, MF_BYCOMMAND);
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)hCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)hMOVEFLY, STR_LIST_MENU_MOVESBOX);
+			hMenuDone = TRUE;
+		}
+		if (vMenu != NULL && vMenu != vMenuDone) {
+			DeleteMenu(vMenu, ID_MENUITEM_COPYSBOX, MF_BYCOMMAND);
+			DeleteMenu(vMenu, ID_MENUITEM_MOVESBOX, MF_BYCOMMAND);
+#ifdef _WIN32_WCE
+			InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+#else
+			InsertMenu(vMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(vMenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+#endif
+			vMenuDone = vMenu;
+		}
+		// delete all existing entries (in case saveboxes have been renamed or reordered)
+		for (i = 0; i < MailBoxCnt; i++) {
+			if (hCOPYFLY != NULL) {
+				DeleteMenu(hCOPYFLY, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
+			}
+			if (hMOVEFLY != NULL) {
+				DeleteMenu(hMOVEFLY, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+			}
+			if (vCOPYFLY != NULL) {
+				DeleteMenu(vCOPYFLY, ID_MENUITEM_COPY2MBOX+i, MF_BYCOMMAND);
+			}
+			if (vMOVEFLY != NULL) {
+				DeleteMenu(vMOVEFLY, ID_MENUITEM_MOVE2MBOX+i, MF_BYCOMMAND);
+			}
+		}
 		// build in reverse order because InsertMenu puts item above
 		for (i = MailBoxCnt; i >= 0; i--) {
-			// ... and repopulate those that are saveboxes
+			// insert those that are saveboxes
 			if (i < MailBoxCnt && (MailBox+i) != NULL && (MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 				if ((MailBox+i)->Name == NULL || *(MailBox+i)->Name == TEXT('\0')) {
 					name = STR_MAILBOX_NONAME;
@@ -592,43 +650,42 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 					name = (MailBox+i)->Name;
 				}
 				this_id = ID_MENUITEM_COPY2MBOX+i;
-				if (hMenu != NULL && InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				if (hCOPYFLY != NULL && InsertMenu(hCOPYFLY, last_copy_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 					last_copy_id = this_id;
 				}
-				if (vMenu != NULL && InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				if (vCOPYFLY != NULL && InsertMenu(vCOPYFLY, last_copy_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 					last_copy_idv = this_id;
 				}
 				this_id = ID_MENUITEM_MOVE2MBOX+i;
-				if (hMenu != NULL && InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				if (hMOVEFLY != NULL && InsertMenu(hMOVEFLY, last_move_id, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 					last_move_id = this_id;
 				}
-				if (vMenu != NULL && IsAttach == FALSE && InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
+				if (vMOVEFLY != NULL && InsertMenu(vMOVEFLY, last_move_idv, MF_BYCOMMAND | MF_STRING, this_id, name)) {
 					last_move_idv = this_id;
 				}
 			}
 		}
-		if (hMenu != NULL && (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
-			EnableMenuItem(hMenu, ID_MENUITEM_COPY2MBOX + SelBox, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
-		}
-	} else {
-		if (hMenu != NULL) {
-			InsertMenu(hMenu, last_copy_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
-			InsertMenu(hMenu, last_move_id, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
-		}
-		if (vMenu != NULL) {
-			InsertMenu(vMenu, last_copy_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_SAVECOPY, STR_LIST_MENU_SELSBOX);
-			if (IsAttach == FALSE) {
-				InsertMenu(vMenu, last_move_idv, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_MOVESAVE, STR_LIST_MENU_SELSBOX);
+		if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
+			if (hCOPYFLY != NULL) {
+				EnableMenuItem(hCOPYFLY, ID_MENUITEM_COPY2MBOX + SelBox, MF_GRAYED);
+			}
+			if (hMOVEFLY != NULL) {
+				EnableMenuItem(hMOVEFLY, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
 			}
 		}
-	}
-	if (vMenu != NULL) {
 		if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE && IsAttach == FALSE) {
-			EnableMenuItem(vMenu, ID_MENUITEM_COPY2MBOX + vSelBox, MF_GRAYED);
-			EnableMenuItem(vMenu, ID_MENUITEM_MOVE2MBOX + vSelBox, MF_GRAYED);
-		} else if (IsAttach == TRUE) {
-			EnableMenuItem(vMenu, ID_MENUITEM_MOVE2NEW, MF_GRAYED);
+			if (vCOPYFLY != NULL) {
+				EnableMenuItem(vCOPYFLY, ID_MENUITEM_COPY2MBOX + vSelBox, MF_GRAYED);
+			}
+			if (vMOVEFLY != NULL) {
+				EnableMenuItem(vMOVEFLY, ID_MENUITEM_MOVE2MBOX + vSelBox, MF_GRAYED);
+			}
+		} else if (IsAttach == TRUE && vMOVEFLY != NULL) {
+			EnableMenuItem(vMOVEFLY, ID_MENUITEM_MOVE2NEW, MF_GRAYED);
+		}
+	} else {
+		if (vMenu != NULL && IsAttach) {
+			EnableMenuItem(vMenu, ID_MENUITEM_MOVESBOX, MF_GRAYED);
 		}
 	}
 	return TRUE;

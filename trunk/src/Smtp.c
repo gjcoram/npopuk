@@ -745,19 +745,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 			return FALSE;
 		}	
-#ifndef _DEBUG
-		// try not sending this, it's the default anyway, for Craig
-	} else {
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER3, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-#endif
-	}
+	} // else if (tpMailItem->Priority == 3) don't bother sending it
 
 	// delivery receipt
 	if (tpMailItem->DeliveryReceipt == 1)

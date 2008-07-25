@@ -374,6 +374,7 @@ BOOL ini_read_setting(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
+	op.SaveboxListCount = profile_get_int(GENERAL, TEXT("SaveboxListCount"), 10, app_path);
 
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1, app_path);
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t, app_path);
@@ -1164,6 +1165,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx, app_path);
 	profile_write_string(GENERAL, TEXT("LvColumnOrder"), op.LvColumnOrder, app_path);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth, app_path);
+	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount, app_path);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread, app_path);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel, app_path);
 	profile_write_int(GENERAL, TEXT("RecvScroll"), op.RecvScroll, app_path);
@@ -1724,8 +1726,8 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 			s_right = GetSystemMetrics(SM_CXSCREEN);
 			s_bot   = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
-			s_right -= 10; // so resize border is visible
-			s_bot   -= 10 + MENU_HEIGHT; // ignoring sip status
+			s_right -= 5; // so resize border is visible
+			s_bot   -= 15 + MENU_HEIGHT; // ignoring sip status
 #endif
 		}
 	}

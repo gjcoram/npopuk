@@ -6030,17 +6030,17 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		MoveWindow(hItem, right-16, top, 15, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-		ShowWindow(hItem, (width > 140));
-		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 135));
+		MoveWindow(hItem, left+1, bottom-30, 40, 21, TRUE);
 
 		if (op.UsePOOMAddressBook == 0) {
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
-			ShowWindow(hItem, (width > 186));
-			MoveWindow(hItem, left+47, bottom-30, 45, 21, TRUE);
+			ShowWindow(hItem, (width > 175));
+			MoveWindow(hItem, left+42, bottom-30, 40, 21, TRUE);
 
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
-			ShowWindow(hItem, (width > 232));
-			MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
+			ShowWindow(hItem, (width > 222));
+			MoveWindow(hItem, left+83, bottom-30, 45, 21, TRUE);
 		}
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
@@ -7556,15 +7556,24 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR Name[BUF_SIZE];
 	int i;
 	int *sel;
+	BOOL skip_vselbox = FALSE;
 	static int last_selected = 0;
 	
 	switch(uMsg)
 	{
 	case WM_INITDIALOG:
 		sel = (int *)lParam;
-		SetWindowText(GetDlgItem(hDlg, IDC_MOVECOPYTEXT), *sel ? STR_TITLE_MOVE2 : STR_TITLE_COPY2);
+		i = *sel;
+		if (i >= VSELBOX_FLAG) {
+			i -= VSELBOX_FLAG;
+			skip_vselbox = TRUE;
+		}
+		SetWindowText(GetDlgItem(hDlg, IDC_MOVECOPYTEXT), i ? STR_TITLE_MOVE2 : STR_TITLE_COPY2);
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+			if ((i == SelBox && skip_vselbox == FALSE) || (i == vSelBox && skip_vselbox == TRUE)) {
+				continue;
+			}
 			if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
 			}

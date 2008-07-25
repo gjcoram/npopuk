@@ -100,7 +100,7 @@ BEGIN
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_MENUITEM_MOVESAVE,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
     "Q",            ID_MENUITEM_QUIT,       VIRTKEY, CONTROL, NOINVERT
     "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
@@ -295,14 +295,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Edit"
         BEGIN
-            POPUP "Copy to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_COPY2NEW
-            END
-            POPUP "Move to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_MOVE2NEW
-            END
+            MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
+            MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
             MENUITEM "Copy to &Savebox",            ID_MENUITEM_SAVECOPY
             MENUITEM "&Delete from list",           ID_MENUITEM_DELETE
             MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
@@ -340,17 +334,8 @@ BEGIN
             MENUITEM "Mark as r&ead",               ID_MENUITEM_READMAIL
             MENUITEM "Mark as &unread",             ID_MENUITEM_UNREADMAIL
         END
-        POPUP "&Transfer"
-        BEGIN
-            POPUP "&Copy to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_COPY2NEW
-            END
-            POPUP "&Move to"
-            BEGIN
-                MENUITEM "(New)",                       ID_MENUITEM_MOVE2NEW
-            END
-        END
+        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
         MENUITEM SEPARATOR
         MENUITEM "&Save as",                    ID_MENUITEM_SAVE
         MENUITEM "External &viewer",            ID_MENUITEM_VIEW
@@ -437,6 +422,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Initialise...",               ID_MENUITEM_LISTINIT
     END
+END
+
+IDR_MENU_COPY_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW
+END
+
+IDR_MENU_MOVE_FLYOUT MENU
+BEGIN
+    MENUITEM "(New)"                            ID_MENUITEM_MOVE2NEW
 END
 
 /////////////////////////////////////////////////////////////////////////////
