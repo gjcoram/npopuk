@@ -5375,6 +5375,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELSAVEBOX), hWnd, SelSaveBoxProc, (LPARAM)&Target) == FALSE) {
 							Target = -1;
 						}
+						if (Target == 0) {
+							WPARAM msg = (mark_del == TRUE) ? ID_MENUITEM_MOVE2NEW : ID_MENUITEM_COPY2NEW;
+							SendMessage(hWnd, WM_COMMAND, msg, 0);
+							break;
+						}
 					}
 				}
 				if (Target != -1) {
@@ -5511,27 +5516,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
-			if (command_id == ID_MENUITEM_COPY2NEW) {
-				// GJC - copy to new SaveBox
+			if (command_id == ID_MENUITEM_COPY2NEW || command_id == ID_MENUITEM_MOVE2NEW) {
+				// GJC - copy/move to new SaveBox
 				int old_selbox, newbox;
 				old_selbox = SelBox;
 				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
 					mailbox_delete(hWnd, newbox, FALSE, TRUE);
-					command_id = 0;
-				} else {
+					SelBox = old_selbox;
+					SelectMBMenu(SelBox);
+					break;
+				} else if (command_id == ID_MENUITEM_COPY2NEW) {
 					command_id = newbox + ID_MENUITEM_COPY2MBOX;
 					// and fall through to do the copy
-				}
-				SelBox = old_selbox;
-			} else if (command_id == ID_MENUITEM_MOVE2NEW) {
-				// GJC - move to new SaveBox
-				int old_selbox, newbox;
-				old_selbox = SelBox;
-				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
-				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
-					mailbox_delete(hWnd, newbox, FALSE, TRUE);
-					command_id = 0;
 				} else {
 					command_id = newbox + ID_MENUITEM_MOVE2MBOX;
 					// and fall through to do the move
