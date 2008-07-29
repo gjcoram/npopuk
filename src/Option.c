@@ -4897,7 +4897,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 		}
-		if (tpMailItem->Mark != MARK_REPLYING) {
+		if (tpMailItem->Mark == MARK_REPLYING) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, (op.AutoAddRecipients == 1) ? 1 : 0, 0);
+		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
 		}
 		if (tpMailItem->Mark == MARK_FORWARDING) {
@@ -7557,7 +7559,7 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	int i;
 	int *sel;
 	BOOL skip_vselbox = FALSE;
-	static int last_selected = 0;
+	static int last_selected = 1;
 	
 	switch(uMsg)
 	{
@@ -7570,6 +7572,7 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		SetWindowText(GetDlgItem(hDlg, IDC_MOVECOPYTEXT), i ? STR_TITLE_MOVE2 : STR_TITLE_COPY2);
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)STR_LIST_MENU_NEW);
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 			if ((i == SelBox && skip_vselbox == FALSE) || (i == vSelBox && skip_vselbox == TRUE)) {
 				continue;
@@ -7585,9 +7588,13 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (LOWORD(wParam)) {
 		case IDOK:
 			last_selected = SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_GETCURSEL, 0, 0);
-			SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
 			sel = (int*)GetWindowLong(hDlg, GWL_USERDATA);
-			*sel = mailbox_name_to_index(Name);
+			if (last_selected == 0) {
+				*sel = 0;
+			} else {
+				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
+				*sel = mailbox_name_to_index(Name);
+			}
 			EndDialog(hDlg, TRUE);
 			break;
 
