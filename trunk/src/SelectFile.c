@@ -758,7 +758,9 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 
 	g_mode_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI) ? TRUE : FALSE;
 	g_action = Action;
-	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
+	if (opptr != NULL && *opptr != NULL && lstrcmp(*opptr, TEXT("\\")) == 0) {
+		*path = TEXT('\0');
+	} else if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 		// directory exists, use it
 		lstrcpy(path, *opptr);
 	} else if (Action == FILE_SAVE_MSG) {
@@ -803,9 +805,14 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		} else {
 			wsprintf(ret, TEXT("%s\\%s"), path, filename);
 		}
-		if (opptr != NULL && lstrcmp(path, *opptr) != 0) {
-			mem_free(opptr);
-			*opptr = alloc_copy_t(path);
+		if (opptr != NULL) {
+			if (*path == TEXT('\0')) {
+				mem_free(opptr);
+				*opptr = alloc_copy_t(TEXT("\\"));
+			} else if (lstrcmp(path, *opptr) != 0) {
+				mem_free(opptr);
+				*opptr = alloc_copy_t(path);
+			}
 		}
 	}
 	if (FileList != NULL) {

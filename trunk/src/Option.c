@@ -1729,6 +1729,12 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				(SendDlgItemMessage(hDlg, IDC_RADIO_IMPORTSBOX, BM_GETCHECK, 0, 0) == 1) ? FALSE : TRUE);
 			break;
 
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_MBOX_NAME:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
 		case IDOK:
 			if (mbox != NULL) {
 				AllocGetText(GetDlgItem(hDlg, IDC_MBOX_NAME), &mbox->Name);
@@ -4230,6 +4236,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			if (i > 0) {
 				ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_CC), -1, 0, LVIS_SELECTED);
 				SendMessage(hDlg, WM_COMMAND, IDC_BUTTON_CC, 0);
+				break;
 			}
 
 			mem_free(&tpMailItem->To);
@@ -5467,6 +5474,9 @@ static TCHAR *AddressGetWholeGroup(TCHAR *groupname)
 		if (item != NULL && item->Group != NULL && item_in_list(groupname, item->Group) == TRUE) {
 			len += lstrlen(item->MailAddress) + 2;
 		}
+	}
+	if (len < 2) {
+		return NULL;
 	}
 	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 	if (ret == NULL) {
