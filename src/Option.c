@@ -287,13 +287,14 @@ static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, HWND hListView)
 	}
 #endif
 
-	if (LKey->hdr.code == LVN_KEYDOWN && LKey->wVKey == VK_DELETE) {
-		SendMessage(hWnd, WM_COMMAND, ID_LV_DELETE, 0);
-		return 1;
-	}
-	if (LKey->hdr.code == LVN_KEYDOWN && LKey->wVKey == TEXT('A') && GetKeyState(VK_CONTROL) < 0) {
-		SendMessage(hWnd, WM_COMMAND, ID_LV_ALLSELECT, 0);
-		return 1;
+	if (LKey->hdr.code == LVN_KEYDOWN) {
+		if (LKey->wVKey == VK_DELETE) {
+			SendMessage(hWnd, WM_COMMAND, ID_LV_DELETE, 0);
+			return 1;
+		} else if (LKey->wVKey == TEXT('A') && GetKeyState(VK_CONTROL) < 0) {
+			SendMessage(hWnd, WM_COMMAND, ID_LV_ALLSELECT, 0);
+			return 1;
+		}
 	}
 	return 0;
 }

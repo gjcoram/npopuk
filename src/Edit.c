@@ -619,6 +619,7 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
  */
 static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	WPARAM keycode;
 	switch (msg) {
 	case WM_CHAR:
 		if ((TCHAR)wParam == TEXT(' ')) {
@@ -638,8 +639,11 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 	case EM_UNDO:
 		return 0;
 	case WM_KEYDOWN:
-		if (LOWORD(wParam) == VK_DELETE) {
+		keycode = LOWORD(wParam);
+		if (keycode == VK_DELETE) {
 			return 0;
+		} else if (keycode == VK_RETURN || keycode == VK_ESCAPE) {
+			SendMessage(GetParent(hWnd), WM_CLOSE, 0, 0);
 		}
 		break;
 	case WM_COMMAND:
