@@ -318,11 +318,11 @@ BOOL ini_read_setting(HWND hWnd)
 	op.TimeFormat = profile_alloc_string(GENERAL, TEXT("TimeFormat"), STR_DEFAULT_TIMEFORMAT, app_path);
 
 #ifndef _WIN32_WCE
-	op.MainRect.left = profile_get_int(GENERAL, TEXT("left"), 0, app_path);
-	op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), 0, app_path);
-	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 440, app_path);
+	op.MainRect.left = profile_get_int(GENERAL, TEXT("left"), 40, app_path);
+	op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), 40, app_path);
+	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 560, app_path);
 	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
-	ini_check_window_pos(&op.MainRect, 440, 320);
+	ini_check_window_pos(&op.MainRect, 560, 320);
 #endif
 
 	{
