@@ -1414,7 +1414,15 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (get_no != -1) {
 			tpMailItem = *(tpMailBox->tpMailItem + get_no);
 			if (tpMailItem != NULL && tpMailItem->Size != NULL) {
+#ifdef UNICODE
+				char *tmp = alloc_tchar_to_char(tpMailItem->Size);
+				if (tmp != NULL) {
+					mail_size = a2i(tmp);
+					mem_free(&tmp);
+				}
+#else
 				mail_size = a2i(tpMailItem->Size);
+#endif
 			}
 		}
 #endif
