@@ -1931,7 +1931,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 
 	GetClientRect(hWnd, &rcClient);
 	if (op.MBMenuWidth > 0) {
-		style |= WS_HSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_THICKFRAME;
+		style |= WS_HSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_SIZEBOX;
 		height = op.MBMenuHeight = rcClient.bottom - Top - Bottom;
 		width = op.MBMenuWidth;
 	} else {
