@@ -1245,6 +1245,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 		ret = GetMessagePos();
 		x = LOWORD(ret);
 		y = HIWORD(ret);
+		break;
 #else
 	case 0:
 #endif
