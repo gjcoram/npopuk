@@ -1501,6 +1501,15 @@ BEGIN
     END
 END
 
+IDR_ADDRESS_POPUP MENU 
+BEGIN
+    POPUP "Address"
+    BEGIN
+        MENUITEM "Edit...",                     IDC_BUTTON_EDIT
+        MENUITEM "Delete...",                   IDC_BUTTON_DELETE
+    END
+END
+
 IDR_MENU_COPY_FLYOUT MENU
 BEGIN
     MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW

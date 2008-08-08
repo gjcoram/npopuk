@@ -88,6 +88,7 @@ static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hPOPUP, hMBPOPUP;				// pop-up menus for listview, mbpane
+HMENU hADPOPUP;								// pop-up menu addresslist
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
@@ -1230,7 +1231,9 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 	HWND hListView;
 	RECT WndRect;
 	RECT ItemRect;
+#ifndef _WIN32_WCE
 	POINT apos;
+#endif
 	int i;
 	int x = 0, y = 0;
 	DWORD ret = 0;
@@ -1240,19 +1243,17 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #endif
 	switch (PosFlag) {
 		//of round Acquisition
-#ifdef _WIN32_WCE
 	case 0:
+	case 3:
+#ifdef _WIN32_WCE
 		ret = GetMessagePos();
 		x = LOWORD(ret);
 		y = HIWORD(ret);
-		break;
 #else
-	case 0:
-#endif
-	case 3:
 		GetCursorPos((LPPOINT)&apos);
 		x = apos.x;
 		y = apos.y;
+#endif
 		break;
 
 	case 1:
@@ -6209,6 +6210,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
 	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
+	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
@@ -6236,6 +6238,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	mem_free(&InitialAccount);
 	DestroyMenu(hPOPUP);
 	DestroyMenu(hMBPOPUP);
+	DestroyMenu(hADPOPUP);
 	UnregisterClass(MAIN_WND_CLASS, hInstance);
 	UnregisterClass(VIEW_WND_CLASS, hInstance);
 	UnregisterClass(EDIT_WND_CLASS, hInstance);

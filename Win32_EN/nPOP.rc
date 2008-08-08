@@ -441,6 +441,15 @@ BEGIN
     END
 END
 
+IDR_ADDRESS_POPUP MENU 
+BEGIN
+    POPUP "Address"
+    BEGIN
+        MENUITEM "Edit...",                     IDC_BUTTON_EDIT
+        MENUITEM "Delete...",                   IDC_BUTTON_DELETE
+    END
+END
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog

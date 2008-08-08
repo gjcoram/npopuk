@@ -673,8 +673,8 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 				CommandBar_GetMenu(GetDlgItem(GetParent(hWnd), IDC_VCB), 0), 1, 0, FALSE);
 			return 0;
 		}
-		break;
 #endif
+		break;
 #else
 	case WM_CONTEXTMENU:
 		SetEditMenu(GetParent(hWnd));
