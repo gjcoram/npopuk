@@ -49,11 +49,12 @@ static MAILBOX *tpOptionMailBox;
 static BOOL PropRet;
 static HWND hLvFilter;
 static int AddrSortFlag = 0;
-static int ViewClose; // to synchronize option on Recv and Fwd tabs
+static int ViewClose = 0; // to synchronize option on Recv and Fwd tabs
 
 #ifdef _WIN32_WCE
-static WNDPROC EditToWndProc;
-static WNDPROC CcAddrWndProc;
+static WNDPROC AddrListProcedure = NULL;
+static WNDPROC EditToWndProc = NULL;
+static WNDPROC CcAddrWndProc = NULL;
 static BOOL CcWndShowing = FALSE;
 #else
 #define WNDPROC_KEY			TEXT("OldWndProc")
@@ -66,6 +67,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
 extern HWND FocusWnd;
 extern HFONT hListFont;
+extern HMENU hADPOPUP;
 extern TCHAR *g_Pass;
 extern int gPassSt;
 extern BOOL ShowMsgFlag;
@@ -128,6 +130,9 @@ static void SetButtonText(HWND hButton, TCHAR *title, BOOL UseFlag);
 static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right);
 static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter);
 static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#ifdef _WIN32_WCE
+static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 static TCHAR *AddressGetWholeGroup(TCHAR *groupname);
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void SetEditToSubClass(HWND hWnd, BOOL CcWnd);
@@ -6751,6 +6756,38 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 /*
+ * SubClassAddrListProc
+ */
+#ifdef _WIN32_WCE
+static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (msg == WM_LBUTTONDOWN) {
+#ifdef _WIN32_WCE_PPC
+		SHRGINFO rg;
+
+		rg.cbSize = sizeof(SHRGINFO);
+		rg.hwndClient = hDlg;
+		rg.ptDown.x = LOWORD(lParam);
+		rg.ptDown.y = HIWORD(lParam);
+		rg.dwFlags = SHRG_RETURNCMD;
+		if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+			if (ListView_GetSelectedCount(hDlg) > 0) {
+				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 3, FALSE);
+				return 0;
+			}
+		}
+#else
+		if (GetKeyState(VK_MENU) < 0) {
+			ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0, FALSE);
+			return 0;
+		}
+#endif
+	}
+	return CallWindowProc(AddrListProcedure, hDlg, msg, wParam, lParam);
+}
+#endif
+
+/*
  * AddressListProc - アドレス帳設定プロシージャ
  */
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -6819,6 +6856,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), enable);
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN10), enable);
 		SetTimer(hDlg, ID_RESIZE_TIMER, 1, NULL);
+#ifdef _WIN32_WCE
+		AddrListProcedure = (WNDPROC)SetWindowLong(hListView, GWL_WNDPROC, (DWORD)SubClassAddrListProc);
+#endif
 		break;
 
 	case WM_TIMER:
@@ -6903,6 +6943,12 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_MAIL), enable);
 		}
 		break;
+
+#ifndef _WIN32_WCE
+	case WM_CONTEXTMENU:
+		ShowMenu(hDlg, hADPOPUP, 0, 0, FALSE);
+		break;
+#endif
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {

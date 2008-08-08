@@ -18,7 +18,7 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 11
-#define NPOPBETA  99
+#define NPOPBETA  11
 #define NPOPPATCH 1
 
 
