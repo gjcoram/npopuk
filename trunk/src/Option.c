@@ -90,7 +90,7 @@ extern DWORD FindPos;
 /* Local Function Prototypes */
 static void SetControlFont(HWND pWnd);
 static LRESULT OptionNotifyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, HWND hListView);
+static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, int ListId);
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
@@ -266,12 +266,13 @@ static LRESULT OptionNotifyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 /*
  * DialogLvNotifyProc - オプション画面のリストビューメッセージ
  */
-static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, HWND hListView)
+static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, int ListId)
 {
 	NMHDR *CForm = (NMHDR *)lParam;
 	LV_KEYDOWN *LKey = (LV_KEYDOWN *)lParam;
+	HWND hListView = GetDlgItem(hWnd, ListId);
 
-	if (CForm->hwndFrom == GetWindow(GetDlgItem(hWnd, IDC_LIST_ADDRESS), GW_CHILD)) {
+	if (CForm->hwndFrom == GetWindow(hListView, GW_CHILD)) {
 		return ListViewHeaderNotifyProc(hWnd, lParam);
 	} else if (CForm->hwndFrom != hListView) {
 		return 0;
@@ -1398,7 +1399,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 #endif
 
 	case WM_NOTIFY:
-		if (DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_FILTER)) == 1) {
+		if (DialogLvNotifyProc(hDlg, lParam, IDC_LIST_FILTER) == 1) {
 			break;
 		}
 		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
@@ -2179,7 +2180,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_NOTIFY:
-		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_MAILBOXES));
+		DialogLvNotifyProc(hDlg, lParam, IDC_LIST_MAILBOXES);
 		{
 			LV_DISPINFO *plv = (LV_DISPINFO *)lParam;
 			if (plv->hdr.code == LVN_ITEMCHANGED) {
@@ -4044,7 +4045,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_NOTIFY:
-		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_CC));
+		DialogLvNotifyProc(hDlg, lParam, IDC_LIST_CC);
 		break;
 
 	case WM_LV_EVENT:
@@ -5802,7 +5803,7 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_NOTIFY:
-		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_ADDRESS));
+		DialogLvNotifyProc(hDlg, lParam, IDC_LIST_ADDRESS);
 		break;
 
 	case WM_COMMAND:
@@ -6761,9 +6762,24 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 #ifdef _WIN32_WCE
 static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (msg == WM_LBUTTONDOWN) {
 #ifdef _WIN32_WCE_PPC
+	if (msg == WM_LBUTTONDOWN) {
 		SHRGINFO rg;
+		LV_HITTESTINFO lvht;
+		POINT apos;
+		int sel;
+
+		apos.x = LOWORD(lParam);
+		apos.y = HIWORD(lParam);
+		lvht.pt = apos;
+		lvht.flags = LVHT_ONITEMICON | LVHT_ONITEMLABEL | LVHT_ONITEMSTATEICON;
+		lvht.iItem = 0;
+		sel = ListView_HitTest(hDlg, &lvht);
+		if (sel >= 0 && GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_SHIFT) >= 0) {
+			ListView_SetItemState(hDlg, sel, 
+				LVIS_FOCUSED | (ListView_GetItemState(hDlg, sel, LVIS_SELECTED) ^ LVIS_SELECTED),
+				LVIS_FOCUSED | LVIS_SELECTED);
+		}
 
 		rg.cbSize = sizeof(SHRGINFO);
 		rg.hwndClient = hDlg;
@@ -6771,18 +6787,18 @@ static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam,
 		rg.ptDown.y = HIWORD(lParam);
 		rg.dwFlags = SHRG_RETURNCMD;
 		if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-			if (ListView_GetSelectedCount(hDlg) > 0) {
+			if (op.UsePOOMAddressBook == 0 && ListView_GetSelectedCount(hDlg) > 0) {
 				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 3, FALSE);
-				return 0;
 			}
-		}
-#else
-		if (GetKeyState(VK_MENU) < 0) {
-			ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0, FALSE);
 			return 0;
 		}
-#endif
 	}
+#else
+	if (msg == WM_LBUTTONUP && GetKeyState(VK_MENU) < 0 && op.UsePOOMAddressBook == 0) {
+		ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0, FALSE);
+		return 0;
+	}
+#endif
 	return CallWindowProc(AddrListProcedure, hDlg, msg, wParam, lParam);
 }
 #endif
@@ -6913,7 +6929,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_NOTIFY:
-		DialogLvNotifyProc(hDlg, lParam, GetDlgItem(hDlg, IDC_LIST_ADDRESS));
+		DialogLvNotifyProc(hDlg, lParam, IDC_LIST_ADDRESS);
 		if (op.AddressSort != 0) {
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP10), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), FALSE);
@@ -7060,6 +7076,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				tpTmpAddressBook->EditNum = -2;
 			} else if (i == 1) {
 				i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED | LVIS_SELECTED);
+				if (i == -1) break;
 				tpTmpAddressBook->EditNum = ((ADDRESSITEM *)ListView_GetlParam(hListView, i))->Num;
 			} else {
 				ErrorMessage(hDlg, STR_ERR_SELECTMAILADDR);
