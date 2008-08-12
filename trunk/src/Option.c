@@ -55,6 +55,9 @@ static int ViewClose = 0; // to synchronize option on Recv and Fwd tabs
 static WNDPROC AddrListProcedure = NULL;
 static WNDPROC EditToWndProc = NULL;
 static WNDPROC CcAddrWndProc = NULL;
+#ifdef _WIN32_WCE
+static WNDPROC DefEditTextWndProc = NULL;
+#endif
 static BOOL CcWndShowing = FALSE;
 #else
 #define WNDPROC_KEY			TEXT("OldWndProc")
@@ -67,7 +70,7 @@ extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
 extern HWND FocusWnd;
 extern HFONT hListFont;
-extern HMENU hADPOPUP;
+extern HMENU hADPOPUP, hEDITPOPUP;
 extern TCHAR *g_Pass;
 extern int gPassSt;
 extern BOOL ShowMsgFlag;
@@ -136,6 +139,9 @@ static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam,
 static TCHAR *AddressGetWholeGroup(TCHAR *groupname);
 static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void SetEditToSubClass(HWND hWnd, BOOL CcWnd);
+#ifdef _WIN32_WCE_PPC
+static LRESULT CALLBACK EditTextCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 /*
  * PropSheetCallback - プロパティシートのコールバック
@@ -893,6 +899,23 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD1));
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD2));
+
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT1),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#ifdef _DEBUG
+		{
+			WNDPROC test = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT2),
+				GWL_WNDPROC, (DWORD)EditTextCallback);
+			if (test != DefEditTextWndProc) {
+				ErrorMessage(hWnd, TEXT("Programming error"));
+			}
+		}
+#else
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT2),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+#endif
 
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		i = lParam;
@@ -4993,6 +5016,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpTmpMailItem->Mark = tpMailItem->Mark;
 		tpTmpMailItem->No = mb; // hack
 		SetEditToSubClass(GetDlgItem(hDlg, IDC_EDIT_TO), FALSE);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_TITLE),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_CLOSE:
@@ -5653,6 +5680,38 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			*AutoCompleteStr = TEXT('\0');
 		}
 		break;
+#ifdef _WIN32_WCE_PPC
+	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+		case ID_MENUITEM_CUT:
+			SendMessage(hWnd, WM_CUT, 0, 0);
+			break;
+		case ID_MENUITEM_COPY:
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			break;
+		case ID_MENUITEM_PASTE:
+			SendMessage(hWnd, WM_PASTE, 0, 0);
+			break;
+		}
+		break;
+	case WM_LBUTTONDOWN:
+		{
+			SHRGINFO rg;
+
+			rg.cbSize = sizeof(SHRGINFO);
+			rg.hwndClient = hWnd;
+			rg.ptDown.x = LOWORD(lParam);
+			rg.ptDown.y = HIWORD(lParam);
+			rg.dwFlags = SHRG_RETURNCMD;
+
+			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+				//ShowMenu(GetParent(hWnd), hEDITPOPUP, 0, 3, FALSE);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 3, FALSE);
+				return 0;
+			}
+		}
+		break;
+#endif
 	}
 #ifdef _WIN32_WCE
 	return CallWindowProcW((CcWndShowing == TRUE) ? CcAddrWndProc : EditToWndProc, hWnd, msg, wParam, lParam);
@@ -5681,6 +5740,50 @@ static void SetEditToSubClass(HWND hWnd, BOOL CcWnd)
 	SetProp(hWnd, WNDPROC_KEY, OldWndProc);
 #endif
 }
+
+/*
+ * EditTextCallback - tap&hold for all EDITTEXT boxes (GJC)
+ *                    assumed that the DefEditTextWndProc is the same for all boxes!
+ */
+#ifdef _WIN32_WCE_PPC
+static LRESULT CALLBACK EditTextCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch(msg) {
+	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+		case ID_MENUITEM_CUT:
+			SendMessage(hWnd, WM_CUT, 0, 0);
+			break;
+		case ID_MENUITEM_COPY:
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			break;
+		case ID_MENUITEM_PASTE:
+			SendMessage(hWnd, WM_PASTE, 0, 0);
+			break;
+		}
+		break;
+	case WM_LBUTTONDOWN:
+		{
+			SHRGINFO rg;
+
+			rg.cbSize = sizeof(SHRGINFO);
+			rg.hwndClient = hWnd;
+			rg.ptDown.x = LOWORD(lParam);
+			rg.ptDown.y = HIWORD(lParam);
+			rg.dwFlags = SHRG_RETURNCMD;
+
+			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+				//ShowMenu(GetParent(hWnd), hEDITPOPUP, 0, 3, FALSE);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 3, FALSE);
+				return 0;
+			}
+		}
+		break;
+	}
+	return CallWindowProcW(DefEditTextWndProc, hWnd, msg, wParam, lParam);
+}
+#endif
+
 
 /*
  * GetMailAddressList - リストビューからメールアドレスのリストを作成

@@ -317,10 +317,11 @@
 #define ID_MENUITEM_MBOXPANE            1236
 #define IDR_MENU_MBPOPUP                1237
 #define IDR_ADDRESS_POPUP               1238
-#define ID_MENUITEM_SAVEMAILBOX         1239
-#define ID_MENUITEM_MBP_SETSIZE         1240
-#define IDD_DIALOG_MBP_SIZE             1241
-#define IDC_EDIT_MBP_SIZE               1242
+#define IDR_MENU_EDIT_POPUP             1239
+#define ID_MENUITEM_SAVEMAILBOX         1240
+#define ID_MENUITEM_MBP_SETSIZE         1241
+#define IDD_DIALOG_MBP_SIZE             1242
+#define IDC_EDIT_MBP_SIZE               1243
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

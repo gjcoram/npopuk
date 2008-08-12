@@ -433,6 +433,16 @@ BEGIN
     END
 END
 
+IDR_MENU_EDIT_POPUP MENU 
+BEGIN
+    POPUP "Edit"
+    BEGIN
+        MENUITEM "Cut",                         ID_MENUITEM_CUT
+        MENUITEM "Copy",                        ID_MENUITEM_COPY
+        MENUITEM "Paste",                       ID_MENUITEM_PASTE
+    END
+END
+
 IDR_MENU_COPY_FLYOUT MENU
 BEGIN
     MENUITEM "(New)"                            ID_MENUITEM_COPY2NEW
@@ -970,7 +980,7 @@ BEGIN
     LTEXT           "",IDC_SBOX_OR_PRIO,2,34,35,10
     COMBOBOX        IDC_COMBO_FILT2BOX,39,30,116,63,CBS_DROPDOWN | 
                     WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_FILTER_FWDADDR,39,30,116,15,ES_AUTOHSCROLL
+    EDITTEXT        IDC_FILTER_FWDADDR,39,30,116,10,ES_AUTOHSCROLL
     LTEXT           "&Item1:",IDC_STATIC,2,51,25,10
     COMBOBOX        IDC_COMBO_HEAD1,39,47,116,63,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
