@@ -88,11 +88,12 @@ static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hPOPUP, hMBPOPUP;				// pop-up menus for listview, mbpane
-HMENU hADPOPUP;								// pop-up menu addresslist
+HMENU hADPOPUP;								// pop-up menu for addresslist
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
 int LastXSize = 0;
+HMENU hEDITPOPUP;							// pop-up menu for Edit boxes (cut/copy/paste)
 #endif
 #ifdef _WIN32_WCE_LAGENDA
 static HWND hCSOBar;						// CSOバー (l'agenda)
@@ -6211,6 +6212,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
 	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
 	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
+#ifdef _WIN32_WCE_PPC
+	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
+#endif
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
@@ -6239,6 +6243,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DestroyMenu(hPOPUP);
 	DestroyMenu(hMBPOPUP);
 	DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE_PPC
+	DestroyMenu(hEDITPOPUP);
+#endif
 	UnregisterClass(MAIN_WND_CLASS, hInstance);
 	UnregisterClass(VIEW_WND_CLASS, hInstance);
 	UnregisterClass(EDIT_WND_CLASS, hInstance);
