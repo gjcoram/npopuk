@@ -492,6 +492,16 @@ static BOOL CALLBACK PopSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SETSSL),
 			SendDlgItemMessage(hDlg, IDC_CHECK_SSL, BM_GETCHECK, 0, 0));
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_NAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_SERVER),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_PORT),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_USER),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -670,19 +680,31 @@ static BOOL CALLBACK SmtpSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		} else if (checked) {
 			bccaddr = tpOptionMailBox->MailAddress;
 		}
-		SendDlgItemMessage(hDlg, IDC_BCCADDRESS, WM_SETTEXT, 0, (LPARAM)bccaddr);
-		EnableWindow(GetDlgItem(hDlg, IDC_BCCADDRESS), checked);
-
 		SendDlgItemMessage(hDlg, IDC_CHECK_SSL, BM_SETCHECK, tpOptionMailBox->SmtpSSL, 0);
+		SendDlgItemMessage(hDlg, IDC_BCCADDRESS, WM_SETTEXT, 0, (LPARAM)bccaddr);
 
 		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_MAILADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_SERVER, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_PORT, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_BCCADDRESS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		EnableWindow(GetDlgItem(hDlg, IDC_BCCADDRESS), checked);
 
 		SendMessage(hDlg, WM_COMMAND, (WPARAM)IDC_CHECK_SMTPAUTH, 0);
 		EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SETSSL),
 			SendDlgItemMessage(hDlg, IDC_CHECK_SSL, BM_GETCHECK, 0, 0));
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_NAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_SERVER),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_PORT),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_BCCADDRESS),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -778,6 +800,10 @@ static BOOL CALLBACK MakeSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		/* ƒRƒ“ƒgƒ[ƒ‹‚Ì‰Šú‰» */
 		SetControlFont(hDlg);
 		SendDlgItemMessage(hDlg, IDC_EDIT_SIG, WM_SETTEXT, 0, (LPARAM)tpOptionMailBox->Signature);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_SIG),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -908,13 +934,15 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			WNDPROC test = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT2),
 				GWL_WNDPROC, (DWORD)EditTextCallback);
 			if (test != DefEditTextWndProc) {
-				ErrorMessage(hWnd, TEXT("Programming error"));
+				ErrorMessage(hDlg, TEXT("Programming error"));
 			}
 		}
 #else
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT2),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_FILTER_FWDADDR),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
 
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
@@ -922,6 +950,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		if (i == -1) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_FLAG, BM_SETCHECK, 1, 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_FWDADDR), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_FILTER_AND, BM_SETCHECK, 1, 0);
 			break;
 		}
@@ -1647,6 +1676,10 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		SendDlgItemMessage(hDlg, IDC_EDIT_USER, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_PASS, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_USER),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -1732,6 +1765,10 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		Type = (int)lParam;
 		SendDlgItemMessage(hDlg, IDC_MBOX_NAME, WM_SETTEXT, 0, (LPARAM)mbox->Name);
 		SendDlgItemMessage(hDlg, IDC_MBOX_NAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_MBOX_NAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		if (Type == MAILBOX_TYPE_SAVE || Type == MAILBOX_ADD_SAVE) {
 			SendMessage(hDlg, WM_SETTEXT, 0, (Type == MAILBOX_TYPE_SAVE) ?
 				(LPARAM)STR_TITLE_RENAMESBOX : (LPARAM)STR_TITLE_ADDSBOX);
@@ -1859,6 +1896,15 @@ static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		SendDlgItemMessage(hDlg, IDC_IMPORT_SBOXNAME, WM_SETTEXT, 0, (LPARAM)tmp);
 		SendDlgItemMessage(hDlg, IDC_IMPORT_SBOXNAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		mem_free(&tmp);
+
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_IMPORT_FILE),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_IMPORT_SBOXFILE),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_IMPORT_SBOXNAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 
 		SendDlgItemMessage(hDlg, IDC_IMPORT_READ, BM_SETCHECK, BST_CHECKED, 0);
 		SendDlgItemMessage(hDlg, IDC_IMPORT_DOWN, BM_SETCHECK, BST_CHECKED, 0);
@@ -2899,6 +2945,10 @@ static BOOL CALLBACK SetReplyOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		if (op.ReHeader != NULL) {
 			SendDlgItemMessage(hDlg, IDC_EDIT_REHEAD, WM_SETTEXT, 0, (LPARAM)op.ReHeader);
 		}
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_REHEAD),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -2978,6 +3028,10 @@ static BOOL CALLBACK SetForwardOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 			SendDlgItemMessage(hDlg, IDC_EDIT_FWDHEAD, WM_SETTEXT, 0, (LPARAM)op.FwdHeader);
 		}
 		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FWDHEAD), enable);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_FWDHEAD),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -3473,7 +3527,12 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		SendDlgItemMessage(hDlg, IDC_DATE_FORMAT, WM_SETTEXT, 0, (LPARAM)op.DateFormat);
 		SendDlgItemMessage(hDlg, IDC_TIME_FORMAT, WM_SETTEXT, 0, (LPARAM)op.TimeFormat);
-
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_DATE_FORMAT),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_TIME_FORMAT),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -6538,6 +6597,12 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 		}
 #endif
 		SendDlgItemMessage(hDlg, IDC_EDIT_COMMENT, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_COMMENT),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		// idx==-1, add new address item
 		if (idx == -2) {
 			// changing Group of multiple addresses
