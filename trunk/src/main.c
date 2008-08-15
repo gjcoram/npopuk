@@ -6157,7 +6157,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #ifdef _WIN32_WCE_LAGENDA
 	SipShowIM(SIPF_OFF);
 #endif
-	
+
+	//of main window From resource pop rise menu load
+	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
+	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
+#ifdef _WIN32_WCE_PPC
+	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
+#endif
+
 	//Window class register
 	if (!InitApplication(hInstance) || !View_InitApplication(hInstance)
 		|| !Edit_InitApplication(hInstance)) {
@@ -6174,6 +6182,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
+		DestroyMenu(hPOPUP);
+		DestroyMenu(hMBPOPUP);
+		DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE_PPC
+		DestroyMenu(hEDITPOPUP);
+#endif
 		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
 	}
@@ -6204,17 +6218,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
+		DestroyMenu(hPOPUP);
+		DestroyMenu(hMBPOPUP);
+		DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE_PPC
+		DestroyMenu(hEDITPOPUP);
+#endif
 		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
 	}
-
-	//of main window From resource pop rise menu load
-	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
-	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
-	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
-#ifdef _WIN32_WCE_PPC
-	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
-#endif
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
