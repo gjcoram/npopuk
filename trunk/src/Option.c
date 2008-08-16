@@ -7407,7 +7407,10 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, op.MatchCase, 0);
 		if (FindOrReplace >= 2) { // Replace
-#ifndef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE_PPC
+			DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_REPLACE),
+				GWL_WNDPROC, (DWORD)EditTextCallback);
+#else
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ALL), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_FIND_ALLBOXES), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), SW_HIDE);
@@ -7436,12 +7439,13 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef _WIN32_WCE_PPC
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_FIND),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
-		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_REPLACE),
-			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
 		break;
 
 	case WM_CLOSE:
+#ifdef _WIN32_WCE_PPC
+		 SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_FIND), GWL_WNDPROC, (DWORD)DefEditTextWndProc);
+#endif
 		EndDialog(hDlg, FALSE);
 		break;
 
