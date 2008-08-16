@@ -7433,6 +7433,12 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_ALL), SW_HIDE);
 #endif
 		}
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_FIND),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_REPLACE),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_CLOSE:
