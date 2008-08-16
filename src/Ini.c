@@ -616,12 +616,13 @@ BOOL ini_read_setting(HWND hWnd)
 	op.SendAttachIndividually = profile_get_int(GENERAL, TEXT("SendAttachIndividually"), 1, app_path);
 	op.CheckEndExec = profile_get_int(GENERAL, TEXT("CheckEndExec"), 0, app_path);
 	op.CheckEndExecNoDelMsg = profile_get_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), 1, app_path);
-	op.TimeoutInterval = profile_get_int(GENERAL, TEXT("TimeoutInterval"), 3, app_path);
-	if (op.Version < 2007) {
+	op.TimeoutInterval = profile_get_int(GENERAL, TEXT("TimeoutInterval"), -1, app_path);
+	if (op.TimeoutInterval <= 0) {
+		op.TimeoutInterval = 180;
+	} else if (op.Version < 2007) {
 		// value was in minutes before, now in seconds
 		op.TimeoutInterval *= 60;
 	}
-	if (op.TimeoutInterval <= 0) op.TimeoutInterval = 60;
 
 	op.ViewClose = profile_get_int(GENERAL, TEXT("ViewClose"), 1, app_path);
 	op.ViewCloseNoNext = profile_get_int(GENERAL, TEXT("ViewCloseNoNext"), 1, app_path);
