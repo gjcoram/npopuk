@@ -313,7 +313,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
         MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
-        MENUITEM "&Replace\tCtrl+H",            ID_MENUITEM_REPLACE
+        MENUITEM "&Replace...\tCtrl+H",         ID_MENUITEM_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Paste fro&m file...",         ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
