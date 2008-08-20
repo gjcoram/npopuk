@@ -3187,7 +3187,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND) {
+			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_FLAG);
@@ -3201,7 +3201,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+			if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_DOWN);
@@ -3214,7 +3214,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND) {
+			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_MAIL);
@@ -3239,7 +3239,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			if (del_it == FALSE) {
 				// mark for delete
 
-				if (vSelBox == MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 					break;
 				}
 				SetMark(hWnd, tpMailItem, ICON_DEL);
@@ -3288,7 +3288,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND) {
+			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			if (tpMailItem->MailStatus == ICON_READ) {
@@ -3304,7 +3304,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			if (vSelBox == MAILBOX_SEND) {
+			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			if (tpMailItem->MailStatus == ICON_MAIL) {
