@@ -27,6 +27,7 @@
 
 static HMENU hCOPYFLY = NULL, hMOVEFLY = NULL;
 static HMENU vCOPYFLY = NULL, vMOVEFLY = NULL;
+HMENU vMenuDone = NULL;
 
 /* Global Variables */
 extern OPTION op;
@@ -525,7 +526,6 @@ int mailbox_next_unread(HWND hWnd, int index, int endindex)
 BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 	HMENU hMenu = NULL, vMenu = NULL;
 	static BOOL hMenuDone = FALSE;
-	static HMENU vMenuDone = NULL;
 	static int first_cnt = -1;
 
 	if (hWnd == MainWnd) {
@@ -565,6 +565,13 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 				first_cnt++;
 			}
 		}
+#ifdef _DEBUG
+		if (op.SocLog > 1) {
+			TCHAR buf[BUF_SIZE];
+			wsprintf(buf, TEXT("SaveboxCount=%d"), first_cnt);
+			log_save(buf);
+		}
+#endif
 	}
 
 	if (hMenu != NULL && hMenuDone == FALSE) {
@@ -675,6 +682,12 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 				EnableMenuItem(hMOVEFLY, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
 			}
 		}
+#ifdef _DEBUG
+		if (vSelBox < 0) {
+			ErrorMessage(hWnd, TEXT("invalid vSelBox"));
+			log_save(TEXT("invalid vSelBox"));
+		}
+#endif
 		if (vSelBox > 0 && (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE && IsAttach == FALSE) {
 			if (vCOPYFLY != NULL) {
 				EnableMenuItem(vCOPYFLY, ID_MENUITEM_COPY2MBOX + vSelBox, MF_GRAYED);
