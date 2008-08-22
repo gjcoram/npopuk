@@ -2813,7 +2813,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 #endif
 
 	enable = !(vSelBox == RecvBox && ExecFlag == TRUE);
-	if (IsSaveBox ==TRUE || IsAttach == TRUE) {
+	if (IsSaveBox == TRUE || IsAttach == TRUE) {
 		enable = 0;
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND); // may have been there already
 		DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
@@ -2836,7 +2836,9 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
 		}
 	} else {
+#ifndef _WIN32_WCE
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
+#endif
 		CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
 		CheckMenuItem(hMenu, ID_MENUITEM_DOWNMARK, (tpMailItem->Mark == ICON_DOWN) ? MF_CHECKED : MF_UNCHECKED);
 		CheckMenuItem(hMenu, ID_MENUITEM_DELMARK, (tpMailItem->Mark == ICON_DEL) ? MF_CHECKED : MF_UNCHECKED);

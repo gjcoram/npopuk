@@ -682,12 +682,6 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 				EnableMenuItem(hMOVEFLY, ID_MENUITEM_MOVE2MBOX + SelBox, MF_GRAYED);
 			}
 		}
-#ifdef _DEBUG
-		if (vSelBox < 0) {
-			ErrorMessage(hWnd, TEXT("invalid vSelBox"));
-			log_save(TEXT("invalid vSelBox"));
-		}
-#endif
 		if (vSelBox > 0 && (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE && IsAttach == FALSE) {
 			if (vCOPYFLY != NULL) {
 				EnableMenuItem(vCOPYFLY, ID_MENUITEM_COPY2MBOX + vSelBox, MF_GRAYED);
