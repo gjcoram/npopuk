@@ -73,6 +73,7 @@ static int g_menu_height;
 
 BOOL ViewWndViewSrc = FALSE;
 int vSelBox = -1;
+extern HMENU vMenuDone;
 
 static MULTIPART **tpMultiPart;
 static int MultiPartCnt, MultiPartTextIndex;
@@ -1043,6 +1044,9 @@ static void EndWindow(HWND hWnd)
 	DestroyWindow(GetDlgItem(hWnd, IDC_HEADER));
 	DestroyWindow(GetDlgItem(hWnd, IDC_EDIT_BODY));
 
+	vSelBox = -1;
+	vMenuDone = NULL;
+
 	DestroyWindow(hWnd);
 }
 
@@ -1772,7 +1776,6 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 #endif
 					EndWindow(hViewWnd);
 					hViewWnd = NULL;
-					vSelBox = -1;
 				}
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
@@ -2098,7 +2101,7 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 	int ret;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-	if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
+	if (vSelBox <= 0 || item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 		ErrorMessage(hWnd, STR_ERR_NOMAIL);
 		return;
 	}
@@ -2762,7 +2765,9 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 		tpMailItem->Mark = mark;
 		cut = 0;
 	}
-	(MailBox+vSelBox)->NeedsSave |= MARKS_CHANGED;
+	if (vSelBox > 0) {
+		(MailBox+vSelBox)->NeedsSave |= MARKS_CHANGED;
+	}
 
 	if (i != -1) {
 		if (tpMailItem->Download == TRUE) {
@@ -3048,7 +3053,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		EndWindow(hWnd);
 		hViewWnd = NULL;
-		vSelBox = -1;
 		break;
 
 	case WM_CLOSE:
@@ -3063,7 +3067,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		EndWindow(hWnd);
 		hViewWnd = NULL;
-		vSelBox = -1;
 		break;
 
 	case WM_INITMENUPOPUP:
@@ -3182,12 +3185,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_FLAGMARK:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_FLAG);
@@ -3196,12 +3199,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		// 受信用にマーク
 		case ID_MENUITEM_DOWNMARK:
+			if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_DOWN);
@@ -3209,12 +3212,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_UNREADMARK:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			SetMark(hWnd, tpMailItem, ICON_MAIL);
@@ -3224,6 +3227,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_KEY_DELETE:
 		case ID_MENUITEM_DELMARK:
 		case ID_MENUITEM_DELETE:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
@@ -3239,7 +3245,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			if (del_it == FALSE) {
 				// mark for delete
 
-				if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 					break;
 				}
 				SetMark(hWnd, tpMailItem, ICON_DEL);
@@ -3283,12 +3289,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_READMAIL:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			if (tpMailItem->MailStatus == ICON_READ) {
@@ -3299,12 +3305,12 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_UNREADMAIL:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) < 0) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
-				break;
-			}
-			if (vSelBox <= MAILBOX_SEND) {
 				break;
 			}
 			if (tpMailItem->MailStatus == ICON_MAIL) {
@@ -3315,6 +3321,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_SAVE:
+			if (vSelBox <= MAILBOX_SEND) {
+				break;
+			}
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
