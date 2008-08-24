@@ -1,5 +1,5 @@
-nPOPuk v2.11 rc1                           readme-211uk.txt
-                                                 2 Aug 2008
+nPOPuk v2.11 rc2                           readme-211uk.txt
+                                                24 Aug 2008
 -----------------------------------------------------------
 
 
@@ -63,7 +63,7 @@ This version extends the original nPOP v1.0.9 version to
 include the following features:
 
 * An optional second pane in the main window to list the
-  accounts (for easier access than the drop-down list).
+  mailboxes (for easier access than the drop-down list).
 
 * A progress bar to graphically show the percentage of a
   message being downloaded or sent.

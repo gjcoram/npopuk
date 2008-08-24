@@ -8,7 +8,7 @@
  *		nakka@nakka.com
  *
  * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
- * Info at http://www.npopsupport.org.uk
+ * Info at http://www.npopuk.org.uk
  */
 
 /* Include Files */
@@ -622,16 +622,23 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 			DeleteMenu(vMenu, ID_MENUITEM_COPYSBOX, MF_BYCOMMAND);
 			DeleteMenu(vMenu, ID_MENUITEM_MOVESBOX, MF_BYCOMMAND);
 #ifdef _WIN32_WCE
-			InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+#ifdef _WIN32_WCE_PPC
+			InsertMenu(vMenu, 10, MF_BYPOSITION | MF_POPUP | MF_STRING,
 				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
-			InsertMenu(vMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND | MF_POPUP | MF_STRING,
+			InsertMenu(vMenu, 11, MF_BYPOSITION | MF_POPUP | MF_STRING,
 				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+#else
+			InsertMenu(vMenu, 14, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			InsertMenu(vMenu, 15, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+#endif // _WIN32_WCE_PPC
 #else
 			InsertMenu(vMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,
 				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
 			InsertMenu(vMenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
 				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
-#endif
+#endif // _WIN32_WCE
 			vMenuDone = vMenu;
 		}
 		// delete all existing entries (in case saveboxes have been renamed or reordered)

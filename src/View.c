@@ -8,7 +8,7 @@
  *		nakka@nakka.com
  *
  * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
- * Info at http://www.npopsupport.org.uk
+ * Info at http://www.npopuk.org.uk
  */
 
 /* Include Files */
@@ -2827,7 +2827,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			hMenu = GetSubMenu(hMenu, 0);
 #endif
 #ifdef _WIN32_WCE_PPC
-			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
+			InsertMenu(hMenu, ID_MENUITEM_FLAGMARK, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_DELETE,
 				STR_LIST_PPCMENU_DELLIST);
 #else
 			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
@@ -2836,7 +2836,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
 		}
 	} else {
-#ifndef _WIN32_WCE
+#ifndef _WIN32_WCE_PPC
 		DeleteMenu(hMenu, ID_MENUITEM_DELETE, MF_BYCOMMAND);
 #endif
 		CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
