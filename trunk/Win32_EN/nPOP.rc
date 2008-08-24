@@ -826,11 +826,11 @@ BEGIN
                     29,10
     CONTROL         "&Reverse Order",IDC_CHECK_SORTORDER,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,114,70,61,10
-    GROUPBOX        "When changing folders, select",IDC_STATIC,3,97,190,31
+    GROUPBOX        "When changing mailboxes, select",IDC_STATIC,3,97,190,31
     CONTROL         "&First",IDC_SORT_SELECT_FIRST,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,10,110,30,10
-    CONTROL         "&Last item in list",IDC_SORT_SELECT_LAST,"Button",BS_AUTORADIOBUTTON,
-                    40,110,90,10
+    CONTROL         "&Last item in list",IDC_SORT_SELECT_LAST,"Button",
+                    BS_AUTORADIOBUTTON,40,110,90,10
     GROUPBOX        "First column is",IDC_STATIC,3,135,190,31
     CONTROL         "S&ubject",IDC_COL_SFDZ,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,9,148,40,10

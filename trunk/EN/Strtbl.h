@@ -8,7 +8,7 @@
  *		nakka@nakka.com
  *
  * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
- * Info at http://www.npopsupport.org.uk
+ * Info at http://www.npopuk.org.uk
  */
 
 #ifndef _INC_STR_TBL_H
@@ -482,9 +482,9 @@
 #endif	//_WIN32_WCE
 
 ///////////// MRP /////////////////////
-#define STR_TITLE_ABOUT				TEXT("About")
-#define STR_WEB_ADDR				TEXT("http://www.npopsupport.org.uk")
-#define STR_ABOUT_TEXT				TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopsupport.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
+#define STR_TITLE_ABOUT		TEXT("About")
+#define STR_WEB_ADDR		TEXT("http://www.npopuk.org.uk") // was www.npopsupport.org.uk
+#define STR_ABOUT_TEXT		TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopuk.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
 
 #endif	//_INC_STR_TBL_H

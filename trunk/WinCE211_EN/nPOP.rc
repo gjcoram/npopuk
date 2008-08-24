@@ -651,7 +651,7 @@ BEGIN
                     BS_AUTORADIOBUTTON | WS_GROUP,9,80,30,10
     CONTROL         "&Last item in list",IDC_SORT_SELECT_LAST,"Button",
                     BS_AUTORADIOBUTTON,40,80,100,10
-    GROUPBOX        "When changing folders, select",IDC_STATIC,3,71,154,22
+    GROUPBOX        "When changing mailboxes, select",IDC_STATIC,3,71,154,22
     CONTROL         "S&ubject",IDC_COL_SFDZ,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,9,104,40,10
     CONTROL         "Fr&om/To",IDC_COL_FSDZ,"Button",BS_AUTORADIOBUTTON,
@@ -871,7 +871,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_FIND,5,18,150,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,40,80,10
-    CONTROL         "Search &all mail in folder",IDC_CHECK_ALL,"Button",
+    CONTROL         "Search &all mail in mailbox",IDC_CHECK_ALL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,55,90,10
     CONTROL         "Search all mailbo&xes",IDC_FIND_ALLBOXES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,15,70,80,10
