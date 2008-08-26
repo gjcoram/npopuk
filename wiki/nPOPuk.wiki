@@ -1,0 +1,13 @@
+#summary nPOPuk resource list.
+
+= Web resources =
+
+http://nPOPsupport.org.uk/
+http://nevcal.com/ppc/
+
+
+= Discussion groups =
+
+Yahoo groups:
+  npopannounce (broadcast only)
+  npopsupport (discussion)
