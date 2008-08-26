@@ -1828,8 +1828,8 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		case WM_LBUTTONUP:
 			if (GetKeyState(VK_MENU) < 0) {
 				SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
-				break;
 			}
+			break;
 #else
 		case WM_RBUTTONUP:
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);

@@ -565,13 +565,6 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 				first_cnt++;
 			}
 		}
-#ifdef _DEBUG
-		if (op.SocLog > 1) {
-			TCHAR buf[BUF_SIZE];
-			wsprintf(buf, TEXT("SaveboxCount=%d"), first_cnt);
-			log_save(buf);
-		}
-#endif
 	}
 
 	if (hMenu != NULL && hMenuDone == FALSE) {
@@ -628,10 +621,8 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 			InsertMenu(vMenu, 11, MF_BYPOSITION | MF_POPUP | MF_STRING,
 				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
 #else
-			InsertMenu(vMenu, 14, MF_BYPOSITION | MF_POPUP | MF_STRING,
-				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
-			InsertMenu(vMenu, 15, MF_BYPOSITION | MF_POPUP | MF_STRING,
-				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+			AppendMenu(vMenu, MF_POPUP | MF_STRING, (UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
+			AppendMenu(vMenu, MF_POPUP | MF_STRING, (UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
 #endif // _WIN32_WCE_PPC
 #else
 			InsertMenu(vMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,

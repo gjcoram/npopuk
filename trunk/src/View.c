@@ -2804,7 +2804,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 	hMenu = GetSubMenu(hViewMenu, 0);
 	htv = NULL;
 #else
-	hMenu = CommandBar_GetMenu(GetDlgItem(hWnd, IDC_VCB), 0);
+	hMenu = GetSubMenu(CommandBar_GetMenu(GetDlgItem(hWnd, IDC_VCB), 0), 2);
 	htv = GetDlgItem(hWnd, IDC_VCB);
 #endif
 #else
@@ -2830,7 +2830,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 			InsertMenu(hMenu, ID_MENUITEM_FLAGMARK, MF_BYCOMMAND | MF_STRING, ID_MENUITEM_DELETE,
 				STR_LIST_PPCMENU_DELLIST);
 #else
-			InsertMenu(hMenu, 9, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
+			InsertMenu(hMenu, 12, MF_BYPOSITION | MF_STRING, ID_MENUITEM_DELETE,
 				STR_LIST_MENU_DELLIST);
 #endif
 			CheckMenuItem(hMenu, ID_MENUITEM_FLAGMARK, (tpMailItem->Mark == ICON_FLAG) ? MF_CHECKED : MF_UNCHECKED);
