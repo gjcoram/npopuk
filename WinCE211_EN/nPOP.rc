@@ -1390,10 +1390,10 @@ BEGIN
         MENUITEM "Repl&y to all",               ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward",                    ID_MENUITEM_FORWARD
         MENUITEM SEPARATOR
+        MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
         MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
-        MENUITEM SEPARATOR
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
@@ -1472,6 +1472,7 @@ BEGIN
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM "Address &info...\tCtrl+I",    ID_MENUITEM_PROP
         MENUITEM SEPARATOR
+        MENUITEM "F&lag for follow-up",         ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark to download\tCtrl+D",   ID_MENUITEM_DOWNMARK
         MENUITEM "Mark to &delete\tCtrl+Del",   ID_MENUITEM_DELMARK
         MENUITEM "Mark as r&ead\tCtrl+B",       ID_MENUITEM_READMAIL
