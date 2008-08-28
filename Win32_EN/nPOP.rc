@@ -654,7 +654,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT           "&Word wrap at",IDC_STATIC,5,12,45,10
     EDITTEXT        IDC_EDIT_BREAKCNT,56,10,30,12,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "characters",IDC_STATIC,96,12,45,10
+    LTEXT           "characters",IDC_STATIC,91,12,45,10
     CONTROL         "&Quoted lines do not word wrap",IDC_CHECK_QBREAK,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,15,25,135,10
     CONTROL         "Send '&Message-Id'",IDC_CHECK_SENDMESSAGEID,"Button",
@@ -664,10 +664,11 @@ BEGIN
     CONTROL         "Show '&Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,68,160,10
-    CONTROL         "Check &queued (",IDC_CHECK_QUEUE_EXIT,"Button",
+    CONTROL         "Check q&ueued (",IDC_CHECK_QUEUE_EXIT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,82,65,10
-    CONTROL         "and &failed send) on exit",IDC_CHECK_SENDERR_EXIT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,70,82,90,10
+    CONTROL         "and &failed send",IDC_CHECK_SENDERR_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,82,60,10
+    LTEXT           ") on exit",IDC_STATIC,131,82,45,10
     PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,110,80,15
 END
 
