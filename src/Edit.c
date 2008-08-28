@@ -272,7 +272,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_REFWD_SELTEXT) {
+		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
 			// forward as attachment
 			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
 			//if (tpMailItem->FwdAttach != NULL) {
@@ -400,9 +400,10 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	int len, cnt, i, TextIndex;
 	int qlen = 0;
 	BOOL is_fwd, fwd_as_att, do_sig, do_sig_above;
+	BOOL has_sel = (seltext != NULL && (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT));
 	is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD;
 
-	if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
+	if (has_sel) {
 		// overrides forward as attachment
 		fwd_as_att = FALSE;
 	} else if (op.FwdQuotation == 2 && is_fwd) {
@@ -412,10 +413,9 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	}
 
 	//Setting
-	if ( fwd_as_att == FALSE
-		&& ((tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))
-		||  (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL)) ) {
-		if (tpMailItem->Mark == MARK_REFWD_SELTEXT && seltext != NULL) {
+	if ( fwd_as_att == FALSE && (has_sel || 
+		(tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))) ) {
+		if (has_sel) {
 			mBody = alloc_copy_t(seltext);
 		} else {
 			mBody = MIME_body_decode(tpReMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
@@ -2556,7 +2556,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->DefReplyTo = TRUE;
 
 		if (seltext != NULL) {
-			tpMailItem->Mark = MARK_REFWD_SELTEXT;
+			tpMailItem->Mark = MARK_REPL_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
 			tpMailItem->Mark = MARK_REPLYING;
 		}
@@ -2611,7 +2611,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->DefReplyTo = TRUE;
 
 		if (OpenFlag == EDIT_FORWARD && seltext != NULL) {
-			tpMailItem->Mark = MARK_REFWD_SELTEXT;
+			tpMailItem->Mark = MARK_FWD_SELTEXT;
 		} else if (tpReMailItem != NULL && tpReMailItem->Body != NULL) {
 			tpMailItem->Mark = MARK_FORWARDING;
 		}

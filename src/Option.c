@@ -4985,7 +4985,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, 
 				(tpMailItem->Mark == MARK_REPLYING) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
-		} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
+		} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
 			// text is selected
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
@@ -4993,7 +4993,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
 		}
-		if (tpMailItem->Mark == MARK_REPLYING) {
+		if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_REPL_SELTEXT) {
 			SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, (op.AutoAddRecipients == 1) ? 1 : 0, 0);
 		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
@@ -5530,7 +5530,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// 2: quote selected text
 			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
-			} else if (tpMailItem->Mark == MARK_REFWD_SELTEXT) {
+			} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
 				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
 			}
 			mem_free((void **)&tpSendMailIList);

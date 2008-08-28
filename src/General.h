@@ -226,8 +226,9 @@
 
 // marks for forwarding/replying and the property dialog
 #define MARK_REPLYING			1
-#define MARK_REFWD_SELTEXT		2
+#define MARK_REPL_SELTEXT		2
 #define MARK_FORWARDING			3
+#define MARK_FWD_SELTEXT		4
 
 #define FILE_OPEN_SINGLE		0
 #define FILE_OPEN_MULTI			1
