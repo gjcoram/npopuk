@@ -1487,18 +1487,18 @@ IDR_MENU_MBPOPUP MENU
 BEGIN
     POPUP "Mailbox"
     BEGIN
-        MENUITEM "Hide this pane",              ID_MENUITEM_MBOXPANE
-        MENUITEM "Set width",                   ID_MENUITEM_MBP_SETSIZE
+        MENUITEM "&Hide this pane",             ID_MENUITEM_MBOXPANE
+        MENUITEM "Set &width",                  ID_MENUITEM_MBP_SETSIZE
         MENUITEM SEPARATOR
-        MENUITEM "Add...",                      ID_MENUITEM_ADDMAILBOX
-        MENUITEM "Edit...",                     ID_MENUITEM_SETMAILBOX
-        MENUITEM "Save",                        ID_MENUITEM_SAVEMAILBOX
-        MENUITEM "Delete...",                   ID_MENUITEM_DELETEMAILBOX
+        MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
+        MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
+        MENUITEM "&Save",                       ID_MENUITEM_SAVEMAILBOX
+        MENUITEM "&Delete...",                  ID_MENUITEM_DELETEMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Move up",                     ID_MENUITEM_MOVEUPMAILBOX
-        MENUITEM "Move down",                   ID_MENUITEM_MOVEDOWNMAILBOX
+        MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Initialise...",               ID_MENUITEM_LISTINIT
+        MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT
     END
 END
 
