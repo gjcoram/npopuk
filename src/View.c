@@ -1177,20 +1177,24 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 				while ( s < t && str_cmp_ni(s, HEAD_SUBJECT, len)) {
 					s++;
 				}
-				item_get_content_t(s, HEAD_SUBJECT, &str);
-				len = lstrlen(str);
-				// limit subject to 50 characters, or at first CR/NL
-				for (r = str, j = 0; 
-					*r != TEXT('\0') && *r != TEXT('\r') && *r != TEXT('\n') && j < 50;
-					r++, j++);
-				if (*r != TEXT('\0')) {
-					if (j + 3 > len) {
-						r = str + len - 3;
+				if (s < t) {
+					item_get_content_t(s, HEAD_SUBJECT, &str);
+					len = lstrlen(str);
+					// limit subject to 50 characters, or at first CR/NL
+					for (r = str, j = 0; 
+						*r != TEXT('\0') && *r != TEXT('\r') && *r != TEXT('\n') && j < 50;
+						r++, j++);
+					if (*r != TEXT('\0')) {
+						if (j + 3 > len) {
+							r = str + len - 3;
+						}
+						*(r++) = TEXT('.');
+						*(r++) = TEXT('.');
+						*(r++) = TEXT('.');
+						*r = TEXT('\0');
 					}
-					*(r++) = TEXT('.');
-					*(r++) = TEXT('.');
-					*(r++) = TEXT('.');
-					*r = TEXT('\0');
+				} else {
+					str = alloc_copy_t(STR_LIST_NOSUBJECT);
 				}
 			} else {
 				// ファイル名をメニューに追加する
