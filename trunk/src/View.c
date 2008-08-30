@@ -671,7 +671,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		if (GetKeyState(VK_MENU) < 0) {
 			SetEditMenu(GetParent(hWnd));
 			ShowMenu(GetParent(hWnd),
-				CommandBar_GetMenu(GetDlgItem(GetParent(hWnd), IDC_VCB), 0), 1, 0, FALSE);
+				CommandBar_GetMenu(GetDlgItem(GetParent(hWnd), IDC_VCB), 0), 1, 0);
 			return 0;
 		}
 #endif
@@ -679,7 +679,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 #else
 	case WM_CONTEXTMENU:
 		SetEditMenu(GetParent(hWnd));
-		ShowMenu(GetParent(hWnd), GetMenu(GetParent(hWnd)), 1, 0, FALSE);
+		ShowMenu(GetParent(hWnd), GetMenu(GetParent(hWnd)), 1, 0);
 		return 0;
 #endif
 	}
@@ -3110,7 +3110,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), 0, 0, FALSE);
+			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), 0, 0);
 			break;
 
 		case IDC_EDIT_BODY:

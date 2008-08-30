@@ -1869,7 +1869,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), 0, 0, FALSE);
+			ShowMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), 0, 0);
 			break;
 
 		case IDC_EDIT_BODY:
