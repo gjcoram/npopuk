@@ -1227,7 +1227,7 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 /*
  * ShowMenu - マウスの位置にメニューを表示する
  */
-int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
+int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 {
 	HWND hListView;
 	RECT WndRect;
@@ -1314,16 +1314,13 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #ifdef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
 	ret = TrackPopupMenu((PosFlag == 3 || PosFlag == 4) ? GetSubMenu(hMenu, mpos): hMenu,
-		TPM_TOPALIGN | TPM_LEFTALIGN | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
-		x, y, 0, hWnd, NULL);
+		TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd, NULL);
 #else
 	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos),
-		TPM_TOPALIGN | TPM_LEFTALIGN | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
-		x, y, 0, hWnd, NULL);
+		TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd, NULL);
 #endif
 #else
-	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos),
-		TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
+	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON, 
 		x, y, 0, hWnd, NULL);
 #endif
 	PostMessage(hWnd, WM_NULL, 0, 0);
@@ -1862,7 +1859,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox < MailBoxCnt-1)));
 
 				SendMessage(hWnd, WM_NULL, 0, 0);
-				ShowMenu(hWnd, hMBPOPUP, 0, 3, FALSE);
+				ShowMenu(hWnd, hMBPOPUP, 0, 3);
 #ifdef _WIN32_WCE
 			} else if (LOWORD(wParam) == ID_MENUITEM_MBP_SETSIZE) {
 				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBP_SIZE), hWnd, MBWidthProc, 0)) {
@@ -4628,7 +4625,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
 				if (op.MBMenuWidth > 0) {
-					ShowMenu(hWnd, hMBPOPUP, 0, 4, FALSE);
+					ShowMenu(hWnd, hMBPOPUP, 0, 4);
 				} else {
 					if (GetDroppedStateMBMenu() == FALSE) {
 						SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
@@ -4641,14 +4638,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 1, FALSE);
+			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 1);
 #elif defined(_WIN32_WCE_LAGENDA)
-			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1, FALSE);
+			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1);
 #else
-			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 1, FALSE);
+			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 1);
 #endif
 #else
-			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 1, FALSE);
+			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 1);
 #endif
 			break;
 
@@ -4656,14 +4653,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENU:
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 0, FALSE);
+			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 0);
 #elif defined(_WIN32_WCE_LAGENDA)
-			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1, FALSE);
+			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1);
 #else
-			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 0, FALSE);
+			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 0);
 #endif
 #else
-			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 0, FALSE);
+			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 0);
 #endif
 			break;
 
@@ -5613,7 +5610,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
 		EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_STOP, (g_soc == -1));
 		SendMessage(hWnd, WM_NULL, 0, 0);
-		ShowMenu(hWnd, hPOPUP, 0, 2, FALSE);
+		ShowMenu(hWnd, hPOPUP, 0, 2);
 #else
 		switch (lParam) {
 #ifdef _WIN32_WCE
@@ -5621,7 +5618,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
 			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_STOP, (g_soc == -1));
 			SendMessage(hWnd, WM_NULL, 0, 0);
-			ShowMenu(hWnd, hPOPUP, 0, 2, FALSE);
+			ShowMenu(hWnd, hPOPUP, 0, 2);
 			break;
 #else
 		case WM_LBUTTONDOWN:
@@ -5652,7 +5649,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					}
 				}
 				SendMessage(hWnd, WM_NULL, 0, 0);
-				ShowMenu(hWnd, hPOPUP, 0, 0, FALSE);
+				ShowMenu(hWnd, hPOPUP, 0, 0);
 			}
 			break;
 #endif
