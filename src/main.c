@@ -1257,17 +1257,26 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #endif
 		break;
 
-	case 1:
-		//of mouse position Acquisition
-		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
-		i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+	case 1: // message list positioning based on selection
+	case 4:	// VK_APPS (menu key) to post hMBPOPUP
+		if (PosFlag == 1) {
+			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
+			i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+		} else {
+			hListView = GetDlgItem(hWnd, IDC_MBMENU);
+			i = GetSelectedMBMenu();
+		}
 		GetWindowRect(hListView, &WndRect);
 		if (i == -1) {
 			x = WndRect.left;
 			y = WndRect.top;
 		} else {
-			ListView_EnsureVisible(hListView, i, TRUE);
-			ListView_GetItemRect(hListView, i, &ItemRect, LVIR_ICON);
+			if (PosFlag == 1) {
+				ListView_EnsureVisible(hListView, i, TRUE);
+				ListView_GetItemRect(hListView, i, &ItemRect, LVIR_ICON);
+			} else {
+				SendMessage(hListView, LB_GETITEMRECT, i, (LPARAM)&ItemRect);
+			}
 			if (ItemRect.left < 0) {
 				ItemRect.left = 0;
 			}
@@ -1304,7 +1313,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL ReturnFlag)
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
-	ret = TrackPopupMenu((PosFlag == 3) ? GetSubMenu(hMenu, mpos): hMenu,
+	ret = TrackPopupMenu((PosFlag == 3 || PosFlag == 4) ? GetSubMenu(hMenu, mpos): hMenu,
 		TPM_TOPALIGN | TPM_LEFTALIGN | ((ReturnFlag == TRUE) ? TPM_RETURNCMD : 0),
 		x, y, 0, hWnd, NULL);
 #else
@@ -4618,10 +4627,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
-				if (GetDroppedStateMBMenu() == FALSE) {
-					SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+				if (op.MBMenuWidth > 0) {
+					ShowMenu(hWnd, hMBPOPUP, 0, 4, FALSE);
 				} else {
-					DropMBMenu(TRUE);
+					if (GetDroppedStateMBMenu() == FALSE) {
+						SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+					} else {
+						DropMBMenu(TRUE);
+					}
 				}
 				break;
 			}
@@ -5360,7 +5373,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
-				if (SelBox == MAILBOX_SEND && mark_del == FALSE) {
+				command_id;
+				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
 					// (in SendBox, Ctrl-C does "create copy"
 					Target = MAILBOX_SEND;
 				} else {
@@ -5379,8 +5393,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							Target = -1;
 						}
 						if (Target == 0) {
-							WPARAM msg = (mark_del == TRUE) ? ID_MENUITEM_MOVE2NEW : ID_MENUITEM_COPY2NEW;
-							SendMessage(hWnd, WM_COMMAND, msg, 0);
+							WPARAM newcmd = (mark_del == TRUE) ? ID_MENUITEM_MOVE2NEW : ID_MENUITEM_COPY2NEW;
+							SendMessage(hWnd, WM_COMMAND, newcmd, 0);
 							break;
 						}
 					}

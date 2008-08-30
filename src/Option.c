@@ -7808,7 +7808,7 @@ BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag) {
 BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	TCHAR Name[BUF_SIZE];
-	int i;
+	int i, j;
 	int *sel;
 	BOOL skip_vselbox = FALSE;
 	static int last_selected = 1;
@@ -7825,13 +7825,17 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetWindowText(GetDlgItem(hDlg, IDC_MOVECOPYTEXT), i ? STR_TITLE_MOVE2 : STR_TITLE_COPY2);
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)STR_LIST_MENU_NEW);
-		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+		for (i = MAILBOX_USER, j = 0; i < MailBoxCnt; i++) {
 			if ((i == SelBox && skip_vselbox == FALSE) || (i == vSelBox && skip_vselbox == TRUE)) {
 				continue;
 			}
 			if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
 				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
+				j++;
 			}
+		}
+		if (last_selected == 0) {
+			last_selected = j; // the new one created last time
 		}
 		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, last_selected, 0);
 		break;

@@ -3505,6 +3505,37 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 
+			if (command_id == ID_MENUITEM_MOVESBOX || command_id == ID_MENUITEM_COPYSBOX) {
+				int cnt = 0, Target = -1;
+				if (command_id == ID_MENUITEM_MOVESBOX) {
+					del_it = TRUE;
+				}
+				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+						Target = i;
+						cnt++;
+					}
+				}
+				if (cnt == 0) {
+					MessageBox(hWnd, STR_ERR_NOSAVEBOXES, WINDOW_TITLE, MB_OK);
+					Target = -1;
+					break;
+				} else if (cnt > 1) {
+					Target = del_it + VSELBOX_FLAG;
+					ask = FALSE;
+					if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELSAVEBOX), hWnd, SelSaveBoxProc, (LPARAM)&Target) == FALSE) {
+						Target = -1;
+						break;
+					}
+				}
+				if (Target == 0) {
+					command_id = (del_it == TRUE) ? ID_MENUITEM_MOVE2NEW : ID_MENUITEM_COPY2NEW;
+				} else {
+					command_id = (del_it == TRUE) ? (ID_MENUITEM_MOVE2MBOX + Target) :
+						(ID_MENUITEM_COPY2MBOX + Target);
+				}
+			}
+
 			if (command_id == ID_MENUITEM_COPY2NEW || command_id == ID_MENUITEM_MOVE2NEW) {
 				// GJC - copy/move to new SaveBox
 				int old_selbox, newbox;
@@ -3523,41 +3554,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					// and fall through to do the move
 				}
 				SelBox = old_selbox;
-			} else if (command_id == ID_MENUITEM_MOVESBOX || command_id == ID_MENUITEM_COPYSBOX) {
-				int cnt = 0, Target = -1;
-				if (command_id == ID_MENUITEM_MOVESBOX) {
-					del_it = TRUE;
-				}
-				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
-						Target = i;
-						cnt++;
-					}
-				}
-				if (cnt == 0) {
-					MessageBox(hWnd, STR_ERR_NOSAVEBOXES, WINDOW_TITLE, MB_OK);
-					Target = -1;
-				} else if (cnt > 1) {
-					Target = del_it + VSELBOX_FLAG;
-					ask = FALSE;
-					if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SELSAVEBOX), hWnd, SelSaveBoxProc, (LPARAM)&Target) == FALSE) {
-						Target = -1;
-					}
-				}
-				if (Target == -1) {
-					break;
-				} else if (Target == 0) {
-					WPARAM msg = (del_it == TRUE) ? ID_MENUITEM_MOVE2NEW : ID_MENUITEM_COPY2NEW;
-					SendMessage(hWnd, WM_COMMAND, msg, 0);
-					break;
-				} else {
-					if (del_it) {
-						command_id = ID_MENUITEM_MOVE2MBOX + Target;
-					} else {
-						command_id = ID_MENUITEM_COPY2MBOX + Target;
-					}
-				}
-			}
+			} 
 
 			if (command_id >= ID_MENUITEM_COPY2MBOX) {
 				// move or copy to SaveBox
