@@ -5328,7 +5328,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						sel = 0;
 						p = (MailBox + i)->ReplyTo;
 						if (p != NULL && *p != TEXT('\0')) {
-							for (j=0; j < SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0); j++) {
+							int cnt = SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0);
+							for (j=0; j < cnt; j++) {
+								buf[0]=TEXT('\0');
 								SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETLBTEXT, j, (LPARAM)buf);
 								if (lstrcmpi(p, buf) == 0) {
 									sel = j;
@@ -7047,7 +7049,6 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_TIMER:
 		if (wParam == ID_RESIZE_TIMER) {
-			RECT rcClient;
 			int width, height, xsize, ysize;
 			width = op.AddrRect.right - op.AddrRect.left;
 			height = op.AddrRect.bottom - op.AddrRect.top;
@@ -7062,8 +7063,20 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				height = ysize - 10 - MENU_HEIGHT;
 			}
 #endif
-			GetWindowRect(hDlg, &rcClient);
-			MoveWindow(hDlg, rcClient.left, rcClient.top, width, height, TRUE);
+			tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
+			if (tpTmpAddressBook != NULL && tpTmpAddressBook->GetAddrList == TRUE) {
+				RECT rcClient;
+				GetWindowRect(hDlg, &rcClient);
+				MoveWindow(hDlg, rcClient.left, rcClient.top, width, height, TRUE);
+			} else {
+				if (op.AddrRect.left > xsize) {
+					op.AddrRect.left = xsize / 2;
+				}
+				if (op.AddrRect.top > ysize) {
+					op.AddrRect.top = ysize / 2;
+				}
+				MoveWindow(hDlg, op.AddrRect.left, op.AddrRect.top, width, height, TRUE);
+			}
 		}
 		KillTimer(hDlg, wParam);
 		break;
