@@ -142,7 +142,9 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override)
 
 	if (Override) {
 		// override a few values
-		tpToMailItem->Mark = tpToMailItem->MailStatus;
+		if (tpToMailItem->Mark != ICON_FLAG) {
+			tpToMailItem->Mark = tpToMailItem->MailStatus;
+		}
 		//tpToMailItem->New = FALSE;
 		tpToMailItem->No = 0;
 		tpToMailItem->UIDL = NULL;

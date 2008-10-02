@@ -2591,16 +2591,16 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 		if (*p == TEXT('<')) {
 			// strip <tags>
 			if (str_cmp_ni_t(p, TEXT("<a "), lstrlen(TEXT("<a "))) == 0) {
-				// <a style="link" href="http://www.nowhere.com"> -> [http://www.nowhere.com]
+				// <a style="link" href="http://www.nowhere.com"> -> <http://www.nowhere.com>
 				for (; *p != TEXT('\0') && *p != TEXT('>'); p++) {
 					if (str_cmp_ni_t(p, TEXT("href=\""), lstrlen(TEXT("href=\""))) == 0) {
 						p += lstrlen(TEXT("href=\""));
-						*(q++) = TEXT('[');
+						*(q++) = TEXT('<');
 						while (*p != TEXT('\0') && *p != TEXT('\"')) {
 							*(q++) = *(p++);
 						}
 						if (*p != TEXT('\0')) {
-							*(q++) = TEXT(']');
+							*(q++) = TEXT('>');
 							p++;
 						}
 						while (*p != TEXT('\0') && *p != TEXT('>')) {
