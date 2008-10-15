@@ -1823,6 +1823,7 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 	int RetFlag = 0;
 	int i;
 	int *dwi = NULL;
+	BOOL done = FALSE;
 	BOOL DoGlobal = op.GlobalFilterEnable && !(tpMailBox->FilterEnable & FILTER_NOGLOBAL)
 					&& (op.tpFilter != NULL);
 
@@ -1835,11 +1836,12 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 			if (do_what != NULL) dwi = do_what + i;
 			RetFlag = item_check_filter(*(op.tpFilter+i), buf, dwi, RetFlag);
 			if (RetFlag & (FILTER_RECV | FILTER_UNRECV)) {
+				done = TRUE;
 				break;
 			}
 		}
 	}
-	if (tpMailBox->tpFilter != NULL) {
+	if (tpMailBox->tpFilter != NULL && done == FALSE) {
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
 			if (do_what != NULL) dwi = do_what + op.GlobalFilterCnt + i;
 			RetFlag = item_check_filter(*(tpMailBox->tpFilter+i), buf, dwi, RetFlag);
