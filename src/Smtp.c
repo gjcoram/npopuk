@@ -817,7 +817,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	// ñ{ï∂ëóêM
 	if (send_body != NULL && send_buf(soc, send_body) == -1) {
 		mem_free(&send_body);
-		send_body = NULL;
+		send_body = send_pt = NULL;
 		encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
@@ -1446,7 +1446,7 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 	SetStatusRecvLen(hWnd, send_pt - send_body, send_len, STR_STATUS_SOCKINFO_SEND);
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
 		mem_free(&send_body);
-		send_body = NULL;
+		send_body = send_pt = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}

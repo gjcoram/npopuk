@@ -1188,11 +1188,12 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
 		}
 	}
-	if (soc == -1) {
-		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
-	}
 
 	if ((int)tpMailItem != -1) {
+		if (soc == -1) {
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+		}
+
 		// V’…ƒtƒ‰ƒO‚Ìœ‹
 		if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE && op.ClearNewOverlay == 1) {
 			for (i = 0; i < tpMailBox->MailItemCnt; i++) {
