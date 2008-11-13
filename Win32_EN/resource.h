@@ -117,9 +117,11 @@
 #define IDC_VIEWWND_CURSOR              242
 #define IDC_BCCADDRESS                  242
 #define IDC_MSG_DIALOG_TXT              243
+#define IDC_FIND_THISMSG                243
 #define IDC_FIND_NEXT_MESSAGE           244
 #define IDC_FIND_NEXT_MAILBOX           245
-#define IDC_FIND_ALLBOXES               246
+#define IDC_FIND_ALLMSGS                246
+#define IDC_FIND_ALLBOXES               247
 #define IDC_MOVECOPYTEXT                247
 #define IDD_DIALOG_IMPORTSBOX           248
 #define IDC_IMPORT_FILE                 249
@@ -252,12 +254,12 @@
 #define IDC_BUTTON_REPLY                1080
 #define IDC_EDIT_FIND                   1080
 #define IDC_BUTTON_NEW                  1081
-#define IDC_CHECK_CASE                  1081
-#define IDC_CHECK_ALL                   1082
+#define IDC_CHECK_CASE                  1082
 #define IDC_CHECK_SUBJECT               1083
 #define IDC_BUTTON_SETAUTH              1083
 #define IDC_CHECK_POP                   1084
 #define IDC_CHECK_TMPPASS               1085
+#define IDC_TEXT_SEARCH                 1086
 #define IDC_EDIT_SOUND                  1087
 #define IDC_RADIO_OPEN                  1087
 #define IDC_BUTTON_SOUND_BROWS          1088
