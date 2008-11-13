@@ -116,9 +116,11 @@
 #define IDC_VIEWAPP_MSGSRC              241
 #define IDC_BCCADDRESS                  242
 #define IDC_MSG_DIALOG_TXT              243
+#define IDC_FIND_THISMSG                243
 #define IDC_FIND_NEXT_MESSAGE           244
 #define IDC_FIND_NEXT_MAILBOX           245
-#define IDC_FIND_ALLBOXES               246
+#define IDC_FIND_ALLMSGS                246
+#define IDC_FIND_ALLBOXES               247
 #define IDC_MOVECOPYTEXT                247
 #define IDD_DIALOG_IMPORTSBOX           248
 #define IDC_IMPORT_FILE                 249
@@ -261,6 +263,7 @@
 #define IDC_CHECK_POP                   1083
 #define IDC_BUTTON_SETAUTH              1084
 #define IDC_BUTTON_SETSSL               1085
+#define IDC_TEXT_SEARCH                 1086
 #define IDC_CHECK_TMPPASS               1086
 #define IDC_STATIC_MAILCNT              1087
 #define IDC_STATIC_MAILSIZE             1088

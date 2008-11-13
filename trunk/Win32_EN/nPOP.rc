@@ -1054,12 +1054,15 @@ BEGIN
     EDITTEXT        IDC_EDIT_FIND,40,10,152,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,30,60,10
-    CONTROL         "Search &all mail in mailbox",IDC_CHECK_ALL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,44,130,10
-    CONTROL         "Search all mailbo&xes",IDC_FIND_ALLBOXES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,58,130,10
     CONTROL         "Search in &subject",IDC_CHECK_SUBJECT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,72,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,30,90,10
+    LTEXT           "Search:",IDC_TEXT_SEARCH,5,44,25,10
+    CONTROL         "This &message only",IDC_FIND_THISMSG,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,44,130,10
+    CONTROL         "&All messages in mailbox",IDC_FIND_ALLMSGS,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,58,130,10
+    CONTROL         "All mailbo&xes",IDC_FIND_ALLBOXES,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,72,130,10
     LTEXT           "Re&place with:",IDC_REPLACE_LABEL,5,50,43,10
     EDITTEXT        IDC_EDIT_REPLACE,50,48,142,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "&Find next",IDC_FIND,200,10,55,14

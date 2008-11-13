@@ -1750,7 +1750,7 @@ static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int fl
 	if (tpFilter->Header1 != NULL && *tpFilter->Header1 != TEXT('\0')) {
 		match1 = item_filter_check_content(buf, tpFilter->Header1, tpFilter->Content1);
 	}
-	if (match1 == FALSE &&  BoolOp != FILTER_BOOL_OR) {
+	if (match1 == FALSE && BoolOp != FILTER_BOOL_OR) {
 		return RetFlag;
 	}
 	if (tpFilter->Header2 != NULL && *tpFilter->Header2 != TEXT('\0')) {
