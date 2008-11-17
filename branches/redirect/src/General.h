@@ -158,6 +158,7 @@
 #define EDIT_REPLYALL			3
 #define EDIT_FORWARD			4					// Added PHH 4-Oct-2003
 #define EDIT_FILTERFORWARD		5					// Added GJC 5-Jul-2008
+#define EDIT_REDIRECT			6					// Added GJC 15-Nov-2008
 
 #define EDIT_NONEDIT			0					//of transmission mail compilation Return value
 #define EDIT_INSIDEEDIT			1
@@ -270,6 +271,7 @@
 #define HEAD_TO					"To:"
 #define HEAD_CC					"Cc:"
 #define HEAD_BCC				"Bcc:"
+#define HEAD_REDIRECT			"X-Redirect-To:"
 #define HEAD_REPLYTO			"Reply-To:"
 #define HEAD_DATE				"Date:"
 #define HEAD_SIZE				"Content-Length:"
@@ -657,6 +659,7 @@ typedef struct _MAILITEM {
 	TCHAR *To;
 	TCHAR *Cc;
 	TCHAR *Bcc;
+	TCHAR *RedirectTo;
 	TCHAR *Date;
 	TCHAR *FmtDate;
 	TCHAR *Size;

@@ -4791,8 +4791,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *mb_replyto, *mb_autobcc;
-	int len;
-	int i, j, st, mb, cnt, sel;
+	int i, j, st, mb, cnt, sel, len;
 	BOOL BtnFlag, found, ret, ReDoAttachButton = FALSE;
 
 	switch (uMsg) {
@@ -4861,160 +4860,172 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETCURSEL, (mb>=0) ? mb : 0, 0);
 		mb = j;
 
-		// GJC ReplyTo options: global replyto and replyto/address for each mailbox
-		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
-		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
-		cnt = 0;
-		sel = -1;
-		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
-		if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
-			sel = cnt = 1;
-		}
-		// global replyto
-		if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
-			p = op.AltReplyTo;
-			while (*p != TEXT('\0')) {
-				p = str_cpy_f_t(buf, p, TEXT(','));
-				// check that this address isn't a duplicate of one from an account
-				found = FALSE;
-				for (j = 1; j < MailBoxCnt; j++) {
-					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
-						continue;
-					}
-					if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-						if (lstrcmp((MailBox + j)->ReplyTo, buf) == 0) {
-							found = TRUE;
-							break;
-						}
-					} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-						if (lstrcmp((MailBox + j)->MailAddress, buf) == 0) {
-							found = TRUE;
-							break;
-						}
-					}
-				}
-				if (found == FALSE) {
-					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)buf);
-					cnt++;
-				}
+		if (tpMailItem->RedirectTo != NULL) {
+			SendDlgItemMessage(hDlg, IDC_EDIT_TO, WM_SETTEXT, 0, (LPARAM)tpMailItem->RedirectTo);
+			if (tpMailItem->Mark == ICON_SEND) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_MARKSEND, BM_SETCHECK, 1, 0);
 			}
-		}
-		// replyto/address for user mailboxes
-		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			TCHAR *addr_to_match = NULL;
-			if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
-				continue;
+		} else {
+			// GJC ReplyTo options: global replyto and replyto/address for each mailbox
+			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
+			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
+			cnt = 0;
+			sel = -1;
+			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
+			if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
+				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
+				sel = cnt = 1;
 			}
-			if ((MailBox + i)->ReplyTo != NULL && *(MailBox + i)->ReplyTo != TEXT('\0')) {
-				addr_to_match = (MailBox + i)->ReplyTo;
-			} else if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
-				addr_to_match = (MailBox + i)->MailAddress;
-			}
-			// check that this address isn't a duplicate of one from a later account
-			if (addr_to_match != NULL) {
-				found = FALSE;
-				for (j = i+1; j < MailBoxCnt; j++) {
-					if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
-						continue;
-					}
-					if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-						if (lstrcmp((MailBox + j)->ReplyTo, addr_to_match) == 0) {
-							found = TRUE;
-							break;
+			// global replyto
+			if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
+				p = op.AltReplyTo;
+				while (*p != TEXT('\0')) {
+					p = str_cpy_f_t(buf, p, TEXT(','));
+					// check that this address isn't a duplicate of one from an account
+					found = FALSE;
+					for (j = 1; j < MailBoxCnt; j++) {
+						if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+							continue;
 						}
-					} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-						if (lstrcmp((MailBox + j)->MailAddress, addr_to_match) == 0) {
-							found = TRUE;
-							break;
+						if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
+							if (lstrcmp((MailBox + j)->ReplyTo, buf) == 0) {
+								found = TRUE;
+								break;
+							}
+						} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
+							if (lstrcmp((MailBox + j)->MailAddress, buf) == 0) {
+								found = TRUE;
+								break;
+							}
 						}
 					}
-				}
-				if (found == FALSE) {
-					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)addr_to_match);
-					cnt++;
-					// check if this address is the ReplyTo for the selected account
-					if (sel == -1 && mb_replyto != NULL && *mb_replyto != TEXT('\0')
-						&& lstrcmp(mb_replyto, addr_to_match) == 0) {
-						sel = cnt;
+					if (found == FALSE) {
+						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)buf);
+						cnt++;
 					}
 				}
 			}
+			// replyto/address for user mailboxes
+			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+				TCHAR *addr_to_match = NULL;
+				if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+					continue;
+				}
+				if ((MailBox + i)->ReplyTo != NULL && *(MailBox + i)->ReplyTo != TEXT('\0')) {
+					addr_to_match = (MailBox + i)->ReplyTo;
+				} else if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
+					addr_to_match = (MailBox + i)->MailAddress;
+				}
+				// check that this address isn't a duplicate of one from a later account
+				if (addr_to_match != NULL) {
+					found = FALSE;
+					for (j = i+1; j < MailBoxCnt; j++) {
+						if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+							continue;
+						}
+						if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
+							if (lstrcmp((MailBox + j)->ReplyTo, addr_to_match) == 0) {
+								found = TRUE;
+								break;
+							}
+						} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
+							if (lstrcmp((MailBox + j)->MailAddress, addr_to_match) == 0) {
+								found = TRUE;
+								break;
+							}
+						}
+					}
+					if (found == FALSE) {
+						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)addr_to_match);
+						cnt++;
+						// check if this address is the ReplyTo for the selected account
+						if (sel == -1 && mb_replyto != NULL && *mb_replyto != TEXT('\0')
+							&& lstrcmp(mb_replyto, addr_to_match) == 0) {
+							sel = cnt;
+						}
+					}
+				}
+			}
+			sel = (sel < 0) ? 0 : sel;
+			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
+
+			/////////////////////// MRP //////////////////////
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETEXTENDEDUI, TRUE, 0);
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
+
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 1, 0);  // Normal or default
+
+			if (tpMailItem->Priority == 1) {// High
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 0, 0);
+			} else if (tpMailItem->Priority == 5) {// Low
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 2, 0);
+			}
+
+			SendDlgItemMessage(hDlg, IDC_DELIV, BM_SETCHECK, tpMailItem->DeliveryReceipt, 0);
+			SendDlgItemMessage(hDlg, IDC_READ, BM_SETCHECK, tpMailItem->ReadReceipt, 0);
+			//////////////////// ______  //////////////////////////
+
+			if (tpMailItem->To != NULL) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_TO, WM_SETTEXT, 0, (LPARAM)tpMailItem->To);
+			}
+
+			if ((tpMailItem->Cc != NULL && *tpMailItem->Cc != TEXT('\0')) ||
+				(tpMailItem->Bcc != NULL && *tpMailItem->Bcc != TEXT('\0')) ||
+				(mb_autobcc != NULL && *mb_autobcc != TEXT('\0'))) {
+				SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, TRUE);
+			}
+			if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
+				|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) 
+				|| (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) ) {
+				SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_ATTACH), STR_SETSEND_BTN_ATTACH, TRUE);
+			}
+			//of list of file name Quotation
+			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
+				SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, 
+					(tpMailItem->Mark == MARK_REPLYING) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
+			} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
+				// text is selected
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
+				SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
+			} else {
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
+			}
+			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_REPL_SELTEXT) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, (op.AutoAddRecipients == 1) ? 1 : 0, 0);
+			} else {
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
+			}
+			if (tpMailItem->Mark == MARK_FORWARDING) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_SETCHECK, (op.FwdQuotation == 2) ? 1 : 0, 0);
+			} else {
+				ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ATT_MSG), SW_HIDE);
+			}
+
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_MARKSEND), SW_HIDE);
 		}
-		sel = (sel < 0) ? 0 : sel;
-		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
-
-		/////////////////////// MRP //////////////////////
-		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETEXTENDEDUI, TRUE, 0);
-		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
-		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
-		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
-
-		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 1, 0);  // Normal or default
-
-		if (tpMailItem->Priority == 1) {// High
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 0, 0);
-		} else if (tpMailItem->Priority == 5) {// Low
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 2, 0);
-		}
-
-		SendDlgItemMessage(hDlg, IDC_DEL, BM_SETCHECK, tpMailItem->DeliveryReceipt, 0);
-		SendDlgItemMessage(hDlg, IDC_READ, BM_SETCHECK, tpMailItem->ReadReceipt, 0);
-		//////////////////// ______  //////////////////////////
-
-		if (tpMailItem->To != NULL) {
-			SendDlgItemMessage(hDlg, IDC_EDIT_TO, WM_SETTEXT, 0, (LPARAM)tpMailItem->To);
-		}
-
 		if (tpMailItem->Subject != NULL) {
 			SendDlgItemMessage(hDlg, IDC_EDIT_TITLE, WM_SETTEXT, 0, (LPARAM)tpMailItem->Subject);
 		}
 
-		if ((tpMailItem->Cc != NULL && *tpMailItem->Cc != TEXT('\0')) ||
-			(tpMailItem->Bcc != NULL && *tpMailItem->Bcc != TEXT('\0')) ||
-			(mb_autobcc != NULL && *mb_autobcc != TEXT('\0'))) {
-			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, TRUE);
-		}
-		if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
-			|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) 
-			|| (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) ) {
-			SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_ATTACH), STR_SETSEND_BTN_ATTACH, TRUE);
-		}
-		//of list of file name Quotation
-		if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
-			SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_SETCHECK, 
-				(tpMailItem->Mark == MARK_REPLYING) ? op.AutoQuotation : ((op.FwdQuotation == 2) ? 0 : 1), 0);
-		} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
-			// text is selected
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
-			SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_SETCHECK, BST_INDETERMINATE, 0);
-		} else {
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), SW_HIDE);
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), SW_HIDE);
-		}
-		if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_REPL_SELTEXT) {
-			SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_SETCHECK, (op.AutoAddRecipients == 1) ? 1 : 0, 0);
-		} else {
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ADD_RECIP), SW_HIDE);
-		}
-		if (tpMailItem->Mark == MARK_FORWARDING) {
-			SendDlgItemMessage(hDlg, IDC_CHECK_ATT_MSG, BM_SETCHECK, (op.FwdQuotation == 2) ? 1 : 0, 0);
-		} else {
-			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_ATT_MSG), SW_HIDE);
-		}
-
 		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SMTP), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_REPLYTO), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_PRIORITY), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_DEL), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_READ), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_TO), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_TO), 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_TITLE), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), 0);
+			if (tpMailItem->RedirectTo != NULL) {
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MARKSEND), 0);
+			} else {
+				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_REPLYTO), 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_PRIORITY), 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_DELIV), 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_READ), 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_QUOTATION), 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_QUOT_3ST), 0);
+			}
 		}
 
 		*(tpSendMailIList + 1) = tpTmpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
@@ -5024,56 +5035,60 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, FALSE);
 			break;
 		}
-		tpTmpMailItem->Cc = alloc_copy_t(tpMailItem->Cc);
-		tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
-		if (tpMailItem->MailStatus != ICON_SENTMAIL &&
-			mb_autobcc != NULL && *mb_autobcc != TEXT('\0')) {
-			if (tpTmpMailItem->Bcc == NULL) {
-				tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
-			} else {
-				TCHAR *tmp;
-				BOOL found = FALSE;
-				p = tpTmpMailItem->Bcc;
-				len = lstrlen(p) + 1;
-				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-				while (tmp != NULL && *p != TEXT('\0')) {
-					p = str_cpy_f_t(tmp, p, TEXT(','));
-					if (lstrcmp(mb_autobcc, tmp) == 0) {
-						found = TRUE;
-						break;
-					}
-				}
-				mem_free(&tmp);
-				if (found == FALSE) {
-					len += lstrlen(mb_autobcc) + 2; // ", "
-					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-					if (tmp != NULL) {
-						wsprintf(tmp, TEXT("%s, %s"), tpTmpMailItem->Bcc, mb_autobcc);
-						mem_free(&tpTmpMailItem->Bcc);
-						tpTmpMailItem->Bcc = tmp;
-					}
-				}
-			}
-		}
-		tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
-		if (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) {
-			// GJC forward entire message as attachment
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * 2);
-			if (p != NULL) {
-				tpTmpMailItem->FwdAttach = p;
-				*(p++) = ATTACH_SEP;
-				*(p++) = TEXT('\0');
-			}
+		if (tpMailItem->RedirectTo != NULL) {
+			tpTmpMailItem->RedirectTo = alloc_copy_t(tpMailItem->RedirectTo);
 		} else {
-			tpTmpMailItem->FwdAttach = alloc_copy_t(tpMailItem->FwdAttach);
+			tpTmpMailItem->Cc = alloc_copy_t(tpMailItem->Cc);
+			tpTmpMailItem->Bcc = alloc_copy_t(tpMailItem->Bcc);
+			if (tpMailItem->MailStatus != ICON_SENTMAIL &&
+				mb_autobcc != NULL && *mb_autobcc != TEXT('\0')) {
+				if (tpTmpMailItem->Bcc == NULL) {
+					tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
+				} else {
+					TCHAR *tmp;
+					BOOL found = FALSE;
+					p = tpTmpMailItem->Bcc;
+					len = lstrlen(p) + 1;
+					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					while (tmp != NULL && *p != TEXT('\0')) {
+						p = str_cpy_f_t(tmp, p, TEXT(','));
+						if (lstrcmp(mb_autobcc, tmp) == 0) {
+							found = TRUE;
+							break;
+						}
+					}
+					mem_free(&tmp);
+					if (found == FALSE) {
+						len += lstrlen(mb_autobcc) + 2; // ", "
+						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						if (tmp != NULL) {
+							wsprintf(tmp, TEXT("%s, %s"), tpTmpMailItem->Bcc, mb_autobcc);
+							mem_free(&tpTmpMailItem->Bcc);
+							tpTmpMailItem->Bcc = tmp;
+						}
+					}
+				}
+			}
+			tpTmpMailItem->Attach = alloc_copy_t(tpMailItem->Attach);
+			if (tpMailItem->Mark == MARK_FORWARDING && op.FwdQuotation == 2) {
+				// GJC forward entire message as attachment
+				p = (TCHAR *)mem_alloc(sizeof(TCHAR) * 2);
+				if (p != NULL) {
+					tpTmpMailItem->FwdAttach = p;
+					*(p++) = ATTACH_SEP;
+					*(p++) = TEXT('\0');
+				}
+			} else {
+				tpTmpMailItem->FwdAttach = alloc_copy_t(tpMailItem->FwdAttach);
+			}
+			tpTmpMailItem->AttachSize = tpMailItem->AttachSize;
+			tpTmpMailItem->ReplyTo = alloc_copy_t(tpMailItem->ReplyTo);
+			tpTmpMailItem->DefReplyTo = tpMailItem->DefReplyTo;
+			tpTmpMailItem->References = alloc_copy_t(tpMailItem->References);
+			tpTmpMailItem->MailStatus = tpMailItem->MailStatus;
+			tpTmpMailItem->Mark = tpMailItem->Mark;
+			tpTmpMailItem->No = mb; // hack
 		}
-		tpTmpMailItem->AttachSize = tpMailItem->AttachSize;
-		tpTmpMailItem->ReplyTo = alloc_copy_t(tpMailItem->ReplyTo);
-		tpTmpMailItem->DefReplyTo = tpMailItem->DefReplyTo;
-		tpTmpMailItem->References = alloc_copy_t(tpMailItem->References);
-		tpTmpMailItem->MailStatus = tpMailItem->MailStatus;
-		tpTmpMailItem->Mark = tpMailItem->Mark;
-		tpTmpMailItem->No = mb; // hack
 		SetEditToSubClass(GetDlgItem(hDlg, IDC_EDIT_TO), FALSE);
 #ifdef _WIN32_WCE_PPC
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_TITLE),
@@ -5222,6 +5237,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				tpTmpMailItem = *(tpSendMailIList + 1);
 				if (tpTmpMailItem == NULL) {
 					EndDialog(hDlg, FALSE);
+					break;
+				}
+				if (tpTmpMailItem->RedirectTo != NULL) {
 					break;
 				}
 				i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
@@ -5407,133 +5425,145 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 
-			//of type dependence letter ? ? ? ? ?
+			//Account mailbox to send from
 			mem_free(&tpMailItem->MailBox);
 			tpMailItem->MailBox = NULL;
-			i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
-			if (i != CB_ERR) {
-				int real=0, sbox=0;
-				// smtp drop-down only has "real" accounts, increment i by the number of saveboxes below it
-				i += MAILBOX_USER;
-				for (j = MAILBOX_USER; j < MailBoxCnt && real < i; j++) {
-					if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
-						sbox++;
-					} else {
-						real++;
-					}
-				}
-				i += sbox;
-			}
-			if (i != CB_ERR && (MailBox + i)->Name != NULL) {
-				tpMailItem->MailBox = alloc_copy_t((MailBox + i)->Name);
-
-				mem_free(&tpMailItem->From);
-				tpMailItem->From = NULL;
-				if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
-					len = lstrlen(TEXT(" <>"));
-					if ((MailBox + i)->UserName != NULL) {
-						len += lstrlen((MailBox + i)->UserName);
-					}
-					len += lstrlen((MailBox + i)->MailAddress);
-					tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-					if (tpMailItem->From != NULL) {
-						p = tpMailItem->From;
-						if ((MailBox + i)->UserName != NULL && *(MailBox + i)->UserName != TEXT('\0')) {
-							p = str_join_t(p, (MailBox + i)->UserName, TEXT(" "), (TCHAR *)-1);
-						}
-						str_join_t(p, TEXT("<"), (MailBox + i)->MailAddress, TEXT(">"), (TCHAR *)-1);
-					}
-				}
-			}
-
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-			mem_free(&tpTmpMailItem->ReplyTo);
-			if (buf[0] != TEXT('\0') && lstrcmp(buf, STR_OMIT_REPLYTO) != 0) {
-				tpTmpMailItem->ReplyTo = alloc_copy_t(buf);
-			} else {
-				tpTmpMailItem->ReplyTo = NULL;
-			}
-
-			////////////////////////// MRP //////////////////////
-			// Get my new settings here and set them into :
-			// tpMailItem->Priority (int)
-			// tpMailItem->ReadReceipt (int - 1 = yes, 0 = No)
-			// tpMailItem->DeliveryReceipt (int - 1 = yes, 0 = No)
-			i = SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_GETCURSEL, 0, 0);
-			if (i == 0)	{
-				tpMailItem->Priority = 1;
-			} else if (i == 1) {
-				tpMailItem->Priority = 3;
-			} else if (i == 2) {
-				tpMailItem->Priority = 5;
-			}
-
-			tpMailItem->ReadReceipt = SendDlgItemMessage(hDlg, IDC_READ, BM_GETCHECK, 0, 0);
-			tpMailItem->DeliveryReceipt = SendDlgItemMessage(hDlg, IDC_DEL, BM_GETCHECK, 0, 0);
-			////////////////////////// --- ////////////////////////
-
-			//Address
-			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TO), &tpMailItem->To);
-			if (tpMailItem->To != NULL) {
-				delete_ctrl_char(tpMailItem->To);
-			}
-			// Œ–¼
-			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TITLE), &tpMailItem->Subject);
-			if (tpMailItem->Subject != NULL) {
-				delete_ctrl_char(tpMailItem->Subject);
-			}
-			if (tpTmpMailItem != NULL) {
-				mem_free(&tpMailItem->Cc);
-				mem_free(&tpMailItem->Bcc);
-				mem_free(&tpMailItem->Attach);
-				mem_free(&tpMailItem->FwdAttach);
-				mem_free(&tpMailItem->ReplyTo);
-
-				// Cc
-				tpMailItem->Cc = alloc_copy_t(tpTmpMailItem->Cc);
-				// Bcc
-				tpMailItem->Bcc = alloc_copy_t(tpTmpMailItem->Bcc);
-				// Attach
-				tpMailItem->Attach = alloc_copy_t(tpTmpMailItem->Attach);
-				tpMailItem->FwdAttach = alloc_copy_t(tpTmpMailItem->FwdAttach);
-				tpMailItem->AttachSize = tpTmpMailItem->AttachSize;
-				if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
-					|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) ) {
-					tpMailItem->Multipart = MULTIPART_ATTACH;
+			if (tpMailItem->RedirectTo != NULL) {
+				AllocGetText(GetDlgItem(hDlg, IDC_COMBO_SMTP), &tpMailItem->MailBox);
+				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TO), &tpMailItem->RedirectTo);
+				if (tpMailItem->RedirectTo == NULL) {
+					tpMailItem->RedirectTo = alloc_copy_t(TEXT(""));
 				} else {
-					tpMailItem->Multipart = MULTIPART_NONE;
+					delete_ctrl_char(tpMailItem->RedirectTo);
 				}
-				if (SelBox == MAILBOX_SEND) {
-					HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-					i = ListView_GetMemToItem(hListView, tpMailItem);
-					if (i != -1) {
-						st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
-						ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(st), LVIS_STATEIMAGEMASK)
-						ListView_RedrawItems(hListView, i, i);
-						UpdateWindow(hListView);
+				tpMailItem->Mark = SendDlgItemMessage(hDlg, IDC_CHECK_MARKSEND, BM_GETCHECK, 0, 0) ? ICON_SEND : ICON_NON;
+				item_free(&tpTmpMailItem, 1);
+			} else {
+				i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
+				if (i != CB_ERR) {
+					int real=0, sbox=0;
+					// smtp drop-down only has "real" accounts, increment i by the number of saveboxes below it
+					i += MAILBOX_USER;
+					for (j = MAILBOX_USER; j < MailBoxCnt && real < i; j++) {
+						if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
+							sbox++;
+						} else {
+							real++;
+						}
+					}
+					i += sbox;
+				}
+				if (i != CB_ERR && (MailBox + i)->Name != NULL) {
+					tpMailItem->MailBox = alloc_copy_t((MailBox + i)->Name);
+
+					mem_free(&tpMailItem->From);
+					tpMailItem->From = NULL;
+					if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
+						len = lstrlen(TEXT(" <>"));
+						if ((MailBox + i)->UserName != NULL) {
+							len += lstrlen((MailBox + i)->UserName);
+						}
+						len += lstrlen((MailBox + i)->MailAddress);
+						tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+						if (tpMailItem->From != NULL) {
+							p = tpMailItem->From;
+							if ((MailBox + i)->UserName != NULL && *(MailBox + i)->UserName != TEXT('\0')) {
+								p = str_join_t(p, (MailBox + i)->UserName, TEXT(" "), (TCHAR *)-1);
+							}
+							str_join_t(p, TEXT("<"), (MailBox + i)->MailAddress, TEXT(">"), (TCHAR *)-1);
+						}
 					}
 				}
-				// ReplyTo
-				tpMailItem->ReplyTo = alloc_copy_t(tpTmpMailItem->ReplyTo);
-				tpMailItem->DefReplyTo = tpTmpMailItem->DefReplyTo;
-				
-				item_free(&tpTmpMailItem, 1);
-			}
-			if (tpMailItem->Mark == MARK_REPLYING
-				&& SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_GETCHECK, 0, 0)) {
-				addr_list_add(tpMailItem->To);
-				addr_list_add(tpMailItem->Cc);
-				addr_list_add(tpMailItem->Bcc);
-			}
 
-			//Quotation -- on exit from this dialog, ->Mark is 0, 1, or 2
-			// 0: no quoting
-			// 1: quote full message (reply or forward)
-			// 2: quote selected text
-			if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
-				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
-			} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
-				tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+				mem_free(&tpTmpMailItem->ReplyTo);
+				if (buf[0] != TEXT('\0') && lstrcmp(buf, STR_OMIT_REPLYTO) != 0) {
+					tpTmpMailItem->ReplyTo = alloc_copy_t(buf);
+				} else {
+					tpTmpMailItem->ReplyTo = NULL;
+				}
+
+				////////////////////////// MRP //////////////////////
+				// Get my new settings here and set them into :
+				// tpMailItem->Priority (int)
+				// tpMailItem->ReadReceipt (int - 1 = yes, 0 = No)
+				// tpMailItem->DeliveryReceipt (int - 1 = yes, 0 = No)
+				i = SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_GETCURSEL, 0, 0);
+				if (i == 0)	{
+					tpMailItem->Priority = 1;
+				} else if (i == 1) {
+					tpMailItem->Priority = 3;
+				} else if (i == 2) {
+					tpMailItem->Priority = 5;
+				}
+
+				tpMailItem->ReadReceipt = SendDlgItemMessage(hDlg, IDC_READ, BM_GETCHECK, 0, 0);
+				tpMailItem->DeliveryReceipt = SendDlgItemMessage(hDlg, IDC_DELIV, BM_GETCHECK, 0, 0);
+				////////////////////////// --- ////////////////////////
+
+				//Address
+				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TO), &tpMailItem->To);
+				if (tpMailItem->To != NULL) {
+					delete_ctrl_char(tpMailItem->To);
+				}
+				// Œ–¼
+				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TITLE), &tpMailItem->Subject);
+				if (tpMailItem->Subject != NULL) {
+					delete_ctrl_char(tpMailItem->Subject);
+				}
+				if (tpTmpMailItem != NULL) {
+					mem_free(&tpMailItem->Cc);
+					mem_free(&tpMailItem->Bcc);
+					mem_free(&tpMailItem->Attach);
+					mem_free(&tpMailItem->FwdAttach);
+					mem_free(&tpMailItem->ReplyTo);
+
+					// Cc
+					tpMailItem->Cc = alloc_copy_t(tpTmpMailItem->Cc);
+					// Bcc
+					tpMailItem->Bcc = alloc_copy_t(tpTmpMailItem->Bcc);
+					// Attach
+					tpMailItem->Attach = alloc_copy_t(tpTmpMailItem->Attach);
+					tpMailItem->FwdAttach = alloc_copy_t(tpTmpMailItem->FwdAttach);
+					tpMailItem->AttachSize = tpTmpMailItem->AttachSize;
+					if ( (tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) 
+						|| (tpMailItem->FwdAttach != NULL && *tpMailItem->FwdAttach != TEXT('\0')) ) {
+						tpMailItem->Multipart = MULTIPART_ATTACH;
+					} else {
+						tpMailItem->Multipart = MULTIPART_NONE;
+					}
+					if (SelBox == MAILBOX_SEND) {
+						HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
+						i = ListView_GetMemToItem(hListView, tpMailItem);
+						if (i != -1) {
+							st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
+							ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(st), LVIS_STATEIMAGEMASK)
+							ListView_RedrawItems(hListView, i, i);
+							UpdateWindow(hListView);
+						}
+					}
+					// ReplyTo
+					tpMailItem->ReplyTo = alloc_copy_t(tpTmpMailItem->ReplyTo);
+					tpMailItem->DefReplyTo = tpTmpMailItem->DefReplyTo;
+				
+					item_free(&tpTmpMailItem, 1);
+				}
+				if (tpMailItem->Mark == MARK_REPLYING
+					&& SendDlgItemMessage(hDlg, IDC_CHECK_ADD_RECIP, BM_GETCHECK, 0, 0)) {
+					addr_list_add(tpMailItem->To);
+					addr_list_add(tpMailItem->Cc);
+					addr_list_add(tpMailItem->Bcc);
+				}
+
+				//Quotation -- on exit from this dialog, ->Mark is 0, 1, or 2
+				// 0: no quoting
+				// 1: quote full message (reply or forward)
+				// 2: quote selected text
+				if (tpMailItem->Mark == MARK_REPLYING || tpMailItem->Mark == MARK_FORWARDING) {
+					tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOTATION, BM_GETCHECK, 0, 0);
+				} else if (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT) {
+					tpMailItem->Mark = (char)SendDlgItemMessage(hDlg, IDC_CHECK_QUOT_3ST, BM_GETCHECK, 0, 0);
+				}
 			}
 			mem_free((void **)&tpSendMailIList);
 			EndDialog(hDlg, TRUE);

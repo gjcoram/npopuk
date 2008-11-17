@@ -626,9 +626,9 @@ BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach) {
 #endif // _WIN32_WCE_PPC
 #else
 			InsertMenu(vMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,
-				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX);
+				(UINT)vCOPYFLY, STR_LIST_MENU_COPYSBOX1);
 			InsertMenu(vMenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
-				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX);
+				(UINT)vMOVEFLY, STR_LIST_MENU_MOVESBOX1);
 #endif // _WIN32_WCE
 			vMenuDone = vMenu;
 		}
@@ -733,9 +733,10 @@ void mailbox_select(HWND hWnd, int Sel)
 	hMenu = GetSubMenu(GetMenu(MainWnd), MailMenuPos);
 #endif
 
-	//of menu Item of the mark is deleted to reply and one for reception the
+	// Delete entries and rebuild appropriate to SendBox or not
 	DeleteMenu(hMenu, ID_MENUITEM_REMESSEGE, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_ALLREMESSEGE, MF_BYCOMMAND);
+	DeleteMenu(hMenu, ID_MENUITEM_REDIRECT, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_DOWNMARK, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_DELMARK, MF_BYCOMMAND);
 	DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
@@ -791,8 +792,9 @@ void mailbox_select(HWND hWnd, int Sel)
 			InsertMenu(hMenu, ID_MENUITEM_UNMARK, MF_STRING,
 				ID_MENUITEM_DELMARK, STR_LIST_MENU_DELMARK);
 		}
-
 #endif
+		InsertMenu(hMenu, 4, MF_BYPOSITION | MF_STRING,
+			ID_MENUITEM_REDIRECT, STR_LIST_MENU_REDIRECT);
 		InsertMenu(hMenu, ID_MENUITEM_DELETE, MF_STRING,
 			ID_MENUITEM_DELATTACH, STR_LIST_MENU_DELATTACH);
 		lvc.pszText = STR_LIST_LVHEAD_FROM;

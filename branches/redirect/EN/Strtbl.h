@@ -191,6 +191,7 @@
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
 #define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
+#define STR_MSG_BYWAYOF				TEXT("%s (by way of %s)")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -292,14 +293,17 @@
 #define STR_LIST_MENU_SENDINFO		TEXT("&Property...")
 #define STR_LIST_MENU_REPLY			TEXT("&Reply...\tCtrl+R")
 #define STR_LIST_MENU_REPLYALL		TEXT("Repl&y to all...\tCtrl+Alt+R")
+#define STR_LIST_MENU_REDIRECT		TEXT("Red&irect...")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark to send\tCtrl+D")
-#define STR_LIST_MENU_DELMARK		TEXT("&Mark to delete\tCtrl+Del")
+#define STR_LIST_MENU_DELMARK		TEXT("Mark to &delete\tCtrl+Del")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark to download\tCtrl+D")
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
-#define STR_LIST_MENU_COPYSBOX		TEXT("&Copy to")
-#define STR_LIST_MENU_MOVESBOX		TEXT("&Move to")
+#define STR_LIST_MENU_COPYSBOX		TEXT("C&opy to")
+#define STR_LIST_MENU_MOVESBOX		TEXT("Mo&ve to")
+#define STR_LIST_MENU_COPYSBOX1		TEXT("&Copy to")
+#define STR_LIST_MENU_MOVESBOX1		TEXT("&Move to")
 #define STR_LIST_MENU_NEW			TEXT("(New)")
 
 // Mail view
@@ -445,8 +449,6 @@
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark to download")
 #define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
-#define STR_LIST_PPCMENU_SAVEBOXCOPY	TEXT("Copy to &Savebox")
-#define STR_LIST_PPCMENU_SAVEBOXMOVE	TEXT("Move to &Savebox")
 
 #ifdef _WIN32_WCE_PPC
 #define STR_TITLE_SMTPAUTH			TEXT("SMTP-AUTH")

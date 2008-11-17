@@ -560,7 +560,14 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 
 		//of subject When the sender (transmission box it is, addressee)
 		case 1:
-			p = (MAILBOX_SEND == SelBox) ? tpMailItem->To : tpMailItem->From;
+			if (MAILBOX_SEND == SelBox) {
+				if (tpMailItem->RedirectTo != NULL)
+					p = tpMailItem->RedirectTo;
+				else
+					p = tpMailItem->To;
+			} else {
+				p = tpMailItem->From;
+			}
 			break;
 
 		//Date
