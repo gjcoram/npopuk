@@ -129,6 +129,7 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	return TRUE;
 }
 
@@ -306,6 +307,7 @@ void item_free(MAILITEM **tpMailItem, int cnt)
 		mem_free(&(*(tpMailItem + i))->To);
 		mem_free(&(*(tpMailItem + i))->Cc);
 		mem_free(&(*(tpMailItem + i))->Bcc);
+		mem_free(&(*(tpMailItem + i))->RedirectTo);
 		mem_free(&(*(tpMailItem + i))->Date);
 		mem_free(&(*(tpMailItem + i))->FmtDate);
 		mem_free(&(*(tpMailItem + i))->Size);
@@ -1121,6 +1123,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	item_get_content_t(buf, HEAD_TO, &tpMailItem->To);
 	item_get_content_t(buf, HEAD_CC, &tpMailItem->Cc);
 	item_get_content_t(buf, HEAD_BCC, &tpMailItem->Bcc);
+	item_get_content_t(buf, HEAD_REDIRECT, &tpMailItem->RedirectTo);
 	item_get_content_t(buf, HEAD_DATE, &tpMailItem->Date);
 	if (tpMailItem->Date != NULL && *tpMailItem->Date != TEXT('\0')) {
 #ifdef UNICODE
@@ -1429,6 +1432,7 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 	len += item_save_header_size(TEXT(HEAD_TO), tpMailItem->To);
 	len += item_save_header_size(TEXT(HEAD_CC), tpMailItem->Cc);
 	len += item_save_header_size(TEXT(HEAD_BCC), tpMailItem->Bcc);
+	len += item_save_header_size(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo);
 	len += item_save_header_size(TEXT(HEAD_DATE), tpMailItem->Date);
 	// don't save tpMailItem->FmtDate
 	len += item_save_header_size(TEXT(HEAD_SUBJECT), tpMailItem->Subject);
@@ -1531,6 +1535,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 	p = item_save_header(TEXT(HEAD_TO), tpMailItem->To, p);
 	p = item_save_header(TEXT(HEAD_CC), tpMailItem->Cc, p);
 	p = item_save_header(TEXT(HEAD_BCC), tpMailItem->Bcc, p);
+	p =	item_save_header(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo, p);
 	p = item_save_header(TEXT(HEAD_DATE), tpMailItem->Date, p);
 	// don't save tpMailItem->FmtDate
 	p = item_save_header(TEXT(HEAD_SUBJECT), tpMailItem->Subject, p);

@@ -536,42 +536,59 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	char **enc_att = NULL;
 	int len, enc, num_att;
 
-	// From
-	mem_free(&tpMailItem->From);
-	tpMailItem->From = NULL;
 	if (send_mail_box->UseReplyToForFrom == 1
 		&& tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
 		FromAddress = tpMailItem->ReplyTo;
 	} else {
 		FromAddress = send_mail_box->MailAddress;
 	}
-	if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
-		len = lstrlen(TEXT(" <>"));
-		p = NULL;
-		// ユーザ名の設定
-		if (send_mail_box->UserName != NULL) {
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(send_mail_box->UserName) + 1));
-			if (p != NULL) {
-				SetUserName(send_mail_box->UserName, p);
-				len += lstrlen(p);
-			}
+	if (tpMailItem->RedirectTo != NULL) {
+		if (FromAddress == NULL) {
+			FromAddress = "??";
 		}
-		len += lstrlen(FromAddress);
-
-		// Fromの作成と送信
-		tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-		if (tpMailItem->From != NULL) {
-			r = tpMailItem->From;
-			if (p != NULL && *p != TEXT('\0')) {
-				r = str_join_t(r, p, TEXT(" "), (TCHAR *)-1);
-			}
-
-			str_join_t(r, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
-			if (send_mime_header(soc, tpMailItem, TEXT(HEAD_FROM), tpMailItem->From, TRUE, ErrStr) == FALSE) {
-				return FALSE;
-			}
+		len = lstrlen(tpMailItem->From) + lstrlen(STR_MSG_BYWAYOF) + lstrlen(FromAddress);
+		p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		if (p == NULL) {
+			return FALSE;
 		}
-		mem_free(&p);
+		wsprintf(p, STR_MSG_BYWAYOF, tpMailItem->From, FromAddress);
+		mem_free(&tpMailItem->From);
+		tpMailItem->From = p;
+	} else {
+		mem_free(&tpMailItem->From);
+		tpMailItem->From = NULL;
+
+		if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
+			len = lstrlen(TEXT(" <>"));
+			p = NULL;
+			// ユーザ名の設定
+			if (send_mail_box->UserName != NULL) {
+				p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(send_mail_box->UserName) + 1));
+				if (p != NULL) {
+					SetUserName(send_mail_box->UserName, p);
+					len += lstrlen(p);
+				}
+			}
+			len += lstrlen(FromAddress);
+
+			// Fromの作成と送信
+			tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+			if (tpMailItem->From != NULL) {
+				r = tpMailItem->From;
+				if (p != NULL && *p != TEXT('\0')) {
+					r = str_join_t(r, p, TEXT(" "), (TCHAR *)-1);
+				}
+
+				str_join_t(r, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
+			}
+			mem_free(&p);
+		}
+	}
+	// From
+	if (tpMailItem->From != NULL) {
+		if (send_mime_header(soc, tpMailItem, TEXT(HEAD_FROM), tpMailItem->From, TRUE, ErrStr) == FALSE) {
+			return FALSE;
+		}
 	}
 	// To
 	if (send_mime_header(soc, tpMailItem, TEXT(HEAD_TO), tpMailItem->To, TRUE, ErrStr) == FALSE) {
@@ -660,23 +677,9 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			return FALSE;
 		}
 	}
-	// 添付ファイルがある場合はマルチパートで送信する
-	switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, 
-								ctype, enc_type, &mctypr, send_body, &mbody, &num_att, &enc_att)) {
-	case MP_ERROR_FILE:
-		mem_free(&send_body);
-		send_body = NULL;
-		lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
-		return FALSE;
 
-	case MP_ERROR_ALLOC:
-		mem_free(&send_body);
-		send_body = NULL;
-		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
-		return FALSE;
-
-	case MP_NO_ATTACH:
-		// Content-Type
+	if (tpMailItem->RedirectTo != NULL) {
+		// Content-Type - determined by original message
 		if (send_header(soc, HEAD_CONTENTTYPE, ctype, ErrStr) == FALSE) {
 			mem_free(&send_body);
 			send_body = NULL;
@@ -688,119 +691,149 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			send_body = NULL;
 			return FALSE;
 		}
-		break;
-
-	case MP_ATTACH:
-		mem_free(&send_body);
-		send_body = mbody;
-		// Content-Type
-		if (send_header(soc, HEAD_CONTENTTYPE, mctypr, ErrStr) == FALSE) {
+	} else {
+		switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, 
+								ctype, enc_type, &mctypr, send_body, &mbody, &num_att, &enc_att)) {
+		case MP_ERROR_FILE:
 			mem_free(&send_body);
 			send_body = NULL;
+			lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
+			return FALSE;
+
+		case MP_ERROR_ALLOC:
+			mem_free(&send_body);
+			send_body = NULL;
+			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+			return FALSE;
+
+		case MP_NO_ATTACH:
+			// Content-Type
+			if (send_header(soc, HEAD_CONTENTTYPE, ctype, ErrStr) == FALSE) {
+				mem_free(&send_body);
+				send_body = NULL;
+				return FALSE;
+			}
+			// Content-Transfer-Encoding
+			if (send_header(soc, HEAD_ENCODING, enc_type, ErrStr) == FALSE) {
+				mem_free(&send_body);
+				send_body = NULL;
+				return FALSE;
+			}
+			break;
+
+		case MP_ATTACH:
+			mem_free(&send_body);
+			send_body = mbody;
+			// Content-Type
+			if (send_header(soc, HEAD_CONTENTTYPE, mctypr, ErrStr) == FALSE) {
+				mem_free(&send_body);
+				send_body = NULL;
+				mem_free(&mctypr);
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}
 			mem_free(&mctypr);
+			break;
+		}
+
+		////////////////////// MRP ////////////////////
+		// this is where the Priority and receipts go.
+		if (tpMailItem->Priority == 1) {
+			if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+
+			if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), HIGH_PRIORITY, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+		} else if (tpMailItem->Priority == 5) {
+			if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+
+			if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), LOW_PRIORITY, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+		} // else if (tpMailItem->Priority == 3) don't bother sending it
+
+		// delivery receipt
+		if (tpMailItem->DeliveryReceipt == 1) {
+			if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+		}
+
+		// read receipt
+		if (tpMailItem->ReadReceipt == 1) {
+			if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+	
+			if(send_header_t(soc, TEXT(HEAD_READ2), tpMailItem->From, ErrStr) == FALSE){
+				mem_free(&send_body);
+				send_body = NULL;
+#ifndef WSAASYNC
+				encatt_free(&enc_att, num_att);
+#endif
+				return FALSE;
+			}	
+		}
+		////////////////////// ---- //////////////////
+
+		// X-Mailer
+		if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
+			mem_free(&send_body);
+			send_body = NULL;
 #ifndef WSAASYNC
 			encatt_free(&enc_att, num_att);
 #endif
 			return FALSE;
 		}
-		mem_free(&mctypr);
-		break;
 	}
 
-	////////////////////// MRP ////////////////////
-	// this is where the Priority and receipts go.
-	if (tpMailItem->Priority == 1) {
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER1, ErrStr) == FALSE){
+	if (tpMailItem->RedirectTo == NULL || tpMailItem->HasHeader == 0) {
+		// blank line - end of headers
+		if (send_buf(soc, "\r\n") == -1) {
 			mem_free(&send_body);
 			send_body = NULL;
 #ifndef WSAASYNC
 			encatt_free(&enc_att, num_att);
 #endif
+			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 			return FALSE;
-		}	
-
-		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), HIGH_PRIORITY, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-	} else if (tpMailItem->Priority == 5) {
-		if(send_header_t(soc, TEXT(HEAD_X_PRIORITY), PRIORITY_NUMBER5, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-
-		if(send_header_t(soc, TEXT(HEAD_IMPORTANCE), LOW_PRIORITY, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-	} // else if (tpMailItem->Priority == 3) don't bother sending it
-
-	// delivery receipt
-	if (tpMailItem->DeliveryReceipt == 1)
-	{
-		if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-	}
-
-	// read receipt
-	if (tpMailItem->ReadReceipt == 1)
-	{
-		if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-	
-		if(send_header_t(soc, TEXT(HEAD_READ2), tpMailItem->From, ErrStr) == FALSE){
-			mem_free(&send_body);
-			send_body = NULL;
-#ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
-#endif
-			return FALSE;
-		}	
-	}
-	////////////////////// ---- //////////////////
-
-	// X-Mailer
-	if (send_header_t(soc, TEXT(HEAD_X_MAILER), APP_NAME, ErrStr) == FALSE) {
-		mem_free(&send_body);
-		send_body = NULL;
-#ifndef WSAASYNC
-		encatt_free(&enc_att, num_att);
-#endif
-		return FALSE;
-	}
-	// ヘッダと本文の区切り
-	if (send_buf(soc, "\r\n") == -1) {
-		mem_free(&send_body);
-		send_body = NULL;
-#ifndef WSAASYNC
-		encatt_free(&enc_att, num_att);
-#endif
-		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
-		return FALSE;
+		}
 	}
 
 #ifdef WSAASYNC
@@ -1223,15 +1256,19 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
-		if (tpMailItem->To == NULL) {
-			// 宛先未設定
-			lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
-			return FALSE;
+		if (tpMailItem->RedirectTo != NULL) {
+			To = tpMailItem->RedirectTo;
+			Cc = NULL;
+			Bcc = NULL;
+		} else {
+			if (tpMailItem->To == NULL) {
+				lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
+				return FALSE;
+			}
+			To = tpMailItem->To;
+			Cc = tpMailItem->Cc;
+			Bcc = tpMailItem->Bcc;
 		}
-		// 宛先設定
-		To = tpMailItem->To;
-		Cc = tpMailItem->Cc;
-		Bcc = tpMailItem->Bcc;
 		command_status = SMTP_RCPTTO;
 		return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
 

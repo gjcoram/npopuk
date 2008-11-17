@@ -255,7 +255,8 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	TCHAR *subject;
 	TCHAR *strPrefix;
 	int len = 0;
-	BOOL is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD;
+	BOOL is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD
+		|| ReplyFlag == EDIT_REDIRECT;
 
 	if (rebox != MAILBOX_SEND && (MailBox + rebox)->Type != MAILBOX_TYPE_SAVE) {
 		tpMailItem->MailBox = alloc_copy_t((MailBox + rebox)->Name);
@@ -272,6 +273,9 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		if (rebox == MAILBOX_SEND) {
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
+		} else if (ReplyFlag == EDIT_REDIRECT) {
+			tpMailItem->Subject = alloc_copy_t(tpReMailItem->Subject);
+			tpMailItem->Body = alloc_copy_t(tpReMailItem->Body);
 		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
 			// forward as attachment
 			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
@@ -376,16 +380,18 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	}
 
 	//of References of reply Setting subject of reply
-	subject = (tpReMailItem->Subject != NULL) ? tpReMailItem->Subject : TEXT("");
-	if (str_cmp_ni_t(subject, strPrefix, lstrlen(strPrefix)) == 0) {
-		subject += lstrlen(strPrefix);
-	} else if (str_cmp_ni_t(subject, REPLY_SUBJECT, lstrlen(REPLY_SUBJECT)) == 0) {
-		subject += lstrlen(REPLY_SUBJECT);
-	}
-	for (; *subject == TEXT(' '); subject++);
-	p = tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(subject) + lstrlen(strPrefix) + 1));
-	if (tpMailItem->Subject != NULL) {
-		str_join_t(p, strPrefix, subject, (TCHAR *)-1);
+	if (ReplyFlag != EDIT_REDIRECT) {
+		subject = (tpReMailItem->Subject != NULL) ? tpReMailItem->Subject : TEXT("");
+		if (str_cmp_ni_t(subject, strPrefix, lstrlen(strPrefix)) == 0) {
+			subject += lstrlen(strPrefix);
+		} else if (str_cmp_ni_t(subject, REPLY_SUBJECT, lstrlen(REPLY_SUBJECT)) == 0) {
+			subject += lstrlen(REPLY_SUBJECT);
+		}
+		for (; *subject == TEXT(' '); subject++);
+		p = tpMailItem->Subject = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(subject) + lstrlen(strPrefix) + 1));
+		if (tpMailItem->Subject != NULL) {
+			str_join_t(p, strPrefix, subject, (TCHAR *)-1);
+		}
 	}
 }
 
@@ -2591,7 +2597,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 
 	case EDIT_FORWARD:
 	case EDIT_FILTERFORWARD:
-		// Forward or forward by filter action
+	case EDIT_REDIRECT:
+		// Forward, forward by filter action, or redirect
 
 		// Check if message is complete, give option to bail out here
 		if (tpReMailItem != NULL && tpReMailItem->Download == FALSE && OpenFlag != EDIT_FILTERFORWARD 
@@ -2622,6 +2629,18 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		if (OpenFlag == EDIT_FILTERFORWARD) {
 			tpMailItem->To = alloc_copy_t(seltext);
 			tpMailItem->Mark = 1; // means quote entire message
+			mkdlg = TRUE;
+		} else if (OpenFlag == EDIT_REDIRECT) {
+			tpMailItem->RedirectTo = alloc_copy_t(TEXT("")); // indicates redirection in SetSendProc
+			tpMailItem->To = alloc_copy_t(tpReMailItem->To);
+			tpMailItem->Cc = alloc_copy_t(tpReMailItem->Cc);
+			tpMailItem->From = alloc_copy_t(tpReMailItem->From);
+			tpMailItem->ContentType = alloc_copy_t(tpReMailItem->ContentType);
+			tpMailItem->Encoding = alloc_copy_t(tpReMailItem->Encoding);
+			tpMailItem->HasHeader = tpReMailItem->HasHeader;
+			tpMailItem->Mark = ICON_SEND;
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_REDIRECT), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
 		} else {
 			//Transmission information setting
 #ifdef _WIN32_WCE
@@ -2636,13 +2655,11 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 				(LPARAM)tpMailItem);
 #endif
-			if (mkdlg == FALSE) {
-				item_free(&tpMailItem, 1);
-				return EDIT_NONEDIT;
-			}
 		}
-		SetReplyMessageBody(tpMailItem, tpReMailItem, OpenFlag, seltext);
-		tpMailItem->Mark = 0;
+		if (mkdlg == FALSE) {
+			item_free(&tpMailItem, 1);
+			return EDIT_NONEDIT;
+		}
 		if (rebox != MAILBOX_SEND && tpReMailItem != NULL) {
 			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
 			if (tpMailItem->FwdAttach != NULL) {
@@ -2651,12 +2668,17 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				(MailBox + rebox)->NeedsSave |= MARKS_CHANGED;
 			}
 		}
+		if (OpenFlag == EDIT_REDIRECT) {
+			SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, (tpMailItem->Mark == ICON_SEND));
+			return EDIT_SEND;
+		}
+		SetReplyMessageBody(tpMailItem, tpReMailItem, OpenFlag, seltext);
+		tpMailItem->Mark = 0;
+		if (OpenFlag == EDIT_FILTERFORWARD) {
+			SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, TRUE);
+			return EDIT_SEND;
+		}
 		break;
-	}
-
-	if (OpenFlag == EDIT_FILTERFORWARD) {
-		SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, TRUE);
-		return EDIT_SEND;
 	}
 
 #ifdef _WIN32_WCE

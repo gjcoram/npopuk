@@ -1101,6 +1101,7 @@ void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg)
 #ifdef WSAASYNC
 	// Progress bar - GJC
 	// [....................]
+	if (len > size) len = size;
 	if (size > 0) {
 		int i;
 		for (i=0; i < (20 * len) / size; i++) {
@@ -2980,7 +2981,12 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 		return;
 	}
 	if (SelBox == MAILBOX_SEND) {
-		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
+		if (tpMailItem->RedirectTo != NULL) {
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_REDIRECT), hWnd, SetSendProc,
+				(LPARAM)tpMailItem) == TRUE) {
+				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
+			}
+		} else if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
 			// GJC: don't edit sent mail
 			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 #ifdef _WIN32_WCE
@@ -5305,6 +5311,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Forward
 		case ID_MENUITEM_FORWARD:
 			ReMessageItem(hWnd, EDIT_FORWARD);
+			break;
+
+		//Redirect (GJC)
+		case ID_MENUITEM_REDIRECT:
+			ReMessageItem(hWnd, EDIT_REDIRECT);
 			break;
 
 		// flag for follow-up
