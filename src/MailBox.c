@@ -74,18 +74,24 @@ BOOL mailbox_init(void)
 }
 
 /*
- * mailbox_create - メールボックスの追加
+ * mailbox_create - add mailbox(es) to the list
  */
 int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 {
 	MAILBOX *TmpMailBox;
 	int count, i;
 
-	//It adds to the list of the mailbox
+	count = MailBoxCnt + Add;
 	if (Index == -1) {
 		Index = MailBoxCnt;
 	}
-	count = MailBoxCnt + Add;
+
+	if (Index < 0 || Index > MailBoxCnt) {
+                TCHAR buf[BUF_SIZE];
+		wsprintf(buf, TEXT("Cannot add mailbox at postion %d"), Index);
+		ErrorMessage(hWnd, buf);
+		return -1;
+	}
 
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * count);
 	if(TmpMailBox == NULL){
@@ -166,19 +172,18 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 }
 
 /*
- * mailbox_delete - メールボックスの削除
+ * mailbox_delete - delete mailbox from list
  */
 int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 {
 	MAILBOX *TmpMailBox;
 	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
-	int cnt;
+	int cnt = MailBoxCnt - 1;
 	int i, j;
 
-	//From list of mailbox deletion
-	cnt = MailBoxCnt - 1;
-	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
-	if(TmpMailBox == NULL){
+	if (DelIndex <= 0 || DelIndex >= MailBoxCnt) {
+		wsprintf(name1, TEXT("Cannot delete mailbox %d"), DelIndex);
+		ErrorMessage(hWnd, name1);
 		return -1;
 	}
 
@@ -186,12 +191,9 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 		SendMessage(hViewWnd, WM_CLOSE, 0, 0);
 	}
 
-	if (DelIndex > 0) {
-		CopyMemory(TmpMailBox, MailBox, DelIndex*sizeof(MAILBOX));
-	}
-	if (DelIndex < cnt) {
-		CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
-	}
+	// if alloc fails, will re-use current block of memory
+	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * cnt);
+
 	if ((MailBox+DelIndex)->Filename == NULL)  {
 		TCHAR path[2*BUF_SIZE];
 		wsprintf(name1, TEXT("MailBox%d.dat"), DelIndex - MAILBOX_USER);
@@ -211,9 +213,27 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 	}
 	mailbox_free(MailBox + DelIndex);
 
+	if (TmpMailBox == NULL) {
+		// failed to allocate new, so just use existing block of memory
+		if (DelIndex < cnt) {
+			CopyMemory((MailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
+		}
+		(MailBox + cnt) = NULL; // or ZeroMemory((MailBox + cnt), sizeof(MAILBOX)); ??
+	} else {
+		if (DelIndex > 0) {
+			CopyMemory(TmpMailBox, MailBox, DelIndex*sizeof(MAILBOX));
+		}
+		if (DelIndex < cnt) {
+			CopyMemory((TmpMailBox+DelIndex), (MailBox+DelIndex+1), (cnt - DelIndex)*sizeof(MAILBOX));
+		}
+		mem_free(&MailBox);
+		MailBox = TmpMailBox;
+	}
+	MailBoxCnt = cnt;
+
 	// rename MailBox%d files above DelIndex, rather than loading&writing them
 	for (i = DelIndex; i < cnt; i++) {
-		if ((TmpMailBox + i)->Filename == NULL) {
+		if ((MailBox + i)->Filename == NULL) {
 			BOOL clash;
 			int k = i;
 			wsprintf(name1, TEXT("MailBox%d.dat"), i + 1 - MAILBOX_USER);
@@ -221,8 +241,8 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 				clash = FALSE;
 				wsprintf(name2, TEXT("MailBox%d.dat"), k - MAILBOX_USER);
 				for (j = 0; j < cnt; j++) {
-					if ((TmpMailBox + j)->Filename != NULL 
-						&& lstrcmpi(name2, (TmpMailBox + j)->Filename) == 0) {
+					if ((MailBox + j)->Filename != NULL 
+						&& lstrcmpi(name2, (MailBox + j)->Filename) == 0) {
 						clash = TRUE;
 						if (k == i) {
 							k = cnt+1;
@@ -234,14 +254,11 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 				}
 			} while (clash == TRUE);
 			if (k != i) {
-				(TmpMailBox + i)->Filename = alloc_copy_t(name2);
+				(MailBox + i)->Filename = alloc_copy_t(name2);
 			}
 			file_rename(hWnd, name1, name2);
 		}
 	}
-	mem_free(&MailBox);
-	MailBox = TmpMailBox;
-	MailBoxCnt = cnt;
 
 	// check that no filter was pointing to this deleted mailbox
 	if (CheckFilt == TRUE) {
