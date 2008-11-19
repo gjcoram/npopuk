@@ -2061,11 +2061,19 @@ BOOL SetSaveBoxName(HWND hWnd)
 			DeleteMBMenu(SelBox);
 			InsertMBMenu(SelBox, new_name);
 			SelectMBMenu(SelBox);
+			for (j = 0; j < op.GlobalFilterCnt; j++) {
+				FILTER *tpFilter = *(op.tpFilter + j);
+				if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
+					if (lstrcmp(tpFilter->SaveboxName, old_name) == 0) {
+						mem_free(&tpFilter->SaveboxName);
+						tpFilter->SaveboxName = alloc_copy_t(new_name);
+					}
+				}
+			}
 			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 				if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->FilterCnt > 0) {
 					for (j = 0; j < (MailBox+i)->FilterCnt; j++) {
-						FILTER *tpFilter;
-						tpFilter = *((MailBox+i)->tpFilter + j);
+						FILTER *tpFilter = *((MailBox+i)->tpFilter + j);
 						if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
 							if (lstrcmp(tpFilter->SaveboxName, old_name) == 0) {
 								mem_free(&tpFilter->SaveboxName);
