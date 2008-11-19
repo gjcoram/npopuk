@@ -71,7 +71,7 @@ static void str_cpy_n(TCHAR *ret, const TCHAR *buf, int len)
 }
 
 /*
- * trim - •¶Žš—ñ‚Ì‘OŒã‚Ì‹ó”’, Tab‚ðœ‹Ž‚·‚é
+ * trim - remove spaces and tabs from both ends of buf
  */
 static BOOL trim(TCHAR *buf)
 {
@@ -241,6 +241,8 @@ static BOOL key_add(SECTION_INFO *si, const TCHAR *key_name, const TCHAR *str, c
 	trim((si->key_info + si->key_count)->key_name);
 	if (comment_flag == FALSE) {
 		(si->key_info + si->key_count)->hash = str2hash((si->key_info + si->key_count)->key_name);
+	} else {
+		(si->key_info + si->key_count)->hash = 0;
 	}
 	lstrcpy((si->key_info + si->key_count)->string, str);
 	(si->key_info + si->key_count)->comment_flag = comment_flag;
@@ -773,7 +775,7 @@ BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const i
 }
 
 /*
- * profile_delete_key - delete items from profile (GJC)
+ * profile_delete_key - delete specific key from profile section (GJC)
  */
 BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name)
 {
@@ -795,7 +797,7 @@ BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name)
 }
 
 /*
- * profile_clear_section - delete items from profile (GJC)
+ * profile_clear_section - delete all keys from profile section (GJC)
  */
 BOOL profile_clear_section(const TCHAR *section_name)
 {
@@ -811,6 +813,7 @@ BOOL profile_clear_section(const TCHAR *section_name)
 	}
 
 	for (j = 0; j < section_to_del->key_count; j++) {
+		*(section_to_del->key_info + j)->key_name = TEXT('\0');
 		if ((section_to_del->key_info + j)->string != NULL) {
 			mem_free(&(section_to_del->key_info + j)->string);
 		}
