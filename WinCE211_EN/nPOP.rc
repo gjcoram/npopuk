@@ -347,7 +347,7 @@ BEGIN
     LTEXT           "&Priority:",IDC_STATIC,5,88,26,8
     COMBOBOX        IDC_PRIORITY,40,86,52,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "Del&ivery receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Del&ivery receipt",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,60,70,10
     CONTROL         "Rea&d receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,170,60,60,10
@@ -393,12 +393,29 @@ BEGIN
     CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",
                     BS_AUTO3STATE | WS_TABSTOP,99,102,54,10
     LTEXT           "Receipts:",IDC_STATIC,2,115,36,8
-    CONTROL         "Del&ivery",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Del&ivery",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,40,115,40,10
     CONTROL         "Rea&d",IDC_READ,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,99,115,40,10
     DEFPUSHBUTTON   "&OK",IDOK,65,130,46,14
     PUSHBUTTON      "&Cancel",IDCANCEL,112,130,45,14
+END
+
+
+IDD_DIALOG_REDIRECT DIALOG DISCARDABLE  0, 0, 160, 80
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Redirect"
+FONT 8, "Tahoma"
+BEGIN
+    LTEXT           "&Account:",IDC_STATIC,1,5,32,10
+    COMBOBOX        IDC_COMBO_SMTP,35,3,120,92,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "&To:",IDC_BUTTON_TO,0,23,32,12
+    EDITTEXT        IDC_EDIT_TO,35,23,120,25,ES_MULTILINE | ES_AUTOVSCROLL
+    CONTROL         "&Mark to send",IDC_CHECK_MARKSEND,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,5,60,55,10
+    DEFPUSHBUTTON   "&OK",IDOK,65,60,46,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,112,60,45,14
 END
 
 IDD_DIALOG_SMTP DIALOG DISCARDABLE  0, 0, 160, 103
@@ -1393,6 +1410,7 @@ BEGIN
         MENUITEM "&Reply",                      ID_MENUITEM_REMESSEGE
         MENUITEM "Repl&y to all",               ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward",                    ID_MENUITEM_FORWARD
+        MENUITEM "Re&direct",                    ID_MENUITEM_REDIRECT
         MENUITEM SEPARATOR
         MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
@@ -1474,6 +1492,7 @@ BEGIN
         MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
         MENUITEM "Reply to &all...",            ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "Redirec&t",                   ID_MENUITEM_REDIRECT
         MENUITEM "Address &info...\tCtrl+I",    ID_MENUITEM_PROP
         MENUITEM SEPARATOR
         MENUITEM "F&lag for follow-up",         ID_MENUITEM_FLAGMARK
