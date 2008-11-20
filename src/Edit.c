@@ -275,7 +275,10 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
 		} else if (ReplyFlag == EDIT_REDIRECT) {
 			tpMailItem->Subject = alloc_copy_t(tpReMailItem->Subject);
-			tpMailItem->Body = alloc_copy_t(tpReMailItem->Body);
+			if (tpReMailItem->HasHeader == 0 || (p = GetBodyPointa(tpReMailItem->Body)) == NULL) {
+				p = tpReMailItem->Body;
+			}
+			tpMailItem->Body = alloc_copy_t(p);
 		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
 			// forward as attachment
 			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
@@ -2632,12 +2635,9 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			mkdlg = TRUE;
 		} else if (OpenFlag == EDIT_REDIRECT) {
 			tpMailItem->RedirectTo = alloc_copy_t(TEXT("")); // indicates redirection in SetSendProc
-			tpMailItem->To = alloc_copy_t(tpReMailItem->To);
-			tpMailItem->Cc = alloc_copy_t(tpReMailItem->Cc);
 			tpMailItem->From = alloc_copy_t(tpReMailItem->From);
 			tpMailItem->ContentType = alloc_copy_t(tpReMailItem->ContentType);
 			tpMailItem->Encoding = alloc_copy_t(tpReMailItem->Encoding);
-			tpMailItem->HasHeader = tpReMailItem->HasHeader;
 			tpMailItem->Mark = ICON_SEND;
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_REDIRECT), hWnd, SetSendProc,
 				(LPARAM)tpMailItem);

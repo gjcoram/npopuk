@@ -2151,16 +2151,18 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 		}
 	}
 
-	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
-	SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-	if (selStart != selEnd) {
-		AllocGetText(hEdit, &buf);
-		if (buf != NULL) {
-			seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
-			if (seltext != NULL) {
-				str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
+	if (ReplyFlag != EDIT_REDIRECT) {
+		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
+		SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+		if (selStart != selEnd) {
+			AllocGetText(hEdit, &buf);
+			if (buf != NULL) {
+				seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
+				if (seltext != NULL) {
+					str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
+				}
+				mem_free(&buf);
 			}
-			mem_free(&buf);
 		}
 	}
 
@@ -3190,6 +3192,10 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SetReMessage(hWnd, EDIT_FORWARD);
 			break;
 
+		case ID_MENUITEM_REDIRECT:
+			SetReMessage(hWnd, EDIT_REDIRECT);
+			break;
+
 		case ID_MENUITEM_FLAGMARK:
 			if (vSelBox <= MAILBOX_SEND) {
 				break;
@@ -3448,7 +3454,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ret = Decode(hWnd, i, DECODE_SAVE_ALL);
 			}
 			if (ret == FALSE) {
-				ErrorMessage(hWnd, STR_ERR_SAVE);
+				if (tpMailItem->Download) {
+					ErrorMessage(hWnd, STR_ERR_SAVE);
+				} else {
+					ErrorMessage(hWnd, STR_ERR_PARTIAL_ATTACH);
+				}
 			}
 			break;
 

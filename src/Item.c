@@ -156,6 +156,7 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override)
 	tpToMailItem->To = alloc_copy_t(tpFromMailItem->To);
 	tpToMailItem->Cc = alloc_copy_t(tpFromMailItem->Cc);
 	tpToMailItem->Bcc = alloc_copy_t(tpFromMailItem->Bcc);
+	tpToMailItem->RedirectTo = alloc_copy_t(tpFromMailItem->RedirectTo);
 	tpToMailItem->Subject = alloc_copy_t(tpFromMailItem->Subject);
 	tpToMailItem->Date = alloc_copy_t(tpFromMailItem->Date);
 	tpToMailItem->FmtDate = alloc_copy_t(tpFromMailItem->FmtDate);
