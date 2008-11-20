@@ -433,6 +433,7 @@ typedef struct _OPTION {
 	int ExpertMode;		// Added PHH 4-10-2003
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
+	int NoEmptyMailbox;
 
 	// SSL
 	TCHAR *CAFile;
