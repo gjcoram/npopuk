@@ -530,7 +530,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	TCHAR *FromAddress = NULL;
 	TCHAR *BodyCSet;
 	TCHAR buf[BUF_SIZE];
-	TCHAR *p, *r;
+	TCHAR *p, *q, *r;
 	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
 	char *mctypr, *mbody;
 	char **enc_att = NULL;
@@ -542,48 +542,47 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	} else {
 		FromAddress = send_mail_box->MailAddress;
 	}
-	if (tpMailItem->RedirectTo != NULL) {
-		if (FromAddress == NULL) {
-			FromAddress = "??";
-		}
-		len = lstrlen(tpMailItem->From) + lstrlen(STR_MSG_BYWAYOF) + lstrlen(FromAddress);
-		p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-		if (p == NULL) {
-			return FALSE;
-		}
-		wsprintf(p, STR_MSG_BYWAYOF, tpMailItem->From, FromAddress);
-		mem_free(&tpMailItem->From);
-		tpMailItem->From = p;
-	} else {
-		mem_free(&tpMailItem->From);
-		tpMailItem->From = NULL;
+	if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
+		len = lstrlen(TEXT(" <>"));
+		p = NULL;
 
-		if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
-			len = lstrlen(TEXT(" <>"));
-			p = NULL;
-			// ユーザ名の設定
-			if (send_mail_box->UserName != NULL) {
-				p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(send_mail_box->UserName) + 1));
-				if (p != NULL) {
-					SetUserName(send_mail_box->UserName, p);
-					len += lstrlen(p);
-				}
+		if (send_mail_box->UserName != NULL) {
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(send_mail_box->UserName) + 1));
+			if (p != NULL) {
+				SetUserName(send_mail_box->UserName, p);
+				len += lstrlen(p);
 			}
-			len += lstrlen(FromAddress);
-
-			// Fromの作成と送信
-			tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-			if (tpMailItem->From != NULL) {
-				r = tpMailItem->From;
-				if (p != NULL && *p != TEXT('\0')) {
-					r = str_join_t(r, p, TEXT(" "), (TCHAR *)-1);
-				}
-
-				str_join_t(r, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
+		}
+		len += lstrlen(FromAddress);
+		
+		r = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		if (r != NULL) {
+			q = r;
+			if (p != NULL && *p != TEXT('\0')) {
+				q = str_join_t(q, p, TEXT(" "), (TCHAR *)-1);
 			}
-			mem_free(&p);
+			str_join_t(q, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
+		}
+		mem_free(&p);
+		if (tpMailItem->RedirectTo != NULL) {
+			len += lstrlen(tpMailItem->RedirectTo) + lstrlen(STR_MSG_BYWAYOF);
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+			if (p != NULL) {
+				wsprintf(p, STR_MSG_BYWAYOF, tpMailItem->RedirectTo, r);
+				mem_free(&r);
+				r = p;
+			}
 		}
 	}
+
+	if (tpMailItem->RedirectTo != NULL) {
+		mem_free(&tpMailItem->To);
+		tpMailItem->To = r;
+	} else {
+		mem_free(&tpMailItem->From);
+		tpMailItem->From = r;
+	}
+
 	// From
 	if (tpMailItem->From != NULL) {
 		if (send_mime_header(soc, tpMailItem, TEXT(HEAD_FROM), tpMailItem->From, TRUE, ErrStr) == FALSE) {
@@ -823,17 +822,15 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		}
 	}
 
-	if (tpMailItem->RedirectTo == NULL || tpMailItem->HasHeader == 0) {
-		// blank line - end of headers
-		if (send_buf(soc, "\r\n") == -1) {
-			mem_free(&send_body);
-			send_body = NULL;
+	// blank line - end of headers
+	if (send_buf(soc, "\r\n") == -1) {
+		mem_free(&send_body);
+		send_body = NULL;
 #ifndef WSAASYNC
-			encatt_free(&enc_att, num_att);
+		encatt_free(&enc_att, num_att);
 #endif
-			lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
-			return FALSE;
-		}
+		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+		return FALSE;
 	}
 
 #ifdef WSAASYNC
@@ -1243,10 +1240,20 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
-		// 返信先メールアドレスの送信
-		if (send_address(hWnd, soc, TEXT(CMD_MAIL_FROM), send_mail_box->MailAddress, ErrStr) == FALSE) {
+		// FROM
+		if (tpMailItem->RedirectTo != NULL) {
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->From) + 1));
+			if (p != NULL) {
+				GetMailAddress(tpMailItem->From, p, NULL, FALSE);
+			}
+		} else {
+			p = alloc_copy_t(send_mail_box->MailAddress);
+		}
+		if (send_address(hWnd, soc, TEXT(CMD_MAIL_FROM), p, ErrStr) == FALSE) {
+			mem_free(&p);
 			return FALSE;
 		}
+		mem_free(&p);
 		command_status = SMTP_MAILFROM;
 		break;
 
@@ -1379,7 +1386,8 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		send_mail_item = *((MailBox + MAILBOX_SEND)->tpMailItem + i);
-		if ((send_mail_item->To == NULL || *send_mail_item->To == TEXT('\0')) &&
+		if ((send_mail_item->RedirectTo == NULL || *send_mail_item->RedirectTo == TEXT('\0')) &&
+			(send_mail_item->To == NULL || *send_mail_item->To == TEXT('\0')) &&
 			(send_mail_item->Cc == NULL || *send_mail_item->Cc == TEXT('\0')) &&
 			(send_mail_item->Bcc == NULL || *send_mail_item->Bcc == TEXT('\0'))) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
@@ -1527,7 +1535,8 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 	starttls_flag = FALSE;
 	send_end_cmd = end_cmd;
 
-	if ((send_mail_item->To == NULL || *send_mail_item->To == TEXT('\0')) &&
+	if ((send_mail_item->RedirectTo == NULL || *send_mail_item->RedirectTo == TEXT('\0')) &&
+		(send_mail_item->To == NULL || *send_mail_item->To == TEXT('\0')) &&
 		(send_mail_item->Cc == NULL || *send_mail_item->Cc == TEXT('\0')) &&
 		(send_mail_item->Bcc == NULL || *send_mail_item->Bcc == TEXT('\0'))) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
