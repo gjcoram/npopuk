@@ -4937,9 +4937,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 			}
-			if (g_soc != -1 && SelBox < RecvBox) {
-				RecvBox--;
-			}
 			if (op.LazyLoadMailboxes > 0) {
 				// make sure SelBox-1 is loaded before deleting
 				int DelBox = SelBox;

@@ -254,6 +254,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 	TCHAR *p;
 	TCHAR *subject;
 	TCHAR *strPrefix;
+	char *q;
 	int len = 0;
 	BOOL is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD
 		|| ReplyFlag == EDIT_REDIRECT;
@@ -275,10 +276,10 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
 		} else if (ReplyFlag == EDIT_REDIRECT) {
 			tpMailItem->Subject = alloc_copy_t(tpReMailItem->Subject);
-			if (tpReMailItem->HasHeader == 0 || (p = GetBodyPointa(tpReMailItem->Body)) == NULL) {
-				p = tpReMailItem->Body;
+			if (tpReMailItem->HasHeader == 0 || (q = GetBodyPointa(tpReMailItem->Body)) == NULL) {
+				q = tpReMailItem->Body;
 			}
-			tpMailItem->Body = alloc_copy_t(p);
+			tpMailItem->Body = alloc_copy(q);
 		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
 			// forward as attachment
 			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));

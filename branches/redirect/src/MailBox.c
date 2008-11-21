@@ -32,6 +32,7 @@ HMENU vMenuDone = NULL;
 /* Global Variables */
 extern OPTION op;
 extern TCHAR *DataDir;
+extern int g_soc;
 
 #ifdef _WIN32_WCE_LAGENDA
 extern HMENU hMainMenu;
@@ -46,13 +47,14 @@ extern MAILBOX *MailBox;
 extern int MailBoxCnt;
 extern ADDRESSBOOK *AddressBook;
 
-extern int SelBox, vSelBox;
+extern int SelBox, vSelBox, RecvBox;
 extern int LvSortFlag;
 extern BOOL EndThreadSortFlag;
 extern BOOL PPCFlag;
 
 /* Local Function Prototypes */
-void mailbox_swap_files(HWND hWnd, int i, int j);
+static BOOL mailbox_name_clash(TCHAR *name);
+static void mailbox_swap_files(HWND hWnd, int i, int j);
 
 /*
  * mailbox_init - メールボックスの初期化
@@ -117,6 +119,10 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 	mem_free(&MailBox);
 	MailBox = TmpMailBox;
 	MailBoxCnt = count;
+
+	if (g_soc != -1 && Index <= RecvBox) {
+		RecvBox++;
+	}
 
 	// rename files above Index, watching out for collisions
 	for (i = MailBoxCnt-1; Add == 1 && i >= Index; i--) {
@@ -189,6 +195,9 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
 
 	if (DelIndex == vSelBox && hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CLOSE, 0, 0);
+	}
+	if (g_soc != -1 && DelIndex <= RecvBox) {
+		RecvBox--;
 	}
 
 	// if alloc fails, will re-use current block of memory
@@ -359,16 +368,48 @@ int mailbox_load_now(HWND hWnd, int num, BOOL ask, BOOL do_saveboxes)
 }
 
 /*
+ * mailbox_name_clash - check for Filename=name
+ */
+static BOOL mailbox_name_clash(TCHAR *name)
+{
+	int k;
+	for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
+		if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
+			&& lstrcmpi(name, (MailBox+k)->Filename) == 0) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/*
  * mailbox_swap_files - exchange mailbox files (if Filename==NULL)
  */
 void mailbox_swap_files(HWND hWnd, int i, int j)
 {
-	TCHAR name1[BUF_SIZE], name2[BUF_SIZE];
+	TCHAR name1[BUF_SIZE], name2[BUF_SIZE], path[2*BUF_SIZE];
+	int len;
+
 	if ((MailBox+i)->Filename != NULL && (MailBox+j)->Filename != NULL) {
 		return;
 	}
 	if ((MailBox+i)->Filename == NULL) {
 		wsprintf(name1, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
+		str_join_t(path, DataDir, name1, (TCHAR *)-1);
+		len = file_get_size(path);
+		if (len == -1) {
+			// mailbox file "name1" doesn't exist
+			if ((MailBox+j)->Filename == NULL) {
+				wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
+				if (mailbox_name_clash(name1)) {
+					// some other mailbox has Filename==name1 -- but it's empty??
+					(MailBox+j)->Filename = alloc_copy_t(name2);
+				} else {
+					file_rename(hWnd, name2, name1);
+				}
+			}
+			return;
+		}
 		if ((MailBox+j)->Filename == NULL) {
 			TCHAR *tmp_name = TEXT("$npop_tmp_mailbox.dat");
 			file_delete(hWnd, tmp_name);
@@ -379,21 +420,18 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 				(MailBox+i)->Filename = alloc_copy_t(name1);
 				(MailBox+j)->Filename = alloc_copy_t(name2);
 			} else {
-				// these shouldn't fail if the first rename succeeded ...
+				// this could fail if name2 doesn't exist, but that's OK
 				file_rename(hWnd, name2, name1);
+				// this shouldn't fail ...
 				file_rename(hWnd, tmp_name, name2);
 			}
 		} else {
+			// MailBoxi becomes MailBoxj (unless MailBoxj.dat is in use)
 			BOOL found = FALSE;
-			int k;
-			// MailBoxi becomes MailBoxj (unless MailBoxj.dat exists)
 			wsprintf(name2, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
-			for (k = MAILBOX_USER; k < MailBoxCnt; k++) {
-				if ((MailBox+k) != NULL && (MailBox+k)->Filename != NULL
-					&& lstrcmpi(name2, (MailBox+k)->Filename) == 0) {
-					found = TRUE;
-					break;
-				}
+			found = mailbox_name_clash(name2);
+			if (found == FALSE) {
+				file_delete(hWnd, name2);
 			}
 			if (found || file_rename(hWnd, name1, name2) == FALSE) {
 				(MailBox+i)->Filename = alloc_copy_t(name1);
