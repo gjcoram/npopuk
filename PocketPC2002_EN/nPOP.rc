@@ -365,11 +365,11 @@ BEGIN
         MENUITEM "Save and &Mark",              ID_MENUITEM_SBOXMARK
         MENUITEM "Save to &Outbox",             ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
+        MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
         MENUITEM "&Property",                   ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding",                   ID_MENUITEM_ENCODE
         MENUITEM "&Attach files",               ID_MENUITEM_ATTACH
-        MENUITEM SEPARATOR
-        MENUITEM "External &viewer",            ID_MENUITEM_VIEW
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_MENUITEM_CLOSE
     END
