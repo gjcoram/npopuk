@@ -1936,6 +1936,43 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			break;
 
+		case ID_MENUITEM_VIEW:
+			// external editor
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (tpMailItem != NULL) {
+				TCHAR *buf;
+				int len;
+				SwitchCursor(FALSE);
+				mem_free(&tpMailItem->Body);
+				tpMailItem->Body = NULL;
+				len = SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXTLENGTH, 0, 0) + 1;
+				if (len > 0) {
+					buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+					if (buf != NULL) {
+						*buf = TEXT('\0');
+						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
+						tpMailItem->BodyEncoding = op.BodyEncoding;
+#ifndef _WCE_OLD
+						if (tpMailItem->BodyCharset == NULL ||
+							(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, tpMailItem->BodyCharset)) == NULL) {
+#endif
+#ifdef UNICODE
+							tpMailItem->Body = alloc_tchar_to_char(buf);
+#else
+							tpMailItem->Body = alloc_copy(buf);
+#endif
+#ifndef _WCE_OLD
+						}
+#endif
+						mem_free(&buf);
+					}
+				}
+				ShowWindow(hEditWnd, SW_HIDE);
+				SetTimer(hEditWnd, ID_APP_TIMER, 1, NULL);
+				SwitchCursor(TRUE);
+			}
+			break;
+
 		case ID_MENUITEM_SENDINFO:
 			ShowSendInfo(hWnd);
 			break;
