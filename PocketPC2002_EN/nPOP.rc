@@ -369,6 +369,8 @@ BEGIN
         MENUITEM "&Encoding",                   ID_MENUITEM_ENCODE
         MENUITEM "&Attach files",               ID_MENUITEM_ATTACH
         MENUITEM SEPARATOR
+        MENUITEM "External &viewer",            ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_MENUITEM_CLOSE
     END
     POPUP "&Edit"

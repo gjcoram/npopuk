@@ -295,6 +295,8 @@ BEGIN
         MENUITEM "Save and &Mark\tCtrl+G",      ID_MENUITEM_SBOXMARK
         MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
+        MENUITEM "External &viewer",            ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
         MENUITEM "&Attach files...",            ID_MENUITEM_ATTACH
