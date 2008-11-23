@@ -7506,7 +7506,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_SETCHECK, op.SubjectFind, 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SUBJECT), op.AllMsgFind || op.AllBoxFind);
-			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), op.AllMsgFind);
+			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MESSAGE), op.AllMsgFind || op.AllBoxFind);
 			EnableWindow(GetDlgItem(hDlg, IDC_FIND_NEXT_MAILBOX), op.AllBoxFind);
 #ifndef _WIN32_WCE_PPC
 			ShowWindow(GetDlgItem(hDlg, IDC_REPLACE_LABEL), SW_HIDE);
@@ -7666,8 +7666,12 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					mem_free(&msg);
 				}
 			} else {
-				op.AllMsgFind = SendDlgItemMessage(hDlg, IDC_FIND_ALLMSGS, BM_GETCHECK, 0, 0);
 				op.AllBoxFind = SendDlgItemMessage(hDlg, IDC_FIND_ALLBOXES, BM_GETCHECK, 0, 0);
+				if (op.AllBoxFind) {
+					op.AllMsgFind = 1;
+				} else {
+					op.AllMsgFind = SendDlgItemMessage(hDlg, IDC_FIND_ALLMSGS, BM_GETCHECK, 0, 0);
+				}
 				op.SubjectFind = SendDlgItemMessage(hDlg, IDC_CHECK_SUBJECT, BM_GETCHECK, 0, 0);
 				if (command == IDC_FIND_NEXT_MESSAGE) {
 					FindNext = 1;

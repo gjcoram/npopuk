@@ -690,6 +690,8 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			send_body = NULL;
 			return FALSE;
 		}
+		num_att = 0;
+		enc_att = NULL;
 	} else {
 		switch (multipart_create(tpMailItem->Attach, tpMailItem->FwdAttach, tpFwdMailItem, 
 								ctype, enc_type, &mctypr, send_body, &mbody, &num_att, &enc_att)) {
