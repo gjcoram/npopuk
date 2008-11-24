@@ -509,6 +509,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ExpertMode = profile_get_int(GENERAL, TEXT("DisableWarning"), 0, app_path);		// Added PHH 4-Oct-2003
 	op.PopBeforeSmtpIsLoginOnly = profile_get_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), 1, app_path);
 	op.PopBeforeSmtpWait = profile_get_int(GENERAL, TEXT("PopBeforeSmtpWait"), 300, app_path);
+	op.NoEmptyMailbox = profile_get_int(GENERAL, TEXT("NoEmptyMailbox"), 0, app_path);
 
 	op.AutoQuotation = profile_get_int(GENERAL, TEXT("AutoQuotation"), 1, app_path);
 	op.FwdQuotation = profile_get_int(GENERAL, TEXT("FwdQuotation"), 1, app_path);
@@ -712,9 +713,13 @@ BOOL ini_read_setting(HWND hWnd)
 	op.GlobalFilterEnable = profile_get_int(GENERAL, TEXT("GlobalFilterEnable"), 0, app_path);
 	op.GlobalFilterCnt = profile_get_int(GENERAL, TEXT("GlobalFilterCnt"), 0, app_path);
 
-	op.tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * op.GlobalFilterCnt);
-	if (op.tpFilter == NULL) {
-		op.GlobalFilterCnt = 0;
+	if (op.GlobalFilterCnt > 0) {
+		op.tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * op.GlobalFilterCnt);
+		if (op.tpFilter == NULL) {
+			op.GlobalFilterCnt = 0;
+		}
+	} else {
+		op.tpFilter = NULL;
 	}
 	for (t = 0; t < op.GlobalFilterCnt; t++) {
 		FILTER *tpFilter = *(op.tpFilter + t) = (FILTER *)mem_calloc(sizeof(FILTER));
@@ -1092,11 +1097,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 	///////////// MRP /////////////////////
 #ifdef UNICODE
-   wcscpy(app_pathBackup, app_path);
-   wcscat(app_pathBackup, TEXT(".bak"));
+	wcscpy(app_pathBackup, app_path);
+	wcscat(app_pathBackup, TEXT(".bak"));
 #else
-   strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
-   strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
+	strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
+	strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
 	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
 	///////////// --- /////////////////////
@@ -1238,6 +1243,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("DisableWarning"), op.ExpertMode, app_path);	// Added PHH 4-Oct-2003
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpIsLoginOnly"), op.PopBeforeSmtpIsLoginOnly, app_path);
 	profile_write_int(GENERAL, TEXT("PopBeforeSmtpWait"), op.PopBeforeSmtpWait, app_path);
+	profile_write_int(GENERAL, TEXT("NoEmptyMailbox"), op.NoEmptyMailbox, app_path);
 
 	profile_write_int(GENERAL, TEXT("AutoQuotation"), op.AutoQuotation, app_path);
 	profile_write_int(GENERAL, TEXT("FwdQuotation"), op.FwdQuotation, app_path);

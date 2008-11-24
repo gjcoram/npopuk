@@ -720,22 +720,31 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		tpMailBox->MailSize = a2i(t);
 	}
 	if (tpMailBox->MailCnt == 0) {
-		if (last_response != NULL) {
+		BOOL do_err = FALSE;
+		if (op.NoEmptyMailbox) {
+			do_err = TRUE;
+		} else if (last_response != NULL) {
 			for (p = last_response + 4; *p != '\0'; p++) {
 				if (str_cmp_n(p, GMAIL_SYS_PROBLEM, strlen(GMAIL_SYS_PROBLEM)) == 0  ||
 				    str_cmp_n(p, GMAIL_EMPTY_2, strlen(GMAIL_EMPTY_2)) == 0  ||
 				    str_cmp_n(p, GMAIL_EMPTY_3, strlen(GMAIL_EMPTY_3)) == 0) {
-#ifdef UNICODE
-					int len = char_to_tchar_size(last_response+4);
-					if (len < BUF_SIZE) {
-						char_to_tchar(last_response+4, ErrStr, len);
-					}
-#else
-					strcpy_s(ErrStr, BUF_SIZE, last_response + 4);
-#endif
-					return POP_ERR;
+					do_err = TRUE;
+					break;
 				}
 			}
+		}
+		if (do_err) {
+			if (last_response != NULL) {
+#ifdef UNICODE
+				int len = char_to_tchar_size(last_response+4);
+				if (len < BUF_SIZE) {
+					char_to_tchar(last_response+4, ErrStr, len);
+				}
+#else
+				strcpy_s(ErrStr, BUF_SIZE, last_response + 4);
+#endif
+			}
+			return POP_ERR;
 		}
 		tpMailBox->ListInitMsg = TRUE;
 		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
@@ -1188,11 +1197,12 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
 		}
 	}
-	if (soc == -1) {
-		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
-	}
 
 	if ((int)tpMailItem != -1) {
+		if (soc == -1) {
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+		}
+
 		// êVíÖÉtÉâÉOÇÃèúãé
 		if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE && op.ClearNewOverlay == 1) {
 			for (i = 0; i < tpMailBox->MailItemCnt; i++) {
