@@ -748,8 +748,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	} // else if (tpMailItem->Priority == 3) don't bother sending it
 
 	// delivery receipt
-	if (tpMailItem->DeliveryReceipt == 1)
-	{
+	if (tpMailItem->DeliveryReceipt == 1) {
 		if(send_header_t(soc, TEXT(HEAD_DELIVERY), tpMailItem->From, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
@@ -761,8 +760,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	}
 
 	// read receipt
-	if (tpMailItem->ReadReceipt == 1)
-	{
+	if (tpMailItem->ReadReceipt == 1) {
 		if(send_header_t(soc, TEXT(HEAD_READ1), tpMailItem->From, ErrStr) == FALSE){
 			mem_free(&send_body);
 			send_body = NULL;
@@ -792,7 +790,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 		return FALSE;
 	}
-	// ヘッダと本文の区切り
+	// blank line - end of headers
 	if (send_buf(soc, "\r\n") == -1) {
 		mem_free(&send_body);
 		send_body = NULL;
@@ -817,7 +815,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	// 本文送信
 	if (send_body != NULL && send_buf(soc, send_body) == -1) {
 		mem_free(&send_body);
-		send_body = NULL;
+		send_body = send_pt = NULL;
 		encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
@@ -1210,7 +1208,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
 			return FALSE;
 		}
-		// 返信先メールアドレスの送信
+		// MAIL FROM starts new message
 		if (send_address(hWnd, soc, TEXT(CMD_MAIL_FROM), send_mail_box->MailAddress, ErrStr) == FALSE) {
 			return FALSE;
 		}
@@ -1421,7 +1419,7 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 			return FALSE;
 		}
 		mem_free(&send_body);
-		send_body = NULL;
+		send_body = send_pt = NULL;
 		command_status = send_end_cmd;
 		if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_CLOSE) == SOCKET_ERROR) {
 			mem_free(&send_body);
@@ -1446,7 +1444,7 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 	SetStatusRecvLen(hWnd, send_pt - send_body, send_len, STR_STATUS_SOCKINFO_SEND);
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
 		mem_free(&send_body);
-		send_body = NULL;
+		send_body = send_pt = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}

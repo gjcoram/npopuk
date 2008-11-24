@@ -277,7 +277,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
         MENUITEM "F&ont...",                    ID_MENUITEM_FONT
-        MENUITEM "Show &date",                  ID_MENUITEM_SHOW_DATE
+        MENUITEM "S&how date",                  ID_MENUITEM_SHOW_DATE
     END
     POPUP "&Transfer"
     BEGIN
@@ -395,10 +395,10 @@ BEGIN
     END
     POPUP "&Mail"
     BEGIN
-        MENUITEM "&Open\tEnter",                ID_MENUITEM_OPEN
+        MENUITEM "Ope&n\tEnter",                ID_MENUITEM_OPEN
         MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
         MENUITEM "Repl&y to all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
-        MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "For&ward...\tCtrl+O",         ID_MENUITEM_FORWARD
         MENUITEM SEPARATOR
         MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
@@ -408,14 +408,14 @@ BEGIN
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
-        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
-        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
+        MENUITEM "C&opy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "Mo&ve to..."                  ID_MENUITEM_MOVESBOX
         MENUITEM "Delete from &list\tShift+Del", ID_MENUITEM_DELETE
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
         MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW
-        MENUITEM "F&ind...\tCtrl+F",            ID_MENUITEM_FIND
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
     END
     POPUP "&Help"
     BEGIN

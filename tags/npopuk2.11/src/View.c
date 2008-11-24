@@ -3448,7 +3448,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ret = Decode(hWnd, i, DECODE_SAVE_ALL);
 			}
 			if (ret == FALSE) {
-				ErrorMessage(hWnd, STR_ERR_SAVE);
+				if (tpMailItem->Download) {
+					ErrorMessage(hWnd, STR_ERR_SAVE);
+				} else {
+					ErrorMessage(hWnd, STR_ERR_PARTIAL_ATTACH);
+				}
 			}
 			break;
 

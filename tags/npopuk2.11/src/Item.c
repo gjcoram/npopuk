@@ -129,6 +129,7 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	return TRUE;
 }
 
@@ -142,7 +143,9 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override)
 
 	if (Override) {
 		// override a few values
-		tpToMailItem->Mark = tpToMailItem->MailStatus;
+		if (tpToMailItem->Mark != ICON_FLAG) {
+			tpToMailItem->Mark = tpToMailItem->MailStatus;
+		}
 		//tpToMailItem->New = FALSE;
 		tpToMailItem->No = 0;
 		tpToMailItem->UIDL = NULL;
@@ -1748,7 +1751,7 @@ static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int fl
 	if (tpFilter->Header1 != NULL && *tpFilter->Header1 != TEXT('\0')) {
 		match1 = item_filter_check_content(buf, tpFilter->Header1, tpFilter->Content1);
 	}
-	if (match1 == FALSE &&  BoolOp != FILTER_BOOL_OR) {
+	if (match1 == FALSE && BoolOp != FILTER_BOOL_OR) {
 		return RetFlag;
 	}
 	if (tpFilter->Header2 != NULL && *tpFilter->Header2 != TEXT('\0')) {
@@ -1821,6 +1824,7 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 	int RetFlag = 0;
 	int i;
 	int *dwi = NULL;
+	BOOL done = FALSE;
 	BOOL DoGlobal = op.GlobalFilterEnable && !(tpMailBox->FilterEnable & FILTER_NOGLOBAL)
 					&& (op.tpFilter != NULL);
 
@@ -1833,11 +1837,12 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 			if (do_what != NULL) dwi = do_what + i;
 			RetFlag = item_check_filter(*(op.tpFilter+i), buf, dwi, RetFlag);
 			if (RetFlag & (FILTER_RECV | FILTER_UNRECV)) {
+				done = TRUE;
 				break;
 			}
 		}
 	}
-	if (tpMailBox->tpFilter != NULL) {
+	if (tpMailBox->tpFilter != NULL && done == FALSE) {
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
 			if (do_what != NULL) dwi = do_what + op.GlobalFilterCnt + i;
 			RetFlag = item_check_filter(*(tpMailBox->tpFilter+i), buf, dwi, RetFlag);

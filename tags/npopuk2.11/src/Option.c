@@ -100,6 +100,7 @@ static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos);
+static void MailboxFilenameUpdate(HWND hListView, int Start, int Stop);
 static BOOL CALLBACK PopSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSmtpAuthProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SmtpSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -2061,11 +2062,19 @@ BOOL SetSaveBoxName(HWND hWnd)
 			DeleteMBMenu(SelBox);
 			InsertMBMenu(SelBox, new_name);
 			SelectMBMenu(SelBox);
+			for (j = 0; j < op.GlobalFilterCnt; j++) {
+				FILTER *tpFilter = *(op.tpFilter + j);
+				if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
+					if (lstrcmp(tpFilter->SaveboxName, old_name) == 0) {
+						mem_free(&tpFilter->SaveboxName);
+						tpFilter->SaveboxName = alloc_copy_t(new_name);
+					}
+				}
+			}
 			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 				if ((MailBox+i)->Type != MAILBOX_TYPE_SAVE && (MailBox+i)->FilterCnt > 0) {
 					for (j = 0; j < (MailBox+i)->FilterCnt; j++) {
-						FILTER *tpFilter;
-						tpFilter = *((MailBox+i)->tpFilter + j);
+						FILTER *tpFilter = *((MailBox+i)->tpFilter + j);
 						if (tpFilter->Action == FILTER_COPY_INDEX || tpFilter->Action == FILTER_MOVE_INDEX) {
 							if (lstrcmp(tpFilter->SaveboxName, old_name) == 0) {
 								mem_free(&tpFilter->SaveboxName);
@@ -2126,12 +2135,27 @@ static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos)
 	if (op.LazyLoadMailboxes > 0) {
 		ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
 	}
-	if (tpMailBox->Filename == NULL) {
-		wsprintf(buf, TEXT("MailBox%d.dat"), Num - MAILBOX_USER);
-	} else {
-		wsprintf(buf, tpMailBox->Filename);
+	MailboxFilenameUpdate(hListView, ItemIndex, ListView_GetItemCount(hListView)-1);
+}
+
+/*
+ * MailboxFilenameUpdate - update Filename column after add/delete/move
+ */
+static void MailboxFilenameUpdate(HWND hListView, int Start, int Stop)
+{
+	MAILBOX *tpMailBox;
+	TCHAR buf[BUF_SIZE];
+	int i, max = ListView_GetItemCount(hListView);
+
+	for (i = Start; i <= Stop && i< max; i++) {
+		tpMailBox = MailBox + i;
+		if (tpMailBox->Filename == NULL) {
+			wsprintf(buf, TEXT("MailBox%d.dat"), i);
+		} else {
+			wsprintf(buf, tpMailBox->Filename);
+		}
+		ListView_SetItemText(hListView, i, ((op.LazyLoadMailboxes > 0) ? 5 : 4), buf);
 	}
-	ListView_SetItemText(hListView, ItemIndex, ((op.LazyLoadMailboxes > 0) ? 5 : 4), buf);
 }
 
 /*
@@ -2143,7 +2167,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	MAILBOX *tpMailBox;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p;
-	int i, sel, oldsel, move = 1;
+	int i, sel, oldsel, first, cnt, move = 1;
 	BOOL ret = FALSE;
 
 	switch (uMsg) {
@@ -2301,16 +2325,18 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			move = 10;
 		case IDC_BUTTON_UP:
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
-			if (ListView_GetSelectedCount(hListView) <= 0) {
+			if ((cnt = ListView_GetSelectedCount(hListView)) <= 0) {
 				break;
 			}
 			sel = -1;
 			oldsel = SelBox;
+			first = ListView_GetNextItem(hListView, -1, LVIS_SELECTED) - 1;
 			while ( (sel = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
 				SelBox = sel + 1;
 				mailbox_move_up(hDlg, FALSE);
 				ListView_MoveItem(hListView, sel, -1 * move, (op.LazyLoadMailboxes > 0) ? 5 : 4);
 			}
+			MailboxFilenameUpdate(hListView, first, first+move+cnt-1);
 			SelBox = oldsel;
 			break;
 
@@ -2318,11 +2344,12 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			move = 10;
 		case IDC_BUTTON_DOWN:
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
-			if (ListView_GetSelectedCount(hListView) <= 0) {
+			if ((cnt = ListView_GetSelectedCount(hListView)) <= 0) {
 				break;
 			}
 			sel = -1;
 			oldsel = SelBox;
+			first = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
 			for (sel = ListView_GetItemCount(hListView) - 1; sel >= 0; sel--) {
 				if (ListView_GetItemState(hListView, sel, LVNI_SELECTED) == LVNI_SELECTED) {
 					SelBox = sel + 1;
@@ -2330,6 +2357,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					ListView_MoveItem(hListView, sel, move, (op.LazyLoadMailboxes > 0) ? 5 : 4);
 				}
 			}
+			MailboxFilenameUpdate(hListView, first, first+move+cnt-1);
 			SelBox = oldsel;
 			break;
 
@@ -2459,6 +2487,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					break;
 				}
 			}
+			first = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
 			while( (sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED)) >= 0) {
 				if (oldsel == sel + MAILBOX_USER) {
 					oldsel = -1;
@@ -2466,6 +2495,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				mailbox_delete(hDlg, sel + MAILBOX_USER, TRUE, FALSE);
 				ListView_DeleteItem(hListView, sel);
 			}
+			MailboxFilenameUpdate(hListView, first, ListView_GetItemCount(hListView)-1);
 			if (oldsel >= 0) {
 				SelectMBMenu(oldsel);
 			}

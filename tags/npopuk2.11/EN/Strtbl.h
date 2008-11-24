@@ -52,6 +52,7 @@
 #define STR_ERR_OPEN				TEXT("Open File error")
 #define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
+#define STR_ERR_PARTIAL_ATTACH		TEXT("Attachments were not fully downloaded")
 #define STR_ERR_FILENAME_TOO_LONG	TEXT("Filename or path too long")
 #define STR_ERR_ADD					TEXT("Address not added")
 #define STR_ERR_POOM				TEXT("POOM failure; check \\Windows\\pimstore.dll")
@@ -293,13 +294,15 @@
 #define STR_LIST_MENU_REPLY			TEXT("&Reply...\tCtrl+R")
 #define STR_LIST_MENU_REPLYALL		TEXT("Repl&y to all...\tCtrl+Alt+R")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark to send\tCtrl+D")
-#define STR_LIST_MENU_DELMARK		TEXT("&Mark to delete\tCtrl+Del")
+#define STR_LIST_MENU_DELMARK		TEXT("Mark to &delete\tCtrl+Del")
 #define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark to download\tCtrl+D")
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
-#define STR_LIST_MENU_COPYSBOX		TEXT("&Copy to")
-#define STR_LIST_MENU_MOVESBOX		TEXT("&Move to")
+#define STR_LIST_MENU_COPYSBOX		TEXT("C&opy to")
+#define STR_LIST_MENU_MOVESBOX		TEXT("Mo&ve to")
+#define STR_LIST_MENU_COPYSBOX1		TEXT("&Copy to")
+#define STR_LIST_MENU_MOVESBOX1		TEXT("&Move to")
 #define STR_LIST_MENU_NEW			TEXT("(New)")
 
 // Mail view
@@ -445,8 +448,6 @@
 #define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark to download")
 #define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
-#define STR_LIST_PPCMENU_SAVEBOXCOPY	TEXT("Copy to &Savebox")
-#define STR_LIST_PPCMENU_SAVEBOXMOVE	TEXT("Move to &Savebox")
 
 #ifdef _WIN32_WCE_PPC
 #define STR_TITLE_SMTPAUTH			TEXT("SMTP-AUTH")

@@ -1101,6 +1101,7 @@ void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg)
 #ifdef WSAASYNC
 	// Progress bar - GJC
 	// [....................]
+	if (len > size) len = size;
 	if (size > 0) {
 		int i;
 		for (i=0; i < (20 * len) / size; i++) {
@@ -4930,9 +4931,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 					break;
 				}
-			}
-			if (g_soc != -1 && SelBox < RecvBox) {
-				RecvBox--;
 			}
 			if (op.LazyLoadMailboxes > 0) {
 				// make sure SelBox-1 is loaded before deleting
