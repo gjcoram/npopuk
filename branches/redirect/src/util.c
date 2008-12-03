@@ -1184,6 +1184,9 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 			continue;
 		}
 		p++;
+		if (p == TEXT('\0')) {
+			break;
+		}
 		switch (*p) {
 		case TEXT('t'):
 			*(r++) = TEXT('\t');

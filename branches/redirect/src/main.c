@@ -162,8 +162,8 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
 #ifndef _WIN32_WCE
 static BOOL ConfirmPass(HWND hWnd, TCHAR *ps);
 #endif
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, TCHAR *pszTip);
-static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf);
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon);
+static void SetTrayIcon(HWND hWnd, HICON hIcon);
 static void FreeAllMailBox(void);
 static BOOL CloseEditViewWindows(int Flag);
 static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
@@ -776,31 +776,40 @@ static BOOL ConfirmPass(HWND hWnd, TCHAR *ps)
 /*
  * TrayMessage - タスクトレイのアイコンの設定
  */
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, TCHAR *pszTip)
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
 {
 	NOTIFYICONDATA tnd;
+	ZeroMemory(&tnd, sizeof(NOTIFYICONDATA));
 
 	tnd.cbSize = sizeof(NOTIFYICONDATA);
 	tnd.hWnd = hWnd;
 	tnd.uID	= uID;
 	tnd.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+#if (_WIN32_IE >= 0x0500)
+	if (hIcon == TrayIcon_Mail && op.ShowNewMailMessage == 0) {
+		tnd.uFlags |= NIF_INFO;
+		tnd.uTimeout = 5000;
+		lstrcpy(tnd.szInfoTitle, WINDOW_TITLE);
+		lstrcpy(tnd.szInfo, STR_MSG_NEWMAIL);
+	}
+#endif
 	tnd.uCallbackMessage = WM_TRAY_NOTIFY;
 	tnd.hIcon = hIcon;
-	lstrcpy(tnd.szTip, (pszTip == NULL) ? TEXT("") : pszTip);
+	lstrcpy(tnd.szTip, (dwMessage == NIM_DELETE) ? TEXT("") : WINDOW_TITLE);
 	return Shell_NotifyIcon(dwMessage, &tnd);
 }
 
 /*
  * SetTrayIcon - タスクトレイにアイコンを設定する
  */
-static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf)
+static void SetTrayIcon(HWND hWnd, HICON hIcon)
 {
 	if (op.ShowTrayIcon != 1 || hIcon == NULL) {
 		return;
 	}
-	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon, buf) == FALSE) {
+	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon) == FALSE) {
 		//When it cannot modify, it adds the
-		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon, buf);
+		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon);
 	}
 }
 
@@ -2554,7 +2563,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	// タスクトレイのアイコンの除去
 	op.ShowTrayIcon = 0;
-	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, NULL);
+	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 
 	//of idea contest of task tray Cancellation
 	DestroyIcon(TrayIcon_Main);
@@ -2689,7 +2698,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -2768,7 +2777,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -2953,7 +2962,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -3602,10 +3611,10 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		IsIconic(hWnd) != 0 ||
 #endif
 		GetForegroundWindow() != hWnd)) {
-		SetTrayIcon(hWnd, TrayIcon_Mail, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Mail);
 	} else {
 		NewMail_Flag = FALSE;
-		SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Main);
 	}
 
 	if (EndThreadSortFlag == TRUE) {
@@ -3813,7 +3822,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		IsIconic(hWnd) != 0 ||
 #endif
 		GetForegroundWindow() != hWnd) {
-		SetTrayIcon(hWnd, TrayIcon_Mail, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Mail);
 		NewMail_Flag = TRUE;
 	}
 
@@ -3980,7 +3989,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		TrayIcon_Mail = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN),
 			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
 		if (op.ShowTrayIcon == 1 && TrayIcon_Main != NULL) {
-			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main, WINDOW_TITLE);
+			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
 		// 自動チェック用タイマーの起動
@@ -4229,7 +4238,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
-			SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+			SetTrayIcon(hWnd, TrayIcon_Main);
 		}
 		NewMail_Flag = FALSE;
 		break;
@@ -4716,9 +4725,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			// タスクトレイのアイコンの設定
 			if (op.ShowTrayIcon == 1) {
-				SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+				SetTrayIcon(hWnd, TrayIcon_Main);
 			} else {
-				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, NULL);
+				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 			}
 			if (ret == TRUE && op.AutoSave == 1) {
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
