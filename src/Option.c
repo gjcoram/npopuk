@@ -7476,7 +7476,11 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 		SetControlFont(hDlg);
 		if (FindStr != NULL) {
-			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_SETTEXT, 0, (LPARAM)FindStr);
+			TCHAR *buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) * 2 + 1));
+			*buf = TEXT('\0');
+			EncodeCtrlChar(FindStr, buf);
+			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_SETTEXT, 0, (LPARAM)buf);
+			mem_free(&buf);
 		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, op.MatchCase, 0);
 		if (FindOrReplace >= 2) { // Replace
@@ -7494,7 +7498,11 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			SetWindowText(GetDlgItem(hDlg, IDCANCEL), STR_REPLACE_DONE);
 			if (ReplaceStr != NULL) {
-				SendDlgItemMessage(hDlg, IDC_EDIT_REPLACE, WM_SETTEXT, 0, (LPARAM)ReplaceStr);
+				TCHAR *buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) * 2 + 1));
+				*buf = TEXT('\0');
+				EncodeCtrlChar(ReplaceStr, buf);
+				SendDlgItemMessage(hDlg, IDC_EDIT_REPLACE, WM_SETTEXT, 0, (LPARAM)buf);
+				mem_free(&buf);
 			}
 		} else { // Find
 			if (op.AllBoxFind) {

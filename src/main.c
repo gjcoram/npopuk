@@ -5389,7 +5389,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				int i, cnt = 0, Target = -1;
 				command_id;
 				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
-					// (in SendBox, Ctrl-C does "create copy"
+					// (in SendBox, Ctrl-C does "edit as new"
 					Target = MAILBOX_SEND;
 				} else {
 					for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
@@ -5436,6 +5436,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
+					}
+					if (SelBox == MAILBOX_SEND && mark_del == FALSE) {
+						OpenItem(hWnd, TRUE, FALSE);
 					}
 				}
 			}

@@ -1201,11 +1201,8 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 			}
 			break;
 
-		case TEXT('\\'):
-			*(r++) = TEXT('\\');
-			break;
-
-		default:
+		default: // including '\\'
+			*(r++) = *p;
 			break;
 		}
 	}
