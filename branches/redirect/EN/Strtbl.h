@@ -186,6 +186,7 @@
 #define STR_MSG_NOATT				TEXT("Attached file not found; verify attachment list")
 #define STR_MSG_NOFWD				TEXT("Original message not found to forward attachments")
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
+#define STR_MSG_NEWMAIL				TEXT("You've got new mail!")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
 #define STR_REPLACED_N				TEXT("Replaced %d instances")
