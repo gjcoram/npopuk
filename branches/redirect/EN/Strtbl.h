@@ -298,7 +298,7 @@
 #define STR_LIST_MENU_REDIRECT		TEXT("Red&irect...")
 #define STR_LIST_MENU_SENDMARK		TEXT("&Mark to send\tCtrl+D")
 #define STR_LIST_MENU_DELMARK		TEXT("Mark to &delete\tCtrl+Del")
-#define STR_LIST_MENU_CREATECOPY	TEXT("Create cop&y\tCtrl+C")
+#define STR_LIST_MENU_CREATECOPY	TEXT("&Edit as new\tCtrl+C")
 #define STR_LIST_MENU_DELATTACH		TEXT("Delete attac&hments")
 #define STR_LIST_MENU_RECVMARK		TEXT("&Mark to download\tCtrl+D")
 #define STR_LIST_MENU_DELLIST		TEXT("Delete from &list\tShift+Del")
@@ -448,7 +448,7 @@
 #define STR_LIST_PPCMENU_FORWARD		TEXT("&Forward")
 #define STR_LIST_PPCMENU_SENDMARK	TEXT("&Mark to send")
 #define STR_LIST_PPCMENU_DELMARK	TEXT("&Mark to delete")
-#define STR_LIST_PPCMENU_CREATECOPY	TEXT("Create cop&y")
+#define STR_LIST_PPCMENU_CREATECOPY	TEXT("&Edit as new")
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark to download")
 #define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
 

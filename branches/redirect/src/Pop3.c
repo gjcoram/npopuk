@@ -744,7 +744,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 				strcpy_s(ErrStr, BUF_SIZE, last_response + 4);
 #endif
 			}
-			return POP_ERR;
+			return (op.NoEmptyMailbox == 2) ? POP_QUIT : POP_ERR;
 		}
 		tpMailBox->ListInitMsg = TRUE;
 		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
