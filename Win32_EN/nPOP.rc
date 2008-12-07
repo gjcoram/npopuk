@@ -139,8 +139,8 @@ BEGIN
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
     VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
-	VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
-	VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, CONTROL, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
@@ -244,7 +244,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDR_MENU_VIEW MENU 
 BEGIN
-    POPUP "&File"
+    POPUP "&Mail"
     BEGIN
         MENUITEM "&Prev mail\tBackspace",       ID_MENUITEM_PREVMAIL
         MENUITEM "&Next mail\tEnter",           ID_MENUITEM_NEXTMAIL
@@ -268,7 +268,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
     END
-    POPUP "&Edit"
+    POPUP "&View"
     BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
@@ -994,7 +994,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Initialise"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "When checking mail:",IDC_STATIC,10,10,185,10
+    LTEXT           "On next check of account:",IDC_STATIC,10,10,185,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
                     BS_AUTORADIOBUTTON,15,25,100,10
     CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
