@@ -405,7 +405,6 @@
 #define IDS_MENUITEM40107               40108
 #define IDS_MENUITEM40110               40111
 #define IDS_MENUITEM40113               40114
-#define IDS_MENUITEM40116               40117
 #define IDS_MENUITEM40119               40120
 #define ID_MENUITEM_FILE                40121
 #define ID_MENUITEM_MAILBOX             40122
@@ -418,7 +417,6 @@
 #define IDS_MENUITEM40138               40139
 #define IDS_MENUITEM40140               40141
 #define ID_MENUITEM_LAN                 40143
-#define IDS_MENUITEM40144               40145
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
 #define ID_MENUITEM_ENCODE              40148  

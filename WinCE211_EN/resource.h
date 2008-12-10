@@ -398,16 +398,6 @@
 #define ID_MENUITEM_FIND                40088
 #define ID_MENUITEM_REPLACE             40089
 #define ID_MENUITEM_NEXTFIND            40090
-#define IDS_MENUITEM40092               40093
-#define IDS_MENUITEM40095               40096
-#define IDS_MENUITEM40098               40099
-#define IDS_MENUITEM40101               40102
-#define IDS_MENUITEM40104               40105
-#define IDS_MENUITEM40107               40108
-#define IDS_MENUITEM40110               40111
-#define IDS_MENUITEM40113               40114
-#define IDS_MENUITEM40116               40117
-#define IDS_MENUITEM40119               40120
 #define ID_MENUITEM_FILE                40121
 #define ID_MENUITEM_MAILBOX             40122
 #define ID_MENUITEM_MAIL                40123
@@ -416,10 +406,7 @@
 #define ID_MENUITEM_VIEW                40129
 #define ID_MENUITEM_ICONSORT            40135
 #define ID_MENUITEM_TRAY                40137
-#define IDS_MENUITEM40138               40139
-#define IDS_MENUITEM40140               40141
 #define ID_MENUITEM_LAN                 40143
-#define IDS_MENUITEM40144               40145
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
 #define ID_MENUITEM_ENCODE              40148  
