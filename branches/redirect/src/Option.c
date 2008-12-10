@@ -7612,6 +7612,11 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_FIND_NEXT_MESSAGE:
 		case IDC_FIND_NEXT_MAILBOX:
 			// above two commands shouldn't be accessible in Replace
+{
+	TCHAR buf[BUF_SIZE];
+	wsprintf(buf, TEXT("Find next, cmd=%d; FindOrReplace=%d\n"), command, FindOrReplace);
+	log_save(buf);
+}
 		case IDOK:
 			if (FindOrReplace >= 2) {
 				SendMessage(hDlg, WM_COMMAND, IDCANCEL, 0);

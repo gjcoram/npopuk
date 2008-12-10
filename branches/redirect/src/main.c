@@ -196,6 +196,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
 static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag);
 static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
+static void SetRecvMark(int Mark);
 static void AutoSave_Mailboxes(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -1142,6 +1143,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 	TCHAR *p;
 
 	tpMailBox = MailBox + BoxIndex;
+	SetRecvMark(ICON_ERROR);
 	RecvBox = -1;
 	SetMailMenu(hWnd);
 	SwitchCursor(TRUE);
@@ -1988,18 +1990,20 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
 	{
 		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
-		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : STR_SENDBOX_NAME TEXT(" *"));
+		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : TEXT("* ") STR_SENDBOX_NAME);
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		TCHAR buf[BUF_SIZE], *p;
-		p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
+		TCHAR *p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 		if ((MailBox + i)->NewMail) {
-			wsprintf(buf, TEXT("%s *"), p);
-			p = buf;
+			TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+			wsprintf(q, TEXT("* %s"), p);
+			AddMBMenu(q);
+			mem_free(&q);
+		} else {
+			AddMBMenu(p);
 		}
-		AddMBMenu(p);
 	}
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)TRUE, 0);
 	UpdateWindow(hCombo);
@@ -2741,6 +2745,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	if (op.SocLog > 0) log_header(TEXT("recv"));
 
 	RecvBox = BoxIndex;
+	SetRecvMark(TRUE);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -2927,6 +2932,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	if (op.SocLog > 0) log_header(TEXT("exec"));
 
 	RecvBox = BoxIndex;
+	SetRecvMark(TRUE);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -3765,11 +3771,11 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 				(MailBox + i)->NewMail = 0;
 			} else {
 				UnreadMailBox++;
-				if (GetStarMBMenu(i, p)) {
+				if (GetStarMBMenu(i, p) == 0) {
 					// * is missing, add it
 					int len = lstrlen(p);
 					TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
-					str_join_t(q, p, TEXT(" *"), (TCHAR *)-1);
+					wsprintf(q, TEXT("* %s"), p);
 					DeleteMBMenu(i);
 					InsertMBMenu(i, q);
 					mem_free(&q);
@@ -3826,7 +3832,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		NewMail_Flag = TRUE;
 	}
 
-	// There is a new arrival in the message box; add the " *" in the drop-down combo
+	// There is a new arrival in the message box; add the "* " in the drop-down combo
 	j = GetSelectedMBMenu();
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox + i)->NewMail == 0 || (MailBox + i)->Loaded == FALSE ||
@@ -3839,11 +3845,11 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		}
 		DeleteMBMenu(i);
 		if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
-			InsertMBMenu(i, STR_MAILBOX_NONAME TEXT(" *"));
+			InsertMBMenu(i, TEXT("* ") STR_MAILBOX_NONAME);
 		} else {
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + i)->Name) + 3));
 			if (p != NULL) {
-				str_join_t(p, (MailBox + i)->Name, TEXT(" *"), (TCHAR *)-1);
+				wsprintf(p, TEXT("* %s"), (MailBox + i)->Name);
 				InsertMBMenu(i, p);
 				mem_free(&p);
 			}
@@ -3892,6 +3898,37 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	}
 	SendMessage(MsgWnd,	WM_SHOWDIALOG, 0, 0);
 #endif
+}
+
+/*
+ * SetRecvMark - set or unset indicator of RecvBox (GJC)
+ */
+static void SetRecvMark(int Mark)
+{
+	MAILBOX *tpMailBox = MailBox + RecvBox;
+	TCHAR *p, *r;
+	if (RecvBox < 0) {
+		return;
+	}
+	DeleteMBMenu(RecvBox);
+	p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
+		? STR_MAILBOX_NONAME : tpMailBox->Name;
+	r = TEXT("");
+	if (Mark == ICON_NON && tpMailBox->NewMail == 0) {
+		InsertMBMenu(RecvBox, p);
+	} else {
+		TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+		if (q != NULL) {
+			if (Mark == ICON_NON) {
+				r = TEXT("* ");
+			} else {
+				r = (Mark == ICON_ERROR) ? TEXT("# ") : TEXT("> ");
+			}
+			str_join_t(q, r, p, (TCHAR *)-1);
+			InsertMBMenu(RecvBox, q);
+			mem_free(&q);
+		}
+	}
 }
 
 /*
@@ -4262,11 +4299,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
+					SetRecvMark(ICON_NON);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					AutoSave_Mailboxes(hWnd);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
+					SetRecvMark(ICON_NON);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -5256,6 +5295,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (g_soc == -1 || GetHostFlag == TRUE) {
 				g_soc = -1;
+				SetRecvMark(ICON_NON);
 				RecvBox = -1;
 				EndSocketFunc(hWnd, FALSE);
 				if (op.SocLog > 0) log_flush();
@@ -5267,6 +5307,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
+				SetRecvMark(ICON_NON);
 				RecvBox = -1;
 				SetItemCntStatusText(NULL, FALSE);
 				SetUnreadCntTitle(TRUE);
@@ -5778,10 +5819,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
+					SetRecvMark(ICON_NON);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
+					SetRecvMark(ICON_NON);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -5803,6 +5846,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (*ErrStr != TEXT('\0')) {
 					SocketErrorMessage(hWnd, ErrStr, RecvBox);
 				} else {
+					SetRecvMark(ICON_NON);
 					RecvBox = -1;
 					if (op.SocLog > 0) log_flush();
 					SetMailMenu(hWnd);
@@ -6375,16 +6419,6 @@ void SelectMBMenu(int index)
 }
 
 /*
- * GetTxtLenMBMenu
- */
-int GetTxtLenMBMenu(int index)
-{
-	int len;
-	len = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETTXTLEN), index, 0);
-	return len;
-}
-
-/*
  * AddMBMenu
  */
 int AddMBMenu(TCHAR *Name)
@@ -6411,7 +6445,7 @@ void DeleteMBMenu(int index)
 }
 
 /*
- * GetStarMBMenu - add * to IDC_MBMENU drop-down
+ * GetStarMBMenu - check if mailbox is prefaced with *
  */
 BOOL GetStarMBMenu(int index, TCHAR *Name)
 {
@@ -6420,7 +6454,7 @@ BOOL GetStarMBMenu(int index, TCHAR *Name)
 #else
 	int len;
 #endif
-	len = GetTxtLenMBMenu(index);
+	len = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETTXTLEN), index, 0);
 	return len > lstrlen(Name);
 }
 

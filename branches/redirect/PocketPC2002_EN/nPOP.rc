@@ -1,6 +1,7 @@
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
+#include "../src/npop_ver.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -1596,19 +1597,19 @@ END
 IDM_MAIN_VIEW SHMENUBAR DISCARDABLE 
 BEGIN
     IDM_MAIN_VIEW, 2,
-    I_IMAGENONE, ID_MENUITEM_FILE, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40110, 0, 0,
-    I_IMAGENONE, ID_MENUITEM_EDIT, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40113, 0, 1,
+    I_IMAGENONE, ID_MENUITEM_MAIL, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40107, 0, 0,
+    I_IMAGENONE, ID_MENUITEM_VIEW, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40110, 0, 1,
 END
 
 IDM_MAIN_EDIT SHMENUBAR DISCARDABLE 
 BEGIN
     IDM_MAIN_EDIT, 2,
     I_IMAGENONE, ID_MENUITEM_FILE, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40116, 0, 0,
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40098, 0, 0,
     I_IMAGENONE, ID_MENUITEM_EDIT, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40144, 0, 1,
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40113, 0, 1,
 END
 
 IDR_MENU_POPUP SHMENUBAR DISCARDABLE 
@@ -1626,8 +1627,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,10,10,6
- PRODUCTVERSION 2,10,10,6
+ FILEVERSION NPOPVER
+ PRODUCTVERSION NPOPVER
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -1642,18 +1643,30 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "nPOPuk 2.10b10p6 based on nPOP 1.0.9\0"
-            VALUE "CompanyName", "\0"
+            VALUE "Comments", "nPOPuk " NPOPVERSTR " based on nPOP 1.0.9"
             VALUE "FileDescription", "nPOPuk\0"
-            VALUE "FileVersion", "2.10 Beta 10 Patch 6\0"
+            VALUE "FileVersion", NPOPVERLNG
             VALUE "InternalName", "nPOPuk\0"
+            VALUE "CompanyName", "\0"
             VALUE "LegalCopyright", "Copyright ©2008 by Nakashima Tomoaki, Geoffrey Coram\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "nPOPuk.exe\0"
-            VALUE "PrivateBuild", "nPOPuk Ver 2.10b10p6\0"
+            VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR
             VALUE "ProductName", "nPOPuk\0"
-            VALUE "ProductVersion", "2.10b10p6\0"
+            VALUE "ProductVersion", NPOPVERLNG
+#ifdef ARM
             VALUE "SpecialBuild", "Pocket PC 2002 (ARM)\0"
+#elif defined (SH3)
+			VALUE "SpecialBuild", "Pocket PC 2002 (SH3)\0"
+#elif defined (SH4)
+			VALUE "SpecialBuild", "Pocket PC 2002 (SH4)\0"
+#elif defined (MIPS)
+			VALUE "SpecialBuild", "Pocket PC 2002 (MIPS)\0"
+#elif defined (x86)
+			VALUE "SpecialBuild", "Pocket PC 2002 (x86)\0"
+#else
+            VALUE "SpecialBuild", "Pocket PC 2002 (??)\0"
+#endif
         END
     END
     BLOCK "VarFileInfo"
@@ -1672,20 +1685,10 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_MENUITEM40113       "Edit"
-    IDS_MENUITEM40116       "File"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_MENUITEM40144       "Edit"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MENUITEM40098       "File"
     IDS_MENUITEM40107       "Mail"
-    IDS_MENUITEM40110       "File"
+    IDS_MENUITEM40110       "View"
+    IDS_MENUITEM40113       "Edit"
 END
 
 STRINGTABLE DISCARDABLE 
