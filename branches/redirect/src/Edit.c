@@ -1370,13 +1370,13 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 
 	if (MarkFlag == TRUE) {
 		tpMailItem->Mark = ICON_SEND;
-		SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
+		SetStarMBMenu(TRUE);
 	} else {
 		if (tpMailItem->Mark != ICON_FLAG) {
 			tpMailItem->Mark = ICON_NON;
 		}
-		if (GetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME) && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
-			SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		if (GetStarMBMenu() && item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE) == -1) {
+			SetStarMBMenu(FALSE);
 		}
 
 	}
