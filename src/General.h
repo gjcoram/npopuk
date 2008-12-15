@@ -1063,8 +1063,8 @@ void SelectMBMenu(int EntryNum);
 int GetSelectedMBMenu(void);
 int AddMBMenu(TCHAR *Name);
 void InsertMBMenu(int EntryNum, TCHAR *Name);
-BOOL GetStarMBMenu(int EntryNum, TCHAR *Name);
-void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel);
+BOOL GetStarMBMenu();
+void SetStarMBMenu(BOOL UseFlag);
 
 #endif
 /* End of source */
