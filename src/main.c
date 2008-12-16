@@ -969,6 +969,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	int ItemCnt;
 	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0;
 	int i;
+	BOOL err = FALSE;
 
 	tpMailBox = (MailBox + SelBox);
 	if (tpMailBox == NULL || (tpViewMailBox != NULL && tpViewMailBox != tpMailBox)) {
@@ -1039,9 +1040,12 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 		if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
 			UnsentCnt++;
 		}
+		if (tpMailItem->Mark == ICON_ERROR) {
+			err = TRUE;
+		}
 	}
 	if (UnsentCnt > 0) {
-		SetStarMBMenu(TRUE);
+		SetStarMBMenu((err == TRUE) ? ICON_ERROR : TRUE);
 	} else {
 		if (GetStarMBMenu()) {
 			SetStarMBMenu(FALSE);
@@ -1989,8 +1993,9 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
 	{
-		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
-		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : TEXT("* ") STR_SENDBOX_NAME);
+		int next = item_get_next_send_mark((MailBox + MAILBOX_SEND), ICON_ERROR);
+		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : ((next==-2) ? TEXT("* ") STR_SENDBOX_NAME
+			: TEXT("* ") STR_SENDBOX_NAME));
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
@@ -6449,15 +6454,17 @@ BOOL GetStarMBMenu()
 }
 
 /*
- * SetStarMBMenu - add * to IDC_MBMENU drop-down for SENDBOX
+ * SetStarMBMenu - add * or # to IDC_MBMENU drop-down for SENDBOX
  */
-void SetStarMBMenu(BOOL UseFlag)
+void SetStarMBMenu(int Flag)
 {
 	DeleteMBMenu(MAILBOX_SEND);
-	if (UseFlag == FALSE) {
+	if (Flag == FALSE) {
 		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME);
-	} else {
+	} else if (Flag == TRUE) {
 		InsertMBMenu(MAILBOX_SEND, TEXT("* ") STR_SENDBOX_NAME);
+	} else {
+		InsertMBMenu(MAILBOX_SEND, TEXT("# ") STR_SENDBOX_NAME);
 	}
 	if (SelBox == MAILBOX_SEND) {
 		SelectMBMenu(MAILBOX_SEND);
