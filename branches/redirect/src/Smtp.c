@@ -656,6 +656,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	send_body = MIME_body_encode(tpMailItem->Body, BodyCSet, enc, ctype, enc_type, ErrStr);
 #endif
 	if (send_body == NULL) {
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 		return FALSE;
 	}
 	if (tpMailItem->FwdAttach != NULL  && *(tpMailItem->FwdAttach) != TEXT('\0')) {
@@ -673,6 +674,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			mem_free(&send_body);
 			send_body = NULL;
 			lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 			return FALSE;
 		}
 	}
@@ -699,12 +701,14 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 			mem_free(&send_body);
 			send_body = NULL;
 			lstrcpy(ErrStr, STR_ERR_SOCK_NOATTACH);
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 			return FALSE;
 
 		case MP_ERROR_ALLOC:
 			mem_free(&send_body);
 			send_body = NULL;
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 			return FALSE;
 
 		case MP_NO_ATTACH:
@@ -1542,6 +1546,7 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 		(send_mail_item->Cc == NULL || *send_mail_item->Cc == TEXT('\0')) &&
 		(send_mail_item->Bcc == NULL || *send_mail_item->Bcc == TEXT('\0'))) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
+		send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
 		return -1;
 	}
 
@@ -1624,10 +1629,9 @@ void smtp_set_error(HWND hWnd)
 
 	smtp_free();
 
-	if (send_mail_item == NULL) {
+	if (send_mail_item == NULL || send_mail_item->Mark != ICON_ERROR) {
 		return;
 	}
-	send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
 	(MailBox + MAILBOX_SEND)->NeedsSave |= MARKS_CHANGED;
 
 	if (SelBox == MAILBOX_SEND) {

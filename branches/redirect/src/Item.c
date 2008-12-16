@@ -630,21 +630,33 @@ int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No)
 }
 
 /*
- * item_get_next_send_mark - 送信マークの付いたアイテムのインデックスを取得
+ * item_get_next_send_mark - check Outbox for send and/or error mark
  */
-int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors)
+int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors)
 {
 	MAILITEM *tpMailItem;
-	int i;
+	int i, ret = -1;
 
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem != NULL && (tpMailItem->Mark == ICON_SEND
-				|| (CheckErrors == TRUE && tpMailItem->Mark == ICON_ERROR))) {
-			return i;
+		if (tpMailItem != NULL) {
+			if (CheckErrors != FALSE && tpMailItem->Mark == ICON_ERROR) {
+				return i;
+			} else if (tpMailItem->Mark == ICON_SEND) {
+				if (CheckErrors != ICON_ERROR) {
+					return i;
+				} else {
+					ret = i;
+				}
+			}
 		}
 	}
-	return -1;
+	if (CheckErrors == ICON_ERROR && ret != -1) {
+		// CheckErrors == ICON_ERROR returns: # of error mark, if any; else -2 if send mark; else -1
+		return -2;
+	} else {
+		return ret;
+	}
 }
 
 /*
