@@ -328,7 +328,7 @@ BOOL ini_read_setting(HWND hWnd)
 	{
 		int top, left;
 #ifdef _WIN32_WCE
-		top = 0; left = 0;
+		top = MENU_HEIGHT; left = 0;
 #else
 		top = op.MainRect.top; left = op.MainRect.left;
 #endif
@@ -790,7 +790,11 @@ BOOL ini_read_setting(HWND hWnd)
 			(MailBox + num)->Filename = NULL;
 		}
 		// Type
-		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0, app_path);
+		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 2, app_path);
+if ((MailBox + num)->Type == 2) {
+	TCHAR msg[BUF_SIZE];
+	wsprintf(msg, TEXT("ERROR loading mailbox %d"), num);
+}
 		(MailBox + num)->WasMbox = -1; // unknown, updated when loaded
 		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
 			// GJC - SaveBox type (not an account)
