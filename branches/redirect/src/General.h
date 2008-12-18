@@ -203,10 +203,10 @@
 #define SMTP_RSET				7
 #define SMTP_MAILFROM			8
 #define SMTP_RCPTTO				9
-#define SMTP_DATA				10
-#define SMTP_SENDBODY			11
-#define SMTP_NEXTSEND			12
-#define SMTP_SENDEND			13
+#define SMTP_DATA				100
+#define SMTP_SENDBODY			101
+#define SMTP_NEXTSEND			102
+#define SMTP_SENDEND			103
 
 #define ICON_NON				0					//Idea contest state
 #define ICON_MAIL				1
