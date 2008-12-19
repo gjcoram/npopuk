@@ -271,7 +271,7 @@ static TCHAR *auth_create_cram_md5(char *buf, TCHAR *user, TCHAR *pass, TCHAR *E
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return NULL;
 	}
-	base64_decode(p, input);
+	base64_decode(p, input, FALSE);
 
 	// ダイジェスト値の取得
 	HMAC_MD5(input, tstrlen(input), key, tstrlen(key), digest);

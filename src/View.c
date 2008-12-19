@@ -2254,7 +2254,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			SwitchCursor(TRUE);
 			return FALSE;
 		}
-		endpoint = ((EncodeFlag == 1) ? base64_decode : QuotedPrintable_decode)(b64str, dstr);
+		endpoint = ((EncodeFlag == 1) ? base64_decode : QuotedPrintable_decode)(b64str, dstr, FALSE);
 		mem_free(&b64str);
 		break;
 

@@ -44,7 +44,7 @@ static const signed char db64[256] = {
  -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3  // F0
 };
 
-char *base64_decode(char *buf, char *ret)
+char *base64_decode(char *buf, char *ret, BOOL is_body)
 {
 	int c, d;
 	unsigned char bb, *bf, *rf;
@@ -72,7 +72,12 @@ char *base64_decode(char *buf, char *ret)
 		} while (d < -1);
 		if ( d < 0 ) break;
 
-		*(rf++) = c | (d >> 4); // first output char from group
+		*rf = c | (d >> 4); // first output char from group
+		if (is_body && *rf == '\n' && rf > ret && *(rf-1) != '\r') {
+			*(rf++) = '\r';
+			*rf = '\n';
+		}
+		rf++;
 		d = (d & 0xF) << 4;
 
 		do {
@@ -81,7 +86,12 @@ char *base64_decode(char *buf, char *ret)
 		} while (c < -2);
 		if ( c < 0 ) break;
 
-		*(rf++) = d | (c >> 2); // second output char from group
+		*rf = d | (c >> 2); // second output char from group
+		if (is_body && *rf == '\n' && *(rf-1) != '\r') {
+			*(rf++) = '\r';
+			*rf = '\n';
+		}
+		rf++;
 		c = (c & 0x3) << 6;
 
 		do {
@@ -90,7 +100,12 @@ char *base64_decode(char *buf, char *ret)
 		} while (d < -2);
 		if ( d < 0 ) break;
 
-		*(rf++) = c | d; // third output char from group
+		*rf = c | d; // third output char from group
+		if (is_body && *rf == '\n' && *(rf-1) != '\r') {
+			*(rf++) = '\r';
+			*rf = '\n';
+		}
+		rf++;
 	}
 	*rf = '\0';
 	return rf;
@@ -215,7 +230,7 @@ static int hex_val(int c)
  * QuotedPrintable_decode - Quoted Printable‚ (RFC 2045)
  *     '\r' = 13 = 0x0D, '\n' = 10 = 0x0A
  */
-char *QuotedPrintable_decode(char *buf, char *ret)
+char *QuotedPrintable_decode(char *buf, char *ret, BOOL dummy)
 {
 	char *p, *r;
 	int hextmp;

@@ -708,7 +708,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 				enc_err = TRUE;
 				continue;
 			}
-			base64_decode(content, dec_buf);
+			base64_decode(content, dec_buf, FALSE);
 			mem_free(&content);
 			break;
 		case 'q': case 'Q':
@@ -1236,9 +1236,9 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 	} else if (tpMailItem->Encoding != NULL) {
 		// decoding always takes fewer characters, so do it in-place
 		if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
-			base64_decode(body, body);
+			base64_decode(body, body, TRUE);
 		} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
-			QuotedPrintable_decode(body, body);
+			QuotedPrintable_decode(body, body, TRUE);
 			check_slash_n = FALSE; // handled in QP_decode
 		}
 		// else encoding is assumed 7bit or 8bit
@@ -1425,7 +1425,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 		if (encode != 0) {
 			enc_ret = (char *)mem_alloc(tstrlen(body) + 1);
 			if (enc_ret != NULL) {
-				((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret);
+				((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret, TRUE);
 				mem_free(&body);
 				body = enc_ret;
 			}
