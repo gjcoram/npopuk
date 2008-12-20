@@ -1237,6 +1237,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 		// decoding always takes fewer characters, so do it in-place
 		if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
 			base64_decode(body, body, TRUE);
+			check_slash_n = FALSE; // handled in base64_decode
 		} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
 			QuotedPrintable_decode(body, body, TRUE);
 			check_slash_n = FALSE; // handled in QP_decode
