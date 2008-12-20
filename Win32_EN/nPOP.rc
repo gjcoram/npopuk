@@ -559,10 +559,10 @@ BEGIN
     CONTROL         "Enable SS&L",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,64,104,70,11
     PUSHBUTTON      "set&up",IDC_BUTTON_SETSSL,160,104,30,12
-    CONTROL         "Exempt from &Check All",IDC_CHECK_CYCLIC,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,64,118,100,10
+    CONTROL         "Exempt from &Check All/Update All",IDC_CHECK_CYCLIC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,131,120,10
     CONTROL         "Disable '&RETR' command",IDC_CHECK_NORETR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,64,131,131,11
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,118,120,11
 END
 
 IDD_DIALOG_SMTP DIALOG  0, 0, 212, 148
