@@ -73,7 +73,7 @@ char *base64_decode(char *buf, char *ret, BOOL is_body)
 		if ( d < 0 ) break;
 
 		*rf = c | (d >> 4); // first output char from group
-		if (is_body && *rf == '\n' && rf > ret && *(rf-1) != '\r') {
+		if (is_body && *rf == '\n' && (rf == ret || *(rf-1) != '\r')) {
 			*(rf++) = '\r';
 			*rf = '\n';
 		}
