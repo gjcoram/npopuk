@@ -1394,7 +1394,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	HWND hListView;
 	TCHAR buf[BUF_SIZE];
-	FILTER **tpFilter;
+	FILTER **tpFilter = NULL;
 	int SelectItem;
 	int i, cnt, oper;
 
@@ -1539,8 +1539,10 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				}
 				op.GlobalFilterCnt = cnt;
 				tpFilter = op.tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * cnt);
-			} else if (tpOptionMailBox->tpFilter != NULL) {
-				filter_free(tpOptionMailBox);
+			} else {
+				if (tpOptionMailBox->tpFilter != NULL) {
+					filter_free(tpOptionMailBox);
+				}
 				tpOptionMailBox->FilterCnt = cnt;
 				tpFilter = tpOptionMailBox->tpFilter = (FILTER **)mem_calloc(sizeof(FILTER *) * cnt);
 			}
