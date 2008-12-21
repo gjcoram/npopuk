@@ -8,7 +8,7 @@
  *
  * For a real release, use patch = 0 or empty
  * If there is ever a need to re-release a real-release, use patch > 0
- * For a release candidate, use Patch = rc# (should be > 0)
+ * For a release candidate, use Beta=99, Patch = rc# (should be > 0)
  * For a beta, use a Beta between 1 and 98, with Patch = 0 or empty
  * For a patched beta, use Beta between 1 and 98, with Patch > 0
  */
@@ -18,8 +18,8 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 12
-#define NPOPBETA  6
-#define NPOPPATCH 4
+#define NPOPBETA  99
+#define NPOPPATCH 1
 
 
 // convert text, blanks, or zeroes to zeroes
