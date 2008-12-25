@@ -93,80 +93,82 @@ int UpdateAddressBook(unsigned short * szFileName, int NameOrder, int NameIsComm
 					}
 					pContacts->get_Count(&numItems);
 
-					HANDLE hFile = INVALID_HANDLE_VALUE;
 					if (numItems >= 1) {
+						HANDLE hFile = INVALID_HANDLE_VALUE;
 						// Backup last file
 						wsprintf(wFileName, L"%s.bak", szFileName);
 						MoveFile((LPCWSTR)szFileName, wFileName);
 
 						hFile = CreateFile((LPCWSTR)szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-					}
-					if (hFile != INVALID_HANDLE_VALUE)
-					{
-						DWORD bytesWritten = 0;
 
-						for (i = 1; i <= numItems; i++)
-						{
-							pContacts->Item(i, (IDispatch **)&pContact);
-							if (pContact)
-							{
-								pContact->get_Title(&bstrTitle);
-								pContact->get_FirstName(&bstrFname);
-								pContact->get_LastName(&bstrLname);
-								pContact->get_MiddleName(&bstrMname);
-								pContact->get_Email1Address(&bstrEmail1);
-								pContact->get_Email2Address(&bstrEmail2);
-								pContact->get_Email3Address(&bstrEmail3);
-								pContact->get_Categories(&bstrCategories); // GJC
-								RELEASE_OBJ(pContact);
+						if (hFile != INVALID_HANDLE_VALUE) {
+							DWORD bytesWritten = 0;
 
-								// Write data to file
-								int offset = 0;
-								if (NameOrder == 1) {
-									wsprintf(userName, L"%s%s%s", bstrFname, SysStringLen(bstrFname)>0?L" ":L"", bstrLname);
-								} else if (NameIsComment == 1) {
-									wsprintf(userName, L"%s%s%s", bstrLname, SysStringLen(bstrLname)>0?L", ":L"", bstrFname);
-								} else {
-									wsprintf(userName, L"\"%s%s%s\"", bstrLname, SysStringLen(bstrLname)>0?L", ":L"", bstrFname);
-								}
-								if (SysStringLen(bstrCategories)>0) {
-									if (NameIsComment == 1) {
-										wsprintf(categories, L"\x09%s", bstrCategories);
+							for (i = 1; i <= numItems; i++)	{
+								pContacts->Item(i, (IDispatch **)&pContact);
+								if (pContact) {
+									pContact->get_Title(&bstrTitle);
+									pContact->get_FirstName(&bstrFname);
+									pContact->get_LastName(&bstrLname);
+									pContact->get_MiddleName(&bstrMname);
+									pContact->get_Email1Address(&bstrEmail1);
+									pContact->get_Email2Address(&bstrEmail2);
+									pContact->get_Email3Address(&bstrEmail3);
+									pContact->get_Categories(&bstrCategories); // GJC
+									RELEASE_OBJ(pContact);
+
+									// Write data to file
+									int offset = 0;
+									if (NameOrder == 1) {
+										wsprintf(userName, L"%s%s%s", bstrFname, SysStringLen(bstrFname)>0?L" ":L"", bstrLname);
+									} else if (NameIsComment == 1) {
+										wsprintf(userName, L"%s%s%s", bstrLname, SysStringLen(bstrLname)>0?L", ":L"", bstrFname);
 									} else {
-										wsprintf(categories, L"\x09\x09%s", bstrCategories);
+										wsprintf(userName, L"\"%s%s%s\"", bstrLname, SysStringLen(bstrLname)>0?L", ":L"", bstrFname);
 									}
-								} else {
-									categories[0] = '\0';
-								}
+									if (SysStringLen(bstrCategories)>0) {
+										if (NameIsComment == 1) {
+											wsprintf(categories, L"\x09%s", bstrCategories);
+										} else {
+											wsprintf(categories, L"\x09\x09%s", bstrCategories);
+										}
+									} else {
+										categories[0] = '\0';
+									}
 
-								if (SysStringLen(bstrEmail1) > 0) {
-									FormatOutputString(szOutputData, userName, bstrEmail1, categories, NameIsComment);
-									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
-								}
-								if (SysStringLen(bstrEmail2) > 0) {
-									FormatOutputString(szOutputData, userName, bstrEmail2, categories, NameIsComment);
-									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
-								}
-								if (SysStringLen(bstrEmail3) > 0) {
-									FormatOutputString(szOutputData, userName, bstrEmail3, categories, NameIsComment);
-									WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
-								}
+									if (SysStringLen(bstrEmail1) > 0) {
+										FormatOutputString(szOutputData, userName, bstrEmail1, categories, NameIsComment);
+										WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
+									}
+									if (SysStringLen(bstrEmail2) > 0) {
+										FormatOutputString(szOutputData, userName, bstrEmail2, categories, NameIsComment);
+										WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
+									}
+									if (SysStringLen(bstrEmail3) > 0) {
+										FormatOutputString(szOutputData, userName, bstrEmail3, categories, NameIsComment);
+										WriteFile(hFile, szOutputData, strlen(szOutputData), &bytesWritten, NULL);
+									}
 
-								SysFreeString(bstrTitle);
-								SysFreeString(bstrFname);
-								SysFreeString(bstrLname);
-								SysFreeString(bstrMname);
-								SysFreeString(bstrEmail1);
-								SysFreeString(bstrEmail2);
-								SysFreeString(bstrEmail3);
-								SysFreeString(bstrCategories);
+									SysFreeString(bstrTitle);
+									SysFreeString(bstrFname);
+									SysFreeString(bstrLname);
+									SysFreeString(bstrMname);
+									SysFreeString(bstrEmail1);
+									SysFreeString(bstrEmail2);
+									SysFreeString(bstrEmail3);
+									SysFreeString(bstrCategories);
+								}
 							}
+							retval = i;
+							CloseHandle(hFile);
+						} else {
+							// Couldn't create file - Restore backup file
+							MoveFile(wFileName, (LPCWSTR)szFileName);
+							retval = -5;
 						}
-						retval = i;
-						CloseHandle(hFile);
+					} else if (numItems == 0) {
+						retval = 0;
 					} else {
-						// Couldn't create file (or no items) - Restore backup file
-						MoveFile(wFileName, (LPCWSTR)szFileName);
 						retval = -4;
 					}
 
