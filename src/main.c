@@ -4326,6 +4326,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					g_soc = -1;
 					if (op.SocLog > 0) log_flush();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					SetItemCntStatusText(NULL, FALSE);
 					SetUnreadCntTitle(TRUE);
 				}
@@ -4438,7 +4439,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), SelBox);
+				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), CheckBox);
 				log_save(msg);
 			}
 			//Mail reception start
