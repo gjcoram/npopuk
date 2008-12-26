@@ -2150,9 +2150,13 @@ static void MailboxFilenameUpdate(HWND hListView, int Start, int Stop)
 	int i, max = ListView_GetItemCount(hListView);
 
 	for (i = Start; i <= Stop && i< max; i++) {
-		tpMailBox = MailBox + i;
+		tpMailBox = MailBox + i + MAILBOX_USER;
 		if (tpMailBox->Filename == NULL) {
+#ifdef _DEBUG
+			wsprintf(buf, TEXT("[MailBox%d.dat]"), i);
+#else
 			wsprintf(buf, TEXT("MailBox%d.dat"), i);
+#endif
 		} else {
 			wsprintf(buf, tpMailBox->Filename);
 		}
