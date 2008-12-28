@@ -328,7 +328,7 @@ BOOL ini_read_setting(HWND hWnd)
 	{
 		int top, left;
 #ifdef _WIN32_WCE
-		top = MENU_HEIGHT; left = 0;
+		top = 0; left = 0;
 #else
 		top = op.MainRect.top; left = op.MainRect.left;
 #endif
@@ -1722,7 +1722,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
  */
 static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 {
-	static int s_left, s_right, s_top = 0, s_bot = 0;
+	static int s_left, s_right, s_top = 0, s_bot = 0, minwl = 10;
 	// use "static" so we only have to make the system calls once
 	if (s_bot == 0 && s_top == 0) {
 #if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
@@ -1740,8 +1740,9 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 			s_right = GetSystemMetrics(SM_CXSCREEN);
 			s_bot   = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
+			s_top	=  MENU_HEIGHT;
 			s_right -= 5; // so resize border is visible
-			s_bot   -= 15 + MENU_HEIGHT; // ignoring sip status
+			s_bot   -= MENU_HEIGHT; // ignoring sip status
 #endif
 		}
 	}
@@ -1753,7 +1754,7 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		the_rect->right -= the_rect->left;
 		the_rect->left = 0;
 	}
-	if (the_rect->right < the_rect->left) {
+	if (the_rect->right < the_rect->left + minwl) {
 		the_rect->right = the_rect->left + def_w;
 	}
 	if (the_rect->right > s_right) {
@@ -1771,7 +1772,7 @@ static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 		the_rect->bottom -= the_rect->top;
 		the_rect->top = 0;
 	}
-	if (the_rect->bottom < the_rect->top) {
+	if (the_rect->bottom < the_rect->top + minwl) {
 		the_rect->bottom = the_rect->top + def_l;
 	}
 	if (the_rect->bottom > s_bot) {
