@@ -4823,10 +4823,11 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	MAILITEM **tpSendMailIList;
 	MAILITEM *tpMailItem;
 	MAILITEM *tpTmpMailItem = NULL;
+	MAILBOX *tpMailBox = NULL;
 	ADDRESSBOOK *tpTmpAddressBook;
 	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
-	TCHAR *mb_replyto, *mb_autobcc;
+	TCHAR *mb_replyto = NULL, *mb_autobcc = NULL;
 	int i, j, st, mb, cnt, sel, len;
 	BOOL BtnFlag, found, ret, ReDoAttachButton = FALSE;
 
@@ -4866,30 +4867,29 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETEXTENDEDUI, TRUE, 0);
 		cnt = 0;
 		mb = -1;
-		mb_replyto = NULL;
-		mb_autobcc = NULL;
 		/* of control Initialization */
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-			if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+			tpMailBox = MailBox + i;
+			if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 				continue;
 			}
 			if ((mb == -1 && SelBox == i) || (tpMailItem->MailBox != NULL && mailbox_name_to_index(tpMailItem->MailBox) == i)) {
 				j = i;
 				mb = cnt;
-				mb_replyto = (MailBox + i)->ReplyTo;
-				if ((MailBox + i)->MyAddr2Bcc) {
-					mb_autobcc = (MailBox + i)->BccAddr;
+				mb_replyto = tpMailBox->ReplyTo;
+				if (tpMailBox->MyAddr2Bcc) {
+					mb_autobcc = tpMailBox->BccAddr;
 					if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
-						mb_autobcc = (MailBox + i)->MailAddress;
+						mb_autobcc = tpMailBox->MailAddress;
 					}
 				} else {
 					mb_autobcc = NULL;
 				}
 			}
-			if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
+			if (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0')) {
 				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
 			} else {
-				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)(MailBox + i)->Name);
+				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)tpMailBox->Name);
 			}
 			cnt++;
 		}
@@ -4919,17 +4919,18 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					p = str_cpy_f_t(buf, p, TEXT(','));
 					// check that this address isn't a duplicate of one from an account
 					found = FALSE;
-					for (j = 1; j < MailBoxCnt; j++) {
-						if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+					for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
+						tpMailBox = MailBox + j;
+						if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 							continue;
 						}
-						if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-							if (lstrcmp((MailBox + j)->ReplyTo, buf) == 0) {
+						if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
+							if (lstrcmp(tpMailBox->ReplyTo, buf) == 0) {
 								found = TRUE;
 								break;
 							}
-						} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-							if (lstrcmp((MailBox + j)->MailAddress, buf) == 0) {
+						} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+							if (lstrcmp(tpMailBox->MailAddress, buf) == 0) {
 								found = TRUE;
 								break;
 							}
@@ -4944,28 +4945,30 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// replyto/address for user mailboxes
 			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 				TCHAR *addr_to_match = NULL;
-				if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+				tpMailBox = MailBox + i;
+				if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 					continue;
 				}
-				if ((MailBox + i)->ReplyTo != NULL && *(MailBox + i)->ReplyTo != TEXT('\0')) {
-					addr_to_match = (MailBox + i)->ReplyTo;
-				} else if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
-					addr_to_match = (MailBox + i)->MailAddress;
+				if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0')) {
+					addr_to_match = tpMailBox->ReplyTo;
+				} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+					addr_to_match = tpMailBox->MailAddress;
 				}
 				// check that this address isn't a duplicate of one from a later account
 				if (addr_to_match != NULL) {
 					found = FALSE;
 					for (j = i+1; j < MailBoxCnt; j++) {
-						if ((MailBox + i)->Type == MAILBOX_TYPE_SAVE) {
+						tpMailBox = MailBox + j;
+						if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 							continue;
 						}
-						if ((MailBox + j)->ReplyTo != NULL && *(MailBox + j)->ReplyTo != TEXT('\0'))  {
-							if (lstrcmp((MailBox + j)->ReplyTo, addr_to_match) == 0) {
+						if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
+							if (lstrcmp(tpMailBox->ReplyTo, addr_to_match) == 0) {
 								found = TRUE;
 								break;
 							}
-						} else if ((MailBox + j)->MailAddress != NULL && *(MailBox + j)->MailAddress != TEXT('\0')) {
-							if (lstrcmp((MailBox + j)->MailAddress, addr_to_match) == 0) {
+						} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+							if (lstrcmp(tpMailBox->MailAddress, addr_to_match) == 0) {
 								found = TRUE;
 								break;
 							}
@@ -5293,7 +5296,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					i += sbox;
 					mb = tpTmpMailItem->No;
-					if ((MailBox + mb)->MyAddr2Bcc) {
+					if ((MailBox + mb)->MyAddr2Bcc && tpTmpMailItem->Bcc != NULL) {
 						// remove bcc of old account
 						BOOL found = FALSE;
 						mb_autobcc = (MailBox + mb)->BccAddr;
@@ -5490,23 +5493,24 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					i += sbox;
 				}
 				if (i != CB_ERR && (MailBox + i)->Name != NULL) {
-					tpMailItem->MailBox = alloc_copy_t((MailBox + i)->Name);
+					tpMailBox = MailBox + i;
+					tpMailItem->MailBox = alloc_copy_t(tpMailBox->Name);
 
 					mem_free(&tpMailItem->From);
 					tpMailItem->From = NULL;
-					if ((MailBox + i)->MailAddress != NULL && *(MailBox + i)->MailAddress != TEXT('\0')) {
+					if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
 						len = lstrlen(TEXT(" <>"));
-						if ((MailBox + i)->UserName != NULL) {
-							len += lstrlen((MailBox + i)->UserName);
+						if (tpMailBox->UserName != NULL) {
+							len += lstrlen(tpMailBox->UserName);
 						}
-						len += lstrlen((MailBox + i)->MailAddress);
+						len += lstrlen(tpMailBox->MailAddress);
 						tpMailItem->From = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 						if (tpMailItem->From != NULL) {
 							p = tpMailItem->From;
-							if ((MailBox + i)->UserName != NULL && *(MailBox + i)->UserName != TEXT('\0')) {
-								p = str_join_t(p, (MailBox + i)->UserName, TEXT(" "), (TCHAR *)-1);
+							if (tpMailBox->UserName != NULL && *tpMailBox->UserName != TEXT('\0')) {
+								p = str_join_t(p, tpMailBox->UserName, TEXT(" "), (TCHAR *)-1);
 							}
-							str_join_t(p, TEXT("<"), (MailBox + i)->MailAddress, TEXT(">"), (TCHAR *)-1);
+							str_join_t(p, TEXT("<"), tpMailBox->MailAddress, TEXT(">"), (TCHAR *)-1);
 						}
 					}
 				}
