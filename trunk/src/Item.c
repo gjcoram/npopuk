@@ -129,6 +129,7 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
 	}
+	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	return TRUE;
 }
 
@@ -155,6 +156,7 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override)
 	tpToMailItem->To = alloc_copy_t(tpFromMailItem->To);
 	tpToMailItem->Cc = alloc_copy_t(tpFromMailItem->Cc);
 	tpToMailItem->Bcc = alloc_copy_t(tpFromMailItem->Bcc);
+	tpToMailItem->RedirectTo = alloc_copy_t(tpFromMailItem->RedirectTo);
 	tpToMailItem->Subject = alloc_copy_t(tpFromMailItem->Subject);
 	tpToMailItem->Date = alloc_copy_t(tpFromMailItem->Date);
 	tpToMailItem->FmtDate = alloc_copy_t(tpFromMailItem->FmtDate);
@@ -306,6 +308,7 @@ void item_free(MAILITEM **tpMailItem, int cnt)
 		mem_free(&(*(tpMailItem + i))->To);
 		mem_free(&(*(tpMailItem + i))->Cc);
 		mem_free(&(*(tpMailItem + i))->Bcc);
+		mem_free(&(*(tpMailItem + i))->RedirectTo);
 		mem_free(&(*(tpMailItem + i))->Date);
 		mem_free(&(*(tpMailItem + i))->FmtDate);
 		mem_free(&(*(tpMailItem + i))->Size);
@@ -627,21 +630,33 @@ int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No)
 }
 
 /*
- * item_get_next_send_mark - 送信マークの付いたアイテムのインデックスを取得
+ * item_get_next_send_mark - check Outbox for send and/or error mark
  */
-int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors)
+int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors)
 {
 	MAILITEM *tpMailItem;
-	int i;
+	int i, ret = -1;
 
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem != NULL && (tpMailItem->Mark == ICON_SEND
-				|| (CheckErrors == TRUE && tpMailItem->Mark == ICON_ERROR))) {
-			return i;
+		if (tpMailItem != NULL) {
+			if (CheckErrors != FALSE && tpMailItem->Mark == ICON_ERROR) {
+				return i;
+			} else if (tpMailItem->Mark == ICON_SEND) {
+				if (CheckErrors != ICON_ERROR) {
+					return i;
+				} else {
+					ret = i;
+				}
+			}
 		}
 	}
-	return -1;
+	if (CheckErrors == ICON_ERROR && ret != -1) {
+		// CheckErrors == ICON_ERROR returns: # of error mark, if any; else -2 if send mark; else -1
+		return -2;
+	} else {
+		return ret;
+	}
 }
 
 /*
@@ -1121,6 +1136,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	item_get_content_t(buf, HEAD_TO, &tpMailItem->To);
 	item_get_content_t(buf, HEAD_CC, &tpMailItem->Cc);
 	item_get_content_t(buf, HEAD_BCC, &tpMailItem->Bcc);
+	item_get_content_t(buf, HEAD_REDIRECT, &tpMailItem->RedirectTo);
 	item_get_content_t(buf, HEAD_DATE, &tpMailItem->Date);
 	if (tpMailItem->Date != NULL && *tpMailItem->Date != TEXT('\0')) {
 #ifdef UNICODE
@@ -1429,6 +1445,7 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 	len += item_save_header_size(TEXT(HEAD_TO), tpMailItem->To);
 	len += item_save_header_size(TEXT(HEAD_CC), tpMailItem->Cc);
 	len += item_save_header_size(TEXT(HEAD_BCC), tpMailItem->Bcc);
+	len += item_save_header_size(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo);
 	len += item_save_header_size(TEXT(HEAD_DATE), tpMailItem->Date);
 	// don't save tpMailItem->FmtDate
 	len += item_save_header_size(TEXT(HEAD_SUBJECT), tpMailItem->Subject);
@@ -1531,6 +1548,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 	p = item_save_header(TEXT(HEAD_TO), tpMailItem->To, p);
 	p = item_save_header(TEXT(HEAD_CC), tpMailItem->Cc, p);
 	p = item_save_header(TEXT(HEAD_BCC), tpMailItem->Bcc, p);
+	p =	item_save_header(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo, p);
 	p = item_save_header(TEXT(HEAD_DATE), tpMailItem->Date, p);
 	// don't save tpMailItem->FmtDate
 	p = item_save_header(TEXT(HEAD_SUBJECT), tpMailItem->Subject, p);

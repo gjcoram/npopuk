@@ -8,7 +8,7 @@
  *
  * For a real release, use patch = 0 or empty
  * If there is ever a need to re-release a real-release, use patch > 0
- * For a release candidate, use Patch = rc# (should be > 0)
+ * For a release candidate, use Beta=99, Patch = rc# (should be > 0)
  * For a beta, use a Beta between 1 and 98, with Patch = 0 or empty
  * For a patched beta, use Beta between 1 and 98, with Patch > 0
  */
@@ -18,8 +18,8 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 12
-#define NPOPBETA  2
-#define NPOPPATCH 0
+#define NPOPBETA  6
+#define NPOPPATCH 8
 
 
 // convert text, blanks, or zeroes to zeroes
@@ -67,9 +67,9 @@
 #else
 #if NPOPPATCH
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c "t" #d
-#define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c) TEXT("t") TEXT(#d)
-#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Test " #d
-//#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Patch " #d
+#define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d)
+//#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Test " #d
+#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Patch " #d
 #elif NPOPBETA
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c)

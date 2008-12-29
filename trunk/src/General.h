@@ -158,6 +158,7 @@
 #define EDIT_REPLYALL			3
 #define EDIT_FORWARD			4					// Added PHH 4-Oct-2003
 #define EDIT_FILTERFORWARD		5					// Added GJC 5-Jul-2008
+#define EDIT_REDIRECT			6					// Added GJC 15-Nov-2008
 
 #define EDIT_NONEDIT			0					//of transmission mail compilation Return value
 #define EDIT_INSIDEEDIT			1
@@ -202,10 +203,10 @@
 #define SMTP_RSET				7
 #define SMTP_MAILFROM			8
 #define SMTP_RCPTTO				9
-#define SMTP_DATA				10
-#define SMTP_SENDBODY			11
-#define SMTP_NEXTSEND			12
-#define SMTP_SENDEND			13
+#define SMTP_DATA				100
+#define SMTP_SENDBODY			101
+#define SMTP_NEXTSEND			102
+#define SMTP_SENDEND			103
 
 #define ICON_NON				0					//Idea contest state
 #define ICON_MAIL				1
@@ -270,6 +271,7 @@
 #define HEAD_TO					"To:"
 #define HEAD_CC					"Cc:"
 #define HEAD_BCC				"Bcc:"
+#define HEAD_REDIRECT			"X-Redirect-To:"
 #define HEAD_REPLYTO			"Reply-To:"
 #define HEAD_DATE				"Date:"
 #define HEAD_SIZE				"Content-Length:"
@@ -431,6 +433,7 @@ typedef struct _OPTION {
 	int ExpertMode;		// Added PHH 4-10-2003
 	int PopBeforeSmtpIsLoginOnly;
 	int PopBeforeSmtpWait;
+	int NoEmptyMailbox;
 
 	// SSL
 	TCHAR *CAFile;
@@ -657,6 +660,7 @@ typedef struct _MAILITEM {
 	TCHAR *To;
 	TCHAR *Cc;
 	TCHAR *Bcc;
+	TCHAR *RedirectTo;
 	TCHAR *Date;
 	TCHAR *FmtDate;
 	TCHAR *Size;
@@ -846,7 +850,7 @@ int item_get_number_to_index(MAILBOX *tpMailBox, int No);
 int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No);
 int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No);
-int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors);
+int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors);
 int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
 BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download, MAILBOX *tpMailBox);
 MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size);
@@ -1059,8 +1063,8 @@ void SelectMBMenu(int EntryNum);
 int GetSelectedMBMenu(void);
 int AddMBMenu(TCHAR *Name);
 void InsertMBMenu(int EntryNum, TCHAR *Name);
-BOOL GetStarMBMenu(int EntryNum, TCHAR *Name);
-void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel);
+BOOL GetStarMBMenu();
+void SetStarMBMenu(int Flag);
 
 #endif
 /* End of source */

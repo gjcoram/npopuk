@@ -1009,7 +1009,7 @@ static void EncodePassword_old(TCHAR *buf, TCHAR *ret, int retsize)
 	r = ret;
 #endif
 
-	base64_decode(p, r);
+	base64_decode(p, r, FALSE);
 
 	len = tstrlen(r);
 	for (i = 0; i < len; i++) {
@@ -1073,7 +1073,7 @@ void EncodePassword(TCHAR *Key, TCHAR *Word, TCHAR *ret, int retsize, BOOL decod
 			*ret = TEXT('\0');
 			return;
 		}
-		t = base64_decode(p + 1, r);
+		t = base64_decode(p + 1, r, FALSE);
 		len = t - r;
 		mem_free(&p);
 		p = r;
@@ -1184,6 +1184,9 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 			continue;
 		}
 		p++;
+		if (p == TEXT('\0')) {
+			break;
+		}
 		switch (*p) {
 		case TEXT('t'):
 			*(r++) = TEXT('\t');
@@ -1198,11 +1201,8 @@ void DecodeCtrlChar(TCHAR *buf, TCHAR *ret)
 			}
 			break;
 
-		case TEXT('\\'):
-			*(r++) = TEXT('\\');
-			break;
-
-		default:
+		default: // including '\\'
+			*(r++) = *p;
 			break;
 		}
 	}

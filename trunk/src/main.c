@@ -42,6 +42,11 @@
 #define ID_TIMEOUT_TIMER		7
 #define ID_NEWMAIL_TIMER		8
 
+#define STATUS_DONE				0
+#define STATUS_CHECK			1
+#define STATUS_NEW				2
+#define STATUS_ERROR			3
+
 #define RECVTIME				1					//Timer interval
 #define SMTPTIME				100
 #define CHECKTIME				100
@@ -162,8 +167,8 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
 #ifndef _WIN32_WCE
 static BOOL ConfirmPass(HWND hWnd, TCHAR *ps);
 #endif
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, TCHAR *pszTip);
-static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf);
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon);
+static void SetTrayIcon(HWND hWnd, HICON hIcon);
 static void FreeAllMailBox(void);
 static BOOL CloseEditViewWindows(int Flag);
 static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
@@ -196,6 +201,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
 static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag);
 static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
+static void SetMailboxMark(int Box, int Status);
 static void AutoSave_Mailboxes(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -776,31 +782,40 @@ static BOOL ConfirmPass(HWND hWnd, TCHAR *ps)
 /*
  * TrayMessage - タスクトレイのアイコンの設定
  */
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, TCHAR *pszTip)
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
 {
 	NOTIFYICONDATA tnd;
+	ZeroMemory(&tnd, sizeof(NOTIFYICONDATA));
 
 	tnd.cbSize = sizeof(NOTIFYICONDATA);
 	tnd.hWnd = hWnd;
 	tnd.uID	= uID;
 	tnd.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+#if (_WIN32_IE >= 0x0500)
+	if (hIcon == TrayIcon_Mail && op.ShowNewMailMessage == 0) {
+		tnd.uFlags |= NIF_INFO;
+		tnd.uTimeout = 5000;
+		lstrcpy(tnd.szInfoTitle, WINDOW_TITLE);
+		lstrcpy(tnd.szInfo, STR_MSG_NEWMAIL);
+	}
+#endif
 	tnd.uCallbackMessage = WM_TRAY_NOTIFY;
 	tnd.hIcon = hIcon;
-	lstrcpy(tnd.szTip, (pszTip == NULL) ? TEXT("") : pszTip);
+	lstrcpy(tnd.szTip, (dwMessage == NIM_DELETE) ? TEXT("") : WINDOW_TITLE);
 	return Shell_NotifyIcon(dwMessage, &tnd);
 }
 
 /*
  * SetTrayIcon - タスクトレイにアイコンを設定する
  */
-static void SetTrayIcon(HWND hWnd, HICON hIcon, TCHAR *buf)
+static void SetTrayIcon(HWND hWnd, HICON hIcon)
 {
 	if (op.ShowTrayIcon != 1 || hIcon == NULL) {
 		return;
 	}
-	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon, buf) == FALSE) {
+	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon) == FALSE) {
 		//When it cannot modify, it adds the
-		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon, buf);
+		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon);
 	}
 }
 
@@ -959,6 +974,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	int ItemCnt;
 	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0;
 	int i;
+	BOOL err = FALSE;
 
 	tpMailBox = (MailBox + SelBox);
 	if (tpMailBox == NULL || (tpViewMailBox != NULL && tpViewMailBox != tpMailBox)) {
@@ -1029,12 +1045,15 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 		if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
 			UnsentCnt++;
 		}
+		if (tpMailItem->Mark == ICON_ERROR) {
+			err = TRUE;
+		}
 	}
 	if (UnsentCnt > 0) {
-		SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, TRUE, (SelBox == MAILBOX_SEND));
+		SetStarMBMenu((err == TRUE) ? ICON_ERROR : TRUE);
 	} else {
-		if (GetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME)) {
-			SetStarMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME, FALSE, (SelBox == MAILBOX_SEND));
+		if (GetStarMBMenu()) {
+			SetStarMBMenu(FALSE);
 		}
 	}
 	if (SelBox == MAILBOX_SEND) {
@@ -1101,6 +1120,7 @@ void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg)
 #ifdef WSAASYNC
 	// Progress bar - GJC
 	// [....................]
+	if (len > size) len = size;
 	if (size > 0) {
 		int i;
 		for (i=0; i < (20 * len) / size; i++) {
@@ -1132,6 +1152,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 	TCHAR *p;
 
 	tpMailBox = MailBox + BoxIndex;
+	SetMailboxMark(RecvBox, STATUS_ERROR);
 	RecvBox = -1;
 	SetMailMenu(hWnd);
 	SwitchCursor(TRUE);
@@ -1977,19 +1998,22 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
 	{
-		int next = item_get_next_send_mark(MailBox + MAILBOX_SEND, TRUE);
-		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : STR_SENDBOX_NAME TEXT(" *"));
+		int next = item_get_next_send_mark((MailBox + MAILBOX_SEND), ICON_ERROR);
+		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : ((next==-2) ? TEXT("* ") STR_SENDBOX_NAME
+			: TEXT("* ") STR_SENDBOX_NAME));
 	}
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		TCHAR buf[BUF_SIZE], *p;
-		p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
+		TCHAR *p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 		if ((MailBox + i)->NewMail) {
-			wsprintf(buf, TEXT("%s *"), p);
-			p = buf;
+			TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+			wsprintf(q, TEXT("* %s"), p);
+			AddMBMenu(q);
+			mem_free(&q);
+		} else {
+			AddMBMenu(p);
 		}
-		AddMBMenu(p);
 	}
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)TRUE, 0);
 	UpdateWindow(hCombo);
@@ -2553,7 +2577,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	// タスクトレイのアイコンの除去
 	op.ShowTrayIcon = 0;
-	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, NULL);
+	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 
 	//of idea contest of task tray Cancellation
 	DestroyIcon(TrayIcon_Main);
@@ -2674,6 +2698,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	command_status = SMTP_START;
 	ExecFlag = TRUE;
 	(MailBox + MAILBOX_SEND)->NeedsSave |= MARKS_CHANGED;
+	RecvBox = MAILBOX_SEND;
 
 	*ErrStr = TEXT('\0');
 	g_soc = smtp_send_mail(hWnd, tpMailBox, tpMailItem, end_cmd, ErrStr);
@@ -2682,13 +2707,12 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 		SocketErrorMessage(hWnd, ErrStr, MAILBOX_SEND);
 		return FALSE;
 	}
-	RecvBox = MAILBOX_SEND;
 
 #ifndef WSAASYNC
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -2731,6 +2755,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	if (op.SocLog > 0) log_header(TEXT("recv"));
 
 	RecvBox = BoxIndex;
+	SetMailboxMark(RecvBox, STATUS_CHECK);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -2767,7 +2792,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -2917,6 +2942,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	if (op.SocLog > 0) log_header(TEXT("exec"));
 
 	RecvBox = BoxIndex;
+	SetMailboxMark(RecvBox, STATUS_CHECK);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -2952,7 +2978,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check, WINDOW_TITLE);
+	SetTrayIcon(hWnd, TrayIcon_Check);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -2980,7 +3006,12 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 		return;
 	}
 	if (SelBox == MAILBOX_SEND) {
-		if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
+		if (tpMailItem->RedirectTo != NULL) {
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_REDIRECT), hWnd, SetSendProc,
+				(LPARAM)tpMailItem) == TRUE) {
+				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
+			}
+		} else if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
 			// GJC: don't edit sent mail
 			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
 #ifdef _WIN32_WCE
@@ -3596,10 +3627,10 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		IsIconic(hWnd) != 0 ||
 #endif
 		GetForegroundWindow() != hWnd)) {
-		SetTrayIcon(hWnd, TrayIcon_Mail, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Mail);
 	} else {
 		NewMail_Flag = FALSE;
-		SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Main);
 	}
 
 	if (EndThreadSortFlag == TRUE) {
@@ -3740,26 +3771,13 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	j = GetSelectedMBMenu();
 	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
 		if((MailBox + i)->NewMail > 0) {
-			TCHAR *p;
-			p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
-				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 			// GJC - check if there still is new mail; if not, update drop-down list
 			if (CheckMsgs == TRUE && item_get_next_new((MailBox + i), -1, NULL) == -1) {
-				DeleteMBMenu(i);
-				InsertMBMenu(i, p);
 				(MailBox + i)->NewMail = 0;
 			} else {
 				UnreadMailBox++;
-				if (GetStarMBMenu(i, p)) {
-					// * is missing, add it
-					int len = lstrlen(p);
-					TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 3));
-					str_join_t(q, p, TEXT(" *"), (TCHAR *)-1);
-					DeleteMBMenu(i);
-					InsertMBMenu(i, q);
-					mem_free(&q);
-				}
 			}
+			SetMailboxMark(i, STATUS_DONE);
 		}
 	}
 	SelectMBMenu(j);
@@ -3778,7 +3796,6 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
  */
 static void NewMail_Message(HWND hWnd, int cnt)
 {
-	TCHAR *p;
 	int i, j;
 
 	if (cnt == -1) {
@@ -3807,11 +3824,11 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		IsIconic(hWnd) != 0 ||
 #endif
 		GetForegroundWindow() != hWnd) {
-		SetTrayIcon(hWnd, TrayIcon_Mail, WINDOW_TITLE);
+		SetTrayIcon(hWnd, TrayIcon_Mail);
 		NewMail_Flag = TRUE;
 	}
 
-	// There is a new arrival in the message box; add the " *" in the drop-down combo
+	// There is a new arrival in the message box; add the "* " in the drop-down combo
 	j = GetSelectedMBMenu();
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox + i)->NewMail == 0 || (MailBox + i)->Loaded == FALSE ||
@@ -3822,17 +3839,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		if (SelBox != i) {
 			(MailBox + i)->NewMail++;
 		}
-		DeleteMBMenu(i);
-		if ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0')) {
-			InsertMBMenu(i, STR_MAILBOX_NONAME TEXT(" *"));
-		} else {
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen((MailBox + i)->Name) + 3));
-			if (p != NULL) {
-				str_join_t(p, (MailBox + i)->Name, TEXT(" *"), (TCHAR *)-1);
-				InsertMBMenu(i, p);
-				mem_free(&p);
-			}
-		}
+		SetMailboxMark(i, STATUS_DONE);
 	}
 	SelectMBMenu(j);
 
@@ -3877,6 +3884,40 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	}
 	SendMessage(MsgWnd,	WM_SHOWDIALOG, 0, 0);
 #endif
+}
+
+/*
+ * SetMailboxMark - set mailbox indicator (GJC)
+ */
+static void SetMailboxMark(int Box, int Status)
+{
+	MAILBOX *tpMailBox = MailBox + Box;
+	TCHAR *p, *r;
+	if (Box < 0) {
+		return;
+	}
+	DeleteMBMenu(Box);
+	p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
+		? STR_MAILBOX_NONAME : tpMailBox->Name;
+	r = TEXT("");
+	if (Status == STATUS_DONE && tpMailBox->NewMail == 0) {
+		InsertMBMenu(Box, p);
+	} else {
+		TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+		if (q != NULL) {
+			if (Status == STATUS_DONE) {
+				r = TEXT("* ");
+			} else {
+				r = (Status == STATUS_ERROR) ? TEXT("# ") : TEXT("> ");
+			}
+			str_join_t(q, r, p, (TCHAR *)-1);
+			InsertMBMenu(Box, q);
+			mem_free(&q);
+		}
+	}
+	if (SelBox == Box) {
+		SelectMBMenu(SelBox);
+	}
 }
 
 /*
@@ -3974,7 +4015,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		TrayIcon_Mail = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN),
 			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
 		if (op.ShowTrayIcon == 1 && TrayIcon_Main != NULL) {
-			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main, WINDOW_TITLE);
+			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
 		// 自動チェック用タイマーの起動
@@ -4223,7 +4264,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
-			SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+			SetTrayIcon(hWnd, TrayIcon_Main);
 		}
 		NewMail_Flag = FALSE;
 		break;
@@ -4247,11 +4288,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					AutoSave_Mailboxes(hWnd);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -4283,6 +4326,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					g_soc = -1;
 					if (op.SocLog > 0) log_flush();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					SetItemCntStatusText(NULL, FALSE);
 					SetUnreadCntTitle(TRUE);
 				}
@@ -4395,7 +4439,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), SelBox);
+				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), CheckBox);
 				log_save(msg);
 			}
 			//Mail reception start
@@ -4710,9 +4754,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			// タスクトレイのアイコンの設定
 			if (op.ShowTrayIcon == 1) {
-				SetTrayIcon(hWnd, TrayIcon_Main, WINDOW_TITLE);
+				SetTrayIcon(hWnd, TrayIcon_Main);
 			} else {
-				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, NULL);
+				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 			}
 			if (ret == TRUE && op.AutoSave == 1) {
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
@@ -4930,9 +4974,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 					break;
 				}
-			}
-			if (g_soc != -1 && SelBox < RecvBox) {
-				RecvBox--;
 			}
 			if (op.LazyLoadMailboxes > 0) {
 				// make sure SelBox-1 is loaded before deleting
@@ -5244,6 +5285,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (g_soc == -1 || GetHostFlag == TRUE) {
 				g_soc = -1;
+				SetMailboxMark(RecvBox, STATUS_DONE);
 				RecvBox = -1;
 				EndSocketFunc(hWnd, FALSE);
 				if (op.SocLog > 0) log_flush();
@@ -5255,6 +5297,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
+				SetMailboxMark(RecvBox, STATUS_DONE);
 				RecvBox = -1;
 				SetItemCntStatusText(NULL, FALSE);
 				SetUnreadCntTitle(TRUE);
@@ -5305,6 +5348,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Forward
 		case ID_MENUITEM_FORWARD:
 			ReMessageItem(hWnd, EDIT_FORWARD);
+			break;
+
+		//Redirect (GJC)
+		case ID_MENUITEM_REDIRECT:
+			ReMessageItem(hWnd, EDIT_REDIRECT);
 			break;
 
 		// flag for follow-up
@@ -5372,7 +5420,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				int i, cnt = 0, Target = -1;
 				command_id;
 				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
-					// (in SendBox, Ctrl-C does "create copy"
+					// (in SendBox, Ctrl-C does "edit as new"
 					Target = MAILBOX_SEND;
 				} else {
 					for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
@@ -5419,6 +5467,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						}
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
+					}
+					if (SelBox == MAILBOX_SEND && mark_del == FALSE) {
+						OpenItem(hWnd, TRUE, FALSE);
 					}
 				}
 			}
@@ -5758,10 +5809,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -5783,6 +5836,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (*ErrStr != TEXT('\0')) {
 					SocketErrorMessage(hWnd, ErrStr, RecvBox);
 				} else {
+					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					if (op.SocLog > 0) log_flush();
 					SetMailMenu(hWnd);
@@ -6355,16 +6409,6 @@ void SelectMBMenu(int index)
 }
 
 /*
- * GetTxtLenMBMenu
- */
-int GetTxtLenMBMenu(int index)
-{
-	int len;
-	len = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETTXTLEN), index, 0);
-	return len;
-}
-
-/*
  * AddMBMenu
  */
 int AddMBMenu(TCHAR *Name)
@@ -6391,36 +6435,34 @@ void DeleteMBMenu(int index)
 }
 
 /*
- * GetStarMBMenu - add * to IDC_MBMENU drop-down
+ * GetStarMBMenu - check if mailbox is prefaced with *
  */
-BOOL GetStarMBMenu(int index, TCHAR *Name)
+BOOL GetStarMBMenu()
 {
 #ifdef _WIN32_WCE
 	unsigned int len;
 #else
 	int len;
 #endif
-	len = GetTxtLenMBMenu(index);
-	return len > lstrlen(Name);
+	len = SendDlgItemMessage(MainWnd, IDC_MBMENU, MsgMBMenu(MB_GETTXTLEN), MAILBOX_SEND, 0);
+	return len > lstrlen(STR_SENDBOX_NAME);
 }
 
 /*
- * SetStarMBMenu - add * to IDC_MBMENU drop-down
+ * SetStarMBMenu - add * or # to IDC_MBMENU drop-down for SENDBOX
  */
-void SetStarMBMenu(int EntryNum, TCHAR *Name, BOOL UseFlag, BOOL SetCurSel)
+void SetStarMBMenu(int Flag)
 {
-	TCHAR buf[BUF_SIZE], *p;
-
-	if (UseFlag == FALSE) {
-		p = Name;
+	DeleteMBMenu(MAILBOX_SEND);
+	if (Flag == FALSE) {
+		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME);
+	} else if (Flag == TRUE) {
+		InsertMBMenu(MAILBOX_SEND, TEXT("* ") STR_SENDBOX_NAME);
 	} else {
-		wsprintf(buf, TEXT("%s *"), Name);
-		p = buf;
+		InsertMBMenu(MAILBOX_SEND, TEXT("# ") STR_SENDBOX_NAME);
 	}
-	DeleteMBMenu(EntryNum);
-	InsertMBMenu(EntryNum, p);
-	if (SetCurSel) {
-		SelectMBMenu(EntryNum);
+	if (SelBox == MAILBOX_SEND) {
+		SelectMBMenu(MAILBOX_SEND);
 	}
 }
 

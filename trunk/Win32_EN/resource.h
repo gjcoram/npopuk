@@ -284,7 +284,7 @@
 #define IDC_APPNAME                     1098
 #define IDC_CHECK_PARANOID              1100
 #define IDC_ABOUT_TEXT                  1101
-#define IDC_DEL                         1102
+#define IDC_DELIV                       1102
 #define IDC_READ                        1103
 #define IDC_VISIT_WEB                   1104
 #define IDC_QUOTSTYLE_0                 1200
@@ -303,6 +303,9 @@
 #define IDC_CHECK_REFILTER              1213
 #define IDC_CHECK_GBLFILTER             1214
 #define IDC_CHECK_ADD_RECIP             1215
+#define ID_MENUITEM_REDIRECT            1216
+#define IDD_DIALOG_REDIRECT             1217
+#define IDC_CHECK_MARKSEND              1218
 #define IDR_MENU_COPY_FLYOUT            1227
 #define IDR_MENU_MOVE_FLYOUT            1228
 #define ID_MENUITEM_COPYSBOX            1229

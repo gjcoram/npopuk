@@ -273,7 +273,7 @@ static void SetHeaderSize(HWND hWnd)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW);
 #elif defined _WIN32_WCE_LAGENDA
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -524,7 +524,7 @@ int SetWordBreak(HWND hWnd)
 	if (i & WS_HSCROLL) {
 		i ^= WS_HSCROLL;
 #ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), MF_CHECKED);
+		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_VIEW), MF_CHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_CHECKED);
 #else
@@ -534,7 +534,7 @@ int SetWordBreak(HWND hWnd)
 	} else {
 		i |= WS_HSCROLL;
 #ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_EDIT), MF_UNCHECKED);
+		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_VIEW), MF_UNCHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_UNCHECKED);
 #else
@@ -910,7 +910,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
-	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
+	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -1060,7 +1060,7 @@ static void SetEditMenu(HWND hWnd)
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -1086,7 +1086,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT);
+	hMenu = SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW);
 #elif defined(_WIN32_WCE_LAGENDA)
 	hMenu = GetSubMenu(hViewMenu, 1);
 #else
@@ -2151,16 +2151,18 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 		}
 	}
 
-	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
-	SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-	if (selStart != selEnd) {
-		AllocGetText(hEdit, &buf);
-		if (buf != NULL) {
-			seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
-			if (seltext != NULL) {
-				str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
+	if (ReplyFlag != EDIT_REDIRECT) {
+		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
+		SendMessage(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+		if (selStart != selEnd) {
+			AllocGetText(hEdit, &buf);
+			if (buf != NULL) {
+				seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
+				if (seltext != NULL) {
+					str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
+				}
+				mem_free(&buf);
 			}
-			mem_free(&buf);
 		}
 	}
 
@@ -2252,7 +2254,7 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 			SwitchCursor(TRUE);
 			return FALSE;
 		}
-		endpoint = ((EncodeFlag == 1) ? base64_decode : QuotedPrintable_decode)(b64str, dstr);
+		endpoint = ((EncodeFlag == 1) ? base64_decode : QuotedPrintable_decode)(b64str, dstr, FALSE);
 		mem_free(&b64str);
 		break;
 
@@ -3110,7 +3112,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_EDIT), 0, 0);
+			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), 0, 0);
 			break;
 
 		case IDC_EDIT_BODY:
@@ -3188,6 +3190,10 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_FORWARD:
 			SetReMessage(hWnd, EDIT_FORWARD);
+			break;
+
+		case ID_MENUITEM_REDIRECT:
+			SetReMessage(hWnd, EDIT_REDIRECT);
 			break;
 
 		case ID_MENUITEM_FLAGMARK:
@@ -3448,7 +3454,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ret = Decode(hWnd, i, DECODE_SAVE_ALL);
 			}
 			if (ret == FALSE) {
-				ErrorMessage(hWnd, STR_ERR_SAVE);
+				if (tpMailItem->Download) {
+					ErrorMessage(hWnd, STR_ERR_SAVE);
+				} else {
+					ErrorMessage(hWnd, STR_ERR_PARTIAL_ATTACH);
+				}
 			}
 			break;
 
