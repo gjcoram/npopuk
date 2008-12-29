@@ -19,7 +19,7 @@
 /* Struct */
 
 /* Function Prototypes */
-char *base64_decode(char *buf, char *ret);
+char *base64_decode(char *buf, char *ret, BOOL is_body);
 void base64_encode(char *buf, char *ret, int size, int breaklen);
 #ifdef UNICODE
 void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen);
@@ -27,7 +27,7 @@ void base64_encode_t(TCHAR *buf, TCHAR *ret, int size, int breaklen);
 #define base64_encode_t base64_encode
 #endif
 
-char *QuotedPrintable_decode(char *buf, char *ret);
+char *QuotedPrintable_decode(char *buf, char *ret, BOOL dummy);
 char *Q_decode(char *buf, char *ret);
 int QuotedPrintable_encode_length(unsigned char *buf, int break_size, const BOOL body);
 void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body);

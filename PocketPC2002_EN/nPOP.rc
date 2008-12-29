@@ -1,6 +1,7 @@
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
+#include "../src/npop_ver.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -270,6 +271,7 @@ BEGIN
         MENUITEM "&Open",                       ID_MENUITEM_OPEN
         MENUITEM "&Reply",                      ID_MENUITEM_REMESSEGE
         MENUITEM "&Forward...",                 ID_MENUITEM_FORWARD
+        MENUITEM "Re&direct...",                ID_MENUITEM_REDIRECT
         MENUITEM SEPARATOR
         POPUP "&Connect"
         BEGIN
@@ -314,7 +316,7 @@ END
 
 IDM_MAIN_VIEW MENU DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "&Mail"
     BEGIN
         MENUITEM "&Prev mail",                  ID_MENUITEM_PREVMAIL
         MENUITEM "&Next mail",                  ID_MENUITEM_NEXTMAIL
@@ -323,6 +325,7 @@ BEGIN
         MENUITEM "&Reply",                      ID_MENUITEM_REMESSEGE
         MENUITEM "Reply to &all",               ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward",                    ID_MENUITEM_FORWARD
+        MENUITEM "Re&direct...",                ID_MENUITEM_REDIRECT
         MENUITEM "Address &info",               ID_MENUITEM_PROP
         MENUITEM SEPARATOR
         POPUP "&Mark"
@@ -342,7 +345,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_MENUITEM_CLOSE
     END
-    POPUP "&Edit"
+    POPUP "&View"
     BEGIN
         MENUITEM "&Copy",                       ID_MENUITEM_COPY
         MENUITEM "Select &all",                 ID_MENUITEM_ALLSELECT
@@ -362,6 +365,8 @@ BEGIN
         MENUITEM "&Send now",                   ID_MENUITEM_SEND
         MENUITEM "Save and &Mark",              ID_MENUITEM_SBOXMARK
         MENUITEM "Save to &Outbox",             ID_MENUITEM_SENDBOX
+        MENUITEM SEPARATOR
+        MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
         MENUITEM SEPARATOR
         MENUITEM "&Property",                   ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding",                   ID_MENUITEM_ENCODE
@@ -516,7 +521,7 @@ BEGIN
     LTEXT           "&Priority:",IDC_STATIC,5,88,26,8
     COMBOBOX        IDC_PRIORITY,40,86,52,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "Del&ivery receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Del&ivery receipt",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,60,70,10
     CONTROL         "Rea&d receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,170,60,60,10
@@ -562,12 +567,28 @@ BEGIN
     CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",BS_AUTO3STATE | 
                     WS_TABSTOP,99,102,54,10
     LTEXT           "Receipts:",IDC_STATIC,2,115,36,8
-    CONTROL         "Del&ivery",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Del&ivery",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,40,115,40,10
     CONTROL         "Rea&d",IDC_READ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     99,115,40,10
     DEFPUSHBUTTON   "&OK",IDOK,65,130,46,14
     PUSHBUTTON      "&Cancel",IDCANCEL,112,130,45,14
+END
+
+IDD_DIALOG_REDIRECT DIALOG DISCARDABLE  0, 0, 160, 144
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "Redirect"
+FONT 8, "Tahoma"
+BEGIN
+    LTEXT           "&Account:",IDC_STATIC,1,5,32,10
+    COMBOBOX        IDC_COMBO_SMTP,35,3,120,92,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "&To:",IDC_BUTTON_TO,0,23,32,12
+    EDITTEXT        IDC_EDIT_TO,35,23,120,25,ES_MULTILINE | ES_AUTOVSCROLL
+    CONTROL         "&Mark to send",IDC_CHECK_MARKSEND,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,5,60,55,10
+    DEFPUSHBUTTON   "&OK",IDOK,65,60,46,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,112,60,45,14
 END
 
 IDD_DIALOG_POP DIALOG DISCARDABLE  0, 0, 160, 103
@@ -590,10 +611,10 @@ BEGIN
     CONTROL         "SS&L",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,76,72,35,10
     PUSHBUTTON      "set&up",IDC_BUTTON_SETSSL,125,72,24,13
-    CONTROL         "Exempt from &Check All",IDC_CHECK_CYCLIC,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,82,100,10
+    CONTROL         "Exempt from &Check All/Update All",IDC_CHECK_CYCLIC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,92,120,10
     CONTROL         "Disable '&RETR' command",IDC_CHECK_NORETR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,92,125,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,82,125,10
 END
 
 IDD_DIALOG_SMTP DIALOG DISCARDABLE  0, 0, 160, 103
@@ -1005,7 +1026,7 @@ IDD_DIALOG_INITMAILBOX DIALOG DISCARDABLE  0, 0, 160, 117
 STYLE WS_POPUP | WS_BORDER
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "When checking mail download:",IDC_STATIC,5,5,150,10
+    LTEXT           "On next check of account:",IDC_STATIC,5,5,150,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
                     BS_AUTORADIOBUTTON,5,20,120,10
     CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
@@ -1576,19 +1597,19 @@ END
 IDM_MAIN_VIEW SHMENUBAR DISCARDABLE 
 BEGIN
     IDM_MAIN_VIEW, 2,
-    I_IMAGENONE, ID_MENUITEM_FILE, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40110, 0, 0,
-    I_IMAGENONE, ID_MENUITEM_EDIT, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40113, 0, 1,
+    I_IMAGENONE, ID_MENUITEM_MAIL, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40107, 0, 0,
+    I_IMAGENONE, ID_MENUITEM_VIEW, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40110, 0, 1,
 END
 
 IDM_MAIN_EDIT SHMENUBAR DISCARDABLE 
 BEGIN
     IDM_MAIN_EDIT, 2,
     I_IMAGENONE, ID_MENUITEM_FILE, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40116, 0, 0,
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40098, 0, 0,
     I_IMAGENONE, ID_MENUITEM_EDIT, TBSTATE_ENABLED, 
-    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40144, 0, 1,
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_MENUITEM40113, 0, 1,
 END
 
 IDR_MENU_POPUP SHMENUBAR DISCARDABLE 
@@ -1606,8 +1627,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,10,10,6
- PRODUCTVERSION 2,10,10,6
+ FILEVERSION NPOPVER
+ PRODUCTVERSION NPOPVER
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -1622,18 +1643,30 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "Comments", "nPOPuk 2.10b10p6 based on nPOP 1.0.9\0"
-            VALUE "CompanyName", "\0"
+            VALUE "Comments", "nPOPuk " NPOPVERSTR " based on nPOP 1.0.9"
             VALUE "FileDescription", "nPOPuk\0"
-            VALUE "FileVersion", "2.10 Beta 10 Patch 6\0"
+            VALUE "FileVersion", NPOPVERLNG
             VALUE "InternalName", "nPOPuk\0"
+            VALUE "CompanyName", "\0"
             VALUE "LegalCopyright", "Copyright ©2008 by Nakashima Tomoaki, Geoffrey Coram\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "nPOPuk.exe\0"
-            VALUE "PrivateBuild", "nPOPuk Ver 2.10b10p6\0"
+            VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR
             VALUE "ProductName", "nPOPuk\0"
-            VALUE "ProductVersion", "2.10b10p6\0"
+            VALUE "ProductVersion", NPOPVERLNG
+#ifdef ARM
             VALUE "SpecialBuild", "Pocket PC 2002 (ARM)\0"
+#elif defined (SH3)
+			VALUE "SpecialBuild", "Pocket PC 2002 (SH3)\0"
+#elif defined (SH4)
+			VALUE "SpecialBuild", "Pocket PC 2002 (SH4)\0"
+#elif defined (MIPS)
+			VALUE "SpecialBuild", "Pocket PC 2002 (MIPS)\0"
+#elif defined (x86)
+			VALUE "SpecialBuild", "Pocket PC 2002 (x86)\0"
+#else
+            VALUE "SpecialBuild", "Pocket PC 2002 (??)\0"
+#endif
         END
     END
     BLOCK "VarFileInfo"
@@ -1652,20 +1685,10 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_MENUITEM40113       "Edit"
-    IDS_MENUITEM40116       "File"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_MENUITEM40144       "Edit"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MENUITEM40098       "File"
     IDS_MENUITEM40107       "Mail"
-    IDS_MENUITEM40110       "File"
+    IDS_MENUITEM40110       "View"
+    IDS_MENUITEM40113       "Edit"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -139,8 +139,8 @@ BEGIN
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
     VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
-	VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
-	VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, CONTROL, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
@@ -244,7 +244,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDR_MENU_VIEW MENU 
 BEGIN
-    POPUP "&File"
+    POPUP "&Mail"
     BEGIN
         MENUITEM "&Prev mail\tBackspace",       ID_MENUITEM_PREVMAIL
         MENUITEM "&Next mail\tEnter",           ID_MENUITEM_NEXTMAIL
@@ -253,6 +253,7 @@ BEGIN
         MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
         MENUITEM "Reply to &all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
         MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "Redirec&t...",                ID_MENUITEM_REDIRECT
         MENUITEM "Address &information...\tCtrl+I", ID_MENUITEM_PROP
         MENUITEM SEPARATOR
         MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
@@ -267,7 +268,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
     END
-    POPUP "&Edit"
+    POPUP "&View"
     BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
@@ -277,7 +278,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
         MENUITEM "F&ont...",                    ID_MENUITEM_FONT
-        MENUITEM "Show &date",                  ID_MENUITEM_SHOW_DATE
+        MENUITEM "S&how date",                  ID_MENUITEM_SHOW_DATE
     END
     POPUP "&Transfer"
     BEGIN
@@ -293,6 +294,8 @@ BEGIN
         MENUITEM "&Send now\tShift+Ctrl+G",     ID_MENUITEM_SEND
         MENUITEM "Save and &Mark\tCtrl+G",      ID_MENUITEM_SBOXMARK
         MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
+        MENUITEM SEPARATOR
+        MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
         MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
@@ -395,10 +398,11 @@ BEGIN
     END
     POPUP "&Mail"
     BEGIN
-        MENUITEM "&Open\tEnter",                ID_MENUITEM_OPEN
+        MENUITEM "Ope&n\tEnter",                ID_MENUITEM_OPEN
         MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
         MENUITEM "Repl&y to all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
-        MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "For&ward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "Red&irect...",                ID_MENUITEM_REDIRECT
         MENUITEM SEPARATOR
         MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
         MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
@@ -408,14 +412,14 @@ BEGIN
         MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
-        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
-        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
+        MENUITEM "C&opy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "Mo&ve to..."                  ID_MENUITEM_MOVESBOX
         MENUITEM "Delete from &list\tShift+Del", ID_MENUITEM_DELETE
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
         MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW
-        MENUITEM "F&ind...\tCtrl+F",            ID_MENUITEM_FIND
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
     END
     POPUP "&Help"
     BEGIN
@@ -502,7 +506,7 @@ BEGIN
     LTEXT           "&Priority:",IDC_STATIC,5,88,26,8
     COMBOBOX        IDC_PRIORITY,40,86,52,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    CONTROL         "Del&ivery receipt",IDC_DEL,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Del&ivery receipt",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,60,70,10
     CONTROL         "Rea&d receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,170,60,60,10
@@ -516,6 +520,22 @@ BEGIN
                     BS_AUTO3STATE | WS_TABSTOP,98,88,54,10
     DEFPUSHBUTTON   "&OK",IDOK,180,86,50,14
     PUSHBUTTON      "&Cancel",IDCANCEL,235,86,50,14
+END
+
+IDD_DIALOG_REDIRECT DIALOGEX 0, 0, 191, 70
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Redirect"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Account:",IDC_STATIC,6,8,29,10
+    COMBOBOX        IDC_COMBO_SMTP,40,5,85,130,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&To:",IDC_BUTTON_TO,5,25,30,12
+    EDITTEXT        IDC_EDIT_TO,40,25,145,12,ES_AUTOHSCROLL
+    CONTROL         "&Mark to send",IDC_CHECK_MARKSEND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,52,54,10
+    DEFPUSHBUTTON   "&OK",IDOK,80,50,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,135,50,50,14
 END
 
 IDD_DIALOG_POP DIALOGEX 0, 0, 212, 158
@@ -539,10 +559,10 @@ BEGIN
     CONTROL         "Enable SS&L",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,64,104,70,11
     PUSHBUTTON      "set&up",IDC_BUTTON_SETSSL,160,104,30,12
-    CONTROL         "Exempt from &Check All",IDC_CHECK_CYCLIC,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,64,118,100,10
+    CONTROL         "Exempt from &Check All/Update All",IDC_CHECK_CYCLIC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,131,120,10
     CONTROL         "Disable '&RETR' command",IDC_CHECK_NORETR,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,64,131,131,11
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,118,120,11
 END
 
 IDD_DIALOG_SMTP DIALOG  0, 0, 212, 148
@@ -974,7 +994,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Initialise"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "When checking mail:",IDC_STATIC,10,10,185,10
+    LTEXT           "On next check of account:",IDC_STATIC,10,10,185,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
                     BS_AUTORADIOBUTTON,15,25,100,10
     CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
