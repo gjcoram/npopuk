@@ -263,6 +263,9 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		tpMailItem->MailBox = alloc_copy_t((MailBox + rebox)->Name);
 	} else if (tpReMailItem->MailBox != NULL) {
 		tpMailItem->MailBox = alloc_copy_t(tpReMailItem->MailBox);
+	} else if ((MailBox+rebox)->Type == MAILBOX_TYPE_SAVE 
+		&& (MailBox+rebox)->DefAccount != NULL && *(MailBox+rebox)->DefAccount != TEXT('\0')) {
+		tpMailItem->MailBox = alloc_copy_t((MailBox+rebox)->DefAccount);
 	}
 
 	// Set the appropriate To/From settings
