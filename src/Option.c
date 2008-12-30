@@ -4865,7 +4865,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		*tpSendMailIList = tpMailItem = (MAILITEM *)lParam;
 
 		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETEXTENDEDUI, TRUE, 0);
-		cnt = 0;
+		cnt = j = 0;
 		mb = -1;
 		/* of control Initialization */
 		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
@@ -4886,11 +4886,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					mb_autobcc = NULL;
 				}
 			}
-			if (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0')) {
-				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)STR_MAILBOX_NONAME);
-			} else {
-				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)tpMailBox->Name);
-			}
+			SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, 
+				((tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0')) ?
+				(LPARAM)STR_MAILBOX_NONAME : (LPARAM)tpMailBox->Name));
 			cnt++;
 		}
 		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETCURSEL, (mb>=0) ? mb : 0, 0);
