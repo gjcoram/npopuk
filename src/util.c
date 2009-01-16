@@ -2646,16 +2646,16 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 						p++;
 					}
 				}
-			} else if (str_cmp_ni_t(p, TEXT("<style>"), lstrlen(TEXT("<style>"))) == 0) {
-				p += lstrlen(TEXT("<style>"));
+			} else if (str_cmp_ni_t(p, TEXT("<style"), lstrlen(TEXT("<style"))) == 0) {
+				p += lstrlen(TEXT("<style"));
 				while (*p != TEXT('\0') && str_cmp_ni_t(p, TEXT("</style>"), lstrlen(TEXT("</style>"))) != 0) {
 					p++;
 				}
 				if (*p != TEXT('\0')) {
 					p += lstrlen(TEXT("</style>"));
 				}
-			} else if (str_cmp_ni_t(p, TEXT("<script>"), lstrlen(TEXT("<script>"))) == 0) {
-				p += lstrlen(TEXT("<script>"));
+			} else if (str_cmp_ni_t(p, TEXT("<script"), lstrlen(TEXT("<script"))) == 0) {
+				p += lstrlen(TEXT("<script"));
 				while (*p != TEXT('\0') && str_cmp_ni_t(p, TEXT("</script>"), lstrlen(TEXT("</script>"))) != 0) {
 					p++;
 				}
