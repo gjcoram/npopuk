@@ -37,6 +37,7 @@ extern int font_charset;
 typedef struct _ENCODE_INFO {
 	TCHAR *buf;
 	char *encode_buf;
+	int buflen;
 	BOOL encode;
 
 	struct _ENCODE_INFO *next;
@@ -328,6 +329,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 		} else {
 			p = get_token_address(r, &encode);
 		}
+		len = p - r + 1;
 
 		eb->next = mem_calloc(sizeof(ENCODE_INFO));
 		if (eb->next == NULL) {
@@ -336,22 +338,27 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 		}
 		eb = eb->next;
 		eb->encode = encode;
+		eb->buflen = len;
 
-		eb->buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (p - r + 2));
+		eb->buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (eb->buf == NULL) {
 			encode_info_free(top_eb.next);
 			return NULL;
 		}
-		str_cpy_n_t(eb->buf, r, p - r + 1);
+		str_cpy_n_t(eb->buf, r, len);
 	}
 
-	// ƒ}[ƒW
+	// merge sections if they both need encoding or both don't
 	eb = top_eb.next;
 	while (eb->next != NULL) {
 		if (eb->encode == eb->next->encode) {
 			tmp_eb = eb->next;
-
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(eb->buf) + lstrlen(tmp_eb->buf) + 1));
+			len = eb->buflen + tmp_eb->buflen;
+			if (len > HEAD_LINELEN || (eb->encode && len > HEAD_ENCODE_LINELEN)) {
+				eb = eb->next;
+				continue;
+			}
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 			if (p == NULL) {
 				encode_info_free(top_eb.next);
 				return NULL;
@@ -361,6 +368,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 			mem_free(&eb->buf);
 			eb->buf = p;
 			eb->next = tmp_eb->next;
+			eb->buflen = len;
 			mem_free(&tmp_eb->buf);
 			mem_free(&tmp_eb);
 		} else {
@@ -368,16 +376,16 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 		}
 	}
 
-	// Ü‚è•Ô‚µ
+	// split buffers if they're too long
 	for (eb = top_eb.next; eb != NULL; eb = eb->next) {
 		len = 0;
 		if (eb->encode == TRUE) {
 			len = get_encode_wrap_len(eb->buf, HEAD_ENCODE_LINELEN);
-			if ((int)lstrlen(eb->buf) <= (int)len) {
+			if (eb->buflen <= len) {
 				len = 0;
 			}
 		} else {
-			if (lstrlen(eb->buf) >= HEAD_LINELEN) {
+			if (eb->buflen >= HEAD_LINELEN) {
 				len = HEAD_LINELEN;
 			}
 		}
@@ -392,11 +400,12 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 			}
 			eb->next->encode = eb->encode;
 			eb->next->next = tmp_eb;
-			eb->next->buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(eb->buf) - len + 1));
+			eb->next->buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (eb->buflen - len + 1));
 			if (eb->next->buf == NULL) {
 				encode_info_free(top_eb.next);
 				return NULL;
 			}
+			eb->next->buflen = eb->buflen - len;
 			lstrcpy(eb->next->buf, eb->buf + len);
 
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 2));
@@ -407,6 +416,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 			str_cpy_n_t(p, eb->buf, len + 1);
 			mem_free(&eb->buf);
 			eb->buf = p;
+			eb->buflen = len + 1;
 		}
 	}
 
