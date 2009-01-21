@@ -37,7 +37,7 @@ extern int font_charset;
 typedef struct _ENCODE_INFO {
 	TCHAR *buf;
 	char *encode_buf;
-	int buflen;
+	int buflen, enclen;
 	BOOL encode;
 
 	struct _ENCODE_INFO *next;
@@ -45,10 +45,10 @@ typedef struct _ENCODE_INFO {
 
 /* Local Function Prototypes */
 static BOOL is_8bit_char_t(TCHAR *str);
-static TCHAR *get_token(TCHAR *p, BOOL *encode);
-static TCHAR *get_token_address(TCHAR *p, BOOL *encode);
+static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len);
+static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len);
 static int get_encode_wrap_len(TCHAR *buf, int len);
-static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address);
+static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address, int prefixlen);
 static void encode_info_free(ENCODE_INFO *eb);
 static int MIME_encode_size(ENCODE_INFO *eb, TCHAR *charset_t, int encoding);
 static int MIME_rfc2231_encode_size(ENCODE_INFO *eb, TCHAR *charset_t);
@@ -188,21 +188,33 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 /*
  * get_token - 単語取得
  */
-static TCHAR *get_token(TCHAR *p, BOOL *encode)
+static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len)
 {
 	*encode = FALSE;
+	*enc_len = 0;
 	for (; *p != TEXT('\0'); p++) {
-		if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
-			// エンコードの必要あり
-			*encode = TRUE;
 #ifndef UNICODE
-		} else if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
+			*enc_len += 6; // overkill?
 			*encode = TRUE;
+			continue;
+		}
 #endif
+		if ((*p >= TEXT('a') && *p <= TEXT('z'))
+			|| (*p >= TEXT('A') && *p <= TEXT('Z'))
+			|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
+			*enc_len++;
 		} else if (*p == TEXT(' ')) {
-			for (; *p == TEXT(' '); p++);
+			*enc_len++;
+			for (; *p == TEXT(' '); p++, *enc_len++);
 			break;
+		} else {
+			*enc_len += 3;
+			if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
+				// エンコードの必要あり
+				*encode = TRUE;
+			}
 		}
 	}
 	return p;
@@ -211,9 +223,10 @@ static TCHAR *get_token(TCHAR *p, BOOL *encode)
 /*
  * get_token_address - メールアドレス用の単語取得
  */
-static TCHAR *get_token_address(TCHAR *p, BOOL *encode)
+static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 {
 	*encode = FALSE;
+	*enc_len = 0;
 	switch (*p)
 	{
 	case TEXT('<'):
@@ -222,55 +235,73 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode)
 	case TEXT(')'):
 	case TEXT(','):
 		p++;
+		*enc_len += 3;
 		break;
 
 	case TEXT('\"'):
 		for (p++; *p != TEXT('\0'); p++) {
-			if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
-				// エンコードの必要あり
-				*encode = TRUE;
-			}
 #ifdef UNICODE
 			if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 				p++;
+				*enc_len += 6; // overkill?
 				*encode = TRUE;
 				continue;
 			}
-			if (*p == TEXT('\\')) {
-				p++;
-				continue;
-			}
-			if (*p == TEXT('\"')) {
-				p++;
-				break;
+			if ((*p >= TEXT('a') && *p <= TEXT('z'))
+				|| (*p >= TEXT('A') && *p <= TEXT('Z'))
+				|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
+				*enc_len++;
+			} else {
+				*enc_len +=3;
+				if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
+					*encode = TRUE;
+				}
+				if (*p == TEXT('\\')) {
+					p++;
+					*enc_len +=3;
+					continue;
+				}
+				if (*p == TEXT('\"')) {
+					p++;
+					*enc_len +=3;
+					break;
+				}
 			}
 		}
 		break;
 
 	default:
 		for (; *p != TEXT('\0'); p++) {
-			if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
-				// エンコードの必要あり
-				*encode = TRUE;
-			}
 #ifdef UNICODE
 			if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 				p++;
+				*enc_len += 6; // overkill?
 				*encode = TRUE;
 				continue;
 			}
-			if (*p == TEXT('\\')) {
-				p++;
-				continue;
-			}
-			if (*p == TEXT('<') || *p == TEXT('>') || *p == TEXT('(') || *p == TEXT(')') || *p == TEXT('\"')) {
-				break;
+			if ((*p >= TEXT('a') && *p <= TEXT('z'))
+				|| (*p >= TEXT('A') && *p <= TEXT('Z'))
+				|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
+				*enc_len++;
+			} else {
+				*enc_len +=3;
+				if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
+					*encode = TRUE;
+				}
+				if (*p == TEXT('\\')) {
+					p++;
+					*enc_len +=3;
+					continue;
+				}
+				if (*p == TEXT('<') || *p == TEXT('>') || *p == TEXT('(') || *p == TEXT(')') || *p == TEXT('\"')) {
+					break;
+				}
 			}
 		}
 		break;
@@ -308,26 +339,50 @@ static int get_encode_wrap_len(TCHAR *buf, int len)
 /*
  * encode_info_create - エンコード情報の作成
  */
-static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
+static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address, int prefixlen)
 {
 	ENCODE_INFO top_eb;
 	ENCODE_INFO *eb;
 	ENCODE_INFO *tmp_eb;
-	TCHAR *p, *r;
-	BOOL encode;
-	int len;
+	TCHAR *p, *r, *t;
+	BOOL encode, tmp_encode;
+	int clen = lstrlen(charset) + 7; // "=??Q??="
+	int len, maxlen = HEAD_ENCODE_LINELEN - prefixlen;
+	int elen, tmp_elen;
 
 	top_eb.next = NULL;
 	eb = &top_eb;
 
-	// エンコード情報の作成
+	// break on spaces (except "in addresses")
 	p = buf;
 	while (*p != TEXT('\0')) {
 		r = p;
-		if (Address == FALSE) {
-			p = get_token(r, &encode);
+		if (Address == TRUE) {
+			p = get_token_address(p, &encode, &elen);
 		} else {
-			p = get_token_address(r, &encode);
+			p = get_token(p, &encode, &elen);
+		}
+		if (elen < maxlen) {
+			while (*p != TEXT('\0')) {
+				// try to add the next token
+				if (Address == TRUE) {
+					t = get_token_address(p, &tmp_encode, &tmp_elen);
+				} else {
+					t = get_token(p, &tmp_encode, &tmp_elen);
+				}
+				if (encode || tmp_encode) {
+					if ((elen + tmp_elen) > maxlen - clen) {
+						break;
+					}
+				} else {
+					if ((t - r) > maxlen) {
+						break;
+					}
+				}
+				p = t;
+				elen += tmp_elen;
+				encode |= tmp_encode;
+			}
 		}
 		len = p - r + 1;
 
@@ -339,6 +394,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 		eb = eb->next;
 		eb->encode = encode;
 		eb->buflen = len;
+		eb->enclen = elen;
 
 		eb->buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (eb->buf == NULL) {
@@ -348,41 +404,16 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address)
 		str_cpy_n_t(eb->buf, r, len);
 	}
 
-	// merge sections if they both need encoding or both don't
-	eb = top_eb.next;
-	while (eb->next != NULL) {
-		if (eb->encode == eb->next->encode) {
-			tmp_eb = eb->next;
-			len = eb->buflen + tmp_eb->buflen;
-			if (len > HEAD_LINELEN || (eb->encode && len > HEAD_ENCODE_LINELEN)) {
-				eb = eb->next;
-				continue;
-			}
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
-			if (p == NULL) {
-				encode_info_free(top_eb.next);
-				return NULL;
-			}
-			r = str_cpy_t(p, eb->buf);
-			r = str_cpy_t(r, tmp_eb->buf);
-			mem_free(&eb->buf);
-			eb->buf = p;
-			eb->next = tmp_eb->next;
-			eb->buflen = len;
-			mem_free(&tmp_eb->buf);
-			mem_free(&tmp_eb);
-		} else {
-			eb = eb->next;
-		}
-	}
-
-	// split buffers if they're too long
+	// split buffers if they're too long (eg first token itself was too long)
 	for (eb = top_eb.next; eb != NULL; eb = eb->next) {
 		len = 0;
 		if (eb->encode == TRUE) {
-			len = get_encode_wrap_len(eb->buf, HEAD_ENCODE_LINELEN);
-			if (eb->buflen <= len) {
-				len = 0;
+			if (eb->enclen > HEAD_ENCODE_LINELEN) {
+				// get_encode_wrap_len isn't very clever
+				len = get_encode_wrap_len(eb->buf, (HEAD_ENCODE_LINELEN/3));
+				if (eb->buflen <= len) {
+					len = 0;
+				}
 			}
 		} else {
 			if (eb->buflen >= HEAD_LINELEN) {
@@ -498,7 +529,7 @@ static int MIME_encode_size(ENCODE_INFO *eb, TCHAR *charset_t, int encoding)
 /*
  * MIME_encode - MIMEエンコード (RFC 2047, RFC 2045)
  */
-TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding)
+TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen)
 {
 	ENCODE_INFO *top_eb, *eb;
 #ifdef UNICODE
@@ -522,7 +553,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding)
 #endif
 
 	// エンコード情報の作成
-	top_eb = eb = encode_info_create(wbuf, charset_t, Address);
+	top_eb = eb = encode_info_create(wbuf, charset_t, Address, headerlen);
 	if (top_eb == NULL) {
 #ifdef UNICODE
 		mem_free(&charset);
@@ -843,7 +874,7 @@ static int MIME_rfc2231_encode_size(ENCODE_INFO *eb, TCHAR *charset_t)
 	int len = 0;
 
 	for (; eb != NULL; eb = eb->next) {
-		len += tstrlen(eb->encode_buf) * 3;
+		len += tstrlen(eb->encode_buf) * 3; // overkill, not all chars will need encoding
 		len += (lstrlen(TEXT("\r\n filename**=;")) + 5);
 		if (eb->next != NULL) {
 			len++;			// ;
@@ -887,13 +918,13 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		return ret;
 	}
 
-	// エンコード情報の作成
-	top_eb = eb = encode_info_create(wbuf, charset_t, FALSE);
+	// break filename into manageable chunks
+	top_eb = eb = encode_info_create(wbuf, charset_t, -1, lstrlen(TEXT(" filename*0*='';")));
 	if (top_eb == NULL) {
 		return NULL;
 	}
 
-	// エンコード後のバッファ確保
+	// compute encoded string length
 	i = MIME_rfc2231_encode_size(eb, charset_t);
 	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i + 1));
 	if (ret == NULL) {

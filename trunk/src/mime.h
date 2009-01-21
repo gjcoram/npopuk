@@ -17,7 +17,7 @@
 
 /* Define */
 #define HEAD_LINELEN			800
-#define HEAD_ENCODE_LINELEN		15
+#define HEAD_ENCODE_LINELEN		76
 #define BODY_ENCODE_LINELEN		76
 
 /* Struct */
@@ -25,7 +25,7 @@
 /* Function Prototypes */
 char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset);
 TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset);
-TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding);
+TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen);
 BOOL MIME_decode(char *buf, TCHAR *ret);
 TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t);
 char *MIME_rfc2231_decode(char *buf);
