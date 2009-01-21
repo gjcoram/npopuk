@@ -475,6 +475,8 @@ void URL_encode(unsigned char *buf, char *ret)
 			(*p >= 'a' && *p <= 'z') ||
 			(*p >= '0' && *p <= '9')) {
 			*(r++) = *p;
+		} else if (*p == ' ') {
+			*(r++) = '_';
 		} else {
 			*(r++) = '%';
 			*(r++) = cHex[*p >> 4];

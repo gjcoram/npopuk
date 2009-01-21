@@ -499,14 +499,15 @@ static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TC
 {
 	TCHAR *p;
 	BOOL ret;
+	int len = lstrlen(header);
 
 	if (content == NULL || *content == TEXT('\0')) {
 		return TRUE;
 	}
 	if (tpMailItem->HeadCharset != NULL) {
-		p = MIME_encode(content, address, tpMailItem->HeadCharset, tpMailItem->HeadEncoding);
+		p = MIME_encode(content, address, tpMailItem->HeadCharset, tpMailItem->HeadEncoding, len);
 	} else {
-		p = MIME_encode(content, address, op.HeadCharset, op.HeadEncoding);
+		p = MIME_encode(content, address, op.HeadCharset, op.HeadEncoding, len);
 	}
 	if (p == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);

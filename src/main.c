@@ -21,6 +21,7 @@
 #include "nEdit.h"
 #endif
 #include "code.h"
+#include "mime.h" // GJC experiment
 
 /* Define */
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ

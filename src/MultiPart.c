@@ -743,10 +743,10 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			p = NULL;
 			if (op.EncodeType == 1) {
 #ifdef UNICODE
-				wtmp = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding);
+				wtmp = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding, 10); // 10==lstrlen(TEXT(" filename="))
 				fname = wtmp;
 #else
-				p = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding);
+				p = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding, 10); // 10==lstrlen(TEXT(" filename="))
 				fname = p;
 #endif
 			}
