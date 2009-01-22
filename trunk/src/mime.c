@@ -375,6 +375,10 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address,
 				// try to add the next token
 				if (Address == TRUE) {
 					t = get_token_address(p, &tmp_encode, &tmp_elen);
+					if (encode != tmp_encode) {
+						// From: =?koi8-r?B?IuzJzNEi?= <umw@bluebeatmusic.com>
+						break;
+					}
 				} else {
 					t = get_token(p, &tmp_encode, &tmp_elen);
 				}
