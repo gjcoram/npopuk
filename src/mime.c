@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2007 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -47,7 +47,7 @@ typedef struct _ENCODE_INFO {
 static BOOL is_8bit_char_t(TCHAR *str);
 static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len);
 static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len);
-static int get_encode_wrap_len(TCHAR *buf, int len);
+static int get_encode_wrap_len(TCHAR *buf, int len, int *enc_len);
 static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address, int prefixlen);
 static void encode_info_free(ENCODE_INFO *eb);
 static int MIME_encode_size(ENCODE_INFO *eb, TCHAR *charset_t, int encoding);
@@ -196,7 +196,7 @@ static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len)
 #ifndef UNICODE
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
-			*enc_len += 6; // overkill?
+			(*enc_len) += 6; // overkill?
 			*encode = TRUE;
 			continue;
 		}
@@ -204,13 +204,13 @@ static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len)
 		if ((*p >= TEXT('a') && *p <= TEXT('z'))
 			|| (*p >= TEXT('A') && *p <= TEXT('Z'))
 			|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
-			*enc_len++;
+			(*enc_len)++;
 		} else if (*p == TEXT(' ')) {
-			*enc_len++;
-			for (; *p == TEXT(' '); p++, *enc_len++);
+			(*enc_len)++;
+			for (; *p == TEXT(' '); p++, (*enc_len)++);
 			break;
 		} else {
-			*enc_len += 3;
+			(*enc_len) += 3;
 			if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
 				// エンコードの必要あり
 				*encode = TRUE;
@@ -235,7 +235,7 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 	case TEXT(')'):
 	case TEXT(','):
 		p++;
-		*enc_len += 3;
+		(*enc_len) += 3;
 		break;
 
 	case TEXT('\"'):
@@ -246,27 +246,27 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 				p++;
-				*enc_len += 6; // overkill?
+				(*enc_len) += 6; // overkill?
 				*encode = TRUE;
 				continue;
 			}
 			if ((*p >= TEXT('a') && *p <= TEXT('z'))
 				|| (*p >= TEXT('A') && *p <= TEXT('Z'))
 				|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
-				*enc_len++;
+				(*enc_len)++;
 			} else {
-				*enc_len +=3;
+				(*enc_len) += 3;
 				if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
 					*encode = TRUE;
 				}
 				if (*p == TEXT('\\')) {
 					p++;
-					*enc_len +=3;
+					(*enc_len) += 3;
 					continue;
 				}
 				if (*p == TEXT('\"')) {
 					p++;
-					*enc_len +=3;
+					(*enc_len) += 3;
 					break;
 				}
 			}
@@ -281,22 +281,22 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 				p++;
-				*enc_len += 6; // overkill?
+				(*enc_len) += 6; // overkill?
 				*encode = TRUE;
 				continue;
 			}
 			if ((*p >= TEXT('a') && *p <= TEXT('z'))
 				|| (*p >= TEXT('A') && *p <= TEXT('Z'))
 				|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
-				*enc_len++;
+				(*enc_len)++;
 			} else {
-				*enc_len +=3;
+				(*enc_len) += 3;
 				if (*encode == FALSE && is_8bit_char_t(p) == TRUE) {
 					*encode = TRUE;
 				}
 				if (*p == TEXT('\\')) {
 					p++;
-					*enc_len +=3;
+					(*enc_len) += 3;
 					continue;
 				}
 				if (*p == TEXT('<') || *p == TEXT('>') || *p == TEXT('(') || *p == TEXT(')') || *p == TEXT('\"')) {
@@ -312,10 +312,11 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 /*
  * get_encode_wrap_len - エンコード部の折り返し位置取得
  */
-static int get_encode_wrap_len(TCHAR *buf, int len)
+static int get_encode_wrap_len(TCHAR *buf, int len, int *enc_len)
 {
 	TCHAR *p;
-	int i = 0;
+	int i = 0, nb = 1;
+        *enc_len = 0;
 
 	if ((int)lstrlen(buf) < (int)len) {
 		return 0;
@@ -325,12 +326,19 @@ static int get_encode_wrap_len(TCHAR *buf, int len)
 			return i;
 		}
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
+		if ( (nb = WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL)) > 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
 			p++;
-			i++;
+			i += nb;
+		}
+		if ((*p >= TEXT('a') && *p <= TEXT('z'))
+			|| (*p >= TEXT('A') && *p <= TEXT('Z'))
+			|| (*p >= TEXT('0') && *p <= TEXT('9'))) {
+			(*enc_len)++;
+		} else {
+			(*enc_len) += 3;
 		}
 	}
 	return 0;
@@ -406,11 +414,11 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address,
 
 	// split buffers if they're too long (eg first token itself was too long)
 	for (eb = top_eb.next; eb != NULL; eb = eb->next) {
-		len = 0;
+		len = elen = 0;
 		if (eb->encode == TRUE) {
 			if (eb->enclen > HEAD_ENCODE_LINELEN) {
 				// get_encode_wrap_len isn't very clever
-				len = get_encode_wrap_len(eb->buf, (HEAD_ENCODE_LINELEN/3));
+				len = get_encode_wrap_len(eb->buf, (HEAD_ENCODE_LINELEN/3), &elen);
 				if (eb->buflen <= len) {
 					len = 0;
 				}
@@ -437,6 +445,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address,
 				return NULL;
 			}
 			eb->next->buflen = eb->buflen - len;
+			eb->next->enclen = eb->enclen - elen;
 			lstrcpy(eb->next->buf, eb->buf + len);
 
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 2));
@@ -448,6 +457,7 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address,
 			mem_free(&eb->buf);
 			eb->buf = p;
 			eb->buflen = len + 1;
+			eb->enclen = elen + 1;
 		}
 	}
 
@@ -600,7 +610,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 				base64_encode(eb->encode_buf, tmp, 0, 0);
 				mem_free(&eb->encode_buf);
 				eb->encode_buf = tmp;
-				EncType = "B";
+				EncType = "?B?";
 				break;
 
 			case ENC_TYPE_Q_PRINT:
@@ -617,14 +627,12 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 				QuotedPrintable_encode(eb->encode_buf, tmp, 0, FALSE);
 				mem_free(&eb->encode_buf);
 				eb->encode_buf = tmp;
-				EncType = "Q";
+				EncType = "?Q?";
 				break;
 			}
 			r = str_cpy(r, "=?");
 			r = str_cpy(r, charset);
-			r = str_cpy(r, "?");
 			r = str_cpy(r, EncType);
-			r = str_cpy(r, "?");
 			r = str_cpy(r, eb->encode_buf);
 			r = str_cpy(r, "?=");
 		}
