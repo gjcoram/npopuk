@@ -868,6 +868,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 				while (*q != TEXT('\0')) {
 					(*p++) = (*q++);
 				}
+				*p = TEXT('\0');
 			}
 		}
 	} else if (tpMailItem->ContentType != NULL &&
