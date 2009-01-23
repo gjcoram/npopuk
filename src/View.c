@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1077,12 +1077,13 @@ static void SetEditMenu(HWND hWnd)
 /*
  * SetAttachMenu - 表示するpartの選択と添付メニューの設定
  */
-static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsAttach)
+static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsAttach, TCHAR **attlist)
 {
 	HMENU hMenu;
 	TCHAR *str, *p, *r;
 	int i, mFlag, ret = -1, cnt = 0;
 	BOOL AppendFlag = FALSE, startbody = FALSE;
+	*attlist = NULL;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -1215,6 +1216,19 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 #else
 			p = ((*(tpMultiPart + i))->Filename != NULL) ? (*(tpMultiPart + i))->Filename : str;
 #endif
+			if (op.ViewShowAttach && (*(tpMultiPart + i))->Filename != NULL) {
+				TCHAR *tmp;
+				int len = lstrlen(p) + lstrlen(STR_MSG_ATTACHMENT) + 4;
+				if (*attlist != NULL) {
+					len += lstrlen(*attlist);
+				}
+				tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+				if (tmp != NULL) {
+					str_join_t(tmp, *attlist, TEXT("\r\n"), STR_MSG_ATTACHMENT, p, TEXT("]"), (TCHAR *)-1);
+				}
+				mem_free(&*attlist);
+				*attlist = tmp;
+			}
 			AppendMenu(hMenu, MF_STRING | mFlag, ID_ATTACH + i, ((p != NULL && *p != TEXT('\0')) ? p : TEXT("Attach")));
 			if (mFlag == MF_ENABLED) {
 				cnt++;
@@ -1305,6 +1319,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 	if (tpMailItem->Body == NULL) {
 		buf = NULL;
 	} else {
+		TCHAR *attachlist;
 		// マルチパートの展開
 		buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &tpMultiPart, &MultiPartCnt, &TextIndex);
 
@@ -1321,7 +1336,16 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		}
 
 		// 表示するpartの選択と添付メニューの設定
-		MultiPartTextIndex = SetAttachMenu(hWnd, tpMailItem, ViewSrc, IsAttach);
+		MultiPartTextIndex = SetAttachMenu(hWnd, tpMailItem, ViewSrc, IsAttach, &attachlist);
+		if (attachlist != NULL) {
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + lstrlen(attachlist) + 1));
+			if (p != NULL) {
+				str_join_t(p, buf, attachlist, (TCHAR *)-1);
+				mem_free(&buf);
+				buf = p;
+			}
+			mem_free(&attachlist);
+		}
 	}
 
 	// 検索位置の初期化
@@ -1331,11 +1355,11 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 	if (buf != NULL) {
 #ifdef _WIN32_WCE
 		if (lstrlen(buf) > EDITMAXSIZE) {
-			*(buf + EDITMAXSIZE) = TEXT('\0');
+			str_cpy_t(buf + EDITMAXSIZE, TEXT("[nPOPuk: text too long]"));
 		}
 #else
 		if (op.osPlatformId != VER_PLATFORM_WIN32_NT && lstrlen(buf) > EDITMAXSIZE) {
-			*(buf + EDITMAXSIZE) = TEXT('\0');
+			str_cpy_t(buf + EDITMAXSIZE, TEXT("[nPOPuk: text too long]"));
 		}
 #endif
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
@@ -1948,7 +1972,7 @@ static void OpenURL(HWND hWnd)
 	TCHAR *buf;
 	TCHAR *str;
 	TCHAR *p, *r, *s;
-	int i, j;
+	int i, j, k;
 	int len;
 	int MailToFlag = 0;
 
@@ -1966,6 +1990,48 @@ static void OpenURL(HWND hWnd)
 	}
 	*buf = TEXT('\0');
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
+
+	// look for "click to download" string
+	len = lstrlen(STR_MSG_PARTIAL_T);
+	if (i <= len) {
+		k = 0;
+	} else {
+		k = i - len;
+	}
+	for (r = buf + k; *r != TEXT('\0') && r < buf + (j + len); r++) {
+		if (str_cmp_n_t(r, STR_MSG_PARTIAL_T, len) == 0) {
+			mem_free(&buf);
+			SendMessage(hWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, 0);
+			return;
+		}
+	}
+	len = lstrlen(STR_MSG_ATTACHMENT);
+	if (i <= len) {
+		k = 0;
+	} else {
+		k = i - len;
+	}
+	for (r = buf + k; *r != TEXT('\0') && r < buf + (j + len); r++) {
+		if (str_cmp_n_t(r, STR_MSG_ATTACHMENT, len) == 0) {
+			r += len;
+			for (s = r; *s != TEXT('\0') && *s != TEXT(']'); s++);
+			if (*s == TEXT(']')) {
+				char *fname;
+				*s = TEXT('\0');
+				fname = alloc_tchar_to_char(r);
+				for (k = 0; k < MultiPartCnt && fname; k++) {
+					if ((*(tpMultiPart + k))->Filename != NULL &&
+						strcmp(fname, (*(tpMultiPart + k))->Filename) == 0) {
+						Decode(hWnd, k, DECODE_ASK);
+						break;
+					}
+				}
+				mem_free(&fname);
+			}
+			mem_free(&buf);
+			return;
+		}
+	}
 
 	for (; *(buf + j) != TEXT('\0') && *(buf + j) != TEXT('\r') && *(buf + j) != TEXT('\n') && *(buf + j) != TEXT(' '); j++);
 #ifdef UNICODE
@@ -3211,6 +3277,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		// 受信用にマーク
 		case ID_MENUITEM_DOWNMARK:
+		case ID_MESSAGE_DOWNLOAD:
 			if (vSelBox <= MAILBOX_SEND || (MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				break;
 			}
@@ -3219,8 +3286,20 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
+			if (command_id == ID_MESSAGE_DOWNLOAD) {
+				if (tpMailItem->Download == TRUE) {
+					break;
+				} else {
+					// in case message was already marked to download
+					tpMailItem->Mark = tpMailItem->MailStatus;
+				}
+			}
 			SetMark(hWnd, tpMailItem, ICON_DOWN);
 			GetMarkStatus(hWnd, tpMailItem);
+			if (command_id == ID_MESSAGE_DOWNLOAD) {
+				PostMessage(MainWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, (LPARAM)vSelBox);
+				SendMessage(hWnd, WM_CLOSE, 0, 0);
+			}
 			break;
 
 		case ID_MENUITEM_UNREADMARK:
