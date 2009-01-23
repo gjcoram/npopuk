@@ -122,6 +122,7 @@ ADDRESSBOOK *AddressBook = NULL;			//Address register
 int MailBoxCnt = 2;							//Mailbox several
 
 int SelBox;									// 選択中のメールボックス
+int vSelBox;
 int RecvBox;								// 送受信中のメールボックス
 static int CheckBox;						// チェック中のメールボックス
 
@@ -5148,6 +5149,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Those which it marks the execution
 		case ID_MENUITEM_EXEC:
+		case ID_MESSAGE_DOWNLOAD:
 			if (g_soc != -1) {
 				break;
 			}
@@ -5155,50 +5157,61 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ServerDelete = FALSE;
 			ans = 0;
 
-			j  = item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL);
-			if (j != -1) {
-				TCHAR msg[MSG_SIZE];
-				wsprintf(msg, STR_Q_DEL_FWDHOLD_ACCT, ((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
-					? STR_MAILBOX_NONAME :(MailBox + SelBox)->Name);
-				ans = MessageBox(hWnd, msg, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
-				if (ans == IDYES) {
-					ServerDelete = TRUE;
-					while (j != -1) {
-						(*((MailBox + SelBox)->tpMailItem + j))->ReFwd &= ~(REFWD_FWDHOLD);
-						j = item_get_next_delete_mark((MailBox + SelBox), FALSE, j, NULL);
+			if (command_id == ID_MESSAGE_DOWNLOAD) {
+				i = (int)lParam;
+				if (i < MAILBOX_USER || i >= MailBoxCnt) {
+					break;
+				}
+				if (item_get_next_download_mark((MailBox + i), -1, NULL) == -1) {
+					MessageBox(hWnd, STR_MSG_NOMARK, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
+					break;
+				}
+			} else {
+				j  = item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL);
+				if (j != -1) {
+					TCHAR msg[MSG_SIZE];
+					wsprintf(msg, STR_Q_DEL_FWDHOLD_ACCT, ((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+						? STR_MAILBOX_NONAME :(MailBox + SelBox)->Name);
+					ans = MessageBox(hWnd, msg, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+					if (ans == IDYES) {
+						ServerDelete = TRUE;
+						while (j != -1) {
+							(*((MailBox + SelBox)->tpMailItem + j))->ReFwd &= ~(REFWD_FWDHOLD);
+							j = item_get_next_delete_mark((MailBox + SelBox), FALSE, j, NULL);
+						}
+					} else if (ans == IDCANCEL) {
+						ShowError = FALSE;
+						break;
+					} else {
+						ans = -2;
 					}
-				} else if (ans == IDCANCEL) {
-					ShowError = FALSE;
-					break;
-				} else {
-					ans = -2;
 				}
-			}
-			if (ServerDelete == FALSE
-				&& item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
-				ans = ParanoidMessageBox(hWnd, (ans == 0) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
-					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
-				if (ans == IDYES) {
-					ServerDelete = TRUE;
-				} else if (ans == IDCANCEL) {
-					ShowError = FALSE;
-					break;
+				if (ServerDelete == FALSE
+					&& item_get_next_delete_mark((MailBox + SelBox), TRUE, -1, NULL) != -1) {
+					ans = ParanoidMessageBox(hWnd, (ans == 0) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
+						STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+					if (ans == IDYES) {
+						ServerDelete = TRUE;
+					} else if (ans == IDCANCEL) {
+						ShowError = FALSE;
+						break;
+					}
 				}
-			}
-			if (ServerDelete == FALSE &&
-				item_get_next_download_mark((MailBox + SelBox), -1, NULL) == -1 &&
-				item_get_next_send_mark((MailBox + SelBox), FALSE) == -1) {
+				if (ServerDelete == FALSE &&
+					item_get_next_download_mark((MailBox + SelBox), -1, NULL) == -1 &&
+					item_get_next_send_mark((MailBox + SelBox), FALSE) == -1) {
 
-				MessageBox(hWnd, (ans == -2) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK,
-					STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
-				break;
+					MessageBox(hWnd, (ans == -2) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK,
+						STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
+					break;
+				}
+				i = SelBox;
 			}
 			if (op.SocLog > 1) {
 				TCHAR msg[BUF_SIZE];
-				wsprintf(msg, TEXT("Update: box=%d, delete=%d\r\n"), SelBox, ServerDelete);
+				wsprintf(msg, TEXT("Update: box=%d, delete=%d\r\n"), i, ServerDelete);
 				log_save(msg);
 			}
-			i = SelBox;
 			AutoCheckFlag = FALSE;
 			// ダイヤルアップ開始
 			if (op.RasCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {

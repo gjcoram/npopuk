@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -516,6 +516,7 @@ typedef struct _OPTION {
 	int ViewAppMsgSource;
 	int AutoOpenAttachMsg;
 	int ViewWindowCursor;
+	int ViewShowAttach;
 	TCHAR *EditApp;
 	TCHAR *EditAppCmdLine;
 	TCHAR *EditFileSuffix;

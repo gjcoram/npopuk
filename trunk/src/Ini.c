@@ -651,6 +651,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewAppMsgSource = profile_get_int(GENERAL, TEXT("ViewAppMsgSource"), 0, app_path);
 	op.AutoOpenAttachMsg = profile_get_int(GENERAL, TEXT("AutoOpenAttachMsg"), 0, app_path);
 	op.ViewWindowCursor = profile_get_int(GENERAL, TEXT("ViewWindowCursor"), 0, app_path);
+	op.ViewShowAttach = profile_get_int(GENERAL, TEXT("ViewShowAttach"), 1, app_path);
 	op.EditApp = profile_alloc_string(GENERAL, TEXT("EditApp"), TEXT(""), app_path);
 	op.EditAppCmdLine = profile_alloc_string(GENERAL, TEXT("EditAppCmdLine"), TEXT(""), app_path);
 	op.EditFileSuffix = profile_alloc_string(GENERAL, TEXT("EditFileSuffix"), TEXT("txt"), app_path);
@@ -1321,6 +1322,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("ViewAppMsgSource"), op.ViewAppMsgSource, app_path);
 	profile_write_int(GENERAL, TEXT("AutoOpenAttachMsg"), op.AutoOpenAttachMsg, app_path);
 	profile_write_int(GENERAL, TEXT("ViewWindowCursor"), op.ViewWindowCursor, app_path);
+	profile_write_int(GENERAL, TEXT("ViewShowAttach"), op.ViewShowAttach, app_path);
 	profile_write_string(GENERAL, TEXT("EditApp"), op.EditApp, app_path);
 	profile_write_string(GENERAL, TEXT("EditAppCmdLine"), op.EditAppCmdLine, app_path);
 	profile_write_string(GENERAL, TEXT("EditFileSuffix"), op.EditFileSuffix, app_path);
