@@ -192,8 +192,7 @@
 #define STR_REPLACED_N				TEXT("Replaced %d instances")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
-#define STR_MSG_PARTIAL				"[nPOPuk:Incomplete message; click to download]"
-#define STR_MSG_PARTIAL_T			TEXT(STR_MSG_PARTIAL)
+#define STR_MSG_PARTIAL				TEXT("[nPOPuk: Incomplete message; double-click to download]")
 #define STR_MSG_ATTACHMENT			TEXT("[Attachment: ")
 #define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
 #define STR_MSG_BYWAYOF				TEXT("%s (by way of %s)")

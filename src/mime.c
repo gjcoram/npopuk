@@ -1378,20 +1378,11 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 
 	*cnt = 0;
 	if (ViewSrc == TRUE) {
-		char *end;
 		// put full headers in for view source
 		i = item_to_string_size(tpMailItem, 2, TRUE, FALSE);
-		if (tpMailItem->Download == FALSE) {
-			i += tstrlen(STR_MSG_PARTIAL) + 2;
-		}
 		body = (char *)mem_alloc(sizeof(char) * (i + 1));
 		*body = '\0';
-		end = item_to_string(body, tpMailItem, 2, TRUE, FALSE);
-		if (tpMailItem->Download == FALSE) {
-			*(end++) = '\r';
-			*(end++) = '\n';
-			str_cpy(end, STR_MSG_PARTIAL);
-		}
+		item_to_string(body, tpMailItem, 2, TRUE, FALSE);
 		buf = alloc_char_to_tchar(body);
 		mem_free(&body);
 		if (buf != NULL && *buf != TEXT('\0')) {
@@ -1460,18 +1451,9 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 
 		// –{•¶‚ÌŽæ“¾
 		if ((*(*tpPart + *TextIndex))->ePos == NULL) {
-			if (tpMailItem->Download){
-				body = alloc_copy(spos);
-				if (body == NULL) {
-					return NULL;
-				}
-			} else {
-				i = tstrlen(spos) + tstrlen(STR_MSG_PARTIAL) + 3;
-				body = (char *)mem_alloc(sizeof(char) * i);
-				if (body == NULL) {
-					return NULL;
-				}
-				str_join(body, spos, "\r\n", STR_MSG_PARTIAL, (char *)-1);
+			body = alloc_copy(spos);
+			if (body == NULL) {
+				return NULL;
 			}
 		} else {
 			i = (*(*tpPart + *TextIndex))->ePos - spos;
