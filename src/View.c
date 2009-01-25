@@ -75,8 +75,8 @@ BOOL ViewWndViewSrc = FALSE;
 int vSelBox = -1;
 extern HMENU vMenuDone;
 
-static MULTIPART **tpMultiPart;
-static int MultiPartCnt, MultiPartTextIndex;
+static MULTIPART **tpMultiPart = NULL;
+static int MultiPartCnt=0, MultiPartTextIndex=0;
 
 TCHAR *FindStr = NULL;
 DWORD FindPos;
@@ -2016,8 +2016,15 @@ static void OpenURL(HWND hWnd)
 	if (*r == TEXT('[')) {
 		for (s = r; *s != TEXT('\0') && *s != TEXT(']'); s++);
 		if (*s == TEXT(']') && (buf + j) > r && (buf + i) < s) {
+			if (str_cmp_n_t(r, STR_HTML_CONV, lstrlen(STR_HTML_CONV)) == 0) {
+				mem_free(&buf);
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
+				Decode(hWnd, MultiPartTextIndex, DECODE_AUTO_OPEN);
+				return;
+			}
 			if (str_cmp_n_t(r, STR_MSG_PARTIAL, lstrlen(STR_MSG_PARTIAL)) == 0) {
 				mem_free(&buf);
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
 				SendMessage(hWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, 0);
 				return;
 			}
@@ -2030,6 +2037,7 @@ static void OpenURL(HWND hWnd)
 				for (k = 0; k < MultiPartCnt && fname; k++) {
 					if ((*(tpMultiPart + k))->Filename != NULL &&
 						strcmp(fname, (*(tpMultiPart + k))->Filename) == 0) {
+						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
 						Decode(hWnd, k, (key_sh || key_ctl) ? DECODE_AUTO_OPEN : DECODE_ASK);
 						break;
 					}
