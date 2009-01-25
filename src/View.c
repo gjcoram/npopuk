@@ -1984,6 +1984,11 @@ static void OpenURL(HWND hWnd)
 	int i, j, k;
 	int len;
 	int MailToFlag = 0;
+	BOOL key_sh, key_ctl;
+
+	key_sh  = GetKeyState(VK_SHIFT);
+	key_ctl = GetKeyState(VK_CONTROL);
+
 
 	// エディットボックスの選択位置の取得
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -2025,7 +2030,7 @@ static void OpenURL(HWND hWnd)
 				for (k = 0; k < MultiPartCnt && fname; k++) {
 					if ((*(tpMultiPart + k))->Filename != NULL &&
 						strcmp(fname, (*(tpMultiPart + k))->Filename) == 0) {
-						Decode(hWnd, k, DECODE_ASK);
+						Decode(hWnd, k, (key_sh || key_ctl) ? DECODE_AUTO_OPEN : DECODE_ASK);
 						break;
 					}
 				}
@@ -3300,8 +3305,13 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SetMark(hWnd, tpMailItem, ICON_DOWN);
 			GetMarkStatus(hWnd, tpMailItem);
 			if (command_id == ID_MESSAGE_DOWNLOAD) {
+#ifdef WSAASYNC
 				PostMessage(MainWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, (LPARAM)vSelBox);
 				SendMessage(hWnd, WM_CLOSE, 0, 0);
+#else
+				SendMessage(MainWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, (LPARAM)vSelBox);
+				SendMessage(hViewWnd, WM_MODFYMESSAGE, 0, (LPARAM)tpMailItem);
+#endif
 			}
 			break;
 
