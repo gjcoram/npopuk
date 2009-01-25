@@ -1334,6 +1334,15 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				buf = p;
 			}
 		}
+		// GJC add notice about incomplete message
+		if (tpMailItem->Download == FALSE) {
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(STR_MSG_PARTIAL) + 1));
+			if (p != NULL) {
+				str_join_t(p, buf, TEXT("\r\n\r\n"), STR_MSG_PARTIAL, (TCHAR *)-1);
+				mem_free(&buf);
+				buf = p;
+			}
+		}
 
 		// 表示するpartの選択と添付メニューの設定
 		MultiPartTextIndex = SetAttachMenu(hWnd, tpMailItem, ViewSrc, IsAttach, &attachlist);
@@ -1991,32 +2000,26 @@ static void OpenURL(HWND hWnd)
 	*buf = TEXT('\0');
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
 
-	// look for "click to download" string
-	len = lstrlen(STR_MSG_PARTIAL_T);
-	if (i <= len) {
-		k = 0;
-	} else {
-		k = i - len;
-	}
-	for (r = buf + k; *r != TEXT('\0') && r < buf + (j + len); r++) {
-		if (str_cmp_n_t(r, STR_MSG_PARTIAL_T, len) == 0) {
-			mem_free(&buf);
-			SendMessage(hWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, 0);
-			return;
+	// look for "[ i  j ]" for download or open-attachment string
+	// require r = [, s = ] and (buf+j) > r and (buf+i) < s
+	for (k = i; k >=0; k--) {
+		r = buf + k;
+		if (*r == TEXT('[') || *r == TEXT('\n')) {
+			break;
 		}
 	}
-	len = lstrlen(STR_MSG_ATTACHMENT);
-	if (i <= len) {
-		k = 0;
-	} else {
-		k = i - len;
-	}
-	for (r = buf + k; *r != TEXT('\0') && r < buf + (j + len); r++) {
-		if (str_cmp_n_t(r, STR_MSG_ATTACHMENT, len) == 0) {
-			r += len;
-			for (s = r; *s != TEXT('\0') && *s != TEXT(']'); s++);
-			if (*s == TEXT(']')) {
+	if (*r == TEXT('[')) {
+		for (s = r; *s != TEXT('\0') && *s != TEXT(']'); s++);
+		if (*s == TEXT(']') && (buf + j) > r && (buf + i) < s) {
+			if (str_cmp_n_t(r, STR_MSG_PARTIAL, lstrlen(STR_MSG_PARTIAL)) == 0) {
+				mem_free(&buf);
+				SendMessage(hWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, 0);
+				return;
+			}
+			len = lstrlen(STR_MSG_ATTACHMENT);
+			if (str_cmp_n_t(r, STR_MSG_ATTACHMENT, len) == 0) {
 				char *fname;
+				r += len;
 				*s = TEXT('\0');
 				fname = alloc_tchar_to_char(r);
 				for (k = 0; k < MultiPartCnt && fname; k++) {
