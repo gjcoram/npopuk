@@ -43,6 +43,7 @@
 
 #define ID_CLICK_TIMER				1
 #define ID_HIDECARET_TIMER			2
+#define ID_REOPEN_TIMER				3
 
 #ifdef _WIN32_WCE
 #define MENU_ATTACH_POS				8
@@ -104,6 +105,7 @@ extern HWND hEditWnd;
 extern HWND FocusWnd;
 extern HFONT hListFont;
 extern MAILBOX *MailBox;
+extern SOCKET g_soc;
 extern int SelBox;
 extern int RecvBox;
 extern int MailBoxCnt;
@@ -1335,7 +1337,8 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			}
 		}
 		// GJC add notice about incomplete message
-		if (tpMailItem->Download == FALSE) {
+		if (tpMailItem->Download == FALSE &&
+			(MultiPartCnt <= 1 || (tpMultiPart[TextIndex])->ePos == NULL)) {
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(STR_MSG_PARTIAL) + 1));
 			if (p != NULL) {
 				str_join_t(p, buf, TEXT("\r\n\r\n"), STR_MSG_PARTIAL, (TCHAR *)-1);
@@ -1984,11 +1987,7 @@ static void OpenURL(HWND hWnd)
 	int i, j, k;
 	int len;
 	int MailToFlag = 0;
-	BOOL key_sh, key_ctl;
-
-	key_sh  = GetKeyState(VK_SHIFT);
-	key_ctl = GetKeyState(VK_CONTROL);
-
+	BOOL key_ctl = GetKeyState(VK_CONTROL);
 
 	// エディットボックスの選択位置の取得
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -2038,7 +2037,7 @@ static void OpenURL(HWND hWnd)
 					if ((*(tpMultiPart + k))->Filename != NULL &&
 						strcmp(fname, (*(tpMultiPart + k))->Filename) == 0) {
 						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
-						Decode(hWnd, k, (key_sh || key_ctl) ? DECODE_AUTO_OPEN : DECODE_ASK);
+						Decode(hWnd, k, (key_ctl < 0) ? DECODE_AUTO_OPEN : DECODE_ASK);
 						break;
 					}
 				}
@@ -3180,6 +3179,16 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			KillTimer(hWnd, wParam);
 			HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
 			break;
+
+#ifndef WSAASYNC
+		case ID_REOPEN_TIMER:
+			_SetForegroundWindow(hWnd);
+			if (g_soc == -1) {
+				SendMessage(hWnd, WM_MODFYMESSAGE, 0, GetWindowLong(hWnd, GWL_USERDATA));
+				KillTimer(hWnd, wParam);
+			}
+			break;
+#endif
 		}
 		break;
 
@@ -3318,7 +3327,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				SendMessage(hWnd, WM_CLOSE, 0, 0);
 #else
 				SendMessage(MainWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, (LPARAM)vSelBox);
-				SendMessage(hViewWnd, WM_MODFYMESSAGE, 0, (LPARAM)tpMailItem);
+				SetTimer(hWnd, ID_REOPEN_TIMER, 1000, NULL);
 #endif
 			}
 			break;
