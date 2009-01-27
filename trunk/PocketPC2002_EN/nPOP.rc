@@ -250,6 +250,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Address book",               ID_MENUITEM_ADDRESS
+        MENUITEM "&Enable auto-check",          ID_MENUITEM_AUTOCHECK
         MENUITEM "Global &Options",             ID_MENUITEM_OPTION
         POPUP "&Dial-up"
         BEGIN

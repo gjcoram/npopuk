@@ -40,8 +40,10 @@ extern HMENU hViewMenu;
 #endif
 
 extern int MailMenuPos;
-extern HWND MainWnd, hMainToolBar;
-extern HWND hViewWnd, hViewToolBar;
+extern HWND MainWnd, hViewWnd;
+#ifdef _WIN32_WCE_PPC
+extern HWND hMainToolBar, hViewToolBar;
+#endif
 
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
