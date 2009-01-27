@@ -4802,6 +4802,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case ID_MENUITEM_AUTOCHECK:
 			op.AutoCheck = (op.AutoCheck == 0) ? 1 : 0;
+			if (op.AutoCheck == 1) {
+				SetTimer(hWnd, ID_AUTOCHECK_TIMER, AUTOCHECKTIME, NULL);
+			} else {
+				KillTimer(hWnd, ID_AUTOCHECK_TIMER);
+				AutoCheckCnt = 0;
+			}
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
