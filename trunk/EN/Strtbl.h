@@ -322,9 +322,10 @@
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
 #define STR_VIEW_RETURN				TEXT("&Return to original")
 
-#define STR_HTML_COMPLETE			TEXT("[nPOPuk: text/html available; double-click to view in browser]\r\n")
-#define STR_HTML_PARTIAL			TEXT("[nPOPuk: text part complete but text/html is not; double-click to download]\r\n")
-#define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk; double-click to view in browser]\r\n")
+#define STR_HTML_COMPLETE			TEXT("[nPOPuk: text/html available; double-click to view in browser]\r\n\r\n")
+#define STR_HTML_PARTIAL			TEXT("[nPOPuk: text part complete but text/html is not; double-click to download]\r\n\r\n")
+#define STR_HTML_CONV				TEXT("[nPOPuk: HTML tags removed; double-click to view in browser]\r\n\r\n")
+#define STR_HTML_CONV_PARTIAL		TEXT("[nPOPuk: HTML tags removed]\r\n\r\n")
 #define STR_NPOPUK_FILES			TEXT("nPOPuk files")
 
 // Mail edit

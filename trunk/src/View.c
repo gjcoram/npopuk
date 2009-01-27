@@ -1330,7 +1330,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
 			|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
 			str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			p = strip_html_tags(buf, TRUE);
+			p = strip_html_tags(buf, (tpMailItem->Download) ? 1 : 2);
 			if (p != NULL) {
 				mem_free(&buf);
 				buf = p;
@@ -2782,7 +2782,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
 			|| (idx != -1 && (tpPart[idx])->ContentType != NULL &&
 			str_cmp_ni((tpPart[idx])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			tmp = strip_html_tags(buf, FALSE);
+			tmp = strip_html_tags(buf, 0);
 			if (tmp != NULL) {
 				mem_free(&buf);
 				buf = tmp;
