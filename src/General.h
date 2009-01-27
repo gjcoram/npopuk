@@ -951,7 +951,7 @@ int SetAttachListSize(TCHAR *buf);
 TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret);
 char *GetMIME2Extension(char *MIMEStr, char *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
-TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice);
+TCHAR *strip_html_tags(TCHAR *buf, int insert_notice);
 int remove_duplicate_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 void rot13_cpy(char *dest, char *start, char *end);

@@ -2554,7 +2554,7 @@ TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag)
 #define LAST_NONWHITE 0
 #define LAST_NL       1
 #define LAST_WHITE    2
-TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
+TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 {
 	TCHAR *p, *q, *ret, *s;
 	int len;
@@ -2566,9 +2566,12 @@ TCHAR *strip_html_tags(TCHAR *buf, BOOL insert_notice)
 		return NULL;
 	}
 	q = ret;
-	if (insert_notice == TRUE) {
+	if (insert_notice == 1) {
 		wsprintf(q, TEXT("%s"), STR_HTML_CONV);
 		q += lstrlen(STR_HTML_CONV);
+	} else if (insert_notice == 2) {
+		wsprintf(q, TEXT("%s"), STR_HTML_CONV_PARTIAL);
+		q += lstrlen(STR_HTML_CONV_PARTIAL);
 	}
 
 	for (p = buf; *p != TEXT('\0'); ) {

@@ -437,7 +437,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 				((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
 				|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
 				str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-				p = strip_html_tags(mBody, FALSE);
+				p = strip_html_tags(mBody, 0);
 				if (p != NULL) {
 					mem_free(&mBody);
 					mBody = p;
