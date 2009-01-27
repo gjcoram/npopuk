@@ -1339,11 +1339,37 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		// GJC add notice about incomplete message
 		if (tpMailItem->Download == FALSE &&
 			(MultiPartCnt <= 1 || (tpMultiPart[TextIndex])->ePos == NULL)) {
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(STR_MSG_PARTIAL) + 1));
+			TCHAR *str;
+			if ((MailBox + vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+				str = STR_MSG_PARTIAL_SBOX;
+			} else {
+				str = STR_MSG_PARTIAL;
+			}
+			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(str) + 1));
 			if (p != NULL) {
-				str_join_t(p, buf, TEXT("\r\n\r\n"), STR_MSG_PARTIAL, (TCHAR *)-1);
+				str_join_t(p, buf, TEXT("\r\n\r\n"), str, (TCHAR *)-1);
 				mem_free(&buf);
 				buf = p;
+			}
+		}
+		if (MultiPartCnt >= 2) {
+			int k;
+			for (k = 0; k < MultiPartCnt; k++) {
+				if ((*(tpMultiPart + k))->ContentType != NULL &&
+					str_cmp_ni((*(tpMultiPart + k))->ContentType, "text/html", tstrlen("text/html")) == 0) {
+					TCHAR *str;
+					if (tpMailItem->Download == FALSE && (*(tpMultiPart + k))->ePos == NULL) {
+						str = STR_HTML_PARTIAL;
+					} else {
+						str = STR_HTML_COMPLETE;
+					}
+					p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(str) + lstrlen(buf) + 1));
+					if (p != NULL) {
+						str_join_t(p, str, buf, (TCHAR *)-1);
+						mem_free(&buf);
+						buf = p;
+					}
+				}
 			}
 		}
 
@@ -2021,7 +2047,19 @@ static void OpenURL(HWND hWnd)
 				Decode(hWnd, MultiPartTextIndex, DECODE_AUTO_OPEN);
 				return;
 			}
-			if (str_cmp_n_t(r, STR_MSG_PARTIAL, lstrlen(STR_MSG_PARTIAL)) == 0) {
+			if (str_cmp_n_t(r, STR_HTML_COMPLETE, lstrlen(STR_HTML_COMPLETE)) == 0) {
+				for (k = 0; k < MultiPartCnt; k++) {
+					if ((*(tpMultiPart + k))->ContentType != NULL &&
+						str_cmp_ni((*(tpMultiPart + k))->ContentType, "text/html", tstrlen("text/html")) == 0) {
+						mem_free(&buf);
+						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
+						Decode(hWnd, k, DECODE_AUTO_OPEN);
+						return;
+					}
+				}
+			}
+			if ((str_cmp_n_t(r, STR_MSG_PARTIAL, lstrlen(STR_MSG_PARTIAL)) == 0)
+				|| (str_cmp_n_t(r, STR_HTML_PARTIAL, lstrlen(STR_HTML_PARTIAL)) == 0)) {
 				mem_free(&buf);
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)i, (LPARAM)i);
 				SendMessage(hWnd, WM_COMMAND, ID_MESSAGE_DOWNLOAD, 0);

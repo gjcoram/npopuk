@@ -68,6 +68,9 @@ static BOOL AutoCompleted = FALSE;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
+#ifdef _WIN32_WCE_PPC
+extern HWND hMainToolBar;
+#endif
 extern HWND FocusWnd;
 extern HFONT hListFont;
 extern HMENU hADPOPUP, hEDITPOPUP;
@@ -3232,6 +3235,15 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 
 			op.AutoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOCHECK, BM_GETCHECK, 0, 0);
 			op.AutoCheckTime = GetDlgItemInt(hDlg, IDC_EDIT_AUTOCHECKTIME, NULL, FALSE);
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#else
+			CheckMenuItem(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
+#else
+			CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
 
 			op.StartCheck = SendDlgItemMessage(hDlg, IDC_CHECK_STARTCHECK, BM_GETCHECK, 0, 0);
 			op.CheckAfterUpdate = SendDlgItemMessage(hDlg, IDC_CHECK_CHECKAFTERUPDATE, BM_GETCHECK, 0, 0);

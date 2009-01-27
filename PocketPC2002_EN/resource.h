@@ -311,6 +311,7 @@
 #define IDC_RADIO_POOMFIRST             1221
 #define IDC_NEWDIRNAME                  1222
 #define IDD_DIALOG_NEWDIR               1223
+#define ID_MENUITEM_AUTOCHECK           1226
 #define IDR_MENU_COPY_FLYOUT            1227
 #define IDR_MENU_MOVE_FLYOUT            1228
 #define ID_MENUITEM_COPYSBOX            1229

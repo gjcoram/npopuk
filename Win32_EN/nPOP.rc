@@ -353,6 +353,7 @@ BEGIN
         MENUITEM "&Address book...",            ID_MENUITEM_ADDRESS
         MENUITEM SEPARATOR
         MENUITEM "Global &Options...",          ID_MENUITEM_OPTION
+        MENUITEM "&Enable auto-check",          ID_MENUITEM_AUTOCHECK
         POPUP "&Dial-up"
         BEGIN
             MENUITEM "&Connect",                    ID_MENUITEM_RAS_CONNECT

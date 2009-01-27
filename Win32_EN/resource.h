@@ -306,6 +306,7 @@
 #define ID_MENUITEM_REDIRECT            1216
 #define IDD_DIALOG_REDIRECT             1217
 #define IDC_CHECK_MARKSEND              1218
+#define ID_MENUITEM_AUTOCHECK           1226
 #define IDR_MENU_COPY_FLYOUT            1227
 #define IDR_MENU_MOVE_FLYOUT            1228
 #define ID_MENUITEM_COPYSBOX            1229

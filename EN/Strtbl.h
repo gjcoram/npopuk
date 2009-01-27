@@ -193,6 +193,7 @@
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
 #define STR_MSG_PARTIAL				TEXT("[nPOPuk: Incomplete message; double-click to download]")
+#define STR_MSG_PARTIAL_SBOX		TEXT("[nPOPuk: Incomplete message; cannot download in savebox]")
 #define STR_MSG_ATTACHMENT			TEXT("[Attachment: ")
 #define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
 #define STR_MSG_BYWAYOF				TEXT("%s (by way of %s)")
@@ -321,7 +322,9 @@
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
 #define STR_VIEW_RETURN				TEXT("&Return to original")
 
-#define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk]\r\n")
+#define STR_HTML_COMPLETE			TEXT("[nPOPuk: text/html available; double-click to view in browser]\r\n")
+#define STR_HTML_PARTIAL			TEXT("[nPOPuk: text part complete but text/html is not; double-click to download]\r\n")
+#define STR_HTML_CONV				TEXT("[HTML tags removed by nPOPuk; double-click to view in browser]\r\n")
 #define STR_NPOPUK_FILES			TEXT("nPOPuk files")
 
 // Mail edit
