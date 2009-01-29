@@ -1249,6 +1249,11 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 		// FROM
 		if (tpMailItem->RedirectTo != NULL) {
+			if (tpMailItem->From == NULL) {
+				lstrcpy(ErrStr, STR_ERR_SOCK_NOFROM);
+				tpMailItem->MailStatus = tpMailItem->Mark = ICON_ERROR;
+				return FALSE;
+			}
 			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->From) + 1));
 			if (p != NULL) {
 				GetMailAddress(tpMailItem->From, p, NULL, FALSE);
@@ -1268,6 +1273,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_MAILFROM);
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
+			tpMailItem->MailStatus = tpMailItem->Mark = ICON_ERROR;
 			return FALSE;
 		}
 		if (tpMailItem->RedirectTo != NULL) {
@@ -1275,13 +1281,15 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			Cc = NULL;
 			Bcc = NULL;
 		} else {
-			if (tpMailItem->To == NULL) {
-				lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
-				return FALSE;
-			}
 			To = tpMailItem->To;
 			Cc = tpMailItem->Cc;
 			Bcc = tpMailItem->Bcc;
+		}
+		if ((To == NULL || *To == TEXT('\0')) && (Cc == NULL || *Cc == TEXT('\0'))) {
+			// should Bcc-only be allowed?
+			lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
+			tpMailItem->MailStatus = tpMailItem->Mark = ICON_ERROR;
+			return FALSE;
 		}
 		command_status = SMTP_RCPTTO;
 		return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
@@ -1290,6 +1298,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (status >= SMTP_ERRORSTATUS) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_RCPTTO);
 			str_cat_n(ErrStr, buf, BUF_SIZE - 1);
+			tpMailItem->MailStatus = tpMailItem->Mark = ICON_ERROR;
 			return FALSE;
 		}
 
