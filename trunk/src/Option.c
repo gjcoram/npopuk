@@ -6138,7 +6138,13 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				TCHAR *item, *addr;
 				int j;
 				item = ListView_AllocGetText(hListView, i, 1);
+				if (item == NULL) {
+					continue;
+				}
 				addr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(item) + 1));
+				if (addr == NULL) {
+					continue;
+				}
 				*addr = TEXT('\0');
 				GetMailAddress(item, addr, NULL, FALSE);
 				for (j = 0; j < AddressBook->ItemCnt; j++) {
@@ -6151,7 +6157,13 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				while((j = ListView_GetNextItem(hListView, j, LVNI_SELECTED)) != -1) {
 					TCHAR *item2, *addr2;
 					item2 = ListView_AllocGetText(hListView, j, 1);
+					if (item2 == NULL) {
+						continue;
+					}
 					addr2 = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(item2) + 1));
+					if (addr2 == NULL) {
+						continue;
+					}
 					*addr2 = TEXT('\0');
 					GetMailAddress(item2, addr2, NULL, FALSE);
 					if (lstrcmp(addr, addr2) == 0) {

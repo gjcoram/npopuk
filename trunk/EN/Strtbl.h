@@ -115,6 +115,7 @@
 #define STR_ERR_SOCK_DELE			TEXT("Deletion failed\n\n")
 #define STR_ERR_SOCK_NOATTACH		TEXT("Attached file was not found")
 #define STR_ERR_SOCK_BADFROM		TEXT("Address error: Check SMTP account settings")
+#define STR_ERR_SOCK_NOFROM			TEXT("Original sender unknown; cannot redirect")
 #define STR_ERR_SOCK_HELO 			TEXT("HELO failed\n")\
 									TEXT("Please check address format\n\n")
 #define STR_ERR_SOCK_SMTPAUTH		TEXT("Login to SMTP server failed\n\n")
