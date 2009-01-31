@@ -682,6 +682,13 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 
 	if (tpMailItem->RedirectTo != NULL) {
 		// Content-Type - determined by original message
+		if (tpMailItem->ContentType != NULL
+			&& str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+			&& str_cmp_ni(ctype, "text/plain;", tstrlen("text/plain;")) == 0) {
+			// hack alert
+			ctype[5] = 'h'; ctype[6] = 't'; ctype[7] = 'm'; ctype[8] = 'l';
+			ctype[9] = ';'; ctype[10] = ' ';
+		}
 		if (send_header(soc, HEAD_CONTENTTYPE, ctype, ErrStr) == FALSE) {
 			mem_free(&send_body);
 			send_body = NULL;
@@ -1285,12 +1292,6 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			Cc = tpMailItem->Cc;
 			Bcc = tpMailItem->Bcc;
 		}
-		if ((To == NULL || *To == TEXT('\0')) && (Cc == NULL || *Cc == TEXT('\0'))) {
-			// should Bcc-only be allowed?
-			lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
-			tpMailItem->MailStatus = tpMailItem->Mark = ICON_ERROR;
-			return FALSE;
-		}
 		command_status = SMTP_RCPTTO;
 		return send_mail_proc(hWnd, soc, NULL, ErrStr, tpMailItem, ShowFlag);
 
@@ -1407,6 +1408,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			(send_mail_item->Cc == NULL || *send_mail_item->Cc == TEXT('\0')) &&
 			(send_mail_item->Bcc == NULL || *send_mail_item->Bcc == TEXT('\0'))) {
 			lstrcpy(ErrStr, STR_ERR_SOCK_NOTO);
+			send_mail_item->Mark = send_mail_item->MailStatus = ICON_ERROR;
 			return FALSE;
 		}
 		// ‰Šú‰»
