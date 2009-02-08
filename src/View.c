@@ -2325,8 +2325,13 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	BOOL is_digest = FALSE, is_msg = FALSE, save_embed = FALSE;
 	BOOL ret = TRUE;
 
-	if (DoWhat == DECODE_SAVE_ALL && (*(tpMultiPart + id))->ePos == NULL) {
-		return FALSE; // saved as much as we can
+
+	if ((*(tpMultiPart + id))->ePos == NULL) {
+		if (DoWhat == DECODE_SAVE_ALL) {
+			return FALSE; // saved as much as we can
+		} else if (IDCANCEL == MessageBox(hWnd, STR_Q_PARTIAL_ATTACH, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_OKCANCEL)) {
+			return FALSE;
+		}
 	}
 
 	if ((*(tpMultiPart + id))->IsDigestMsg == TRUE) {

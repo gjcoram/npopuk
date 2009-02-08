@@ -529,7 +529,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	char *din, *dout;
 #endif
 	TCHAR *FromAddress = NULL;
-	TCHAR *BodyCSet;
+	TCHAR *BodyCSet, *octype;
 	TCHAR buf[BUF_SIZE];
 	TCHAR *p, *q, *r;
 	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
@@ -649,13 +649,20 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 		BodyCSet = op.BodyCharset;
 		enc = op.BodyEncoding;
 	}
+	octype = NULL;
+	if (tpMailItem->RedirectTo != NULL && tpMailItem->ContentType != NULL) {
+		octype = alloc_copy_t(tpMailItem->ContentType);
+		for (p = octype; *p != TEXT(';') && *p != TEXT('\0'); p++);
+		*p = TEXT('\0');
+	}
 #ifdef UNICODE
 	body = alloc_char_to_tchar(tpMailItem->Body);
-	send_body = MIME_body_encode(body, BodyCSet, enc, ctype, enc_type, ErrStr);
+	send_body = MIME_body_encode(body, BodyCSet, enc, octype, ctype, enc_type, ErrStr);
 	mem_free(&body);
 #else
-	send_body = MIME_body_encode(tpMailItem->Body, BodyCSet, enc, ctype, enc_type, ErrStr);
+	send_body = MIME_body_encode(tpMailItem->Body, BodyCSet, enc, octype, ctype, enc_type, ErrStr);
 #endif
+	mem_free(&octype);
 	if (send_body == NULL) {
 		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 		return FALSE;
@@ -681,14 +688,7 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	}
 
 	if (tpMailItem->RedirectTo != NULL) {
-		// Content-Type - determined by original message
-		if (tpMailItem->ContentType != NULL
-			&& str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
-			&& str_cmp_ni(ctype, "text/plain;", tstrlen("text/plain;")) == 0) {
-			// hack alert
-			ctype[5] = 'h'; ctype[6] = 't'; ctype[7] = 'm'; ctype[8] = 'l';
-			ctype[9] = ';'; ctype[10] = ' ';
-		}
+		// Content-Type - derived from original message
 		if (send_header(soc, HEAD_CONTENTTYPE, ctype, ErrStr) == FALSE) {
 			mem_free(&send_body);
 			send_body = NULL;

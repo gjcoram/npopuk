@@ -29,8 +29,8 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 BOOL MIME_decode(char *buf, TCHAR *ret);
 TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t);
 char *MIME_rfc2231_decode(char *buf);
-BOOL MIME_create_encode_header(TCHAR *charset, int encoding, char *ret_content_type, char *ret_encoding);
-char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr);
+BOOL MIME_create_encode_header(TCHAR *charset, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding);
+char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr);
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body);
 TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart, MULTIPART ***tpPart, int *cnt, int *TextIndex);
 

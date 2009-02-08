@@ -882,11 +882,14 @@ BEGIN
     CONTROL         "When &looking for next unread message",IDC_VIEWSKIPDEL_UNREAD,
                     "Button",BS_AUTORADIOBUTTON,10,91,160,10
     CONTROL         "&Close window if no next message",IDC_VIEWCLOSENONEXT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,115,147,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,112,147,10
+    CONTROL         "&Append attachment list to message in view window",
+                    IDC_VIEWSHOWATTACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    10,126,177,10
     CONTROL         "&External viewer gets message source",IDC_VIEWAPP_MSGSRC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,132,187,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,140,187,10
     CONTROL         "S&how cursor in view window",IDC_VIEWWND_CURSOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,149,187,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,154,187,10
 END
 
 IDD_DIALOG_OPTION_ETC DIALOGEX 0, 0, 217, 187
@@ -1045,7 +1048,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LISTBOX         IDC_LIST_FILE,0,0,238,100,LBS_NOINTEGRALHEIGHT | 
                     LBS_WANTKEYBOARDINPUT | LBS_EXTENDEDSEL | WS_VSCROLL | 
-                    WS_TABSTOP,WS_EX_RIGHT
+                    WS_TABSTOP
     PUSHBUTTON      "&Add",IDC_BUTTON_ADD,130,104,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,184,104,50,14
     DEFPUSHBUTTON   "OK",IDOK,130,122,50,14
