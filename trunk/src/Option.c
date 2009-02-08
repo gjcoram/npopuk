@@ -36,11 +36,18 @@
 #define IDC_EDIT_BODY				2003
 #define ID_RESIZE_TIMER				1
 
+typedef struct _ATTACH_ITEM {
+	TCHAR *fname;
+	BOOL is_fwd;
+	struct _ATTACH_ITEM *next;
+} ATTACH_ITEM;
+
 /* Global Variables */
 HWND MsgWnd = NULL;
 BOOL ImportRead = TRUE;
 BOOL ImportDown = TRUE;
 int ReplaceCnt = 0;
+static ATTACH_ITEM *top_attach_item = NULL;
 
 extern OPTION op;
 extern TCHAR *DataDir;
@@ -3286,6 +3293,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			SendDlgItemMessage(hDlg, IDC_VIEWSKIPDEL_NEVER, BM_SETCHECK, 1, 0);
 		}
 		SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_SETCHECK, op.ViewCloseNoNext, 0);
+		SendDlgItemMessage(hDlg, IDC_VIEWSHOWATTACH, BM_SETCHECK, op.ViewShowAttach, 0);
 		SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_SETCHECK, op.ViewAppMsgSource, 0);
 #ifndef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_SETCHECK, op.ViewWindowCursor, 0);
@@ -3316,6 +3324,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				op.ViewSkipDeleted = 0;
 			}
 			op.ViewCloseNoNext = SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_GETCHECK, 0, 0);
+			op.ViewShowAttach = SendDlgItemMessage(hDlg, IDC_VIEWSHOWATTACH, BM_GETCHECK, 0, 0);
 			op.ViewAppMsgSource = SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
 			op.ViewWindowCursor = SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_GETCHECK, 0, 0);
@@ -4458,21 +4467,36 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return TRUE;
 }
 
+void attach_item_free()
+{
+	ATTACH_ITEM *a_item = top_attach_item, *next;
+	while (a_item) {
+		mem_free(&a_item->fname);
+		next = a_item->next;
+		mem_free(&a_item);
+		a_item = next;
+	}
+	top_attach_item = NULL;
+}
+
 /*
  * SetAttachProc - 添付ファイルの設定プロシージャ
  */
 BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #define ID_FILE_ADD				(WM_APP + 100)
+#define ID_FWD_ADD				(WM_APP + 101)
 	MAILITEM *tpMailItem;
 	MULTIPART **tpMultiPart = NULL;
+	ATTACH_ITEM *a_item = NULL, *i_item;
 	TCHAR fpath[MULTI_BUF_SIZE], buf[BUF_SIZE];
 	TCHAR *f, *f1, *f2;
-	int i, j, len, pfxlen, cnt, cnt1, cnt2, mpcnt = 0;
+	int i, j, cnt, cnt1, cnt2, mpcnt = 0;
 	unsigned len1, len2;
 	long FileSize;
 	MEMORYSTATUS memInfo;
 	int fwd_whole_msg = 0;
+	BOOL is_fwd = FALSE;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -4502,13 +4526,11 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (tpMailItem->FwdAttach != NULL) {
 			f = tpMailItem->FwdAttach;
 			if (*f == ATTACH_SEP) {
-				SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)STR_FWD_ORIG_MSG);
+				SendMessage(hDlg, WM_COMMAND, ID_FWD_ADD, (LPARAM)STR_FWD_ORIG_MSG);
 			} else {
 				while (*f != TEXT('\0')) {
-					f = str_cpy_f_t(buf, f, ATTACH_SEP);
-					//fpath[0] = '\0';
-					str_join_t(fpath, STR_FWDATT_PREFIX, buf, (TCHAR *)-1);
-					SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)fpath);
+					f = str_cpy_f_t(fpath, f, ATTACH_SEP);
+					SendMessage(hDlg, WM_COMMAND, ID_FWD_ADD, (LPARAM)fpath);
 				}
 			}
 		}
@@ -4541,8 +4563,8 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 			break;
 		}
-		len = DragQueryFile((HANDLE)wParam, 0xFFFFFFFF, NULL, 0);
-		for (i = 0; i < len; i++) {
+		cnt = DragQueryFile((HANDLE)wParam, 0xFFFFFFFF, NULL, 0);
+		for (i = 0; i < cnt; i++) {
 			DragQueryFile((HANDLE)wParam, i, fpath, BUF_SIZE - 1);
 			SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)fpath);
 		}
@@ -4575,9 +4597,12 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 				SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)buf);
 			} else {
+				// FILE_OPEN_MULTI may have a trailing '\' if the files are in the root dir (C:\)
 				len1 = (unsigned)lstrlen(buf);
-				*(buf + len1) = TEXT('\\');
-				len1++;
+				if (*(buf + (len1 -1)) != TEXT('\\')) {
+					*(buf + len1) = TEXT('\\');
+					len1++;
+				}
 				while (*f1 != TEXT('\0')) {
 					f1 = str_cpy_f_t((buf+len1), f1, TEXT('\0'));
 					SendMessage(hDlg, WM_COMMAND, ID_FILE_ADD, (LPARAM)buf);
@@ -4585,18 +4610,63 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
+		case ID_FWD_ADD:
+			is_fwd = TRUE;
 		case ID_FILE_ADD:
-			if (dir_check((TCHAR *)lParam) == TRUE) {
+			f = (TCHAR *)lParam;
+			if (dir_check(f) == TRUE) {
 				break;
 			}
-			for (i = 0; i < SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0); i++) {
-				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)buf);
-				if (lstrcmp((TCHAR *)lParam, buf) == 0) {
-					SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, i, 0);
-					break;
+			cnt = SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0);
+			if (top_attach_item != NULL && lstrcmp(f, top_attach_item->fname) == 0) {
+				a_item = top_attach_item;
+				top_attach_item = top_attach_item->next;
+				a_item->next = NULL; // this one goes at the end
+				a_item->is_fwd = is_fwd;
+				// don't need to free and re-copy fname; it's the same!
+				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, 0, 0);
+				cnt--;
+			}
+			i_item = top_attach_item;
+			for (i = 0; i < cnt && i_item && i_item->next; i++) {
+				if (lstrcmp(f, i_item->next->fname) == 0) {
+					if (a_item == NULL) {
+						a_item = i_item->next;
+						i_item->next = i_item->next->next; // may be null
+						a_item->next = NULL; // this one goes at the end
+						a_item->is_fwd = is_fwd;
+						// don't need to free and re-copy fname; it's the same!
+					} else {
+						// f was found twice??
+						ATTACH_ITEM *d_item = i_item->next;
+						i_item->next = i_item->next->next; // may be null
+						mem_free(&d_item->fname);
+						mem_free(&d_item);
+					}
+					SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, i+1, 0);
+					cnt--;
+				}
+				if (i_item->next != NULL) {
+					i_item = i_item->next;
 				}
 			}
-			SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_ADDSTRING, 0, lParam);
+			if (a_item == NULL) {
+				a_item = (ATTACH_ITEM *)mem_calloc(sizeof(ATTACH_ITEM));
+				a_item->fname = alloc_copy_t(f);
+				a_item->is_fwd = is_fwd;
+			}
+ 			if (top_attach_item == NULL) {
+				top_attach_item = a_item;
+			} else if (i_item) {
+				i_item->next = a_item;
+			} // else ??
+			f = GetFileNameString(a_item->fname);
+			if (a_item->is_fwd == TRUE) {
+				wsprintf(buf, TEXT("%s%s"), STR_FWDATT_PREFIX, f);
+				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_ADDSTRING, 0, (LPARAM)buf);
+			} else {
+				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_ADDSTRING, 0, (LPARAM)f);
+			}
 			break;
 
 		case IDC_BUTTON_DELETE:
@@ -4614,11 +4684,30 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (MessageBox(hDlg, STR_Q_UNLINKATTACH, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				break;
 			}
-			for (i = SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0) - 1; i >= 0; i--) {
-				if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETSEL, i, 0) == 0) {
-					continue;
+			cnt = SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0);
+			i_item = top_attach_item;
+			a_item = NULL;
+			for (i = 0; i < cnt && i_item; i++) {
+				ATTACH_ITEM *d_item;
+				if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETSEL, i, 0) != 0) {
+					d_item = i_item;
+					if (i_item == top_attach_item) {
+						top_attach_item = top_attach_item->next;
+					} else if (a_item != NULL) {
+						a_item->next = i_item->next;
+					}
+					i_item = i_item->next;
+					mem_free(&d_item->fname);
+					mem_free(&d_item);
+				} else {
+					a_item = i_item;
+					i_item = i_item->next;
 				}
-				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, i, 0);
+			}
+			for (i = cnt - 1; i >= 0; i--) {
+				if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETSEL, i, 0) != 0) {
+					SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_DELETESTRING, i, 0);
+				}
 			}
 			break;
 
@@ -4638,36 +4727,34 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpMailItem->FwdAttach = NULL;
 			tpMailItem->AttachSize = 0;
 
-			if (SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0) <= 0) {
+			if ( (cnt = SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0)) <= 0) {
 				EndDialog(hDlg, TRUE);
 				break;
 			}
 
-			len = lstrlen(STR_FWD_ORIG_MSG);
-			pfxlen = lstrlen(STR_FWDATT_PREFIX);
 			len1 = len2 = 0;
-			cnt = SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETCOUNT, 0, 0);
 			cnt1 = cnt2 = 0;
-			for (i = 0; i < cnt; i++) {
-				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)fpath);
-				if (str_cmp_n_t(fpath, STR_FWD_ORIG_MSG, len) == 0) {
-					fwd_whole_msg = 1;
-					cnt2 = 1;
-					len2 = 1;
-				} else if (str_cmp_n_t(fpath, STR_FWDATT_PREFIX, pfxlen) != 0) {
-					len1 += SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXTLEN, i, 0);
+			a_item = top_attach_item;
+			for (i = 0; i < cnt && a_item; i++) {
+				f = a_item->fname;
+				if (a_item->is_fwd == FALSE) {
+					len1 += lstrlen(f);
 					if (cnt1 != 0) {
 						len1++;
 					}
 					cnt1++;
+				} else if (lstrcmp(f, STR_FWD_ORIG_MSG) == 0) {
+					fwd_whole_msg = 1;
+					cnt2 = 1;
+					len2 = 1;
 				} else if (fwd_whole_msg == 0) {
-					len2 += SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXTLEN, i, 0);
-					len2 -= pfxlen;
+					len2 += lstrlen(f);
 					if (cnt2 != 0) {
 						len2++;
 					}
 					cnt2++;
 				}
+				a_item = a_item->next;
 			}
 			if (cnt1 > 0) {
 				f1 = tpMailItem->Attach = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len1 + 1));
@@ -4714,27 +4801,28 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			cnt1 = cnt2 = 0;
-			for (i = 0; i < cnt; i++) {
-				SendDlgItemMessage(hDlg, IDC_LIST_FILE, LB_GETTEXT, i, (LPARAM)fpath);
-				if (str_cmp_n_t(fpath, STR_FWD_ORIG_MSG, len) == 0) {
-					*(f2++) = ATTACH_SEP;
-					*(f2++) = TEXT('\0');
-					tpMailItem->AttachSize += fwd_whole_msg;
-				} else if (str_cmp_n_t(fpath, STR_FWDATT_PREFIX, pfxlen) != 0) {
+			a_item = top_attach_item;
+			for (i = 0; i < cnt && a_item; i++) {
+				f = a_item->fname;
+				if (a_item->is_fwd == FALSE) {
 					if (cnt1 != 0) {
 						*(f1++) = ATTACH_SEP;
 					}
-					f1 = str_cpy_t(f1, fpath);
-					FileSize = file_get_size(fpath);
+					f1 = str_cpy_t(f1, f);
+					FileSize = file_get_size(f);
 					if (FileSize > 0) {
 						tpMailItem->AttachSize += (FileSize*4)/3; // 4/3 for MIME encoding
 					}
 					cnt1++;
+				} else if (lstrcmp(f, STR_FWD_ORIG_MSG) == 0) {
+					*(f2++) = ATTACH_SEP;
+					*(f2++) = TEXT('\0');
+					tpMailItem->AttachSize += fwd_whole_msg;
 				} else if (fwd_whole_msg == 0) {
 					if (cnt2 != 0) {
 						*(f2++) = ATTACH_SEP;
 					}
-					f2 = str_cpy_t(f2, fpath+pfxlen);
+					f2 = str_cpy_t(f2, f);
 					FileSize = 0;
 					for (j = 0; j < mpcnt; j++) {
 						TCHAR *fname;
@@ -4746,7 +4834,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 						fname = (*(tpMultiPart + j))->Filename;
 #endif
-						if (lstrcmp(fname, fpath+pfxlen) == 0) {
+						if (lstrcmp(fname, f) == 0) {
 							FileSize = (*(tpMultiPart + j))->ePos - (*(tpMultiPart + j))->hPos;
 #ifdef UNICODE
 							mem_free(&fname);
@@ -4760,6 +4848,7 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					tpMailItem->AttachSize += FileSize;
 					cnt2++;
 				}
+				a_item = a_item->next;
 			}
 			memInfo.dwLength = sizeof(memInfo);
 			GlobalMemoryStatus(&memInfo); 
@@ -5207,6 +5296,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDC_BUTTON_ATTACH:
+			if (top_attach_item != NULL) {
+				// already modifying attachments for another message
+				break;
+			}
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
 				EndDialog(hDlg, FALSE);
@@ -5215,6 +5308,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tpTmpMailItem = *(tpSendMailIList + 1);
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ATTACH),
 				hDlg, SetAttachProc, (LPARAM)tpTmpMailItem);
+			attach_item_free();
 
 			if (tpTmpMailItem != NULL) {
 				ReDoAttachButton = TRUE;
@@ -7694,7 +7788,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (show_msg == TRUE) {
 					TCHAR *msg, *title;
 					if (FindOrReplace == 3 && ReplaceCnt > 0) {
-						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_REPLACED_N) + 7));
+						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_MSG_REPLACED_N) + 7));
 					} else {
 						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) + lstrlen(STR_MSG_NOFIND) + 1));
 					}
@@ -7703,7 +7797,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					if (FindOrReplace == 3 && ReplaceCnt > 0) {
 						if (ReplaceCnt > 999999) ReplaceCnt = 999999;
-						wsprintf(msg, STR_REPLACED_N, ReplaceCnt);
+						wsprintf(msg, STR_MSG_REPLACED_N, ReplaceCnt);
 						title = STR_TITLE_FIND;
 					} else {
 						wsprintf(msg, STR_MSG_NOFIND, FindStr);

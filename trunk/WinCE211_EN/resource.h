@@ -310,6 +310,7 @@
 #define ID_MENUITEM_REDIRECT            1216
 #define IDD_DIALOG_REDIRECT             1217
 #define IDC_CHECK_MARKSEND              1218
+#define IDC_VIEWSHOWATTACH              1219
 #define IDC_RADIO_POOMLAST              1220
 #define IDC_RADIO_POOMFIRST             1221
 #define ID_MENUITEM_AUTOCHECK           1226

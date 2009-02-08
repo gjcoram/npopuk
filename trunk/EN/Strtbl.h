@@ -178,6 +178,7 @@
 #define STR_Q_NOBODYDELATT			TEXT("Message has no text part; deleting attachments\nwill leave nothing.  Proceed?")
 #define STR_Q_SAVE_EMBEDDED			TEXT("Convert embedded image names?")
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\nSkip this one?")
+#define STR_Q_PARTIAL_ATTACH		TEXT("Incomplete attachment; continue?\n(Else cancel, download message, and try again)")
 #define STR_Q_CREATE_INIFILE		TEXT("Create INIFILE at '%s'?")
 
 // Message
@@ -190,7 +191,7 @@
 #define STR_MSG_NEWMAIL				TEXT("You've got new mail!")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("\"%s\" not found")
-#define STR_REPLACED_N				TEXT("Replaced %d instances")
+#define STR_MSG_REPLACED_N			TEXT("Replaced %d instances")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\nSome incompatibilities may exist.\nProceed anyway?")
 #define STR_MSG_NOTEXTPART			TEXT("[Message has no text part]")
 #define STR_MSG_PARTIAL				TEXT("[nPOPuk: Incomplete message; double-click to download]")
@@ -383,7 +384,7 @@
 #define STR_SETSEND_BTN_CC			TEXT("&Recipients")
 #define STR_SETSEND_BTN_ATTACH		TEXT("Attac&h")
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
-#define STR_FWD_ORIG_MSG			TEXT("Fwd: (original message)")
+#define STR_FWD_ORIG_MSG			TEXT(" (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
 
 // Mail Prop

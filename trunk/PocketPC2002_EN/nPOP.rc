@@ -907,20 +907,21 @@ BEGIN
     CONTROL         "that is &unread",IDC_VIEWNEXTDEL_UNREAD,"Button",
                     BS_AUTOCHECKBOX,75,29,60,10
     CONTROL         "Ne&ver",IDC_VIEWSKIPDEL_NEVER,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,7,54,110,10
+                    BS_AUTORADIOBUTTON | WS_GROUP,7,66,33,10
     CONTROL         "&When moving (prev, next, next unread)",
-                    IDC_VIEWSKIPDEL_ALWAYS,"Button",BS_AUTORADIOBUTTON,7,66,
+                    IDC_VIEWSKIPDEL_ALWAYS,"Button",BS_AUTORADIOBUTTON,7,54,
                     145,10
-    CONTROL         "When &looking for next unread message",
-                    IDC_VIEWSKIPDEL_UNREAD,"Button",BS_AUTORADIOBUTTON,7,78,
-                    145,10
+    CONTROL         "When &looking for next unread",IDC_VIEWSKIPDEL_UNREAD,
+                    "Button",BS_AUTORADIOBUTTON,43,66,108,10
     GROUPBOX        "Skip messages marked for deletion",IDC_STATIC,1,42,155,
-                    50
+                    40
     CONTROL         "&Close window if no next message",IDC_VIEWCLOSENONEXT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,83,147,10
+    CONTROL         "&Append attachment list to message",IDC_VIEWSHOWATTACH,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,95,147,10
     CONTROL         "&External viewer gets message source",
                     IDC_VIEWAPP_MSGSRC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    1,107,155,10
+                    1,107,147,10
 END
 
 IDD_DIALOG_OPTION_ETC DIALOG DISCARDABLE  0, 0, 160, 122

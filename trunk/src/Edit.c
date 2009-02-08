@@ -1664,6 +1664,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = TRUE;
 #endif
+	BOOL dlg;
 
 	switch (msg) {
 	case WM_CREATE:
@@ -1982,10 +1983,13 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_ATTACH:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-			if (tpMailItem != NULL &&
-				DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ATTACH), hWnd, SetAttachProc, (LPARAM)tpMailItem) == TRUE) {
+			dlg = FALSE;
+			if (tpMailItem != NULL) {
+				dlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ATTACH), hWnd, SetAttachProc, (LPARAM)tpMailItem);
+				attach_item_free();
+			}
+			if (dlg == TRUE) {
 				int st, i;
-
 				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 				SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 				if ((tpMailItem->Attach != NULL && *tpMailItem->Attach != TEXT('\0')) ||

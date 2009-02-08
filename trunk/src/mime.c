@@ -1055,17 +1055,26 @@ char *MIME_rfc2231_decode(char *buf)
 /*
  * MIME_create_encode_header - エンコードヘッダ作成
  */
-BOOL MIME_create_encode_header(TCHAR *charset, int encoding, char *ret_content_type, char *ret_encoding)
+BOOL MIME_create_encode_header(TCHAR *charset, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding)
 {
+	TCHAR *content_type;
 #ifdef UNICODE
 	TCHAR buf[BUF_SIZE];
+#endif
+	
+	if (ctype_in != NULL && *ctype_in != TEXT('\0')) {
+		content_type = ctype_in;
+	} else {
+		content_type = TEXT("text/plain");
+	}
 
+#ifdef UNICODE
 	// Content-Type
-	wsprintf(buf, TEXT("text/plain; charset=\"%s\""), charset);
+	wsprintf(buf, TEXT("%s; charset=\"%s\""), content_type, charset);
 	tchar_to_char(buf, ret_content_type, BUF_SIZE);
 #else
 	// Content-Type
-	wsprintf(ret_content_type, TEXT("text/plain; charset=\"%s\""), charset);
+	wsprintf(ret_content_type, TEXT("%s; charset=\"%s\""), content_type, charset);
 #endif
 
 	// Content-Transfer-Encoding
@@ -1095,7 +1104,7 @@ BOOL MIME_create_encode_header(TCHAR *charset, int encoding, char *ret_content_t
 /*
  * MIME_body_encode - 本文のエンコード (RFC 822, RFC 2822, RFC 2045)
  */
-char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr)
+char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr)
 {
 	TCHAR *buf;
 	char *ret;
@@ -1120,7 +1129,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 
 	if (encode == FALSE) {
 		// Assume US-ASCII (could be national variant)
-		MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ret_content_type, ret_encoding);
+		MIME_create_encode_header(TEXT(CHARSET_US_ASCII), 0, ctype_in, ret_content_type, ret_encoding);
 		ret = alloc_tchar_to_char(buf);
 	} else {
 		if (encoding == ENC_TYPE_7BIT) {
@@ -1130,7 +1139,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, char *ret_co
 		//if (lstrcmpi(charset_t, TEXT(CHARSET_US_ASCII)) == 0) {
 			// that's a lie if there's 8-bit data ...
 		//}
-		MIME_create_encode_header(charset_t, encoding, ret_content_type, ret_encoding);
+		MIME_create_encode_header(charset_t, encoding, ctype_in, ret_content_type, ret_encoding);
 
 		// charsetの変換
 #ifndef _WCE_OLD

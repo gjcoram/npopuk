@@ -168,7 +168,14 @@ BOOL dir_check(const TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
+	const TCHAR *p;
 
+	// FILE_OPEN_MULTI may return C:\ plus a set of filenames
+	// FindFirstFile does not accept a trailing '\'
+	p = path + (lstrlen(path) - 1);
+	if (*p == TEXT('\\')) {
+		return TRUE;
+	}
 	if ((hFindFile = FindFirstFile(path, &FindData)) == INVALID_HANDLE_VALUE) {
 		return FALSE;
 	}
