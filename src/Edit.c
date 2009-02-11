@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -42,6 +42,10 @@ HWND hEditToolBar = NULL;
 TCHAR *tmp_attach;
 static int EditMaxLength;
 static BOOL ProcessFlag;
+
+#ifdef _WIN32_WCE_PPC
+char EditMenuOpened = 0;
+#endif
 
 #ifdef _WIN32_WCE
 static WNDPROC EditWindowProcedure;
@@ -893,6 +897,16 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 5, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	Height = 0;
+
+	// code courtesy of Christian Ghisler
+	if (op.osMajorVer >= 5) {
+		// WM5 is 5.1, WM6 is 5.2
+		SendMessage(hEditToolBar, SHCMBM_OVERRIDEKEY, VK_F1, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+		SendMessage(hEditToolBar, SHCMBM_OVERRIDEKEY, VK_F2, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+	}
+
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
 	hCSOBar = CSOBar_Create(hInst, hWnd, 1, BaseInfo);
@@ -1786,6 +1800,52 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		}
 		break;
 
+#ifdef _WIN32_WCE_PPC
+	case WM_HOTKEY:
+		// code courtesy of Christian Ghisler
+		if (op.osMajorVer >= 5 && LOWORD(lParam)==0) {
+			HWND submenu;
+			RECT r;
+			POINT pt;
+			int itemopen;
+				switch(HIWORD(lParam)) {
+			case VK_F1: // VK_TSOFT1
+			case VK_F2: // VK_TSOFT2
+				if (EditMenuOpened) {
+					itemopen = EditMenuOpened - 1;
+				} else {
+					itemopen = (HIWORD(lParam)==VK_F1) ? 0 : 1;
+				}
+				SendMessage(hEditToolBar, TB_GETITEMRECT, itemopen, (LPARAM)&r);
+				pt.x = (r.left + r.right) / 2;
+				pt.y = (r.top + r.bottom) / 2;
+				submenu = GetWindow(hEditToolBar, GW_CHILD);
+				EditMenuOpened = 0;
+				PostMessage(submenu, WM_LBUTTONDOWN, 1, MAKELONG(pt.x,pt.y));
+				PostMessage(submenu, WM_LBUTTONUP, 1, MAKELONG(pt.x,pt.y));
+				break;
+			}
+		}
+		break;
+	case WM_EXITMENULOOP:
+		EditMenuOpened = 0;
+		break;
+	case WM_INITMENUPOPUP:
+		SetEditMenu(hWnd);
+		// try to enable an item on the menu to see which one is visible
+		if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_ALLSELECT, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			EditMenuOpened = 2;
+		else if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_SENDINFO, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			EditMenuOpened = 1;
+		break;
+#else 
+	case WM_INITMENUPOPUP:
+		if (LOWORD(lParam) == 1) {
+			SetEditMenu(hWnd);
+		}
+		break;
+#endif
+
 	case WM_CLOSE:
 		if (EndEditWindow(hWnd,FALSE) == FALSE) {
 			break;
@@ -1797,15 +1857,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		break;
 
-	case WM_INITMENUPOPUP:
-#ifdef _WIN32_WCE_PPC
-		SetEditMenu(hWnd);
-#else
-		if (LOWORD(lParam) == 1) {
-			SetEditMenu(hWnd);
-		}
-#endif
-		break;
 
 	case WM_TIMER:
 		switch (wParam) {

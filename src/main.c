@@ -100,6 +100,7 @@ static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 HWND hMainToolBar;							// ツールバー (PocketPC)
 int LastXSize = 0;
 HMENU hEDITPOPUP;							// pop-up menu for Edit boxes (cut/copy/paste)
+char MainMenuOpened=0;
 #endif
 #ifdef _WIN32_WCE_LAGENDA
 static HWND hCSOBar;						// CSOバー (l'agenda)
@@ -2152,6 +2153,15 @@ static BOOL InitWindow(HWND hWnd)
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
 
+	// code courtesy of Christian Ghisler
+	if (op.osMajorVer >= 5) {
+		// WM5 is 5.1, WM6 is 5.2
+		SendMessage(hMainToolBar, SHCMBM_OVERRIDEKEY, VK_F1, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+		SendMessage(hMainToolBar, SHCMBM_OVERRIDEKEY, VK_F2, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+	}
+
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
 	hCSOBar = CSOBar_Create(hInst, hWnd, 1, BaseInfo);
@@ -3962,7 +3972,7 @@ static void AutoSave_Mailboxes(HWND hWnd)
 	SwitchCursor(TRUE);
 }
 /*
- * WndProc - メインウィンドウプロシージャ
+ * WndProc - Message handler for main window
  */
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -4212,6 +4222,46 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		CloseEditViewWindows(1);
 		FocusWnd = hWnd;
 		break;
+#endif
+
+#ifdef _WIN32_WCE_PPC
+		case WM_HOTKEY:
+			// code courtesy of Christian Ghisler
+			if (op.osMajorVer >= 5 && LOWORD(lParam)==0) {
+				HWND submenu;
+				RECT r;
+				POINT pt;
+				int itemopen;
+
+				switch(HIWORD(lParam)) {
+				case VK_F1: // VK_TSOFT1
+				case VK_F2: // VK_TSOFT2
+					if (MainMenuOpened) {
+						itemopen = MainMenuOpened - 1;
+					} else {
+						itemopen = (HIWORD(lParam)==VK_F1) ? 0 : 1;
+					}
+					SendMessage(hMainToolBar, TB_GETITEMRECT, itemopen, (LPARAM)&r);
+					pt.x = (r.left + r.right) / 2;
+					pt.y = (r.top + r.bottom) / 2;
+					submenu = GetWindow(hMainToolBar, GW_CHILD);
+					MainMenuOpened = 0;
+					PostMessage(submenu, WM_LBUTTONDOWN, 1, MAKELONG(pt.x,pt.y));
+					PostMessage(submenu, WM_LBUTTONUP, 1, MAKELONG(pt.x,pt.y));
+					break;
+				}
+			}
+			break;
+		case WM_EXITMENULOOP:
+			MainMenuOpened = 0;
+			break;
+		case WM_INITMENUPOPUP:
+			// try to enable an item on the menu to see which one is visible
+			if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_SELMODE, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+				MainMenuOpened = 2;
+			else if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_NEWMAIL, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+				MainMenuOpened = 1;
+			break;
 #endif
 
 	case WM_CLOSE:
