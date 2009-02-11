@@ -64,6 +64,7 @@ static WNDPROC EditWindowProcedure;
 HWND hViewWnd = NULL;
 #ifdef _WIN32_WCE_PPC
 HWND hViewToolBar;
+char ViewMenuOpened = 0;
 int LastXSize_V = 0;
 #endif
 
@@ -812,6 +813,15 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 12, 16, 16);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 
+	// code courtesy of Christian Ghisler
+	if (op.osMajorVer >= 5) {
+		// WM5 is 5.1, WM6 is 5.2
+		SendMessage(hViewToolBar, SHCMBM_OVERRIDEKEY, VK_F1, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+		SendMessage(hViewToolBar, SHCMBM_OVERRIDEKEY, VK_F2, 
+			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+	}
+
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
 	hCSOBar = CSOBar_Create(hInst, hWnd, 1, BaseInfo);
@@ -1108,6 +1118,8 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	if (MultiPartCnt == 0 && ViewSrc == TRUE) {
 		AppendMenu(hMenu, MF_STRING, ID_VIEW_PART, STR_VIEW_MENU_ATTACH);
 		return 0;
+	} else {
+		AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
 	}
 	if ((*tpMultiPart)->sPos == tpMailItem->Body) {
 		startbody = TRUE;
@@ -1119,16 +1131,9 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	}
 	if (MultiPartCnt == 1 && startbody && (*tpMultiPart)->ePos == NULL &&
 		(*tpMultiPart)->ContentType != NULL &&
-		str_cmp_ni((*tpMultiPart)->ContentType, "text", tstrlen("text")) == 0) {
-
-		BOOL htmlonly = (str_cmp_ni((*tpMultiPart)->ContentType, "text/html", tstrlen("text/html")) == 0) ? TRUE : FALSE;
-		if (tpMailItem->HasHeader || (op.StripHtmlTags == 1 && htmlonly == TRUE)) {
-			AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
-		}
-		if (htmlonly == TRUE) {
-			AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-			AppendMenu(hMenu, MF_STRING, ID_ATTACH, TEXT("text/html"));
-		}
+		str_cmp_ni((*tpMultiPart)->ContentType, "text/html", tstrlen("text/html")) == 0) {
+		AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+		AppendMenu(hMenu, MF_STRING, ID_ATTACH, TEXT("text/html"));
 		return 0;
 	}
 
@@ -1142,28 +1147,21 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			part_is_text = 1;
 		}
 		if (ret == -1 && part_is_text != 0) {
-			// 一番目に出現したテキストデータは本文にする
+			// this is the text part
 			ret = i;
-			if (MultiPartCnt == 1 && tpMailItem->Multipart > MULTIPART_ATTACH) {
-				AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
-			}
 		}
 		if (part_is_text != 1 || ret != i) {
 			if (AppendFlag == FALSE) {
-				if (MultiPartCnt > 1 || (MultiPartCnt == 1 && part_is_text == FALSE)) {
-					AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
-				}
 				if (MultiPartCnt > 1) {
 					AppendMenu(hMenu, MF_STRING, ID_VIEW_SAVE_ATTACH, STR_VIEW_MENU_SAVEATTACH);
 					if (IsAttach == FALSE) {
 						AppendMenu(hMenu, MF_STRING, ID_VIEW_DELETE_ATTACH, STR_VIEW_MENU_DELATTACH);
 					}
 				}
-				// 区切りの追加
 				AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
 				AppendFlag = TRUE;
 			}
-			// 途中で切れているデータの場合はメニューを非活性にする
+			// add attachment to menu, grayed if incomplete
 			mFlag = ((*(tpMultiPart + i))->ePos == NULL) ? MF_GRAYED : MF_ENABLED;
 			if (MultiPartCnt == 1 && tpMailItem->Download == TRUE) {
 				mFlag = MF_ENABLED;
@@ -2325,10 +2323,11 @@ static BOOL Decode(HWND hWnd, int id, int DoWhat)
 	BOOL is_digest = FALSE, is_msg = FALSE, save_embed = FALSE;
 	BOOL ret = TRUE;
 
-
 	if ((*(tpMultiPart + id))->ePos == NULL) {
 		if (DoWhat == DECODE_SAVE_ALL) {
 			return FALSE; // saved as much as we can
+		} else if (id == MultiPartTextIndex) {
+			; // 
 		} else if (IDCANCEL == MessageBox(hWnd, STR_Q_PARTIAL_ATTACH, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_OKCANCEL)) {
 			return FALSE;
 		}
@@ -3187,6 +3186,52 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		hViewWnd = NULL;
 		break;
 
+#ifdef _WIN32_WCE_PPC
+	case WM_HOTKEY:
+		// code courtesy of Christian Ghisler
+		if (op.osMajorVer >= 5 && LOWORD(lParam)==0) {
+			HWND submenu;
+			RECT r;
+			POINT pt;
+			int itemopen;
+				switch(HIWORD(lParam)) {
+			case VK_F1: // VK_TSOFT1
+			case VK_F2: // VK_TSOFT2
+				if (ViewMenuOpened) {
+					itemopen = ViewMenuOpened - 1;
+				} else {
+					itemopen = (HIWORD(lParam)==VK_F1) ? 0 : 1;
+				}
+				SendMessage(hViewToolBar, TB_GETITEMRECT, itemopen, (LPARAM)&r);
+				pt.x = (r.left + r.right) / 2;
+				pt.y = (r.top + r.bottom) / 2;
+				submenu = GetWindow(hViewToolBar, GW_CHILD);
+				ViewMenuOpened = 0;
+				PostMessage(submenu, WM_LBUTTONDOWN, 1, MAKELONG(pt.x,pt.y));
+				PostMessage(submenu, WM_LBUTTONUP, 1, MAKELONG(pt.x,pt.y));
+				break;
+			}
+		}
+		break;
+	case WM_EXITMENULOOP:
+		ViewMenuOpened = 0;
+		break;
+	case WM_INITMENUPOPUP:
+		SetEditMenu(hWnd);
+		// try to enable an item on the menu to see which one is visible
+		if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_ALLSELECT, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			ViewMenuOpened = 2;
+		else if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_SAVE, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			ViewMenuOpened = 1;
+		break;
+#else 
+	case WM_INITMENUPOPUP:
+		if (LOWORD(lParam) == 1) {
+			SetEditMenu(hWnd);
+		}
+		break;
+#endif
+	
 	case WM_CLOSE:
 		if (ESCFlag == TRUE) {
 			ESCFlag = FALSE;
@@ -3199,16 +3244,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 		EndWindow(hWnd);
 		hViewWnd = NULL;
-		break;
-
-	case WM_INITMENUPOPUP:
-#ifdef _WIN32_WCE_PPC
-		SetEditMenu(hWnd);
-#else
-		if (LOWORD(lParam) == 1) {
-			SetEditMenu(hWnd);
-		}
-#endif
 		break;
 
 	case WM_TIMER:
@@ -3587,8 +3622,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			ModifyWindow(hWnd, tpMailItem,
-				((GET_WM_COMMAND_ID(wParam, lParam) == ID_VIEW_SOURCE) ? TRUE : FALSE), FALSE);
+			ModifyWindow(hWnd, tpMailItem, ((command_id == ID_VIEW_SOURCE) ? TRUE : FALSE), FALSE);
 			break;
 
 		case ID_VIEW_SAVE_ATTACH:
