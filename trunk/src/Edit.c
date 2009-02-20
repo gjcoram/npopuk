@@ -76,6 +76,10 @@ extern int SelBox;
 extern SOCKET g_soc;
 extern BOOL gSockFlag;
 
+#ifdef _WIN32_WCE
+extern HMENU hEditPop;
+#endif
+
 /* Local Function Prototypes */
 static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress);
 static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, TCHAR *ret);
@@ -1931,12 +1935,14 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam,lParam)) {
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), 0, 0);
+			ShowMenu(hWnd, hEditPop, 0, 0);
 			break;
+#endif
 
+#ifdef _WIN32_WCE_PPC
 		case IDC_EDIT_BODY:
 			switch (HIWORD(wParam)) {
 			case EN_SETFOCUS:

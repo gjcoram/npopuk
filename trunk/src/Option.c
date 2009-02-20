@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -2236,8 +2236,8 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			xsize = GetSystemMetrics(SM_CXSCREEN);
 			ysize = GetSystemMetrics(SM_CYSCREEN);
 			// in case of landscape/portrait swap
-			if (width > xsize) {
-				width = xsize - 10;
+			if (width > xsize - 10) {
+				width = xsize;
 			}
 			if (height > ysize) {
 				height = ysize - 10 - MENU_HEIGHT;
@@ -5942,8 +5942,7 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			rg.dwFlags = SHRG_RETURNCMD;
 
 			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-				//ShowMenu(GetParent(hWnd), hEDITPOPUP, 0, 3);
-				ShowMenu(hWnd, hEDITPOPUP, 0, 3);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 0);
 				return 0;
 			}
 		}
@@ -6010,8 +6009,7 @@ static LRESULT CALLBACK EditTextCallback(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			rg.dwFlags = SHRG_RETURNCMD;
 
 			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-				//ShowMenu(GetParent(hWnd), hEDITPOPUP, 0, 3, FALSE);
-				ShowMenu(hWnd, hEDITPOPUP, 0, 3);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 0);
 				return 0;
 			}
 		}
@@ -6447,28 +6445,28 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 		ypos = height - ((height > 150) ? 69 : 39);
 	} else {
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_ADD);
-		ShowWindow(hItem, (width > 94));
-		MoveWindow(hItem, left+1, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 90));
+		MoveWindow(hItem, left+1, bottom-30, 42, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_SAVE);
-		ShowWindow(hItem, (width > 140));
-		MoveWindow(hItem,left+47, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 134));
+		MoveWindow(hItem,left+45, bottom-30, 42, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_EDIT);
-		ShowWindow(hItem, (width > 186));
-		MoveWindow(hItem, left+93, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 178));
+		MoveWindow(hItem, left+89, bottom-30, 42, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
-		ShowWindow(hItem, (width > 232));
-		MoveWindow(hItem, left+139, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 222));
+		MoveWindow(hItem, left+133, bottom-30, 42, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDCANCEL);
-		ShowWindow(hItem, (width > 278));
-		MoveWindow(hItem, right-93, bottom-30, 45, 21, TRUE);
+		ShowWindow(hItem, (width > 266));
+		MoveWindow(hItem, right-89, bottom-30, 42, 21, TRUE);
 
 		hItem = GetDlgItem(hDlg, IDOK);
 		ShowWindow(hItem, (width > 70));
-		MoveWindow(hItem, right-47, bottom-30, 45, 21, TRUE);
+		MoveWindow(hItem, right-44, bottom-30, 42, 21, TRUE);
 
 		ypos = height-39;
 	}
@@ -7146,7 +7144,7 @@ static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam,
 		rg.dwFlags = SHRG_RETURNCMD;
 		if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
 			if (op.UsePOOMAddressBook == 0 && ListView_GetSelectedCount(hDlg) > 0) {
-				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 3);
+				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0);
 			}
 			return 0;
 		}

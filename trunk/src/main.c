@@ -93,9 +93,12 @@ static HICON TrayIcon_Main;					// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
-static HMENU hPOPUP, hMBPOPUP;				// pop-up menus for listview, mbpane
-HMENU hADPOPUP;								// pop-up menu for addresslist
+static HMENU hMainPop, hPOPUP, hMBPOPUP;	// pop-up menus for main window, systray, mbpane
+HMENU hADPOPUP, hViewPop=NULL;				// pop-up menus for Address list, View window
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
+#ifdef _WIN32_WCE
+HMENU hEditPop=NULL;						// pop-up menu for Edit window
+#endif
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
 int LastXSize = 0;
@@ -1249,27 +1252,27 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 }
 
 /*
- * ShowMenu - マウスの位置にメニューを表示する
+ * ShowMenu - post pop-up menu
  */
-int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
+void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 {
 	HWND hListView;
 	RECT WndRect;
 	RECT ItemRect;
-#ifndef _WIN32_WCE
+#ifdef _WIN32_WCE
+	DWORD ret;
+#else
 	POINT apos;
 #endif
 	int i;
 	int x = 0, y = 0;
-	DWORD ret = 0;
 
 #ifndef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
 #endif
 	switch (PosFlag) {
 		//of round Acquisition
-	case 0:
-	case 3:
+	case 0: // pop-up at mouse position
 #ifdef _WIN32_WCE
 		ret = GetMessagePos();
 		x = LOWORD(ret);
@@ -1281,7 +1284,7 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 #endif
 		break;
 
-	case 1: // message list positioning based on selection
+	case 1: // pop-up at position of selection
 	case 4:	// VK_APPS (menu key) to post hMBPOPUP
 		if (PosFlag == 1) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
@@ -1316,39 +1319,31 @@ int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 		break;
 
 #ifdef _WIN32_WCE
+	case 2:
+		GetWindowRect(hWnd, &WndRect);
 #ifdef _WIN32_WCE_LAGENDA
-	case 2:
-		GetWindowRect(hWnd, &WndRect);
-		TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_BOTTOMALIGN | TPM_RIGHTALIGN,
-			0, wnd_size.bottom, 0, hWnd, NULL);
-		PostMessage(hWnd, WM_NULL, 0, 0);
-		return 0;
+		x = 0;
+		y = wnd_size.bottom; // ??
 #else
-	case 2:
-		GetWindowRect(hWnd, &WndRect);
-		TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_BOTTOMALIGN | TPM_RIGHTALIGN,
-			WndRect.right, WndRect.bottom, 0, hWnd, NULL);
-		PostMessage(hWnd, WM_NULL, 0, 0);
-		return 0;
+		x = WndRect.right;
+		y = WndRect.bottom;
 #endif
+		break;
 #endif
 	}
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	_SetForegroundWindow(hWnd);
-	ret = TrackPopupMenu((PosFlag == 3 || PosFlag == 4) ? GetSubMenu(hMenu, mpos): hMenu,
-		TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd, NULL);
-#else
-	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos),
-		TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd, NULL);
 #endif
+	TrackPopupMenu(GetSubMenu(hMenu, mpos), 
+		(PosFlag == 2) ? (TPM_BOTTOMALIGN | TPM_RIGHTALIGN) : (TPM_TOPALIGN | TPM_LEFTALIGN),
+		x, y, 0, hWnd, NULL);
 #else
-	ret = TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON, 
+	TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON, 
 		x, y, 0, hWnd, NULL);
 #endif
 	PostMessage(hWnd, WM_NULL, 0, 0);
-	return ret;
 }
 
 /*
@@ -1539,6 +1534,28 @@ int SetMailMenu(HWND hWnd)
 	}
 	EnableMenuItem(hMenu, ID_MENUITEM_COPY2NEW, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVE2NEW, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_COPYSBOX, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_MOVESBOX, !SelFlag);
+	
+	// pop-up context menu
+	if (SendBoxFlag) {
+		hMenu = hMainPop; // GetSubMenu(hMainPop, 0);
+		EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+		EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+		EnableMenuItem(hMenu, ID_MENUITEM_READMAIL, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_UNREADMAIL, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_COPYSBOX, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_MOVESBOX, !SelFlag);
+	} else {
+		hMenu = GetSubMenu(hMainPop, 1);
+		EnableMenuItem(hMenu, ID_MENUITEM_SAVECOPY, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_PROP, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_FORWARD, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_SENDMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+	}
+	EnableMenuItem(hMenu, ID_MENUITEM_FLAGMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+	EnableMenuItem(hMenu, ID_MENUITEM_UNMARK, !(SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
+	EnableMenuItem(hMenu, ID_MENUITEM_DELETE, !SelFlag);
 
 	return retval;
 }
@@ -1883,7 +1900,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox < MailBoxCnt-1)));
 
 				SendMessage(hWnd, WM_NULL, 0, 0);
-				ShowMenu(hWnd, hMBPOPUP, 0, 3);
+				ShowMenu(hWnd, hMBPOPUP, 0, 0);
 #ifdef _WIN32_WCE
 			} else if (LOWORD(wParam) == ID_MENUITEM_MBP_SETSIZE) {
 				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBP_SIZE), hWnd, MBWidthProc, 0)) {
@@ -3071,6 +3088,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 	HWND hListView;
 	int i;
 
+	// will choose the item with focus, even if it isn't selected (or if several are selected)
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
 	if (i < 0)
@@ -4736,32 +4754,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-#ifdef _WIN32_WCE
-#ifdef _WIN32_WCE_PPC
-			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 1);
-#elif defined(_WIN32_WCE_LAGENDA)
-			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1);
-#else
-			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 1);
-#endif
-#else
-			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 1);
-#endif
+			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1);
 			break;
 
 		//In position of mouse pop rise menu indicatory
 		case ID_MENU:
-#ifdef _WIN32_WCE
-#ifdef _WIN32_WCE_PPC
-			ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 0);
-#elif defined(_WIN32_WCE_LAGENDA)
-			ShowMenu(hWnd, hMainMenu, MailMenuPos, 1);
-#else
-			ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 0);
-#endif
-#else
-			ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 0);
-#endif
+			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 0);
 			break;
 
 		//====== file =========
@@ -5505,7 +5503,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
-				command_id;
+				if (ListView_GetSelectedCount(GetDlgItem(MainWnd, IDC_LISTVIEW)) <= 0) {
+					break;
+				}
 				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
 					// (in SendBox, Ctrl-C does "edit as new"
 					Target = MAILBOX_SEND;
@@ -5671,6 +5671,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (command_id == ID_MENUITEM_COPY2NEW || command_id == ID_MENUITEM_MOVE2NEW) {
 				// GJC - copy/move to new SaveBox
 				int old_selbox, newbox;
+				if (ListView_GetSelectedCount(GetDlgItem(MainWnd, IDC_LISTVIEW)) <= 0) {
+					break;
+				}
 				old_selbox = SelBox;
 				SelBox = newbox = mailbox_create(hWnd, 1, -1, TRUE, FALSE);
 				if (SetMailBoxType(hWnd, MAILBOX_ADD_SAVE) == -1) {
@@ -6312,8 +6315,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	hMainPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MAINPOP));
+	hViewPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_VIEWPOP));
 	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
 	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
+#ifdef _WIN32_WCE
+	hEditPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDITPOP));
+#endif
 #ifdef _WIN32_WCE_PPC
 	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
 #endif
@@ -6335,8 +6343,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			CloseHandle(hMutex);
 		}
 		DestroyMenu(hPOPUP);
+		DestroyMenu(hMainPop);
+		DestroyMenu(hViewPop);
 		DestroyMenu(hMBPOPUP);
 		DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE
+		DestroyMenu(hEditPop);
+#endif
 #ifdef _WIN32_WCE_PPC
 		DestroyMenu(hEDITPOPUP);
 #endif
@@ -6371,8 +6384,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			CloseHandle(hMutex);
 		}
 		DestroyMenu(hPOPUP);
+		DestroyMenu(hMainPop);
+		DestroyMenu(hViewPop);
 		DestroyMenu(hMBPOPUP);
 		DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE
+		DestroyMenu(hEditPop);
+#endif
 #ifdef _WIN32_WCE_PPC
 		DestroyMenu(hEDITPOPUP);
 #endif
@@ -6405,8 +6423,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	mem_free(&IniFile);
 	mem_free(&InitialAccount);
 	DestroyMenu(hPOPUP);
+	DestroyMenu(hMainPop);
+	DestroyMenu(hViewPop);
 	DestroyMenu(hMBPOPUP);
 	DestroyMenu(hADPOPUP);
+#ifdef _WIN32_WCE
+	DestroyMenu(hEditPop);
+#endif
 #ifdef _WIN32_WCE_PPC
 	DestroyMenu(hEDITPOPUP);
 #endif

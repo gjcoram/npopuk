@@ -430,6 +430,70 @@ BEGIN
     END
 END
 
+IDR_MENU_MAINPOP MENU
+BEGIN
+    POPUP "Mailbox"
+    BEGIN
+        POPUP "Mark"
+        BEGIN
+            MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+            MENUITEM "Mark to download",    ID_MENUITEM_DOWNMARK
+            MENUITEM "Mark to delete",      ID_MENUITEM_DELMARK
+            MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+            MENUITEM SEPARATOR
+            MENUITEM "Mark as read",        ID_MENUITEM_READMAIL
+            MENUITEM "Mark as unread",      ID_MENUITEM_UNREADMAIL
+        END
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM "Thread mode",         ID_MENUITEM_THREADVIEW
+        MENUITEM "Select by tap",       ID_MENUITEM_SELMODE
+    END
+    POPUP "Outbox"
+    BEGIN
+        MENUITEM "Property...",         ID_MENUITEM_PROP
+        MENUITEM "Edit as new..."       ID_MENUITEM_SAVECOPY
+        MENUITEM "Forward...",          ID_MENUITEM_FORWARD
+        MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+        MENUITEM "Mark to send",        ID_MENUITEM_SENDMARK
+        MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+        MENUITEM "Select by tap",       ID_MENUITEM_SELMODE
+    END
+END
+
+IDR_MENU_EDITPOP MENU
+BEGIN
+    POPUP "Edit"
+    BEGIN
+        MENUITEM "Undo",                ID_MENUITEM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cut",                 ID_MENUITEM_CUT
+        MENUITEM "Copy",                ID_MENUITEM_COPY
+        MENUITEM "Paste",               ID_MENUITEM_PASTE
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "Word wrap",           ID_MENUITEM_WORDBREAK
+    END
+END
+
+IDR_MENU_VIEWPOP MENU
+BEGIN
+    POPUP "View"
+    BEGIN
+        MENUITEM "Copy",                ID_MENUITEM_COPY
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Word wrap",           ID_MENUITEM_WORDBREAK
+    END
+END
+
 IDR_ADDRESS_POPUP MENU 
 BEGIN
     POPUP "Address"
@@ -654,7 +718,7 @@ BEGIN
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,23,150,10
-    CONTROL         "&Include header lines",IDC_CHECK_SHOWHEAD,"Button",
+    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,36,120,10
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
                     BS_AUTORADIOBUTTON,10,61,110,10
@@ -836,11 +900,11 @@ BEGIN
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,0,0,150,135
     PUSHBUTTON      "^",IDC_BUTTON_UP,150,30,10,20
     PUSHBUTTON      "v",IDC_BUTTON_DOWN,150,85,10,20
-    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,0,140,30,14
-    PUSHBUTTON      "&Save",IDC_BUTTON_SAVE,32,140,30,14
-    PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,64,140,31,14
-    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,97,140,31,14
-    DEFPUSHBUTTON   "&Go to",IDOK,130,140,30,14
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,0,140,28,14
+    PUSHBUTTON      "&Save",IDC_BUTTON_SAVE,30,140,28,14
+    PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,60,140,29,14
+    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,91,140,31,14
+    DEFPUSHBUTTON   "&Go to",IDOK,124,140,30,14
     PUSHBUTTON      "&Done",IDCANCEL,170,140,30,14
 END
 
