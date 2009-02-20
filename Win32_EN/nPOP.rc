@@ -406,11 +406,11 @@ BEGIN
         MENUITEM "Red&irect...",                ID_MENUITEM_REDIRECT
         MENUITEM SEPARATOR
         MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
-        MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
-        MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM "&Mark to download\tCtrl+D",   ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",   ID_MENUITEM_DELMARK
         MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
         MENUITEM SEPARATOR
-        MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
+        MENUITEM "Mark as r&ead\tCtrl+B",       ID_MENUITEM_READMAIL
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
         MENUITEM "C&opy to..."                  ID_MENUITEM_COPYSBOX
@@ -428,21 +428,68 @@ BEGIN
     END
 END
 
+IDR_MENU_MAINPOP MENU
+BEGIN
+    POPUP "Mailbox"
+    BEGIN
+        POPUP "Mark"
+        BEGIN
+            MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+            MENUITEM "Mark to download",    ID_MENUITEM_DOWNMARK
+            MENUITEM "Mark to delete",      ID_MENUITEM_DELMARK
+            MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+            MENUITEM SEPARATOR
+            MENUITEM "Mark as read",        ID_MENUITEM_READMAIL
+            MENUITEM "Mark as unread",      ID_MENUITEM_UNREADMAIL
+        END
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM "Thread mode",         ID_MENUITEM_THREADVIEW
+    END
+    POPUP "Outbox"
+    BEGIN
+        MENUITEM "Property...",         ID_MENUITEM_PROP
+        MENUITEM "Edit as new..."       ID_MENUITEM_SAVECOPY
+        MENUITEM "Forward...",          ID_MENUITEM_FORWARD
+        MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+        MENUITEM "Mark to send",        ID_MENUITEM_SENDMARK
+        MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+    END
+END
+
+IDR_MENU_VIEWPOP MENU
+BEGIN
+    POPUP "View"
+    BEGIN
+        MENUITEM "Copy",                ID_MENUITEM_COPY
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Word wrap",           ID_MENUITEM_WORDBREAK
+    END
+END
+
 IDR_MENU_MBPOPUP MENU 
 BEGIN
     POPUP "Mailbox"
     BEGIN
-        MENUITEM "&Hide this pane",             ID_MENUITEM_MBOXPANE
+        MENUITEM "&Hide this pane",     ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
-        MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
-        MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
-        MENUITEM "&Save",                       ID_MENUITEM_SAVEMAILBOX
-        MENUITEM "&Delete...",                  ID_MENUITEM_DELETEMAILBOX
+        MENUITEM "&Add...",             ID_MENUITEM_ADDMAILBOX
+        MENUITEM "&Edit...",            ID_MENUITEM_SETMAILBOX
+        MENUITEM "&Save",               ID_MENUITEM_SAVEMAILBOX
+        MENUITEM "&Delete...",          ID_MENUITEM_DELETEMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
-        MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
+        MENUITEM "Move &up",            ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "Move d&own",          ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT
+        MENUITEM "&Initialise...",      ID_MENUITEM_LISTINIT
     END
 END
 
@@ -450,8 +497,8 @@ IDR_ADDRESS_POPUP MENU
 BEGIN
     POPUP "Address"
     BEGIN
-        MENUITEM "Edit...",                     IDC_BUTTON_EDIT
-        MENUITEM "Delete...",                   IDC_BUTTON_DELETE
+        MENUITEM "Edit...",             IDC_BUTTON_EDIT
+        MENUITEM "Delete...",           IDC_BUTTON_DELETE
     END
 END
 
@@ -657,7 +704,7 @@ BEGIN
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,25,165,10
-    CONTROL         "&Include header lines",IDC_CHECK_SHOWHEAD,"Button",
+    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,39,120,10
     GROUPBOX        "Account messages",IDC_STATIC,5,57,205,58
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
@@ -1581,7 +1628,7 @@ BEGIN
     ID_MENUITEM_ALLREMESSEGE "Reply to all"
     ID_MENUITEM_NEXTFIND    "Find next"
     ID_MENUITEM_SEND        "Send now"
-	ID_MENUITEM_SENDMARK    "Mark to send"
+    ID_MENUITEM_SENDMARK    "Mark to send"
     ID_MENUITEM_SBOXMARK    "Save and Mark"
     ID_MENUITEM_SENDBOX     "Save to Outbox"
     ID_MENUITEM_SENDINFO    "Property"

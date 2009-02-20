@@ -50,7 +50,7 @@
 #else
 #define MENU_ATTACH_POS				9
 #endif
-#define ID_VIEW_SOURCE				400
+#define MENU_ATTACH_POP				7
 #define ID_VIEW_PART				401
 #define ID_VIEW_DELETE_ATTACH		402
 #define ID_VIEW_SAVE_ATTACH			403
@@ -75,7 +75,7 @@ static int g_menu_height;
 
 BOOL ViewWndViewSrc = FALSE;
 int vSelBox = -1;
-extern HMENU vMenuDone;
+extern HMENU hViewPop, vMenuDone;
 
 static MULTIPART **tpMultiPart = NULL;
 static int MultiPartCnt=0, MultiPartTextIndex=0;
@@ -132,7 +132,7 @@ static void DelEditSubClass(HWND hWnd);
 static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void EndWindow(HWND hWnd);
-static void SetEditMenu(HWND hWnd);
+static void SetViewMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL BodyOnly);
 static MAILITEM *View_NextMail(HWND hWnd);
 static MAILITEM *View_PrevMail(HWND hWnd);
@@ -483,6 +483,8 @@ void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag)
 #endif	// _WIN32_WCE
 	CheckMenuItem(GetSubMenu(hMenu, 1), ID_MENUITEM_WORDBREAK, Flag);
 #endif	// _WIN32_WCE_PPC
+
+	CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_WORDBREAK, Flag);
 }
 
 /*
@@ -672,17 +674,16 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		}
 #else
 		if (GetKeyState(VK_MENU) < 0) {
-			SetEditMenu(GetParent(hWnd));
-			ShowMenu(GetParent(hWnd),
-				CommandBar_GetMenu(GetDlgItem(GetParent(hWnd), IDC_VCB), 0), 1, 0);
+			SetViewMenu(GetParent(hWnd));
+			ShowMenu(GetParent(hWnd), hViewPop, 0, 0);
 			return 0;
 		}
 #endif
 		break;
 #else
 	case WM_CONTEXTMENU:
-		SetEditMenu(GetParent(hWnd));
-		ShowMenu(GetParent(hWnd), GetMenu(GetParent(hWnd)), 1, 0);
+		SetViewMenu(GetParent(hWnd));
+		ShowMenu(GetParent(hWnd), hViewPop, 0, 0);
 		return 0;
 #endif
 	}
@@ -1063,9 +1064,9 @@ static void EndWindow(HWND hWnd)
 }
 
 /*
- * SetEditMenu - 編集メニューの活性／非活性の切り替え
+ * SetViewMenu - enable/disable items in menu
  */
-static void SetEditMenu(HWND hWnd)
+static void SetViewMenu(HWND hWnd)
 {
 	HMENU hMenu;
 	int i, j;
@@ -1084,6 +1085,7 @@ static void SetEditMenu(HWND hWnd)
 	// エディットボックスの選択位置の取得
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
 	EnableMenuItem(hMenu, ID_MENUITEM_COPY, (i < j) ? MF_ENABLED : MF_GRAYED);
+	EnableMenuItem(hViewPop, ID_MENUITEM_COPY, (i < j) ? MF_ENABLED : MF_GRAYED);
 }
 
 /*
@@ -1091,7 +1093,7 @@ static void SetEditMenu(HWND hWnd)
  */
 static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsAttach, TCHAR **attlist)
 {
-	HMENU hMenu;
+	HMENU hMenu, hPopMenu;
 	TCHAR *str, *p, *r;
 	int i, mFlag, ret = -1, cnt = 0;
 	BOOL AppendFlag = FALSE, startbody = FALSE;
@@ -1108,18 +1110,24 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 #else
 	hMenu = GetSubMenu(GetMenu(hWnd), 1);
 #endif
+	hPopMenu = GetSubMenu(hViewPop, 0);
+
 	// メニューを初期化する
 	while (DeleteMenu(hMenu, MENU_ATTACH_POS, MF_BYPOSITION) == TRUE);
+	while (DeleteMenu(hPopMenu, MENU_ATTACH_POP, MF_BYPOSITION) == TRUE);
 
 	if (DigestMaster != NULL) {
 		AppendMenu(hMenu, MF_STRING, ID_RETURN_TO_MASTER, STR_VIEW_RETURN);
+		AppendMenu(hPopMenu, MF_STRING, ID_RETURN_TO_MASTER, STR_VIEW_RETURN);
 	}
 
 	if (MultiPartCnt == 0 && ViewSrc == TRUE) {
 		AppendMenu(hMenu, MF_STRING, ID_VIEW_PART, STR_VIEW_MENU_ATTACH);
+		AppendMenu(hPopMenu, MF_STRING, ID_VIEW_PART, STR_VIEW_MENU_ATTACH);
 		return 0;
 	} else {
-		AppendMenu(hMenu, MF_STRING, ID_VIEW_SOURCE, STR_VIEW_MENU_SOURCE);
+		AppendMenu(hMenu, MF_STRING, ID_MENUITEM_VIEWSOURCE, STR_VIEW_MENU_SOURCE);
+		AppendMenu(hPopMenu, MF_STRING, ID_MENUITEM_VIEWSOURCE, STR_VIEW_MENU_SOURCE);
 	}
 	if ((*tpMultiPart)->sPos == tpMailItem->Body) {
 		startbody = TRUE;
@@ -3217,7 +3225,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		ViewMenuOpened = 0;
 		break;
 	case WM_INITMENUPOPUP:
-		SetEditMenu(hWnd);
+		SetViewMenu(hWnd);
 		// try to enable an item on the menu to see which one is visible
 		if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_ALLSELECT, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
 			ViewMenuOpened = 2;
@@ -3227,7 +3235,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #else 
 	case WM_INITMENUPOPUP:
 		if (LOWORD(lParam) == 1) {
-			SetEditMenu(hWnd);
+			SetViewMenu(hWnd);
 		}
 		break;
 #endif
@@ -3280,8 +3288,8 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		switch (command_id) {
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
-			SetEditMenu(hWnd);
-			ShowMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), 0, 0);
+			SetViewMenu(hWnd);
+			ShowMenu(hWnd, hViewPop, 0, 0);
 			break;
 
 		case IDC_EDIT_BODY:
@@ -3615,14 +3623,14 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			break;
 
-		case ID_VIEW_SOURCE:
+		case ID_MENUITEM_VIEWSOURCE:
 		case ID_VIEW_PART:
 			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			ModifyWindow(hWnd, tpMailItem, ((command_id == ID_VIEW_SOURCE) ? TRUE : FALSE), FALSE);
+			ModifyWindow(hWnd, tpMailItem, ((command_id == ID_MENUITEM_VIEWSOURCE) ? TRUE : FALSE), FALSE);
 			break;
 
 		case ID_VIEW_SAVE_ATTACH:

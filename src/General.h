@@ -1051,7 +1051,7 @@ void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);
-int ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag);
+void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag);
 int SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);

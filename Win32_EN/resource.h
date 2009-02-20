@@ -307,6 +307,7 @@
 #define IDD_DIALOG_REDIRECT             1217
 #define IDC_CHECK_MARKSEND              1218
 #define IDC_VIEWSHOWATTACH              1219
+#define ID_MENUITEM_VIEWSOURCE          1225
 #define ID_MENUITEM_AUTOCHECK           1226
 #define IDR_MENU_COPY_FLYOUT            1227
 #define IDR_MENU_MOVE_FLYOUT            1228
@@ -318,9 +319,13 @@
 #define IDC_LIST_MAILBOXES              1234
 #define IDC_BUTTON_SAVE                 1235
 #define ID_MENUITEM_MBOXPANE            1236
-#define IDR_MENU_MBPOPUP                1237
-#define IDR_ADDRESS_POPUP               1238
-#define ID_MENUITEM_SAVEMAILBOX         1239
+#define ID_MENUITEM_SAVEMAILBOX         1237
+#define IDR_MENU_MAINPOP                1240
+#define IDR_MENU_SENDBOXPOP             1241
+#define IDR_MENU_EDITPOP                1242
+#define IDR_MENU_VIEWPOP                1243
+#define IDR_MENU_MBPOPUP                1244
+#define IDR_ADDRESS_POPUP               1245
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003
