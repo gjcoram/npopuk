@@ -1022,6 +1022,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 							// tpMailItem is incomplete
 							item_free(&tpMailItem, 1);
 							*(tpMailBox->tpMailItem + i) = NULL;
+							j = -1;
 						} else {
 							// neither is complete ...
 							if (tstrlen(tpMailItem->Body) >= tstrlen(dupItem->Body)) {
@@ -1030,6 +1031,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 							} else {
 								item_free(&tpMailItem, 1);
 								*(tpMailBox->tpMailItem + i) = NULL;
+								j = -1;
 							}
 						}
 						do_resize = TRUE;
