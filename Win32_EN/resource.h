@@ -262,7 +262,6 @@
 #define IDC_TEXT_SEARCH                 1086
 #define IDC_EDIT_SOUND                  1087
 #define IDC_RADIO_OPEN                  1087
-#define IDC_BUTTON_SOUND_BROWS          1088
 #define IDC_RADIO_SAVE                  1088
 #define IDC_BUTTON_SOUND_PLAY           1089
 #define IDC_STATIC_MAILCNT              1089
@@ -326,6 +325,11 @@
 #define IDR_MENU_VIEWPOP                1243
 #define IDR_MENU_MBPOPUP                1244
 #define IDR_ADDRESS_POPUP               1245
+#define IDD_DIALOG_SAVEATTACH           1250
+#define IDC_BUTTON_ALLSEL               1251
+#define IDC_BUTTON_NOSEL                1252
+#define IDC_EDIT_SAVEDIR                1253
+#define IDC_BUTTON_FILE_BROWSE          1254
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

@@ -95,6 +95,9 @@ extern int vSelBox;
 extern ADDRESSBOOK *AddressBook;
 extern BOOL SaveBoxesLoaded;
 
+extern MULTIPART **vMultiPart;
+extern int MultiPartCnt, MultiPartTextIndex;
+
 TCHAR *ReplaceStr = NULL;
 extern TCHAR *FindStr;
 extern int FindNext, FindOrReplace;
@@ -3193,13 +3196,13 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		case IDC_CHECK_SOUND:
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_SOUND),
 				SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_GETCHECK, 0, 0));
-			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SOUND_BROWS),
+			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_FILE_BROWSE),
 				SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_GETCHECK, 0, 0));
 			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SOUND_PLAY),
 				SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_GETCHECK, 0, 0));
 			break;
 
-		case IDC_BUTTON_SOUND_BROWS:
+		case IDC_BUTTON_FILE_BROWSE:
 			*buf = TEXT('\0');
 			if (filename_select(hDlg, buf, TEXT("wav"), STR_WAVE_FILTER, FILE_OPEN_SINGLE, &op.SavedOpenDir) == FALSE) {
 				break;
@@ -4858,6 +4861,126 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			if (tpMultiPart != NULL) {
 				multipart_free(&tpMultiPart, mpcnt);
+			}
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
+ * SaveAttachProc - save all attachments
+ */
+BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	HWND hListView;
+	MAILITEM *tpMailItem;
+	TCHAR SaveDir[BUF_SIZE];
+	int i, idx;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_ATTACH, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+		if (lParam == 0) {
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		tpMailItem = (MAILITEM *)lParam;
+		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		hListView = GetDlgItem(hDlg, IDC_LIST_FILE);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, 300, STR_ATTACH_NAME, 0);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, 50, STR_ATTACH_SIZE, 1);
+		for (i = 0; i < MultiPartCnt; i++) {
+			if (i != MultiPartTextIndex) {
+				TCHAR *p, *r;
+				if ((*(vMultiPart + i))->Filename != NULL) {
+#ifdef UNICODE
+					p = alloc_char_to_tchar((*(vMultiPart + i))->Filename);
+#else
+					p = alloc_copy((*(vMultiPart + i))->Filename);
+#endif
+				} else {
+#ifdef UNICODE
+					p = alloc_char_to_tchar((*(vMultiPart + i))->ContentType);
+#else
+					p = alloc_copy((*(vMultiPart + i))->ContentType);
+#endif
+					if (p != NULL) {
+						for (r = p; *r != TEXT('\0') && *r != TEXT(';'); r++);
+						*r = TEXT('\0');
+					}
+				}
+				idx = ListView_AddOptionItem(hListView, p, 0);
+				mem_free(&p);
+				if ((*(vMultiPart + i))->ePos != NULL) {
+					TCHAR sz[10];
+					int len = (*(vMultiPart + i))->ePos - (*(vMultiPart + i))->sPos;
+					wsprintf(sz, TEXT("%d"), len);
+					ListView_SetItemText(hListView, idx, 1, sz);
+				}
+			}
+		}
+		ListView_SetItemState(hListView, -1, LVIS_SELECTED, LVIS_SELECTED);
+		ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_SETTEXT, 0, (LPARAM)op.SavedSaveDir);
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_BUTTON_ALLSEL:
+			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_FILE), -1, LVIS_SELECTED, LVIS_SELECTED);
+			SetFocus(GetDlgItem(hDlg, IDC_LIST_FILE));
+			break;
+
+		case IDC_BUTTON_NOSEL:
+			ListView_SetItemState(GetDlgItem(hDlg, IDC_LIST_FILE), -1, 0, LVIS_SELECTED);
+			break;
+
+		case IDC_BUTTON_FILE_BROWSE:
+			lstrcpy(SaveDir, STR_ATTACH_DIR);
+			if (filename_select(hDlg, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.SavedSaveDir) == TRUE) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_SETTEXT, 0, (LPARAM)op.SavedSaveDir);
+			}
+			break;
+
+		case IDOK:
+			tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
+			if (tpMailItem == NULL) {
+				EndDialog(hDlg, FALSE);
+				break;
+			}
+			hListView = GetDlgItem(hDlg, IDC_LIST_FILE);
+			if (ListView_GetSelectedCount(hListView) <= 0) {
+				ErrorMessage(hDlg, STR_ERR_NOSELECT);
+				break;
+			}
+			idx = 0;
+			for (i = 0; i < MultiPartCnt; i++, idx++) {
+				if (i == MultiPartTextIndex) {
+					idx--;
+				} else {
+					if (ListView_GetItemState(hListView, idx, LVIS_SELECTED) == LVIS_SELECTED) {
+						AttachDecode(hDlg, i, DECODE_SAVE_ALL);
+					}
+				}
 			}
 			EndDialog(hDlg, TRUE);
 			break;

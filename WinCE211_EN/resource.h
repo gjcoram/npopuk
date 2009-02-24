@@ -336,6 +336,11 @@
 #define IDR_MENU_MBPOPUP                1244
 #define IDR_ADDRESS_POPUP               1245
 #define IDR_MENU_EDIT_POPUP             1246
+#define IDD_DIALOG_SAVEATTACH           1250
+#define IDC_BUTTON_ALLSEL               1251
+#define IDC_BUTTON_NOSEL                1252
+#define IDC_EDIT_SAVEDIR                1253
+#define IDC_BUTTON_FILE_BROWSE          1254
 #define LVS_NOSORTHEADER                0x8000
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002

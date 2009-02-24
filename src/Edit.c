@@ -23,8 +23,6 @@
 #endif
 
 /* Define */
-#define ID_MENU				(WM_APP + 102)
-
 #define IDC_VCB				2000
 #define IDC_VTB				2001
 #define IDC_HEADER			2002

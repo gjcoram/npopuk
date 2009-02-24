@@ -662,14 +662,14 @@ BOOL ini_read_setting(HWND hWnd)
 	op.StripHtmlTags = profile_get_int(GENERAL, TEXT("StripHtmlTags"), 1, app_path);
 #ifdef _WIN32_WCE_PPC
 	{
-		TCHAR *OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), TEXT(""), app_path);
+		TCHAR *OpenSaveDir = profile_alloc_string(GENERAL, TEXT("OpenSaveDir"), DataDir, app_path);
 		op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), OpenSaveDir, app_path);
 		op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), OpenSaveDir, app_path);
 		mem_free(&OpenSaveDir);
 	}
 #else
-	op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), TEXT(""), app_path);
-	op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), TEXT(""), app_path);
+	op.SavedOpenDir = profile_alloc_string(GENERAL, TEXT("SavedOpenDir"), DataDir, app_path);
+	op.SavedSaveDir = profile_alloc_string(GENERAL, TEXT("SavedSaveDir"), DataDir, app_path);
 #endif
 
 

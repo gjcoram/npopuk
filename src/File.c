@@ -388,7 +388,10 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		ParanoidMessageBox(hWnd, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
 	} // else is_open or choose dir (backup): just let Windows determine the directory
 
-	of.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+	of.Flags = OFN_HIDEREADONLY;
+	if (Action != FILE_CHOOSE_DIR) {
+		of.Flags |= OFN_OVERWRITEPROMPT;
+	}
 #ifndef _WIN32_WCE
 	// GJC allow multiselect
 	if (Action == FILE_OPEN_MULTI) {
@@ -1014,11 +1017,11 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					int j = item_find_thread(tpMailBox, mid, i);
 					while (j != -1) {
 						MAILITEM *dupItem = *(tpMailBox->tpMailItem + j);
-						if (tpMailItem->Download == TRUE) {
+						if (tpMailItem->Download == TRUE || dupItem->Body == NULL) {
 							// tpMailItem is complete, so delete dupItem (may also be complete)
 							item_free(&dupItem, 1);
 							*(tpMailBox->tpMailItem + j) = NULL;
-						} else if (dupItem->Download == TRUE) {
+						} else if (dupItem->Download == TRUE || tpMailItem->Body == NULL) {
 							// tpMailItem is incomplete
 							item_free(&tpMailItem, 1);
 							*(tpMailBox->tpMailItem + i) = NULL;
@@ -1249,6 +1252,8 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 		wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
 		dir_create(path);
 		wsprintf(path, TEXT("%s%s\\%s%s"), DataDir, op.AttachPath, ATTACH_FILE, FileName);
+	} else if (do_what == DECODE_SAVE_ALL) {
+		wsprintf(path, TEXT("%s\\%s"), op.SavedSaveDir, FileName);
 	} else {
 		if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
 			return TRUE; // user cancelled, not an error

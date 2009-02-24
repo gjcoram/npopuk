@@ -27,12 +27,10 @@
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ
 #define WM_FINDMAILBOX			(WM_APP + 101)
 #define WM_RAS_START			(WM_APP + 400)
+#define ID_MAILITEM_OPEN		(WM_APP + 300)		//ID
 
-#define ID_MENU					(WM_APP + 102)		//Control ID
 #define IDC_CB					2000
 #define IDC_TB					2001
-
-#define ID_MAILITEM_OPEN		(WM_APP + 300)		//ID
 
 #define ID_RECV_TIMER			1					//for mail Open Timer ID
 #define ID_SMTP_TIMER			2
@@ -1790,8 +1788,10 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 #endif
 		return ListView_NotifyProc(hWnd, lParam);
-	}
-	if (CForm->hwndFrom == GetWindow(GetDlgItem(hWnd, IDC_LISTVIEW), GW_CHILD)) {
+	} else if (CForm->hwndFrom == GetDlgItem(MainWnd, IDC_MBMENU)) {
+		int b = 5;
+		b++;
+	} else if (CForm->hwndFrom == GetWindow(GetDlgItem(hWnd, IDC_LISTVIEW), GW_CHILD)) {
 		return ListViewHeaderNotifyProc(hWnd, lParam);
 	}
 #ifndef _WIN32_WCE
@@ -1808,6 +1808,49 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
+#ifdef OVERRIDE_WM_CHAR
+		case WM_CHAR:
+			{
+				TCHAR p = (TCHAR)wParam, q = 0;
+				if (p >= TEXT('a') && p <= TEXT('z')) {
+					q = p + TEXT('A') - TEXT('a');
+				} else if (p >= TEXT('A') && p <= TEXT('Z')) {
+					q = p - TEXT('A') + TEXT('a');
+				}
+				if (q != 0) {
+					TCHAR n[3], o[4];
+					int i;
+					str_cpy_n_t(n, STR_MAILBOX_NONAME, 2);
+					str_cpy_n_t(o, STR_SENDBOX_NAME, 3);
+					for (i = SelBox + 1; i < MailBoxCnt; i++) {
+						if (((MailBox + i)->Name == NULL && (q == n[0] || p == n[0]))
+							|| ((MailBox + i)->Name != NULL && (q == *(MailBox + i)->Name || p == *(MailBox + i)->Name))) {
+							break;
+						}
+					}
+					if (i >= MailBoxCnt) {
+						if (SelBox != MAILBOX_SEND && (q == o[1] || p == o[1])) {
+							i = MAILBOX_SEND;
+						} else {
+							for (i = MAILBOX_USER; i < SelBox; i++) {
+								if (((MailBox + i)->Name == NULL && (q == n[0] || p == n[0]))
+									|| ((MailBox + i)->Name != NULL && (q == *(MailBox + i)->Name || p == *(MailBox + i)->Name))) {
+									break;
+								}
+							}
+							if (i == SelBox) {
+								i = MailBoxCnt;
+							}
+						}
+					}
+					if (i < MailBoxCnt) {
+						mailbox_select(MainWnd, i);
+					}
+				}
+				return 0;
+			}
+#endif
+
 #ifndef _WIN32_WCE
 		case WM_EXITSIZEMOVE:
 #else
@@ -2017,18 +2060,17 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 	}
 
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
-	{
-		int next = item_get_next_send_mark((MailBox + MAILBOX_SEND), ICON_ERROR);
-		AddMBMenu((next==-1) ? STR_SENDBOX_NAME : ((next==-2) ? TEXT("* ") STR_SENDBOX_NAME
-			: TEXT("* ") STR_SENDBOX_NAME));
-	}
-
+	AddMBMenu(STR_SENDBOX_NAME); // updated later
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		TCHAR *p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 		if ((MailBox + i)->NewMail) {
 			TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+#ifdef _WIN32_WCE_PPC
 			wsprintf(q, TEXT("* %s"), p);
+#else
+			wsprintf(q, TEXT("%s *"), p);
+#endif
 			AddMBMenu(q);
 			mem_free(&q);
 		} else {
@@ -3939,12 +3981,21 @@ static void SetMailboxMark(int Box, int Status)
 	} else {
 		TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
 		if (q != NULL) {
+#ifdef _WIN32_WCE_PPC
 			if (Status == STATUS_DONE) {
 				r = TEXT("* ");
 			} else {
 				r = (Status == STATUS_ERROR) ? TEXT("# ") : TEXT("> ");
 			}
 			str_join_t(q, r, p, (TCHAR *)-1);
+#else
+			if (Status == STATUS_DONE) {
+				r = TEXT(" *");
+			} else {
+				r = (Status == STATUS_ERROR) ? TEXT(" #") : TEXT(" <");
+			}
+			str_join_t(q, p, r, (TCHAR *)-1);
+#endif
 			InsertMBMenu(Box, q);
 			mem_free(&q);
 		}
@@ -4243,43 +4294,43 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 
 #ifdef _WIN32_WCE_PPC
-		case WM_HOTKEY:
-			// code courtesy of Christian Ghisler
-			if (op.osMajorVer >= 5 && LOWORD(lParam)==0) {
-				HWND submenu;
-				RECT r;
-				POINT pt;
-				int itemopen;
+	case WM_HOTKEY:
+		// code courtesy of Christian Ghisler
+		if (op.osMajorVer >= 5 && LOWORD(lParam)==0) {
+			HWND submenu;
+			RECT r;
+			POINT pt;
+			int itemopen;
 
-				switch(HIWORD(lParam)) {
-				case VK_F1: // VK_TSOFT1
-				case VK_F2: // VK_TSOFT2
-					if (MainMenuOpened) {
-						itemopen = MainMenuOpened - 1;
-					} else {
-						itemopen = (HIWORD(lParam)==VK_F1) ? 0 : 1;
-					}
-					SendMessage(hMainToolBar, TB_GETITEMRECT, itemopen, (LPARAM)&r);
-					pt.x = (r.left + r.right) / 2;
-					pt.y = (r.top + r.bottom) / 2;
-					submenu = GetWindow(hMainToolBar, GW_CHILD);
-					MainMenuOpened = 0;
-					PostMessage(submenu, WM_LBUTTONDOWN, 1, MAKELONG(pt.x,pt.y));
-					PostMessage(submenu, WM_LBUTTONUP, 1, MAKELONG(pt.x,pt.y));
-					break;
+			switch(HIWORD(lParam)) {
+			case VK_F1: // VK_TSOFT1
+			case VK_F2: // VK_TSOFT2
+				if (MainMenuOpened) {
+					itemopen = MainMenuOpened - 1;
+				} else {
+					itemopen = (HIWORD(lParam)==VK_F1) ? 0 : 1;
 				}
+				SendMessage(hMainToolBar, TB_GETITEMRECT, itemopen, (LPARAM)&r);
+				pt.x = (r.left + r.right) / 2;
+				pt.y = (r.top + r.bottom) / 2;
+				submenu = GetWindow(hMainToolBar, GW_CHILD);
+				MainMenuOpened = 0;
+				PostMessage(submenu, WM_LBUTTONDOWN, 1, MAKELONG(pt.x,pt.y));
+				PostMessage(submenu, WM_LBUTTONUP, 1, MAKELONG(pt.x,pt.y));
+				break;
 			}
-			break;
-		case WM_EXITMENULOOP:
-			MainMenuOpened = 0;
-			break;
-		case WM_INITMENUPOPUP:
-			// try to enable an item on the menu to see which one is visible
-			if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_SELMODE, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
-				MainMenuOpened = 2;
-			else if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_NEWMAIL, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
-				MainMenuOpened = 1;
-			break;
+		}
+		break;
+	case WM_EXITMENULOOP:
+		MainMenuOpened = 0;
+		break;
+	case WM_INITMENUPOPUP:
+		// try to enable an item on the menu to see which one is visible
+		if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_SELMODE, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			MainMenuOpened = 2;
+		else if (EnableMenuItem((HMENU)wParam, ID_MENUITEM_NEWMAIL, MF_BYCOMMAND | MF_ENABLED) != 0xFFFFFFFF)
+			MainMenuOpened = 1;
+		break;
 #endif
 
 	case WM_CLOSE:
@@ -4688,16 +4739,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			} else if (op.MBMenuWidth > 0 && HIWORD(wParam) == LBN_SELCHANGE) {
 				mailbox_select(hWnd, GetSelectedMBMenu());
 				SwitchCursor(TRUE);
-#ifdef BAD_IDEA
-			if (op.MBMenuWidth > 0) {
-				if (HIWORD(wParam) == LBN_SELCHANGE) {
-					ListView_DeleteAllItems(GetDlgItem(hWnd, IDC_LISTVIEW));
-					SwitchCursor(TRUE);
-				} else if (HIWORD(wParam) == LBN_KILLFOCUS || HIWORD(wParam) == LBN_DBLCLK) {
-					mailbox_select(hWnd, GetSelectedMBMenu());
-				}
-			}
-#endif
 			}
 			break;
 
@@ -6566,10 +6607,17 @@ void SetStarMBMenu(int Flag)
 	DeleteMBMenu(MAILBOX_SEND);
 	if (Flag == FALSE) {
 		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME);
+#ifdef _WIN32_WCE_PPC
 	} else if (Flag == TRUE) {
 		InsertMBMenu(MAILBOX_SEND, TEXT("* ") STR_SENDBOX_NAME);
 	} else {
 		InsertMBMenu(MAILBOX_SEND, TEXT("# ") STR_SENDBOX_NAME);
+#else
+	} else if (Flag == TRUE) {
+		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME TEXT(" *"));
+	} else {
+		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME TEXT(" #"));
+#endif
 	}
 	if (SelBox == MAILBOX_SEND) {
 		SelectMBMenu(MAILBOX_SEND);

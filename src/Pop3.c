@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -92,6 +92,7 @@ extern BOOL ShowMsgFlag;
 extern BOOL NewMail_Flag;
 extern BOOL EndThreadSortFlag;
 extern BOOL ServerDelete;
+extern BOOL ViewReopen;
 
 extern int PopBeforeSmtpFlag;
 extern int ssl_type;
@@ -1516,6 +1517,12 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 	if (hViewWnd != NULL) {
+#ifndef WSAASYNC
+		if (ViewReopen == TRUE) {
+			SendMessage(hViewWnd, WM_MODFYMESSAGE, 0, (LPARAM)tpMailItem);
+			ViewReopen = FALSE;
+		}
+#endif
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
 	}
 	if (soc == -1) {
