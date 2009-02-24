@@ -48,7 +48,7 @@
 
 /* Define */
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
-#define APP_VERSION_NUM			2009
+#define APP_VERSION_NUM			2010
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
@@ -151,6 +151,9 @@
 #define WM_ENDDIALOG			(WM_APP + 10)		//Mail arrival message end
 
 #define WM_CHANGE_MARK			(WM_APP + 11)
+#define WM_MODFYMESSAGE			(WM_APP + 12)
+
+#define ID_MENU					(WM_APP + 102)
 
 #define EDIT_OPEN				0					//Type
 #define EDIT_NEW				1
@@ -973,6 +976,7 @@ int SetWordBreak(HWND hWnd);
 void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
+BOOL AttachDecode(HWND hWnd, int id, int DoWhat);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
 BOOL ShellOpen(TCHAR *FileName);
 
@@ -1002,6 +1006,7 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void attach_item_free();
 BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CheckDependence(HWND hWnd, int Ctl, TCHAR **buf);
 BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

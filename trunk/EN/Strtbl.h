@@ -84,6 +84,7 @@
 #define STR_ERR_FILENAME			TEXT("Invalid character in filename")
 #define STR_ERR_FILECONFLICT		TEXT("\"%s\" conflicts with filename for %s")
 #define STR_ERR_NOFILENAME			TEXT("No file name specified")
+#define STR_ERR_NOSELECT			TEXT("Nothing selected")
 #define STR_ERR_NOSBOXNAME			TEXT("No name specified for savebox")
 #define STR_ERR_NOUIDLNOFILL		TEXT("Cannot fill-in messages because 'NoUIDL=1' for this account")
 #define STR_ERR_DUPPARAM			TEXT("Duplicate parameter '%s'")
@@ -390,6 +391,11 @@
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
 #define STR_MAILPROP_MAILADDRESS	TEXT("Mail address")
+
+// Attach list
+#define STR_ATTACH_NAME				TEXT("Attachment")
+#define STR_ATTACH_SIZE				TEXT("Size")
+#define STR_ATTACH_DIR				TEXT("(Filename will be ignored)")
 
 // Mailbox list
 #define STR_MAILBOXES_NAME			TEXT("Name")
