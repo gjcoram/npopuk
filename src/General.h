@@ -237,9 +237,9 @@
 #define FILE_OPEN_SINGLE		0
 #define FILE_OPEN_MULTI			1
 #define FILE_SAVE_SINGLE		2
-#define FILE_SAVE_MULTI			3
-#define FILE_SAVE_MSG			4
-#define FILE_CHOOSE_DIR			5
+#define FILE_SAVE_MSG			3
+#define FILE_CHOOSE_DIR			4
+#define FILE_CHOOSE_BACKDIR		5
 
 #define DECODE_ASK					0
 #define DECODE_AUTO_OPEN			1

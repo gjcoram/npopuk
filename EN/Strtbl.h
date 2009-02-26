@@ -52,6 +52,7 @@
 #define STR_ERR_OPEN				TEXT("Open File error")
 #define STR_ERR_SAVEEND				TEXT("Save File error \nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
+#define STR_ERR_NODIR				TEXT("Directory does not exist: %s")
 #define STR_ERR_PARTIAL_ATTACH		TEXT("Attachments were not fully downloaded")
 #define STR_ERR_FILENAME_TOO_LONG	TEXT("Filename or path too long")
 #define STR_ERR_ADD					TEXT("Address not added")

@@ -140,6 +140,7 @@ BOOL KeyShowHeader;							//Is by the key the transitory header indicatory flag
 static BOOL AllCheck = FALSE;				//which While going around
 BOOL ExecFlag = FALSE;				//While executing
 BOOL ServerDelete = TRUE;
+BOOL CheckAfterThisUpdate = FALSE;
 static BOOL ExecCheckFlag = FALSE;			//Check decision
 static int AutoCheckCnt = 0;				//of check after the executing With fraction count
 static int SmtpWait = 0;					//pop before SMTP to start of automatic operation check waiting after the certifying (milli-second)
@@ -2496,7 +2497,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		do {
 			repeat = FALSE;
 			lstrcpy(SaveDir, STR_NPOPUK_FILES);
-			if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.BackupDir) == FALSE) {
+			if (filename_select(hWnd, SaveDir, NULL, NULL, FILE_CHOOSE_BACKDIR, &op.BackupDir) == FALSE) {
 				return FALSE;
 			} else if (lstrcmpi(SaveDir, AppDir) == 0) {
 				ErrorMessage(hWnd, STR_ERR_BACKUP_APPDIR);
@@ -4407,7 +4408,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						//After the checking execution
 						break;
 					}
-					if (ExecFlag == TRUE && op.CheckAfterUpdate == 1 && RecvBox != MAILBOX_SEND) {
+					if (ExecFlag && CheckAfterThisUpdate && RecvBox != MAILBOX_SEND) {
 						// 実行後チェック
 						ExecFlag = FALSE;
 						RecvMailList(hWnd, RecvBox, FALSE);
@@ -4589,7 +4590,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 			}
 			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 &&
-				op.CheckAfterUpdate == 1 && ExecCheckFlag == FALSE) {
+				CheckAfterThisUpdate && ExecCheckFlag == FALSE) {
 				// 実行後チェック
 				RecvMailList(hWnd, CheckBox, FALSE);
 				ExecCheckFlag = TRUE;
@@ -5270,6 +5271,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ans = 0;
 
 			if (command_id == ID_MESSAGE_DOWNLOAD) {
+				CheckAfterThisUpdate = FALSE;
 				i = (int)lParam;
 				if (i < MAILBOX_USER || i >= MailBoxCnt) {
 					break;
@@ -5279,6 +5281,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 			} else {
+				CheckAfterThisUpdate = (op.CheckAfterUpdate == 1) ? TRUE : FALSE;
 				j  = item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL);
 				if (j != -1) {
 					TCHAR msg[MSG_SIZE];
@@ -5332,7 +5335,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			AllCheck = FALSE;
 			ExecFlag = TRUE;
 			NewMailCnt = -1;
-			if (op.CheckAfterUpdate == 1 && SelBox != MAILBOX_SEND) {
+			if (CheckAfterThisUpdate && SelBox != MAILBOX_SEND) {
 				NewMailCnt = 0;
 				Init_NewMailFlag(hWnd);
 				if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
@@ -5382,7 +5385,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			ExecFlag = TRUE;
 			CheckBox = MAILBOX_USER - 1;
 			NewMailCnt = -1;
-			if (op.CheckAfterUpdate == 1) {
+			CheckAfterThisUpdate = (op.CheckAfterUpdate == 1) ? TRUE : FALSE;
+			if (CheckAfterThisUpdate) {
 				NewMailCnt = 0;
 				Init_NewMailFlag(hWnd);
 			}
@@ -5934,7 +5938,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						//After the checking execution
 						break;
 					}
-					if (ExecFlag == TRUE && op.CheckAfterUpdate == 1 && RecvBox != MAILBOX_SEND) {
+					if (ExecFlag && CheckAfterThisUpdate && RecvBox != MAILBOX_SEND) {
 						// 実行後チェック
 						ExecFlag = FALSE;
 						RecvMailList(hWnd, RecvBox, FALSE);

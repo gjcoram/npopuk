@@ -446,6 +446,7 @@ BEGIN
         END
         MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
         MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM "Delete attachments",  ID_MENUITEM_DELATTACH
         MENUITEM "Delete from list",    ID_MENUITEM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
