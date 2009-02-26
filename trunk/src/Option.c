@@ -4884,7 +4884,7 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	HWND hListView;
 	MAILITEM *tpMailItem;
-	TCHAR SaveDir[BUF_SIZE];
+	TCHAR *SaveDir, tmp[BUF_SIZE];
 	int i, idx;
 
 	switch (uMsg) {
@@ -4955,10 +4955,17 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDC_BUTTON_FILE_BROWSE:
-			lstrcpy(SaveDir, STR_ATTACH_DIR);
-			if (filename_select(hDlg, SaveDir, NULL, NULL, FILE_CHOOSE_DIR, &op.SavedSaveDir) == TRUE) {
-				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_SETTEXT, 0, (LPARAM)op.SavedSaveDir);
+			lstrcpy(tmp, STR_ATTACH_DIR);
+			i = SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_GETTEXTLENGTH, 0, 0) + 1;
+			SaveDir = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i+1));
+			if (i > 0 && SaveDir != NULL) {
+				*SaveDir = TEXT('\0');
+				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_GETTEXT, i, (LPARAM)SaveDir);
+			}				
+			if (filename_select(hDlg, tmp, NULL, NULL, FILE_CHOOSE_DIR, &SaveDir) == TRUE) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_SETTEXT, 0, (LPARAM)SaveDir);
 			}
+			mem_free(&SaveDir);
 			break;
 
 		case IDOK:
@@ -4972,6 +4979,21 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				ErrorMessage(hDlg, STR_ERR_NOSELECT);
 				break;
 			}
+			i = SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_GETTEXTLENGTH, 0, 0) + 1;
+			SaveDir = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i+1));
+			if (i > 0 && SaveDir != NULL) {
+				*SaveDir = TEXT('\0');
+				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_GETTEXT, i, (LPARAM)SaveDir);
+			}
+			if (SaveDir == NULL || dir_check(SaveDir) == FALSE) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, STR_ERR_NODIR, SaveDir);
+				ErrorMessage(hDlg, msg);
+				mem_free(&SaveDir);
+				break;
+			}
+			mem_free(&op.SavedSaveDir);
+			op.SavedSaveDir = SaveDir;
 			idx = 0;
 			for (i = 0; i < MultiPartCnt; i++, idx++) {
 				if (i == MultiPartTextIndex) {

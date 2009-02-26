@@ -524,9 +524,6 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, lParam);
 		}
 		SendDlgItemMessage(hDlg, IDC_COMBO_PATH, CB_SETEXTENDEDUI, TRUE, 0);
-		if (g_action == FILE_SAVE_MULTI) { // GJC
-			SetDlgItemText(hDlg, IDCANCEL, TEXT("Skip"));
-		}
 		if (g_action == FILE_OPEN_MULTI || g_action == FILE_OPEN_SINGLE) {
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_NEW), SW_HIDE);
 		}
@@ -763,9 +760,9 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 	} else if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 		// directory exists, use it
 		lstrcpy(path, *opptr);
-	} else if (Action == FILE_SAVE_MSG) {
+	} else if (Action == FILE_SAVE_MSG || Action == FILE_CHOOSE_DIR) {
 		lstrcpy(path, DataDir);
-	} else if (g_mode_open == FALSE && Action != FILE_CHOOSE_DIR) {
+	} else if (g_mode_open == FALSE && Action != FILE_CHOOSE_BACKDIR) {
 		TCHAR buf[BUF_SIZE];
 		// saving an attachment
 		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
@@ -773,7 +770,7 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 		lstrcpy(path, buf);
 	} else {
 		*path = TEXT('\0');
-		if (Action == FILE_CHOOSE_DIR) {
+		if (Action == FILE_CHOOSE_BACKDIR) {
 			ParanoidMessageBox(hDlg, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
 		}
 	}

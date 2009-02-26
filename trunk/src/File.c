@@ -319,21 +319,6 @@ void filename_conv(TCHAR *buf)
 }
 
 /*
- * OpenFileHook - change Cancel to Skip for saving multiple attachments (GJC)
- */
-#ifndef _WIN32_WCE_PPC
-static UINT CALLBACK OpenFileHook(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	LPNMHDR pnmh = (LPNMHDR) lParam;
-
-	if (uMsg == WM_NOTIFY && pnmh != NULL && pnmh->code == CDN_INITDONE) {
-		SetDlgItemText(GetParent(hDlg), IDCANCEL, TEXT("Skip"));
-	}
-	return 0;
-}
-#endif
-
-/*
  * filename_select - the log Acquisition
  */
 BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Action, TCHAR **opptr)
@@ -350,7 +335,8 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	TCHAR CurDir[BUF_SIZE];
 #endif
 	TCHAR *ph, *qh;
-	BOOL bret = TRUE, is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI);
+	BOOL bret = TRUE, is_open = (Action == FILE_OPEN_SINGLE || Action == FILE_OPEN_MULTI),
+		is_dir = (Action == FILE_CHOOSE_DIR || Action == FILE_CHOOSE_BACKDIR);
 
 	ZeroMemory(&of, sizeof(OPENFILENAME));
 	of.lStructSize = sizeof(OPENFILENAME);
@@ -377,19 +363,19 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 		// yes, use it
 		of.lpstrInitialDir = *opptr;
-	} else if (Action == FILE_SAVE_MSG) {
+	} else if (Action == FILE_SAVE_MSG || Action == FILE_CHOOSE_DIR) {
 		of.lpstrInitialDir = DataDir;
-	} else if (is_open == FALSE && Action != FILE_CHOOSE_DIR) {
+	} else if (is_open == FALSE && is_dir == FALSE) {
 		// saving an attachment
 		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
 		dir_create(buf);
 		of.lpstrInitialDir = buf;
-	} else if (Action == FILE_CHOOSE_DIR) {
+	} else if (Action == FILE_CHOOSE_BACKDIR) {
 		ParanoidMessageBox(hWnd, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
 	} // else is_open or choose dir (backup): just let Windows determine the directory
 
 	of.Flags = OFN_HIDEREADONLY;
-	if (Action != FILE_CHOOSE_DIR) {
+	if (is_dir == FALSE) {
 		of.Flags |= OFN_OVERWRITEPROMPT;
 	}
 #ifndef _WIN32_WCE
@@ -398,9 +384,6 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 		of.Flags |= OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 		of.lpstrFile = ret;
 		of.nMaxFile = MULTI_BUF_SIZE - 1;
-	} else if (Action == FILE_SAVE_MULTI) {
-		of.Flags |= OFN_ENABLEHOOK | OFN_EXPLORER | OFN_ENABLESIZING;
-		of.lpfnHook = (LPOFNHOOKPROC)OpenFileHook;
 	}
 
 	// save (then restore) current working directory, GetOpen/SaveFileName changes it
@@ -1239,7 +1222,6 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 	HANDLE hFile;
 	TCHAR path[BUF_SIZE];
 	DWORD ret;
-	int SaveAction = (do_what == DECODE_SAVE_ALL) ? FILE_SAVE_MULTI : FILE_SAVE_SINGLE;
 
 	// ƒtƒ@ƒCƒ‹‚É•Û‘¶
 	if (FileName == NULL) {
@@ -1255,7 +1237,7 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 	} else if (do_what == DECODE_SAVE_ALL) {
 		wsprintf(path, TEXT("%s\\%s"), op.SavedSaveDir, FileName);
 	} else {
-		if (filename_select(hWnd, path, Ext, NULL, SaveAction, &op.SavedSaveDir) == FALSE) {
+		if (filename_select(hWnd, path, Ext, NULL, FILE_SAVE_SINGLE, &op.SavedSaveDir) == FALSE) {
 			return TRUE; // user cancelled, not an error
 		}
 	}
