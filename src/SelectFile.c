@@ -593,7 +593,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		break;
 
 	case WM_LVDBLCLICK:
-		if (g_action == FILE_CHOOSE_DIR) {
+		if (g_action == FILE_CHOOSE_DIR || g_action == FILE_CHOOSE_BACKDIR) {
 			break;
 		}
 		if(ListView_GetNextItem(GetDlgItem(hDlg, IDC_LIST_FILE), -1, LVIS_SELECTED) != -1){
@@ -607,7 +607,7 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		}
 		*buf = TEXT('\0');
 		ListView_GetItemText(GetDlgItem(hDlg, IDC_LIST_FILE), i, 0, buf, BUF_SIZE - 1);
-		if (g_action == FILE_CHOOSE_DIR || CheckDir(buf) == TRUE) {
+		if (g_action == FILE_CHOOSE_DIR || g_action == FILE_CHOOSE_BACKDIR || CheckDir(buf) == TRUE) {
 			break;
 		}
 		// GJC - allow multiple selection with CTRL
@@ -760,14 +760,8 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 	} else if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 		// directory exists, use it
 		lstrcpy(path, *opptr);
-	} else if (Action == FILE_SAVE_MSG || Action == FILE_CHOOSE_DIR) {
-		lstrcpy(path, DataDir);
 	} else if (g_mode_open == FALSE && Action != FILE_CHOOSE_BACKDIR) {
-		TCHAR buf[BUF_SIZE];
-		// saving an attachment
-		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
-		dir_create(buf);
-		lstrcpy(path, buf);
+		lstrcpy(path, DataDir);
 	} else {
 		*path = TEXT('\0');
 		if (Action == FILE_CHOOSE_BACKDIR) {
@@ -797,7 +791,7 @@ BOOL SelectFile(HWND hDlg, HINSTANCE hInst, int Action, TCHAR *fname, TCHAR *ret
 				MessageBox(hDlg, STR_ERR_TOOMANYFILES, STR_TITLE_ERROR, MB_OK | MB_ICONERROR);
 			}
 			*p = TEXT('\0');
-		} else if (Action == FILE_CHOOSE_DIR) {
+		} else if (Action == FILE_CHOOSE_DIR || g_action == FILE_CHOOSE_BACKDIR) {
 			wsprintf(ret, TEXT("%s\\"), path);
 		} else {
 			wsprintf(ret, TEXT("%s\\%s"), path, filename);
