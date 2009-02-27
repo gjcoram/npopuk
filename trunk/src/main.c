@@ -1537,7 +1537,7 @@ int SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_MOVESBOX, !SelFlag);
 	
 	// pop-up context menu
-	if (SendBoxFlag) {
+	if (SendBoxFlag) { // actually means we're not in the sendbox
 		hMenu = hMainPop; // GetSubMenu(hMainPop, 0);
 		EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 		EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
@@ -1545,6 +1545,9 @@ int SetMailMenu(HWND hWnd)
 		EnableMenuItem(hMenu, ID_MENUITEM_UNREADMAIL, !SelFlag);
 		EnableMenuItem(hMenu, ID_MENUITEM_COPYSBOX, !SelFlag);
 		EnableMenuItem(hMenu, ID_MENUITEM_MOVESBOX, !SelFlag);
+#ifdef _WIN32_WCE_PPC
+		EnableMenuItem(hMenu, ID_MENUITEM_DELATTACH, !SelFlag);
+#endif
 	} else {
 		hMenu = GetSubMenu(hMainPop, 1);
 		EnableMenuItem(hMenu, ID_MENUITEM_SAVECOPY, !SelFlag);

@@ -330,7 +330,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	return SelectFile(hWnd, hInst, Action, path, ret, opptr);
 #else
 	OPENFILENAME of;
-	TCHAR path[MULTI_BUF_SIZE], buf[BUF_SIZE];
+	TCHAR path[MULTI_BUF_SIZE];
 #ifndef _WIN32_WCE
 	TCHAR CurDir[BUF_SIZE];
 #endif
@@ -363,13 +363,8 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	if (opptr != NULL && *opptr != NULL && **opptr != TEXT('\0') && dir_check(*opptr)) {
 		// yes, use it
 		of.lpstrInitialDir = *opptr;
-	} else if (Action == FILE_SAVE_MSG || Action == FILE_CHOOSE_DIR) {
+	} else if (is_open == FALSE && Action != FILE_CHOOSE_BACKDIR) {
 		of.lpstrInitialDir = DataDir;
-	} else if (is_open == FALSE && is_dir == FALSE) {
-		// saving an attachment
-		wsprintf(buf, TEXT("%s%s"), DataDir, op.AttachPath);
-		dir_create(buf);
-		of.lpstrInitialDir = buf;
 	} else if (Action == FILE_CHOOSE_BACKDIR) {
 		ParanoidMessageBox(hWnd, STR_WARN_BACKUPDIR, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_OK);
 	} // else is_open or choose dir (backup): just let Windows determine the directory
