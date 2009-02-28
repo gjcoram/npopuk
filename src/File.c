@@ -1225,7 +1225,7 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 		lstrcpy(path, FileName);
 	}
 
-	if (do_what == DECODE_SAVE_EMBED) {
+	if (do_what == DECODE_SAVE_EMBED || do_what == DECODE_SAVE_IMAGES) {
 		wsprintf(path, TEXT("%s%s"), DataDir, op.AttachPath);
 		dir_create(path);
 		wsprintf(path, TEXT("%s%s\\%s%s"), DataDir, op.AttachPath, ATTACH_FILE, FileName);

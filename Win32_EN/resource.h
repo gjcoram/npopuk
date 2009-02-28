@@ -330,6 +330,7 @@
 #define IDC_BUTTON_NOSEL                1252
 #define IDC_EDIT_SAVEDIR                1253
 #define IDC_BUTTON_FILE_BROWSE          1254
+#define ID_MENUITEM_VIEWIMAGE           1255
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

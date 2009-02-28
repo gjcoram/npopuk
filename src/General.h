@@ -246,6 +246,8 @@
 #define DECODE_SAVE_ALL				2
 #define DECODE_OPEN_IF_MSG			3
 #define DECODE_SAVE_EMBED			4
+#define DECODE_SAVE_IMAGES			5
+#define DECODE_VIEW_IMAGES			6
 
 #define MULTIPART_NONE			0
 #define MULTIPART_ATTACH		1

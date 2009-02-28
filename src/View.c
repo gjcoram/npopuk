@@ -134,7 +134,8 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 static MAILITEM *View_NextMail(HWND hWnd);
 static MAILITEM *View_PrevMail(HWND hWnd);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
-static void View_Scroll(HWND hViewWnd, int dir);
+static void View_Scroll(HWND hWnd, int dir);
+static int FindLargerImage(HWND hWnd, int id, BOOL ask);
 static void OpenURL(HWND hWnd);
 static void SetReMessage(HWND hWnd, int ReplyFlag);
 static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc);
@@ -1091,7 +1092,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 {
 	HMENU hMenu, hPopMenu;
 	TCHAR *str, *p, *r;
-	int i, mFlag, ret = -1, cnt = 0;
+	int i, mFlag, ret = -1, cnt = 0, images = 0;
 	BOOL AppendFlag = FALSE, startbody = FALSE;
 	*attlist = NULL;
 
@@ -1149,6 +1150,8 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			part_is_text = 2;
 		} else if (str_cmp_ni((*(vMultiPart + i))->ContentType, "text", tstrlen("text")) == 0) {
 			part_is_text = 1;
+		} else if (str_cmp_ni((*(vMultiPart + i))->ContentType, "image", tstrlen("image")) == 0) {
+			images++;
 		}
 		if (ret == -1 && part_is_text != 0) {
 			// this is the text part
@@ -1157,6 +1160,7 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 		if (part_is_text != 1 || ret != i) {
 			if (AppendFlag == FALSE) {
 				if (MultiPartCnt > 1) {
+					AppendMenu(hMenu, MF_STRING, ID_MENUITEM_VIEWIMAGE, STR_VIEW_MENU_IMAGES);
 					AppendMenu(hMenu, MF_STRING, ID_VIEW_SAVE_ATTACH, STR_VIEW_MENU_SAVEATTACH);
 					if (IsAttach == FALSE) {
 						AppendMenu(hMenu, MF_STRING, ID_VIEW_DELETE_ATTACH, STR_VIEW_MENU_DELATTACH);
@@ -1239,6 +1243,9 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			}
 			mem_free(&str);
 		}
+	}
+	if (images == 0) {
+		DeleteMenu(hMenu, ID_MENUITEM_VIEWIMAGE, MF_BYCOMMAND);
 	}
 	return ret;
 }
@@ -1595,7 +1602,7 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 /*
  * View_Scroll - page up or down, switch messages if at end
  */
-static void View_Scroll(HWND hViewWnd, int dir)
+static void View_Scroll(HWND hWnd, int dir)
 {
 	TEXTMETRIC lptm;
 	SCROLLINFO ScrollInfo;
@@ -1605,7 +1612,7 @@ static void View_Scroll(HWND hViewWnd, int dir)
 	BOOL Next = FALSE;
 
 	// フォントの高さを取得
-	hdc = GetDC(hViewWnd);
+	hdc = GetDC(hWnd);
 	if (hViewFont != NULL) {
 		hFont = SelectObject(hdc, hViewFont);
 	}
@@ -1613,23 +1620,23 @@ static void View_Scroll(HWND hViewWnd, int dir)
 	if (hViewFont != NULL) {
 		SelectObject(hdc, hFont);
 	}
-	ReleaseDC(hViewWnd, hdc);
+	ReleaseDC(hWnd, hdc);
 
 	// スクロール情報の取得
 	ScrollInfo.cbSize = sizeof(SCROLLINFO);
 	ScrollInfo.fMask = SIF_POS | SIF_RANGE;
-	GetScrollInfo(hViewWnd, SB_VERT, &ScrollInfo);
+	GetScrollInfo(hWnd, SB_VERT, &ScrollInfo);
 
-	GetClientRect(hViewWnd,(LPRECT)&rRect);
+	GetClientRect(hWnd,(LPRECT)&rRect);
 	if (dir > 0) {
 		ScrollInfo.nMax -= ((rRect.bottom - rRect.top) / (lptm.tmHeight + lptm.tmExternalLeading));
 		if (ScrollInfo.nPos >= ScrollInfo.nMax) {
 			Next = TRUE;
 		}
 		// PageDown
-		SendMessage(hViewWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+		SendMessage(hWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
 		if (Next == TRUE) {
-			HWND hParent = GetParent(hViewWnd);
+			HWND hParent = GetParent(hWnd);
 			// 次の未開封メールへ移動する
 			if (View_NextUnreadMail(hParent) == NULL && op.ViewCloseNoNext == 1) {
 				SendMessage(hParent, WM_CLOSE, 0, 0);
@@ -1639,11 +1646,10 @@ static void View_Scroll(HWND hViewWnd, int dir)
 		if (ScrollInfo.nPos <= 0) {
 			Next = TRUE;
 		}
-		SendMessage(hViewWnd, WM_VSCROLL, SB_PAGEUP, 0);
+		SendMessage(hWnd, WM_VSCROLL, SB_PAGEUP, 0);
 		if (Next == TRUE) {
-			HWND hParent = GetParent(hViewWnd);
-			if (View_PrevMail(hParent) == NULL && op.ViewCloseNoNext == 1) {
-				SendMessage(hParent, WM_CLOSE, 0, 0);
+			if (View_PrevMail(hViewWnd) == NULL && op.ViewCloseNoNext == 1) {
+				SendMessage(hViewWnd, WM_CLOSE, 0, 0);
 			}
 		}
 
@@ -2005,6 +2011,39 @@ BOOL ShellOpen(TCHAR *FileName)
 }
 
 /*
+ * FindLargerImage - check for image with same name
+ */
+static int FindLargerImage(HWND hWnd, int id, BOOL ask)
+{
+	char *name, *end;
+	int i, len, ans = IDNO;
+
+	name = (*(vMultiPart + id))->Filename;
+	end = (*(vMultiPart + id))->ePos;
+	if (name == NULL || end == NULL) {
+		return FALSE;
+	}
+	len = end - (*(vMultiPart + id))->sPos;
+	for (i = id+1; i < MultiPartCnt; i++) {
+		char *name2 = (*(vMultiPart + i))->Filename;
+		if (name2 != NULL && tstrcmp(name, name2) == 0) {
+			if ((end = (*(vMultiPart + i))->ePos) != NULL) {
+				int len2 = end - (*(vMultiPart + i))->sPos;
+				if (len2 > len) {
+					if (ask) {
+						ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACHED, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+					} else {
+						ans = IDYES;
+					}
+					break;
+				}
+			}
+		}
+	}
+	return ans;
+}
+
+/*
  * OpenURL - エディットボックスから選択されたURLを抽出して開く
  */
 static void OpenURL(HWND hWnd)
@@ -2348,6 +2387,11 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 
 	SwitchCursor(FALSE);
 
+	if (DoWhat == DECODE_SAVE_IMAGES && ((*(vMultiPart + id))->ContentType == NULL
+		|| str_cmp_ni((*(vMultiPart + id))->ContentType, "image", strlen("image")) != 0)) {
+		return FALSE;
+	}
+
 	if ((*(vMultiPart + id))->ePos != NULL) {
 		len = (*(vMultiPart + id))->ePos - (*(vMultiPart + id))->sPos;
 	} else {
@@ -2363,7 +2407,6 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 	} else {
 		str_cpy_n(b64str, (*(vMultiPart + id))->sPos, len - 1);
 	}
-
 	if ((*(vMultiPart + id))->Encoding != NULL) {
 		if (str_cmp_i((*(vMultiPart + id))->Encoding, "base64") == 0) {
 			EncodeFlag = 1;
@@ -2456,33 +2499,21 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 			fname = alloc_copy_t(str);
 		}
 	} else {
-		char *tmp = (*(vMultiPart + id))->Filename;
-		int i;
 		mem_free(&p);
-		fname = alloc_char_to_tchar(tmp);
-		for (i = id+1; i < MultiPartCnt; i++) {
-			char *tmp2 = (*(vMultiPart + i))->Filename;
-			if (tmp2 != NULL && tstrcmp(tmp, tmp2) == 0) {
-				if ((*(vMultiPart + i))->ePos != NULL) {
-					int len2 = (*(vMultiPart + i))->ePos - (*(vMultiPart + i))->sPos;
-					if (len2 > len) {
-						int ans = MessageBox(hWnd, STR_Q_ATT_SAME_NAME, STR_TITLE_ATTACHED, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
-						if (ans != IDNO) {
-							mem_free(&str);
-							mem_free(&ext);
-							mem_free(&fname);
-							mem_free(&dstr);
-						}
-						if (ans == IDCANCEL) {
-							return FALSE;
-						} else if (ans == IDYES) {
-							return TRUE;
-						}
-						break;
-					}
-				}
+		if (DoWhat != DECODE_VIEW_IMAGES) {
+			int ans = FindLargerImage(hWnd, id, TRUE);
+			if (ans != IDNO) {
+				mem_free(&str);
+				mem_free(&ext);
+				mem_free(&dstr);
+			}
+			if (ans == IDCANCEL) {
+				return FALSE;
+			} else if (ans == IDYES) {
+				return TRUE;
 			}
 		}
+		fname = alloc_char_to_tchar((*(vMultiPart + id))->Filename);
 	}
 
 	if (fname != NULL) {
@@ -2497,8 +2528,8 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 
 	// 確認ダイアログ
 	AttachProcess = 0;
-	if (DoWhat != DECODE_SAVE_ALL && DoWhat != DECODE_SAVE_EMBED) {
-		if (DoWhat == DECODE_AUTO_OPEN
+	if (DoWhat != DECODE_SAVE_ALL && DoWhat != DECODE_SAVE_EMBED && DoWhat != DECODE_SAVE_IMAGES) {
+		if (DoWhat == DECODE_AUTO_OPEN || DoWhat == DECODE_VIEW_IMAGES
 			|| (is_msg == TRUE && (DoWhat == DECODE_OPEN_IF_MSG || op.AutoOpenAttachMsg == 1))) {
 			AttachProcess = 1;
 		} else { // DECODE_ASK (or DECODE_OPEN_IF_MSG but !is_msg ?)
@@ -3096,7 +3127,7 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	MAILITEM *tpMailItem, *tpNextMail;
-	int key, i, command_id;
+	int key, i, command_id, first;
 	BOOL del_it = FALSE, ask = TRUE;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	static BOOL SipFlag = FALSE;
@@ -3617,6 +3648,31 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 			ModifyWindow(hWnd, tpMailItem, ((command_id == ID_MENUITEM_VIEWSOURCE) ? TRUE : FALSE), FALSE);
+			break;
+
+		case ID_MENUITEM_VIEWIMAGE:
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
+				ErrorMessage(hWnd, STR_ERR_NOMAIL);
+				break;
+			}
+			first = MultiPartCnt;
+			for (i = 0; i < MultiPartCnt; i++) {
+				if (((*(vMultiPart + i))->ContentType != NULL
+					&& str_cmp_ni((*(vMultiPart + i))->ContentType, "image", strlen("image")) == 0)
+					&& FindLargerImage(hWnd, i, FALSE) == IDNO) {
+					first = i;
+					break;
+				}
+			}
+			for (i = MultiPartCnt-1; i > first; i--) {
+				AttachDecode(hWnd, i, DECODE_SAVE_IMAGES); 
+			}
+			if (first >= 0 && first < MultiPartCnt) {
+				AttachDecode(hWnd, first, DECODE_VIEW_IMAGES);
+			} else {
+				ErrorMessage(hWnd, STR_ERR_SAVE);
+			}
 			break;
 
 		case ID_VIEW_SAVE_ATTACH:
