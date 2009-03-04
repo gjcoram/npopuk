@@ -652,7 +652,29 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	octype = NULL;
 	if (tpMailItem->RedirectTo != NULL && tpMailItem->ContentType != NULL) {
 		octype = alloc_copy_t(tpMailItem->ContentType);
-		for (p = octype; *p != TEXT(';') && *p != TEXT('\0'); p++);
+		for (p = octype; *p != TEXT('\0'); p++) {
+			while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n') || *p == TEXT('\t')) {
+				p++;
+			}
+			if (str_cmp_ni_t(p, TEXT("charset"), lstrlen(TEXT("charset"))) == 0) {
+				q = r = p;
+				while (*q != TEXT(';') && *q != TEXT('\0')) {
+					q++;
+				}
+				if (*q == TEXT(';')) {
+					q++;
+				}
+				while (*q == TEXT(' ') || *q == TEXT('\r') || *q == TEXT('\n') || *q == TEXT('\t')) {
+					q++;
+				}
+				while (*q != TEXT('\0')) {
+					*(r++) = *(q++);
+				}
+			}
+			while (*p != TEXT(';') && *p != TEXT('\0')) {
+				p++;
+			}
+		}
 		*p = TEXT('\0');
 	}
 #ifdef UNICODE

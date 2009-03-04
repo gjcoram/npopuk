@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1360,7 +1360,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	} else if (tpMailBox == MailBox + MAILBOX_SEND) {
 		// presently, can't forward as attachment
 		tpMailItem->Multipart = MULTIPART_NONE;
-		if (tpMailItem->ContentType != NULL) {
+		if (tpMailItem->RedirectTo == NULL && tpMailItem->ContentType != NULL) {
 			// fix bug in previous versions: forwarded messages copied Content-Type of original
 			mem_free(&tpMailItem->ContentType);
 			if (tpMailBox) {
