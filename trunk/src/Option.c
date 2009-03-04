@@ -3717,6 +3717,11 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_ADDSTRING, 0, (LPARAM)STR_LAZYLOAD_AUTO_NOSEARCH);
 		SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_ADDSTRING, 0, (LPARAM)STR_LAZYLOAD_PROMPT);
 		SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_SETCURSEL, op.LazyLoadMailboxes, 0);
+		if (op.LazyLoadMailboxes == 0) {
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_BLINDAPPEND), FALSE);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_CHECK_BLINDAPPEND, BM_SETCHECK, op.BlindAppend, 0);
+		}
 		break;
 
 	case WM_NOTIFY:
@@ -3729,6 +3734,13 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			SetSip(hDlg, HIWORD(wParam));
 			break;
 #endif
+
+		case IDC_COMBO_LAZYLOAD:
+			if (HIWORD(wParam) == CBN_CLOSEUP) {
+				int sel = SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_GETCURSEL, 0, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_BLINDAPPEND), (sel == 0) ? FALSE : TRUE);
+			}
+			break;
 
 		case IDC_RADIO_FORMAT_NPOP:
 		case IDC_RADIO_FORMAT_MBOX:
@@ -3773,6 +3785,9 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				}
 			}
 			op.LazyLoadMailboxes = SendDlgItemMessage(hDlg, IDC_COMBO_LAZYLOAD, CB_GETCURSEL, 0, 0);
+			if (op.LazyLoadMailboxes != 0) {
+				op.BlindAppend = SendDlgItemMessage(hDlg, IDC_CHECK_BLINDAPPEND, BM_GETCHECK, 0, 0);
+			}
 			break;
 		}
 		break;

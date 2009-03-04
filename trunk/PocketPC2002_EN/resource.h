@@ -70,6 +70,7 @@
 #define IDD_DIALOG_OPTION_RAS           177
 #define IDD_DIALOG_SETSMTPAUTH          178
 #define IDD_DIALOG_MAILBOXES            179
+#define IDD_DIALOG_OPTION_ADV           180
 #define IDD_DIALOG_ATTACH_NOTICE        181
 #define IDD_DIALOG_SETSSL               182
 #define IDD_DIALOG_ENCODE               183
@@ -130,7 +131,7 @@
 #define IDC_IMPORT_DOWN                 253
 #define IDC_COL_SFDZ                    254
 #define IDC_COL_FSDZ                    255
-#define IDD_DIALOG_OPTION_ADV           256
+#define IDC_CHECK_BLINDAPPEND           256
 #define IDC_RADIO_FORMAT_NPOP           257
 #define IDC_RADIO_FORMAT_MBOX           258
 #define IDC_COMBO_LAZYLOAD              259
