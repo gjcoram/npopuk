@@ -1331,6 +1331,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		buf = NULL;
 	} else {
 		TCHAR *attachlist;
+		BOOL has_digest = FALSE;
 		// マルチパートの展開
 		buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &vMultiPart, &MultiPartCnt, &TextIndex);
 
@@ -1345,9 +1346,18 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				buf = p;
 			}
 		}
+		if (tpMailItem->Download == FALSE) {
+			int i;
+			for (i = 0; i < MultiPartCnt; i++) {
+				if ((vMultiPart[i])->IsDigestMsg) {
+					has_digest = TRUE;
+					break;
+				}
+			}
+		}
 		// GJC add notice about incomplete message
 		if (tpMailItem->Download == FALSE &&
-			(MultiPartCnt <= 1 || (vMultiPart[TextIndex])->ePos == NULL)) {
+			(MultiPartCnt <= 1 || has_digest || (vMultiPart[TextIndex])->ePos == NULL)) {
 			TCHAR *str;
 			if ((MailBox + vSelBox)->Type == MAILBOX_TYPE_SAVE) {
 				str = STR_MSG_PARTIAL_SBOX;
