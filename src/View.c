@@ -73,6 +73,9 @@ static int g_menu_height;
 BOOL ViewWndViewSrc = FALSE;
 int vSelBox = -1;
 extern HMENU hViewPop, vMenuDone;
+#ifdef _WIN32_WCE_PPC
+extern HMENU hEditPop;
+#endif
 
 MULTIPART **vMultiPart = NULL;
 int MultiPartCnt=0, MultiPartTextIndex=0;
@@ -481,15 +484,19 @@ void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag)
 	CheckMenuItem(GetSubMenu(hMenu, 1), ID_MENUITEM_WORDBREAK, Flag);
 #endif	// _WIN32_WCE_PPC
 
-	CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_WORDBREAK, Flag);
+	if (hWnd == hViewWnd) {
+		CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_WORDBREAK, Flag);
+#ifdef _WIN32_WCE_PPC
+	} else {
+		CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_WORDBREAK, Flag);
+#endif
+	}
 }
 
 /*
  * SetWordBreak - ê‹ÇËï‘ÇµÇÃêÿÇËë÷Ç¶
  */
-#ifdef _WIN32_WCE_PPC
-int SetWordBreak(HWND hWnd, HWND hToolBar)
-#elif defined(_WIN32_WCE_LAGENDA)
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 int SetWordBreak(HWND hWnd, HMENU hMenu)
 #else
 int SetWordBreak(HWND hWnd)
@@ -525,9 +532,7 @@ int SetWordBreak(HWND hWnd)
 	i = GetWindowLong(hEdit, GWL_STYLE);
 	if (i & WS_HSCROLL) {
 		i ^= WS_HSCROLL;
-#ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_VIEW), MF_CHECKED);
-#elif defined(_WIN32_WCE_LAGENDA)
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_CHECKED);
 #else
 		SetWordBreakMenu(hWnd, NULL, MF_CHECKED);
@@ -535,9 +540,7 @@ int SetWordBreak(HWND hWnd)
 		ret = 1;
 	} else {
 		i |= WS_HSCROLL;
-#ifdef _WIN32_WCE_PPC
-		SetWordBreakMenu(hWnd, SHGetSubMenu(hToolBar, ID_MENUITEM_VIEW), MF_UNCHECKED);
-#elif defined(_WIN32_WCE_LAGENDA)
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 		SetWordBreakMenu(hWnd, hMenu, MF_UNCHECKED);
 #else
 		SetWordBreakMenu(hWnd, NULL, MF_UNCHECKED);
@@ -3609,7 +3612,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_MENUITEM_WORDBREAK:
 			DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
-			op.WordBreakFlag = SetWordBreak(hWnd, hViewToolBar);
+			op.WordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW));
 #elif defined(_WIN32_WCE_LAGENDA)
 			op.WordBreakFlag = SetWordBreak(hWnd, hViewMenu);
 #else

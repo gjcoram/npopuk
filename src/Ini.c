@@ -1724,65 +1724,64 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
  */
 static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
 {
-	static int s_left, s_right, s_top = 0, s_bot = 0, minwl = 10;
+	static RECT scr_rect;
+	int minwl = 10;
+	memset (&scr_rect, 0, sizeof (RECT));
 	// use "static" so we only have to make the system calls once
-	if (s_bot == 0 && s_top == 0) {
+	if (scr_rect.top == 0 && scr_rect.bottom == 0) {
 #if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
 		if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
 			// Win98 or later
-			s_left  = GetSystemMetrics(SM_XVIRTUALSCREEN); // may be negative for multi-monitor
-			s_top   = GetSystemMetrics(SM_YVIRTUALSCREEN);
-			s_right = GetSystemMetrics(SM_CXVIRTUALSCREEN) + s_left;
-			s_bot   = GetSystemMetrics(SM_CYVIRTUALSCREEN) + s_top;
+			SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&scr_rect, 0);
 		} else
 #endif
 		{
-			s_left  = 0;
-			s_top   = 0;
-			s_right = GetSystemMetrics(SM_CXSCREEN);
-			s_bot   = GetSystemMetrics(SM_CYSCREEN);
+			scr_rect.left   = 0;
+			scr_rect.top    = 0;
+			scr_rect.right  = GetSystemMetrics(SM_CXSCREEN);
+			scr_rect.bottom = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
-			s_top	=  MENU_HEIGHT;
-			s_right -= 5; // so resize border is visible
-			s_bot   -= MENU_HEIGHT; // ignoring sip status
+			scr_rect.top	 =  MENU_HEIGHT;
+			scr_rect.right  -= 5; // so resize border is visible
+			scr_rect.bottom -= MENU_HEIGHT; // ignoring sip status
 #endif
 		}
 	}
 
-	if (the_rect->left < s_left) {
-		the_rect->right += (s_left - the_rect->left);
-		the_rect->left = s_left;
-	} else if (the_rect->left > s_right) {
+	if (the_rect->left < scr_rect.left) {
+		the_rect->right += (scr_rect.left - the_rect->left);
+		the_rect->left = scr_rect.left;
+	} else if (the_rect->left > scr_rect.right) {
 		the_rect->right -= the_rect->left;
 		the_rect->left = 0;
 	}
 	if (the_rect->right < the_rect->left + minwl) {
 		the_rect->right = the_rect->left + def_w;
 	}
-	if (the_rect->right > s_right) {
-		the_rect->left += (s_right - the_rect->right);
-		if (the_rect->left < s_left) {
-			the_rect->left = s_left;
+	if (the_rect->right > scr_rect.right) {
+		the_rect->left += (scr_rect.right - the_rect->right);
+		if (the_rect->left < scr_rect.left) {
+			the_rect->left = scr_rect.left;
 		}
-		the_rect->right = s_right;
+		the_rect->right = scr_rect.right;
 	}
 
-	if (the_rect->top < s_top) {
-		the_rect->bottom += (s_top - the_rect->top);
-		the_rect->top = s_top;
-	} else if (the_rect->top > s_bot) {
+	if (the_rect->top < scr_rect.top) {
+		the_rect->bottom += (scr_rect.top - the_rect->top);
+		the_rect->top = scr_rect.top;
+	} else if (the_rect->top > scr_rect.bottom) {
 		the_rect->bottom -= the_rect->top;
 		the_rect->top = 0;
 	}
 	if (the_rect->bottom < the_rect->top + minwl) {
 		the_rect->bottom = the_rect->top + def_l;
 	}
-	if (the_rect->bottom > s_bot) {
-		the_rect->top += (s_bot - the_rect->bottom);
-		if (the_rect->top < s_top) {
-			the_rect->top = s_top;
+	if (the_rect->bottom > scr_rect.bottom) {
+		the_rect->top += (scr_rect.bottom - the_rect->bottom);
+		if (the_rect->top < scr_rect.top) {
+			the_rect->top = scr_rect.top;
 		}
-		the_rect->bottom = s_bot;
+		the_rect->bottom = scr_rect.bottom;
 	}
 }
 

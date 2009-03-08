@@ -2388,7 +2388,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				if (!sent) {
 					DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 				}
-				op.EditWordBreakFlag = SetWordBreak(hWnd, hEditToolBar);
+				op.EditWordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT));
 #elif defined(_WIN32_WCE_LAGENDA)
 				op.EditWordBreakFlag = SetWordBreak(hWnd, hViewMenu);
 #else
