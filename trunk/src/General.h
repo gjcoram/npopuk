@@ -968,9 +968,7 @@ TCHAR *replace_env_var(TCHAR *buf);
 // View
 BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
-#ifdef _WIN32_WCE_PPC
-int SetWordBreak(HWND hWnd, HWND hToolBar);
-#elif defined(_WIN32_WCE_LAGENDA)
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 int SetWordBreak(HWND hWnd, HMENU hMenu);
 #else
 int SetWordBreak(HWND hWnd);
