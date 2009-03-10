@@ -29,6 +29,9 @@
 #define IDR_MENU_EDIT                   122
 #define IDD_DIALOG_SETSEND              123
 #define IDD_DIALOG_SETSEND_WIDE         124
+#define IDD_DIALOG_SETSEND_SHORT        125
+#define IDD_DIALOG_SETSEND_MORE         126
+#define IDC_BUTTON_SETSEND_MORE         127
 #define IDB_TOOLBAR_EDIT                128
 #define IDI_ICON_SENTMAIL               129
 #define IDI_ICON_SEND                   130
@@ -79,15 +82,11 @@
 #define IDI_ICON_LOW                    186
 #define IDI_ICON_HIGH                   187
 #define IDD_DIALOG_ABOUT                188
-#define IDC_CHECK_SORTORDER             195
-#define IDC_SORTITEM1                   196
-#define IDC_SORTITEM2                   197
-#define IDC_SORTITEM3                   198
-#define IDC_SORTITEM4                   199
 #define IDC_STATIC_SORT                 200
-#define IDC_AUTOSORT1                   201
-#define IDC_AUTOSORT2                   202
-#define IDC_AUTOSORT3                   203
+#define IDC_COMBO_SORT                  201
+#define IDC_TEXT_SORTCOL                202
+#define IDC_COMBO_SORTCOL               203
+#define IDC_CHECK_SORTORDER             204
 #define IDI_ICON_FWD                    210
 #define IDI_ICON_REPL                   211
 #define IDI_ICON_REPLFWD                212
@@ -336,6 +335,7 @@
 #define IDR_MENU_MBPOPUP                1244
 #define IDR_ADDRESS_POPUP               1245
 #define IDR_MENU_EDIT_POPUP             1246
+#define IDC_SHOW_NAVIG                  1247
 #define IDD_DIALOG_SAVEATTACH           1250
 #define IDC_BUTTON_ALLSEL               1251
 #define IDC_BUTTON_NOSEL                1252
