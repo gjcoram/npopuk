@@ -143,6 +143,10 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 static BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag);
 static int SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type);
 static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#ifdef _WIN32_WCE_PPC
+static BOOL CALLBACK SendMoreProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
+static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem);
 static void SetButtonText(HWND hButton, TCHAR *title, BOOL UseFlag);
 static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, int right);
 static void SetAddressList(HWND hDlg, ADDRESSBOOK *tpAddressBook, TCHAR *Filter);
@@ -3300,6 +3304,8 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_SETCHECK, op.ViewAppMsgSource, 0);
 #ifndef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_SETCHECK, op.ViewWindowCursor, 0);
+#elif defined(_WIN32_WCE_PPC)
+		SendDlgItemMessage(hDlg, IDC_SHOW_NAVIG, BM_SETCHECK, op.ShowNavButtons, 0);
 #endif
 		break;
 
@@ -3331,6 +3337,8 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.ViewAppMsgSource = SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
 			op.ViewWindowCursor = SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_GETCHECK, 0, 0);
+#elif defined(_WIN32_WCE_PPC)
+			op.ShowNavButtons = SendDlgItemMessage(hDlg, IDC_SHOW_NAVIG, BM_GETCHECK, 0, 0);
 #endif
 			break;
 		}
@@ -3399,40 +3407,40 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 	case WM_INITDIALOG:
 		redraw = FALSE;
 
-		if (op.LvAutoSort == 0)  // Added PHH 11-Nov-2003
-		{
+#ifdef _WIN32_WCE_PPC
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_FILEORDER);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_SBOXCOL);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_ALLBOXCOL);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_SETCURSEL, op.LvAutoSort, 0);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_SUBJ);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_FROM);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_DATE);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_SIZE);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_SETCURSEL, abs(op.LvSortItem)+1, 0);
+		EnableSortColumns(hDlg, (op.LvAutoSort != 0));
+#else
+		if (op.LvAutoSort == 0) { // Added PHH 11-Nov-2003
 			SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, FALSE);
-		}
-		else if (op.LvAutoSort == 1) 
-		{
+		} else if (op.LvAutoSort == 1) {
 			SendDlgItemMessage(hDlg, IDC_AUTOSORT2, BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, TRUE);
-		}
-		else if (op.LvAutoSort == 2) 
-		{
+		} else if (op.LvAutoSort == 2) {
 			SendDlgItemMessage(hDlg, IDC_AUTOSORT3, BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, TRUE);
 		}
-		if (op.LvSortItem < 0) 
-		{
-			SendDlgItemMessage(hDlg, IDC_CHECK_SORTORDER, BM_SETCHECK, 1, 0);
-		}
-		if (abs(op.LvSortItem) == 1) 
-		{
+		if (abs(op.LvSortItem) == 1) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM1, BM_SETCHECK, 1, 0);
-		}
-		if (abs(op.LvSortItem) == 2) 
-		{
+		} else if (abs(op.LvSortItem) == 2) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_SETCHECK, 1, 0);
-		}
-		if (abs(op.LvSortItem) == 3) 
-		{
+		} else if (abs(op.LvSortItem) == 3) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM3, BM_SETCHECK, 1, 0);
-		}
-		if (abs(op.LvSortItem) == 4) 
-		{
+		} else if (abs(op.LvSortItem) == 4) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM4, BM_SETCHECK, 1, 0);
+		}
+#endif
+		if (op.LvSortItem < 0) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_SORTORDER, BM_SETCHECK, 1, 0);
 		}
 		if (op.LvDefSelectPos == 0) {
 			SendDlgItemMessage(hDlg, IDC_SORT_SELECT_FIRST, BM_SETCHECK, 1, 0);
@@ -3452,44 +3460,32 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		switch (LOWORD(wParam)) {
 
 		case IDOK:
-			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1)  // Added PHH 11-Nov-2003
-			{
+#ifdef _WIN32_WCE_PPC
+			op.LvAutoSort = SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0);
+			op.LvSortItem = SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_GETCURSEL, 0, 0);
+#else
+			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1) { // Added PHH 11-Nov-2003
 				op.LvAutoSort = 0;	
-			}
-			else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT2, BM_GETCHECK, 0, 0) == 1) 
-			{
+			} else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT2, BM_GETCHECK, 0, 0) == 1) {
 				op.LvAutoSort = 1;
-			}
-			else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT3, BM_GETCHECK, 0, 0) == 1) 
-			{
+			} else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT3, BM_GETCHECK, 0, 0) == 1) {
 				op.LvAutoSort = 2;
-			}
-			else 
-			{
+			} else {
 				op.LvAutoSort = 1;
 			}
 			
-			if (SendDlgItemMessage(hDlg, IDC_SORTITEM1, BM_GETCHECK, 0, 0) == 1) 
-			{
+			if (SendDlgItemMessage(hDlg, IDC_SORTITEM1, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 1;
-			}
-			else if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1) 
-			{
+			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 2;
-			}
-			else if (SendDlgItemMessage(hDlg, IDC_SORTITEM3, BM_GETCHECK, 0, 0) == 1) 
-			{
+			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM3, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 3;
-			}
-			else if (SendDlgItemMessage(hDlg, IDC_SORTITEM4, BM_GETCHECK, 0, 0) == 1) 
-			{
+			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM4, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 4;
-			}
-			else 
-			{
+			} else {
 				op.LvSortItem = 2;
 			}
-			
+#endif
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_SORTORDER, BM_GETCHECK, 0, 0) == 1) 
 			{
 				op.LvSortItem = -op.LvSortItem;
@@ -3515,6 +3511,14 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 			break;
 
+#ifdef _WIN32_WCE_PPC
+		case IDC_COMBO_SORT:
+			if (HIWORD(wParam) == CBN_CLOSEUP) {
+				enable = (SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0) == 0) ? FALSE : TRUE;
+				EnableSortColumns(hDlg, enable);
+			}
+		case IDC_COMBO_SORTCOL:
+#else
 		case IDC_AUTOSORT1:
 		case IDC_AUTOSORT2:
 		case IDC_AUTOSORT3:
@@ -3530,6 +3534,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		case IDC_SORTITEM2:
 		case IDC_SORTITEM3:
 		case IDC_SORTITEM4:
+#endif
 		case IDC_CHECK_SORTORDER:
 		case IDC_COL_FSDZ:
 		case IDC_COL_SFDZ:
@@ -4485,6 +4490,144 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return TRUE;
 }
 
+#ifdef _WIN32_WCE_PPC
+static BOOL CALLBACK SendMoreProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	MAILITEM *tpMailItem;
+	TCHAR buf[BUF_SIZE];
+	int i, j, cmd;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_SENDMORE, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+
+		if (lParam == 0) {
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		tpMailItem = (MAILITEM *)lParam;
+		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+
+		SetReplyToCombo(hDlg, tpMailItem);
+
+		/////////////////////// MRP //////////////////////
+		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETEXTENDEDUI, TRUE, 0);
+		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
+		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
+		SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
+		if (tpMailItem->Priority == 1) {// High
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 0, 0);
+		} else if (tpMailItem->Priority == 5) {// Low
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 2, 0);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 1, 0);  // Normal or default
+		}
+
+		SendDlgItemMessage(hDlg, IDC_DELIV, BM_SETCHECK, tpMailItem->DeliveryReceipt, 0);
+		SendDlgItemMessage(hDlg, IDC_READ, BM_SETCHECK, tpMailItem->ReadReceipt, 0);
+		//////////////////// ______  //////////////////////////
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		cmd = LOWORD(wParam);
+		tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
+		if (tpMailItem == NULL) {
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		if (cmd == IDCANCEL) {
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		if (cmd != IDOK && tpMailItem->MailStatus == ICON_SENTMAIL) {
+			break;
+		}
+
+		if (cmd == IDC_COMBO_REPLYTO) {
+			if (HIWORD(wParam) == CBN_EDITCHANGE || HIWORD(wParam) == CBN_CLOSEUP) {
+				tpMailItem = (MAILITEM *)GetWindowLong(hDlg, GWL_USERDATA);
+				if (tpMailItem == NULL) {
+					EndDialog(hDlg, FALSE);
+					break;
+				}
+				if (HIWORD(wParam) == CBN_EDITCHANGE) {
+					tpMailItem->DefReplyTo = FALSE;
+				} else if (tpMailItem->DefReplyTo == TRUE) {
+					// check if ReplyTo is still the default for selected account
+					TCHAR *p;
+					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+					i = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
+					if (i != CB_ERR) {
+						int real=0, sbox=0;
+						i += MAILBOX_USER;
+						// smtp drop-down only has "real" accounts, increment i by the number of saveboxes below it
+						for (j = MAILBOX_USER; j < MailBoxCnt && real < i; j++) {
+							if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
+								sbox++;
+							} else {
+								real++;
+							}
+						}
+						i += sbox;
+						p = (MailBox + i)->ReplyTo;
+						if (((p == NULL || *p == TEXT('\0')) && lstrcmp(buf, STR_OMIT_REPLYTO) != 0)
+							|| (p != NULL && *p != TEXT('\0') && lstrcmp(buf, p) != 0)) {
+							tpMailItem->DefReplyTo = FALSE;
+						}
+					}
+
+				}
+			}
+		}
+
+		if (cmd == IDOK) {
+			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+			mem_free(&tpMailItem->ReplyTo);
+			if (buf[0] != TEXT('\0') && lstrcmp(buf, STR_OMIT_REPLYTO) != 0) {
+				tpMailItem->ReplyTo = alloc_copy_t(buf);
+			} else {
+				tpMailItem->ReplyTo = NULL;
+			}
+
+			////////////////////////// MRP //////////////////////
+			// Get my new settings here and set them into :
+			// tpMailItem->Priority (int)
+			// tpMailItem->ReadReceipt (int - 1 = yes, 0 = No)
+			// tpMailItem->DeliveryReceipt (int - 1 = yes, 0 = No)
+			i = SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_GETCURSEL, 0, 0);
+			if (i == 0)	{
+				tpMailItem->Priority = 1;
+			} else if (i == 1) {
+				tpMailItem->Priority = 3;
+			} else if (i == 2) {
+				tpMailItem->Priority = 5;
+			}
+
+			tpMailItem->ReadReceipt = SendDlgItemMessage(hDlg, IDC_READ, BM_GETCHECK, 0, 0);
+			tpMailItem->DeliveryReceipt = SendDlgItemMessage(hDlg, IDC_DELIV, BM_GETCHECK, 0, 0);
+			////////////////////////// --- ////////////////////////
+
+			EndDialog(hDlg, TRUE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
+
 void attach_item_free()
 {
 	ATTACH_ITEM *a_item = top_attach_item, *next;
@@ -5063,6 +5206,117 @@ BOOL CheckDependence(HWND hWnd, int Ctl, TCHAR **buf)
 }
 
 /*
+ * SetReplyToCombo - global replyto and replyto/address for each mailbox (GJC)
+ */
+static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem)
+{
+	MAILBOX *tpMailBox;
+	TCHAR buf[BUF_SIZE];
+	TCHAR *mb_replyto = NULL, *p;
+	int i, j, sel, cnt;
+	BOOL found;
+
+	tpMailBox = MailBox + SelBox;
+	if (tpMailBox != NULL && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+		mb_replyto = tpMailBox->ReplyTo;
+	}
+	if (tpMailItem->MailBox != NULL) {
+		i = mailbox_name_to_index(tpMailItem->MailBox);
+		if (i != -1) {
+			tpMailBox = MailBox + i;
+			if (tpMailBox != NULL && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+				mb_replyto = tpMailBox->ReplyTo;
+			}
+		}
+	}
+
+	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
+	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
+	cnt = 0;
+	sel = -1;
+	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
+	if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
+		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
+		sel = cnt = 1;
+	}
+	// global replyto
+	if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
+		p = op.AltReplyTo;
+		while (*p != TEXT('\0')) {
+			p = str_cpy_f_t(buf, p, TEXT(','));
+			// check that this address isn't a duplicate of one from an account
+			found = FALSE;
+			for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
+				tpMailBox = MailBox + j;
+				if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+					continue;
+				}
+				if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
+					if (lstrcmp(tpMailBox->ReplyTo, buf) == 0) {
+						found = TRUE;
+						break;
+					}
+				} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+					if (lstrcmp(tpMailBox->MailAddress, buf) == 0) {
+						found = TRUE;
+						break;
+					}
+				}
+			}
+			if (found == FALSE) {
+				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)buf);
+				cnt++;
+			}
+		}
+	}
+	// replyto/address for user mailboxes
+	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+		TCHAR *addr_to_match = NULL;
+		tpMailBox = MailBox + i;
+		if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+			continue;
+		}
+		if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0')) {
+			addr_to_match = tpMailBox->ReplyTo;
+		} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+			addr_to_match = tpMailBox->MailAddress;
+		}
+		// check that this address isn't a duplicate of one from a later account
+		if (addr_to_match != NULL) {
+			found = FALSE;
+			for (j = i+1; j < MailBoxCnt; j++) {
+				tpMailBox = MailBox + j;
+				if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+					continue;
+				}
+				if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
+					if (lstrcmp(tpMailBox->ReplyTo, addr_to_match) == 0) {
+						found = TRUE;
+						break;
+					}
+				} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
+					if (lstrcmp(tpMailBox->MailAddress, addr_to_match) == 0) {
+						found = TRUE;
+						break;
+					}
+				}
+			}
+			if (found == FALSE) {
+				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)addr_to_match);
+				cnt++;
+				// check if this address is the ReplyTo for the selected account
+				if (sel == -1 && mb_replyto != NULL && *mb_replyto != TEXT('\0')
+					&& lstrcmp(mb_replyto, addr_to_match) == 0) {
+					sel = cnt;
+				}
+			}
+		}
+	}
+	sel = (sel < 0) ? 0 : sel;
+	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
+}
+
+/*
  * SetButtonText - Buttonのテキストを設定する
  */
 static void SetButtonText(HWND hButton, TCHAR *title, BOOL UseFlag)
@@ -5088,11 +5342,10 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	MAILITEM *tpTmpMailItem = NULL;
 	MAILBOX *tpMailBox = NULL;
 	ADDRESSBOOK *tpTmpAddressBook;
-	TCHAR *p;
 	TCHAR buf[BUF_SIZE];
-	TCHAR *mb_replyto = NULL, *mb_autobcc = NULL;
+	TCHAR *mb_autobcc = NULL, *p;
 	int i, j, st, mb, cnt, sel, len;
-	BOOL BtnFlag, found, ret, ReDoAttachButton = FALSE;
+	BOOL BtnFlag, ret, ReDoAttachButton = FALSE;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -5139,7 +5392,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if ((mb == -1 && SelBox == i) || (tpMailItem->MailBox != NULL && mailbox_name_to_index(tpMailItem->MailBox) == i)) {
 				j = i;
 				mb = cnt;
-				mb_replyto = tpMailBox->ReplyTo;
 				if (tpMailBox->MyAddr2Bcc) {
 					mb_autobcc = tpMailBox->BccAddr;
 					if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
@@ -5163,109 +5415,28 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendDlgItemMessage(hDlg, IDC_CHECK_MARKSEND, BM_SETCHECK, 1, 0);
 			}
 		} else {
-			// GJC ReplyTo options: global replyto and replyto/address for each mailbox
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
-			cnt = 0;
-			sel = -1;
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
-			if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
-				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
-				sel = cnt = 1;
-			}
-			// global replyto
-			if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
-				p = op.AltReplyTo;
-				while (*p != TEXT('\0')) {
-					p = str_cpy_f_t(buf, p, TEXT(','));
-					// check that this address isn't a duplicate of one from an account
-					found = FALSE;
-					for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
-						tpMailBox = MailBox + j;
-						if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-							continue;
-						}
-						if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
-							if (lstrcmp(tpMailBox->ReplyTo, buf) == 0) {
-								found = TRUE;
-								break;
-							}
-						} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
-							if (lstrcmp(tpMailBox->MailAddress, buf) == 0) {
-								found = TRUE;
-								break;
-							}
-						}
-					}
-					if (found == FALSE) {
-						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)buf);
-						cnt++;
-					}
-				}
-			}
-			// replyto/address for user mailboxes
-			for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-				TCHAR *addr_to_match = NULL;
-				tpMailBox = MailBox + i;
-				if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-					continue;
-				}
-				if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0')) {
-					addr_to_match = tpMailBox->ReplyTo;
-				} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
-					addr_to_match = tpMailBox->MailAddress;
-				}
-				// check that this address isn't a duplicate of one from a later account
-				if (addr_to_match != NULL) {
-					found = FALSE;
-					for (j = i+1; j < MailBoxCnt; j++) {
-						tpMailBox = MailBox + j;
-						if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-							continue;
-						}
-						if (tpMailBox->ReplyTo != NULL && *tpMailBox->ReplyTo != TEXT('\0'))  {
-							if (lstrcmp(tpMailBox->ReplyTo, addr_to_match) == 0) {
-								found = TRUE;
-								break;
-							}
-						} else if (tpMailBox->MailAddress != NULL && *tpMailBox->MailAddress != TEXT('\0')) {
-							if (lstrcmp(tpMailBox->MailAddress, addr_to_match) == 0) {
-								found = TRUE;
-								break;
-							}
-						}
-					}
-					if (found == FALSE) {
-						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)addr_to_match);
-						cnt++;
-						// check if this address is the ReplyTo for the selected account
-						if (sel == -1 && mb_replyto != NULL && *mb_replyto != TEXT('\0')
-							&& lstrcmp(mb_replyto, addr_to_match) == 0) {
-							sel = cnt;
-						}
-					}
-				}
-			}
-			sel = (sel < 0) ? 0 : sel;
-			SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
 
-			/////////////////////// MRP //////////////////////
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETEXTENDEDUI, TRUE, 0);
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
+			if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) != NULL) {
 
-			SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 1, 0);  // Normal or default
+				SetReplyToCombo(hDlg, tpMailItem);
 
-			if (tpMailItem->Priority == 1) {// High
-				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 0, 0);
-			} else if (tpMailItem->Priority == 5) {// Low
-				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 2, 0);
+				/////////////////////// MRP //////////////////////
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETEXTENDEDUI, TRUE, 0);
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)HIGH_PRIORITY);
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)NORMAL_PRIORITY);
+				SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_ADDSTRING, 0, (LPARAM)LOW_PRIORITY);
+				if (tpMailItem->Priority == 1) {// High
+					SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 0, 0);
+				} else if (tpMailItem->Priority == 5) {// Low
+					SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 2, 0);
+				} else {
+					SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_SETCURSEL, 1, 0);  // Normal or default
+				}
+
+				SendDlgItemMessage(hDlg, IDC_DELIV, BM_SETCHECK, tpMailItem->DeliveryReceipt, 0);
+				SendDlgItemMessage(hDlg, IDC_READ, BM_SETCHECK, tpMailItem->ReadReceipt, 0);
+				//////////////////// ______  //////////////////////////
 			}
-
-			SendDlgItemMessage(hDlg, IDC_DELIV, BM_SETCHECK, tpMailItem->DeliveryReceipt, 0);
-			SendDlgItemMessage(hDlg, IDC_READ, BM_SETCHECK, tpMailItem->ReadReceipt, 0);
-			//////////////////// ______  //////////////////////////
 
 			if (tpMailItem->To != NULL) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_TO, WM_SETTEXT, 0, (LPARAM)tpMailItem->To);
@@ -5454,6 +5625,21 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, BtnFlag);
 			}
 			break;
+
+#ifdef _WIN32_WCE_PPC
+		case IDC_BUTTON_SETSEND_MORE:
+			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
+			if (tpSendMailIList == NULL) {
+				EndDialog(hDlg, FALSE);
+				break;
+			}
+			tpTmpMailItem = *(tpSendMailIList + 1);
+			if (tpTmpMailItem != NULL) {
+				DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_MORE),
+					hDlg, SendMoreProc, (LPARAM)tpTmpMailItem);
+			}
+			break;
+#endif
 
 		case IDC_BUTTON_ATTACH:
 			if (top_attach_item != NULL) {
@@ -5646,22 +5832,24 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						(tpTmpMailItem->Bcc != NULL && *tpTmpMailItem->Bcc != TEXT('\0'))) ? TRUE : FALSE;
 					SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, BtnFlag);
 
-					// GJC update reply-to
-					if (tpTmpMailItem->DefReplyTo == TRUE) {
-						sel = 0;
-						p = (MailBox + i)->ReplyTo;
-						if (p != NULL && *p != TEXT('\0')) {
-							int cnt = SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0);
-							for (j=0; j < cnt; j++) {
-								buf[0]=TEXT('\0');
-								SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETLBTEXT, j, (LPARAM)buf);
-								if (lstrcmpi(p, buf) == 0) {
-									sel = j;
-									break;
+					if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) != NULL) {
+						// GJC update reply-to
+						if (tpTmpMailItem->DefReplyTo == TRUE) {
+							sel = 0;
+							p = (MailBox + i)->ReplyTo;
+							if (p != NULL && *p != TEXT('\0')) {
+								int cnt = SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0);
+								for (j=0; j < cnt; j++) {
+									buf[0]=TEXT('\0');
+									SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETLBTEXT, j, (LPARAM)buf);
+									if (lstrcmpi(p, buf) == 0) {
+										sel = j;
+										break;
+									}
 								}
 							}
+							SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
 						}
-						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETCURSEL, sel, 0);
 					}
 				}
 			}
@@ -5781,31 +5969,37 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 				}
 
-				SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-				mem_free(&tpTmpMailItem->ReplyTo);
-				if (buf[0] != TEXT('\0') && lstrcmp(buf, STR_OMIT_REPLYTO) != 0) {
-					tpTmpMailItem->ReplyTo = alloc_copy_t(buf);
+				if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) == NULL) {
+					tpMailItem->Priority = tpTmpMailItem->Priority;
+					tpMailItem->ReadReceipt = tpTmpMailItem->ReadReceipt;
+					tpMailItem->DeliveryReceipt = tpTmpMailItem->DeliveryReceipt;
 				} else {
-					tpTmpMailItem->ReplyTo = NULL;
-				}
+					SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+					mem_free(&tpTmpMailItem->ReplyTo);
+					if (buf[0] != TEXT('\0') && lstrcmp(buf, STR_OMIT_REPLYTO) != 0) {
+						tpTmpMailItem->ReplyTo = alloc_copy_t(buf);
+					} else {
+						tpTmpMailItem->ReplyTo = NULL;
+					}
 
-				////////////////////////// MRP //////////////////////
-				// Get my new settings here and set them into :
-				// tpMailItem->Priority (int)
-				// tpMailItem->ReadReceipt (int - 1 = yes, 0 = No)
-				// tpMailItem->DeliveryReceipt (int - 1 = yes, 0 = No)
-				i = SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_GETCURSEL, 0, 0);
-				if (i == 0)	{
-					tpMailItem->Priority = 1;
-				} else if (i == 1) {
-					tpMailItem->Priority = 3;
-				} else if (i == 2) {
-					tpMailItem->Priority = 5;
-				}
+					////////////////////////// MRP //////////////////////
+					// Get my new settings here and set them into :
+					// tpMailItem->Priority (int)
+					// tpMailItem->ReadReceipt (int - 1 = yes, 0 = No)
+					// tpMailItem->DeliveryReceipt (int - 1 = yes, 0 = No)
+					i = SendDlgItemMessage(hDlg, IDC_PRIORITY, CB_GETCURSEL, 0, 0);
+					if (i == 0)	{
+						tpMailItem->Priority = 1;
+					} else if (i == 1) {
+						tpMailItem->Priority = 3;
+					} else if (i == 2) {
+						tpMailItem->Priority = 5;
+					}
 
-				tpMailItem->ReadReceipt = SendDlgItemMessage(hDlg, IDC_READ, BM_GETCHECK, 0, 0);
-				tpMailItem->DeliveryReceipt = SendDlgItemMessage(hDlg, IDC_DELIV, BM_GETCHECK, 0, 0);
-				////////////////////////// --- ////////////////////////
+					tpMailItem->ReadReceipt = SendDlgItemMessage(hDlg, IDC_READ, BM_GETCHECK, 0, 0);
+					tpMailItem->DeliveryReceipt = SendDlgItemMessage(hDlg, IDC_DELIV, BM_GETCHECK, 0, 0);
+					////////////////////////// --- ////////////////////////
+				}
 
 				//Address
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TO), &tpMailItem->To);
@@ -8169,12 +8363,16 @@ BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
  * EnableSortColumns - enable/disable radio buttons for sorting
  */
 BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag) {
+#ifdef _WIN32_WCE_PPC
+	EnableWindow(GetDlgItem(hDlg, IDC_TEXT_SORTCOL), EnableFlag);
+	EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SORTCOL), EnableFlag);
+#else
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM1), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM2), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM3), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM4), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SORTORDER), EnableFlag);
-
+#endif
 	return TRUE;
 }
 
