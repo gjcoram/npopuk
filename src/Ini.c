@@ -619,7 +619,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.CheckEndExecNoDelMsg = profile_get_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), 1, app_path);
 	op.TimeoutInterval = profile_get_int(GENERAL, TEXT("TimeoutInterval"), -1, app_path);
 	if (op.TimeoutInterval <= 0) {
-		op.TimeoutInterval = 180;
+		op.TimeoutInterval = 120;
 	} else if (op.Version < 2007) {
 		// value was in minutes before, now in seconds
 		op.TimeoutInterval *= 60;

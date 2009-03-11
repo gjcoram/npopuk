@@ -166,6 +166,7 @@
 #define IDC_COMMENT_OR_NAME             1006
 #define IDC_CHECK_DELATTACH             1007
 #define IDC_CHECK_APOP                  1008
+#define IDC_TEXT_READLINE               1008
 #define IDC_EDIT_READLINE               1009
 #define IDC_CHECK_CYCLIC                1009
 #define IDC_RADIO_NOSAVE                1010
