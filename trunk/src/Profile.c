@@ -797,6 +797,17 @@ BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name)
 }
 
 /*
+ * profile_find_section - check if section exists (GJC)
+ */
+BOOL profile_find_section(const TCHAR *section_name)
+{
+	if (section_find(section_name) == -1) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
  * profile_clear_section - delete all keys from profile section (GJC)
  */
 BOOL profile_clear_section(const TCHAR *section_name)

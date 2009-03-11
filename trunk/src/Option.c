@@ -18,6 +18,7 @@
 #include "jp.h"
 #include "mime.h"
 #include "multipart.h"
+#include "profile.h"
 #include "charset.h"
 #ifdef _WIN32_WCE
 #include "ppcpoom.h"
@@ -1793,6 +1794,7 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			SendMessage(hDlg, WM_SETTEXT, 0, (Type == MAILBOX_TYPE_SAVE) ?
 				(LPARAM)STR_TITLE_RENAMESBOX : (LPARAM)STR_TITLE_ADDSBOX);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_MBOXIN), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_TEMPL), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_IMPORTSBOX), FALSE);
 			SendDlgItemMessage(hDlg, IDC_RADIO_MBOXSAVE, BM_SETCHECK, BST_CHECKED, 0);
 			if (Type == MAILBOX_TYPE_SAVE) {
@@ -1800,6 +1802,7 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 		} else {
 			SendDlgItemMessage(hDlg, IDC_RADIO_MBOXIN, BM_SETCHECK, BST_CHECKED, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_MBOX_NAME), FALSE);
 		}
 		break;
 
@@ -1812,8 +1815,10 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		case IDC_RADIO_MBOXIN:
 		case IDC_RADIO_MBOXSAVE:
 		case IDC_RADIO_IMPORTSBOX:
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_TEMPL),
+				SendDlgItemMessage(hDlg, IDC_RADIO_MBOXIN, BM_GETCHECK, 0, 0));
 			EnableWindow(GetDlgItem(hDlg, IDC_MBOX_NAME), 
-				(SendDlgItemMessage(hDlg, IDC_RADIO_IMPORTSBOX, BM_GETCHECK, 0, 0) == 1) ? FALSE : TRUE);
+				SendDlgItemMessage(hDlg, IDC_RADIO_MBOXSAVE, BM_GETCHECK, 0, 0));
 			break;
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -1824,12 +1829,44 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case IDOK:
 			if (mbox != NULL) {
-				AllocGetText(GetDlgItem(hDlg, IDC_MBOX_NAME), &mbox->Name);
 				if (SendDlgItemMessage(hDlg, IDC_RADIO_IMPORTSBOX, BM_GETCHECK, 0, 0) == 1) {
 					mbox->Type = MAILBOX_IMPORT_SAVE;
 				} else {
+					AllocGetText(GetDlgItem(hDlg, IDC_MBOX_NAME), &mbox->Name);
 					mbox->Type = SendDlgItemMessage(hDlg, IDC_RADIO_MBOXSAVE, BM_GETCHECK, 0, 0);
-			
+					if (mbox->Type == 0 && SendDlgItemMessage(hDlg, IDC_CHECK_TEMPL, BM_GETCHECK, 0, 0) == 1) {
+						TCHAR fname[BUF_SIZE], tmp[BUF_SIZE];
+						*fname = TEXT('\0');
+						if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
+							profile_initialize(fname, FALSE);
+							if (profile_find_section(TEXT("Internet_Mail")) == FALSE) {
+								ErrorMessage(hDlg, STR_ERR_BAD_CONFIG);
+							} else {
+								profile_get_string(TEXT("Internet_Mail"), TEXT("Use_IMAP"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+								if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
+									ErrorMessage(hDlg, STR_ERR_NO_IMAP);
+								}
+								mem_free(&mbox->Name);
+								// strings found in example setup files
+								mbox->Name = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Window_Title"), TEXT(""), fname);
+								mbox->Server = profile_alloc_string(TEXT("Internet_Mail"), TEXT("POP_Server"), TEXT(""), fname);
+								mbox->SmtpServer = profile_alloc_string(TEXT("Internet_Mail"), TEXT("SMTP_Server"), TEXT(""), fname);
+								mbox->MailAddress = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Address"), TEXT(""), fname);
+								mbox->UserName = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Name"), TEXT(""), fname);
+								mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), TEXT(""), fname);
+								mbox->Pass = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Password"), TEXT(""), fname);
+								profile_get_string(TEXT("Internet_Mail"), TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+								if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
+									mbox->SmtpAuth = 1;
+								}
+								mbox->Port = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_Port"), 110, fname);
+								mbox->PopSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("PopSSL"), 0, fname);
+								mbox->SmtpPort = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Port"), 25, fname);
+								mbox->SmtpAuth = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Auth"), mbox->SmtpAuth, fname);
+							}
+							profile_free();
+						}
+					}
 					if (mbox->Type == 1 && (mbox->Name == NULL || *mbox->Name == TEXT('\0'))) {
 						mem_free(&mbox->Name);
 						mbox->Name = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_SAVEBOX_NONAME)+1));

@@ -28,6 +28,7 @@ int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int 
 BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path);
 BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const int num, const TCHAR *file_path);
 BOOL profile_delete_key(const TCHAR *section_name, const TCHAR *key_name);
+BOOL profile_find_section(const TCHAR *section_name);
 BOOL profile_clear_section(const TCHAR *section_name);
 
 #endif
