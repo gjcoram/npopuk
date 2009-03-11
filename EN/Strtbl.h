@@ -38,6 +38,7 @@
 #define STR_TEXT_FILTER				TEXT("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0")
 #define STR_WAVE_FILTER				TEXT("Sound Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0\0")
 #define STR_MBOX_FILTER				TEXT("MBOX Files (*.mbx)\0*.mbx\0EML Files (*.eml)\0*.eml\0nPOP Files (*.dat)\0*.dat\0All Files (*.*)\0*.*\0\0")
+#define STR_TEMPL_FILTER			TEXT("Install files (*.ins)\0*.ins\0All Files (*.*)\0*.*\0\0")
 
 // Error
 #define STR_ERR_MEMALLOC			TEXT("Memory Allocation error")
@@ -58,6 +59,8 @@
 #define STR_ERR_ADD					TEXT("Address not added")
 #define STR_ERR_POOM				TEXT("POOM failure; check \\Windows\\pimstore.dll")
 #define STR_ERR_VIEW				TEXT("Display failed")
+#define STR_ERR_BAD_CONFIG			TEXT("File does not contain an Internet_Mail configuration")
+#define STR_ERR_NO_IMAP				TEXT("IMAP not supported")
 #define STR_ERR_TOOMANYMAILBOXES	TEXT("Too many mailboxes")
 #define STR_ERR_TOOMANYFILES		TEXT("Too many files selected; try again.")
 #define STR_ERR_SELECTMAILBOX		TEXT("No account specified")
