@@ -1311,13 +1311,13 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		if (EndFlag == 0 && gSendAndQuit == FALSE 
 			&& (tpMailItem->Subject == NULL || *tpMailItem->Subject == TEXT('\0'))) {
 #ifdef _WIN32_WCE
-			if (GetSystemMetrics(SM_CXSCREEN) >= 450) { // _WIDE
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
-			} else {
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
+			int res = IDD_DIALOG_SETSEND;
+			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+				res = IDD_DIALOG_SETSEND_WIDE;
+			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+				res = IDD_DIALOG_SETSEND_SHORT;
 			}
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 #else
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 				(LPARAM)tpMailItem);
@@ -1494,7 +1494,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 static void ShowSendInfo(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
-	BOOL mkdlg;
+	int res = IDD_DIALOG_SETSEND;
 
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (tpMailItem == NULL) {
@@ -1502,23 +1502,17 @@ static void ShowSendInfo(HWND hWnd)
 	}
 #ifdef _WIN32_WCE
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-			(LPARAM)tpMailItem);
-	} else {
-		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-			(LPARAM)tpMailItem);
+		res = IDD_DIALOG_SETSEND_WIDE;
+	} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+		res = IDD_DIALOG_SETSEND_SHORT;
 	}
-#else
-	mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-		(LPARAM)tpMailItem);
 #endif
-	if (mkdlg == FALSE) {
-		return;
+	if (DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem)) {
+		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
+		SetWindowString(hWnd, tpMailItem->Subject,
+			(tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
+		SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	}
-	(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
-	SetWindowString(hWnd, tpMailItem->Subject,
-		(tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
-	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 }
 
 /*
@@ -2627,22 +2621,19 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				tpMailItem->MailBox = alloc_copy_t((MailBox + SelBox)->Name);
 			}
 		} else {
+			int res = IDD_DIALOG_SETSEND;
+
 			// Transmission information setting
 			_SetForegroundWindow(hWnd);
-
+	
 #ifdef _WIN32_WCE
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
-			} else {
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_SHORT), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
+				res = IDD_DIALOG_SETSEND_WIDE;
+			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+				res = IDD_DIALOG_SETSEND_SHORT;
 			}
-#else
-			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-				(LPARAM)tpMailItem);
 #endif
-			if (mkdlg == FALSE) {
+			if (FALSE == DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem)) {
 				item_free(&tpMailItem, 1);
 				return EDIT_NONEDIT;
 			}
@@ -2676,12 +2667,14 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 
 		//Transmission information setting
 #ifdef _WIN32_WCE
-		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-				(LPARAM)tpMailItem);
-		} else {
-			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-				(LPARAM)tpMailItem);
+		{
+			int res = IDD_DIALOG_SETSEND;
+			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+				res = IDD_DIALOG_SETSEND_WIDE;
+			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+				res = IDD_DIALOG_SETSEND_SHORT;
+			}
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 		}
 #else
 		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
@@ -2744,13 +2737,13 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		} else {
 			//Transmission information setting
 #ifdef _WIN32_WCE
+			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
-			} else {
-				mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-					(LPARAM)tpMailItem);
+				res = IDD_DIALOG_SETSEND_WIDE;
+			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+				res = IDD_DIALOG_SETSEND_SHORT;
 			}
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 #else
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 				(LPARAM)tpMailItem);

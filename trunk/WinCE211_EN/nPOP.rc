@@ -311,11 +311,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Recv"
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "&Lines to be downloaded:",IDC_STATIC,5,8,85,10
-    EDITTEXT        IDC_EDIT_READLINE,95,5,29,15,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,23,150,10
+                    WS_TABSTOP,5,5,150,10
+    LTEXT           "&Lines to be downloaded:",IDC_EDIT_READLINE,15,20,85,10
+    EDITTEXT        IDC_EDIT_READLINE,100,18,29,15,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,36,120,10
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
@@ -612,7 +612,7 @@ BEGIN
 END
 
 IDD_DIALOG_SAVEATTACH DIALOG DISCARDABLE  0, 0, 162, 121
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Save Attachments"
 FONT 8, "Tahoma"
 BEGIN

@@ -2660,6 +2660,7 @@ BOOL SetMailBoxOption(HWND hWnd)
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	int newlsm = 0;
+	BOOL enable;
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* ÉRÉìÉgÉçÅ[ÉãÇÃèâä˙âª */
@@ -2681,6 +2682,7 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			break;
 		}
 
+		EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), !op.ListDownload);
 		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), !op.ListDownload);
 		break;
 
@@ -2696,8 +2698,9 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #endif
 
 		case IDC_CHECK_LISTDOWNLOAD:
-			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE),
-				!SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0));
+			enable = !SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable);
 			break;
 
 		case IDOK:
@@ -5060,7 +5063,11 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		tpMailItem = (MAILITEM *)lParam;
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		hListView = GetDlgItem(hDlg, IDC_LIST_FILE);
+#ifdef _WIN32_WCE
+		ListView_AddColumn(hListView, LVCFMT_LEFT, 200, STR_ATTACH_NAME, 0);
+#else
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 300, STR_ATTACH_NAME, 0);
+#endif
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 50, STR_ATTACH_SIZE, 1);
 		for (i = 0; i < MultiPartCnt; i++) {
 			if (i != MultiPartTextIndex) {
@@ -5755,34 +5762,36 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
 							mb_autobcc = (MailBox + mb)->MailAddress;
 						}
-						if (lstrcmp(mb_autobcc, tpTmpMailItem->Bcc) == 0) {
-							mem_free(&tpTmpMailItem->Bcc);
-							tpTmpMailItem->Bcc = NULL;
-						} else {
-							p = tpTmpMailItem->Bcc;
-							len = lstrlen(p) + 1;
-							while (*p != TEXT('\0')) {
-								if (*p == TEXT(',')) len +=3;
-								p++;
-							}
-							tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-							if (tmp != NULL) {
-								q = tmp;
-								*q = TEXT('\0');
+						if (mb_autobcc != NULL) {
+							if (lstrcmp(mb_autobcc, tpTmpMailItem->Bcc) == 0) {
+								mem_free(&tpTmpMailItem->Bcc);
+								tpTmpMailItem->Bcc = NULL;
+							} else {
 								p = tpTmpMailItem->Bcc;
+								len = lstrlen(p) + 1;
 								while (*p != TEXT('\0')) {
-									p = str_cpy_f_t(buf, p, TEXT(','));
-									if (lstrcmp(mb_autobcc, buf) == 0) {
-										found = TRUE;
-									} else {
-										if (q == tmp) {
-											q = str_join_t(q, buf, (TCHAR *)-1);
+									if (*p == TEXT(',')) len +=3;
+									p++;
+								}
+								tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+								if (tmp != NULL) {
+									q = tmp;
+									*q = TEXT('\0');
+									p = tpTmpMailItem->Bcc;
+									while (*p != TEXT('\0')) {
+										p = str_cpy_f_t(buf, p, TEXT(','));
+										if (lstrcmp(mb_autobcc, buf) == 0) {
+											found = TRUE;
 										} else {
-											q = str_join_t(q, TEXT(",\r\n "), buf, (TCHAR *)-1);
+											if (q == tmp) {
+												q = str_join_t(q, buf, (TCHAR *)-1);
+											} else {
+												q = str_join_t(q, TEXT(",\r\n "), buf, (TCHAR *)-1);
+											}
 										}
-									}
-									while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
-										p++;
+										while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
+											p++;
+										}
 									}
 								}
 							}
@@ -5800,29 +5809,31 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (mb_autobcc == NULL || *mb_autobcc == TEXT('\0')) {
 							mb_autobcc = (MailBox + i)->MailAddress;
 						}
-						if (tpTmpMailItem->Bcc == NULL) {
-							tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
-						} else {
-							BOOL found = FALSE;
-							p = tpTmpMailItem->Bcc;
-							while (*p != TEXT('\0')) {
-								p = str_cpy_f_t(buf, p, TEXT(','));
-								if (lstrcmp(mb_autobcc, buf) == 0) {
-									found = TRUE;
-									break;
-								}
-								while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
-									p++;
-								}
+						if (mb_autobcc != NULL && *mb_autobcc != TEXT('\0')) {
+							if (tpTmpMailItem->Bcc == NULL) {
+								tpTmpMailItem->Bcc = alloc_copy_t(mb_autobcc);
+							} else {
+								BOOL found = FALSE;
+								p = tpTmpMailItem->Bcc;
+								while (*p != TEXT('\0')) {
+									p = str_cpy_f_t(buf, p, TEXT(','));
+									if (lstrcmp(mb_autobcc, buf) == 0) {
+										found = TRUE;
+										break;
+									}
+									while (*p == TEXT(' ') || *p == TEXT('\r') || *p == TEXT('\n')) {
+										p++;
+									}
 
-							}
-							if (found == FALSE) {
-								len = lstrlen(tpTmpMailItem->Bcc) + lstrlen(mb_autobcc) + 5;
-								tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-								if (tmp != NULL) {
-									wsprintf(tmp, TEXT("%s,\r\n %s"), tpTmpMailItem->Bcc, mb_autobcc);
-									mem_free(&tpTmpMailItem->Bcc);
-									tpTmpMailItem->Bcc = tmp;
+								}
+								if (found == FALSE) {
+									len = lstrlen(tpTmpMailItem->Bcc) + lstrlen(mb_autobcc) + 5;
+									tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+									if (tmp != NULL) {
+										wsprintf(tmp, TEXT("%s,\r\n %s"), tpTmpMailItem->Bcc, mb_autobcc);
+										mem_free(&tpTmpMailItem->Bcc);
+										tpTmpMailItem->Bcc = tmp;
+									}
 								}
 							}
 						}

@@ -3142,13 +3142,14 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 
 	if (SelBox == MAILBOX_SEND && ReplyFlag == EDIT_REPLY) {
 #ifdef _WIN32_WCE
+		int res = IDD_DIALOG_SETSEND;
 		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND_WIDE), hWnd, SetSendProc,
-				(LPARAM)ListView_GetlParam(hListView, i));
-		} else {
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-				(LPARAM)ListView_GetlParam(hListView, i));
+			res = IDD_DIALOG_SETSEND_WIDE;
+		} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+			res = IDD_DIALOG_SETSEND_SHORT;
 		}
+		DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc,
+				(LPARAM)ListView_GetlParam(hListView, i));
 #else
 		DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 			(LPARAM)ListView_GetlParam(hListView, i));

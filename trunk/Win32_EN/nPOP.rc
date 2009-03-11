@@ -698,7 +698,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Recv"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "&Lines to be downloaded:",IDC_STATIC,5,12,95,10
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,5,12,95,10
     EDITTEXT        IDC_EDIT_READLINE,101,10,40,12,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "&Download entire body when checking",
