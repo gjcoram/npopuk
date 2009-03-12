@@ -43,7 +43,7 @@ extern BOOL SaveBoxesLoaded;
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
 static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret);
-static void ini_check_window_pos(RECT *rect, int def_w, int def_l);
+static void ini_check_window_pos(RECT *rect, RECT *scr_rect, int def_w, int def_l);
 
 /*
  * ini_start_auth_check - Check Password
@@ -188,6 +188,7 @@ BOOL ini_read_setting(HWND hWnd)
 {
 	DWORD DirInfo;
 	HDC hdc;
+	RECT scr_rect;
 	TCHAR app_path[BUF_SIZE];
 	TCHAR buf[BUF_SIZE];
 	TCHAR key_buf[BUF_SIZE];
@@ -282,7 +283,27 @@ BOOL ini_read_setting(HWND hWnd)
 		op.osPlatformId = os_info.dwPlatformId;
 		op.osMajorVer = os_info.dwMajorVersion;
 		op.osMinorVer = os_info.dwMinorVersion;
+
+		memset (&scr_rect, 0, sizeof (RECT));
+#if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
+		if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
+			// Win98 or later
+			SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&scr_rect, 0);
+		} else
+#endif
+		{
+			scr_rect.left   = 0;
+			scr_rect.top    = 0;
+			scr_rect.right  = GetSystemMetrics(SM_CXSCREEN);
+			scr_rect.bottom = GetSystemMetrics(SM_CYSCREEN);
+#ifdef _WIN32_WCE
+			scr_rect.top	 =  MENU_HEIGHT;
+			scr_rect.right  -= 5; // so resize border is visible
+			scr_rect.bottom -= MENU_HEIGHT; // ignoring sip status
+#endif
+		}
 	}
+
 
 #ifdef _DEBUG
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 1, app_path);
@@ -317,32 +338,32 @@ BOOL ini_read_setting(HWND hWnd)
 	op.DateFormat = profile_alloc_string(GENERAL, TEXT("DateFormat"), STR_DEFAULT_DATEFORMAT, app_path);
 	op.TimeFormat = profile_alloc_string(GENERAL, TEXT("TimeFormat"), STR_DEFAULT_TIMEFORMAT, app_path);
 
-#ifndef _WIN32_WCE
-	op.MainRect.left = profile_get_int(GENERAL, TEXT("left"), 40, app_path);
-	op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), 40, app_path);
-	op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), 560, app_path);
-	op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), 320, app_path);
-	ini_check_window_pos(&op.MainRect, 560, 320);
-#endif
-
 	{
 		int top, left;
 #ifdef _WIN32_WCE
 		top = 0; left = 0;
 #else
+		top = (scr_rect.bottom - scr_rect.top) / 4 + scr_rect.top;
+		left = (scr_rect.right - scr_rect.left) / 4 + scr_rect.left;
+		op.MainRect.left = profile_get_int(GENERAL, TEXT("left"), left, app_path);
+		op.MainRect.top = profile_get_int(GENERAL, TEXT("top"), top, app_path);
+		op.MainRect.right = profile_get_int(GENERAL, TEXT("right"), left+560, app_path);
+		op.MainRect.bottom = profile_get_int(GENERAL, TEXT("bottom"), top+320, app_path);
+		ini_check_window_pos(&op.MainRect, &scr_rect, 560, 320);
+
 		top = op.MainRect.top; left = op.MainRect.left;
 #endif
 		op.AddrRect.left = profile_get_int(GENERAL, TEXT("AddressLeft"), left, app_path);
 		op.AddrRect.top = profile_get_int(GENERAL, TEXT("AddressTop"), top, app_path);
 		op.AddrRect.right = profile_get_int(GENERAL, TEXT("AddressRight"), left+400, app_path);
 		op.AddrRect.bottom = profile_get_int(GENERAL, TEXT("AddressBottom"), top+300, app_path);
-		ini_check_window_pos(&op.AddrRect, 400, 300);
+		ini_check_window_pos(&op.AddrRect, &scr_rect, 400, 300);
 
 		op.MblRect.left = profile_get_int(GENERAL, TEXT("MblLeft"), left, app_path);
 		op.MblRect.top = profile_get_int(GENERAL, TEXT("MblTop"), top, app_path);
 		op.MblRect.right = profile_get_int(GENERAL, TEXT("MblRight"), left+400, app_path);
 		op.MblRect.bottom = profile_get_int(GENERAL, TEXT("MblBottom"), top+300, app_path);
-		ini_check_window_pos(&op.MblRect, 400, 300);
+		ini_check_window_pos(&op.MblRect, &scr_rect, 400, 300);
 	}
 
 	op.ShowTrayIcon = profile_get_int(GENERAL, TEXT("ShowTrayIcon"), 1, app_path);
@@ -464,13 +485,13 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ViewRect.top = profile_get_int(GENERAL, TEXT("viewtop"), 0, app_path);
 	op.ViewRect.right = profile_get_int(GENERAL, TEXT("viewright"), 450, app_path);
 	op.ViewRect.bottom = profile_get_int(GENERAL, TEXT("viewbottom"), 400, app_path);
-	ini_check_window_pos(&op.ViewRect, 450, 400);
+	ini_check_window_pos(&op.ViewRect, &scr_rect, 450, 400);
 
 	op.EditRect.left = profile_get_int(GENERAL, TEXT("editleft"), 0, app_path);
 	op.EditRect.top = profile_get_int(GENERAL, TEXT("edittop"), 0, app_path);
 	op.EditRect.right = profile_get_int(GENERAL, TEXT("editright"), 450, app_path);
 	op.EditRect.bottom = profile_get_int(GENERAL, TEXT("editbottom"), 400, app_path);
-	ini_check_window_pos(&op.EditRect, 450, 400);
+	ini_check_window_pos(&op.EditRect, &scr_rect, 450, 400);
 #endif
 
 	op.ShowHeader = profile_get_int(GENERAL, TEXT("ShowHeader"), 0, app_path);
@@ -1722,66 +1743,44 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 /*
  * ini_check_window_pos - check window isn't outside current screen (GJC)
  */
-static void ini_check_window_pos(RECT *the_rect, int def_w, int def_l)
+static void ini_check_window_pos(RECT *the_rect, RECT *scr_rect, int def_w, int def_l)
 {
-	static RECT scr_rect;
 	int minwl = 10;
-	memset (&scr_rect, 0, sizeof (RECT));
-	// use "static" so we only have to make the system calls once
-	if (scr_rect.top == 0 && scr_rect.bottom == 0) {
-#if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
-		if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
-			// Win98 or later
-			SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&scr_rect, 0);
-		} else
-#endif
-		{
-			scr_rect.left   = 0;
-			scr_rect.top    = 0;
-			scr_rect.right  = GetSystemMetrics(SM_CXSCREEN);
-			scr_rect.bottom = GetSystemMetrics(SM_CYSCREEN);
-#ifdef _WIN32_WCE
-			scr_rect.top	 =  MENU_HEIGHT;
-			scr_rect.right  -= 5; // so resize border is visible
-			scr_rect.bottom -= MENU_HEIGHT; // ignoring sip status
-#endif
-		}
-	}
 
-	if (the_rect->left < scr_rect.left) {
-		the_rect->right += (scr_rect.left - the_rect->left);
-		the_rect->left = scr_rect.left;
-	} else if (the_rect->left > scr_rect.right) {
+	if (the_rect->left < scr_rect->left) {
+		the_rect->right += (scr_rect->left - the_rect->left);
+		the_rect->left = scr_rect->left;
+	} else if (the_rect->left > scr_rect->right) {
 		the_rect->right -= the_rect->left;
 		the_rect->left = 0;
 	}
 	if (the_rect->right < the_rect->left + minwl) {
 		the_rect->right = the_rect->left + def_w;
 	}
-	if (the_rect->right > scr_rect.right) {
-		the_rect->left += (scr_rect.right - the_rect->right);
-		if (the_rect->left < scr_rect.left) {
-			the_rect->left = scr_rect.left;
+	if (the_rect->right > scr_rect->right) {
+		the_rect->left += (scr_rect->right - the_rect->right);
+		if (the_rect->left < scr_rect->left) {
+			the_rect->left = scr_rect->left;
 		}
-		the_rect->right = scr_rect.right;
+		the_rect->right = scr_rect->right;
 	}
 
-	if (the_rect->top < scr_rect.top) {
-		the_rect->bottom += (scr_rect.top - the_rect->top);
-		the_rect->top = scr_rect.top;
-	} else if (the_rect->top > scr_rect.bottom) {
+	if (the_rect->top < scr_rect->top) {
+		the_rect->bottom += (scr_rect->top - the_rect->top);
+		the_rect->top = scr_rect->top;
+	} else if (the_rect->top > scr_rect->bottom) {
 		the_rect->bottom -= the_rect->top;
 		the_rect->top = 0;
 	}
 	if (the_rect->bottom < the_rect->top + minwl) {
 		the_rect->bottom = the_rect->top + def_l;
 	}
-	if (the_rect->bottom > scr_rect.bottom) {
-		the_rect->top += (scr_rect.bottom - the_rect->bottom);
-		if (the_rect->top < scr_rect.top) {
-			the_rect->top = scr_rect.top;
+	if (the_rect->bottom > scr_rect->bottom) {
+		the_rect->top += (scr_rect->bottom - the_rect->bottom);
+		if (the_rect->top < scr_rect->top) {
+			the_rect->top = scr_rect->top;
 		}
-		the_rect->bottom = scr_rect.bottom;
+		the_rect->bottom = scr_rect->bottom;
 	}
 }
 
