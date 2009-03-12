@@ -28,6 +28,7 @@
 #ifndef _WIN32_WCE
 #define sizeof_PROPSHEETHEADER		40	//of end
 #else
+#define IDC_CB						2000
 #define sizeof_PROPSHEETHEADER		sizeof(PROPSHEETHEADER)
 #endif
 

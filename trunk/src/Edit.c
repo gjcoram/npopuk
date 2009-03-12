@@ -1314,8 +1314,10 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 				res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 				res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 			}
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 #else
@@ -1503,8 +1505,10 @@ static void ShowSendInfo(HWND hWnd)
 #ifdef _WIN32_WCE
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 	} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 		res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 	}
 #endif
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem)) {
@@ -2629,8 +2633,10 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 #ifdef _WIN32_WCE
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 				res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 				res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 			}
 #endif
 			if (FALSE == DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem)) {
@@ -2671,8 +2677,10 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 				res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 				res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 			}
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 		}
@@ -2740,8 +2748,10 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 				res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 				res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 			}
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 #else

@@ -3157,8 +3157,10 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 		int res = IDD_DIALOG_SETSEND;
 		if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 			res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
 		} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
 			res = IDD_DIALOG_SETSEND_SHORT;
+#endif
 		}
 		DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc,
 				(LPARAM)ListView_GetlParam(hListView, i));
