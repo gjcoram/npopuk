@@ -37,6 +37,7 @@
 #define IDI_ICON_SEND                   130
 #define IDR_ACCELERATOR_EDIT            131
 #define IDR_ACCELERATOR_VIEW            132
+#define IDD_DIALOG_STARTCONFIG          133
 #define IDD_DIALOG_SMTP                 134
 #define IDD_DIALOG_SIG                  135
 #define IDD_DIALOG_OPTION_FWD           136
@@ -266,7 +267,6 @@
 #define IDC_BUTTON_SETAUTH              1084
 #define IDC_BUTTON_SETSSL               1085
 #define IDC_TEXT_SEARCH                 1086
-#define IDC_CHECK_TMPPASS               1086
 #define IDC_STATIC_MAILCNT              1087
 #define IDC_STATIC_MAILSIZE             1088
 #define IDC_COMBO_SSLTYPE               1089
@@ -290,6 +290,8 @@
 #define IDC_DELIV                       1102
 #define IDC_READ                        1103
 #define IDC_VISIT_WEB                   1104
+#define IDC_CHECK_TMPPASS               1105
+#define IDC_CHECK_INIPASS               1106
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202

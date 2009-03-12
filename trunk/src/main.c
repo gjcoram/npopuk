@@ -75,7 +75,7 @@ static TCHAR *InitialAccount = NULL;
 BOOL gSendAndQuit = FALSE;
 BOOL gCheckAndQuit = FALSE;
 BOOL gDoingQuit = FALSE;
-BOOL first_start;							// 初回起動フラグ
+BOOL first_start = FALSE;					// 初回起動フラグ
 BOOL SaveBoxesLoaded = FALSE;
 BOOL PPCFlag;								// PsPCフラグ
 #ifndef _WIN32_WCE
@@ -378,11 +378,6 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
 	trunc_to_dirname(AppDir);
 
-#ifdef _DEBUG 
-	// Put command line prefix in the log file
-	wsprintf(fname,TEXT("cmd: %.248s%s"), lpCmdLine, TEXT("\r\n"));
-	log_save(fname);
-#endif
 	for(p = lpCmdLine; p && *p == TEXT(' '); p++); // remove spaces
 
 	// command-line options should preceed any mailto: arguments
@@ -2757,7 +2752,16 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 				SetMailMenu(hWnd);
 				return FALSE;
 			}
-			if (gPassSt == 1) {
+			if (gPassSt >= 10) {
+				//Save in INI
+				if (tpMailBox->AuthUserPass == 1) {
+					mem_free(&tpMailBox->SmtpPass);
+					tpMailBox->SmtpPass = alloc_copy_t(g_Pass);
+				} else {
+					mem_free(&tpMailBox->Pass);
+					tpMailBox->Pass = alloc_copy_t(g_Pass);
+				}
+			} else if (gPassSt == 1) {
 				//Temporarily the setting
 				if (tpMailBox->AuthUserPass == 1) {
 					tpMailBox->SmtpTmpPass = alloc_copy_t(g_Pass);
@@ -2825,7 +2829,11 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 			g_soc = -1;
 			return FALSE;
 		}
-		if (gPassSt == 1) {
+		if (gPassSt >= 10) {
+			//Save in INI
+			mem_free(&tpMailBox->Pass);
+			tpMailBox->Pass = alloc_copy_t(g_Pass);
+		} else if (gPassSt == 1) {
 			//Temporarily the setting
 			tpMailBox->TmpPass = alloc_copy_t(g_Pass);
 		}
@@ -3012,7 +3020,11 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 			g_soc = -1;
 			return FALSE;
 		}
-		if (gPassSt == 1) {
+		if (gPassSt >= 10) {
+			//Save in INI
+			mem_free(&tpMailBox->Pass);
+			tpMailBox->Pass = alloc_copy_t(g_Pass);
+		} else if (gPassSt == 1) {
 			//Temporarily the setting
 			tpMailBox->TmpPass = alloc_copy_t(g_Pass);
 		}
@@ -4097,6 +4109,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		SwitchCursor(TRUE);
 
+		if (first_start == TRUE) {
+			ShowWindow(hWnd, SW_SHOW);
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_STARTCONFIG), hWnd,
+				StartConfigProc, 0) == FALSE) {
+				first_start = -1;
+				save_flag = TRUE;
+				DestroyWindow(hWnd);
+				break;
+			}
+			SetMailBoxOption(hWnd);
+			ini_save_setting(hWnd, FALSE, FALSE, NULL);
+		}
+
 		//of control inside window Setting
 		TrayIcon_Main = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_NOCHECK),
 			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
@@ -4108,19 +4133,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
-		// 自動チェック用タイマーの起動
+		if (first_start == TRUE) {
+			break;
+		}
+
+		// timer for auto-check at start-up
 		if (op.AutoCheck == 1) {
 			SetTimer(hWnd, ID_AUTOCHECK_TIMER, AUTOCHECKTIME, NULL);
 		}
 
-		//of timer for automatic operation check At the time of the first starting
-		if (first_start == TRUE) {
-			ShowWindow(hWnd, SW_SHOW);
-			SetMailBoxOption(hWnd);
-			ini_save_setting(hWnd, FALSE, FALSE, NULL);
-			break;
-		}
-		
 		// 起動時チェックの開始
 		if (op.StartCheck == 1 && gSendAndQuit == FALSE) {
 			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_ALLCHECK, 0);
@@ -4915,16 +4936,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Version information
 		case ID_MENUITEM_ABOUT:
-	///////////// MRP /////////////////////
+			///////////// MRP /////////////////////
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), NULL, AboutBoxProc, 0);
-	///////////// --- /////////////////////
+			///////////// --- /////////////////////
 			break;
 
-	///////////// MRP /////////////////////
+		///////////// MRP /////////////////////
 		case ID_MENUITEM_SAVEALL:
 			SaveWindow(hWnd, FALSE, FALSE, TRUE);
 			break;
-	///////////// --- /////////////////////
+		///////////// --- /////////////////////
 
 		case ID_MENUITEM_BACKUP:
 			if (g_soc == -1) {
@@ -6362,19 +6383,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SipShowIM(SIPF_OFF);
 #endif
 
-	//of main window From resource pop rise menu load
-	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
-	hMainPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MAINPOP));
-	hViewPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_VIEWPOP));
-	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
-	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
-#ifdef _WIN32_WCE
-	hEditPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDITPOP));
-#endif
-#ifdef _WIN32_WCE_PPC
-	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
-#endif
-
 	//Window class register
 	if (!InitApplication(hInstance) || !View_InitApplication(hInstance)
 		|| !Edit_InitApplication(hInstance)) {
@@ -6391,17 +6399,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
-		DestroyMenu(hPOPUP);
-		DestroyMenu(hMainPop);
-		DestroyMenu(hViewPop);
-		DestroyMenu(hMBPOPUP);
-		DestroyMenu(hADPOPUP);
-#ifdef _WIN32_WCE
-		DestroyMenu(hEditPop);
-#endif
-#ifdef _WIN32_WCE_PPC
-		DestroyMenu(hEDITPOPUP);
-#endif
 		ErrorMessage(NULL, STR_ERR_INIT);
 		return 0;
 	}
@@ -6432,20 +6429,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
-		DestroyMenu(hPOPUP);
-		DestroyMenu(hMainPop);
-		DestroyMenu(hViewPop);
-		DestroyMenu(hMBPOPUP);
-		DestroyMenu(hADPOPUP);
-#ifdef _WIN32_WCE
-		DestroyMenu(hEditPop);
-#endif
-#ifdef _WIN32_WCE_PPC
-		DestroyMenu(hEDITPOPUP);
-#endif
-		ErrorMessage(NULL, STR_ERR_INIT);
+		if (first_start != -1) {
+			ErrorMessage(NULL, STR_ERR_INIT);
+		}
 		return 0;
 	}
+
+	//of main window From resource pop rise menu load
+	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	hMainPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MAINPOP));
+	hViewPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_VIEWPOP));
+	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
+	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
+#ifdef _WIN32_WCE
+	hEditPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDITPOP));
+#endif
+#ifdef _WIN32_WCE_PPC
+	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
+#endif
 
 	//From resource accelerator load
 	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));

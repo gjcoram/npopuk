@@ -111,6 +111,7 @@ static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, int ListId);
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
+static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos);
@@ -1452,6 +1453,14 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_GBLFILTER), SW_HIDE);
 		}
 		SetFilterList(GetDlgItem(hDlg, IDC_LIST_FILTER));
+#ifdef _WIN32_WCE_PPC
+		i = GetSystemMetrics(SM_CXSCREEN);
+		if (i > 250) {
+			MoveWindow(hListView, 0, 20, i-20, 117, TRUE);
+			MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_UP), i-15, 30, 15, 30, TRUE);
+			MoveWindow(GetDlgItem(hDlg, IDC_BUTTON_DOWN), i-15, 90, 15, 30, TRUE);
+		}
+#endif
 		break;
 
 #ifndef _WIN32_WCE
@@ -1764,6 +1773,57 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 /*
+ * GetConfigFile - open and parse internet mail configuration file
+ */
+static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
+{
+	BOOL ret = TRUE;
+	TCHAR fname[BUF_SIZE], tmp[BUF_SIZE];
+
+	*fname = TEXT('\0');
+	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
+		profile_initialize(fname, FALSE);
+		if (profile_find_section(TEXT("Internet_Mail")) == FALSE) {
+			ErrorMessage(hDlg, STR_ERR_BAD_CONFIG);
+			ret = FALSE;
+		} else {
+			profile_get_string(TEXT("Internet_Mail"), TEXT("Use_IMAP"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
+				ErrorMessage(hDlg, STR_ERR_NO_IMAP);
+			}
+			mem_free(&mbox->Name);
+			// strings found in example setup files
+			mbox->Name = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Window_Title"), TEXT(""), fname);
+			mbox->Server = profile_alloc_string(TEXT("Internet_Mail"), TEXT("POP_Server"), TEXT(""), fname);
+			mbox->SmtpServer = profile_alloc_string(TEXT("Internet_Mail"), TEXT("SMTP_Server"), TEXT(""), fname);
+			mbox->MailAddress = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Address"), TEXT(""), fname);
+			mbox->UserName = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Name"), TEXT(""), fname);
+			mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), TEXT(""), fname);
+			mbox->Pass = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Password"), TEXT(""), fname);
+			profile_get_string(TEXT("Internet_Mail"), TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
+				mbox->SmtpAuth = 1;
+			}
+			mbox->Port = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_Port"), 110, fname);
+			mbox->PopSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_SSL"), 0, fname);
+			profile_get_string(TEXT("Internet_Mail"), TEXT("POP_RETR"), TEXT("Yes"), tmp, BUF_SIZE-1, fname);
+			if (str_cmp_ni_t(tmp, TEXT("No"), 2) == 0) {
+				mbox->NoRETR = 1;
+			}
+			mbox->NoRETR = profile_get_int(TEXT("Internet_Mail"), TEXT("NoRetr"), mbox->NoRETR, fname);
+			mbox->SmtpPort = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Port"), 25, fname);
+			mbox->SmtpSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_SSL"), 0, fname);
+			mbox->SmtpAuth = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Auth"), mbox->SmtpAuth, fname);
+		}
+		profile_free();
+	} else {
+		mbox->Type = -1;
+		ret = FALSE;
+	}
+	return ret;
+}
+
+/*
  * MboxTypeProc - set type: Account or SaveBox (GJC)
 */
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1835,37 +1895,7 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					AllocGetText(GetDlgItem(hDlg, IDC_MBOX_NAME), &mbox->Name);
 					mbox->Type = SendDlgItemMessage(hDlg, IDC_RADIO_MBOXSAVE, BM_GETCHECK, 0, 0);
 					if (mbox->Type == 0 && SendDlgItemMessage(hDlg, IDC_CHECK_TEMPL, BM_GETCHECK, 0, 0) == 1) {
-						TCHAR fname[BUF_SIZE], tmp[BUF_SIZE];
-						*fname = TEXT('\0');
-						if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
-							profile_initialize(fname, FALSE);
-							if (profile_find_section(TEXT("Internet_Mail")) == FALSE) {
-								ErrorMessage(hDlg, STR_ERR_BAD_CONFIG);
-							} else {
-								profile_get_string(TEXT("Internet_Mail"), TEXT("Use_IMAP"), TEXT("No"), tmp, BUF_SIZE-1, fname);
-								if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
-									ErrorMessage(hDlg, STR_ERR_NO_IMAP);
-								}
-								mem_free(&mbox->Name);
-								// strings found in example setup files
-								mbox->Name = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Window_Title"), TEXT(""), fname);
-								mbox->Server = profile_alloc_string(TEXT("Internet_Mail"), TEXT("POP_Server"), TEXT(""), fname);
-								mbox->SmtpServer = profile_alloc_string(TEXT("Internet_Mail"), TEXT("SMTP_Server"), TEXT(""), fname);
-								mbox->MailAddress = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Address"), TEXT(""), fname);
-								mbox->UserName = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Name"), TEXT(""), fname);
-								mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), TEXT(""), fname);
-								mbox->Pass = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Password"), TEXT(""), fname);
-								profile_get_string(TEXT("Internet_Mail"), TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1, fname);
-								if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
-									mbox->SmtpAuth = 1;
-								}
-								mbox->Port = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_Port"), 110, fname);
-								mbox->PopSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("PopSSL"), 0, fname);
-								mbox->SmtpPort = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Port"), 25, fname);
-								mbox->SmtpAuth = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Auth"), mbox->SmtpAuth, fname);
-							}
-							profile_free();
-						}
+						GetConfigFile(hDlg, mbox);
 					}
 					if (mbox->Type == 1 && (mbox->Name == NULL || *mbox->Name == TEXT('\0'))) {
 						mem_free(&mbox->Name);
@@ -2592,6 +2622,44 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 
 			EndDialog(hDlg, TRUE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
+ * StartConfigProc
+ */
+BOOL CALLBACK StartConfigProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL ret = TRUE;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		SetControlFont(hDlg);
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+
+		case IDOK:
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_TEMPL, BM_GETCHECK, 0, 0)) {
+				ret = GetConfigFile(hDlg, MailBox + MAILBOX_USER);
+			}
+			EndDialog(hDlg, ret);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
 			break;
 		}
 		break;
@@ -3976,6 +4044,7 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		if (gPassSt == 0) {
 			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TMPPASS), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_INIPASS), SW_HIDE);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_SETCHECK, 1, 0);
 		}
@@ -4002,6 +4071,11 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #endif
 
+		case IDC_CHECK_TMPPASS:
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INIPASS),
+				SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0));
+			break;
+
 		case IDOK:
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &g_Pass);
 			if (gPassSt == 0) {
@@ -4010,7 +4084,8 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 			} else {
-				gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0);
+				gPassSt = SendDlgItemMessage(hDlg, IDC_CHECK_TMPPASS, BM_GETCHECK, 0, 0)
+					+ 10 * SendDlgItemMessage(hDlg, IDC_CHECK_INIPASS, BM_GETCHECK, 0, 0);
 			}
 			PassWnd = NULL;
 			EndDialog(hDlg, TRUE);
