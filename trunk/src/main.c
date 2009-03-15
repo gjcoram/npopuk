@@ -4120,6 +4120,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				DestroyWindow(hWnd);
 				break;
 			}
+			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			SetMailBoxOption(hWnd);
 			ini_save_setting(hWnd, FALSE, FALSE, NULL);
 		}
@@ -5494,6 +5495,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Reply
 		// (for SENDBOX, this menuitem ID is associated with "Property")
 		case ID_MENUITEM_REMESSEGE:
+		case ID_MENUITEM_PROP:
 			ReMessageItem(hWnd, EDIT_REPLY);
 			break;
 
