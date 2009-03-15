@@ -154,6 +154,12 @@
 #define IDC_REPLACE_ALL                 275
 #define IDC_REPLACE_AGAIN               276
 #define IDC_FIND                        277
+#define IDC_FILTER_ITEM1                280
+#define IDC_FILTER_TEXT1                281
+#define IDC_FILTER_ITEM2                282
+#define IDC_FILTER_TEXT2                283
+#define IDC_FILTER_MORE                 284
+#define IDC_FILTER_BACK                 285
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451

@@ -1381,7 +1381,11 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 					str_cmp_ni((*(vMultiPart + k))->ContentType, "text/html", tstrlen("text/html")) == 0) {
 					TCHAR *str;
 					if (tpMailItem->Download == FALSE && (*(vMultiPart + k))->ePos == NULL) {
-						str = STR_HTML_PARTIAL;
+						if ((MailBox+vSelBox)->Type == MAILBOX_TYPE_SAVE) {
+							str = STR_HTML_PARTIAL_SBOX;
+						} else {
+							str = STR_HTML_PARTIAL;
+						}
 					} else {
 						str = STR_HTML_COMPLETE;
 					}
@@ -1391,6 +1395,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 						mem_free(&buf);
 						buf = p;
 					}
+					break;
 				}
 			}
 		}

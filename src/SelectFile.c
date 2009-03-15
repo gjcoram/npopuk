@@ -647,6 +647,9 @@ static BOOL CALLBACK SelectFileDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		if (((LV_KEYDOWN *)lParam)->wVKey == VK_BACK) {
 			SendMessage(hDlg, WM_COMMAND, IDC_BUTTON_UP, 0);
 			break;
+		} else if (((LV_KEYDOWN *)lParam)->wVKey == VK_RETURN) {
+			SendMessage(hDlg, WM_COMMAND, IDOK, 0);
+			break;
 		}
 		break;
 

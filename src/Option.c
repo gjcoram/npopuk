@@ -923,6 +923,9 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	TCHAR *p, *nptr;
 	int i, j, len, lenc, lenm;
 	BOOL enabled = TRUE, is_copy = FALSE, is_move = FALSE;
+#ifdef _WIN32_WCE_PPC
+	int show = SW_SHOW, hide = SW_HIDE;
+#endif
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -964,6 +967,30 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 #endif
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_FILTER_FWDADDR),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+
+#ifdef _WIN32_WCE_PPC
+		ShowWindow(GetDlgItem(hDlg, IDC_FILTER_BACK), SW_HIDE);
+		if (GetSystemMetrics(SM_CYSCREEN) > 300) {
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_MORE), SW_HIDE);
+		} else {
+			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_AND), 67, 52, 45, 13, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_OR), 120, 52, 37, 13, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_UNLESS), 165, 52, 67, 13, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_ITEM2), 3, 79, 37, 16, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_COMBO_HEAD2), 58, 76, 174, 20, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_TEXT2), 3, 107, 52, 16, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_EDIT_CONTENT2), 58, 101, 174, 24, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDOK), 120, 130, 52, 22, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDCANCEL), 178, 130, 52, 22, FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_AND), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_OR), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_UNLESS), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_ITEM2), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_COMBO_HEAD2), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_TEXT2), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_CONTENT2), SW_HIDE);
+		}
 #endif
 
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
@@ -1116,6 +1143,30 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
 			}
 			break;
+
+#ifdef _WIN32_WCE_PPC
+		case IDC_FILTER_MORE:
+			show = SW_HIDE; hide = SW_SHOW;
+		case IDC_FILTER_BACK:
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_BACK), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_AND), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_OR), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_UNLESS), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_ITEM2), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_COMBO_HEAD2), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_TEXT2), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_CONTENT2), hide);
+
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_MORE), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_SBOX_OR_PRIO), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_FWDADDR), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_ITEM1), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_COMBO_HEAD1), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_TEXT1), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_CONTENT1), show);
+			break;
+#endif
 
 		case IDOK:
 			i = GetWindowLong(hDlg, GWL_USERDATA);
