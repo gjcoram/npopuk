@@ -923,7 +923,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	TCHAR *p, *nptr;
 	int i, j, len, lenc, lenm;
 	BOOL enabled = TRUE, is_copy = FALSE, is_move = FALSE;
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	int show = SW_SHOW, hide = SW_HIDE;
 #endif
 
@@ -969,10 +969,10 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
 
-#ifdef _WIN32_WCE_PPC
-		ShowWindow(GetDlgItem(hDlg, IDC_FILTER_BACK), SW_HIDE);
+#ifdef _WIN32_WCE
+		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_BACK), SW_HIDE);
 		if (GetSystemMetrics(SM_CYSCREEN) > 300) {
-			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_MORE), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MORE), SW_HIDE);
 		} else {
 			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_AND), 67, 52, 45, 13, FALSE);
 			MoveWindow(GetDlgItem(hDlg, IDC_FILTER_OR), 120, 52, 37, 13, FALSE);
@@ -1144,11 +1144,11 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			}
 			break;
 
-#ifdef _WIN32_WCE_PPC
-		case IDC_FILTER_MORE:
+#ifdef _WIN32_WCE
+		case IDC_BUTTON_MORE:
 			show = SW_HIDE; hide = SW_SHOW;
-		case IDC_FILTER_BACK:
-			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_BACK), hide);
+		case IDC_BUTTON_BACK:
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_BACK), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_AND), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_OR), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_UNLESS), hide);
@@ -1157,7 +1157,7 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_TEXT2), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_EDIT_CONTENT2), hide);
 
-			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_MORE), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MORE), show);
 			ShowWindow(GetDlgItem(hDlg, IDC_SBOX_OR_PRIO), show);
 			ShowWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), show);
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_FWDADDR), show);
@@ -2744,15 +2744,7 @@ BOOL SetMailBoxOption(HWND hWnd)
 	psp.hInstance = hInst;
 
 	// POP
-#if defined(_WIN32_WCE) && !defined(_WIN32_WCE_PPC) && !defined(_WIN32_WCE_LAGENDA)
-	if (PPCFlag == FALSE) {
-		psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_POP_HPC);
-	} else {
-		psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_POP);
-	}
-#else
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_POP);
-#endif
 	psp.pfnDlgProc = PopSetProc;
 	hpsp[0] = CreatePropertySheetPage(&psp);
 
@@ -3098,6 +3090,11 @@ static BOOL CALLBACK SetUpdateOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_UPDATEOPTION, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
 		if (op.CheckEndExecNoDelMsg == 2) {
 			SendDlgItemMessage(hDlg, IDC_RADIO_UAC_KEEP, BM_SETCHECK, 1, 0);
 		} else if (op.CheckEndExecNoDelMsg == 1) {
@@ -3441,6 +3438,10 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	BOOL retval = TRUE;
+#ifdef _WIN32_WCE
+	int show = SW_SHOW, hide = SW_HIDE;
+#endif
+
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		SendDlgItemMessage(hDlg, IDC_CHECK_SCANALLFORUNREAD, BM_SETCHECK, op.ScanAllForUnread, 0);
@@ -3464,8 +3465,26 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_SETCHECK, op.ViewAppMsgSource, 0);
 #ifndef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_SETCHECK, op.ViewWindowCursor, 0);
-#elif defined(_WIN32_WCE_PPC)
+#else
+#ifdef _WIN32_WCE_PPC
 		SendDlgItemMessage(hDlg, IDC_SHOW_NAVIG, BM_SETCHECK, op.ShowNavButtons, 0);
+#endif
+
+		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_BACK), SW_HIDE);
+		if (GetSystemMetrics(SM_CYSCREEN) > 700) {
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MORE), SW_HIDE);
+		} else {
+			MoveWindow(GetDlgItem(hDlg, IDC_VIEWCLOSENONEXT), 5, 14, 200, 16, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_VIEWSHOWATTACH), 5, 34, 200, 16, FALSE);
+			MoveWindow(GetDlgItem(hDlg, IDC_VIEWAPP_MSGSRC), 5, 54, 200, 16, FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWCLOSENONEXT), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSHOWATTACH), SW_HIDE);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWAPP_MSGSRC), SW_HIDE);
+#ifdef _WIN32_WCE_PPC
+			MoveWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), 5, 74, 200, 16, FALSE);
+			ShowWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), SW_HIDE);
+#endif
+		}
 #endif
 		break;
 
@@ -3478,6 +3497,30 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			EnableWindow(GetDlgItem(hDlg, IDC_VIEWNEXTDEL_UNREAD), 
 				SendDlgItemMessage(hDlg, IDC_VIEWNEXTDEL_NEXT, BM_GETCHECK, 0, 0));
 			
+#ifdef _WIN32_WCE
+		case IDC_BUTTON_MORE:
+			show = SW_HIDE; hide = SW_SHOW;
+		case IDC_BUTTON_BACK:
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_BACK), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWCLOSENONEXT), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSHOWATTACH), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWAPP_MSGSRC), hide);
+#ifdef _WIN32_WCE_PPC
+			ShowWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), hide);
+#endif
+
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MORE), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SCANALLFORUNREAD), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_TEXT_NEXTDEL), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWNEXTDEL_NEXT), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWNEXTDEL_UNREAD), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSKIPDEL_ALWAYS), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSKIPDEL_NEVER), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSKIPDEL_UNREAD), show);
+			ShowWindow(GetDlgItem(hDlg, IDC_TEXT_VIEWSKIP), show);
+			break;
+#endif
+
 		case IDOK:
 			op.ScanAllForUnread = SendDlgItemMessage(hDlg, IDC_CHECK_SCANALLFORUNREAD, BM_GETCHECK, 0, 0);
 			if (SendDlgItemMessage(hDlg, IDC_VIEWNEXTDEL_NEXT, BM_GETCHECK, 0, 0) == 1) {
@@ -3567,7 +3610,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 	case WM_INITDIALOG:
 		redraw = FALSE;
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_FILEORDER);
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_SBOXCOL);
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_ADDSTRING, 0, (LPARAM)STR_SORT_ALLBOXCOL);
@@ -3620,7 +3663,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		switch (LOWORD(wParam)) {
 
 		case IDOK:
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 			op.LvAutoSort = SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0);
 			op.LvSortItem = SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_GETCURSEL, 0, 0);
 #else
@@ -3671,7 +3714,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 			break;
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 		case IDC_COMBO_SORT:
 			if (HIWORD(wParam) == CBN_CLOSEUP) {
 				enable = (SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0) == 0) ? FALSE : TRUE;
@@ -3979,16 +4022,8 @@ BOOL SetOption(HWND hWnd)
 
 	ViewClose = op.ViewClose;
 
-	// éÛêM
-#if defined(_WIN32_WCE) && !defined(_WIN32_WCE_PPC) && !defined(_WIN32_WCE_LAGENDA)
-	if (PPCFlag == FALSE) {
-		psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RECV_HPC);
-	} else {
-		psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RECV);
-	}
-#else
+	//Recv
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RECV);
-#endif
 	psp.pfnDlgProc = SetRecvOptionProc;
 	hpsp[0] = CreatePropertySheetPage(&psp);
 
@@ -8538,7 +8573,7 @@ BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
  * EnableSortColumns - enable/disable radio buttons for sorting
  */
 BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag) {
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	EnableWindow(GetDlgItem(hDlg, IDC_TEXT_SORTCOL), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_COMBO_SORTCOL), EnableFlag);
 #else

@@ -158,8 +158,10 @@
 #define IDC_FILTER_TEXT1                281
 #define IDC_FILTER_ITEM2                282
 #define IDC_FILTER_TEXT2                283
-#define IDC_FILTER_MORE                 284
-#define IDC_FILTER_BACK                 285
+#define IDC_BUTTON_MORE                 284
+#define IDC_BUTTON_BACK                 285
+#define IDC_TEXT_VIEWSKIP               286
+#define IDC_TEXT_NEXTDEL                287
 #
 #define IDM_MAIN_WINDOW                 450
 #define IDM_MAIN_VIEW                   451
