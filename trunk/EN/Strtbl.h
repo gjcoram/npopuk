@@ -487,6 +487,7 @@
 #define STR_TITLE_CCBCC				TEXT("Recipients")
 #define STR_TITLE_ATTACH			TEXT("Attach files")
 #define STR_TITLE_ETCHEADER			TEXT("Other headers")
+#define STR_TITLE_UPDATEOPTION		TEXT("Update after Check")
 #define STR_TITLE_SENDINFO			TEXT("Property")
 #define STR_TITLE_SENDMORE			TEXT("More")
 #define STR_TITLE_ADDRESSINFO		TEXT("Address information")
