@@ -5629,7 +5629,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					} else {
 						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 					}
-					if (SelBox == MAILBOX_SEND && mark_del == FALSE) {
+					if (SelBox == MAILBOX_SEND && Target == MAILBOX_SEND && mark_del == FALSE) {
 						OpenItem(hWnd, TRUE, FALSE);
 					}
 				}

@@ -290,7 +290,7 @@ int mailbox_delete(HWND hWnd, int DelIndex, BOOL CheckFilt, BOOL Select)
  */
 BOOL mailbox_read(void)
 {
-	//送信箱
+	// Outbox
 	(MailBox + MAILBOX_SEND)->Name = alloc_copy_t(STR_SENDBOX_NAME);
 	if (file_read_mailbox(SENDBOX_FILE, (MailBox + MAILBOX_SEND), FALSE, FALSE) == FALSE) {
 		TCHAR tmp[BUF_SIZE];
@@ -299,8 +299,12 @@ BOOL mailbox_read(void)
 		return FALSE;
 	}
 
-	//アドレス帳
-	if(file_read_address_book(ADDRESS_FILE, AddressBook, op.LoadPOOMAtStart) < 0){
+	// Address book
+#ifdef _WIN32_WCE
+	if(file_read_address_book(ADDRESS_FILE, AddressBook, op.LoadPOOMAtStart) < 0) {
+#else
+	if(file_read_address_book(ADDRESS_FILE, AddressBook, TRUE) < 0) {
+#endif
 		return FALSE;
 	}
 	return TRUE;

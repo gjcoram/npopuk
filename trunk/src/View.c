@@ -106,6 +106,7 @@ extern HWND hEditWnd;
 extern HWND FocusWnd;
 extern HFONT hListFont;
 extern MAILBOX *MailBox;
+extern ATTACH_ITEM *top_attach_item;
 extern SOCKET g_soc;
 extern int SelBox;
 extern int RecvBox;
@@ -1128,6 +1129,10 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	} else {
 		AppendMenu(hMenu, MF_STRING, ID_MENUITEM_VIEWSOURCE, STR_VIEW_MENU_SOURCE);
 		AppendMenu(hPopMenu, MF_STRING, ID_MENUITEM_VIEWSOURCE, STR_VIEW_MENU_SOURCE);
+	}
+	if (tpMailItem->Attach != NULL || tpMailItem->FwdAttach != NULL) {
+		AppendMenu(hMenu, MF_STRING, ID_VIEW_SAVE_ATTACH, STR_VIEW_MENU_SHOWATTACH);
+		return 0;
 	}
 	if ((*vMultiPart)->sPos == tpMailItem->Body) {
 		startbody = TRUE;
@@ -3700,7 +3705,14 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ErrorMessage(hWnd, STR_ERR_NOMAIL);
 				break;
 			}
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SAVEATTACH), hWnd, SaveAttachProc, (LPARAM)tpMailItem);
+			if (tpMailItem->Attach != NULL || tpMailItem->Attach != NULL) {
+				if (top_attach_item == NULL) {
+					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ATTACH), hWnd, SetAttachProc, (LPARAM)tpMailItem);
+					attach_item_free();
+				}
+			} else {
+				DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SAVEATTACH), hWnd, SaveAttachProc, (LPARAM)tpMailItem);
+			}
 			break;
 
 		case ID_VIEW_DELETE_ATTACH:
