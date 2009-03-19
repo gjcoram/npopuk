@@ -300,7 +300,7 @@ BOOL mailbox_read(void)
 	}
 
 	//ƒAƒhƒŒƒX’ 
-	if(file_read_address_book(ADDRESS_FILE, AddressBook) < 0){
+	if(file_read_address_book(ADDRESS_FILE, AddressBook, op.LoadPOOMAtStart) < 0){
 		return FALSE;
 	}
 	return TRUE;
