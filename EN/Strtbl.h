@@ -326,6 +326,7 @@
 #define STR_VIEW_MENU_ATTACH		TEXT("&View text")
 #define STR_VIEW_MENU_SOURCE		TEXT("&View source")
 #define STR_VIEW_MENU_IMAGES		TEXT("View &images")
+#define STR_VIEW_MENU_SHOWATTACH	TEXT("&Show attachments")
 #define STR_VIEW_MENU_SAVEATTACH	TEXT("&Save attach")
 #define STR_VIEW_MENU_DELATTACH		TEXT("&Delete attach")
 #define STR_VIEW_RETURN				TEXT("&Return to original")

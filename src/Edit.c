@@ -37,7 +37,7 @@
 /* Global Variables */
 HWND hEditWnd = NULL;
 HWND hEditToolBar = NULL;
-TCHAR *tmp_attach;
+TCHAR *tmp_attach = NULL;
 static int EditMaxLength;
 static BOOL ProcessFlag;
 
@@ -280,10 +280,12 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		strPrefix = op.FwdSubject;
 		tpMailItem->AttachSize = 0;
 
-		if (rebox == MAILBOX_SEND) {
+		if (tpReMailItem->Attach != NULL) {
+			// forwarding one's own message from MAILBOX_SEND (or savebox)
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
-		} else if (ReplyFlag == EDIT_REDIRECT) {
+		}
+		if (ReplyFlag == EDIT_REDIRECT) {
 			tpMailItem->Subject = alloc_copy_t(tpReMailItem->Subject);
 			if (tpReMailItem->HasHeader == 0 || (q = GetBodyPointa(tpReMailItem->Body)) == NULL) {
 				q = tpReMailItem->Body;

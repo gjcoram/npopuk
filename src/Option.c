@@ -38,18 +38,12 @@
 #define IDC_EDIT_BODY				2003
 #define ID_RESIZE_TIMER				1
 
-typedef struct _ATTACH_ITEM {
-	TCHAR *fname;
-	BOOL is_fwd;
-	struct _ATTACH_ITEM *next;
-} ATTACH_ITEM;
-
 /* Global Variables */
 HWND MsgWnd = NULL;
 BOOL ImportRead = TRUE;
 BOOL ImportDown = TRUE;
 int ReplaceCnt = 0;
-static ATTACH_ITEM *top_attach_item = NULL;
+ATTACH_ITEM *top_attach_item = NULL;
 
 extern OPTION op;
 extern TCHAR *DataDir;
@@ -8049,6 +8043,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
 			break;
 
+#ifdef _WIN32_WCE
 		case IDC_BUTTON_GETPOOM:
 			{
 				ADDRESSBOOK *tpGetAddressBook = (ADDRESSBOOK *)mem_calloc(sizeof(ADDRESSBOOK));
@@ -8075,6 +8070,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 			break;
+#endif
 
 		case IDC_BUTTON_MAIL:
 			// Compose new message, or add addresses to Property dialog

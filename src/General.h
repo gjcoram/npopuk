@@ -743,6 +743,12 @@ typedef enum {
 #define FILTER_BOOL_OR 1
 #define FILTER_BOOL_UNLESS 2
 
+typedef struct _ATTACH_ITEM {
+	TCHAR *fname;
+	BOOL is_fwd;
+	struct _ATTACH_ITEM *next;
+} ATTACH_ITEM;
+
 typedef struct _ATTACHINFO {
 	TCHAR *from;
 	TCHAR *fname;

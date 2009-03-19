@@ -225,6 +225,14 @@ MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *Ma
 		}
 #endif
 	}
+	if (tpMailBox->Type == MAILBOX_TYPE_SAVE) {
+		if ((*(tpMailList + i))->MailStatus == ICON_SEND) {
+			(*(tpMailList + i))->MailStatus = ICON_NON;
+		}
+		if ((*(tpMailList + i))->Mark == ICON_SEND) {
+			(*(tpMailList + i))->Mark = ICON_NON;
+		}
+	}
 
 	mem_free((void **)&tpMailBox->tpMailItem);
 	tpMailBox->tpMailItem = tpMailList;
