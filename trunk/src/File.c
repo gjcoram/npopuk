@@ -1701,7 +1701,7 @@ BOOL file_save_address_book(TCHAR *FileName, TCHAR *SaveDir, ADDRESSBOOK *tpAddr
 /*
  * file_read_address_book - of pause of log The address register is read from the file
  */
-int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
+int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetContacts)
 {
 	ADDRESSITEM *tpAddrItem;
 	TCHAR path[BUF_SIZE], pathBackup[BUF_SIZE];
@@ -1741,7 +1741,7 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook)
 
 #ifdef _WIN32_WCE
 	///////////// MRP /////////////////////
-	if (op.UsePOOMAddressBook != 0) {
+	if (op.UsePOOMAddressBook != 0 && GetContacts != FALSE) {
 		retcode = UpdateAddressBook(path, op.UsePOOMAddressBook, op.POOMNameIsComment);
 		// retcode = number of addresses if > 0, some kind of failure if < 0
 		retcode = (retcode < 0) ? -100 : 0;

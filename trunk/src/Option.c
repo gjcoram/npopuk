@@ -3859,7 +3859,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						op.UsePOOMAddressBook = newsort;
 						op.POOMNameIsComment  = newcmmt;
 						SwitchCursor(FALSE);
-						read = file_read_address_book(ADDRESS_FILE, tpTmpAddressBook);
+						read = file_read_address_book(ADDRESS_FILE, tpTmpAddressBook, TRUE);
 						SwitchCursor(TRUE);
 						if (read < -50) {
 							MessageBox(hDlg, STR_ERR_POOM, WINDOW_TITLE, MB_OK);
@@ -6974,6 +6974,10 @@ static void SetWindowSize(HWND hDlg, int ListID, int top, int bottom, int left, 
 			hItem = GetDlgItem(hDlg, IDC_BUTTON_DELETE);
 			ShowWindow(hItem, (width > 222));
 			MoveWindow(hItem, left+83, bottom-30, 45, 21, TRUE);
+		} else {
+			hItem = GetDlgItem(hDlg, IDC_BUTTON_GETPOOM);
+			ShowWindow(hItem, (width > 222));
+			MoveWindow(hItem, left+42, bottom-30, 85, 21, TRUE);
 		}
 
 		hItem = GetDlgItem(hDlg, IDC_BUTTON_MAIL);
@@ -7760,9 +7764,9 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 #ifdef _WIN32_WCE
 		///////////// MRP /////////////////////
-		if (op.UsePOOMAddressBook != 0) {
-//			EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), FALSE);
-//			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_ADD), SW_HIDE);
+		if (op.UsePOOMAddressBook == 0) {
+			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_GETPOOM), SW_HIDE);
+		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_EDIT), SW_HIDE);
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_DELETE), SW_HIDE);
 		}
@@ -8043,6 +8047,33 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			//SetAddressList(hDlg, tpTmpAddressBook, buf);
 			SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
+			break;
+
+		case IDC_BUTTON_GETPOOM:
+			{
+				ADDRESSBOOK *tpGetAddressBook = (ADDRESSBOOK *)mem_calloc(sizeof(ADDRESSBOOK));
+				if (tpGetAddressBook != NULL) {
+					int read;
+					SwitchCursor(FALSE);
+					read = file_read_address_book(ADDRESS_FILE, tpGetAddressBook, TRUE);
+					SwitchCursor(TRUE);
+					if (read < -50) {
+						MessageBox(hDlg, STR_ERR_POOM, WINDOW_TITLE, MB_OK);
+						read += 100;
+					}
+					if (read < 0) {
+						addressbook_free(tpGetAddressBook);
+					} else {
+						tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
+						addressbook_free(tpTmpAddressBook);
+						SetWindowLong(hDlg, GWL_USERDATA, (LPARAM)tpGetAddressBook);
+						SetAddressList(hDlg, tpGetAddressBook, 
+							(op.AddressShowGroup == NULL || *op.AddressShowGroup == TEXT('\0'))
+							? STR_ADDRESSLIST_ALLGROUP : op.AddressShowGroup);
+
+					}
+				}
+			}
 			break;
 
 		case IDC_BUTTON_MAIL:

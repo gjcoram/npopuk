@@ -300,6 +300,7 @@
 #define IDC_VISIT_WEB                   1104
 #define IDC_CHECK_TMPPASS               1105
 #define IDC_CHECK_INIPASS               1106
+#define IDC_BUTTON_GETPOOM              1107
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202

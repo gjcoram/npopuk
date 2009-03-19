@@ -551,6 +551,7 @@ typedef struct _OPTION {
 	int	UsePOOMAddressBook;
 ///////////// --- /////////////////////
 	int POOMNameIsComment;
+	int LoadPOOMAtStart;
 #endif
 #ifdef _WIN32_WCE_PPC
 	int UseBuiltinSSL;
@@ -824,7 +825,7 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf);
 BOOL file_savebox_convert(TCHAR *NewFileName);
 BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName);
 BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL CheckDup);
-int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook);
+int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetContacts);
 MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id);
 BOOL file_write(HANDLE hFile, char *buf, int len);
 BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len);

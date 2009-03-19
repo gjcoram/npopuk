@@ -582,6 +582,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.UsePOOMAddressBook = profile_get_int(GENERAL, TEXT("UsePOOMAddressBook"), 0, app_path);
 	///////////// --- /////////////////////
 	op.POOMNameIsComment = profile_get_int(GENERAL, TEXT("POOMNameIsComment"), 0, app_path);
+	op.LoadPOOMAtStart = profile_get_int(GENERAL, TEXT("LoadPOOMAtStart"), 1, app_path);
 #endif
 #ifdef _WIN32_WCE_PPC
 	op.UseBuiltinSSL = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 1, app_path);
@@ -1304,6 +1305,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("UsePOOMAddressBook"), op.UsePOOMAddressBook, app_path);
 	///////////// --- /////////////////////
 	profile_write_int(GENERAL, TEXT("POOMNameIsComment"), op.POOMNameIsComment, app_path);
+	profile_write_int(GENERAL, TEXT("LoadPOOMAtStart"), op.LoadPOOMAtStart, app_path);
 #endif
 #ifdef _WIN32_WCE_PPC
 	profile_write_int(GENERAL, TEXT("UseBuiltinSSL"), op.UseBuiltinSSL, app_path);
