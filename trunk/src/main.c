@@ -2211,6 +2211,7 @@ static BOOL InitWindow(HWND hWnd)
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
 
+#ifdef _WIN32_WCE_SP
 	// code courtesy of Christian Ghisler
 	if (op.osMajorVer >= 5) {
 		// WM5 is 5.1, WM6 is 5.2
@@ -2219,6 +2220,7 @@ static BOOL InitWindow(HWND hWnd)
 		SendMessage(hMainToolBar, SHCMBM_OVERRIDEKEY, VK_F2, 
 			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
 	}
+#endif
 
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
