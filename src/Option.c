@@ -1844,7 +1844,7 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 			mbox->SmtpServer = profile_alloc_string(TEXT("Internet_Mail"), TEXT("SMTP_Server"), TEXT(""), fname);
 			mbox->MailAddress = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Address"), TEXT(""), fname);
 			mbox->UserName = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Name"), TEXT(""), fname);
-			mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), TEXT(""), fname);
+			mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), mbox->MailAddress, fname);
 			mbox->Pass = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Password"), TEXT(""), fname);
 			profile_get_string(TEXT("Internet_Mail"), TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1, fname);
 			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {

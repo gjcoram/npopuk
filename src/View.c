@@ -815,6 +815,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 12, 16, 16);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 
+#ifdef _WIN32_WCE_SP
 	// code courtesy of Christian Ghisler
 	if (op.osMajorVer >= 5) {
 		// WM5 is 5.1, WM6 is 5.2
@@ -823,6 +824,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(hViewToolBar, SHCMBM_OVERRIDEKEY, VK_F2, 
 			MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY, SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
 	}
+#endif
 
 #elif defined(_WIN32_WCE_LAGENDA)
 	// BE-500
