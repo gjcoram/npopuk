@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -59,7 +59,7 @@ static BOOL section_add(const TCHAR *section_name);
 static int section_find(const TCHAR *section_name);
 static BOOL key_add(SECTION_INFO *si, const TCHAR *key_name, const TCHAR *str, const BOOL comment_flag);
 static int key_find(const SECTION_INFO *si, const TCHAR *key_name);
-static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path);
+static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str);
 
 /*
  * str_cpy_n - 文字列のコピー
@@ -538,7 +538,7 @@ void profile_free(void)
 /*
  * profile_get_string - 文字列の取得
  */
-long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, TCHAR *ret, const long size, const TCHAR *file_path)
+long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, TCHAR *ret, const long size)
 {
 	TCHAR *buf, *p;
 	int section_index;
@@ -578,7 +578,7 @@ long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const 
 /*
  * profile_alloc_string - バッファを確保して文字列の取得
  */
-TCHAR *profile_alloc_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, const TCHAR *file_path)
+TCHAR *profile_alloc_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str)
 {
 	TCHAR *buf;
 	int section_index;
@@ -631,7 +631,7 @@ void profile_free_string(TCHAR *buf)
 /*
  * profile_get_int - 数値の取得
  */
-int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int default_str, const TCHAR *file_path)
+int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int default_str)
 {
 	TCHAR *buf, *p;
 	int section_index;
@@ -670,7 +670,7 @@ int profile_get_int(const TCHAR *section_name, const TCHAR *key_name, const int 
 /*
  * profile_write_data - データの書き込み
  */
-static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path)
+static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str)
 {
 	int section_index;
 	int key_index;
@@ -740,17 +740,17 @@ static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name,
 /*
  * profile_write_string - 文字列の書き込み
  */
-BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str, const TCHAR *file_path)
+BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str)
 {
 	TCHAR *buf, *p;
 	BOOL ret;
 
 	if (str == NULL || *str == TEXT('\0')) {
-		return profile_write_data(section_name, key_name, TEXT(""), file_path);
+		return profile_write_data(section_name, key_name, TEXT(""));
 	}
 
 	if ((buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(str) + 3))) == NULL) {
-		return profile_write_data(section_name, key_name, str, file_path);
+		return profile_write_data(section_name, key_name, str);
 	}
 	p = buf;
 	*(p++) = TEXT('"');
@@ -758,7 +758,7 @@ BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, cons
 	p += lstrlen(p);
 	*(p++) = TEXT('"');
 	*(p++) = TEXT('\0');
-	ret = profile_write_data(section_name, key_name, buf, file_path);
+	ret = profile_write_data(section_name, key_name, buf);
 	mem_free(&buf);
 	return ret;
 }
@@ -766,12 +766,12 @@ BOOL profile_write_string(const TCHAR *section_name, const TCHAR *key_name, cons
 /*
  * profile_write_int - 数値の書き込み
  */
-BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const int num, const TCHAR *file_path)
+BOOL profile_write_int(const TCHAR *section_name, const TCHAR *key_name, const int num)
 {
 	TCHAR ret[BUF_SIZE];
 
 	wsprintf(ret, TEXT("%d"), num);
-	return profile_write_data(section_name, key_name, ret, file_path);
+	return profile_write_data(section_name, key_name, ret);
 }
 
 /*

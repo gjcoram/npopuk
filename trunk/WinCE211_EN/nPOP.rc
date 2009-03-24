@@ -1504,6 +1504,10 @@ IDR_MENU_MAINPOP MENU
 BEGIN
     POPUP "Mailbox"
     BEGIN
+        MENUITEM "Open",                ID_MENUITEM_OPEN
+        MENUITEM "Reply",               ID_MENUITEM_REMESSEGE
+        MENUITEM "Reply to all",        ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "Forward",             ID_MENUITEM_FORWARD
         POPUP "Mark"
         BEGIN
             MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK

@@ -1828,38 +1828,63 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 
 	*fname = TEXT('\0');
 	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
+		static TCHAR *iMail = TEXT("Internet_Mail");
 		profile_initialize(fname, FALSE);
-		if (profile_find_section(TEXT("Internet_Mail")) == FALSE) {
+		if (profile_find_section(iMail) == FALSE) {
 			ErrorMessage(hDlg, STR_ERR_BAD_CONFIG);
 			ret = FALSE;
 		} else {
-			profile_get_string(TEXT("Internet_Mail"), TEXT("Use_IMAP"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+			profile_get_string(iMail, TEXT("Use_IMAP"), TEXT("No"), tmp, BUF_SIZE-1);
 			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
 				ErrorMessage(hDlg, STR_ERR_NO_IMAP);
 			}
 			mem_free(&mbox->Name);
 			// strings found in example setup files
-			mbox->Name = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Window_Title"), TEXT(""), fname);
-			mbox->Server = profile_alloc_string(TEXT("Internet_Mail"), TEXT("POP_Server"), TEXT(""), fname);
-			mbox->SmtpServer = profile_alloc_string(TEXT("Internet_Mail"), TEXT("SMTP_Server"), TEXT(""), fname);
-			mbox->MailAddress = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Address"), TEXT(""), fname);
-			mbox->UserName = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Email_Name"), TEXT(""), fname);
-			mbox->User = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Name"), mbox->MailAddress, fname);
-			mbox->Pass = profile_alloc_string(TEXT("Internet_Mail"), TEXT("Pop_Logon_Password"), TEXT(""), fname);
-			profile_get_string(TEXT("Internet_Mail"), TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1, fname);
+			mbox->Name = profile_alloc_string(iMail, TEXT("Window_Title"), TEXT(""));
+			mbox->Server = profile_alloc_string(iMail, TEXT("POP_Server"), TEXT(""));
+			mbox->SmtpServer = profile_alloc_string(iMail, TEXT("SMTP_Server"), TEXT(""));
+			mbox->MailAddress = profile_alloc_string(iMail, TEXT("Email_Address"), TEXT(""));
+			mbox->UserName = profile_alloc_string(iMail, TEXT("Email_Name"), TEXT(""));
+			mbox->User = profile_alloc_string(iMail, TEXT("Pop_Logon_Name"), mbox->MailAddress);
+			mbox->Pass = profile_alloc_string(iMail, TEXT("Pop_Logon_Password"), TEXT(""));
+			profile_get_string(iMail, TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1);
 			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
 				mbox->SmtpAuth = 1;
 			}
-			mbox->Port = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_Port"), 110, fname);
-			mbox->PopSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("POP_SSL"), 0, fname);
-			profile_get_string(TEXT("Internet_Mail"), TEXT("POP_RETR"), TEXT("Yes"), tmp, BUF_SIZE-1, fname);
+			// nPOPuk-specific settings
+			mbox->PopSSL = profile_get_int(iMail, TEXT("POP_SSL"), 0);
+			mbox->PopSSL = profile_get_int(iMail, TEXT("PopSSL"), mbox->PopSSL);
+			mbox->Port = profile_get_int(iMail, TEXT("POP_Port"), ((mbox->PopSSL) ? 995 : 110));
+			mbox->Port = profile_get_int(iMail, TEXT("Port"), mbox->Port);
+			mbox->APOP = profile_get_int(iMail, TEXT("APOP"), 0);
+			mbox->PopSSLInfo.Type = profile_get_int(iMail, TEXT("PopSSLType"), 0);
+			mbox->PopSSLInfo.Verify = profile_get_int(iMail, TEXT("PopSSLVerify"), 1);
+			mbox->PopSSLInfo.Depth = profile_get_int(iMail, TEXT("PopSSLDepth"), -1);
+			mbox->PopSSLInfo.Cert = profile_alloc_string(iMail, TEXT("PopSSLCert"), TEXT(""));
+			mbox->PopSSLInfo.Pkey = profile_alloc_string(iMail, TEXT("PopSSLPkey"), TEXT(""));
+			mbox->PopSSLInfo.Pass = profile_alloc_string(iMail, TEXT("PopSSLPass"), TEXT(""));
+			mbox->NoUIDL = profile_get_int(iMail, TEXT("NoUIDL"), 0);
+			profile_get_string(iMail, TEXT("POP_RETR"), TEXT("Yes"), tmp, BUF_SIZE-1);
 			if (str_cmp_ni_t(tmp, TEXT("No"), 2) == 0) {
 				mbox->NoRETR = 1;
 			}
-			mbox->NoRETR = profile_get_int(TEXT("Internet_Mail"), TEXT("NoRetr"), mbox->NoRETR, fname);
-			mbox->SmtpPort = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Port"), 25, fname);
-			mbox->SmtpSSL = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_SSL"), 0, fname);
-			mbox->SmtpAuth = profile_get_int(TEXT("Internet_Mail"), TEXT("SMTP_Auth"), mbox->SmtpAuth, fname);
+			mbox->NoRETR = profile_get_int(iMail, TEXT("NoRetr"), mbox->NoRETR);
+			mbox->CyclicFlag = profile_get_int(iMail, TEXT("CyclicFlag"), 0);
+			mbox->SmtpSSL = profile_get_int(iMail, TEXT("SMTP_SSL"), 0);
+			mbox->SmtpSSL = profile_get_int(iMail, TEXT("SmtpSSL"), mbox->SmtpSSL);
+			mbox->SmtpPort = profile_get_int(iMail, TEXT("SMTP_Port"), ((mbox->SmtpSSL) ? 465 : 25));
+			mbox->SmtpPort = profile_get_int(iMail, TEXT("SmtpPort"), mbox->SmtpPort);
+			mbox->SmtpAuth = profile_get_int(iMail, TEXT("SMTP_Auth"), 0);
+			mbox->SmtpAuth = profile_get_int(iMail, TEXT("SmtpAuth"), mbox->SmtpAuth);
+			mbox->PopBeforeSmtp = profile_get_int(iMail, TEXT("PopBeforeSmtp"), 0);
+			mbox->SmtpAuthType = profile_get_int(iMail, TEXT("SmtpAuthType"), 0);
+			mbox->AuthUserPass = profile_get_int(iMail, TEXT("AuthUserPass"), 0);
+			mbox->SmtpSSLInfo.Type = profile_get_int(iMail, TEXT("SmtpSSLType"), 0);
+			mbox->SmtpSSLInfo.Verify = profile_get_int(iMail, TEXT("SmtpSSLVerify"), 1);
+			mbox->SmtpSSLInfo.Depth = profile_get_int(iMail, TEXT("SmtpSSLDepth"), -1);
+			mbox->SmtpSSLInfo.Cert = profile_alloc_string(iMail, TEXT("SmtpSSLCert"), TEXT(""));
+			mbox->SmtpSSLInfo.Pkey = profile_alloc_string(iMail, TEXT("SmtpSSLPkey"), TEXT(""));
+			mbox->SmtpSSLInfo.Pass = profile_alloc_string(iMail, TEXT("SmtpSSLPass"), TEXT(""));
 		}
 		profile_free();
 	} else {
