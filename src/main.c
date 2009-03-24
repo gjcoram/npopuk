@@ -1534,6 +1534,10 @@ int SetMailMenu(HWND hWnd)
 	// pop-up context menu
 	if (SendBoxFlag) { // actually means we're not in the sendbox
 		hMenu = hMainPop; // GetSubMenu(hMainPop, 0);
+		EnableMenuItem(hMenu, ID_MENUITEM_OPEN, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_REMESSEGE, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_ALLREMESSEGE, !SelFlag);
+		EnableMenuItem(hMenu, ID_MENUITEM_FORWARD, !SelFlag);
 		EnableMenuItem(hMenu, ID_MENUITEM_DOWNMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 		EnableMenuItem(hMenu, ID_MENUITEM_DELMARK, !(SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)));
 		EnableMenuItem(hMenu, ID_MENUITEM_READMAIL, !SelFlag);
