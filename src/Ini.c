@@ -1668,7 +1668,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("SaveboxName"));
 			profile_delete_key(buf, key_buf);
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Priority"));
-			profile_delete_key(GENERAL, key_buf);
+			profile_delete_key(buf, key_buf);
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
 			profile_delete_key(buf, key_buf);
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
