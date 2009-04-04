@@ -1870,7 +1870,7 @@ static int item_filter_check(MAILBOX *tpMailBox, char *buf, int *do_what)
 	}
 	if (tpMailBox->tpFilter != NULL && done == FALSE) {
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
-			if (do_what != NULL) dwi = do_what + op.GlobalFilterCnt + i;
+			if (do_what != NULL) dwi = do_what + (op.GlobalFilterCnt + i);
 			RetFlag = item_check_filter(*(tpMailBox->tpFilter+i), buf, dwi, RetFlag);
 			if (RetFlag & (FILTER_RECV | FILTER_UNRECV)) {
 				break;
