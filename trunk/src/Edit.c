@@ -2767,6 +2767,14 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			item_free(&tpMailItem, 1);
 			return EDIT_NONEDIT;
 		}
+		if (OpenFlag == EDIT_REDIRECT) {
+			if (rebox != MAILBOX_SEND && tpReMailItem != NULL) {
+				SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
+			}
+			SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, (tpMailItem->Mark == ICON_SEND));
+			return EDIT_SEND;
+		}
+		SetReplyMessageBody(tpMailItem, tpReMailItem, OpenFlag, seltext);
 		if (rebox != MAILBOX_SEND && tpReMailItem != NULL) {
 			SetReplyFwdMark(tpReMailItem, ICON_FWD_MASK, rebox);
 			if (tpMailItem->FwdAttach != NULL) {
@@ -2775,11 +2783,6 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				(MailBox + rebox)->NeedsSave |= MARKS_CHANGED;
 			}
 		}
-		if (OpenFlag == EDIT_REDIRECT) {
-			SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, (tpMailItem->Mark == ICON_SEND));
-			return EDIT_SEND;
-		}
-		SetReplyMessageBody(tpMailItem, tpReMailItem, OpenFlag, seltext);
 		tpMailItem->Mark = 0;
 		if (OpenFlag == EDIT_FILTERFORWARD) {
 			SetItemToSendBox(NULL, tpMailItem, TRUE, EDIT_SEND, TRUE);
