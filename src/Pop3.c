@@ -386,6 +386,8 @@ static BOOL check_message_id(char *buf, MAILITEM *tpMailItem, TCHAR *ErrStr, MAI
 		mem_free(&content);
 		mem_free(&p);
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return FALSE;
 	}
 	mem_free(&p);
@@ -393,6 +395,8 @@ static BOOL check_message_id(char *buf, MAILITEM *tpMailItem, TCHAR *ErrStr, MAI
 	if (tpMailItem->MessageID == NULL || tstrcmp(tpMailItem->MessageID, content) != 0) {
 		mem_free(&content);
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return FALSE;
 	}
 #endif
@@ -1463,6 +1467,8 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	get_no = item_get_number_to_index(tpMailBox, download_get_no);
 	if (get_no == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return POP_ERR;
 	}
 	tpMailItem = *(tpMailBox->tpMailItem + get_no);
@@ -1599,6 +1605,8 @@ static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (lstrcmp(tpMailItem->UIDL, UIDL) != 0) {
 		mem_free(&UIDL);
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return POP_ERR;
 	}
 	mem_free(&UIDL);
@@ -1662,6 +1670,8 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	get_no = item_get_number_to_index(tpMailBox, delete_get_no);
 	if (get_no == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return POP_ERR;
 	}
 	tpMailItem = *(tpMailBox->tpMailItem + get_no);
@@ -1706,6 +1716,8 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	get_no = item_get_number_to_index(tpMailBox, delete_get_no);
 	if (get_no == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
+		mem_free(&tpMailBox->LastMessageId);
+		tpMailBox->LastMessageId = NULL;
 		return POP_ERR;
 	}
 	get_no = item_get_next_delete_mark(tpMailBox, TRUE, get_no, &delete_get_no);

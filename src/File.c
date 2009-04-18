@@ -1231,6 +1231,14 @@ BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len
 		wsprintf(path, TEXT("%s%s\\%s%s"), DataDir, op.AttachPath, ATTACH_FILE, FileName);
 	} else if (do_what == DECODE_SAVE_ALL) {
 		wsprintf(path, TEXT("%s\\%s"), op.SavedSaveDir, FileName);
+		if (file_get_size(path) > 0) {
+			TCHAR msg[MSG_SIZE];
+			wsprintf(msg, STR_Q_REPLACEFILE, path);
+			if (MessageBox(hWnd, msg, STR_TITLE_SAVE,
+				MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
+				return FALSE;
+			}
+		}
 	} else {
 		if (filename_select(hWnd, path, Ext, NULL, FILE_SAVE_SINGLE, &op.SavedSaveDir) == FALSE) {
 			return TRUE; // user cancelled, not an error

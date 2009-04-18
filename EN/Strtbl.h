@@ -106,8 +106,8 @@
 #define STR_ERR_SOCK_SEND			TEXT("Send error")
 #define STR_ERR_SOCK_RESPONSE		TEXT("Response not analysed\n\n")
 #define STR_ERR_SOCK_GETITEMINFO	TEXT("Item information not acquired")
-#define STR_ERR_SOCK_MAILSYNC 		TEXT("Mail numbers not synchronised\n\n")\
-									TEXT("New and existing numbers must agree")
+#define STR_ERR_SOCK_MAILSYNC 		TEXT("Mail numbers not synchronised;\n\n")\
+									TEXT("check account to resolve.")
 #define STR_ERR_SOCK_NOMESSAGEID	TEXT("Message-Id not acquired")
 #define STR_ERR_SOCK_NOUSERID		TEXT("No username set")
 #define STR_ERR_SOCK_NOPASSWORD		TEXT("No password set")
@@ -157,6 +157,7 @@
 #define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
 #define STR_Q_DELSBOXFILE			TEXT("Delete existing file \"%s%s\" from DataFileDir?")
+#define STR_Q_REPLACEFILE			TEXT("\"%s\"\r already exists.  Do you want to replace it?")
 #define STR_Q_OVERWRITE				TEXT("\"%s\" \nMessage already in Savebox\nOverwrite?")
 #define STR_Q_COPY					TEXT("Copy %d mail to %s?")
 #define STR_Q_MOVE					TEXT("Move %d mail to %s?")
