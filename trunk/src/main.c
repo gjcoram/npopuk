@@ -1626,6 +1626,18 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 	switch (msg) {
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	case WM_LBUTTONDOWN:
+		{
+			SHRGINFO rg;
+			rg.cbSize = sizeof(SHRGINFO);
+			rg.hwndClient = hWnd;
+			rg.ptDown.x = LOWORD(lParam);
+			rg.ptDown.y = HIWORD(lParam);
+			rg.dwFlags = SHRG_RETURNCMD;
+			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+				SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENU, 0);
+				return 0;
+			}
+		}
 		//Item under mouse acquisition
 		apos.x = LOWORD(lParam);
 		apos.y = HIWORD(lParam);
@@ -1635,14 +1647,16 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 		lvht.iItem = 0;
 		i = ListView_HitTest(hWnd, &lvht);
 
-		if (SelMode == TRUE && GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_SHIFT) >= 0) {
-			//Selective mode
-			if (i != -1) {
-				ListView_SetItemState(hWnd, i,
-					LVIS_FOCUSED | (ListView_GetItemState(hWnd, i, LVIS_SELECTED) ^ LVIS_SELECTED),
-					LVIS_FOCUSED | LVIS_SELECTED);
+		if (SelMode == TRUE) {
+			if (GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_SHIFT) >= 0) {
+				//Selective mode
+				if (i != -1) {
+					ListView_SetItemState(hWnd, i,
+						LVIS_FOCUSED | (ListView_GetItemState(hWnd, i, LVIS_SELECTED) ^ LVIS_SELECTED),
+						LVIS_FOCUSED | LVIS_SELECTED);
+				}
+				return 0;
 			}
-			return 0;
 		}
 		break;
 #endif
@@ -5660,6 +5674,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_SELMODE:
 			SelMode = !SelMode;
 			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), ID_MENUITEM_SELMODE, (SelMode == TRUE) ? MF_CHECKED : MF_UNCHECKED);
+			CheckMenuItem(hMainPop, ID_MENUITEM_SELMODE, (SelMode == TRUE) ? MF_CHECKED : MF_UNCHECKED);
 			break;
 #elif defined(_WIN32_WCE_LAGENDA)
 		//Selective mode

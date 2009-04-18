@@ -2443,7 +2443,7 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 	case 1:
 	case 2:
 		// エンコードされている場合はデコードを行う
-		dstr = (char *)mem_alloc(tstrlen(b64str));
+		dstr = (char *)mem_alloc(tstrlen(b64str)+1);
 		if (dstr == NULL) {
 			mem_free(&b64str);
 			SwitchCursor(TRUE);
