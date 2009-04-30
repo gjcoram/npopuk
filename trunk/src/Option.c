@@ -1840,7 +1840,7 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 			}
 			mem_free(&mbox->Name);
 			// strings found in example setup files
-			mbox->Name = profile_alloc_string(iMail, TEXT("Window_Title"), TEXT(""));
+			mbox->Name = profile_alloc_string(iMail, TEXT("Window_Title"), TEXT("New Account"));
 			mbox->Server = profile_alloc_string(iMail, TEXT("POP_Server"), TEXT(""));
 			mbox->SmtpServer = profile_alloc_string(iMail, TEXT("SMTP_Server"), TEXT(""));
 			mbox->MailAddress = profile_alloc_string(iMail, TEXT("Email_Address"), TEXT(""));
@@ -1850,6 +1850,8 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 			profile_get_string(iMail, TEXT("Logon_Using_SPA"), TEXT("No"), tmp, BUF_SIZE-1);
 			if (str_cmp_ni_t(tmp, TEXT("Yes"), 3) == 0) {
 				mbox->SmtpAuth = 1;
+			} else {
+				mbox->SmtpAuth = 0;
 			}
 			// nPOPuk-specific settings
 			mbox->PopSSL = profile_get_int(iMail, TEXT("POP_SSL"), 0);
@@ -1874,7 +1876,7 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 			mbox->SmtpSSL = profile_get_int(iMail, TEXT("SmtpSSL"), mbox->SmtpSSL);
 			mbox->SmtpPort = profile_get_int(iMail, TEXT("SMTP_Port"), ((mbox->SmtpSSL) ? 465 : 25));
 			mbox->SmtpPort = profile_get_int(iMail, TEXT("SmtpPort"), mbox->SmtpPort);
-			mbox->SmtpAuth = profile_get_int(iMail, TEXT("SMTP_Auth"), 0);
+			mbox->SmtpAuth = profile_get_int(iMail, TEXT("SMTP_Auth"), mbox->SmtpAuth);
 			mbox->SmtpAuth = profile_get_int(iMail, TEXT("SmtpAuth"), mbox->SmtpAuth);
 			mbox->PopBeforeSmtp = profile_get_int(iMail, TEXT("PopBeforeSmtp"), 0);
 			mbox->SmtpAuthType = profile_get_int(iMail, TEXT("SmtpAuthType"), 0);
@@ -5320,6 +5322,9 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		ListView_SetItemState(hListView, -1, LVIS_SELECTED, LVIS_SELECTED);
 		ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 		SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_SETTEXT, 0, (LPARAM)op.SavedSaveDir);
+		i = lstrlen(op.SavedSaveDir);
+		SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, EM_SETSEL, (WPARAM)i, (LPARAM)i);
+		SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, EM_SCROLLCARET, 0, 0);
 		break;
 
 	case WM_CLOSE:
