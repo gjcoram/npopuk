@@ -4239,6 +4239,10 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		
 		SelMailBox = (MAILBOX *)lParam;
 
+		if (SelMailBox->NoUIDL == TRUE) {
+			ShowWindow(GetDlgItem(hDlg, IDC_RADIO_FIX_UIDL), SW_HIDE);
+		}
+
 		//Mail several
 		wsprintf(buf, STR_STATUS_INIT_MAILCNT, SelMailBox->MailCnt);
 		SetWindowText(GetDlgItem(hDlg, IDC_STATIC_MAILCNT), buf);
@@ -4263,6 +4267,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_COMMAND:
+		St = 1;
 		switch (LOWORD(wParam)) {
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 		case IDC_EDIT_GETNUM:
@@ -4271,9 +4276,10 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #endif
 
 		case IDC_RADIO_FIRSTGET:
+		case IDC_RADIO_FIX_UIDL:
+			St = 0;
 		case IDC_RADIO_SETGET:
 		case IDC_RADIO_FILLIN:
-			St = !SendDlgItemMessage(hDlg, IDC_RADIO_FIRSTGET, BM_GETCHECK, 0, 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_GETNUM), St);
 			break;
 
@@ -4289,6 +4295,9 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (SendDlgItemMessage(hDlg, IDC_RADIO_FIRSTGET, BM_GETCHECK, 0, 0) == 1) {
 				SelMailBox->LastNo = -1;
 				SelMailBox->ListInitMsg = FALSE;
+			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_FIX_UIDL, BM_GETCHECK, 0, 0) == 1) {
+				mem_free(&(SelMailBox->LastMessageId));
+				SelMailBox->LastMessageId = NULL;
 			} else {
 				SelMailBox->LastNo = GetDlgItemInt(hDlg, IDC_EDIT_GETNUM, NULL, FALSE);
 				SelMailBox->ListInitMsg = SendDlgItemMessage(hDlg, IDC_RADIO_SETGET, BM_GETCHECK, 0, 0);

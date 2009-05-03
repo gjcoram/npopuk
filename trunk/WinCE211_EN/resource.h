@@ -104,7 +104,6 @@
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
 #define ID_MENUITEM_BACKUP              230
-#define IDC_RADIO_FILLIN                231
 #define IDC_FILTER_AND                  232
 #define IDC_FILTER_OR                   233
 #define IDC_FILTER_UNLESS               234
@@ -298,7 +297,9 @@
 #define IDC_VISIT_WEB                   1104
 #define IDC_CHECK_TMPPASS               1105
 #define IDC_CHECK_INIPASS               1106
-#define IDC_BUTTON_GETPOOM              1107
+#define IDC_RADIO_FILLIN                1107
+#define IDC_RADIO_FIX_UIDL              1108
+#define IDC_BUTTON_GETPOOM              1110
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202

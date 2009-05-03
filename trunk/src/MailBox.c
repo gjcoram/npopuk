@@ -1080,24 +1080,24 @@ BOOL addr_add(ADDRESSBOOK *tpAddrBook, ADDRESSITEM *tpNewAddrItem)
  */
 void addr_move(ADDRESSBOOK *tpAddrBook, int num, int step)
 {
-	ADDRESSITEM *HoldItem, *AddrItem; 
-	int dir, cnt = 0, i = num;
-	dir = (step > 0) ? 1 : -1;
+	ADDRESSITEM *HoldItem, *AddrItem;
+	int cnt = 0, vis = 0, i = num, dir = (step > 0) ? 1 : -1;
 
 	HoldItem = *(tpAddrBook->tpAddrItem + num);
 	// move until we hit a visible item (or the end)
 	while((i > 0 && dir == -1) || ( i < tpAddrBook->ItemCnt -1 && dir == +1)) {
 		AddrItem = *(tpAddrBook->tpAddrItem + i) = *(tpAddrBook->tpAddrItem + i + dir);
 		i += dir;
+		cnt += dir;
 		AddrItem->Num -= dir;
 		if (AddrItem->Displayed == TRUE) {
-			cnt++;
-			if (cnt >= abs(step)) {
+			vis++;
+			if (vis >= abs(step)) {
 				break;
 			}
 		}
 	}
-	HoldItem->Num += (dir * cnt);
+	HoldItem->Num += cnt;
 	*(tpAddrBook->tpAddrItem + i) = HoldItem;
 }
 

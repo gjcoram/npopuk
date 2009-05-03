@@ -446,8 +446,6 @@ BEGIN
         MENUITEM "Delete attachments",  ID_MENUITEM_DELATTACH
         MENUITEM "Delete from list",    ID_MENUITEM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
-        MENUITEM "Thread mode",         ID_MENUITEM_THREADVIEW
         MENUITEM "Select by tap",       ID_MENUITEM_SELMODE
     END
     POPUP "Outbox"
@@ -1388,19 +1386,21 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "On next check of account:",IDC_STATIC,5,5,150,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
-                    BS_AUTORADIOBUTTON,5,20,120,10
+                    BS_AUTORADIOBUTTON,5,17,120,10
     CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
-                    BS_AUTORADIOBUTTON,5,35,40,10
-    CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",BS_AUTORADIOBUTTON,
-                    5,47,40,10
-    LTEXT           "} from item number:",IDC_STATIC,45,41,65,10
-    EDITTEXT        IDC_EDIT_GETNUM,114,39,40,13,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "# of Messages:",IDC_STATIC,10,70,60,10
-    LTEXT           "",IDC_STATIC_MAILCNT,72,70,50,10
-    LTEXT           "Total Size:",IDC_STATIC,10,80,60,10
-    LTEXT           "",IDC_STATIC_MAILSIZE,72,80,50,10
-    PUSHBUTTON      "Cancel",IDCANCEL,119,101,35,14
-    GROUPBOX        "",IDC_STATIC,5,64,149,28
+                    BS_AUTORADIOBUTTON,5,32,40,10
+    CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",
+                    BS_AUTORADIOBUTTON,5,43,40,10
+    LTEXT           "} from item &number:",IDC_STATIC,45,38,65,10
+    EDITTEXT        IDC_EDIT_GETNUM,114,36,40,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
+                    BS_AUTORADIOBUTTON,5,58,100,10
+    LTEXT           "# of Messages:",IDC_STATIC,10,73,60,10
+    LTEXT           "",IDC_STATIC_MAILCNT,72,73,50,10
+    LTEXT           "Total Size:",IDC_STATIC,10,83,60,10
+    LTEXT           "",IDC_STATIC_MAILSIZE,72,83,50,10
+    GROUPBOX        "",IDC_STATIC,5,67,149,28
+    PUSHBUTTON      "Cancel",IDCANCEL,119,100,35,14
 END
 
 IDD_DIALOG_FIND DIALOG DISCARDABLE  0, 0, 160, 103
