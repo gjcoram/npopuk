@@ -397,7 +397,7 @@ BOOL filename_select(HWND hWnd, TCHAR *ret, TCHAR *DefExt, TCHAR *filter, int Ac
 	} else {
 		if (GetSaveFileName((LPOPENFILENAME)&of) == FALSE) {
 			bret = FALSE;
-		} else if (Action == FILE_CHOOSE_DIR) {
+		} else if (is_dir) {
 			ph = qh = path;
 			while (*ph != TEXT('\0')) {
 				if (*ph == TEXT('\\')) {
