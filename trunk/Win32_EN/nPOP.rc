@@ -1075,14 +1075,14 @@ BEGIN
     LTEXT           "On next check of account:",IDC_STATIC,10,5,185,10
     CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
                     BS_AUTORADIOBUTTON,15,18,100,10
-    CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
-                    BS_AUTORADIOBUTTON,15,34,100,10
     CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
-                    BS_AUTORADIOBUTTON,15,49,40,10
+                    BS_AUTORADIOBUTTON,15,35,40,10
     CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",
-                    BS_AUTORADIOBUTTON,15,63,40,10
-    LTEXT           "from item &number:",IDC_STATIC,60,56,105,10
-    EDITTEXT        IDC_EDIT_GETNUM,125,54,30,12,ES_AUTOHSCROLL | ES_NUMBER
+                    BS_AUTORADIOBUTTON,15,47,40,10
+    LTEXT           "from item &number:",IDC_STATIC,60,42,105,10
+    EDITTEXT        IDC_EDIT_GETNUM,125,40,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
+                    BS_AUTORADIOBUTTON,15,64,100,10
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,80,167,1
     LTEXT           "Account details:",IDC_STATIC,10,83,61,8
     LTEXT           "Messages:",IDC_STATIC,15,95,48,9
