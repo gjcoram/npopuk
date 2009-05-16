@@ -207,7 +207,7 @@
 #define IDC_BUTTON_ATTACH               1029
 #define IDC_CHECK_SHIWNEWMESSAGE        1030
 #define IDC_CHECK_SELECTSENDBOX         1030
-#define IDC_CHECK_SHIWNOMESSAGE         1031
+#define IDC_CHECK_DELNOTNEW             1031
 #define IDC_CHECK_POPBEFORESMTP         1031
 #define IDC_CHECK_SENDDATE              1031
 #define IDC_CHECK_AUTOCHECK             1032

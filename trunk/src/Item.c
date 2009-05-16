@@ -2012,6 +2012,9 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 		}
 	} else if (fret & FILTER_DELETEMARK) {
 		tpMailItem->Mark = ICON_DEL;
+		if (op.DeletedIsNotNew) {
+			tpMailItem->New = FALSE;
+		}
 	}
 
 	return !(error);
