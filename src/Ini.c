@@ -402,6 +402,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.ScanAllForUnread = profile_get_int(GENERAL, TEXT("ScanAllForUnread"), t);
 
 	op.DelIsMarkDel = profile_get_int(GENERAL, TEXT("DelIsMarkDel"), 1);
+	op.DeletedIsNotNew = profile_get_int(GENERAL, TEXT("DeletedIsNotNew"), 0);
 	op.RecvScroll = profile_get_int(GENERAL, TEXT("RecvScroll"), 1);
 	op.SaveMsg = profile_get_int(GENERAL, TEXT("SaveMsg"), 1);
 	op.AutoSave = profile_get_int(GENERAL, TEXT("AutoSave"), 1);
@@ -812,12 +813,18 @@ BOOL ini_read_setting(HWND hWnd)
 			mem_free(&(MailBox + num)->Filename);
 			(MailBox + num)->Filename = NULL;
 		}
+		// NewMailSoundFile
+		(MailBox + num)->NewMailSoundFile = profile_alloc_string(buf, TEXT("NewMailSoundFile"), TEXT(""));
+		if (*(MailBox + num)->NewMailSoundFile == TEXT('\0')) {
+			mem_free(&(MailBox + num)->NewMailSoundFile);
+			(MailBox + num)->NewMailSoundFile = NULL;
+		}
 		// Type
 		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 2);
-if ((MailBox + num)->Type == 2) {
-	TCHAR msg[BUF_SIZE];
-	wsprintf(msg, TEXT("ERROR loading mailbox %d"), num);
-}
+		if ((MailBox + num)->Type == 2) {
+			TCHAR msg[BUF_SIZE];
+			wsprintf(msg, TEXT("ERROR loading mailbox %d"), num);
+		}
 		(MailBox + num)->WasMbox = -1; // unknown, updated when loaded
 		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
 			// GJC - SaveBox type (not an account)
@@ -1203,6 +1210,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel);
+	profile_write_int(GENERAL, TEXT("DeletedIsNotNew"), op.DeletedIsNotNew);
 	profile_write_int(GENERAL, TEXT("RecvScroll"), op.RecvScroll);
 	profile_write_int(GENERAL, TEXT("SaveMsg"), op.SaveMsg);
 	profile_write_int(GENERAL, TEXT("AutoSave"), op.AutoSave);
@@ -1491,13 +1499,13 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(buf, TEXT("Name"), (MailBox + j)->Name);
 		// Filename
 		profile_write_string(buf, TEXT("Filename"), (MailBox + j)->Filename);
+		// NewMailSoundFile
+		profile_write_string(buf, TEXT("NewMailSoundFile"), (MailBox + j)->NewMailSoundFile);
 		// Type
 		profile_write_int(buf, TEXT("Type"), (MailBox + j)->Type);
-
 		if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
 			// Default account
 			profile_write_string(buf, TEXT("DefAccount"), (MailBox + j)->DefAccount);
-
 			// no other settings for SaveBox-type mailboxes
 			continue;
 		}

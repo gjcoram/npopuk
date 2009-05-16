@@ -3334,7 +3334,8 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		/* ƒRƒ“ƒgƒ[ƒ‹‚Ì‰Šú‰» */
 		SetControlFont(hDlg);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNEWMESSAGE, BM_SETCHECK, op.ShowNewMailMessage, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNOMESSAGE, BM_SETCHECK, op.ShowNoMailMessage, 0);
+		//SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNOMESSAGE, BM_SETCHECK, op.ShowNoMailMessage, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_DELNOTNEW, BM_SETCHECK, op.DeletedIsNotNew, 0);
 
 		SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_SETCHECK, op.NewMailSound, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_EXECSOUND, BM_SETCHECK, op.ExecEndSound, 0);
@@ -3417,7 +3418,8 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 
 		case IDOK:
 			op.ShowNewMailMessage = SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNEWMESSAGE, BM_GETCHECK, 0, 0);
-			op.ShowNoMailMessage = SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNOMESSAGE, BM_GETCHECK, 0, 0);
+			//op.ShowNoMailMessage = SendDlgItemMessage(hDlg, IDC_CHECK_SHIWNOMESSAGE, BM_GETCHECK, 0, 0);
+			op.DeletedIsNotNew = SendDlgItemMessage(hDlg, IDC_CHECK_DELNOTNEW, BM_GETCHECK, 0, 0);
 
 			op.NewMailSound = SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_GETCHECK, 0, 0);
 			op.ExecEndSound = SendDlgItemMessage(hDlg, IDC_CHECK_EXECSOUND, BM_GETCHECK, 0, 0);
@@ -5384,6 +5386,12 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			if (SaveDir == NULL || dir_check(SaveDir) == FALSE) {
 				TCHAR msg[MSG_SIZE];
+if (op.SocLog > 1) {
+	if (SaveDir == NULL) {
+		wsprintf(msg, TEXT("SaveDir string is null, widget text len is %d"), i);
+		log_save(msg);
+	}
+}
 				wsprintf(msg, STR_ERR_NODIR, SaveDir);
 				ErrorMessage(hDlg, msg);
 				mem_free(&SaveDir);

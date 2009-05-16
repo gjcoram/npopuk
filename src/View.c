@@ -3829,7 +3829,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					mbox = command_id - ID_MENUITEM_MOVE2MBOX;
 					mark_del = TRUE;
 				}
-				if (mbox >= 0 && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
+				if (mbox >= 0 && mbox != vSelBox && mbox < MailBoxCnt && (MailBox+mbox) != NULL) {
 					TCHAR fname[BUF_SIZE];
 					tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 					tpNextMail = NULL;

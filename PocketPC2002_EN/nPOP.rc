@@ -948,8 +948,11 @@ BEGIN
     CONTROL         "&Display message when new mail arrives",
                     IDC_CHECK_SHIWNEWMESSAGE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,5,157,10
-    CONTROL         "Display message when &no new mail",
-                    IDC_CHECK_SHIWNOMESSAGE,"Button",BS_AUTOCHECKBOX | 
+//    CONTROL         "Display message when &no new mail",
+//                    IDC_CHECK_SHIWNOMESSAGE,"Button",BS_AUTOCHECKBOX | 
+//                    WS_TABSTOP,5,17,153,10
+    CONTROL         "Messages filtered to delete are &not new",
+                    IDC_CHECK_DELNOTNEW,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,17,153,10
     CONTROL         "&Sound when new mail",IDC_CHECK_SOUND,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,29,115,10

@@ -62,7 +62,7 @@ static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
 static int delete_get_no;					// 削除メール位置
 static BOOL init_recv;						// 新着取得位置初期化フラグ
-static BOOL mail_received;					// １件目受信フラグ
+static int mail_received;					// １件目受信フラグ
 static BOOL receiving_uidl;					// UIDLレスポンス受信中
 static BOOL receiving_data;					// メールデータ受信中
 static BOOL disable_uidl;					// UIDLサポートフラグ
@@ -762,7 +762,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	SetItemCntStatusText(tpMailBox, FALSE);
 
 	init_recv = FALSE;
-	mail_received = FALSE;
+	mail_received = 0;
 	disable_top = (op.ListDownload != 0) ? TRUE : FALSE;
 
 	// UIDLの初期化
@@ -1165,7 +1165,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	}
 
 	// 受信の最大アイテム数分のメモリを確保
-	if (mail_received == FALSE) {
+	if (mail_received == 0) {
 		if (ShowFlag == TRUE) {
 			ListView_SetItemCount(GetDlgItem(hWnd, IDC_LISTVIEW), tpMailBox->MailCnt);
 		}
@@ -1204,12 +1204,15 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	}
 
 	if ((int)tpMailItem != -1) {
+		BOOL first_new_msg = (tpMailItem->New == TRUE) && (mail_received != 1)
+			&& (NewMail_Flag == FALSE) && (ShowMsgFlag == FALSE);
+
 		if (soc == -1) {
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 		}
 
 		// 新着フラグの除去
-		if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE && op.ClearNewOverlay == 1) {
+		if (first_new_msg && op.ClearNewOverlay == 1) {
 			for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 				if (*(tpMailBox->tpMailItem + i) == NULL) {
 					continue;
@@ -1223,9 +1226,11 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 			st =  INDEXTOSTATEIMAGEMASK(st);
-			st |= INDEXTOOVERLAYMASK(ICON_NEW_MASK);	   
+			if (tpMailItem->New) {
+				st |= INDEXTOOVERLAYMASK(ICON_NEW_MASK);
+			}
 
-			if (mail_received == FALSE && NewMail_Flag == FALSE && ShowMsgFlag == FALSE) {
+			if (first_new_msg) {
 				if (op.ClearNewOverlay == 1) {
 					// clear new overlay from existing messages when new(er) mail received
 					ListView_SetItemState(hListView, -1, 0, INDEXTOOVERLAYMASK(ICON_NEW_MASK));
@@ -1249,7 +1254,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 			//of new arrival position The item is added to list view the
 			i = ListView_InsertItem(hListView, &lvi);
-			if (mail_received == FALSE) {
+			if (mail_received == 0) {
 				ListView_EnsureVisible(hListView, i, TRUE);
 			}
 			// 一行下へスクロール
@@ -1259,11 +1264,17 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			SetItemCntStatusText(tpMailBox, FALSE);
 			EndThreadSortFlag = TRUE;
 		}
-		mail_received = TRUE;
+		if (first_new_msg) {
+			mail_received = 1;
+		} else if (mail_received == 0) {
+			mail_received = -1;
+		}
 
-		// 新着カウント
-		NewMailCnt++;
-		tpMailBox->NewMail++;
+		if (tpMailItem->New) {
+			// may be false, if message has been filtered to delete
+			NewMailCnt++;
+			tpMailBox->NewMail++;
+		}
 		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;		
 	}
 	 

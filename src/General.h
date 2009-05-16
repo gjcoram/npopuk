@@ -400,6 +400,7 @@ typedef struct _OPTION {
 	int MBMenuHeight; // not saved in INI, for resizing
 	int SaveboxListCount;
 	int ScanAllForUnread;
+	int DeletedIsNotNew;
 	int DelIsMarkDel;
 	int RecvScroll;
 	int SaveMsg;
@@ -581,6 +582,7 @@ typedef struct _MAILBOX {
 	BOOL Loaded;
 	BOOL WasMbox; // when file was read
 	TCHAR *DefAccount; // for saveboxes, account for outgoing mail
+	TCHAR *NewMailSoundFile;
 
 	// POP
 	TCHAR *Server;

@@ -1626,7 +1626,7 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 	switch (msg) {
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 	case WM_LBUTTONDOWN:
-		{
+		if (SelMode == TRUE) {
 			SHRGINFO rg;
 			rg.cbSize = sizeof(SHRGINFO);
 			rg.hwndClient = hWnd;
@@ -3955,6 +3955,9 @@ static void NewMail_Message(HWND hWnd, int cnt)
 			(MailBox + i)->NewMail++;
 		}
 		SetMailboxMark(i, STATUS_DONE);
+		if ((MailBox + i)->NewMailSoundFile && *(MailBox + i)->NewMailSoundFile != TEXT('\0')) {
+			sndPlaySound((MailBox + i)->NewMailSoundFile, SND_ASYNC | SND_NODEFAULT);
+		}
 	}
 	SelectMBMenu(j);
 
@@ -5610,7 +5613,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							cnt++;
 						}
 					}
-					if (cnt == 0) {
+					if (cnt == 0 || (cnt == 1 && Target == SelBox)) {
 						MessageBox(hWnd, STR_ERR_NOSAVEBOXES, WINDOW_TITLE, MB_OK);
 						Target = -1;
 					} else if (cnt > 1) {
