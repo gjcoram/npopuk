@@ -5386,12 +5386,6 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			if (SaveDir == NULL || dir_check(SaveDir) == FALSE) {
 				TCHAR msg[MSG_SIZE];
-if (op.SocLog > 1) {
-	if (SaveDir == NULL) {
-		wsprintf(msg, TEXT("SaveDir string is null, widget text len is %d"), i);
-		log_save(msg);
-	}
-}
 				wsprintf(msg, STR_ERR_NODIR, SaveDir);
 				ErrorMessage(hDlg, msg);
 				mem_free(&SaveDir);

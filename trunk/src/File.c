@@ -168,39 +168,41 @@ BOOL dir_check(const TCHAR *path)
 {
 	WIN32_FIND_DATA FindData;
 	HANDLE hFindFile;
-	const TCHAR *p;
-TCHAR msg[MSG_SIZE];
+	int len;
 
+	if (path == NULL) {
+		return FALSE;
+	} else {
+		len = lstrlen(path);
+	}
+
+#ifndef _WIN32_WCE
 	// FILE_OPEN_MULTI may return C:\ plus a set of filenames
-	// FindFirstFile does not accept a trailing '\'
-	p = path + (lstrlen(path) - 1);
-	if (*p == TEXT('\\')) {
-if (op.SocLog > 1) {
-	wsprintf(msg, TEXT("dir check: '%s' TRUE by trailing \\"), path);
-	log_save(msg);
-}
+	// FindFirstFile does not accept a trailing '\' -- nor "C:"
+	if (len > 1 && path[1] == TEXT(':') &&
+		(len == 2 || (len == 3 && path[2] == TEXT('\\')))) {
+		TCHAR test[5];
+		if (len == 2) {
+			wsprintf(test, TEXT("%s\\*"), path);
+		} else {
+			wsprintf(test, TEXT("%s*"), path);
+		}
+		if ((hFindFile = FindFirstFile(test, &FindData)) == INVALID_HANDLE_VALUE) {
+			return FALSE;
+		}
+		FindClose(hFindFile);
 		return TRUE;
 	}
+#endif
+
 	if ((hFindFile = FindFirstFile(path, &FindData)) == INVALID_HANDLE_VALUE) {
-if (op.SocLog > 1) {
-	wsprintf(msg, TEXT("dir check: '%s' FALSE invalid handle"), path);
-	log_save(msg);
-}
 		return FALSE;
 	}
 	FindClose(hFindFile);
 
 	if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-if (op.SocLog > 1) {
-	wsprintf(msg, TEXT("dir check: '%s' TRUE attribute directory"), path);
-	log_save(msg);
-}
 		return TRUE;
 	}
-if (op.SocLog > 1) {
-	wsprintf(msg, TEXT("dir check: '%s' FALSE default return"), path);
-	log_save(msg);
-}
 	return FALSE;
 }
 
