@@ -3295,7 +3295,9 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 				MAILITEM *tpFwdMailItem = NULL;
 				int k, kk;
 				if ((k = mailbox_name_to_index(tpMailItem->MailBox)) != -1) {
-					if ((kk = item_find_thread(MailBox + k, tpMailItem->References, (MailBox+i)->MailItemCnt)) != -1) {
+					if ((MailBox + k)->Loaded
+							&& (kk = item_find_thread(MailBox + k, tpMailItem->References,
+														(MailBox+k)->MailItemCnt)) != -1) {
 						tpFwdMailItem = (*((MailBox + k)->tpMailItem + kk));
 					}
 				}
