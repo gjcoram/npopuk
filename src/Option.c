@@ -3642,17 +3642,15 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_FROM);
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_DATE);
 		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_ADDSTRING, 0, (LPARAM)STR_SORTCOL_SIZE);
-		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_SETCURSEL, abs(op.LvSortItem)+1, 0);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_SETCURSEL, abs(op.LvSortItem)-1, 0);
 		EnableSortColumns(hDlg, (op.LvAutoSort != 0));
 #else
 		if (op.LvAutoSort == 0) { // Added PHH 11-Nov-2003
 			SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, FALSE);
-		} else if (op.LvAutoSort == 1) {
-			SendDlgItemMessage(hDlg, IDC_AUTOSORT2, BM_SETCHECK, 1, 0);
-			EnableSortColumns(hDlg, TRUE);
-		} else if (op.LvAutoSort == 2) {
-			SendDlgItemMessage(hDlg, IDC_AUTOSORT3, BM_SETCHECK, 1, 0);
+		} else {
+			SendDlgItemMessage(hDlg, (op.LvAutoSort == 1) ? IDC_AUTOSORT2 : IDC_AUTOSORT3,
+				BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, TRUE);
 		}
 		if (abs(op.LvSortItem) == 1) {
@@ -3678,6 +3676,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		} else {
 			SendDlgItemMessage(hDlg, IDC_COL_SFDZ, BM_SETCHECK, 1, 0);
 		}
+		break;
 
 	case WM_NOTIFY:
 		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
@@ -3688,7 +3687,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		case IDOK:
 #ifdef _WIN32_WCE
 			op.LvAutoSort = SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0);
-			op.LvSortItem = SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_GETCURSEL, 0, 0);
+			op.LvSortItem = SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_GETCURSEL, 0, 0) + 1;
 #else
 			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1) { // Added PHH 11-Nov-2003
 				op.LvAutoSort = 0;	
@@ -8649,8 +8648,8 @@ BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag) {
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM2), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM3), EnableFlag);
 	EnableWindow(GetDlgItem(hDlg, IDC_SORTITEM4), EnableFlag);
-	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SORTORDER), EnableFlag);
 #endif
+	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SORTORDER), EnableFlag);
 	return TRUE;
 }
 
