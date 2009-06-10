@@ -3218,6 +3218,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	if (tpSingleItem == NULL) {
 		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		if ((i = ListView_GetSelectedCount(hListView)) <= 0) {
+			ErrorMessage(hWnd, STR_ERR_NOSELECT);
 			return FALSE;
 		}
 	} else {
@@ -3244,6 +3245,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	if (tpMailBox->Loaded == FALSE) {
 		if (op.BlindAppend == 0) { // || TargetBox == MAILBOX_SEND, assumed always loaded
 			if (mailbox_load_now(hWnd, TargetBox, FALSE, FALSE) != 1) {
+				ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 				return FALSE;
 			}
 		}
@@ -3268,7 +3270,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 
 			//The copy is drawn up in the transmission box the
 			if ((tpTmpMailItem = item_to_mailbox(tpMailBox, tpMailItem, NULL, TRUE)) == NULL) {
-				ErrorMessage(hWnd, STR_ERR_COPYFAIL);
+				ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 				retval = FALSE;
 				break;
 			}
@@ -5651,8 +5653,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							// save Target mailbox
 							file_save_mailbox(fname, DataDir, Target, FALSE, TRUE, 2);
 						}
-					} else {
-						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 					}
 					if (SelBox == MAILBOX_SEND && Target == MAILBOX_SEND && mark_del == FALSE) {
 						OpenItem(hWnd, TRUE, FALSE);
@@ -5819,8 +5819,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
 							file_save_mailbox(fname, DataDir, mbox, FALSE, TRUE, 2);
 						}
-					} else {
-						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 					}
 				}
 			}
