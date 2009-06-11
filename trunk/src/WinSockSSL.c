@@ -23,6 +23,7 @@
 
 #if defined( _MSC_VER) && (_MSC_VER <= 1200)
 typedef void *HCERTSTORE;
+extern int _stricmp(const char *, const char *);
 #endif
 
 /* Define */
