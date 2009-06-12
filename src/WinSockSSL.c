@@ -152,7 +152,7 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 
 #ifdef _WIN32_WCE_PPC
 	// Option to use Windows native SSL
-	if (ssl_tp >= 0 && op.UseBuiltinSSL == 1)
+	if (ssl_tp >= 0 && op.UseWindowsSSL == 1)
 	{
 		SSLVALIDATECERTHOOK hook;
 		int		err;

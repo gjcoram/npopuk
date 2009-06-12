@@ -65,9 +65,7 @@ unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr)
 {
 	unsigned long ret;
 	LPHOSTENT lpHostEnt;
-#ifdef UNICODE
 	char *HostName;
-#endif
 
 	SetSocStatusTextT(hWnd, STR_STATUS_GETHOSTBYNAME);
 	if (server == NULL || *server == TEXT('\0')) {
@@ -80,28 +78,30 @@ unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr)
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return 0;
 	}
+#else
+	HostName = server;
+#endif
 	ret = inet_addr(HostName);
-	if (ret == -1) {
+	while (ret == -1) {
 		lpHostEnt = gethostbyname(HostName);
 		if (lpHostEnt != NULL) {
 			ret = ((struct in_addr *)lpHostEnt->h_addr_list[0])->s_addr;
 		} else {
-			lstrcpy(ErrStr, STR_ERR_SOCK_GETIPADDR);
-			ret = 0;
+			int err = WSAGetLastError();
+#ifdef _DEBUG
+			if (op.SocLog > 1) {
+				wsprintf(ErrStr, TEXT("%s, errno=%d\r\n"), STR_ERR_SOCK_GETIPADDR, err);
+				log_save(ErrStr);
+			}
+#endif
+			if (err != WSATRY_AGAIN) {
+				lstrcpy(ErrStr, STR_ERR_SOCK_GETIPADDR);
+				ret = 0;
+			}
 		}
 	}
+#ifdef UNICODE
 	mem_free(&HostName);
-#else
-	ret = inet_addr(server);
-	if (ret == -1) {
-		lpHostEnt = gethostbyname(server);
-		if (lpHostEnt != NULL) {
-			ret = ((struct in_addr *)lpHostEnt->h_addr_list[0])->s_addr;
-		} else {
-			lstrcpy(ErrStr, STR_ERR_SOCK_GETIPADDR);
-			ret = 0;
-		}
-	}
 #endif
 	return ret;
 }
@@ -134,7 +134,7 @@ SOCKET connect_server(HWND hWnd, unsigned long ip_addr, unsigned short port, con
 #ifdef _WIN32_WCE_PPC
 	// Use built-in SSL if no npopssl.dll
 	str_join_t(SSLPath, AppDir, TEXT("npopssl.dll"), (TCHAR *)-1);
-	if (ssl_tp >= 0 && op.UseBuiltinSSL == 1
+	if (ssl_tp >= 0 && op.UseWindowsSSL == 1
 		&& INVALID_FILE_SIZE == GetFileAttributes(TEXT("\\Windows\\npopssl.dll"))
 		&& INVALID_FILE_SIZE == GetFileAttributes(SSLPath))
 	{
