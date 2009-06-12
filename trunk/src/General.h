@@ -18,6 +18,7 @@
 #if defined( _MSC_VER) && (_MSC_VER <= 1200)
 #define strcpy_s(dest,size,src) strcpy(dest,src)
 #define strcat_s(dest,size,append) strcat(dest,append)
+#define sprintf_s(dest, size, fmtstr, arg1, arg2) sprintf(dest, fmtstr, arg1, arg2)
 #endif
 
 /* Include Files */
@@ -555,7 +556,7 @@ typedef struct _OPTION {
 	int LoadPOOMAtStart;
 #endif
 #ifdef _WIN32_WCE_PPC
-	int UseBuiltinSSL;
+	int UseWindowsSSL;
 	int ShowNavButtons;
 #endif
 

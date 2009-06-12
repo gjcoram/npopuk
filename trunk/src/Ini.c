@@ -586,7 +586,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.LoadPOOMAtStart = profile_get_int(GENERAL, TEXT("LoadPOOMAtStart"), 1);
 #endif
 #ifdef _WIN32_WCE_PPC
-	op.UseBuiltinSSL = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 1);
+	i = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 0);
+	op.UseWindowsSSL = profile_get_int(GENERAL, TEXT("UseWindowsSSL"), i);
 	op.ShowNavButtons = profile_get_int(GENERAL, TEXT("ShowNavButtons"), 1);
 #endif
 
@@ -1316,7 +1317,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("LoadPOOMAtStart"), op.LoadPOOMAtStart);
 #endif
 #ifdef _WIN32_WCE_PPC
-	profile_write_int(GENERAL, TEXT("UseBuiltinSSL"), op.UseBuiltinSSL);
+	profile_write_int(GENERAL, TEXT("UseWindowsSSL"), op.UseWindowsSSL);
 	profile_write_int(GENERAL, TEXT("ShowNavButtons"), op.ShowNavButtons);
 #endif
 
@@ -1390,6 +1391,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_delete_key(GENERAL, TEXT("OpenSaveDir"));
 	profile_delete_key(GENERAL, TEXT("RememberOpenSaveDir"));
 	profile_delete_key(GENERAL, TEXT("DecodeInPlace"));
+	profile_delete_key(GENERAL, TEXT("UseBuiltinSSL"));
 
 	for (t = 0, j = 0; j < op.RasInfoCnt; j++) {
 		if (*(op.RasInfo + j) == NULL ||

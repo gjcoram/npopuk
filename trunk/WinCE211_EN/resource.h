@@ -2,6 +2,9 @@
 // Microsoft Developer Studio generated include file.
 // Used by nPOP.rc
 //
+#if _WIN32_WCE <= 200
+#define WS_SIZEBOX			0x0000
+#endif
 #define LVS_REPORT                      0x0001
 #define IDCANCEL2                       3
 #define LVS_SINGLESEL                   0x0004
