@@ -69,6 +69,10 @@ include the following features:
   (http://www.openssl.org/)
   This product includes cryptographic software written by
   Eric Young (eay@cryptsoft.com).
+  Please read LICENSE_openssl.txt
+  The Windows CE versions of this program also include
+  software from http://www.essemer.com.au/
+  Please read LICENSE_wcecompat.txt
 
 * Ability to import Internet Setup files (*.ins) to
   configure accounts.  Templates for popular mail
