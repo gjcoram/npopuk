@@ -1,4 +1,4 @@
-readme.txt for openssl
+readme.txt for openssl (version 0.9.8k)
 
 Please review LICENSE.txt
 
@@ -22,12 +22,12 @@ Please review LICENSE.txt
 6) The .lib files should now be in "out32"
 
 
-For Windows CE, you will need to obtain wcecompat.lib; you should be
-able to download it from http://www.essemer.com.au/windowsce
-If you have already built the Win32 versions, please delete
-inc32\openssl\opensslconf.h
+For Windows CE, you will need to obtain wcecompat.lib; you should
+be able to download it from http://www.essemer.com.au/windowsce
+If you have already built the Win32 version of the OpenSSL libs,
+please delete inc32\openssl\opensslconf.h
 
 You may need to run another batch file to set up for the specific
-processor (ARM, MIPS, SH3, SH4, X86).  Then "nmake -f celib.mak"
-and the .lib files should be in "out32_proc" where proc stands for
-the processor.
+processor.  Then "nmake -f celib.mak" and the .lib files should be
+made in "out32_PROC" where PROC stands for the processor  (ARM,
+MIPS, SH3, SH4, X86).
