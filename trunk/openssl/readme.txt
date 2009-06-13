@@ -28,6 +28,6 @@ If you have already built the Win32 versions, please delete
 inc32\openssl\opensslconf.h
 
 You may need to run another batch file to set up for the specific
-processor (ARM, MIPS, SH3, SH4).  Then "nmake -f celib.mak" and the
-.lib files should be in "out32_proc" where proc stands for the
-processor.
+processor (ARM, MIPS, SH3, SH4, X86).  Then "nmake -f celib.mak"
+and the .lib files should be in "out32_proc" where proc stands for
+the processor.
