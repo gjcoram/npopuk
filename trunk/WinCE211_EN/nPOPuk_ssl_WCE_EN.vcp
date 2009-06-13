@@ -301,7 +301,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /machine:IX86 /subsystem:$(CESubsystem)
-# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
+# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -540,16 +540,6 @@ NODEP_CPP_CODE_=\
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
-DEP_CPP_CODE_=\
-	"..\src\General.h"\
-	"..\src\jp.h"\
-	"..\src\kr.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_CODE_=\
-	"..\EN\Strtbl.h"\
-	
-
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
 DEP_CPP_CODE_=\
@@ -697,11 +687,15 @@ NODEP_CPP_EDIT_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_EDIT_=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_EDIT_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -846,12 +840,15 @@ NODEP_CPP_FILE_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_FILE_=\
+	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_FILE_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -957,11 +954,7 @@ DEP_CPP_FONT_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_FONT_=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_FONT_=\
-	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1098,12 +1091,13 @@ NODEP_CPP_INI_C=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_INI_C=\
+	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_INI_C=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1261,13 +1255,16 @@ NODEP_CPP_ITEM_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_ITEM_=\
+	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_ITEM_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1397,11 +1394,11 @@ NODEP_CPP_JP_Ce=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_JP_Ce=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_JP_Ce=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1525,11 +1522,11 @@ NODEP_CPP_LISTV=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_LISTV=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_LISTV=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1637,6 +1634,7 @@ DEP_CPP_MAILB=\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
 	".\stdafx.h"\
 	
 
@@ -1654,11 +1652,12 @@ NODEP_CPP_MAILB=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_MAILB=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_MAILB=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1777,6 +1776,8 @@ DEP_CPP_MAIN_=\
 	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
@@ -1798,11 +1799,16 @@ NODEP_CPP_MAIN_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_MAIN_=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_MAIN_=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2091,6 +2097,7 @@ NODEP_CPP_MIME_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_MIME_=\
+	"..\EN\Strtbl.h"\
 	"..\src\Charset.h"\
 	"..\src\code.h"\
 	"..\src\Font.h"\
@@ -2098,10 +2105,8 @@ DEP_CPP_MIME_=\
 	"..\src\jp.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_MIME_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2258,11 +2263,14 @@ NODEP_CPP_MULTI=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_MULTI=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_MULTI=\
 	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2421,6 +2429,7 @@ DEP_CPP_OPTIO=\
 	"..\src\multipart.h"\
 	"..\src\npop_ver.h"\
 	"..\src\ppcpoom.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
 	
 
@@ -2440,11 +2449,17 @@ NODEP_CPP_OPTIO=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_OPTIO=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_OPTIO=\
 	"..\EN\Strtbl.h"\
+	"..\src\Charset.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\jp.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
+	"..\src\Profile.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2584,13 +2599,13 @@ NODEP_CPP_POP3_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_POP3_=\
+	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_POP3_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2710,14 +2725,18 @@ DEP_CPP_PPCPO=\
 
 DEP_CPP_PPCPO=\
 	"..\src\ppcpoom.h"\
-	{$(INCLUDE)}"pimstore.h"\
+	
+NODEP_CPP_PPCPO=\
+	".\imstore.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Debug"
 
 DEP_CPP_PPCPO=\
 	"..\src\ppcpoom.h"\
-	{$(INCLUDE)}"pimstore.h"\
+	
+NODEP_CPP_PPCPO=\
+	".\imstore.h"\
 	
 
 !ENDIF 
@@ -2890,11 +2909,11 @@ NODEP_CPP_RAS_C=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_RAS_C=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_RAS_C=\
 	"..\EN\Strtbl.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	".\stdafx.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -3049,13 +3068,16 @@ NODEP_CPP_SMTP_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_SMTP_=\
+	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_SMTP_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -3148,16 +3170,6 @@ NODEP_CPP_STRIN=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
-
-DEP_CPP_STRIN=\
-	"..\src\General.h"\
-	"..\src\global.h"\
-	"..\src\md5.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_STRIN=\
-	"..\EN\Strtbl.h"\
-	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -3307,13 +3319,14 @@ NODEP_CPP_UTIL_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_UTIL_=\
+	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_UTIL_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -3479,13 +3492,17 @@ NODEP_CPP_VIEW_=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_VIEW_=\
+	"..\EN\Strtbl.h"\
+	"..\src\code.h"\
+	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
+	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_VIEW_=\
-	"..\EN\Strtbl.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -3577,6 +3594,8 @@ DEP_CPP_WINSO=\
 	"..\src\npop_ver.h"\
 	"..\src\openssl.h"\
 	".\stdafx.h"\
+	".\stddef.h"\
+	".\time.h"\
 	
 NODEP_CPP_WINSO=\
 	".\slsock.h"\
@@ -3642,10 +3661,50 @@ NODEP_CPP_WINSO=\
 
 DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\openssl\inc32\openssl\asn1.h"\
+	"..\openssl\inc32\openssl\bio.h"\
+	"..\openssl\inc32\openssl\bn.h"\
+	"..\openssl\inc32\openssl\buffer.h"\
+	"..\openssl\inc32\openssl\comp.h"\
+	"..\openssl\inc32\openssl\crypto.h"\
+	"..\openssl\inc32\openssl\dh.h"\
+	"..\openssl\inc32\openssl\dsa.h"\
+	"..\openssl\inc32\openssl\dtls1.h"\
+	"..\openssl\inc32\openssl\e_os2.h"\
+	"..\openssl\inc32\openssl\ebcdic.h"\
+	"..\openssl\inc32\openssl\evp.h"\
+	"..\openssl\inc32\openssl\hmac.h"\
+	"..\openssl\inc32\openssl\kssl.h"\
+	"..\openssl\inc32\openssl\lhash.h"\
+	"..\openssl\inc32\openssl\obj_mac.h"\
+	"..\openssl\inc32\openssl\objects.h"\
+	"..\openssl\inc32\openssl\opensslconf.h"\
+	"..\openssl\inc32\openssl\opensslv.h"\
+	"..\openssl\inc32\openssl\ossl_typ.h"\
+	"..\openssl\inc32\openssl\pem.h"\
+	"..\openssl\inc32\openssl\pem2.h"\
+	"..\openssl\inc32\openssl\pkcs7.h"\
+	"..\openssl\inc32\openssl\pq_compat.h"\
+	"..\openssl\inc32\openssl\pqueue.h"\
+	"..\openssl\inc32\openssl\rsa.h"\
+	"..\openssl\inc32\openssl\safestack.h"\
+	"..\openssl\inc32\openssl\sha.h"\
+	"..\openssl\inc32\openssl\ssl.h"\
+	"..\openssl\inc32\openssl\ssl2.h"\
+	"..\openssl\inc32\openssl\ssl23.h"\
+	"..\openssl\inc32\openssl\ssl3.h"\
+	"..\openssl\inc32\openssl\stack.h"\
+	"..\openssl\inc32\openssl\symhacks.h"\
+	"..\openssl\inc32\openssl\tls1.h"\
+	"..\openssl\inc32\openssl\x509.h"\
+	"..\openssl\inc32\openssl\x509_vfy.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
+	"..\src\openssl.h"\
 	".\stdafx.h"\
+	".\stddef.h"\
+	".\time.h"\
 	
 NODEP_CPP_WINSO=\
 	".\slsock.h"\
@@ -3666,11 +3725,52 @@ NODEP_CPP_WINSO=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_WINSO=\
-	"..\src\General.h"\
-	".\stdafx.h"\
-	
-NODEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\openssl\inc32\openssl\asn1.h"\
+	"..\openssl\inc32\openssl\bio.h"\
+	"..\openssl\inc32\openssl\bn.h"\
+	"..\openssl\inc32\openssl\buffer.h"\
+	"..\openssl\inc32\openssl\comp.h"\
+	"..\openssl\inc32\openssl\crypto.h"\
+	"..\openssl\inc32\openssl\dh.h"\
+	"..\openssl\inc32\openssl\dsa.h"\
+	"..\openssl\inc32\openssl\dtls1.h"\
+	"..\openssl\inc32\openssl\e_os2.h"\
+	"..\openssl\inc32\openssl\ebcdic.h"\
+	"..\openssl\inc32\openssl\evp.h"\
+	"..\openssl\inc32\openssl\hmac.h"\
+	"..\openssl\inc32\openssl\kssl.h"\
+	"..\openssl\inc32\openssl\lhash.h"\
+	"..\openssl\inc32\openssl\obj_mac.h"\
+	"..\openssl\inc32\openssl\objects.h"\
+	"..\openssl\inc32\openssl\opensslconf.h"\
+	"..\openssl\inc32\openssl\opensslv.h"\
+	"..\openssl\inc32\openssl\ossl_typ.h"\
+	"..\openssl\inc32\openssl\pem.h"\
+	"..\openssl\inc32\openssl\pem2.h"\
+	"..\openssl\inc32\openssl\pkcs7.h"\
+	"..\openssl\inc32\openssl\pq_compat.h"\
+	"..\openssl\inc32\openssl\pqueue.h"\
+	"..\openssl\inc32\openssl\rsa.h"\
+	"..\openssl\inc32\openssl\safestack.h"\
+	"..\openssl\inc32\openssl\sha.h"\
+	"..\openssl\inc32\openssl\ssl.h"\
+	"..\openssl\inc32\openssl\ssl2.h"\
+	"..\openssl\inc32\openssl\ssl23.h"\
+	"..\openssl\inc32\openssl\ssl3.h"\
+	"..\openssl\inc32\openssl\stack.h"\
+	"..\openssl\inc32\openssl\symhacks.h"\
+	"..\openssl\inc32\openssl\tls1.h"\
+	"..\openssl\inc32\openssl\x509.h"\
+	"..\openssl\inc32\openssl\x509_vfy.h"\
+	"..\src\Font.h"\
+	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	"..\src\openssl.h"\
+	".\stdafx.h"\
+	".\stddef.h"\
+	".\time.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
