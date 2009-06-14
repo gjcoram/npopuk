@@ -610,7 +610,9 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		len += lstrlen(tpMailItem->MailBox);
 	}
 	len += lstrlen(STR_EDIT_HEAD_TO);
-	if (tpMailItem->To != NULL) {
+	if (tpMailItem->RedirectTo != NULL) {
+		len += lstrlen(tpMailItem->RedirectTo);
+	} else if (tpMailItem->To != NULL) {
 		len += lstrlen(tpMailItem->To);
 	}
 	len += SetCcAddressSize(tpMailItem->Cc);
@@ -625,7 +627,8 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		return;
 	}
 
-	p = str_join_t(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, tpMailItem->To, (TCHAR *)-1);
+	p = str_join_t(buf, STR_EDIT_HEAD_MAILBOX, tpMailItem->MailBox, STR_EDIT_HEAD_TO, 
+		(tpMailItem->RedirectTo != NULL) ? tpMailItem->RedirectTo : tpMailItem->To, (TCHAR *)-1);
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
 	p = str_join_t(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
@@ -1515,6 +1518,9 @@ static void ShowSendInfo(HWND hWnd)
 #endif
 	}
 #endif
+	if (tpMailItem->RedirectTo != NULL) {
+		res = IDD_DIALOG_REDIRECT;
+	}
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem)) {
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		SetWindowString(hWnd, tpMailItem->Subject,

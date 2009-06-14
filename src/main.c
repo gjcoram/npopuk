@@ -3117,7 +3117,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 		return;
 	}
 	if (SelBox == MAILBOX_SEND) {
-		if (tpMailItem->RedirectTo != NULL) {
+		if (tpMailItem->RedirectTo != NULL && tpMailItem->MailStatus != ICON_SENTMAIL) {
 			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_REDIRECT), hWnd, SetSendProc,
 				(LPARAM)tpMailItem) == TRUE) {
 				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
@@ -4555,8 +4555,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				int next = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox);
 				if (next != -1) {
 					// ƒ[ƒ‹‚Ì‘—M
-					SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem + next), SMTP_NEXTSEND);
-					break;
+					ret = SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem + next), SMTP_NEXTSEND);
+					if (ret == TRUE) {
+						break;
+					}
 				}
 			}
 
@@ -4640,8 +4642,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				int next = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox);
 				if (next != -1) {
 					//Execution of transmission mail (POP before SMTP)
-					SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +	next), SMTP_NEXTSEND);
-					break;
+					ret = SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +	next), SMTP_NEXTSEND);
+					if (ret == TRUE) {
+						break;
+					}
 				}
 			}
 			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 &&
