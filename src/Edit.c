@@ -856,7 +856,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{3,	ID_MENUITEM_SENDINFO,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{4,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{4,	ID_MENUITEM_FIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{5,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -868,6 +869,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_SBOXMARK,
 		STR_CMDBAR_SENDBOX,
 		STR_CMDBAR_SENDINFO,
+		STR_CMDBAR_FIND,
 		STR_CMDBAR_NEXTFIND,
 		NULL // extra for CE.net
 	};
@@ -900,8 +902,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 
 	hEditToolBar = mbi.hwndMB;
-    CommandBar_AddToolTips(hEditToolBar, 7, szTips);
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 5, TB_ICONSIZE, TB_ICONSIZE);
+    CommandBar_AddToolTips(hEditToolBar, 8, szTips);
+	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 6, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	Height = 0;
 
@@ -939,10 +941,10 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hEditToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
 	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
 	// else HPC2000 (Jornada 690, 720)
-	CommandBar_AddToolTips(hEditToolBar, 12, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
+	CommandBar_AddToolTips(hEditToolBar, 8, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_EDIT_HPC : (WORD)IDR_MENU_EDIT;
 	CommandBar_InsertMenubar(hEditToolBar, hInst, idMenu, 0);
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 5, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 6, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hEditToolBar, 0, 0);
 
@@ -950,7 +952,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif
 #else
 	// Win32
-	hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 5, hInst, IDB_TOOLBAR_EDIT,
+	hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 6, hInst, IDB_TOOLBAR_EDIT,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hEditToolBar, GWL_STYLE, GetWindowLong(hEditToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hEditToolBar, TB_SETINDENT, 5, 0);

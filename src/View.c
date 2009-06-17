@@ -756,13 +756,14 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{4,	ID_MENUITEM_ALLREMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{5,	ID_MENUITEM_FORWARD,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{6,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{6,	ID_MENUITEM_FIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{7,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{7,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{8,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{9,	ID_MENUITEM_DELETE,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{10,ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{11,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{8,	ID_MENUITEM_DOWNMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{9,	ID_MENUITEM_DELMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{10,ID_MENUITEM_DELETE,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{11,ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{12,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
@@ -776,6 +777,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_REMESSEGE,
 		STR_CMDBAR_ALLREMESSEGE,
 		STR_CMDBAR_FORWARD,
+		STR_CMDBAR_FIND,
 		STR_CMDBAR_NEXTFIND,
 		STR_CMDBAR_DOWNMARK,
 		STR_CMDBAR_DELMARK,
@@ -811,8 +813,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	CommandBar_AddToolTips(hViewToolBar, 14, szTips);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 12, 16, 16);
+	CommandBar_AddToolTips(hViewToolBar, 15, szTips);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, 16, 16);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 
 #ifdef _WIN32_WCE_SP
@@ -850,16 +852,16 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
 	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
 	// else HPC2000 (Jornada 690, 720)
-	CommandBar_AddToolTips(hViewToolBar, 13, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
+	CommandBar_AddToolTips(hViewToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_VIEW_HPC : (WORD)IDR_MENU_VIEW;
 	CommandBar_InsertMenubar(hViewToolBar, hInst, idMenu, 0);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 12, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hViewToolBar, 0, 0);
 #endif
 #else
 	// Win32
-	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 12, hInst, IDB_TOOLBAR_VIEW,
+	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 13, hInst, IDB_TOOLBAR_VIEW,
 		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
 	SetWindowLong(hViewToolBar, GWL_STYLE, GetWindowLong(hViewToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hViewToolBar, TB_SETINDENT, 5, 0);
@@ -3079,6 +3081,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FIND,       lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
@@ -3086,6 +3089,7 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		// xsize < 300: hide some buttons
 		lp = (LPARAM)MAKELONG(1, 0);
 		if (op.ShowNavButtons) {
+			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FIND,       lp);
 			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
 			hidedel = 1;
@@ -3871,8 +3875,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
 							file_save_mailbox(fname, DataDir, mbox, FALSE, TRUE, 2);
 						}
-					} else {
-						ErrorMessage(hWnd, STR_ERR_SAVECOPY);
 					}
 					if (SelBox == mbox) {
 						SwitchCursor(FALSE);
