@@ -583,7 +583,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		if (!Found) {
 			// Error: can't make INI file name
 			TCHAR msg[MSG_SIZE];
-			wsprintf(msg,STR_ERR_INIFILE,p);
+			wsprintf(msg, STR_ERR_INIFILE, p);
 			ErrorMessage(NULL, msg);
 			mem_free(&AppDir);
 			FreeParms();
@@ -622,7 +622,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		if (buf == NULL) {
 			// Error: can't read file
 			TCHAR msg[MSG_SIZE];
-			wsprintf(msg,STR_ERR_INIFILE,fname);
+			wsprintf(msg, STR_ERR_READ_INI, fname);
 			ErrorMessage(NULL, msg);
 			mem_free(&AppDir);
 			mem_free(&DefaultDataDir);
@@ -691,19 +691,40 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	}
 
 	if (parms[OP_Y].value) {
+		TCHAR msg[MSG_SIZE];
 		IniFile = parms[OP_Y].value;
 		parms[OP_Y].value = NULL;
-		if (file_get_size(IniFile) == -1) {
-			TCHAR msg[MSG_SIZE];
-			HANDLE hFile;
+		len = file_get_size(IniFile);
+#ifdef _WIN32_WCE
+		if (len == -1) {
+			if (dir_check(DefaultDataDir) == FALSE) {
+				wsprintf(msg, STR_Q_DIR_NOT_READY, IniFile);
+				if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONERROR | MB_OKCANCEL) == IDCANCEL) {
+					mem_free(&IniFile);
+					mem_free(&AppDir);
+					mem_free(&DefaultDataDir);
+					FreeParms();
+					return -1;
+				}
+			}
+			len = file_get_size(IniFile);
+		}			
+#endif
+		if (len == -1) {
 			wsprintf(msg, STR_Q_CREATE_INIFILE, IniFile);
 			if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
-				BOOL hasdir;
-				hasdir = dir_create(DefaultDataDir);
+				HANDLE hFile;
+				dir_create(DefaultDataDir);
 				hFile = CreateFile(IniFile, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				if (hFile == NULL || hFile == (HANDLE)-1) {
-					wsprintf(msg, STR_ERR_INIFILE, IniFile);
-					ErrorMessage(NULL, msg);
+					DWORD DirInfo;
+					DirInfo = GetFileAttributes(DefaultDataDir);
+					if (DirInfo & FILE_ATTRIBUTE_READONLY) {
+						ErrorMessage(NULL, STR_ERR_READONLY);
+					} else {
+						wsprintf(msg, STR_ERR_WRITE_INI, IniFile);
+						ErrorMessage(NULL, msg);
+					}
 					mem_free(&IniFile);
 					mem_free(&AppDir);
 					mem_free(&DefaultDataDir);
@@ -711,6 +732,12 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 					return -1;
 				}
 				CloseHandle(hFile);
+			} else {
+				mem_free(&IniFile);
+				mem_free(&AppDir);
+				mem_free(&DefaultDataDir);
+				FreeParms();
+				return -1;
 			}
 		}
 	}
@@ -4296,7 +4323,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_SIZE:
 		if (wParam == SIZE_MINIMIZED) {
 #ifdef _WIN32_WCE_PPC
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				// could also unload mailboxes here
 				SaveWindow(hWnd, FALSE, FALSE, FALSE);
 			}
@@ -4593,6 +4620,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+			if (op.AutoSave == 2) {
+				AutoSave_Mailboxes(hWnd);
+			}
 
 			do {
 				CheckBox++;
@@ -4659,6 +4689,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			ExecCheckFlag = FALSE;
+			if (op.AutoSave == 2) {
+				AutoSave_Mailboxes(hWnd);
+			}
 
 			CheckBox++;
 			if (CheckBox >= MailBoxCnt) {
@@ -4916,7 +4949,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			} else {
 				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 			}
-			if (ret == TRUE && op.AutoSave == 1) {
+			if (ret == TRUE && op.AutoSave != 0) {
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 			}
 			SwitchCursor(TRUE);
@@ -5046,7 +5079,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
 				mailbox_select(hWnd, SelBox);
 			}
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5062,7 +5095,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			} else if (SetMailBoxOption(hWnd) == FALSE) {
 				break;
 			}
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5160,7 +5193,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			} else {
 				mailbox_select(hWnd, mailbox_delete(hWnd, SelBox, TRUE, FALSE));
 			}
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, TRUE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5170,7 +5203,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//of account Account on portable
 		case ID_MENUITEM_MOVEUPMAILBOX:
 			mailbox_move_up(hWnd, TRUE);
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5180,7 +5213,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Account under portable
 		case ID_MENUITEM_MOVEDOWNMAILBOX:
 			mailbox_move_down(hWnd, TRUE);
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5656,7 +5689,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								SetFlagOrDeleteMark(hWnd, ICON_DEL, TRUE);
 							}
 						}
-						if (op.AutoSave == 1 && (MailBox+Target)->Loaded == TRUE) {
+						if (op.AutoSave != 0 && (MailBox+Target)->Loaded == TRUE) {
 							// save Target mailbox
 							file_save_mailbox(fname, DataDir, Target, FALSE, TRUE, 2);
 						}
@@ -5823,7 +5856,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								SetFlagOrDeleteMark(hWnd, ICON_DEL, TRUE);
 							}
 						}
-						if (op.AutoSave == 1 && (MailBox+mbox)->Loaded == TRUE) {
+						if (op.AutoSave != 0 && (MailBox+mbox)->Loaded == TRUE) {
 							file_save_mailbox(fname, DataDir, mbox, FALSE, TRUE, 2);
 						}
 					}
