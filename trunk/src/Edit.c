@@ -1471,7 +1471,7 @@ static BOOL CloseEditMail(HWND hWnd, BOOL SendFlag, BOOL ShowFlag)
 	sent = (tpMailItem->MailStatus == ICON_SENTMAIL) ? TRUE : FALSE;
 	(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 
-	if (op.AutoSave == 1 && sent == FALSE) {
+	if (op.AutoSave != 0 && sent == FALSE) {
 		//Transmission box retention to file
 		file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
 	}

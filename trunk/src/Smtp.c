@@ -1400,7 +1400,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			}
 		}
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
-		if (op.AutoSave == 1) {
+		if (op.AutoSave != 0) {
 			// 送信箱をファイルに保存
 			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
 		}
@@ -1464,7 +1464,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			}
 		}
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
-		if (op.AutoSave == 1) {
+		if (op.AutoSave != 0) {
 			// 送信箱をファイルに保存
 			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
 		}

@@ -2558,7 +2558,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				MailboxSummaryAdd(SelBox, hListView, (i != MAILBOX_IMPORT_SAVE), sel+1);
 			}
 			SelBox = oldsel;
-			if (ret == TRUE && op.AutoSave == 1) {
+			if (ret == TRUE && op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hDlg, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -2624,7 +2624,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				ListView_SetItemText(hListView, sel, 0, p);
 				SelBox = oldsel;
 				SelectMBMenu(SelBox);
-				if (op.AutoSave == 1) {
+				if (op.AutoSave != 0) {
 					SwitchCursor(FALSE);
 					ini_save_setting(hDlg, FALSE, FALSE, NULL);
 					SwitchCursor(TRUE);
@@ -6948,9 +6948,9 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			}
 #ifdef _WIN32_WCE
-			if (op.AutoSave == 1 && op.UsePOOMAddressBook == 0) {
+			if (op.AutoSave != 0 && op.UsePOOMAddressBook == 0) {
 #else
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 #endif
 				// アドレス帳を保存
 				file_save_address_book(ADDRESS_FILE, DataDir, AddressBook);
@@ -8185,7 +8185,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			tpTmpAddressBook->tpAddrItem = NULL;
 			tpTmpAddressBook->ItemCnt = 0;
 
-			if (op.AutoSave == 1) {
+			if (op.AutoSave != 0) {
 				// アドレス帳を保存
 				file_save_address_book(ADDRESS_FILE, DataDir, AddressBook);
 			}
@@ -8771,7 +8771,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetControlFont(hDlg);
 		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
 		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
-		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
+		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT STR_ABOUT_OPENSSL);
 
 		memset ((char *)&logfont, 0, sizeof (logfont));
 
