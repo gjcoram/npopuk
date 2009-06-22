@@ -715,7 +715,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 			if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDYES) {
 				HANDLE hFile;
 				dir_create(DefaultDataDir);
-				hFile = CreateFile(IniFile, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				hFile = CreateFile(IniFile, GENERIC_WRITE, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				if (hFile == NULL || hFile == (HANDLE)-1) {
 					DWORD DirInfo;
 					DirInfo = GetFileAttributes(DefaultDataDir);
