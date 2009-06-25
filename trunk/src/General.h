@@ -110,8 +110,9 @@
 #define MAX_MAILBOX_CNT			1000				// see ID_MENUITEM_COPY2MBOX
 #define MAX_TRAY_CNT			10					// see ID_MENUITEM_TRAYCHECK
 
-#define SICONSIZE				16					//Size
-#define TB_ICONSIZE				16					//of small idea contest Column several
+#define SICONSIZE				16					//Size of listview icons
+//#define TB_ICONSIZE				32					//Toolbar buttons
+#define TB_ICONSIZE				16					//Toolbar buttons
 
 #define TABSTOPLEN				8					// TAB Stop
 
