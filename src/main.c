@@ -696,18 +696,14 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		parms[OP_Y].value = NULL;
 		len = file_get_size(IniFile);
 #ifdef _WIN32_WCE
-		if (len == -1) {
-			if (dir_check(DefaultDataDir) == FALSE) {
-				wsprintf(msg, STR_Q_DIR_NOT_READY, IniFile);
-				if (MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONERROR | MB_OKCANCEL) == IDCANCEL) {
-					mem_free(&IniFile);
-					mem_free(&AppDir);
-					mem_free(&DefaultDataDir);
-					FreeParms();
-					return -1;
-				}
-			}
-			len = file_get_size(IniFile);
+		if (len == -1 && dir_check(DefaultDataDir) == FALSE) {
+			wsprintf(msg, STR_ERR_DIR_NOT_READY, IniFile);
+			MessageBox(NULL, msg, WINDOW_TITLE, MB_ICONERROR | MB_OK);
+			mem_free(&IniFile);
+			mem_free(&AppDir);
+			mem_free(&DefaultDataDir);
+			FreeParms();
+			return -1;
 		}			
 #endif
 		if (len == -1) {

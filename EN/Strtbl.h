@@ -46,6 +46,7 @@
 #define STR_ERR_INIFILE				TEXT("Cannot find INI file: %s")
 #define STR_ERR_READ_INI			TEXT("Error reading INI file: %s")
 #define STR_ERR_WRITE_INI			TEXT("Error writing INI file: %s")
+#define STR_ERR_DIR_NOT_READY		TEXT("Directory not found or storage card not ready looking for\r\n'%s'")
 #define STR_ERR_READONLY			TEXT("Application directory is read-only")
 #define STR_ERR_NODATADIR			TEXT("DataFileDir is not a directory")
 #define STR_ERR_DATAREADONLY		TEXT("DataFileDir is read-only")
@@ -188,11 +189,9 @@
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\r\nSkip this one?")
 #define STR_Q_PARTIAL_ATTACH		TEXT("Incomplete attachment; continue?\r\n(Else cancel, download message, and try again)")
 #ifdef _WIN32_WCE
-#define STR_Q_DIR_NOT_READY			TEXT("Directory not found or storage card not ready looking for\r\n'%s'\r\n")\
-									TEXT("Click OK when ready or Cancel to exit.")
-#define STR_Q_CREATE_INIFILE		TEXT("Create INIFILE at '%s'?")
+#define STR_Q_CREATE_INIFILE		TEXT("Create configuation file at '%s'?")
 #else
-#define STR_Q_CREATE_INIFILE		TEXT("Welcome to nPOPuk!\r\nCreate a new INIFILE at '%s'?")
+#define STR_Q_CREATE_INIFILE		TEXT("Welcome to nPOPuk!\r\nCreate a new configuration file at '%s'?")
 #endif
 
 // Message
