@@ -19,8 +19,6 @@
 #include "charset.h"
 
 /* Define */
-#define GENERAL				TEXT("GENERAL")
-
 #define INI_BUF_SIZE		1024
 
 /* Global Variables */
@@ -1083,73 +1081,12 @@ BOOL ini_read_setting(HWND hWnd)
 }
 
 /*
- * ini_save_setting - INIファイルへ設定情報を書き出す
+ * ini_write_general - write GENERAL settings
  */
-BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir)
+void ini_write_general(BOOL do_pw)
 {
-	TCHAR app_path[BUF_SIZE];
-	///////////// MRP /////////////////////
-	TCHAR app_pathBackup[BUF_SIZE];
-	///////////// --- /////////////////////
-	TCHAR buf[BUF_SIZE];
-	TCHAR key_buf[BUF_SIZE];
 	TCHAR conv_buf[INI_BUF_SIZE];
-	TCHAR tmp[BUF_SIZE];
-#ifdef UNICODE
-	TCHAR ret[BUF_SIZE];
-#endif
-	int j, t;
-	BOOL rc = TRUE;
-	BOOL found;
-	BOOL is_backup = FALSE;
 
-	if (SaveDir == NULL) {
-		if (IniFile == NULL) {
-			str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-		} else {
-			str_cpy_n_t(app_path, IniFile, BUF_SIZE);
-		}
-	} else {
-		is_backup = TRUE;
-		if (IniFile == NULL) {
-			str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-		} else {
-			TCHAR *p, *q;
-			for (p = q = IniFile; *p != TEXT('\0'); p++) {
-#ifndef UNICODE
-				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p+1) != TEXT('\0')) {
-					p++;
-					continue;
-				}
-#endif
-				if (*p == TEXT('\\') || *p == TEXT('/')) {
-					q = p+1;
-				}
-			}
-			wsprintf(app_path, TEXT("%s%s"), SaveDir, q);
-		}
-	}
-
-	///////////// MRP /////////////////////
-#ifdef UNICODE
-	wcscpy(app_pathBackup, app_path);
-	wcscat(app_pathBackup, TEXT(".bak"));
-#else
-	strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
-	strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
-#endif
-	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
-	///////////// --- /////////////////////
-
-	// if IniFile != NULL or SaveDir != NULL, this initializes from
-	// the previous backup, not from the ini file in use!
-	profile_initialize(app_path, FALSE);
-
-	if (is_backup == TRUE) {
-		profile_write_string(GENERAL, TEXT("DataFileDir"), TEXT(""));
-	} else {
-		profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir);
-	}
 	profile_write_string(GENERAL, TEXT("BackupDir"), op.BackupDir);
 	profile_write_int(GENERAL, TEXT("Version"), op.Version);
 	profile_write_int(GENERAL, TEXT("SocLog"), op.SocLog);
@@ -1224,8 +1161,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass);
 	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes);
-	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
-	profile_write_string(GENERAL, TEXT("pw"), tmp);
+	if (do_pw) {
+		TCHAR tmp[BUF_SIZE];
+		EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
+		profile_write_string(GENERAL, TEXT("pw"), tmp);
+	}
 
 	profile_write_int(GENERAL, TEXT("LvColSize-0"), op.LvColSize[0]);
 	profile_write_int(GENERAL, TEXT("LvColSize-1"), op.LvColSize[1]);
@@ -1376,6 +1316,76 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("RasEndDisCon"), op.RasEndDisCon);
 	profile_write_int(GENERAL, TEXT("RasNoCheck"), op.RasNoCheck);
 	profile_write_int(GENERAL, TEXT("RasWaitSec"), op.RasWaitSec);
+}
+
+/*
+ * ini_save_setting - INIファイルへ設定情報を書き出す
+ */
+BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir)
+{
+	TCHAR app_path[BUF_SIZE];
+	///////////// MRP /////////////////////
+	TCHAR app_pathBackup[BUF_SIZE];
+	///////////// --- /////////////////////
+	TCHAR buf[BUF_SIZE];
+	TCHAR key_buf[BUF_SIZE];
+	TCHAR tmp[BUF_SIZE];
+#ifdef UNICODE
+	TCHAR ret[BUF_SIZE];
+#endif
+	int j, t;
+	BOOL rc = TRUE;
+	BOOL found;
+	BOOL is_backup = FALSE;
+
+	if (SaveDir == NULL) {
+		if (IniFile == NULL) {
+			str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		} else {
+			str_cpy_n_t(app_path, IniFile, BUF_SIZE);
+		}
+	} else {
+		is_backup = TRUE;
+		if (IniFile == NULL) {
+			str_join_t(app_path, SaveDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+		} else {
+			TCHAR *p, *q;
+			for (p = q = IniFile; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+				if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p+1) != TEXT('\0')) {
+					p++;
+					continue;
+				}
+#endif
+				if (*p == TEXT('\\') || *p == TEXT('/')) {
+					q = p+1;
+				}
+			}
+			wsprintf(app_path, TEXT("%s%s"), SaveDir, q);
+		}
+	}
+
+	///////////// MRP /////////////////////
+#ifdef UNICODE
+	wcscpy(app_pathBackup, app_path);
+	wcscat(app_pathBackup, TEXT(".bak"));
+#else
+	strcpy_s(app_pathBackup, BUF_SIZE-5, app_path);
+	strcat_s(app_pathBackup, BUF_SIZE, TEXT(".bak"));
+#endif
+	CopyFile(app_path, app_pathBackup, FALSE); // Create the backup file.
+	///////////// --- /////////////////////
+
+	// if IniFile != NULL or SaveDir != NULL, this initializes from
+	// the previous backup, not from the ini file in use!
+	profile_initialize(app_path, FALSE);
+
+	if (is_backup == TRUE) {
+		profile_write_string(GENERAL, TEXT("DataFileDir"), TEXT(""));
+	} else {
+		profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir);
+	}
+	ini_write_general(TRUE);
 
 	// GJC delete obsolete entries
 	profile_delete_key(GENERAL, TEXT("StertPass"));
@@ -1701,7 +1711,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		j++;
 	}
 
-	if (profile_flush(app_path) == FALSE) {
+	if (profile_flush(app_path, NULL) == FALSE) {
 		rc = FALSE;
 	}
 	profile_free();	 

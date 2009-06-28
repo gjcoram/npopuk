@@ -135,8 +135,6 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void EndWindow(HWND hWnd);
 static void SetViewMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL BodyOnly);
-static MAILITEM *View_NextMail(HWND hWnd);
-static MAILITEM *View_PrevMail(HWND hWnd);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
 static void View_Scroll(HWND hWnd, int dir);
 static int FindLargerImage(HWND hWnd, int id, BOOL ask);
@@ -1455,21 +1453,21 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 }
 
 /*
- * View_NextMail - 次のメールを表示
+ * View_NextPrev - next or previous message
  */
-static MAILITEM *View_NextMail(HWND hWnd)
+MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
 	int Index;
 	int j;
 
-	if (SelBox == MAILBOX_SEND) {
+	if ((isView == TRUE && SelBox == MAILBOX_SEND) || (isView == FALSE && SelBox != MAILBOX_SEND)) {
 		return NULL;
 	}
-	if (DigestMessageNum > 0 && DigestMaster != NULL) {
-		j = DigestMessageNum + 1;
-		if (j < DigestMessageCnt) {
+	if (SelBox != MAILBOX_SEND && DigestMessageNum > 0 && DigestMaster != NULL) {
+		j = DigestMessageNum + dir;
+		if (j > 0 && j < DigestMessageCnt) {
 			TCHAR *tmp;
 			multipart_free(&vMultiPart, MultiPartCnt);
 			vMultiPart = NULL;
@@ -1487,13 +1485,17 @@ static MAILITEM *View_NextMail(HWND hWnd)
 		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 
-		if (AttachMailItem == NULL || tpMailItem != AttachMailItem) {
+		if (SelBox == MAILBOX_SEND || AttachMailItem == NULL || tpMailItem != AttachMailItem) {
 			Index = ListView_GetMemToItem(hListView, tpMailItem);
 		} else {
 			Index = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
 		}
 
-		j = ListView_GetNextMailItem(hListView, Index);
+		if (dir > 0) {
+			j = ListView_GetNextMailItem(hListView, Index);
+		} else {
+			j = ListView_GetPrevMailItem(hListView, Index);
+		}
 		if (j == -1) {
 			return NULL;
 		}
@@ -1504,62 +1506,10 @@ static MAILITEM *View_NextMail(HWND hWnd)
 
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	}
-	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
-	ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
-	return tpMailItem;
-}
-
-/*
- * View_PrevMail - 前のメールを表示
- */
-static MAILITEM *View_PrevMail(HWND hWnd)
-{
-	MAILITEM *tpMailItem;
-	HWND hListView;
-	int Index;
-	int j;
-
-	if (SelBox == MAILBOX_SEND) {
-		return NULL;
+	if (isView) {
+		SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
+		ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 	}
-	if (DigestMessageNum > 0 && DigestMaster != NULL) {
-		j = DigestMessageNum - 1;
-		if (j > 0) {
-			TCHAR *tmp;
-			multipart_free(&vMultiPart, MultiPartCnt);
-			vMultiPart = NULL;
-			MultiPartCnt = 0;
-			tmp = MIME_body_decode(DigestMaster, FALSE, FALSE, &vMultiPart, &MultiPartCnt, &Index);
-			mem_free(&tmp);
-			SetWindowLong(hWnd, GWL_USERDATA, (long)DigestMaster);
-			if (AttachDecode(hWnd, j, DECODE_OPEN_IF_MSG) == TRUE) {
-				return AttachMailItem;
-			}
-		}
-		// else return to master
-		tpMailItem = DigestMaster;
-	} else {
-		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-		if (AttachMailItem == NULL || tpMailItem != AttachMailItem) {
-			Index = ListView_GetMemToItem(hListView, tpMailItem);
-		} else {
-			Index = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
-		}
-
-		j = ListView_GetPrevMailItem(hListView, Index);
-		if (j == -1) {
-			return NULL;
-		}
-		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-		ListView_SetItemState(hListView,
-			j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-		ListView_EnsureVisible(hListView, j, TRUE);
-
-		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
-	}
-	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
-	ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 	return tpMailItem;
 }
 
@@ -1577,7 +1527,7 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 		return NULL;
 	}
 	if (DigestMessageNum > 0 && DigestMaster != NULL) {
-		return View_NextMail(hWnd);
+		return View_NextPrev(hWnd, +1, TRUE);
 	}
 	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -1675,7 +1625,7 @@ static void View_Scroll(HWND hWnd, int dir)
 		}
 		SendMessage(hWnd, WM_VSCROLL, SB_PAGEUP, 0);
 		if (Next == TRUE) {
-			if (View_PrevMail(hViewWnd) == NULL && op.ViewCloseNoNext == 1) {
+			if (View_NextPrev(hViewWnd, -1, TRUE) == NULL && op.ViewCloseNoNext == 1) {
 				SendMessage(hViewWnd, WM_CLOSE, 0, 0);
 			}
 		}
@@ -3081,7 +3031,6 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
-		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FIND,       lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
@@ -3089,20 +3038,23 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
 		// xsize < 300: hide some buttons
 		lp = (LPARAM)MAKELONG(1, 0);
 		if (op.ShowNavButtons) {
-			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FIND,       lp);
 			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTFIND,   lp);
 			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK,   lp);
 			hidedel = 1;
-		} else {
-			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
-			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
-			SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
 		}
 		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK,   lp);
 	}
+	if (!op.ShowNavButtons) {
+		lp = (LPARAM)MAKELONG(1, 0);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_PREVMAIL,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTMAIL,   lp);
+		SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_NEXTUNREAD, lp);
+	}
 	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(hidedel || IsSaveBox == TRUE, 0));
 	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELETE,  (LPARAM)MAKELONG(hidedel || IsSaveBox == FALSE, 0));
-	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, (LPARAM)MAKELONG((xsize < 350), 0));
+	lp = (LPARAM)MAKELONG((xsize < 300) || (xsize < 350 && op.ShowNavButtons), 0);
+	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_UNREADMARK, lp);
+	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_FIND,       lp);
 #else
 	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELMARK, (LPARAM)MAKELONG(IsSaveBox == TRUE, 0));
 	SendMessage(htv, TB_HIDEBUTTON, ID_MENUITEM_DELETE,  (LPARAM)MAKELONG(IsSaveBox == FALSE, 0));
@@ -3386,13 +3338,13 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_NEXTMAIL:
-			if (View_NextMail(hWnd) == NULL && op.ViewCloseNoNext == 1) {
+			if (View_NextPrev(hWnd, +1, TRUE) == NULL && op.ViewCloseNoNext == 1) {
 				SendMessage(hWnd, WM_CLOSE, 0, 0);
 			}
 			break;
 
 		case ID_MENUITEM_PREVMAIL:
-			if (View_PrevMail(hWnd) == NULL && op.ViewCloseNoNext == 1) {
+			if (View_NextPrev(hWnd, -1, TRUE) == NULL && op.ViewCloseNoNext == 1) {
 				SendMessage(hWnd, WM_CLOSE, 0, 0);
 			}
 			break;
@@ -3505,7 +3457,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				GetMarkStatus(hWnd, tpMailItem);
 				if (tpMailItem->Mark == ICON_DEL) {
 					if (op.ViewNextAfterDel == 1) {
-						tpMailItem = View_NextMail(hWnd);
+						tpMailItem = View_NextPrev(hWnd, +1, TRUE);
 					} else if (op.ViewNextAfterDel == 2) {
 						tpMailItem = View_NextUnreadMail(hWnd);
 					}
@@ -3866,7 +3818,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 								SetMark(hWnd, tpMailItem, ICON_DEL);
 								GetMarkStatus(hWnd, tpMailItem);
 								if (op.ViewNextAfterDel == 1) {
-									tpNextMail = View_NextMail(hWnd);
+									tpNextMail = View_NextPrev(hWnd, +1, TRUE);
 								} else if (op.ViewNextAfterDel == 2) {
 									tpNextMail = View_NextUnreadMail(hWnd);
 								}

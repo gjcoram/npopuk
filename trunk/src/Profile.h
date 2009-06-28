@@ -14,12 +14,14 @@
 /* Include Files */
 
 /* Define */
+#define GENERAL					TEXT("GENERAL")
 
 /* Struct */
 
 /* Function Prototypes */
+BOOL profile_create(void);
 BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only);
-BOOL profile_flush(const TCHAR *file_path);
+BOOL profile_flush(const TCHAR *file_path, TCHAR **general_only);
 void profile_free(void);
 long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, TCHAR *ret, const long size);
 TCHAR *profile_alloc_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str);
