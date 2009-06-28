@@ -21,7 +21,7 @@
 #include "nEdit.h"
 #endif
 #include "code.h"
-#include "mime.h" // GJC experiment
+#include "profile.h"
 
 /* Define */
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ
@@ -208,6 +208,7 @@ static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
 static void SetMailboxMark(int Box, int Status);
 static void AutoSave_Mailboxes(HWND hWnd);
+static BOOL AdvOptionEditor(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
 static HWND InitInstance(HINSTANCE hInstance, int CmdShow);
@@ -2529,8 +2530,8 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 	BOOL SaveAll = (SelDir == TRUE) || (UpdateStatus == TRUE) || (op.AutoSave == 0);
 	BOOL err = FALSE;
 #ifdef _WIN32_WCE_PPC
+	// watch out for quit messages from task managers
 	MSG msg;
-
 	PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
 #endif
 
@@ -4112,6 +4113,28 @@ static void AutoSave_Mailboxes(HWND hWnd)
 	}
 	SwitchCursor(TRUE);
 }
+
+/*
+ * AdvOptionEditor - text edit of global options section of INI file
+ */
+static BOOL AdvOptionEditor(HWND hWnd)
+{
+	BOOL ret = FALSE;
+	MAILITEM *tpMailItem;
+
+	tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+	if (tpMailItem == NULL || profile_create() == FALSE) {
+		ErrorMessage(hWnd, STR_ERR_MEMALLOC);
+		return FALSE;
+	}
+	tpMailItem->Body = NULL;
+	ini_write_general(TRUE);
+	ret = profile_flush(NULL, &(tpMailItem->Body));
+	profile_free();
+
+	return ret;
+}
+
 /*
  * WndProc - Message handler for main window
  */
@@ -4417,7 +4440,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_CLOSE:
 #ifdef _WIN32_WCE_PPC
-		// some task managers send both in succession
+		// some task managers send ctrl+q then wm_close in succession
 		if (gDoingQuit == TRUE) {
 			break;
 		}
@@ -4435,6 +4458,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 		if (op.CheckQueuedOnExit > 0 
 			&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
+#ifdef _WIN32_WCE_PPC
+			// watch out for quit messages from task managers
+			MSG msg;
+			PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
+#endif
 			_SetForegroundWindow(hWnd);
 			if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				mailbox_select(hWnd, MAILBOX_SEND);
@@ -4929,7 +4957,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Option
 		case ID_MENUITEM_OPTION:
-			ret = SetOption(hWnd);
+			if ((GetKeyState(VK_SHIFT) < 0) && 
+					MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES) {
+				ret = AdvOptionEditor(hWnd);
+			} else {
+				ret = SetOption(hWnd);
+			}
 
 			SwitchCursor(FALSE);
 			// 自動チェックタイマーの設定

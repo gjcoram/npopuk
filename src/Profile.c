@@ -277,6 +277,18 @@ static int key_find(const SECTION_INFO *si, const TCHAR *key_name)
 }
 
 /*
+ * profile_create - just set up memory
+ */
+BOOL profile_create(void) {
+	if ((section_info = (SECTION_INFO *)mem_calloc(sizeof(SECTION_INFO) * ALLOC_SIZE)) == NULL) {
+		return FALSE;
+	}
+	section_count = 1;
+	section_size = ALLOC_SIZE;
+	return TRUE;
+}
+
+/*
  * profile_initialize - 初期化
  */
 BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
@@ -335,13 +347,10 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 	buf = cbuf;
 #endif
 
-	// セクションの確保
-	if ((section_info = (SECTION_INFO *)mem_calloc(sizeof(SECTION_INFO) * ALLOC_SIZE)) == NULL) {
+	if (profile_create() == FALSE) {
 		mem_free(&buf);
 		return FALSE;
 	}
-	section_count = 1;
-	section_size = ALLOC_SIZE;
 
 	p = buf;
 	while ((file_size > (p - buf)) && *p != TEXT('\0') && Done == FALSE) {
@@ -407,10 +416,10 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 /*
  * profile_flush - バッファをファイルに書き込む
  */
-BOOL profile_flush(const TCHAR *file_path)
+BOOL profile_flush(const TCHAR *file_path, TCHAR **general_only)
 {
 	HANDLE hFile;
-	TCHAR *buf, *p;
+	TCHAR *buf, *p, *name;
 	int len;
 	int i, j;
 
@@ -424,9 +433,13 @@ BOOL profile_flush(const TCHAR *file_path)
 		if ((section_info + i)->key_info == NULL) {
 			continue;
 		}
+		name = (section_info + i)->section_name;
+		if (general_only && lstrcmp(name, GENERAL) != 0) {
+			continue;
+		}
 		// セクション名
 		if (i != 0) {
-			len += lstrlen((section_info + i)->section_name) + 4;
+			len += lstrlen(name) + 4;
 		}
 		for (j = 0; j < (section_info + i)->key_count; j++) {
 			if (*((section_info + i)->key_info + j)->key_name == TEXT('\0')) {
@@ -455,10 +468,14 @@ BOOL profile_flush(const TCHAR *file_path)
 		if ((section_info + i)->key_info == NULL) {
 			continue;
 		}
+		name = (section_info + i)->section_name;
+		if (general_only && lstrcmp(name, GENERAL) != 0) {
+			continue;
+		}
 		// セクション名
 		if (i != 0) {
 			*(p++) = TEXT('[');
-			lstrcpy(p, (section_info + i)->section_name);
+			lstrcpy(p, name);
 			p += lstrlen(p);
 			*(p++) = TEXT(']');
 			*(p++) = TEXT('\r');
@@ -487,21 +504,23 @@ BOOL profile_flush(const TCHAR *file_path)
 	}
 	*p = TEXT('\0');
 
-	// ファイルを開く
+	if (general_only) {
+		// only requesting a string containing the [GENERAL] section
+		*general_only = buf;
+		return TRUE;
+	}
+
 	hFile = CreateFile(file_path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == NULL || hFile == (HANDLE)-1) {
 		mem_free(&buf);
 		return FALSE;
 	}
-	// ファイルに書き込む
 	if (write_ascii_file(hFile, buf, len) == FALSE) {
 		mem_free(&buf);
 		CloseHandle(hFile);
 		return FALSE;
 	}
-	// メモリの解放
 	mem_free(&buf);
-	// ファイルを閉じる
 	FlushFileBuffers(hFile);
 	CloseHandle(hFile);
 	return TRUE;

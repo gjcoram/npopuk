@@ -850,6 +850,7 @@ BOOL file_delete(HWND hWnd, TCHAR *name);
 // Ini
 BOOL ini_start_auth_check(void);
 BOOL ini_read_setting(HWND hWnd);
+void ini_write_general(BOOL do_pw);
 BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir);
 void ini_free(void);
 
@@ -984,6 +985,7 @@ int SetWordBreak(HWND hWnd, HMENU hMenu);
 #else
 int SetWordBreak(HWND hWnd);
 #endif
+MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView);
 void View_FindMail(HWND hWnd, BOOL FindSet);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
