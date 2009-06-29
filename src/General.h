@@ -1007,7 +1007,6 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 
 // Option
 void SetSip(HWND hDlg, int edit_notify);
-void SetControlFont(HWND pWnd);
 int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);
@@ -1017,6 +1016,7 @@ BOOL SetMailBoxOption(HWND hWnd);
 BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL SetOption(HWND hWnd);
 BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

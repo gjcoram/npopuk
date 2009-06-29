@@ -480,6 +480,7 @@
 #define STR_CMDBAR_SEND				TEXT("Send now")
 #define STR_CMDBAR_SBOXMARK			TEXT("Save and Mark")
 #define STR_CMDBAR_SENDBOX			TEXT("Save to Outbox")
+#define STR_CMDBAR_SAVECOPY			TEXT("Edit as New")
 #define STR_CMDBAR_SENDINFO			TEXT("Property")
 
 #define STR_LIST_PPCMENU_SENDINFO	TEXT("&Property")

@@ -100,6 +100,7 @@ extern int FindNext, FindOrReplace;
 extern DWORD FindPos;
 
 /* Local Function Prototypes */
+static void SetControlFont(HWND pWnd);
 static LRESULT OptionNotifyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, int ListId);
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
@@ -244,7 +245,7 @@ void SetSip(HWND hDlg, int edit_notify)
 /*
  * SetControlFont - コントロールのフォント設定
  */
-void SetControlFont(HWND pWnd)
+static void SetControlFont(HWND pWnd)
 {
 	HWND hWnd;
 	TCHAR buf[BUF_SIZE];
@@ -4025,6 +4026,68 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		retval = FALSE;
 	}
 	return retval;
+}
+
+/*
+ * AdvOptionProc - callback for advanced options editor
+ */
+BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static BOOL first = TRUE;
+	TCHAR **tmp;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_OPTIONEDIT, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+
+		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		tmp = (TCHAR **)lParam;
+		SendDlgItemMessage(hDlg, IDC_EDIT_INI, WM_SETTEXT, 0, (LPARAM)*tmp);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_INI),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+		first = TRUE;
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_EDIT_SIG:
+			if (first && HIWORD( wParam ) == EN_SETFOCUS) {
+				int len = lstrlen(STR_WARN_EDIT_RISK);
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, 0, (LPARAM)len);
+				first = FALSE;
+			}
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetSip(hDlg, HIWORD(wParam));
+#endif
+			break;
+
+		case IDOK:
+			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_INI), tmp);
+			EndDialog(hDlg, FALSE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /*
