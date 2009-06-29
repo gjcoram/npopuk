@@ -180,24 +180,16 @@ static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
 }
 
 /*
- * ini_read_setting - INIファイルから設定情報を読みこむ
+ * ini_read_general
  */
-BOOL ini_read_setting(HWND hWnd)
+void ini_read_general(HWND hWnd)
 {
-	DWORD DirInfo;
 	HDC hdc;
 	RECT scr_rect;
-	TCHAR app_path[BUF_SIZE];
-	TCHAR buf[BUF_SIZE];
-	TCHAR key_buf[BUF_SIZE];
-	TCHAR conv_buf[INI_BUF_SIZE];
-	TCHAR ret[BUF_SIZE];
-	TCHAR tmp[BUF_SIZE];
-	TCHAR *ConvertName = NULL;
-	TCHAR *p, *r;
 	UINT char_set;
-	int i, j, t, cnt, num, len;
-	int fDef, width;
+	TCHAR conv_buf[INI_BUF_SIZE];
+	TCHAR tmp[BUF_SIZE];
+	int len, width, t, i;
 
 	hdc = GetDC(hWnd);
 #ifndef _WIN32_WCE
@@ -207,107 +199,30 @@ BOOL ini_read_setting(HWND hWnd)
 #endif
 	ReleaseDC(hWnd, hdc);
 
-	if (IniFile != NULL) {
-		TCHAR msg[MSG_SIZE];
-		long fsize;
-		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
-		fsize = file_get_size(app_path);
-		if (fsize == -2) {
-			wsprintf(msg, STR_ERR_FILE_TOO_LARGE, app_path);
-			ErrorMessage(hWnd, msg);
-			return FALSE;
-		} else if (fsize == -1) {
-			wsprintf(msg, STR_ERR_INIFILE, app_path);
-			ErrorMessage(NULL, msg);
-			return FALSE;
-		}
-	} else {
-		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
-	}
-	if (profile_initialize(app_path, FALSE) == FALSE) {
-		return FALSE;
-	}
-
-	// cache at start-up
-	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)op.DecPt, 4);
-
-	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1);
-
-	if (*op.DataFileDir == TEXT('\0')) {
-		DataDir = DefaultDataDir;
-//GJC } else if (*op.DataFileDir == TEXT('.')) {
-		// relative path
-// look out: DataDir shouldn't be freed in the other two cases ...
-	} else {
-		DataDir = op.DataFileDir;
-		for (p = r = DataDir; *p != TEXT('\0'); p++) {
-#ifndef UNICODE
-			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-				p++;
-				continue;
-			}
-#endif
-			if (*p == TEXT('\\') || *p == TEXT('/')) {
-				r = p;
-			}
-		}
-		if (r != (DataDir + lstrlen(DataDir) - 1) || lstrlen(DataDir) == 1) {
-			lstrcat(DataDir, TEXT("\\"));
-		}
-		DirInfo = GetFileAttributes(DataDir);
-		if ((DirInfo == 0xFFFFFFFF) || !(DirInfo & FILE_ATTRIBUTE_DIRECTORY)) {
-			MessageBox(NULL, STR_ERR_NODATADIR, KEY_NAME, MB_OK | MB_ICONERROR);
-			return FALSE;
-		} else if (DirInfo & FILE_ATTRIBUTE_READONLY) {
-			MessageBox(NULL, STR_ERR_DATAREADONLY, KEY_NAME, MB_OK);
-		}
-	}
-
-	op.BackupDir = profile_alloc_string(GENERAL, TEXT("BackupDir"), TEXT(""));
-
-	op.Version = profile_get_int(GENERAL, TEXT("Version"), 0);
-	if (op.Version > APP_VERSION_NUM) {
-		wsprintf(tmp, STR_MSG_NEWVERSION, app_path, KEY_NAME);
-		if (MessageBox(hWnd, tmp, WINDOW_TITLE, MB_YESNO) == IDNO) {
-			return FALSE;
-		}
-	}
-	// if op.Version < APP_VERSION_NUM, adjust at end (after checking other settings)
-
-	{
-		OSVERSIONINFO os_info;
-		os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		GetVersionEx(&os_info);
-		op.osPlatformId = os_info.dwPlatformId;
-		op.osMajorVer = os_info.dwMajorVersion;
-		op.osMinorVer = os_info.dwMinorVersion;
-
-		memset (&scr_rect, 0, sizeof (RECT));
-#if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
-		if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
-			// Win98 or later
-			SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&scr_rect, 0);
-		} else
-#endif
-		{
-			scr_rect.left   = 0;
-			scr_rect.top    = 0;
-			scr_rect.right  = GetSystemMetrics(SM_CXSCREEN);
-			scr_rect.bottom = GetSystemMetrics(SM_CYSCREEN);
-#ifdef _WIN32_WCE
-			scr_rect.top	 =  MENU_HEIGHT;
-			scr_rect.right  -= 5; // so resize border is visible
-			scr_rect.bottom -= MENU_HEIGHT; // ignoring sip status
-#endif
-		}
-	}
-
-
 #ifdef _DEBUG
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 1);
 #else
 	op.SocLog = profile_get_int(GENERAL, TEXT("SocLog"), 0);
 #endif
+
+	memset (&scr_rect, 0, sizeof (RECT));
+#if (WINVER >= 0x0500) && (!defined(_WIN32_WCE))
+	if (op.osMajorVer > 4 || (op.osMajorVer == 4 && op.osMinorVer >= 10)) {
+			// Win98 or later
+		SystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)&scr_rect, 0);
+	} else
+#endif
+	{
+		scr_rect.left   = 0;
+		scr_rect.top    = 0;
+		scr_rect.right  = GetSystemMetrics(SM_CXSCREEN);
+		scr_rect.bottom = GetSystemMetrics(SM_CYSCREEN);
+#ifdef _WIN32_WCE
+		scr_rect.top	 =  MENU_HEIGHT;
+		scr_rect.right  -= 5; // so resize border is visible
+		scr_rect.bottom -= MENU_HEIGHT; // ignoring sip status
+#endif
+	}
 
 	op.view_font.name = profile_alloc_string(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT);
 	op.view_font.size = profile_get_int(GENERAL, TEXT("FontSize"), 9);
@@ -422,9 +337,6 @@ BOOL ini_read_setting(HWND hWnd)
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0);
 	op.ScrambleMailboxes = profile_get_int(GENERAL, TEXT("ScrambleMailboxes"), 0);
-	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1);
-	EncodePassword(TEXT("_pw_"), ret, tmp, BUF_SIZE - 1, TRUE);
-	op.Password = alloc_copy_t(tmp);
 
 #ifdef _WIN32_WCE
 	op.LvColSize[0] = profile_get_int(GENERAL, TEXT("LvColSize-0"), 158);
@@ -703,6 +615,104 @@ BOOL ini_read_setting(HWND hWnd)
 	op.URLAppCmdLine = profile_alloc_string(GENERAL, TEXT("URLAppCmdLine"), TEXT(""));
 
 	op.EnableLAN = profile_get_int(GENERAL, TEXT("EnableLAN"), 0);
+}
+
+/*
+ * ini_read_setting - INIファイルから設定情報を読みこむ
+ */
+BOOL ini_read_setting(HWND hWnd)
+{
+	DWORD DirInfo;
+	TCHAR app_path[BUF_SIZE];
+	TCHAR buf[BUF_SIZE];
+	TCHAR key_buf[BUF_SIZE];
+	TCHAR ret[BUF_SIZE];
+	TCHAR msg[MSG_SIZE];
+	TCHAR *ConvertName = NULL;
+	TCHAR *p, *r;
+	int i, j, t, cnt, num, len;
+	int fDef;
+
+	if (IniFile != NULL) {
+		long fsize;
+		str_cpy_n_t(app_path, IniFile, BUF_SIZE);
+		fsize = file_get_size(app_path);
+		if (fsize == -2) {
+			wsprintf(msg, STR_ERR_FILE_TOO_LARGE, app_path);
+			ErrorMessage(hWnd, msg);
+			return FALSE;
+		} else if (fsize == -1) {
+			wsprintf(msg, STR_ERR_INIFILE, app_path);
+			ErrorMessage(NULL, msg);
+			return FALSE;
+		}
+	} else {
+		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
+	}
+	if (profile_initialize(app_path, FALSE) == FALSE) {
+		return FALSE;
+	}
+
+	// cache at start-up
+	GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, (LPTSTR)op.DecPt, 4);
+
+	len = profile_get_string(GENERAL, TEXT("DataFileDir"), TEXT(""), op.DataFileDir, BUF_SIZE - 1);
+
+	if (*op.DataFileDir == TEXT('\0')) {
+		DataDir = DefaultDataDir;
+//GJC } else if (*op.DataFileDir == TEXT('.')) {
+		// relative path
+// look out: DataDir shouldn't be freed in the other two cases ...
+	} else {
+		DataDir = op.DataFileDir;
+		for (p = r = DataDir; *p != TEXT('\0'); p++) {
+#ifndef UNICODE
+			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+				p++;
+				continue;
+			}
+#endif
+			if (*p == TEXT('\\') || *p == TEXT('/')) {
+				r = p;
+			}
+		}
+		if (r != (DataDir + lstrlen(DataDir) - 1) || lstrlen(DataDir) == 1) {
+			lstrcat(DataDir, TEXT("\\"));
+		}
+		DirInfo = GetFileAttributes(DataDir);
+		if ((DirInfo == 0xFFFFFFFF) || !(DirInfo & FILE_ATTRIBUTE_DIRECTORY)) {
+			MessageBox(NULL, STR_ERR_NODATADIR, KEY_NAME, MB_OK | MB_ICONERROR);
+			return FALSE;
+		} else if (DirInfo & FILE_ATTRIBUTE_READONLY) {
+			MessageBox(NULL, STR_ERR_DATAREADONLY, KEY_NAME, MB_OK);
+		}
+	}
+
+	op.BackupDir = profile_alloc_string(GENERAL, TEXT("BackupDir"), TEXT(""));
+
+	op.Version = profile_get_int(GENERAL, TEXT("Version"), 0);
+	if (op.Version > APP_VERSION_NUM) {
+		wsprintf(msg, STR_MSG_NEWVERSION, app_path, KEY_NAME);
+		if (MessageBox(hWnd, msg, WINDOW_TITLE, MB_YESNO) == IDNO) {
+			return FALSE;
+		}
+	}
+	// if op.Version < APP_VERSION_NUM, adjust at end (after checking other settings)
+
+	{
+		OSVERSIONINFO os_info;
+		os_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&os_info);
+		op.osPlatformId = os_info.dwPlatformId;
+		op.osMajorVer = os_info.dwMajorVersion;
+		op.osMinorVer = os_info.dwMinorVersion;
+	}
+
+	ini_read_general(hWnd);
+
+	profile_get_string(GENERAL, TEXT("pw"), TEXT(""), ret, BUF_SIZE - 1);
+	EncodePassword(TEXT("_pw_"), ret, buf, BUF_SIZE - 1, TRUE);
+	op.Password = alloc_copy_t(buf);
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1);
@@ -729,8 +739,8 @@ BOOL ini_read_setting(HWND hWnd)
 
 		wsprintf(key_buf, TEXT("RASINFO-%d_%s"), j, TEXT("RasPass"));
 		len = profile_get_string(TEXT("RASINFO"), key_buf, TEXT(""), ret, BUF_SIZE - 1);
-		EncodePassword((*(op.RasInfo + j))->RasUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(*(op.RasInfo + j))->RasPass = alloc_copy_t(tmp);
+		EncodePassword((*(op.RasInfo + j))->RasUser, ret, msg, BUF_SIZE - 1, TRUE);
+		(*(op.RasInfo + j))->RasPass = alloc_copy_t(msg);
 	}
 
 	op.GlobalFilterEnable = profile_get_int(GENERAL, TEXT("GlobalFilterEnable"), 0);
@@ -841,8 +851,8 @@ BOOL ini_read_setting(HWND hWnd)
 				}
 				if (file_read_mailbox(buf, (MailBox + num), FALSE, TRUE) == FALSE) {
 					profile_free();
-					wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
-					ErrorMessage(hWnd, tmp);
+					wsprintf(msg, STR_ERR_OPENMAILBOX, buf);
+					ErrorMessage(hWnd, msg);
 					return FALSE;
 				}
 			} else {
@@ -864,8 +874,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->User = profile_alloc_string(buf, TEXT("User"), TEXT(""));
 		// Pass
 		profile_get_string(buf, TEXT("Pass"), TEXT(""), ret, BUF_SIZE - 1);
-		EncodePassword((MailBox + num)->User, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + num)->Pass = alloc_copy_t(tmp);
+		EncodePassword((MailBox + num)->User, ret, msg, BUF_SIZE - 1, TRUE);
+		(MailBox + num)->Pass = alloc_copy_t(msg);
 		// APOP
 		(MailBox + num)->APOP = profile_get_int(buf, TEXT("APOP"), 0);
 		// POP SSL
@@ -947,8 +957,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->SmtpUser = profile_alloc_string(buf, TEXT("SmtpUser"), TEXT(""));
 		// SMTP Authentication Pass
 		profile_get_string(buf, TEXT("SmtpPass"), TEXT(""), ret, BUF_SIZE - 1);
-		EncodePassword((MailBox + num)->SmtpUser, ret, tmp, BUF_SIZE - 1, TRUE);
-		(MailBox + num)->SmtpPass = alloc_copy_t(tmp);
+		EncodePassword((MailBox + num)->SmtpUser, ret, msg, BUF_SIZE - 1, TRUE);
+		(MailBox + num)->SmtpPass = alloc_copy_t(msg);
 		// SMTP SSL
 		(MailBox + num)->SmtpSSL = profile_get_int(buf, TEXT("SmtpSSL"), 0);
 		// SMTP SSL Option
@@ -1021,8 +1031,8 @@ BOOL ini_read_setting(HWND hWnd)
 			}
 			if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 				profile_free();
-				wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
-				ErrorMessage(hWnd, tmp);
+				wsprintf(msg, STR_ERR_OPENMAILBOX, buf);
+				ErrorMessage(hWnd, msg);
 				return FALSE;
 			}
 		} else {
@@ -1051,8 +1061,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->CyclicFlag = 1;
 		if (file_read_mailbox(buf, (MailBox + num), FALSE, FALSE) == FALSE) {
 			profile_free();
-			wsprintf(tmp, STR_ERR_OPENMAILBOX, buf);
-			ErrorMessage(hWnd, tmp);
+			wsprintf(msg, STR_ERR_OPENMAILBOX, buf);
+			ErrorMessage(hWnd, msg);
 			return FALSE;
 		}
 	}
@@ -1083,12 +1093,10 @@ BOOL ini_read_setting(HWND hWnd)
 /*
  * ini_write_general - write GENERAL settings
  */
-void ini_write_general(BOOL do_pw)
+void ini_write_general(void)
 {
 	TCHAR conv_buf[INI_BUF_SIZE];
 
-	profile_write_string(GENERAL, TEXT("BackupDir"), op.BackupDir);
-	profile_write_int(GENERAL, TEXT("Version"), op.Version);
 	profile_write_int(GENERAL, TEXT("SocLog"), op.SocLog);
 
 	profile_write_string(GENERAL, TEXT("FontName"), op.view_font.name);
@@ -1161,11 +1169,6 @@ void ini_write_general(BOOL do_pw)
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass);
 	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes);
-	if (do_pw) {
-		TCHAR tmp[BUF_SIZE];
-		EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
-		profile_write_string(GENERAL, TEXT("pw"), tmp);
-	}
 
 	profile_write_int(GENERAL, TEXT("LvColSize-0"), op.LvColSize[0]);
 	profile_write_int(GENERAL, TEXT("LvColSize-1"), op.LvColSize[1]);
@@ -1309,13 +1312,6 @@ void ini_write_general(BOOL do_pw)
 	profile_write_string(GENERAL, TEXT("URLApp"), op.URLApp);
 
 	profile_write_int(GENERAL, TEXT("EnableLAN"), op.EnableLAN);
-
-	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon);
-	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon);
-	profile_write_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), op.RasCheckEndDisConTimeout);
-	profile_write_int(GENERAL, TEXT("RasEndDisCon"), op.RasEndDisCon);
-	profile_write_int(GENERAL, TEXT("RasNoCheck"), op.RasNoCheck);
-	profile_write_int(GENERAL, TEXT("RasWaitSec"), op.RasWaitSec);
 }
 
 /*
@@ -1385,7 +1381,20 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	} else {
 		profile_write_string(GENERAL, TEXT("DataFileDir"), op.DataFileDir);
 	}
-	ini_write_general(TRUE);
+	profile_write_string(GENERAL, TEXT("BackupDir"), op.BackupDir);
+	profile_write_int(GENERAL, TEXT("Version"), op.Version);
+
+	ini_write_general();
+
+	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
+	profile_write_string(GENERAL, TEXT("pw"), tmp);
+
+	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon);
+	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon);
+	profile_write_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), op.RasCheckEndDisConTimeout);
+	profile_write_int(GENERAL, TEXT("RasEndDisCon"), op.RasEndDisCon);
+	profile_write_int(GENERAL, TEXT("RasNoCheck"), op.RasNoCheck);
+	profile_write_int(GENERAL, TEXT("RasWaitSec"), op.RasWaitSec);
 
 	// GJC delete obsolete entries
 	profile_delete_key(GENERAL, TEXT("StertPass"));
@@ -1809,9 +1818,12 @@ static void ini_check_window_pos(RECT *the_rect, RECT *scr_rect, int def_w, int 
 /*
  * ini_free - 設定情報を解放する
  */
-void ini_free(void)
+void ini_free(BOOL free_all)
 {
-	mem_free(&op.BackupDir);
+	if (free_all) {
+		mem_free(&op.BackupDir);
+		mem_free(&op.Password);
+	}
 	mem_free(&op.LvColumnOrder);
 	mem_free(&op.AddressShowGroup);
 	mem_free(&op.view_font.name);
@@ -1861,6 +1873,5 @@ void ini_free(void)
 	mem_free(&op.URLApp);
 	mem_free(&op.URLAppCmdLine);
 	mem_free(&op.AttachPath);
-	mem_free(&op.Password);
 }
 /* End of source */

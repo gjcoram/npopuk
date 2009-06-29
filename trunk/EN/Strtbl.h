@@ -147,6 +147,7 @@
 // Warning
 #define STR_WARN_ATTACH_MEM			TEXT("Attachments may be too large to encode\r\nin available memory")
 #define STR_WARN_BACKUPDIR			TEXT("Previous backup directory no longer exists")
+#define STR_WARN_EDIT_RISK			TEXT("; EDIT AT YOUR OWN RISK!\r\n")
 
 // Question
 #define STR_Q_DELETE				TEXT("Delete it?")
@@ -180,6 +181,7 @@
 #define STR_Q_QUEUEDMAIL_EXIT		TEXT("Messages marked for sending haven't been sent.\r\nExit anyway?")
 #define STR_Q_EXITSAVE				TEXT("Save files?")
 #define STR_Q_UPGRADE				TEXT("Import settings from nPOP to nPOPuk?")
+#define STR_Q_ADV_OPT				TEXT("Open advanced global options editor?")
 #define STR_Q_USEPOOM				TEXT("Using PocketContacts will replace existing items in Address book.\r\nProceed anyway?")
 #define STR_Q_LOADMAILBOX			TEXT("Load mailbox '%s'?")
 #define STR_Q_LOADASMBOX			TEXT("Load %s as MBOX (%d messages) instead of nPOP format (1 message)?")
@@ -495,6 +497,7 @@
 #define STR_TITLE_SETSSL			TEXT("Set SSL")
 #define STR_TITLE_FILTER			TEXT("Set filter")
 #define STR_TITLE_INITMAILBOX		TEXT("Initialise")
+#define STR_TITLE_OPTIONEDIT		TEXT("Options Editor")
 #define STR_TITLE_CCBCC				TEXT("Recipients")
 #define STR_TITLE_ATTACH			TEXT("Attach files")
 #define STR_TITLE_ETCHEADER			TEXT("Other headers")
