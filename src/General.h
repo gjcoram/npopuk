@@ -849,10 +849,11 @@ BOOL file_delete(HWND hWnd, TCHAR *name);
 
 // Ini
 BOOL ini_start_auth_check(void);
+void ini_read_general(HWND hWnd);
 BOOL ini_read_setting(HWND hWnd);
-void ini_write_general(BOOL do_pw);
+void ini_write_general(void);
 BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir);
-void ini_free(void);
+void ini_free(BOOL free_all);
 
 // Item
 int item_is_mailbox(MAILBOX *tpMailBox, MAILITEM *tpMailItem);
@@ -1006,6 +1007,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 
 // Option
 void SetSip(HWND hDlg, int edit_notify);
+void SetControlFont(HWND pWnd);
 int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);

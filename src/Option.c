@@ -100,7 +100,6 @@ extern int FindNext, FindOrReplace;
 extern DWORD FindPos;
 
 /* Local Function Prototypes */
-static void SetControlFont(HWND pWnd);
 static LRESULT OptionNotifyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT DialogLvNotifyProc(HWND hWnd, LPARAM lParam, int ListId);
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
@@ -245,7 +244,7 @@ void SetSip(HWND hDlg, int edit_notify)
 /*
  * SetControlFont - コントロールのフォント設定
  */
-static void SetControlFont(HWND pWnd)
+void SetControlFont(HWND pWnd)
 {
 	HWND hWnd;
 	TCHAR buf[BUF_SIZE];

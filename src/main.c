@@ -208,6 +208,7 @@ static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
 static void SetMailboxMark(int Box, int Status);
 static void AutoSave_Mailboxes(HWND hWnd);
+static BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL AdvOptionEditor(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -2692,7 +2693,7 @@ static BOOL EndWindow(HWND hWnd)
 	mem_free(&g_Pass);
 
 	// Ý’è‚Ì‰ð•ú
-	ini_free();
+	ini_free(TRUE);
 	filter_free(NULL); // global filters
 	FreeRasInfo();
 
@@ -4115,21 +4116,90 @@ static void AutoSave_Mailboxes(HWND hWnd)
 }
 
 /*
+ * AdvOptionProc - callback for advanced options editor
+ */
+static BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static BOOL first = TRUE;
+	TCHAR **tmp;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_OPTIONEDIT, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+
+		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		tmp = (TCHAR **)lParam;
+		SendDlgItemMessage(hDlg, IDC_EDIT_INI, WM_SETTEXT, 0, (LPARAM)*tmp);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_INI),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+		first = TRUE;
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_EDIT_SIG:
+			if (first && HIWORD( wParam ) == EN_SETFOCUS) {
+				int len = lstrlen(STR_WARN_EDIT_RISK);
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, 0, (LPARAM)len);
+				first = FALSE;
+			}
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetSip(hDlg, HIWORD(wParam));
+#endif
+			break;
+
+		case IDOK:
+			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_INI), tmp);
+			EndDialog(hDlg, FALSE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
  * AdvOptionEditor - text edit of global options section of INI file
  */
 static BOOL AdvOptionEditor(HWND hWnd)
 {
 	BOOL ret = FALSE;
-	MAILITEM *tpMailItem;
+	TCHAR *buf;
 
-	tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
-	if (tpMailItem == NULL || profile_create() == FALSE) {
+	if (profile_create() == FALSE) {
 		ErrorMessage(hWnd, STR_ERR_MEMALLOC);
 		return FALSE;
 	}
-	tpMailItem->Body = NULL;
-	ini_write_general(TRUE);
-	ret = profile_flush(NULL, &(tpMailItem->Body));
+	ini_write_general();
+	ret = profile_flush(NULL, &buf);
+	if (ret) {
+		ret = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_OPTION_EDITOR), hWnd,
+				AdvOptionProc, (LPARAM)&buf);
+	}
+	if (ret) {
+		ini_free(FALSE);
+		ini_read_general(hWnd);
+	}
+	mem_free(&buf);
 	profile_free();
 
 	return ret;

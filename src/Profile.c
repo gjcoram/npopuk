@@ -19,6 +19,7 @@
 
 #include "Memory.h"
 #include "Profile.h"
+#include "Strtbl.h"
 
 /* Define */
 #define BUF_SIZE				256
@@ -427,8 +428,12 @@ BOOL profile_flush(const TCHAR *file_path, TCHAR **general_only)
 		return FALSE;
 	}
 
-	// 保存サイズの計算
-	len = 0;
+	// compute string length
+	if (general_only) {
+		len = lstrlen(STR_WARN_EDIT_RISK);
+	} else {
+		len = 0;
+	}
 	for (i = 0; i < section_count; i++) {
 		if ((section_info + i)->key_info == NULL) {
 			continue;
@@ -459,11 +464,15 @@ BOOL profile_flush(const TCHAR *file_path, TCHAR **general_only)
 		len += 2;
 	}
 
-	// 保存するための領域の確保
+	// allocate string
 	if ((p = buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1))) == NULL) {
 		return FALSE;
 	}
-	// 保存文字列の作成
+	if (general_only) {
+		lstrcpy(p, STR_WARN_EDIT_RISK);
+		p += lstrlen(p);
+	}
+	// build string
 	for (i = 0; i < section_count; i++) {
 		if ((section_info + i)->key_info == NULL) {
 			continue;
