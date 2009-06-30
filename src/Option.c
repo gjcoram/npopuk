@@ -4075,7 +4075,7 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDOK:
 			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_INI), tmp);
-			EndDialog(hDlg, FALSE);
+			EndDialog(hDlg, TRUE);
 			break;
 
 		case IDCANCEL:
