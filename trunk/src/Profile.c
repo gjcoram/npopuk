@@ -295,12 +295,10 @@ BOOL profile_create(void) {
 BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 {
 	HANDLE hFile;
-	TCHAR *buf, *p, *r, *s;
-	TCHAR tmp[BUF_SIZE];
+	TCHAR *buf;
 	char *cbuf;
 	DWORD size_low, size_high;
 	DWORD ret;
-	BOOL Done = FALSE;
 	long file_size;
 #ifdef UNICODE
 	long len;
@@ -353,9 +351,23 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 		return FALSE;
 	}
 
+	profile_parse(buf, file_size, pw_only);
+	mem_free(&buf);
+	return TRUE;
+}
+/*
+ * profile_parse - parse string (from file or editor window)
+ */
+void profile_parse(TCHAR *buf, long len, BOOL general_only)
+{
+	TCHAR *p, *r, *s;
+	TCHAR tmp[BUF_SIZE];
+	BOOL Done = FALSE;
+	int i;
+
 	p = buf;
-	while ((file_size > (p - buf)) && *p != TEXT('\0') && Done == FALSE) {
-		for (r = p; (file_size > (r - buf)) && (*r != TEXT('\r') && *r != TEXT('\n')); r++)
+	while ((len > (p - buf)) && *p != TEXT('\0') && Done == FALSE) {
+		for (r = p; (len > (r - buf)) && (*r != TEXT('\r') && *r != TEXT('\n')); r++)
 			;
 
 		switch (*p) {
@@ -365,7 +377,7 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 				break;
 			}
 			*(r - 1) = TEXT('\0');
-			if (pw_only && section_count > 1) {
+			if (general_only && section_count > 1) {
 				Done = TRUE;
 			} else {
 				section_add(p + 1);
@@ -382,14 +394,14 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 			}
 			if (*p == TEXT('#') || *p == TEXT(';')) {
 				// コメント
-				for (s = tmp; p < r; p++, s++) {
+				for (s = tmp, i = 0; p < r && i < BUF_SIZE; p++, s++, i++) {
 					*s = *p;
 				}
 				*s = TEXT('\0');
 				key_add((section_info + section_count - 1), tmp, TEXT(""), TRUE);
 			} else {
 				// キーの追加
-				for (s = tmp; p < r; p++, s++) {
+				for (s = tmp, i=0; p < r && i < BUF_SIZE; p++, s++, i++) {
 					if (*p == TEXT('=')) {
 						break;
 					}
@@ -402,16 +414,15 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 				*r = TEXT('\0');
 				key_add((section_info + section_count - 1), tmp, p, FALSE);
 			}
-			if (file_size > (r - buf)) {
+			if (len > (r - buf)) {
 				r++;
 			}
 		}
 		p = r;
-		for (; (file_size > (p - buf)) && (*p == TEXT('\r') || *p == TEXT('\n')); p++)
+		for (; (len > (p - buf)) && (*p == TEXT('\r') || *p == TEXT('\n')); p++)
 			;
 	}
-	mem_free(&buf);
-	return TRUE;
+	return;
 }
 
 /*

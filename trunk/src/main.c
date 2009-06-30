@@ -4128,12 +4128,14 @@ static BOOL AdvOptionEditor(HWND hWnd)
 	}
 	ini_write_general();
 	ret = profile_flush(NULL, &buf);
+	profile_free();
 	if (ret) {
 		ret = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_OPTION_EDITOR), hWnd,
 				AdvOptionProc, (LPARAM)&buf);
 	}
-	if (ret) {
+	if (ret && profile_create() != FALSE) {
 		ini_free(FALSE);
+		profile_parse(buf, lstrlen(buf), TRUE);
 		ini_read_general(hWnd);
 	}
 	mem_free(&buf);
@@ -4965,7 +4967,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Option
 		case ID_MENUITEM_OPTION:
 			if ((GetKeyState(VK_SHIFT) < 0) && 
-					MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES) {
+					ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES) {
 				ret = AdvOptionEditor(hWnd);
 			} else {
 				ret = SetOption(hWnd);
