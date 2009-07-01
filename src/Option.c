@@ -3429,15 +3429,6 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 
 			op.AutoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOCHECK, BM_GETCHECK, 0, 0);
 			op.AutoCheckTime = GetDlgItemInt(hDlg, IDC_EDIT_AUTOCHECKTIME, NULL, FALSE);
-#ifdef _WIN32_WCE
-#ifdef _WIN32_WCE_PPC
-			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-#else
-			CheckMenuItem(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-#endif
-#else
-			CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-#endif
 
 			op.StartCheck = SendDlgItemMessage(hDlg, IDC_CHECK_STARTCHECK, BM_GETCHECK, 0, 0);
 			op.CheckAfterUpdate = SendDlgItemMessage(hDlg, IDC_CHECK_CHECKAFTERUPDATE, BM_GETCHECK, 0, 0);
@@ -4034,6 +4025,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static BOOL first = TRUE;
+	TCHAR buf[BUF_SIZE];
 	TCHAR **tmp;
 
 	switch (uMsg) {
@@ -4048,20 +4040,23 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		tmp = (TCHAR **)lParam;
 		SendDlgItemMessage(hDlg, IDC_EDIT_INI, WM_SETTEXT, 0, (LPARAM)*tmp);
+		SendDlgItemMessage(hDlg, IDC_EDIT_FIND, EM_LIMITTEXT, 30, 0);
 #ifdef _WIN32_WCE_PPC
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_INI),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
 		first = TRUE;
+		FindPos = 0;
 		break;
 
 	case WM_CLOSE:
+		FindPos = 0;
 		EndDialog(hDlg, FALSE);
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
-		case IDC_EDIT_SIG:
+		case IDC_EDIT_INI:
 			if (first && HIWORD( wParam ) == EN_SETFOCUS) {
 				int len = lstrlen(STR_WARN_EDIT_RISK);
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, 0, (LPARAM)len);
@@ -4072,13 +4067,33 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			break;
 
+		case IDC_EDIT_FIND:
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetSip(hDlg, HIWORD(wParam));
+#endif
+			if (HIWORD(wParam) != EN_CHANGE) {
+				break;
+			} else {
+				DWORD dwStart, dwEnd;
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, dwStart-1, dwStart);
+				// and fall through
+			}
+
+		case IDC_FIND:
+			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
+			FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, TRUE);
+			break;
+
 		case IDOK:
 			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_INI), tmp);
+			FindPos = 0;
 			EndDialog(hDlg, TRUE);
 			break;
 
 		case IDCANCEL:
+			FindPos = 0;
 			EndDialog(hDlg, FALSE);
 			break;
 		}
