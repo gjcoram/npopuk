@@ -4134,9 +4134,38 @@ static BOOL AdvOptionEditor(HWND hWnd)
 				AdvOptionProc, (LPARAM)&buf);
 	}
 	if (ret && profile_create() != FALSE) {
+		int oldmbw = op.MBMenuWidth;
 		ini_free(FALSE);
 		profile_parse(buf, lstrlen(buf), TRUE);
 		ini_read_general(hWnd);
+		if (oldmbw != op.MBMenuWidth && (oldmbw > 0 || op.MBMenuWidth > 0)) {
+			int newmbw = op.MBMenuWidth;
+			if (oldmbw > 0) {
+				op.MBMenuWidth = oldmbw;
+				if (newmbw > 0) {
+					SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_MBOXPANE, 0);
+					op.MBMenuWidth = -newmbw;
+				}
+			} else {
+				op.MBMenuWidth = -op.MBMenuWidth;
+			}
+			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_MBOXPANE, 0);
+			if (newmbw < 0) {
+				op.MBMenuWidth = newmbw;
+			}
+		}
+		mailbox_select(hWnd, SelBox);
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+		CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+#elif defined(_WIN32_WCE_LAGENDA)
+		CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+#else
+		CheckMenuItem(CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
+#else
+		CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
 	}
 	mem_free(&buf);
 	profile_free();
@@ -4981,6 +5010,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				KillTimer(hWnd, ID_AUTOCHECK_TIMER);
 				AutoCheckCnt = 0;
 			}
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#else
+			CheckMenuItem(CommandBar_GetMenu(GetDlgItem(MainWnd, IDC_CB), 0), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
+#else
+			CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
 			// タスクトレイのアイコンの設定
 			if (op.ShowTrayIcon == 1) {
 				SetTrayIcon(hWnd, TrayIcon_Main);
