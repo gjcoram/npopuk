@@ -1162,7 +1162,7 @@ void ErrorMessage(HWND hWnd, TCHAR *buf)
 {
 	SwitchCursor(TRUE);
 	ShowError = TRUE;
-	MessageBox(hWnd, buf, STR_TITLE_ERROR, MB_OK | MB_ICONERROR);
+	MessageBox(hWnd, buf, STR_TITLE_ERROR, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
 	ShowError = FALSE;
 }
 
@@ -4227,6 +4227,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		if (first_start == TRUE) {
 			ShowWindow(hWnd, SW_SHOW);
+			_SetForegroundWindow(hWnd);
 			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_STARTCONFIG), hWnd,
 				StartConfigProc, 0) == FALSE) {
 				first_start = -1;
