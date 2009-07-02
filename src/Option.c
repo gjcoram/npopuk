@@ -4074,15 +4074,15 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam) != EN_CHANGE) {
 				break;
 			} else {
-				DWORD dwStart, dwEnd;
-				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, dwStart-1, dwStart);
-				// and fall through
+				FindPos--;
 			}
+			// fall through
 
 		case IDC_FIND:
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
-			FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, TRUE);
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, TRUE) == FALSE) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
+			}
 			break;
 
 		case IDOK:

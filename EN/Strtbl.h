@@ -190,11 +190,7 @@
 #define STR_Q_SAVE_EMBEDDED			TEXT("Convert embedded image names?")
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\r\nSkip this one?")
 #define STR_Q_PARTIAL_ATTACH		TEXT("Incomplete attachment; continue?\r\n(Else cancel, download message, and try again)")
-#ifdef _WIN32_WCE
-#define STR_Q_CREATE_INIFILE		TEXT("Create configuation file at '%s'?")
-#else
-#define STR_Q_CREATE_INIFILE		TEXT("Welcome to nPOPuk!\r\nCreate a new configuration file at '%s'?")
-#endif
+#define STR_Q_CREATE_INIFILE		TEXT("Create a new configuration file at '%s'?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")
