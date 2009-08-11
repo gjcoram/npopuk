@@ -4060,6 +4060,7 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (first && HIWORD( wParam ) == EN_SETFOCUS) {
 				int len = lstrlen(STR_WARN_EDIT_RISK);
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, 0, (LPARAM)len);
+				SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
 				first = FALSE;
 			}
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -8756,7 +8757,9 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				continue;
 			}
 			if ((MailBox+i)->Type == MAILBOX_TYPE_SAVE) {
-				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)(MailBox+i)->Name);
+				TCHAR *name = (MailBox+i)->Name;
+				if (!name) name = STR_MAILBOX_NONAME;
+				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)name);
 				j++;
 			}
 		}
