@@ -84,8 +84,8 @@ static int confirm_flag;					// 認証フラグ
 
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
-HFONT hListFont;							// ListViewのフォント
-HFONT hViewFont;							// 表示のフォント
+HFONT hListFont = NULL;						// ListViewのフォント
+HFONT hViewFont = NULL;						// 表示のフォント
 int font_charset;
 static HICON TrayIcon_Main;					// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
@@ -2357,14 +2357,14 @@ static BOOL InitWindow(HWND hWnd)
 	if (op.view_font.name != NULL && *op.view_font.name != TEXT('\0')) {
 		hViewFont = font_create(hWnd, &op.view_font);
 	}
+	hdc = GetDC(hWnd);
 	if (hViewFont == NULL) {
 #ifdef _WIN32_WCE
-		hViewFont = font_copy(GetStockObject(SYSTEM_FONT));
+		hViewFont = font_copy(GetStockObject(SYSTEM_FONT), hdc, op.view_font.size);
 #else
-		hViewFont = font_copy(GetStockObject(DEFAULT_GUI_FONT));
+		hViewFont = font_copy(GetStockObject(DEFAULT_GUI_FONT), hdc, op.view_font.size);
 #endif
 	}
-	hdc = GetDC(hWnd);
 	if (hViewFont != NULL) {
 		hFont = SelectObject(hdc, hViewFont);
 	}

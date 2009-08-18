@@ -54,7 +54,7 @@ HFONT font_create(HWND hWnd, FONT_INFO *fi)
 /*
  * font_copy - フォントのコピーを作成
  */
-HFONT font_copy(const HFONT hfont)
+HFONT font_copy(const HFONT hfont, HDC hdc, int size)
 {
 	LOGFONT lf;
 
@@ -62,6 +62,7 @@ HFONT font_copy(const HFONT hfont)
 	if (GetObject(hfont, sizeof(LOGFONT), &lf) == 0) {
 		return NULL;
 	}
+	lf.lfHeight = -(int)((size * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);
 	return CreateFontIndirect((CONST LOGFONT *)&lf);
 }
 
