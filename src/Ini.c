@@ -303,6 +303,12 @@ void ini_read_general(HWND hWnd)
 	if (op.MBMenuWidth == 0) {
 		op.MBMenuWidth = 130; // upgrade from previous default
 	}
+	op.MBMenuMinWidth = profile_get_int(GENERAL, TEXT("MBMenuMinWidth"), 25);
+	if (op.MBMenuWidth > 0 && op.MBMenuWidth < op.MBMenuMinWidth) {
+		op.MBMenuWidth = op.MBMenuMinWidth;
+	} else if (op.MBMenuWidth < 0 && op.MBMenuWidth > -op.MBMenuMinWidth){
+		op.MBMenuWidth = -op.MBMenuMinWidth;
+	}
 	width = GetSystemMetrics(SM_CXSCREEN);
 	if (op.MBMenuWidth > width) {
 		op.MBMenuWidth = width / 2;
@@ -1153,6 +1159,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx);
 	profile_write_string(GENERAL, TEXT("LvColumnOrder"), op.LvColumnOrder);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth);
+	profile_write_int(GENERAL, TEXT("MBMenuMinWidth"), op.MBMenuMinWidth);
 	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel);

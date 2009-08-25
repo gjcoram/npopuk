@@ -1,5 +1,5 @@
-nPOPuk v2.13 beta                          readme-213uk.txt
-                                                  June 2009
+nPOPuk v2.13 rc1                           readme-213uk.txt
+                                                August 2009
 -----------------------------------------------------------
 
 
@@ -73,6 +73,9 @@ include the following features:
   The Windows CE versions of this program also include
   software from http://www.essemer.com.au/
   Please read LICENSE_wcecompat.txt
+
+* Navigation buttons to move forward/backward between
+  sent messages in the Outbox.
 
 * Ability to import Internet Setup files (*.ins) to
   configure accounts.  Templates for popular mail
