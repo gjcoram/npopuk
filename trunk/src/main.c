@@ -1905,10 +1905,17 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #ifdef _WIN32_WCE
 				op.MBMenuWidth = paneRect.right;
 #else
-				top.x = paneRect.right;
+				op.MBMenuWidth = paneRect.right - paneRect.left;
+				top.x = paneRect.left;
 				top.y = paneRect.top;
 				ScreenToClient(MainWnd, &top);
-				op.MBMenuWidth = top.x;
+				if (op.MBMenuWidth < op.MBMenuMinWidth) {
+					op.MBMenuWidth = op.MBMenuMinWidth;
+					top.x = 1;
+				}
+				if (top.x > 0) {
+					MoveWindow(hWnd, 0, top.y, op.MBMenuWidth, op.MBMenuHeight, TRUE);
+				}
 #endif
 				hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 #ifdef _WIN32_WCE_PPC

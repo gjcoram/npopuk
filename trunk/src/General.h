@@ -399,6 +399,7 @@ typedef struct _OPTION {
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
 	int MBMenuWidth;
+	int MBMenuMinWidth;
 	int MBMenuHeight; // not saved in INI, for resizing
 	int SaveboxListCount;
 	int ScanAllForUnread;
