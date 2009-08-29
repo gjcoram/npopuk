@@ -527,10 +527,11 @@
 
 ///////////// MRP /////////////////////
 #define STR_TITLE_ABOUT		TEXT("About")
-#define STR_WEB_ADDR		TEXT("http://www.npopuk.org.uk") // was www.npopsupport.org.uk
+#define STR_WEB_ADDR		TEXT("http://www.npopuk.org.uk/") // was www.npopsupport.org.uk
 #define STR_ABOUT_TEXT		TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopuk.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
-#define STR_ABOUT_OPENSSL	TEXT("\r\nThis product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit. (http://www.openssl.org/)\r\nThis product includes cryptographic software written by Eric Young (eay@cryptsoft.com)")
 ///////////// --- /////////////////////
+#define STR_OPENSSL_WEB_ADDR	TEXT("http://www.openssl.org/")
+#define STR_ABOUT_OPENSSL	TEXT("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit. (http://www.openssl.org/)\r\nThis product includes cryptographic software written by Eric Young (eay@cryptsoft.com)")
 
 #endif	//_INC_STR_TBL_H
 /* End of source */

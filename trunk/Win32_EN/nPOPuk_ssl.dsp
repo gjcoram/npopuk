@@ -45,8 +45,8 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "NDEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -72,8 +72,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "_DEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /GZ /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
@@ -99,8 +99,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Release_Unicode"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /D "WIN32" /D "NDEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "NDEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /D "UNICODE" /D "_UNICODE" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Ox /Og /Os /Ob0 /Gf /Gy /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /D "UNICODE" /D "_UNICODE" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -128,8 +128,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug_Unicode"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /D "WIN32" /D "_DEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "_DEBUG" /D "DO_SSL" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /D "UNICODE" /D "_UNICODE" /YX /FD /GZ /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D "UNICODE" /D "_UNICODE" /U "UNICODE" /U "_UNICODE" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /I "..\EN" /I "..\inc32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "WSAASYNC" /D _WIN32_IE=0x0400 /D "UNICODE" /D "_UNICODE" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"

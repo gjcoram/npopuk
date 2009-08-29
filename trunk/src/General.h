@@ -49,7 +49,8 @@
 
 /* Define */
 #ifdef DO_SSL
-#define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT TEXT("(SSL)")
+#define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT TEXT(" (SSL)")
+extern const char *SSLeay_version(int t);
 #else
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
 #endif
@@ -801,6 +802,7 @@ int send_buf_t(SOCKET soc, TCHAR *wbuf);
 void socket_close(HWND hWnd, SOCKET soc);
 int init_ssl(const HWND hWnd, const SOCKET soc, TCHAR *ErrStr);
 void free_ssl(void);
+BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // Pop3
 BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
@@ -1011,6 +1013,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext, BOOL NoAppFlag);
 
 // Option
+void SetControlFont(HWND pWnd);
 void SetSip(HWND hDlg, int edit_notify);
 int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
@@ -1036,7 +1039,6 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AttachNoticeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DigestReplyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);

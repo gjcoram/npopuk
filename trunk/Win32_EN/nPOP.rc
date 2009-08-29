@@ -425,6 +425,7 @@ BEGIN
     POPUP "&Help"
     BEGIN
         MENUITEM "&About...",                   ID_MENUITEM_ABOUT
+        MENUITEM "About &SSL...",               ID_MENUITEM_ABOUT_SSL
     END
 END
 
@@ -1734,7 +1735,7 @@ BEGIN
             VALUE "FileDescription", "nPOPuk"
             VALUE "FileVersion", NPOPVERLNG
             VALUE "InternalName", "nPOPuk"
-            VALUE "LegalCopyright", "Copyright ©2008 by Nakashima Tomoaki, Geoffrey Coram"
+            VALUE "LegalCopyright", "Copyright ©2009 by Nakashima Tomoaki, Geoffrey Coram"
             VALUE "OriginalFilename", "nPOPuk.exe"
             VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR
             VALUE "ProductName", "nPOPuk"
