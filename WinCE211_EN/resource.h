@@ -191,6 +191,7 @@
 #define IDC_EDIT_SIG                    1014
 #define IDC_EDIT_INI                    1014
 #define IDC_COMBO_PATH                  1015
+#define IDC_CHECK_SHOWHEAD              1015
 #define IDC_EDIT_QUOTCHAR               1016
 #define IDC_CHECK_LISTDOWNLOAD          1016
 #define IDC_EDIT_REHEAD                 1017

@@ -26,8 +26,7 @@ typedef struct _FONT_INFO {
 } FONT_INFO;
 
 /* Function Prototypes */
-HFONT font_create(HWND hWnd, FONT_INFO *fi);
-HFONT font_copy(const HFONT hfont, HDC hdc, int size);
+HFONT font_create_or_copy(HWND hWnd, HDC hdc, FONT_INFO *fi);
 int font_get_charset(const HDC hdc);
 #ifndef _WIN32_WCE
 BOOL font_select(const HWND hWnd, FONT_INFO *fi);

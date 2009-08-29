@@ -2510,10 +2510,13 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_MENUITEM_FONT:
 			// ƒtƒHƒ“ƒg
 			if (font_select(hWnd, &op.view_font) == TRUE) {
+				HDC hdc;
 				if (hViewFont != NULL) {
 					DeleteObject(hViewFont);
 				}
-				hViewFont = font_create(hWnd, &op.view_font);
+				hdc = GetDC(hWnd);
+				hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
+				ReleaseDC(hWnd, hdc);
 				if (hViewWnd != NULL) {
 					SendDlgItemMessage(hViewWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 				}

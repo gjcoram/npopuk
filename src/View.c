@@ -3596,10 +3596,13 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case ID_MENUITEM_FONT:
 			// フォント
 			if (font_select(hWnd, &op.view_font) == TRUE) {
+				HDC hdc;
 				if (hViewFont != NULL) {
 					DeleteObject(hViewFont);
 				}
-				hViewFont = font_create(hWnd, &op.view_font);
+				hdc = GetDC(hWnd);
+				hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
+				ReleaseDC(hWnd, hdc);
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 				font_charset = op.view_font.charset;
 				// Editウィンドウのフォントを設定
