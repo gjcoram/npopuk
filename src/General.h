@@ -48,7 +48,11 @@
 #include "npop_ver.h"
 
 /* Define */
+#ifdef DO_SSL
+#define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT TEXT("(SSL)")
+#else
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
+#endif
 #define APP_VERSION_NUM			2011
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")

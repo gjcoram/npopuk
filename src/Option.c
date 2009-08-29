@@ -8851,7 +8851,11 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetControlFont(hDlg);
 		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
 		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
+#ifdef DO_SSL
+		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
+#else
 		SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT STR_ABOUT_OPENSSL);
+#endif
 
 		memset ((char *)&logfont, 0, sizeof (logfont));
 
