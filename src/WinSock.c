@@ -36,7 +36,7 @@ static SSL_INFO ssl_info;
 
 static HINSTANCE ssl_lib;
 static FARPROC ssl_init;
-static FARPROC ssl_send;
+static FARPROC ssl_send = NULL;
 static FARPROC ssl_recv;
 static FARPROC ssl_close;
 static FARPROC ssl_free;
@@ -543,4 +543,104 @@ void free_ssl(void)
 		ssl_lib = NULL;
 	}
 }
+
+BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static HWND AboutWnd;
+	static HFONT hFont;
+	LOGFONT logfont;
+	HDC hDC;
+
+	switch(uMsg)
+	{
+	case WM_INITDIALOG:
+		SetControlFont(hDlg);
+		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
+		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
+		if ((int)lParam == ID_MENUITEM_ABOUT) {
+			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
+		} else {
+			if (ssl_send == NULL) {
+				SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), TEXT("SSL not loaded"));
+			} else {
+				SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), TEXT("SSL loaded from DLL"));
+			}
+		}
+
+		memset ((char *)&logfont, 0, sizeof (logfont));
+
+		hDC = GetDC(hDlg);
+		logfont.lfHeight = - (int)((8 * GetDeviceCaps(hDC, LOGPIXELSY)) / 72);
+		logfont.lfWidth = 0; 
+		logfont.lfEscapement = 0; 
+		logfont.lfOrientation = 0;
+		logfont.lfWeight = FW_NORMAL; 
+		logfont.lfItalic = FALSE; 
+		logfont.lfUnderline = FALSE; 
+		logfont.lfStrikeOut = FALSE; 
+		logfont.lfCharSet = DEFAULT_CHARSET; 
+		logfont.lfOutPrecision = OUT_DEFAULT_PRECIS; 
+		logfont.lfClipPrecision = CLIP_DEFAULT_PRECIS; 
+		logfont.lfQuality = DEFAULT_QUALITY; 
+		logfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE; 
+#ifdef _WIN32_WCE   // Windows CE - 8, "Tahoma"
+#ifdef UNICODE
+		wcscpy(logfont.lfFaceName, TEXT("Tahoma"));
+#else
+		strcpy_s(logfont.lfFaceName, 32, TEXT("Tahoma"));
+#endif
+#else // Win32 - 8, "MS Sans Serif"
+#ifdef UNICODE
+		wcscpy(logfont.lfFaceName, TEXT("MS Sans Serif"));
+#else
+		strcpy_s(logfont.lfFaceName, 32, TEXT("MS Sans Serif"));
+#endif
+#endif
+		hFont = CreateFontIndirect( &logfont );
+
+		SendMessage(GetDlgItem(hDlg, IDC_ABOUT_TEXT), WM_SETFONT, (WPARAM) hFont, (LPARAM) TRUE);  
+
+		if(AboutWnd != NULL){
+			_SetForegroundWindow(AboutWnd);
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		AboutWnd = hDlg;
+
+		SetWindowText(hDlg, STR_TITLE_ABOUT);
+		break;
+
+	case WM_CLOSE:
+		AboutWnd = NULL;
+		DeleteObject(hFont);
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch(LOWORD(wParam))
+		{
+		case IDC_VISIT_WEB:
+			ShellOpen(STR_WEB_ADDR);
+			break;
+
+		case IDOK:
+			AboutWnd = NULL;
+			DeleteObject(hFont);
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			AboutWnd = NULL;
+			DeleteObject(hFont);
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* End of source */

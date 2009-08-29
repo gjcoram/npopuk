@@ -2140,6 +2140,7 @@ static BOOL InitWindow(HWND hWnd)
 	RECT StatusRect;
 	HDC hdc;
 	HFONT hFont;
+	HMENU hMenu;
 	int Height = 0;
 	int i, j;
 	int Width[2];
@@ -2257,10 +2258,7 @@ static BOOL InitWindow(HWND hWnd)
 
 	Height = 0;
 	i = 0;
-	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
 
@@ -2296,13 +2294,10 @@ static BOOL InitWindow(HWND hWnd)
 
 	Height = g_menu_height = CSOBar_Height(hCSOBar);
 	i = 0;
-	CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(GetSubMenu(hMainMenu, 0), ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(GetSubMenu(hMainMenu, 1), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+	hMenu = GetSubMenu(hMainMenu, 0);
 	PPCFlag = TRUE;
 	MailMenuPos = 1;
-
 #else
 	// H/PC & PsPC
 	hToolBar = CommandBar_Create(hInst, hWnd, IDC_CB);
@@ -2325,13 +2320,7 @@ static BOOL InitWindow(HWND hWnd)
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	Height = CommandBar_Height(hToolBar);
 	i = 0;
-	{
-		HMENU hMenu = CommandBar_GetMenu(hToolBar, 0);
-		CheckMenuItem(hMenu, ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, ((op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED));
-	}
+	hMenu = CommandBar_GetMenu(hToolBar, 0);
 #endif
 #else
 	// Win32
@@ -2345,16 +2334,15 @@ static BOOL InitWindow(HWND hWnd)
 
 	GetWindowRect(hToolBar, &ToolbarRect);
 	Height = ToolbarRect.bottom - ToolbarRect.top;
-
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
+	hMenu = GetMenu(hWnd);
+#endif
 
-	{
-		HMENU hMenu = GetMenu(hWnd);
-		CheckMenuItem(hMenu, ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
-		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
-	}
+	CheckMenuItem(hMenu, ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
+#ifndef _WIN32_WCE_LAGENDA
+	CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
 #endif
 
 	// ListViewƒtƒHƒ“ƒg
@@ -5102,9 +5090,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Version information
 		case ID_MENUITEM_ABOUT:
-			///////////// MRP /////////////////////
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), NULL, AboutBoxProc, 0);
-			///////////// --- /////////////////////
+		case ID_MENUITEM_ABOUT_SSL:
+			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), NULL, AboutBoxProc, command_id);
 			break;
 
 		///////////// MRP /////////////////////

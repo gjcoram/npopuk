@@ -86,6 +86,7 @@
 #define IDI_ICON_LOW                    186
 #define IDI_ICON_HIGH                   187
 #define IDD_DIALOG_ABOUT                188
+#define ID_MENUITEM_ABOUT_SSL           189
 #define IDC_STATIC_SORT                 200
 #define IDC_COMBO_SORT                  201
 #define IDC_TEXT_SORTCOL                202
