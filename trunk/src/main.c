@@ -31,6 +31,7 @@
 
 #define IDC_CB					2000
 #define IDC_TB					2001
+#define IDC_EDIT_BODY			2003
 
 #define ID_RECV_TIMER			1					//for mail Open Timer ID
 #define ID_SMTP_TIMER			2
@@ -2357,21 +2358,11 @@ static BOOL InitWindow(HWND hWnd)
 #endif
 
 	// ListViewƒtƒHƒ“ƒg
-	if (op.lv_font.name != NULL && *op.lv_font.name != TEXT('\0')) {
-		hListFont = font_create(hWnd, &op.lv_font);
-	}
-	//View of font and font
-	if (op.view_font.name != NULL && *op.view_font.name != TEXT('\0')) {
-		hViewFont = font_create(hWnd, &op.view_font);
-	}
 	hdc = GetDC(hWnd);
-	if (hViewFont == NULL) {
-#ifdef _WIN32_WCE
-		hViewFont = font_copy(GetStockObject(SYSTEM_FONT), hdc, op.view_font.size);
-#else
-		hViewFont = font_copy(GetStockObject(DEFAULT_GUI_FONT), hdc, op.view_font.size);
-#endif
+	if (op.lv_font.size > 0) {
+		hListFont = font_create_or_copy(hWnd, hdc, &op.lv_font);
 	}
+	hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
 	if (hViewFont != NULL) {
 		hFont = SelectObject(hdc, hViewFont);
 	}
@@ -2379,6 +2370,7 @@ static BOOL InitWindow(HWND hWnd)
 	if (hViewFont != NULL) {
 		SelectObject(hdc, hFont);
 	}
+	ReleaseDC(hWnd, hdc);
 
 	//Status bar
 	CreateWindowEx(0, STATUSCLASSNAME, TEXT(""),
@@ -4141,10 +4133,30 @@ static BOOL AdvOptionEditor(HWND hWnd)
 				AdvOptionProc, (LPARAM)&buf);
 	}
 	if (ret && profile_create() != FALSE) {
+		HDC hdc;
 		int oldmbw = op.MBMenuWidth;
 		ini_free(FALSE);
 		profile_parse(buf, lstrlen(buf), TRUE);
 		ini_read_general(hWnd);
+		if (hViewFont != NULL) {
+			DeleteObject(hViewFont);
+		}
+		hdc = GetDC(hWnd);
+		if (op.lv_font.size > 0) {
+			if (hListFont != NULL) {
+				DeleteObject(hListFont);
+			}
+			hListFont = font_create_or_copy(hWnd, hdc, &op.lv_font);
+		}
+		hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
+		ReleaseDC(hWnd, hdc);
+		if (hViewWnd != NULL) {
+			SendDlgItemMessage(hViewWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
+		}
+#ifndef _WIN32_WCE
+		EnumWindows((WNDENUMPROC)enum_windows_proc, 0);
+#endif
+		font_charset = op.view_font.charset;
 		if (oldmbw != op.MBMenuWidth && (oldmbw > 0 || op.MBMenuWidth > 0)) {
 			int newmbw = op.MBMenuWidth;
 			if (oldmbw > 0) {

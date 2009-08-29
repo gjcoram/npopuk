@@ -22,48 +22,44 @@
 /* Local Function Prototypes */
 
 /*
- * font_create - フォントを作成する
+ * font_create_or_copy - create (if fi->name) or copy default (but resize)
  */
-HFONT font_create(HWND hWnd, FONT_INFO *fi)
+HFONT font_create_or_copy(HWND hWnd, HDC hdc, FONT_INFO *fi)
 {
+	HFONT retfont = NULL;
 	LOGFONT lf;
-	HDC hdc;
-
 	ZeroMemory(&lf, sizeof(LOGFONT));
 
-	hdc = GetDC(hWnd);
-	lf.lfHeight = -(int)((fi->size * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);
-	ReleaseDC(hWnd, hdc);
-
-	lf.lfWidth = 0;
-	lf.lfEscapement = 0;
-	lf.lfOrientation = 0;
-	lf.lfWeight = fi->weight;
-	lf.lfItalic = fi->italic;
-	lf.lfUnderline = FALSE;
-	lf.lfStrikeOut = FALSE;
-	lf.lfCharSet = fi->charset;
-	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-	lf.lfQuality = DEFAULT_QUALITY;
-	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-	lstrcpy(lf.lfFaceName, fi->name);
-	return CreateFontIndirect((CONST LOGFONT *)&lf);
-}
-
-/*
- * font_copy - フォントのコピーを作成
- */
-HFONT font_copy(const HFONT hfont, HDC hdc, int size)
-{
-	LOGFONT lf;
-
-	ZeroMemory(&lf, sizeof(LOGFONT));
-	if (GetObject(hfont, sizeof(LOGFONT), &lf) == 0) {
-		return NULL;
+	if (fi->name != NULL && *fi->name != TEXT('\0')) {
+		lf.lfHeight = -(int)((fi->size * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);
+		lf.lfWidth = 0;
+		lf.lfEscapement = 0;
+		lf.lfOrientation = 0;
+		lf.lfWeight = fi->weight;
+		lf.lfItalic = fi->italic;
+		lf.lfUnderline = FALSE;
+		lf.lfStrikeOut = FALSE;
+		lf.lfCharSet = fi->charset;
+		lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+		lf.lfQuality = DEFAULT_QUALITY;
+		lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+		lstrcpy(lf.lfFaceName, fi->name);
+		retfont = CreateFontIndirect((CONST LOGFONT *)&lf);
 	}
-	lf.lfHeight = -(int)((size * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);
-	return CreateFontIndirect((CONST LOGFONT *)&lf);
+
+	if (retfont == NULL) {
+#ifdef _WIN32_WCE
+		if (GetObject(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), &lf) == 0) {
+#else
+		if (GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &lf) == 0) {
+#endif
+			return NULL;
+		}
+		lf.lfHeight = -(int)((fi->size * GetDeviceCaps(hdc,LOGPIXELSY)) / 72);
+		retfont = CreateFontIndirect((CONST LOGFONT *)&lf);
+	}
+	return retfont;
 }
 
 /*
