@@ -3553,7 +3553,7 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 	MAILITEM *tpMailItem;
 	HWND hListView;
 	int i;
-	BOOL set = FALSE;
+	BOOL set = Clear; // Clear == TRUE when called to move to savebox
 
 	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	if (ListView_GetSelectedCount(hListView) <= 0) {
@@ -3563,14 +3563,13 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 
 	// if one is unset, then set them all; else clear them all
 	i = -1;
-	while ((i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
+	while (set == FALSE && (i = ListView_GetNextItem(hListView, i, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
 		if (tpMailItem->Mark != Mark) {
 			set = TRUE;
-			break;
 		}
 	}
 

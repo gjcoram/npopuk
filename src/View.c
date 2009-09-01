@@ -3818,7 +3818,8 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 								}
 							} else {
 								tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
-								SetMark(hWnd, tpMailItem, ICON_DEL);
+								tpMailItem->Mark = tpMailItem->MailStatus; // in case message was already marked
+								SetMark(hWnd, tpMailItem, ICON_DEL); // this would have unmarked it
 								GetMarkStatus(hWnd, tpMailItem);
 								if (op.ViewNextAfterDel == 1) {
 									tpNextMail = View_NextPrev(hWnd, +1, TRUE);
