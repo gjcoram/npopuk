@@ -532,7 +532,7 @@
 ///////////// --- /////////////////////
 #define STR_WEB_DOC			TEXT("http://www.npopuk.org.uk/") NPOPWEBVER TEXT("/")
 #ifdef _WIN32_WCE_PPC
-#define STR_WM_HELP_ADDR	STR_WEB_DOC TEXT("contents2.html")
+#define STR_WM_HELP_ADDR	STR_WEB_DOC TEXT("wm/contents2.html")
 #endif
 #define STR_OPENSSL_WEB_ADDR	TEXT("http://www.openssl.org/")
 #define STR_ABOUT_OPENSSL	TEXT("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit. (http://www.openssl.org/)\r\nThis product includes cryptographic software written by Eric Young (eay@cryptsoft.com)")
