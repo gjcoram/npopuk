@@ -565,6 +565,9 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			} else {
 				SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), TEXT("SSL loaded from DLL"));
 			}
+#ifdef _WIN32_WCE
+			ShowWindow(GetDlgItem(hDlg, IDC_VISIT_WM_HELP), SW_HIDE);
+#endif
 		}
 
 		memset ((char *)&logfont, 0, sizeof (logfont));
@@ -622,6 +625,16 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_VISIT_WEB:
 			ShellOpen(STR_WEB_ADDR);
 			break;
+
+#ifdef _WIN32_WCE
+		case IDC_VISIT_WM_HELP:
+#ifdef _WIN32_WCE_PPC
+			ShellOpen(STR_WM_HELP_ADDR);
+#else
+			ShellOpen(STR_WEB_DOC);
+#endif
+			break;
+#endif
 
 		case IDOK:
 			AboutWnd = NULL;

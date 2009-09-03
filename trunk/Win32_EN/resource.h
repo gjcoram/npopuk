@@ -70,7 +70,6 @@
 #define IDD_DIALOG_SETSMTPAUTH          183
 #define IDD_DIALOG_ATTACH_NOTICE        184
 #define IDD_DIALOG_ABOUT                185
-#define ID_MENUITEM_ABOUT_SSL           186
 #define IDD_DIALOG_SETSSL               189
 #define IDD_DIALOG_ENCODE               191
 #define IDI_ICON_CLIP_LOW               192	 
@@ -354,7 +353,6 @@
 #define ID_KEY_CTRLENTER                40017
 #define ID_MENUITEM_DELETE              40018
 #define ID_MENUITEM_LISTINIT            40019
-#define ID_MENUITEM_ABOUT               40020
 #define ID_MENUITEM_ICONSORT            40021
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
@@ -386,7 +384,10 @@
 #define ID_MENUITEM_UNDO                40049
 #define ID_MENUITEM_ALLCHECK            40050
 #define ID_MENUITEM_ADDRESS             40051
-#define ID_MENUITEM_RESTORE             40054
+#define ID_MENUITEM_RESTORE             40052
+#define ID_MENUITEM_ABOUT               40053
+#define ID_MENUITEM_ABOUT_SSL           40054
+#define ID_MENUITEM_VISIT_WEB           40055
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_DELETE                   40065

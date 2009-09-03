@@ -86,7 +86,6 @@
 #define IDI_ICON_LOW                    186
 #define IDI_ICON_HIGH                   187
 #define IDD_DIALOG_ABOUT                188
-#define ID_MENUITEM_ABOUT_SSL           189
 #define IDC_STATIC_SORT                 200
 #define IDC_COMBO_SORT                  201
 #define IDC_TEXT_SORTCOL                202
@@ -305,6 +304,7 @@
 #define IDC_CHECK_INIPASS               1106
 #define IDC_RADIO_FILLIN                1107
 #define IDC_RADIO_FIX_UIDL              1108
+#define IDC_VISIT_WM_HELP               1109
 #define IDC_BUTTON_GETPOOM              1110
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
@@ -408,7 +408,7 @@
 #define ID_MENUITEM_UNDO                40049
 #define ID_MENUITEM_ALLCHECK            40050
 #define ID_MENUITEM_ADDRESS             40051
-#define ID_MENUITEM_RESTORE             40054
+#define ID_MENUITEM_RESTORE             40052
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_DELETE                   40065

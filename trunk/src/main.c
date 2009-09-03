@@ -5089,9 +5089,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Version information
 		case ID_MENUITEM_ABOUT:
+#ifndef _WIN32_WCE
 		case ID_MENUITEM_ABOUT_SSL:
+#endif
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), NULL, AboutBoxProc, command_id);
 			break;
+
+#ifndef _WIN32_WCE_PPC
+		case ID_MENUITEM_VISIT_WEB:
+			ShellOpen(STR_WEB_ADDR);
+			break;
+#endif
 
 		///////////// MRP /////////////////////
 		case ID_MENUITEM_SAVEALL:
