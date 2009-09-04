@@ -294,6 +294,9 @@ BEGIN
         MENUITEM "&Send now\tShift+Ctrl+G",     ID_MENUITEM_SEND
         MENUITEM "Save and &Mark\tCtrl+G",      ID_MENUITEM_SBOXMARK
         MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
+        MENUITEM "&Next message",               ID_MENUITEM_NEXTMAIL
+        MENUITEM "&Previous message",           ID_MENUITEM_PREVMAIL
+        MENUITEM "&Edit as new...",             ID_MENUITEM_SAVECOPY
         MENUITEM SEPARATOR
         MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
         MENUITEM SEPARATOR

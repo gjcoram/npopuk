@@ -2634,11 +2634,17 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_FILE);
 	if (hMenu != NULL) {
 #endif
-		EnableMenuItem(hMenu, ID_MENUITEM_SEND, menu_state);
-		EnableMenuItem(hMenu, ID_MENUITEM_SBOXMARK, menu_state);
-		EnableMenuItem(hMenu, ID_MENUITEM_SENDBOX, menu_state);
-		EnableMenuItem(hMenu, ID_MENUITEM_ENCODE, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_ATTACH, menu_state);
+		if (editable) {
+			DeleteMenu(hMenu, ID_MENUITEM_NEXTMAIL, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_PREVMAIL, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_SAVECOPY, MF_BYCOMMAND);
+		} else {
+			DeleteMenu(hMenu, ID_MENUITEM_SEND, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_SBOXMARK, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_SENDBOX, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_ENCODE, MF_BYCOMMAND);
+		}
 	}
 
 	if (hEditToolBar != NULL) {
