@@ -2347,7 +2347,7 @@ static BOOL InitWindow(HWND hWnd)
 
 	// ListViewƒtƒHƒ“ƒg
 	hdc = GetDC(hWnd);
-	if (op.lv_font.size > 0) {
+	if ((op.lv_font.name != NULL && *op.lv_font.name != TEXT('\0')) || op.lv_font.size != 9) {
 		hListFont = font_create_or_copy(hWnd, hdc, &op.lv_font);
 	}
 	hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
@@ -4129,7 +4129,7 @@ static BOOL AdvOptionEditor(HWND hWnd)
 			DeleteObject(hViewFont);
 		}
 		hdc = GetDC(hWnd);
-		if (op.lv_font.size > 0) {
+		if ((op.lv_font.name != NULL && *op.lv_font.name != TEXT('\0')) || op.lv_font.size != 9) {
 			if (hListFont != NULL) {
 				DeleteObject(hListFont);
 			}
@@ -5097,7 +5097,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifndef _WIN32_WCE_PPC
 		case ID_MENUITEM_VISIT_WEB:
-			ShellOpen(STR_WEB_ADDR);
+			ShellOpen(STR_WEB_DOC);
 			break;
 #endif
 
