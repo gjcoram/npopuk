@@ -226,15 +226,21 @@ void ini_read_general(HWND hWnd)
 
 	op.view_font.name = profile_alloc_string(GENERAL, TEXT("FontName"), STR_DEFAULT_FONT);
 	op.view_font.size = profile_get_int(GENERAL, TEXT("FontSize"), 9);
+	if (op.view_font.size <= 0) {
+		op.view_font.size = 9;
+	}
 	op.view_font.weight = profile_get_int(GENERAL, TEXT("FontWeight"), 0);
 	op.view_font.italic = profile_get_int(GENERAL, TEXT("FontItalic"), 0);
 	op.view_font.charset = profile_get_int(GENERAL, TEXT("FontCharset"), char_set);
 
 	op.lv_font.name = profile_alloc_string(GENERAL, TEXT("LvFontName"), TEXT(""));
 	if (op.Version < 2011 && (op.lv_font.name == NULL || *op.lv_font.name == TEXT('\0'))) {
-		op.lv_font.size = 0;
+		op.lv_font.size = 9;
 	} else {
-		op.lv_font.size = profile_get_int(GENERAL, TEXT("LvFontSize"), 0);
+		op.lv_font.size = profile_get_int(GENERAL, TEXT("LvFontSize"), 9);
+		if (op.lv_font.size <= 0) {
+			op.lv_font.size = 9;
+		}
 	}
 	op.lv_font.weight = profile_get_int(GENERAL, TEXT("LvFontWeight"), 0);
 	op.lv_font.italic = profile_get_int(GENERAL, TEXT("LvFontItalic"), 0);
