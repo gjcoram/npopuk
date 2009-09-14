@@ -2629,12 +2629,13 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 		EnableMenuItem(hMenu, ID_MENUITEM_PASTEQUOT, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_REFLOW, menu_state);
 		EnableMenuItem(hMenu, ID_MENUITEM_FILEOPEN, menu_state);
-#ifdef _WIN32_WCE_PPC
 	}
+#ifdef _WIN32_WCE_PPC
 	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_FILE);
-	if (hMenu != NULL) {
+#else
+	hMenu = GetSubMenu(hMenu, 0);
 #endif
-		EnableMenuItem(hMenu, ID_MENUITEM_ATTACH, menu_state);
+	if (hMenu != NULL) {
 		if (editable) {
 			DeleteMenu(hMenu, ID_MENUITEM_NEXTMAIL, MF_BYCOMMAND);
 			DeleteMenu(hMenu, ID_MENUITEM_PREVMAIL, MF_BYCOMMAND);
@@ -2644,6 +2645,13 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 			DeleteMenu(hMenu, ID_MENUITEM_SBOXMARK, MF_BYCOMMAND);
 			DeleteMenu(hMenu, ID_MENUITEM_SENDBOX, MF_BYCOMMAND);
 			DeleteMenu(hMenu, ID_MENUITEM_ENCODE, MF_BYCOMMAND);
+			DeleteMenu(hMenu, ID_MENUITEM_ATTACH, MF_BYCOMMAND);
+			InsertMenu(hMenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				ID_MENUITEM_NEXTMAIL, STR_LIST_MENU_NEXTMAIL);
+			InsertMenu(hMenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				ID_MENUITEM_PREVMAIL, STR_LIST_MENU_PREVMAIL);
+			InsertMenu(hMenu, 2, MF_BYPOSITION | MF_POPUP | MF_STRING,
+				ID_MENUITEM_SAVECOPY, STR_LIST_MENU_EDITNEW);
 		}
 	}
 
