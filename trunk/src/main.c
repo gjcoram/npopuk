@@ -3143,6 +3143,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 			ShowWindow(hWnd, SW_HIDE);
 #endif
 		}
+		_SetForegroundWindow(tpMailItem->hEditWnd);
 		return;
 	}
 	if (tpMailItem->Body == NULL && SelBox != MAILBOX_SEND && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE) {

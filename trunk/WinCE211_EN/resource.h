@@ -377,7 +377,6 @@
 #define ID_KEY_CTRLENTER                40017
 #define ID_MENUITEM_DELETE              40018
 #define ID_MENUITEM_LISTINIT            40019
-#define ID_MENUITEM_ABOUT               40020
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
 #define ID_MESSAGE_DOWNLOAD             40024
@@ -409,6 +408,8 @@
 #define ID_MENUITEM_ALLCHECK            40050
 #define ID_MENUITEM_ADDRESS             40051
 #define ID_MENUITEM_RESTORE             40052
+#define ID_MENUITEM_ABOUT               40053
+#define ID_MENUITEM_VISIT_WEB           40055
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_DELETE                   40065

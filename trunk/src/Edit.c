@@ -2631,10 +2631,9 @@ void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable) {
 		EnableMenuItem(hMenu, ID_MENUITEM_FILEOPEN, menu_state);
 	}
 #ifdef _WIN32_WCE_PPC
-	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_FILE);
-#else
-	hMenu = GetSubMenu(hMenu, 0);
+	hMenu = SHGetSubMenu(hEditToolBar, ID_MENUITEM_FILE); // gets top-level menu
 #endif
+	hMenu = GetSubMenu(hMenu, 0);
 	if (hMenu != NULL) {
 		if (editable) {
 			DeleteMenu(hMenu, ID_MENUITEM_NEXTMAIL, MF_BYCOMMAND);
