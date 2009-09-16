@@ -14,23 +14,23 @@
 INSTALLTOP=\usr\local\ssl
 
 # Set your compiler options
-PLATFORM=VC-WIN32
-CC=cl
-CFLAG= /MT /Ox /O2 /Ob2 /W3 /WX /Gs0 /GF /Gy /nologo -DOPENSSL_SYSNAME_WIN32 -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE /Fdout32 -DOPENSSL_NO_IDEA -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_SEED -DOPENSSL_NO_RC5 -DOPENSSL_NO_MDC2 -DOPENSSL_NO_CMS -DOPENSSL_NO_JPAKE -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_KRB5 -DOPENSSL_NO_EC -DOPENSSL_NO_ECDSA -DOPENSSL_NO_ECDH -DZLIB -DOPENSSL_NO_DYNAMIC_ENGINE -I"C:\Program Files\Microsoft SDK\include" -I"..\zlib123"
+PLATFORM=VC-CE
+CC=$(CC)
+CFLAG= /MC /O1i /W3 /GF /Gy /nologo -DUNICODE -D_UNICODE -DOPENSSL_SYSNAME_WINCE -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DNO_CHMOD -I$(WCECOMPAT)/include -DOPENSSL_SMALL_FOOTPRINT -D_WIN32_WCE=211 -DUNDER_CE=211 -DWCE_PLATFORM_"MS_HPC_PRO" -DARM -D_ARM_ /Fdout32_$(TARGETCPU) -DOPENSSL_NO_IDEA -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_SEED -DOPENSSL_NO_RC5 -DOPENSSL_NO_MDC2 -DOPENSSL_NO_CMS -DOPENSSL_NO_JPAKE -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_KRB5 -DOPENSSL_NO_EC -DOPENSSL_NO_ECDSA -DOPENSSL_NO_ECDH -DZLIB -DOPENSSL_NO_DYNAMIC_ENGINE -I"C:\Windows CE Tools\WCE211\MS HPC Pro\include" -I"..\zlib123"
 APP_CFLAG=
-LIB_CFLAG=/Zl
+LIB_CFLAG=
 SHLIB_CFLAG=
-APP_EX_OBJ=setargv.obj
+APP_EX_OBJ=
 SHLIB_EX_OBJ=
 # add extra libraries to this define, for solaris -lsocket -lnsl would
 # be added
-EX_LIBS=wsock32.lib gdi32.lib crypt32.lib advapi32.lib user32.lib
+EX_LIBS=winsock.lib
 
 # The OpenSSL directory
 SRC_D=.
 
 LINK=link
-LFLAGS=/nologo /subsystem:console /opt:ref /LIBPATH:"C:\Program Files\Microsoft SDK\Lib"
+LFLAGS=/nologo /opt:ref /subsystem:windowsce,2.11 /machine:ARM
 RSC=rc
 
 AES_ASM_OBJ=
@@ -59,23 +59,20 @@ CPUID_ASM_OBJ=
 CPUID_ASM_SRC=
 
 # The output directory for everything intersting
-OUT_D=out32
+OUT_D=out32_$(TARGETCPU)
 # The output directory for all the temporary muck
-TMP_D=tmp32
+TMP_D=tmp32_$(TARGETCPU)
 # The output directory for the header files
 INC_D=inc32
 INCO_D=inc32\openssl
 
-#PERL=perl
-#CP=$(PERL) util/copy.pl
 CP=copy
 RM=del
 RANLIB=
-#MKDIR=$(PERL) util/mkdir-p.pl
 MKDIR=mkdir
-MKLIB=lib
+MKLIB=lib /nologo
 MLFLAGS=
-ASM=ml /Cp /coff /c /Cx
+ASM=ml /nologo /Cp /coff /c /Cx
 
 ######################################################
 # You should not need to touch anything below this point
@@ -157,6 +154,16 @@ EXHEADER=$(INCO_D)\e_os2.h \
 	$(INCO_D)\ssl.h $(INCO_D)\ssl2.h $(INCO_D)\ssl3.h \
 	$(INCO_D)\ssl23.h $(INCO_D)\tls1.h $(INCO_D)\dtls1.h
 
+T_OBJ=$(OBJ_D)\md2test.obj \
+	$(OBJ_D)\md4test.obj $(OBJ_D)\md5test.obj $(OBJ_D)\shatest.obj \
+	$(OBJ_D)\sha1test.obj $(OBJ_D)\sha256t.obj $(OBJ_D)\sha512t.obj \
+	$(OBJ_D)\hmactest.obj $(OBJ_D)\rmdtest.obj $(OBJ_D)\destest.obj \
+	$(OBJ_D)\rc2test.obj $(OBJ_D)\rc4test.obj $(OBJ_D)\bftest.obj \
+	$(OBJ_D)\casttest.obj $(OBJ_D)\bntest.obj $(OBJ_D)\exptest.obj \
+	$(OBJ_D)\rsa_test.obj $(OBJ_D)\dsatest.obj $(OBJ_D)\dhtest.obj \
+	$(OBJ_D)\randtest.obj $(OBJ_D)\evp_test.obj $(OBJ_D)\enginetest.obj \
+	$(OBJ_D)\ssltest.obj 
+
 SSLOBJ=$(OBJ_D)\s2_meth.obj \
 	$(OBJ_D)\s2_srvr.obj $(OBJ_D)\s2_clnt.obj $(OBJ_D)\s2_lib.obj \
 	$(OBJ_D)\s2_enc.obj $(OBJ_D)\s2_pkt.obj $(OBJ_D)\s3_meth.obj \
@@ -165,11 +172,13 @@ SSLOBJ=$(OBJ_D)\s2_meth.obj \
 	$(OBJ_D)\s23_meth.obj $(OBJ_D)\s23_srvr.obj $(OBJ_D)\s23_clnt.obj \
 	$(OBJ_D)\s23_lib.obj $(OBJ_D)\s23_pkt.obj $(OBJ_D)\t1_meth.obj \
 	$(OBJ_D)\t1_srvr.obj $(OBJ_D)\t1_clnt.obj $(OBJ_D)\t1_lib.obj \
-	$(OBJ_D)\t1_enc.obj $(OBJ_D)\ssl_lib.obj \
+	$(OBJ_D)\t1_enc.obj $(OBJ_D)\d1_meth.obj $(OBJ_D)\d1_srvr.obj \
+	$(OBJ_D)\d1_clnt.obj $(OBJ_D)\d1_lib.obj $(OBJ_D)\d1_pkt.obj \
+	$(OBJ_D)\d1_both.obj $(OBJ_D)\d1_enc.obj $(OBJ_D)\ssl_lib.obj \
 	$(OBJ_D)\ssl_err2.obj $(OBJ_D)\ssl_cert.obj $(OBJ_D)\ssl_sess.obj \
 	$(OBJ_D)\ssl_ciph.obj $(OBJ_D)\ssl_stat.obj $(OBJ_D)\ssl_rsa.obj \
 	$(OBJ_D)\ssl_asn1.obj $(OBJ_D)\ssl_txt.obj $(OBJ_D)\ssl_algs.obj \
-	$(OBJ_D)\ssl_err.obj
+	$(OBJ_D)\bio_ssl.obj $(OBJ_D)\ssl_err.obj 
 
 CRYPTOOBJ=$(OBJ_D)\cryptlib.obj \
 	$(OBJ_D)\dyn_lck.obj $(OBJ_D)\mem.obj $(OBJ_D)\mem_clr.obj \
@@ -329,7 +338,7 @@ CRYPTOOBJ=$(OBJ_D)\cryptlib.obj \
 	$(OBJ_D)\ocsp_err.obj $(OBJ_D)\ui_err.obj $(OBJ_D)\ui_lib.obj \
 	$(OBJ_D)\ui_openssl.obj $(OBJ_D)\ui_util.obj $(OBJ_D)\ui_compat.obj \
 	$(OBJ_D)\str_err.obj $(OBJ_D)\str_lib.obj \
-	$(OBJ_D)\str_meth.obj $(OBJ_D)\str_mem.obj $(OBJ_D)\pqueue.obj
+	$(OBJ_D)\str_meth.obj $(OBJ_D)\str_mem.obj $(OBJ_D)\pqueue.obj 
 
 E_SHLIB=
 
@@ -479,7 +488,6 @@ $(INCL_D)\kssl.h: $(SRC_D)\ssl\kssl.h
 $(INCL_D)\ssl_locl.h: $(SRC_D)\ssl\ssl_locl.h
 	$(CP) "$(SRC_D)\ssl\ssl_locl.h" "$(INCL_D)\ssl_locl.h"
 
-
 $(INCO_D)\e_os2.h: $(SRC_D)\.\e_os2.h
 	$(CP) "$(SRC_D)\.\e_os2.h" "$(INCO_D)\e_os2.h"
 
@@ -495,7 +503,7 @@ $(INCO_D)\opensslv.h: $(SRC_D)\crypto\opensslv.h
 #$(INCO_D)\opensslconf.h: $(SRC_D)\crypto\opensslconf.h
 #	$(CP) "$(SRC_D)\crypto\opensslconf.h" "$(INCO_D)\opensslconf.h"
 $(INCO_D)\opensslconf.h:
-	$(CP) "$(SRC_D)\.\opensslconf_nt.h" "$(INCO_D)\opensslconf.h"
+	$(CP) "$(SRC_D)\opensslconf_wce.h" "$(INCO_D)\opensslconf.h"
 
 $(INCO_D)\ebcdic.h: $(SRC_D)\crypto\ebcdic.h
 	$(CP) "$(SRC_D)\crypto\ebcdic.h" "$(INCO_D)\ebcdic.h"
@@ -809,6 +817,27 @@ $(OBJ_D)\t1_lib.obj: $(SRC_D)\ssl\t1_lib.c
 $(OBJ_D)\t1_enc.obj: $(SRC_D)\ssl\t1_enc.c
 	$(CC) /Fo$(OBJ_D)\t1_enc.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\t1_enc.c
 
+$(OBJ_D)\d1_meth.obj: $(SRC_D)\ssl\d1_meth.c
+	$(CC) /Fo$(OBJ_D)\d1_meth.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_meth.c
+
+$(OBJ_D)\d1_srvr.obj: $(SRC_D)\ssl\d1_srvr.c
+	$(CC) /Fo$(OBJ_D)\d1_srvr.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_srvr.c
+
+$(OBJ_D)\d1_clnt.obj: $(SRC_D)\ssl\d1_clnt.c
+	$(CC) /Fo$(OBJ_D)\d1_clnt.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_clnt.c
+
+$(OBJ_D)\d1_lib.obj: $(SRC_D)\ssl\d1_lib.c
+	$(CC) /Fo$(OBJ_D)\d1_lib.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_lib.c
+
+$(OBJ_D)\d1_pkt.obj: $(SRC_D)\ssl\d1_pkt.c
+	$(CC) /Fo$(OBJ_D)\d1_pkt.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_pkt.c
+
+$(OBJ_D)\d1_both.obj: $(SRC_D)\ssl\d1_both.c
+	$(CC) /Fo$(OBJ_D)\d1_both.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_both.c
+
+$(OBJ_D)\d1_enc.obj: $(SRC_D)\ssl\d1_enc.c
+	$(CC) /Fo$(OBJ_D)\d1_enc.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_enc.c
+
 $(OBJ_D)\ssl_lib.obj: $(SRC_D)\ssl\ssl_lib.c
 	$(CC) /Fo$(OBJ_D)\ssl_lib.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\ssl_lib.c
 
@@ -838,6 +867,9 @@ $(OBJ_D)\ssl_txt.obj: $(SRC_D)\ssl\ssl_txt.c
 
 $(OBJ_D)\ssl_algs.obj: $(SRC_D)\ssl\ssl_algs.c
 	$(CC) /Fo$(OBJ_D)\ssl_algs.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\ssl_algs.c
+
+$(OBJ_D)\bio_ssl.obj: $(SRC_D)\ssl\bio_ssl.c
+	$(CC) /Fo$(OBJ_D)\bio_ssl.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\bio_ssl.c
 
 $(OBJ_D)\ssl_err.obj: $(SRC_D)\ssl\ssl_err.c
 	$(CC) /Fo$(OBJ_D)\ssl_err.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\ssl_err.c

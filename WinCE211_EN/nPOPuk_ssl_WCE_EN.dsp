@@ -56,8 +56,8 @@ CFG=nPOPuk_WCE_EN - Win32 (WCE ARM) Debug
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=clmips.exe
-# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /c
-# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "MIPS" /D "_MIPS_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
+# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "DO_SSL" /YX /Oxs /c
+# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "MIPS" /D "_MIPS_" /D "NDEBUG" /D "DO_SSL" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "MIPS" /d "_MIPS_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "MIPS" /d "_MIPS_"
@@ -69,7 +69,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
 
@@ -85,8 +85,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=clmips.exe
-# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
-# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
+# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "DO_SSL" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
+# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "DO_SSL" /D "MIPS" /D "_MIPS_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "MIPS" /d "_MIPS_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "MIPS" /d "_MIPS_"
@@ -98,7 +98,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\wcecompat\lib_mips\wcecompat.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /debug /machine:MIPS /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
 
@@ -114,8 +114,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=shcl.exe
-# ADD BASE CPP /nologo /Qsh4 /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /c
-# ADD CPP /nologo /Qsh4 /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "SHx" /D "SH4" /D "_SH4_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
+# ADD BASE CPP /nologo /Qsh4 /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "DO_SSL" /YX /Oxs /c
+# ADD CPP /nologo /Qsh4 /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "SHx" /D "SH4" /D "_SH4_" /D "NDEBUG" /D "DO_SSL" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CEConfigName)" /d "SHx" /d "SH4" /d "_SH4_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CEConfigName)" /d "SHx" /d "SH4" /d "_SH4_"
@@ -127,7 +127,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
 
@@ -143,8 +143,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=shcl.exe
-# ADD BASE CPP /nologo /Qsh4 /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
-# ADD CPP /nologo /Qsh4 /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
+# ADD BASE CPP /nologo /Qsh4 /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "DO_SSL" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
+# ADD CPP /nologo /Qsh4 /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "DO_SSL" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CEConfigName)" /d "SHx" /d "SH4" /d "_SH4_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CEConfigName)" /d "SHx" /d "SH4" /d "_SH4_"
@@ -156,7 +156,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /debug /machine:SH4 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Release"
 
@@ -172,8 +172,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=shcl.exe
-# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /c
-# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "SHx" /D "SH3" /D "_SH3_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
+# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "DO_SSL" /YX /Oxs /c
+# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "SHx" /D "SH3" /D "_SH3_" /D "NDEBUG" /D "DO_SSL" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "SHx" /d "SH3" /d "_SH3_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "SHx" /d "SH3" /d "_SH3_"
@@ -185,7 +185,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH3\libeay32.lib ..\openssl\out32_SH3\ssleay32.lib ..\wcecompat\lib_sh3\wcecompat.lib /nologo /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH3\libeay32.lib ..\openssl\out32_SH3\ssleay32.lib ..\zlib_wce\lib_sh3\zlib_wce.lib ..\wcecompat\lib_sh3\wcecompat.lib /nologo /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Rel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Debug"
 
@@ -201,8 +201,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=shcl.exe
-# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
-# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
+# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "DO_SSL" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
+# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "DO_SSL" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "SHx" /d "SH3" /d "_SH3_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "SHx" /d "SH3" /d "_SH3_"
@@ -214,7 +214,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH3\libeay32.lib ..\openssl\out32_SH3\ssleay32.lib ..\wcecompat\lib_sh3\wcecompat.lib /nologo /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Dbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH3\libeay32.lib ..\openssl\out32_SH3\ssleay32.lib ..\zlib_wce\lib_sh3\zlib_wce.lib ..\wcecompat\lib_sh3\wcecompat.lib /nologo /debug /machine:SH3 /nodefaultlib:"$(CENoDefaultLib)" /out:"SH3Dbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
@@ -230,8 +230,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=clarm.exe
-# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /c
-# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
+# ADD BASE CPP /nologo /M$(CECrtMT) /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "DO_SSL" /YX /Oxs /c
+# ADD CPP /nologo /M$(CECrtMT) /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "ARM" /D "_ARM_" /D "NDEBUG" /D "DO_SSL" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Oxs /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "ARM" /d "_ARM_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "ARM" /d "_ARM_"
@@ -243,7 +243,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
 
@@ -259,8 +259,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=clarm.exe
-# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
-# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
+# ADD BASE CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /D "DEBUG" /D "DO_SSL" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /YX /c
+# ADD CPP /nologo /M$(CECrtMTDebug) /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "DO_SSL" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "ARM" /d "_ARM_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "ARM" /d "_ARM_"
@@ -272,7 +272,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /debug /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /debug /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /debug /machine:ARM /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /stack:0x10000,0x1000 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
@@ -288,8 +288,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=cl.exe
-# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /Oxs /c
-# ADD CPP /nologo /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /Oxs /c
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "DO_SSL" /YX /Gs8192 /GF /Oxs /c
+# ADD CPP /nologo /W3 /I "." /I "..\EN" /I "..\openssl\inc32" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D "NDEBUG" /D "DO_SSL" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /Oxs /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "_i386_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "_i386_"
@@ -317,8 +317,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=cl.exe
-# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
-# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /c
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "DO_SSL" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "DO_SSL" /D "_i386_" /D "i_386_" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CEConfigName)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /YX /Gs8192 /GF /c
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "_i386_"
 # ADD RSC /l 0x409 /r /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CEConfigName)" /d "_X86_" /d "x86" /d "_i386_"
@@ -346,8 +346,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=cl.exe
-# ADD BASE CPP nologo Gz W3 D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "i486" D UNDER_CE=$(CEVersion) D "UNICODE" D "_UNICODE" D "_X86_" D "x86" D "NDEBUG" YX Oxs c
-# ADD CPP nologo Gz W3 I "." I "..\EN" I "..\openssl\inc32" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "i486" D "_X86_" D "x86" D "NDEBUG" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX Oxs c
+# ADD BASE CPP nologo Gz W3 D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "i486" D UNDER_CE=$(CEVersion) D "UNICODE" D "_UNICODE" D "_X86_" D "x86" D "NDEBUG" D "DO_SSL" YX Oxs c
+# ADD CPP nologo Gz W3 I "." I "..\EN" I "..\openssl\inc32" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "i486" D "_X86_" D "x86" D "NDEBUG" D "DO_SSL" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX Oxs c
 RSC=rc.exe
 # ADD BASE RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "NDEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
 # ADD RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "NDEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
@@ -375,8 +375,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 CPP=cl.exe
-# ADD BASE CPP nologo Gz W3 Zi Od D "DEBUG" D "i486" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_X86_" D "x86" YX c
-# ADD CPP nologo Gz W3 Zi Od I "." I "..\EN" I "..\openssl\inc32" D "DEBUG" D "i486" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "_X86_" D "x86" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX c
+# ADD BASE CPP nologo Gz W3 Zi Od D "DEBUG" D "DO_SSL" D "i486" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_X86_" D "x86" YX c
+# ADD CPP nologo Gz W3 Zi Od I "." I "..\EN" I "..\openssl\inc32" D "DEBUG" D "DO_SSL" D "i486" D "WIN32" D "STRICT" D "_WIN32_WCE_EMULATION" D "INTERNATIONAL" D "USA" D "INTLMSG_CODEPAGE" D "_X86_" D "x86" D UNDER_CE=$(CEVersion) D _WIN32_WCE=$(CEVersion) D "$(CEConfigName)" D "UNICODE" D "_UNICODE" D "_NOFILEMAP" YX c
 RSC=rc.exe
 # ADD BASE RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "DEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r
 # ADD RSC l 0x409 d UNDER_CE=$(CEVersion) d _WIN32_WCE=$(CEVersion) d "UNICODE" d "_UNICODE" d "DEBUG" d "$(CEConfigName)" d "_X86_" d "x86" d "i486" r

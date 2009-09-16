@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib advapi32.lib"
+				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib out32\zlib_win32.lib advapi32.lib"
 				AdditionalDependencies="user32.lib gdi32.lib comdlg32.lib shell32.lib ole32.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib"
 				OutputFile=".\Debug_Unicode/nPOPuk.exe"
 				LinkIncremental="2"
@@ -172,13 +172,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib advapi32.lib"
+				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib out32\zlib_win32.lib advapi32.lib"
 				AdditionalDependencies="user32.lib gdi32.lib comdlg32.lib shell32.lib ole32.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib"
 				OutputFile=".\Release/nPOPuk.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories=""
 				GenerateManifest="false"
+				IgnoreDefaultLibraryNames="libc.lib"
 				ProgramDatabaseFile=".\Release/nPOPuk.pdb"
 				SubSystem="2"
 				OptimizeForWindows98="1"
@@ -272,7 +273,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib advapi32.lib"
+				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib out32\zlib_win32.lib advapi32.lib"
 				AdditionalDependencies="user32.lib gdi32.lib comdlg32.lib shell32.lib ole32.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib"
 				OutputFile=".\Release_Unicode/nPOPuk.exe"
 				LinkIncremental="1"
@@ -372,7 +373,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib advapi32.lib"
+				AdditionalOptions="..\openssl\out32\ssleay32.lib ..\openssl\out32\libeay32.lib out32\zlib_win32.lib advapi32.lib"
 				AdditionalDependencies="user32.lib gdi32.lib comdlg32.lib shell32.lib ole32.lib odbc32.lib odbccp32.lib comctl32.lib wsock32.lib Winmm.lib imm32.lib"
 				OutputFile=".\Debug/nPOPuk.exe"
 				LinkIncremental="2"
