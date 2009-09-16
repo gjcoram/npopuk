@@ -28,6 +28,9 @@ If you have already built the Win32 version of the OpenSSL libs,
 please delete inc32\openssl\opensslconf.h
 
 You may need to run another batch file to set up for the specific
-processor.  Then "nmake -f celib.mak" and the .lib files should be
-made in "out32_PROC" where PROC stands for the processor  (ARM,
-MIPS, SH3, SH4, X86).
+processor.  Then "nmake -f cearmlib.mak" and the .lib files should be
+made in "out32_ARM" (similarly for cesh3lib.mak, cesh4lib.mak, and
+cempslib.mak).
+
+These files now include support for ZLIB compression using code from
+http://www.zlib.net/
