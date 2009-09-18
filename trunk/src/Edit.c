@@ -2060,6 +2060,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			tpMailItem = View_NextPrev(hWnd, +1, FALSE);
 			if (tpMailItem != NULL) {
 				UpdateEditWindow(hWnd, tpMailItem);
+			} else if (op.ViewCloseNoNext) {
+				CloseEditMail(hWnd, FALSE, TRUE);
 			}
 			break;
 
@@ -2067,6 +2069,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			tpMailItem = View_NextPrev(hWnd, -1, FALSE);
 			if (tpMailItem != NULL) {
 				UpdateEditWindow(hWnd, tpMailItem);
+			} else if (op.ViewCloseNoNext) {
+				CloseEditMail(hWnd, FALSE, TRUE);
 			}
 			break;
 
