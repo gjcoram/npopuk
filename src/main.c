@@ -22,6 +22,9 @@
 #endif
 #include "code.h"
 #include "profile.h"
+#ifdef _WIN32_WCE
+#include "Projects.h"
+#endif
 
 /* Define */
 #define WM_TRAY_NOTIFY			(WM_APP + 100)		// タスクトレイ
@@ -646,7 +649,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 			*t = '\0';
 			if (strlen(s) > 0) {
 				TCHAR fullname[BUF_SIZE];
-				BOOL Found;
+				BOOL Found = FALSE;
 #ifdef UNICODE
 				p = alloc_char_to_tchar(s);
 #else
@@ -659,11 +662,38 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 					FreeParms();
 					return FALSE;
 				}
-#ifndef _WIN32_WCE
+#ifdef _WIN32_WCE
+				len = lstrlen(TEXT("%STORAGE_CARD%"));
+				if (str_cmp_n_t(p, TEXT("%STORAGE_CARD%"), len) == 0) {
+					HANDLE hFlashCard;
+					WIN32_FIND_DATA lpwfdFlashCard;
+					BOOL next = TRUE;
+
+					hFlashCard = FindFirstFlashCard (&lpwfdFlashCard);
+					if (hFlashCard != INVALID_HANDLE_VALUE) {
+						while (next) {
+							TCHAR *fcPath = lpwfdFlashCard.cFileName;
+							wsprintf(fullname, TEXT("\\%s%s"), fcPath, (p+len));
+							if (file_get_size(fullname) > 0) {
+								Found = TRUE;
+								break;
+							}
+							next = FindNextFlashCard(hFlashCard, &lpwfdFlashCard);
+						}
+						FindClose(hFlashCard);
+					}
+					if (Found == FALSE) {
+						str_cpy_n_t(fullname, p, BUF_SIZE);
+						Found = TRUE;
+					}
+				}
+#else
 				p = replace_env_var(p);
 #endif
-				str_cpy_n_t(fullname, DefaultDataDir, BUF_SIZE);
-				Found = MergePath(fullname, p);
+				if (Found == FALSE) {
+					str_cpy_n_t(fullname, DefaultDataDir, BUF_SIZE);
+					Found = MergePath(fullname, p);
+				}
 				if (!Found) {
 					// Error: can't make INI file name
 					TCHAR msg[MSG_SIZE];
