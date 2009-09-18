@@ -301,7 +301,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /machine:IX86 /subsystem:$(CESubsystem)
-# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
+# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\openssl\out32_X86\ssleay32.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /stack:0x10000,0x1000 /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -330,7 +330,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /machine:IX86 /subsystem:$(CESubsystem)
-# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /stack:0x10000,0x1000 /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
+# ADD LINK32 $(CEx86Corelibc) $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /stack:0x10000,0x1000 /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /machine:IX86 /subsystem:$(CESubsystem)
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
 
@@ -1705,11 +1705,13 @@ DEP_CPP_MAIN_=\
 	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
-	"..\src\mime.h"\
-	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MAIN_=\
+	"..\src\Projects.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
@@ -1776,11 +1778,13 @@ DEP_CPP_MAIN_=\
 	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
-	"..\src\mime.h"\
-	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MAIN_=\
+	"..\src\Projects.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
@@ -1804,11 +1808,13 @@ DEP_CPP_MAIN_=\
 	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
-	"..\src\mime.h"\
-	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
+	
+NODEP_CPP_MAIN_=\
+	"..\src\Projects.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2749,6 +2755,7 @@ SOURCE=..\src\Profile.c
 !IF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Release"
 
 DEP_CPP_PROFI=\
+	"..\EN\Strtbl.h"\
 	"..\src\Profile.h"\
 	
 
@@ -2785,6 +2792,7 @@ DEP_CPP_PROFI=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_PROFI=\
+	"..\EN\Strtbl.h"\
 	"..\src\Profile.h"\
 	
 
@@ -2797,6 +2805,7 @@ DEP_CPP_PROFI=\
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
 
 DEP_CPP_PROFI=\
+	"..\EN\Strtbl.h"\
 	"..\src\Profile.h"\
 	
 
@@ -3596,9 +3605,7 @@ DEP_CPP_WINSO=\
 	".\stdafx.h"\
 	".\stddef.h"\
 	".\time.h"\
-	
-NODEP_CPP_WINSO=\
-	".\slsock.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
@@ -3705,9 +3712,7 @@ DEP_CPP_WINSO=\
 	".\stdafx.h"\
 	".\stddef.h"\
 	".\time.h"\
-	
-NODEP_CPP_WINSO=\
-	".\slsock.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
