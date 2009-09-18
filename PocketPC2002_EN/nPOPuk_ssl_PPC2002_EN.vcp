@@ -61,7 +61,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib ..\openssl\out32_arm\libeay32.lib ..\openssl\out32_arm\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib Note_prj.lib ..\openssl\out32_arm\libeay32.lib ..\openssl\out32_arm\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC2002_EN - Win32 (WCE ARM) Debug"
 
@@ -94,7 +95,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib ..\openssl\out32_arm\libeay32.lib ..\openssl\out32_arm\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib Note_prj.lib ..\openssl\out32_arm\libeay32.lib ..\openssl\out32_arm\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC2002_EN - Win32 (WCE x86) Release"
 
@@ -127,7 +129,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib Note_prj.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOPuk_PPC2002_EN - Win32 (WCE x86) Debug"
 
@@ -160,7 +163,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib aygshell.lib winsock.lib ole32.lib Oleaut32.lib Note_prj.lib ..\openssl\out32\libeay32.lib ..\openssl\out32\ssleay32.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -739,12 +743,12 @@ DEP_CPP_MAIN_=\
 	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
-	"..\src\mime.h"\
-	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
 	{$(INCLUDE)}"aygshell.h"\
+	{$(INCLUDE)}"Projects.h"\
 	{$(INCLUDE)}"sipapi.h"\
 	
 
@@ -1196,6 +1200,7 @@ SOURCE=..\src\Profile.c
 !IF  "$(CFG)" == "nPOPuk_PPC2002_EN - Win32 (WCE ARM) Release"
 
 DEP_CPP_PROFI=\
+	"..\EN\Strtbl.h"\
 	"..\src\Profile.h"\
 	
 
@@ -1600,9 +1605,13 @@ DEP_CPP_WINSO=\
 	"..\openssl\inc32\openssl\bio.h"\
 	"..\openssl\inc32\openssl\bn.h"\
 	"..\openssl\inc32\openssl\buffer.h"\
+	"..\openssl\inc32\openssl\comp.h"\
 	"..\openssl\inc32\openssl\crypto.h"\
+	"..\openssl\inc32\openssl\dh.h"\
+	"..\openssl\inc32\openssl\dsa.h"\
 	"..\openssl\inc32\openssl\dtls1.h"\
 	"..\openssl\inc32\openssl\e_os2.h"\
+	"..\openssl\inc32\openssl\ebcdic.h"\
 	"..\openssl\inc32\openssl\evp.h"\
 	"..\openssl\inc32\openssl\hmac.h"\
 	"..\openssl\inc32\openssl\kssl.h"\
@@ -1617,6 +1626,7 @@ DEP_CPP_WINSO=\
 	"..\openssl\inc32\openssl\pkcs7.h"\
 	"..\openssl\inc32\openssl\pq_compat.h"\
 	"..\openssl\inc32\openssl\pqueue.h"\
+	"..\openssl\inc32\openssl\rsa.h"\
 	"..\openssl\inc32\openssl\safestack.h"\
 	"..\openssl\inc32\openssl\sha.h"\
 	"..\openssl\inc32\openssl\ssl.h"\
