@@ -1488,6 +1488,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		wsprintf(msg, STR_ERR_FILE_TOO_LARGE, path);
 		ErrorMessage(NULL, msg);
 	}
+	tpMailBox->WasMbox = op.WriteMbox;
 
 	///////////// MRP /////////////////////
 	DeleteFile(pathBackup);
