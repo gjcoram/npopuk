@@ -8764,6 +8764,8 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (last_selected == 0) {
 			last_selected = j; // the new one created last time
+		} else if (last_selected > j) {
+			last_selected = 1; // mailbox was deleted
 		}
 		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, last_selected, 0);
 		break;
