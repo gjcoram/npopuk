@@ -2099,8 +2099,6 @@ static void OpenURL(HWND hWnd)
 				}
 				mem_free(&fname);
 			}
-			mem_free(&buf);
-			return;
 		}
 	}
 
@@ -2172,10 +2170,10 @@ static void OpenURL(HWND hWnd)
 	}
 #endif
 
-	// 開始位置の取得
+	// skip some characters
 	for (s = str; *s == TEXT('(') || *s == TEXT(')') || *s == TEXT('\"') ||
 		*s == TEXT('<') || *s == TEXT('>') || *s == TEXT('\t') || *s == TEXT(' '); s++);
-	// URLの開始位置を取得
+	// look for the start of a URL
 	for (p = s; *p != TEXT('\0'); p++) {
 		if (str_cmp_ni_t(p, URL_HTTP, lstrlen(URL_HTTP)) == 0 ||
 			str_cmp_ni_t(p, URL_HTTPS, lstrlen(URL_HTTPS)) == 0 ||
@@ -2185,20 +2183,32 @@ static void OpenURL(HWND hWnd)
 			break;
 		}
 	}
-	// 終了位置の取得
-	for (p = s; *p != TEXT('\0'); p++) {
-		if (*p == TEXT('(') || *p == TEXT(')') || *p == TEXT('\"') ||
-			*p == TEXT('<') || *p == TEXT('>') || *p == TEXT(']') ||
-			*p == TEXT('\r') || *p == TEXT('\n') || *p == TEXT('\t') ||
-			*p == TEXT(' ')) { // || IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-			*p = TEXT('\0');
-			break;
-		}
-		if (*p == TEXT('@')) {
-			if (MailToFlag != 0) {
-				MailToFlag = -1;
-			} else {
-				MailToFlag = 1;
+	// find the end of the URL
+	{
+		int paren=0, brack=0;
+		for (p = s; *p != TEXT('\0'); p++) {
+			if (*p == TEXT('(')) {
+				paren++;
+			} else if (*p == TEXT(')')) {
+				paren--;
+				if (paren < 0) break;
+			} else if (*p == TEXT('[')) {
+				brack++;
+			} else if (*p == TEXT(']')) {
+				brack--;
+				if (brack < 0) break;
+			} else if (*p == TEXT('\"') || *p == TEXT('<') || *p == TEXT('>') ||
+				*p == TEXT('\r') || *p == TEXT('\n') || *p == TEXT('\t') ||
+				*p == TEXT(' ')) { // || IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+				*p = TEXT('\0');
+				break;
+			}
+			if (*p == TEXT('@')) {
+				if (MailToFlag != 0) {
+					MailToFlag = -1;
+				} else {
+					MailToFlag = 1;
+				}
 			}
 		}
 	}

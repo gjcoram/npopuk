@@ -850,7 +850,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 		SetControlFont(hDlg);
 		if ((int)lParam == ID_MENUITEM_ABOUT) {
-			SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME);
+			SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME STR_UNICODE TEXT(" (SSL)"));
 			SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
 #ifdef _WIN32_WCE
 			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT TEXT("\r\n") STR_ABOUT_OPENSSL);

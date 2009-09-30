@@ -249,7 +249,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories=".,..\EN"
+				AdditionalIncludeDirectories=".,..\EN,..\openssl\inc32"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;WSAASYNC;_WIN32_IE=0x0500;UNICODE"
 				StringPooling="true"
 				RuntimeLibrary="0"
