@@ -533,6 +533,11 @@
 #define STR_WEB_ADDR		TEXT("http://www.npopuk.org.uk/") // was www.npopsupport.org.uk
 #define STR_ABOUT_TEXT		TEXT("Extended from nPOP Version 1.0.9\r\nCopyright © 1996-2006 by \r\nTomoaki Nakashima. All rights reserved.\r\n\r\nhttp://www.nakka.com/\r\nnakka@nakka.com\r\n\r\nUK Fix info at http://www.npopuk.org.uk\r\nContributions from Greg Chapman, Geoffrey Coram, Werner Furlan, Paul Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy Millenson, Matthew R. Pattman, and Gerard Samija.\r\n")
 ///////////// --- /////////////////////
+#if defined(UNICODE) && !defined(_WIN32_WCE)
+#define STR_UNICODE			TEXT("U")
+#else
+#define STR_UNICODE
+#endif
 #define STR_WEB_DOC			TEXT("http://www.npopuk.org.uk/") NPOPWEBVER TEXT("/")
 #ifdef _WIN32_WCE_PPC
 #define STR_WM_HELP_ADDR	STR_WEB_DOC TEXT("wm/")
