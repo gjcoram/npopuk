@@ -3942,6 +3942,9 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		} else {
 			SendDlgItemMessage(hDlg, IDC_CHECK_BLINDAPPEND, BM_SETCHECK, op.BlindAppend, 0);
 		}
+#ifdef _WIN32_WCE_PPC
+		SendDlgItemMessage(hDlg, IDC_ADV_INI_EDITOR, BM_SETCHECK, op.PromptIniEdit, 0);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -4008,6 +4011,10 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			if (op.LazyLoadMailboxes != 0) {
 				op.BlindAppend = SendDlgItemMessage(hDlg, IDC_CHECK_BLINDAPPEND, BM_GETCHECK, 0, 0);
 			}
+#ifdef _WIN32_WCE_PPC
+			op.PromptIniEdit = SendDlgItemMessage(hDlg, IDC_ADV_INI_EDITOR, BM_GETCHECK, 0, 0);
+#endif
+
 			break;
 		}
 		break;

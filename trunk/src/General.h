@@ -560,6 +560,7 @@ typedef struct _OPTION {
 #ifdef _WIN32_WCE_PPC
 	int UseWindowsSSL;
 	int ShowNavButtons;
+	int PromptIniEdit;
 #endif
 
 	int GlobalFilterEnable;

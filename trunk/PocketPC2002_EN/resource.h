@@ -154,6 +154,7 @@
 #define IDC_REPLACE_ALL                 275
 #define IDC_REPLACE_AGAIN               276
 #define IDC_FIND                        277
+#define IDC_ADV_INI_EDITOR              278
 #define IDC_FILTER_ITEM1                280
 #define IDC_FILTER_TEXT1                281
 #define IDC_FILTER_ITEM2                282

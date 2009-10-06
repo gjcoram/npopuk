@@ -515,6 +515,7 @@ void ini_read_general(HWND hWnd)
 	i = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 0);
 	op.UseWindowsSSL = profile_get_int(GENERAL, TEXT("UseWindowsSSL"), i);
 	op.ShowNavButtons = profile_get_int(GENERAL, TEXT("ShowNavButtons"), 1);
+	op.PromptIniEdit = profile_get_int(GENERAL, TEXT("PromptIniEdit"), 0);
 #endif
 
 	op.NewMailSound = profile_get_int(GENERAL, TEXT("NewMailSound"), 1);
@@ -1279,6 +1280,7 @@ void ini_write_general(void)
 #ifdef _WIN32_WCE_PPC
 	profile_write_int(GENERAL, TEXT("UseWindowsSSL"), op.UseWindowsSSL);
 	profile_write_int(GENERAL, TEXT("ShowNavButtons"), op.ShowNavButtons);
+	profile_write_int(GENERAL, TEXT("PromptIniEdit"), op.PromptIniEdit);
 #endif
 
 	profile_write_int(GENERAL, TEXT("NewMailSound"), op.NewMailSound);
