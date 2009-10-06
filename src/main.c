@@ -22,7 +22,7 @@
 #endif
 #include "code.h"
 #include "profile.h"
-#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
 #include "Projects.h"
 #endif
 
@@ -663,6 +663,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 					return FALSE;
 				}
 #ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
 				len = lstrlen(TEXT("%STORAGE_CARD%"));
 				if (str_cmp_n_t(p, TEXT("%STORAGE_CARD%"), len) == 0) {
 					HANDLE hFlashCard;
@@ -687,6 +688,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 						Found = TRUE;
 					}
 				}
+#endif
 #else
 				p = replace_env_var(p);
 #endif
@@ -5033,8 +5035,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Option
 		case ID_MENUITEM_OPTION:
-			if ((GetKeyState(VK_SHIFT) < 0) && 
-					ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES) {
+			if (((GetKeyState(VK_SHIFT) < 0) 
+					&& ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
+#ifdef _WIN32_WCE_PPC
+				|| (op.PromptIniEdit
+					&& MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
+#endif
+					) {
 				ret = AdvOptionEditor(hWnd);
 			} else {
 				ret = SetOption(hWnd);

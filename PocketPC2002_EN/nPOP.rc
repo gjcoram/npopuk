@@ -376,14 +376,13 @@ BEGIN
         MENUITEM "&Copy",                       ID_MENUITEM_COPY
         MENUITEM "&Paste",                      ID_MENUITEM_PASTE
         MENUITEM "Paste as &quotation",         ID_MENUITEM_PASTEQUOT
+        MENUITEM "Paste fro&m file",            ID_MENUITEM_FILEOPEN
         MENUITEM "&Reflow selection",           ID_MENUITEM_REFLOW
         MENUITEM "Select &all",                 ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
         MENUITEM "&Find",                       ID_MENUITEM_FIND
         MENUITEM "Find &next",                  ID_MENUITEM_NEXTFIND
         MENUITEM "&Replace",                    ID_MENUITEM_REPLACE
-        MENUITEM SEPARATOR
-        MENUITEM "Paste fro&m file",            ID_MENUITEM_FILEOPEN
         MENUITEM SEPARATOR
         MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
     END
@@ -1086,17 +1085,19 @@ BEGIN
     EDITTEXT        IDC_EDIT_PASS,44,16,95,12,ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT           "File format:",IDC_STATIC,5,35,40,10
     CONTROL         "&nPOP",IDC_RADIO_FORMAT_NPOP,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,45,35,35,10
+                    BS_AUTORADIOBUTTON | WS_GROUP,45,35,30,10
     CONTROL         "&MBOX",IDC_RADIO_FORMAT_MBOX,"Button",
-                    BS_AUTORADIOBUTTON,45,46,50,10
+                    BS_AUTORADIOBUTTON,122,35,35,10
     CONTROL         "&Scramble",IDC_CHECK_SCRAMBLE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,83,35,60,10
-    COMBOBOX        IDC_COMBO_LAZYLOAD,11,70,135,95,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP,78,35,45,10
+    COMBOBOX        IDC_COMBO_LAZYLOAD,11,57,135,95,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Append to saveboxes without loading",
                     IDC_CHECK_BLINDAPPEND,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,11,86,140,10
-    GROUPBOX        "Load mailboxes",IDC_STATIC,5,60,150,40
+                    WS_TABSTOP,11,73,140,10
+    GROUPBOX        "Load mailboxes",IDC_STATIC,5,47,150,40
+    CONTROL         "&Enable INI editor",IDC_ADV_INI_EDITOR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,91,80,10
 END
 
 IDD_DIALOG_MAILPROP DIALOG DISCARDABLE  0, 0, 160, 116
