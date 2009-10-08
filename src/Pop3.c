@@ -68,6 +68,7 @@ static BOOL receiving_data;					// メールデータ受信中
 static BOOL disable_uidl;					// UIDLサポートフラグ
 static BOOL disable_top;					// TOPサポートフラグ (op.ListDownload が 1 or TOPが未サポート)
 static BOOL uidl_missing = FALSE;
+static SYSTEMTIME recv_clock;
 
 typedef struct _UIDL_INFO {
 	int no;
@@ -128,7 +129,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
-
+static void pop_log_download_rate();
 
 #ifdef _WIN32_WCE_PPC
 //================================================
@@ -1118,6 +1119,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			receiving_data = TRUE;
 			recvlen = 0;
 			recvcnt = REDRAWCNT;
+			GetLocalTime(&recv_clock);
 			return POP_TOP;
 		}
 		if (disable_top == FALSE && tpMailBox->NoRETR == 0) {
@@ -1185,6 +1187,9 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		if (*p == '\0') {
 			return POP_ERR;
 		}
+	}
+	if (op.SocLog > 1) {
+		pop_log_download_rate();
 	}
 
 	new_message_id = item_get_message_id(mail_buf);
@@ -1455,6 +1460,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		receiving_data = TRUE;
 		recvlen = 0;
 		recvcnt = REDRAWCNT;
+		GetLocalTime(&recv_clock);
 		return POP_RETR;
 	}
 
@@ -1508,7 +1514,11 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 
-	// 本文を取得
+	if (op.SocLog > 1) {
+		pop_log_download_rate();
+	}
+
+	// convert mail_buf to message structure
 	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE, tpMailBox);
 	if (tpMailItem == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
@@ -1658,6 +1668,7 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		receiving_data = TRUE;
 		recvlen = 0;
 		recvcnt = REDRAWCNT;
+		GetLocalTime(&recv_clock);
 		return POP_TOP;
 	}
 
@@ -1940,7 +1951,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		TCHAR ErrStr[BUF_SIZE] = TEXT("");
 		char end[2] = ".";
 		int salvage = POP_ERR;
-		if (op.SocLog > 1) log_save(TEXT("Salvaging received mail data\r\n"));
+		if (op.SocLog > 1) log_save(STR_MSG_SALVAGING);
 		if (command_status == POP_RETR) {
 			salvage = exec_proc_retr(hWnd, -1, end, 1, ErrStr, tpMailBox, ShowFlag);
 		} else if (command_status == POP_TOP) {
@@ -1961,6 +1972,26 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 	return ret;
 }
 
+/*
+ * pop_log_download_rate - log bytes per second
+ */
+static void pop_log_download_rate() {
+	TCHAR msg[MSG_SIZE];
+	SYSTEMTIME st;
+	TCHAR pfx = TEXT(' ');
+	int diff;
+	GetLocalTime(&st);
+	if (st.wDay != recv_clock.wDay) st.wHour += 24;
+	diff = 60*(st.wHour - recv_clock.wHour
+		+ 60*(st.wMinute - recv_clock.wMinute))
+		+ st.wSecond - recv_clock.wSecond;
+	if (recvlen > 102400) {
+		recvlen /= 1024;
+		pfx = TEXT('k');
+	}
+	wsprintf(msg, TEXT("%d %cbytes received in %d seconds\r\n"), recvlen, pfx, diff);
+	log_save(msg);
+}
 /*
  * claim_mail_buf
  */

@@ -1350,7 +1350,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
 			|| (TextIndex != -1 && (vMultiPart[TextIndex])->ContentType != NULL &&
 			str_cmp_ni((vMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			p = strip_html_tags(buf, (tpMailItem->Download) ? 1 : 2);
+			p = strip_html_tags(buf, (tpMailItem->Download && op.ViewShowAttach) ? 1 : 2);
 			if (p != NULL) {
 				mem_free(&buf);
 				buf = p;
@@ -1381,7 +1381,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				buf = p;
 			}
 		}
-		if (MultiPartCnt >= 2) {
+		if (MultiPartCnt >= 2 && op.ViewShowAttach) {
 			int k;
 			for (k = 0; k < MultiPartCnt; k++) {
 				if ((*(vMultiPart + k))->ContentType != NULL &&
