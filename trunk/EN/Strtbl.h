@@ -211,6 +211,7 @@
 #define STR_MSG_ATTACHMENT			TEXT("[Attachment: ")
 #define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
 #define STR_MSG_BYWAYOF				TEXT("%s (by way of %s)")
+#define STR_MSG_SALVAGING			TEXT("Salvaging received mail data\r\n")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
