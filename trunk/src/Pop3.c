@@ -1482,6 +1482,12 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	SetSocStatusTextT(hWnd, STR_STATUS_RECVDONE);
 
 	get_no = item_get_number_to_index(tpMailBox, download_get_no);
+	if (op.SocLog > 1) {
+		TCHAR msg[MSG_SIZE];
+		wsprintf(msg, TEXT("exec_proc_retr: soc=%s, get_no=%d\r\n"),
+			((soc==-1)?TEXT("-1"):TEXT("OK")), get_no);
+		log_save(msg);
+	}
 	if (get_no == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
 		mem_free(&tpMailBox->LastMessageId);
@@ -1978,18 +1984,23 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 static void pop_log_download_rate() {
 	TCHAR msg[MSG_SIZE];
 	SYSTEMTIME st;
-	TCHAR pfx = TEXT(' ');
-	int diff;
+	TCHAR *units = TEXT("Bytes");
+	int diff, diffms, rate = 0;
 	GetLocalTime(&st);
 	if (st.wDay != recv_clock.wDay) st.wHour += 24;
 	diff = 60*(st.wHour - recv_clock.wHour
 		+ 60*(st.wMinute - recv_clock.wMinute))
 		+ st.wSecond - recv_clock.wSecond;
+	diffms = diff * 1000 + (st.wMilliseconds - recv_clock.wMilliseconds);
 	if (recvlen > 102400) {
 		recvlen /= 1024;
-		pfx = TEXT('k');
+		units = TEXT("KB");
 	}
-	wsprintf(msg, TEXT("%d %cbytes received in %d seconds\r\n"), recvlen, pfx, diff);
+	if (diffms > 0) {
+		rate = (recvlen * 1000) / diffms;
+	}
+	wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
+		recvlen, units, diff, rate, units);
 	log_save(msg);
 }
 /*
