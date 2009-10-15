@@ -1,5 +1,5 @@
-nPOPuk v2.13 rc1                           readme-213uk.txt
-                                                August 2009
+nPOPuk v2.13                               readme-213uk.txt
+                                                14 Oct 2009
 -----------------------------------------------------------
 
 
@@ -76,6 +76,9 @@ include the following features:
 
 * Navigation buttons to move forward/backward between
   sent messages in the Outbox.
+
+* An advanced options editor, to modify the global
+  options by editing in a text window.
 
 * Ability to import Internet Setup files (*.ins) to
   configure accounts.  Templates for popular mail
