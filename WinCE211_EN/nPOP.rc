@@ -1096,10 +1096,10 @@ BEGIN
                     BS_AUTORADIOBUTTON,5,32,40,10
     CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",
                     BS_AUTORADIOBUTTON,5,43,40,10
-    LTEXT           "} from item &number:",IDC_STATIC,45,38,65,10
-    EDITTEXT        IDC_EDIT_GETNUM,114,36,40,13,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
                     BS_AUTORADIOBUTTON,5,58,100,10
+    LTEXT           "} from item &number:",IDC_STATIC,45,38,65,10
+    EDITTEXT        IDC_EDIT_GETNUM,114,36,40,13,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "# of Messages:",IDC_STATIC,10,73,60,10
     LTEXT           "",IDC_STATIC_MAILCNT,72,73,50,10
     LTEXT           "Total Size:",IDC_STATIC,10,83,60,10
