@@ -512,7 +512,11 @@ void ini_read_general(HWND hWnd)
 	op.LoadPOOMAtStart = profile_get_int(GENERAL, TEXT("LoadPOOMAtStart"), 1);
 #endif
 #ifdef _WIN32_WCE_PPC
+#ifdef DO_SSL
+	i = 0;
+#else
 	i = profile_get_int(GENERAL, TEXT("UseBuiltinSSL"), 0);
+#endif
 	op.UseWindowsSSL = profile_get_int(GENERAL, TEXT("UseWindowsSSL"), i);
 	op.ShowNavButtons = profile_get_int(GENERAL, TEXT("ShowNavButtons"), 1);
 	op.PromptIniEdit = profile_get_int(GENERAL, TEXT("PromptIniEdit"), 0);
