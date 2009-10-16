@@ -18,7 +18,7 @@
 #define _INC_OLE
 #include <windows.h>
 #undef  _INC_OLE
-#if defined( _MSC_VER) && (_MSC_VER <= 1200)
+#if !defined(_WIN32_WCE) && defined( _MSC_VER) && (_MSC_VER <= 1200)
 typedef void *HCERTSTORE;
 extern int _stricmp(const char *, const char *);
 #undef __WINCRYPT_H__
