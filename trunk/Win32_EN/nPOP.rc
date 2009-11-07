@@ -426,7 +426,7 @@ BEGIN
     BEGIN
         MENUITEM "&About...",                   ID_MENUITEM_ABOUT
         MENUITEM "About &SSL...",               ID_MENUITEM_ABOUT_SSL
-        MENUITEM "&On-line docs...",            ID_MENUITEM_VISIT_WEB
+        MENUITEM "&On-line docs",               ID_MENUITEM_VISIT_WEB
     END
 END
 
