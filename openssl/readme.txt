@@ -1,4 +1,4 @@
-readme.txt for openssl (version 0.9.8k)
+readme.txt for openssl (version 0.9.8l)
 
 Please review LICENSE.txt
 
