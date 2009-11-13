@@ -5039,7 +5039,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					&& ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
 #ifdef _WIN32_WCE_PPC
 				|| (op.PromptIniEdit
-					&& MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
+					&& MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO | MB_DEFBUTTON2) == IDYES)
 #endif
 					) {
 				ret = AdvOptionEditor(hWnd);
