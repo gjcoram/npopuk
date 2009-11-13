@@ -418,7 +418,7 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 {
 	MULTIPART *tpMultiPartItem;
 	char *Boundary;
-	char *p;
+	char *p, *tmpname = NULL;
 	char *Content, *sPos;
 	BOOL is_digest = FALSE;
 
@@ -480,9 +480,9 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 		get_content(p, HEAD_DISPOSITION, &Content);
 
 		// ファイル名の取得
-		if ((tpMultiPartItem->Filename = multipart_get_filename_rfc2231(Content)) == NULL &&
-			(tpMultiPartItem->Filename = multipart_get_filename(Content, "filename")) == NULL &&
-			(tpMultiPartItem->Filename = multipart_get_filename(tpMultiPartItem->ContentType, "name")) == NULL &&
+		if ((tmpname = multipart_get_filename_rfc2231(Content)) == NULL &&
+			(tmpname = multipart_get_filename(Content, "filename")) == NULL &&
+			(tmpname = multipart_get_filename(tpMultiPartItem->ContentType, "name")) == NULL &&
 			tpMultiPartItem->ContentType != NULL && tpMultiPartItem->ContentID != NULL) {
 			char *c, *ctype, *ext;
 			ctype = alloc_copy(tpMultiPartItem->ContentType);
@@ -492,7 +492,7 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 			ext = GetMIME2Extension(ctype, NULL);
 			c = (char *)mem_alloc(sizeof(char) * (tstrlen(ctype) + tstrlen(tpMultiPartItem->ContentID) + 1));
 			if (c != NULL) {
-				tpMultiPartItem->Filename = c;
+				tmpname = c;
 				str_join(c, tpMultiPartItem->ContentID, ext, (char *)-1);
 				for ( ; *c != '\0'; c++) {
 					if (*c == '\\' || *c == '/' || *c == ':' || *c == '*' || *c == '?' ||
@@ -505,6 +505,42 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 			mem_free(&ctype);
 		}
 		mem_free(&Content);
+
+		// handle case of repeated filename
+		if (cnt > 1 && tmpname) {
+			TCHAR *ext, *newname = tmpname;
+			int i=0, j=0, offset = lstrlen(tmpname)-1;
+			for (ext = tmpname + offset; offset > 0; ext--, offset--) {
+				if (*ext == TEXT('.')) {
+					break;
+				}
+			}
+			if (offset <= 0) { // didn't find a '.'
+				offset = lstrlen(tmpname);
+				ext = tmpname + offset;
+			}
+			while (i < cnt-1) {
+				MULTIPART *tpPrevItem = *(*tpMultiPart + i);
+				if (tpPrevItem->Filename && lstrcmp(tpPrevItem->Filename, newname) == 0) {
+					j++;
+					if (j >= 1000) break;
+					if (newname == tmpname) {
+						newname = (TCHAR *)mem_alloc(sizeof(TCHAR)*(lstrlen(tmpname) + 5)); // _999\n
+						wsprintf(newname, TEXT("%s"), tmpname);
+					}
+					if (newname && newname != tmpname) {
+						wsprintf(newname + offset, TEXT("_%d%s"), j, ext);
+					}
+					i = -1; // start checking at the beginning
+				}
+				i++;
+			}
+			if (newname != tmpname) {
+				mem_free(&tmpname);
+				tmpname = newname;
+			}
+		}
+		tpMultiPartItem->Filename = tmpname;
 		
 		// 本文の位置の取得
 		tpMultiPartItem->hPos = p;
