@@ -5466,6 +5466,10 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (i > 0 && SaveDir != NULL) {
 				*SaveDir = TEXT('\0');
 				SendDlgItemMessage(hDlg, IDC_EDIT_SAVEDIR, WM_GETTEXT, i, (LPARAM)SaveDir);
+				i = lstrlen(SaveDir)-1;
+				if (SaveDir[i] == TEXT('\\')) {
+					SaveDir[i] = TEXT('\0');
+				}
 			}
 			if (SaveDir == NULL || dir_check(SaveDir) == FALSE) {
 				TCHAR msg[MSG_SIZE];
