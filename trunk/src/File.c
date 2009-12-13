@@ -536,6 +536,9 @@ char *file_read(TCHAR *path, long FileSize)
 	//The file is opened
 	hFile = CreateFile(path, GENERIC_READ, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == NULL || hFile == (HANDLE)-1) {
+		hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	}
+	if (hFile == NULL || hFile == (HANDLE)-1) {
 		return NULL;
 	}
 	cBuf = (char *)mem_calloc(FileSize + 1);

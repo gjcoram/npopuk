@@ -508,28 +508,36 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
 
 		// handle case of repeated filename
 		if (cnt > 1 && tmpname) {
-			TCHAR *ext, *newname = tmpname;
-			int i=0, j=0, offset = lstrlen(tmpname)-1;
+			char *ext, *newname = tmpname;
+			int i=0, j=0, offset = strlen(tmpname)-1;
 			for (ext = tmpname + offset; offset > 0; ext--, offset--) {
-				if (*ext == TEXT('.')) {
+				if (*ext == '.') {
 					break;
 				}
 			}
 			if (offset <= 0) { // didn't find a '.'
-				offset = lstrlen(tmpname);
+				offset = strlen(tmpname);
 				ext = tmpname + offset;
 			}
 			while (i < cnt-1) {
 				MULTIPART *tpPrevItem = *(*tpMultiPart + i);
-				if (tpPrevItem->Filename && lstrcmp(tpPrevItem->Filename, newname) == 0) {
+				if (tpPrevItem->Filename && strcmp(tpPrevItem->Filename, newname) == 0) {
 					j++;
 					if (j >= 1000) break;
 					if (newname == tmpname) {
-						newname = (TCHAR *)mem_alloc(sizeof(TCHAR)*(lstrlen(tmpname) + 5)); // _999\n
-						wsprintf(newname, TEXT("%s"), tmpname);
+						newname = (char *)mem_alloc(sizeof(char)*(strlen(tmpname) + 5)); // _999\n
+						str_cpy(newname, tmpname);
 					}
 					if (newname && newname != tmpname) {
-						wsprintf(newname + offset, TEXT("_%d%s"), j, ext);
+#ifdef UNICODE
+						TCHAR dtmp[5];
+						char ctmp[5];
+						wsprintf(dtmp, TEXT("_%d"), j);
+						tchar_to_char(dtmp, ctmp, 5);
+						str_join(newname + offset, ctmp, ext, (char *)-1);
+#else
+						wsprintf(newname + offset, "_%d%s", j, ext);
+#endif
 					}
 					i = -1; // start checking at the beginning
 				}

@@ -121,7 +121,7 @@
 #define STR_ERR_SOCK_TOP			TEXT("TOP failed\r\n")
 #define STR_ERR_SOCK_RETR			TEXT("RETR failed\r\n")
 #define STR_ERR_SOCK_DELE			TEXT("Deletion failed\r\n")
-#define STR_ERR_SOCK_NOATTACH		TEXT("Attached file was not found")
+#define STR_ERR_SOCK_NOATTACH		TEXT("Attached file was not found (or is in use)")
 #define STR_ERR_SOCK_BADFROM		TEXT("Address error: Check SMTP account settings")
 #define STR_ERR_SOCK_NOFROM			TEXT("Original sender unknown; cannot redirect")
 #define STR_ERR_SOCK_HELO 			TEXT("HELO failed\r\n")\

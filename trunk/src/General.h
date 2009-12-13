@@ -268,7 +268,7 @@
 #define FILTER_PRIORITY			128
 #define FILTER_FORWARD			256
 
-#define MP_ERROR_FILE			-2					//Is not the return value
+#define MP_ERROR_FILE			-2
 #define MP_ERROR_ALLOC			-1
 #define MP_NO_ATTACH			0
 #define MP_ATTACH				1
