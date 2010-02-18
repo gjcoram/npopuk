@@ -98,6 +98,7 @@ TCHAR *ReplaceStr = NULL;
 extern TCHAR *FindStr;
 extern int FindNext, FindOrReplace;
 extern DWORD FindPos;
+extern FINDPARTS *FindParts;
 
 /* Local Function Prototypes */
 static LRESULT OptionNotifyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -4087,7 +4088,7 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_FIND:
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
-			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, TRUE) == FALSE) {
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE) == FALSE) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
 			}
 			break;
@@ -8328,6 +8329,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			mem_free(&buf);
 		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, op.MatchCase, 0);
+		SendDlgItemMessage(hDlg, IDC_WILDCARD, BM_SETCHECK, op.Wildcards, 0);
 		if (FindOrReplace >= 2) { // Replace
 #ifdef _WIN32_WCE_PPC
 			DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_REPLACE),
@@ -8425,6 +8427,13 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					SetFocus(GetDlgItem(hDlg, IDC_EDIT_REPLACE));
 					break;
 				}
+				op.MatchCase = SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0);
+				op.Wildcards = SendDlgItemMessage(hDlg, IDC_WILDCARD, BM_GETCHECK, 0, 0);
+				if (op.Wildcards && ParseFindString(FindStr) == FALSE) {
+					ErrorMessage(hDlg, STR_ERR_MEMALLOC);
+					SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
+					break;
+				}
 				{
 					HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
 					if (hEdit != NULL) {
@@ -8438,8 +8447,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 								if (buf != NULL) {
 									int len = lstrlen(FindStr);
 									if ( ((j-i) == len) &&
-										(op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
-										|| (op.MatchCase == TRUE && str_cmp_n_t(FindStr, buf+i, len) == 0)) {
+										( (str_cmp_n_t(FindStr, buf+i, len) == 0)
+										|| (op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
+										|| (op.Wildcards == TRUE && str_find(FindStr, buf+i, op.MatchCase, FindParts, &len) == buf+i))) {
 										FindOrReplace = 4;
 									}
 									mem_free(&buf);
@@ -8457,11 +8467,6 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_FIND_NEXT_MESSAGE:
 		case IDC_FIND_NEXT_MAILBOX:
 			// above two commands shouldn't be accessible in Replace
-{
-	TCHAR buf[BUF_SIZE];
-	wsprintf(buf, TEXT("Find next, cmd=%d; FindOrReplace=%d\n"), command, FindOrReplace);
-	log_save(buf);
-}
 		case IDOK:
 			if (FindOrReplace >= 2) {
 				SendMessage(hDlg, WM_COMMAND, IDCANCEL, 0);
@@ -8481,6 +8486,12 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			FindNext = 0;
 			op.MatchCase = SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0);
+			op.Wildcards = SendDlgItemMessage(hDlg, IDC_WILDCARD, BM_GETCHECK, 0, 0);
+			if (op.Wildcards && ParseFindString(FindStr) == FALSE) {
+				ErrorMessage(hDlg, STR_ERR_MEMALLOC);
+				SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
+				break;
+			}
 			if (FindOrReplace >= 2) {
 				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
 				BOOL show_msg = TRUE, done = FALSE;
@@ -8490,7 +8501,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					show_msg = FALSE;
 				}
 				while (done == FALSE) {
-					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase,
+					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards,
 							(FindOrReplace == 3) ? FALSE : TRUE);
 					if (found && FindOrReplace == 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);

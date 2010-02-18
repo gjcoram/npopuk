@@ -1454,6 +1454,8 @@ BEGIN
     EDITTEXT        IDC_EDIT_REPLACE,40,20,85,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,35,50,10
+    CONTROL         "Use &wildcards",IDC_WILDCARD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,50,60,10
     PUSHBUTTON      "&Find",IDC_FIND,60,35,25,12
     PUSHBUTTON      "&Replace",IDC_REPLACE,90,35,35,12
     PUSHBUTTON      "Replace &all",IDC_REPLACE_ALL,75,50,50,12

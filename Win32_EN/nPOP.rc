@@ -1170,9 +1170,11 @@ BEGIN
     LTEXT           "Find &text:",IDC_STATIC,5,12,33,10
     EDITTEXT        IDC_EDIT_FIND,40,10,152,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,30,60,10
+                    WS_TABSTOP,5,30,50,10
     CONTROL         "Search in &subject",IDC_CHECK_SUBJECT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,70,30,90,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,60,30,70,10
+    CONTROL         "Use &wildcards",IDC_WILDCARD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,135,30,60,10
     LTEXT           "Search:",IDC_TEXT_SEARCH,5,44,25,10
     CONTROL         "This &message only",IDC_FIND_THISMSG,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,35,44,130,10

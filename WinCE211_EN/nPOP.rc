@@ -1114,11 +1114,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Find"
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "Find &text:",IDC_STATIC,5,5,40,10
+    LTEXT           "Find &text:",IDC_STATIC,5,5,35,10
     EDITTEXT        IDC_EDIT_FIND,5,18,150,12,ES_AUTOHSCROLL
     CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,45,5,50,10
+    CONTROL         "Use &wildcards",IDC_WILDCARD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,100,5,60,10
-    LTEXT           "Search:",IDC_TEXT_SEARCH,5,40,25,10
+/*    LTEXT           "Search:",IDC_TEXT_SEARCH,5,40,25,10
     CONTROL         "T&his message",IDC_FIND_THISMSG,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,35,40,60,10
     CONTROL         "This mail&box",IDC_FIND_ALLMSGS,"Button",
@@ -1126,10 +1128,10 @@ BEGIN
     CONTROL         "All mailbo&xes",IDC_FIND_ALLBOXES,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,35,70,60,10
     CONTROL         "Search in &subject",IDC_CHECK_SUBJECT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,85,80,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,85,80,10*/
     DEFPUSHBUTTON   "&Find next",IDC_FIND,100,40,55,12
-    PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,100,55,55,12
-    PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,100,70,55,12
+/*    PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,100,55,55,12
+    PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,100,70,55,12*/
     LTEXT           "Re&place with:",IDC_REPLACE_LABEL,5,57,43,10
     EDITTEXT        IDC_EDIT_REPLACE,5,70,90,12,ES_AUTOHSCROLL
     PUSHBUTTON      "&Replace",IDC_REPLACE,100,55,55,12

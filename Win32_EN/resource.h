@@ -249,9 +249,10 @@
 #define IDC_EDIT_WAIT                   1073
 #define IDC_CHECK_RASCON                1074
 #define IDC_LIST_FILE                   1075
-#define IDC_CHECK_ENCODETYPE            1078
-#define IDC_BUTTON_ADDADDRESS           1079
-#define IDC_BUTTON_REPLY                1080
+#define IDC_WILDCARD                    1076
+#define IDC_CHECK_ENCODETYPE            1077
+#define IDC_BUTTON_ADDADDRESS           1078
+#define IDC_BUTTON_REPLY                1079
 #define IDC_EDIT_FIND                   1080
 #define IDC_BUTTON_NEW                  1081
 #define IDC_CHECK_CASE                  1082

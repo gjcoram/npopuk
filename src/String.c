@@ -22,6 +22,8 @@
 #define to_lower(c)			((c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c)
 
 /* Global Variables */
+FINDPARTS *FindParts = NULL;
+extern void ErrorMessage(HWND hWnd, TCHAR *buf);
 
 /* Local Function Prototypes */
 static int str_len_n(const TCHAR *buf, int len);
@@ -149,7 +151,7 @@ char *alloc_tchar_to_char(TCHAR *str)
  * alloc_char_to_tchar - メモリを確保して char を TCHAR に変換する
  */
 #ifdef UNICODE
-TCHAR *alloc_char_to_tchar(char *str)
+TCHAR *alloc_char_to_tchar(const char *str)
 {
 	TCHAR *tchar;
 	int len;
@@ -572,19 +574,105 @@ static int str_len_n(const TCHAR *buf, int len)
 }
 
 /*
- * str_find - 文字列内に含まれる文字列を検索して位置を返す
+ * str_find - find pattern ptn in string str
+ *          - or wildcard-pattern (parsed into FINDPARTS) fp in str
  */
-TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag)
+TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag, FINDPARTS *fp, int *len)
 {
 	TCHAR *p;
-	int len1, len2;
+	int len1, len2, len3;
+	DWORD lcid;
+	if (fp != NULL) {
+		ptn = fp->str;
+	}
+	if (ptn && *ptn != TEXT('\0')) {
+		len1 = lstrlen(ptn);
+	} else {
+		len1 = 0;
+	}
 
-	len1 = lstrlen(ptn);
+	*len = -1;
+	lcid = MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT);
 	for (p = str; *p != TEXT('\0'); p++) {
-		len2 = str_len_n(p, len1);
-		if (CompareString(MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), SORT_DEFAULT),
-			(case_flag) ? 0 : NORM_IGNORECASE, p, len2, ptn, len1) == 2) {
-			break;
+		int match;
+		if (len1 == 0) {
+			match = 2;
+			len2 = 0;
+		} else {
+			len2 = str_len_n(p, len1);
+			match = CompareString(lcid, (case_flag) ? 0 : NORM_IGNORECASE, p, len2, ptn, len1);
+		}
+		if (match == 2) {
+			if (fp == NULL) {
+				*len = len2;
+				break;
+			} else if (fp->next == NULL) {
+				len3 = lstrlen(p);
+				if (fp->wild == TEXT('*')) {
+					*len = len3;
+					break;
+				} else if (fp->wild == TEXT('?') && len3 > len2) {
+					*len = len2 + 1;
+#ifndef UNICODE
+					if (IsDBCSLeadByte((BYTE)*(p+(*len))) == TRUE && *(p+(*len)+1) != TEXT('\0')) {
+						*len++;
+					}
+#endif
+					break;
+				} else if (fp->wild == 0 || fp->wild == TEXT('\0')) {
+					*len = len2;
+					break;
+				}
+			} else {
+				// fp->next != NULL
+				TCHAR *r, *s;
+				len3 = 0;
+				if (fp->wild == TEXT('*')) {
+					r = str_find(ptn, p+len2, case_flag, fp->next, &len3);
+					if (*r != TEXT('\0')) {
+						len3 += (r-p);
+						*len = len3;
+						break;
+					}
+				} else if (fp->wild == TEXT('?')) {
+					r = p + len2 + 1;
+#ifndef UNICODE
+					if (IsDBCSLeadByte((BYTE)*r) == TRUE && *(r+1) != TEXT('\0')) {
+						r++;
+					}
+#endif
+					s = fp->next->str;
+					if (s && *s != TEXT('\0')) {
+						int len4 = lstrlen(s);
+						len3 = str_len_n(r, len4);
+						match = CompareString(lcid, (case_flag) ? 0 : NORM_IGNORECASE, r, len3, s, len4);
+					} else {
+						// original pattern must have had "??"
+						match = 2;
+					}
+					if (match == 2) {
+						if (fp->next->next != NULL || fp->next->wild != 0) {
+							// this recursively deals with fp->next->wild and fp->next->next
+							r = str_find(ptn, r, case_flag, fp->next, &len3);
+						} // else r = r
+						if (*r != TEXT('\0')) {
+							len3 += (r-p);
+							*len = len3;
+							break;
+						}
+					} else {
+						len3 = 0;
+					}
+				} else { 
+					// no wildcard? then why is fp->next not null?
+					ErrorMessage(NULL, TEXT("Wildcard parsing error"));
+					len3 = 1;
+				}
+				if (len3 > 0) {
+					*len = len3;
+					break;
+				}
+			}
 		}
 #ifndef UNICODE
 		// 2バイトコードの場合は2バイト進める
@@ -612,4 +700,102 @@ BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len)
 	}
 	return FALSE;
 }
+
+void findparts_free()
+{
+	if (FindParts != NULL) {
+		FINDPARTS *fp = FindParts, *fpn;
+		while (fp) {
+			mem_free(&(fp->str));
+			fpn = fp->next;
+			mem_free(&fp);
+			fp = fpn;
+		}
+		FindParts = NULL;
+	}
+}
+
+/*
+ * ParseFindString - convert "abc*def??ghi" to {"abc",'*'},{"def",'?'},{"",'?'},{"ghi",'\0'}
+ */
+BOOL ParseFindString(TCHAR *str)
+{
+	FINDPARTS *fp;
+	TCHAR *p, *t, *tmp;
+	int in_str = 1;
+	BOOL ret = TRUE;
+
+	findparts_free();
+	FindParts = fp = (FINDPARTS *)mem_calloc(sizeof(FINDPARTS));
+	tmp = t = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(str) + 1));
+	if (fp == NULL || tmp == NULL) {
+		mem_free(&tmp);
+		return FALSE;
+	}
+	*t = TEXT('\0');
+	for (p = str; *p != TEXT('\0'); p++) {
+		BOOL is_lead = FALSE;
+#ifdef UNICODE
+		if (*p == TEXT('\\') && *(p + 1) != TEXT('\0')) {
+#else
+		is_lead = IsDBCSLeadByte((BYTE)*p);
+		if (( is_lead == TRUE || *p == TEXT('\\')) && *(p + 1) != TEXT('\0')) {
+#endif
+			if (!in_str) {
+				if ((fp->next = (FINDPARTS *)mem_calloc(sizeof(FINDPARTS))) == NULL) {
+					ret = FALSE;
+					break;
+				}
+				fp = fp->next;
+				in_str = 1;
+			}
+			if (is_lead == TRUE) {
+				*(t++) = *(p++);
+			} else {
+				// de-escape: \? becomes ?
+				p++;
+			}
+			*(t++) = *p;
+		} else if (*p == TEXT('*') || *p == TEXT('?')) {
+			if (in_str) {
+				// end of a string
+				*t = TEXT('\0');
+				fp->str = alloc_copy_t(tmp);
+				t = tmp;
+			} else if (fp->wild != TEXT('*') || *p != TEXT('*')) {
+				// two wilds in sequence
+				// ** is the same as *, but ?* is different from *
+				// "a?*e" matches "axe" but not "aerie"
+				if ((fp->next = (FINDPARTS *)mem_calloc(sizeof(FINDPARTS))) == NULL) {
+					ret = FALSE;
+					break;
+				}
+				fp = fp->next;
+				fp->str = 0;
+			}
+			fp->wild = *p;
+			in_str = 0;
+		} else {
+			if (!in_str) {
+				if ((fp->next = (FINDPARTS *)mem_calloc(sizeof(FINDPARTS))) == NULL) {
+					ret = FALSE;
+					break;
+				}
+				fp = fp->next;
+				in_str = 1;
+			}
+			*(t++) = *p;
+		}
+	}
+	if (ret && in_str) {
+		// end of a string
+		*t = TEXT('\0');
+		fp->str = alloc_copy_t(tmp);
+	}
+	fp->next = NULL;
+	mem_free(&tmp);
+
+	return ret;
+}
+
 /* End of source */
