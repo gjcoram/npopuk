@@ -85,6 +85,7 @@ DWORD FindPos;
 MAILITEM *FindMailItem = NULL;
 static int FindBox = 0, FindStartBox = 0, FindStartItem = 0;
 int FindNext = 0, FindOrReplace = 0;
+extern FINDPARTS *FindParts;
 
 static BOOL ESCFlag = FALSE;
 static BOOL UnicodeEdit = 0;
@@ -363,12 +364,13 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 /*
  * FindEditString - EDIT内の文字列を検索する
  */
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop)
 {
 	DWORD dwStart;
 	DWORD dwEnd;
 	TCHAR *buf = NULL;
 	TCHAR *p;
+	int len;
 
 #ifdef UNICODE
 	// 検索位置の取得
@@ -380,20 +382,20 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 
 	// エディットから文字列を取得する
 	AllocGetText(hEdit, &buf);
-	p = str_find(strFind, buf + FindPos, CaseFlag);
+	p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 	if (Loop == TRUE && *p == TEXT('\0')) {
-		p = str_find(strFind, buf, CaseFlag);
+		p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 	}
 
 	// 検索文字列が見つからなかった場合
-	if (*p == TEXT('\0')) {
+	if (*p == TEXT('\0') || len < 0) {
 		mem_free(&buf);
 		return FALSE;
 	}
 
 	// 文字列が見つかった場合はその位置を選択状態にする
 	FindPos = p - buf;
-	SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + lstrlen(strFind));
+	SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 	SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
 	mem_free(&buf);
 	FindPos++;
@@ -402,7 +404,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 	// エディットから文字列を取得する
 	AllocGetText(hEdit, &buf);
 	if (UnicodeEdit == 2) {
-		int st, len;
+		int st;
 		WCHAR *wbuf;
 
 		len = MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0);
@@ -420,17 +422,17 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 		if ((st + 1U) != FindPos) {
 			FindPos = st;
 		}
-		p = str_find(strFind, buf + FindPos, CaseFlag);
+		p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		if (Loop == TRUE && *p == TEXT('\0')) {
-			p = str_find(strFind, buf, CaseFlag);
+			p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		}
 		// 検索文字列が見つからなかった場合
-		if (*p == TEXT('\0')) {
+		if (*p == TEXT('\0') || len < 0) {
 			mem_free(&buf);
 			return FALSE;
 		}
 		st = MultiByteToWideChar(CP_ACP, 0, buf, p - buf, NULL, 0);
-		len = MultiByteToWideChar(CP_ACP, 0, strFind, -1, NULL, 0) - 1;
+		// len = MultiByteToWideChar(CP_ACP, 0, strFind, -1, NULL, 0) - 1;
 		// 文字列が見つかった場合はその位置を選択状態にする
 		SendMessage(hEdit, EM_SETSEL, st, st + len);
 		FindPos = p - buf;
@@ -441,9 +443,9 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 		if ((dwStart + 1U) != FindPos) {
 			FindPos = dwStart;
 		}
-		p = str_find(strFind, buf + FindPos, CaseFlag);
+		p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		if (Loop == TRUE && *p == TEXT('\0')) {
-			p = str_find(strFind, buf, CaseFlag);
+			p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		}
 		// 検索文字列が見つからなかった場合
 		if (*p == TEXT('\0')) {
@@ -452,7 +454,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop)
 		}
 		// 文字列が見つかった場合はその位置を選択状態にする
 		FindPos = p - buf;
-		SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + lstrlen(strFind));
+		SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 	}
 	SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
 	mem_free(&buf);
@@ -1648,7 +1650,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	FindOrReplace = 1;
 	if (hWnd != MainWnd) {
 		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY); // used here & far below
-		if (FindSet != FALSE || FindStr == NULL) {
+		if (FindSet == TRUE || FindStr == NULL) {
 #ifdef UNICODE
 			// 選択文字列を取得
 			SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
@@ -1656,6 +1658,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				AllocGetText(hEdit, &buf);
 				if (buf != NULL) {
 					mem_free(&FindStr);
+					findparts_free();
 					FindStr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (dwEnd - dwStart + 1));
 					if (FindStr != NULL) {
 						str_cpy_n_t(FindStr, buf + dwStart, dwEnd - dwStart + 1);
@@ -1683,6 +1686,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					
 						len = WideCharToMultiByte(CP_ACP, 0, wbuf + dwStart, dwEnd - dwStart, NULL, 0, NULL, NULL);
 						mem_free(&FindStr);
+						findparts_free();
 						FindStr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 						if (FindStr != NULL) {
 							WideCharToMultiByte(CP_ACP, 0, wbuf + dwStart, dwEnd - dwStart, FindStr, len + 1, NULL, NULL);
@@ -1763,7 +1767,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	while (Done == FALSE) {
 		if (FirstLoop == TRUE && hWnd != MainWnd) {
 			// 本文から検索して見つかった位置を選択状態にする
-			if (FindEditString(hEdit, FindStr, op.MatchCase, FALSE) == TRUE) {
+			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE) == TRUE) {
 				break;
 			}
 
@@ -1771,7 +1775,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			if (op.AllMsgFind == 0) {
 				// clear selection and search again
 				SendMessage(hEdit, EM_SETSEL, 0, 0);
-				if (FindEditString(hEdit, FindStr, op.MatchCase, FALSE) == TRUE) {
+				if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE) == TRUE) {
 					break;
 				}
 			}
@@ -1797,12 +1801,14 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			}
 
 			if (sbody != NULL) {
-				s = str_find(FindStr, sbody, op.MatchCase);
+				int len;
+				s = str_find(FindStr, sbody, op.MatchCase, ((op.Wildcards) ? FindParts : NULL), &len);
 			}
 			if (sbody != NULL && *s != TEXT('\0')) {
 				Found = TRUE;
 			} else if (op.SubjectFind != 0 && FindMailItem->Subject != NULL) {
-				s = str_find(FindStr, FindMailItem->Subject, op.MatchCase);
+				int len;
+				s = str_find(FindStr, FindMailItem->Subject, op.MatchCase, ((op.Wildcards) ? FindParts : NULL), &len);
 				if (*s != TEXT('\0')) {
 					Found = TRUE;
 				}
@@ -1853,7 +1859,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					hEdit = GetDlgItem(hViewWnd, IDC_EDIT_BODY);
 				}
 				if (hEdit != NULL) {
-					FindEditString(hEdit, FindStr, op.MatchCase, FALSE);
+					FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE);
 				}
 				break;
 			}

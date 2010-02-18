@@ -80,7 +80,7 @@ char *alloc_copy(const char *buf);
 #endif
 #ifdef UNICODE
 char *alloc_tchar_to_char(TCHAR *str);
-TCHAR *alloc_char_to_tchar(char *str);
+TCHAR *alloc_char_to_tchar(const char *str);
 #else
 #define alloc_tchar_to_char alloc_copy_t
 #define alloc_char_to_tchar alloc_copy_t
@@ -139,7 +139,17 @@ BOOL str_match(const char *ptn, const char *str);
 #else
 #define str_match str_match_t
 #endif
-TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag);
+
+typedef struct _FINDPARTS {
+	TCHAR *str;
+	TCHAR wild;
+	struct _FINDPARTS *next;
+} FINDPARTS;
+
+void findparts_free();
+BOOL ParseFindString(TCHAR *str);
+
+TCHAR *str_find(TCHAR *ptn, TCHAR *str, int case_flag, FINDPARTS *fp, int *len);
 
 BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len);
 

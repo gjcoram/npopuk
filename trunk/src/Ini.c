@@ -444,6 +444,7 @@ void ini_read_general(HWND hWnd)
 #endif
 	op.MatchCase = profile_get_int(GENERAL, TEXT("MstchCase"), 0);
 	op.MatchCase = profile_get_int(GENERAL, TEXT("MatchCase"), op.MatchCase);
+	op.Wildcards = profile_get_int(GENERAL, TEXT("Wildcards"), 0);
 	op.AllMsgFind = profile_get_int(GENERAL, TEXT("AllFind"), 1);
 	op.AllMsgFind = profile_get_int(GENERAL, TEXT("AllMsgFind"), op.AllMsgFind);
 	op.AllBoxFind = profile_get_int(GENERAL, TEXT("AllBoxFind"), 1);
@@ -1232,6 +1233,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("EditWordBreakFlag"), op.EditWordBreakFlag);
 	profile_write_int(GENERAL, TEXT("ViewShowDate"), op.ViewShowDate);
 	profile_write_int(GENERAL, TEXT("MatchCase"), op.MatchCase);
+	profile_write_int(GENERAL, TEXT("Wildcards"), op.Wildcards);
 	profile_write_int(GENERAL, TEXT("AllMsgFind"), op.AllMsgFind);
 	profile_write_int(GENERAL, TEXT("AllBoxFind"), op.AllBoxFind);
 	profile_write_int(GENERAL, TEXT("SubjectFind"), op.SubjectFind);

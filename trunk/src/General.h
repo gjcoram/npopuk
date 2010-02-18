@@ -430,6 +430,7 @@ typedef struct _OPTION {
 	int EditWordBreakFlag;
 	int ViewShowDate;
 	int MatchCase;
+	int Wildcards;
 	int AllMsgFind;
 	int AllBoxFind;
 	int SubjectFind;
@@ -982,7 +983,7 @@ TCHAR *replace_env_var(TCHAR *buf);
 #endif
 
 // View
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, BOOL Loop);
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 int SetWordBreak(HWND hWnd, HMENU hMenu);

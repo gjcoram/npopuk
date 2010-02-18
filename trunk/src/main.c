@@ -2705,6 +2705,7 @@ static BOOL EndWindow(HWND hWnd)
 	FindStr = NULL;
 	mem_free(&ReplaceStr);
 	ReplaceStr = NULL;
+	findparts_free();
 
 	//in searching character string Release
 	FreeAllMailBox();
