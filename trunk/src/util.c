@@ -2559,6 +2559,7 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 	TCHAR *p, *q, *ret, *s;
 	int len;
 	int last_char = LAST_NONWHITE;
+	BOOL zero_margin = FALSE;
 
 	len = lstrlen(buf) + lstrlen(STR_HTML_CONV) + 1;
 	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
@@ -2627,9 +2628,11 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 			} else if (str_cmp_ni_t(p, TEXT("<p>"), lstrlen(TEXT("<p>"))) == 0) {
 				// GJC what about </p>?
 				p += lstrlen(TEXT("<p>"));
-				*(q++) = TEXT('\r');
-				*(q++) = TEXT('\n');
-				last_char = LAST_NL;
+				if (last_char != LAST_NL || zero_margin == FALSE) {
+					*(q++) = TEXT('\r');
+					*(q++) = TEXT('\n');
+					last_char = LAST_NL;
+				}
 			} else if (str_cmp_ni_t(p, TEXT("<head>"), lstrlen(TEXT("<head>"))) == 0) {
 				p += lstrlen(TEXT("<head>"));
 				while (*p != TEXT('\0')) {
@@ -2645,6 +2648,11 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 							p++;
 						}
 						break;
+					} else if (str_cmp_ni_t(p, TEXT("margin:"), lstrlen(TEXT("margin:"))) == 0) {
+						p += lstrlen(TEXT("margin:"));
+						if (*p == TEXT('0') || (*p == TEXT(' ') && *(p+1) == TEXT('0'))) {
+							zero_margin = TRUE;
+						}
 					} else {
 						p++;
 					}
@@ -2652,6 +2660,12 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 			} else if (str_cmp_ni_t(p, TEXT("<style"), lstrlen(TEXT("<style"))) == 0) {
 				p += lstrlen(TEXT("<style"));
 				while (*p != TEXT('\0') && str_cmp_ni_t(p, TEXT("</style>"), lstrlen(TEXT("</style>"))) != 0) {
+					if (str_cmp_ni_t(p, TEXT("margin:"), lstrlen(TEXT("margin:"))) == 0) {
+						p += lstrlen(TEXT("margin:"));
+						if (*p == TEXT('0') || (*p == TEXT(' ') && *(p+1) == TEXT('0'))) {
+							zero_margin = TRUE;
+						}
+					}
 					p++;
 				}
 				if (*p != TEXT('\0')) {

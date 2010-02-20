@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -742,6 +742,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #ifndef _WIN32_WCE_PPC
 	HWND hViewToolBar;
 #endif	// _WIN32_WCE_PPC
+#ifndef _WIN32_WCE_SP
 	TBBUTTON tbButton[] = {
 #ifdef _WIN32_WCE
 #ifndef _WIN32_WCE_PPC
@@ -765,6 +766,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{11,ID_MENUITEM_UNREADMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{12,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
+#endif	// _WIN32_WCE_SP
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
@@ -815,7 +817,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	CommandBar_AddToolTips(hViewToolBar, 15, szTips);
 	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, 16, 16);
+#ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+#endif
 
 #ifdef _WIN32_WCE_SP
 	// code courtesy of Christian Ghisler

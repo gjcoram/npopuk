@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -2204,6 +2204,7 @@ static BOOL InitWindow(HWND hWnd)
 #ifndef _WIN32_WCE_PPC
 	HWND hToolBar;
 #endif	// _WIN32_WCE_PPC
+#ifndef _WIN32_WCE_SP
 	TBBUTTON tbButton[] = {
 #ifdef _WIN32_WCE
 #ifndef _WIN32_WCE_PPC
@@ -2239,6 +2240,8 @@ static BOOL InitWindow(HWND hWnd)
 		{16,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #endif
 	};
+#endif // _WIN32_WCE_SP
+
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
@@ -2286,7 +2289,9 @@ static BOOL InitWindow(HWND hWnd)
 
 	CommandBar_AddToolTips(hMainToolBar, 15, szTips);
 	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 13, 16, 16);
+#ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+#endif
 
 	Height = 0;
 	i = 0;
