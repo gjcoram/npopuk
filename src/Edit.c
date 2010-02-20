@@ -881,6 +881,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	HWND hCSOBar;
 	DWORD style;
 #else	// _WIN32_WCE_LAGENDA
+#ifndef _WIN32_WCE_SP
 	TBBUTTON tbButton[] = {
 #ifdef _WIN32_WCE
 #ifndef _WIN32_WCE_PPC
@@ -899,6 +900,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{7,	ID_MENUITEM_FIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{8,	ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
+#endif // _WIN32_WCE_SP
 #ifdef _WIN32_WCE
 	static TCHAR *szTips[] = {
 #ifdef _WIN32_WCE_PPC
@@ -947,7 +949,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hEditToolBar = mbi.hwndMB;
     CommandBar_AddToolTips(hEditToolBar, 11, szTips);
 	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 9, TB_ICONSIZE, TB_ICONSIZE);
+#ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
+#endif
 	Height = 0;
 
 #ifdef _WIN32_WCE_SP
