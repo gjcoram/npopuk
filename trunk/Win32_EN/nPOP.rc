@@ -358,7 +358,6 @@ BEGIN
         BEGIN
             MENUITEM "&Connect",                    ID_MENUITEM_RAS_CONNECT
             MENUITEM "&Disconnect",                 ID_MENUITEM_RAS_DISCONNECT
-
             MENUITEM SEPARATOR
             MENUITEM "&LAN",                        ID_MENUITEM_LAN
         END
@@ -383,7 +382,16 @@ BEGIN
         MENUITEM "Su&mmary...",                 ID_MENUITEM_MAILBOXES
         MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
-        MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
+        POPUP "&Sort by"
+        BEGIN
+            MENUITEM "&Number",                 ID_MENUITEM_FILESORT
+            MENUITEM "&Icon",                   ID_MENUITEM_ICONSORT
+            MENUITEM "&From/To",                ID_MENUITEM_FROMSORT
+            MENUITEM "&Subject",                ID_MENUITEM_SUBJSORT
+            MENUITEM "&Date",                   ID_MENUITEM_DATESORT
+            MENUITEM "Si&ze",                   ID_MENUITEM_SIZESORT
+            MENUITEM "&Thread\tCtrl+T",         ID_MENUITEM_THREADVIEW
+        END
         MENUITEM SEPARATOR
         MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT
     END
@@ -419,7 +427,6 @@ BEGIN
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
-        MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW
         MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
     END
     POPUP "&Help"
@@ -907,11 +914,11 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sort"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    CONTROL         "&All mailboxes in file order",IDC_AUTOSORT1,"Button",
+    CONTROL         "&All mailboxes in file order",IDC_AUTOSORT0,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,10,10,110,10
-    CONTROL         "&SaveBoxes by column",IDC_AUTOSORT2,"Button",
+    CONTROL         "&SaveBoxes by column",IDC_AUTOSORT1,"Button",
                     BS_AUTORADIOBUTTON,10,25,90,10
-    CONTROL         "All mailboxes &by column",IDC_AUTOSORT3,"Button",
+    CONTROL         "All mailboxes &by column",IDC_AUTOSORT2,"Button",
                     BS_AUTORADIOBUTTON,10,40,90,10
     GROUPBOX        "Column",IDC_STATIC,108,25,85,60
     CONTROL         "Subjec&t",IDC_SORTITEM1,"Button",BS_AUTORADIOBUTTON | 
@@ -1738,7 +1745,7 @@ BEGIN
             VALUE "FileDescription", "nPOPuk"
             VALUE "FileVersion", NPOPVERLNG
             VALUE "InternalName", "nPOPuk"
-            VALUE "LegalCopyright", "Copyright ©2009 by Nakashima Tomoaki, Geoffrey Coram"
+            VALUE "LegalCopyright", "Copyright ©2010 by Nakashima Tomoaki, Geoffrey Coram"
             VALUE "OriginalFilename", "nPOPuk.exe"
             VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR
             VALUE "ProductName", "nPOPuk"

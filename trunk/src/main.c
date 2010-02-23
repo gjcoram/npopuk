@@ -117,7 +117,7 @@ int MailMenuPos;							// メニュー位置
 
 static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
 static WNDPROC MBPaneWndProc = NULL;
-int LvSortFlag;								// ListViewのソートフラグ
+int LvSortFlag = 0;							// ListViewのソートフラグ
 BOOL EndThreadSortFlag;						// 通信終了時の自動ソートフラグ(スレッド表示用)
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 static BOOL SelMode;						// 選択モード (PocketPC, l'agenda)
@@ -1786,6 +1786,49 @@ static void DelListViewSubClass(HWND hWnd)
 }
 
 /*
+ * ListViewSortCheck - set checkmark on main window menu item
+ */
+#ifndef _WIN32_WCE
+void ListViewSortMenuCheck(int sort_flag)
+{
+	HMENU hMenu = GetMenu(MainWnd);
+	CheckMenuItem(hMenu, ID_MENUITEM_FILESORT, MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_ICONSORT, MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_SUBJSORT, MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_FROMSORT, MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_DATESORT, MF_UNCHECKED);
+	CheckMenuItem(hMenu, ID_MENUITEM_SIZESORT, MF_UNCHECKED);
+
+	if (op.LvThreadView == 1) {
+		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, MF_CHECKED);
+	} else {
+		int i = ABS(sort_flag) - 1;
+		CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, MF_UNCHECKED);
+		switch(i) {
+			case SORT_ICON:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_ICONSORT, MF_CHECKED);
+				break;
+			case SORT_SUBJ:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_SUBJSORT, MF_CHECKED);
+				break;
+			case SORT_FROM:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_FROMSORT, MF_CHECKED);
+				break;
+			case SORT_DATE:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_DATESORT, MF_CHECKED);
+				break;
+			case SORT_SIZE:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_SIZESORT, MF_CHECKED);
+				break;
+			default:
+				CheckMenuItem(GetMenu(MainWnd), ID_MENUITEM_FILESORT, MF_CHECKED);
+				break;
+		}
+	}
+}
+#endif
+
+/*
  * ListViewHeaderNotifyProc - リストビューヘッダメッセージ
  */
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam)
@@ -1826,6 +1869,9 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam)
 		if (op.LvAutoSort == 2 || (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
 			op.LvSortItem = LvSortFlag;
 		}
+#ifndef _WIN32_WCE
+		ListViewSortMenuCheck(LvSortFlag);
+#endif
 		break;
 	}
 	return FALSE;
@@ -4930,6 +4976,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_COMMAND: {
 		BOOL mark_del = FALSE;
+		int sort_val = 0;
 		int mbox, command_id = GET_WM_COMMAND_ID(wParam, lParam);
 		switch (command_id) {
 		//of message compilation
@@ -5354,9 +5401,42 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
-		//In idea contest order sort
+			// ListView column sorting from menu item
+			// (can also click on column headers, handled elsewhere)
 		case ID_MENUITEM_ICONSORT:
+			sort_val = (ABS(LvSortFlag) == (SORT_ICON + 1)) ? (LvSortFlag * -1) : (SORT_ICON + 1);
+#ifndef _WIN32_WCE
+		case ID_MENUITEM_FILESORT:
+			if (sort_val == 0) {
+				sort_val = (ABS(LvSortFlag) == (SORT_NO + 1)) ? (LvSortFlag * -1) : (SORT_NO + 1);
+			}
+		case ID_MENUITEM_SUBJSORT:
+			if (sort_val == 0) {
+				sort_val = (ABS(LvSortFlag) == (SORT_SUBJ + 1)) ? (LvSortFlag * -1) : (SORT_SUBJ + 1);
+			}
+		case ID_MENUITEM_FROMSORT:
+			if (sort_val == 0) {
+				sort_val = (ABS(LvSortFlag) == (SORT_FROM + 1)) ? (LvSortFlag * -1) : (SORT_FROM + 1);
+			}
+		case ID_MENUITEM_DATESORT:
+			if (sort_val == 0) {
+				sort_val = (ABS(LvSortFlag) == (SORT_DATE + 1)) ? (LvSortFlag * -1) : (SORT_DATE + 1);
+			}
+		case ID_MENUITEM_SIZESORT:
+			if (sort_val == 0) {
+				sort_val = (ABS(LvSortFlag) == (SORT_SIZE + 1)) ? (LvSortFlag * -1) : (SORT_SIZE + 1);
+				
+			}
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_FILESORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_ICONSORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_SUBJSORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_FROMSORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_DATESORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_SIZESORT, MF_UNCHECKED);
+			CheckMenuItem(GetMenu(hWnd), command_id, MF_CHECKED);
+#endif
 			op.LvThreadView = 0;
+			LvSortFlag = sort_val;
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 			CheckMenuItem(SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), ID_MENUITEM_THREADVIEW, MF_UNCHECKED);
@@ -5368,7 +5448,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #else
 			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_THREADVIEW, MF_UNCHECKED);
 #endif
-			LvSortFlag = (ABS(LvSortFlag) == (SORT_ICON + 1)) ? (LvSortFlag * -1) : (SORT_ICON + 1);
 			//Sort
 			SwitchCursor(FALSE);
 			ListView_SortItems(GetDlgItem(hWnd, IDC_LISTVIEW), CompareFunc, LvSortFlag);

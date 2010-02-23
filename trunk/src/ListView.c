@@ -422,7 +422,7 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 {
 	MAILITEM *tpMailItem;
 	LV_ITEM lvi;
-	int i, j, state;
+	int i, j, state, sort = SORT_NO + 1;
 	int start_index, index = -1;
 
 	ListView_SetRedraw(hListView, FALSE);
@@ -479,10 +479,17 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 		// スレッド表示
 		item_create_thread(tpMailBox);
 		ListView_SortItems(hListView, CompareFunc, SORT_THREAD + 1);
+		sort = SORT_THREAD + 1;
 	} else if (((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE && op.LvAutoSort == 1) || op.LvAutoSort == 2) {
 		//Automatic sort
 		ListView_SortItems(hListView, CompareFunc, op.LvSortItem);
+		sort = op.LvSortItem;
 	}
+#ifndef _WIN32_WCE
+	if (AddLast == FALSE) {
+		ListViewSortMenuCheck(sort);
+	}
+#endif
 	ListView_SetRedraw(hListView, FALSE);
 
 	//The item is put in selective state the
@@ -625,19 +632,19 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 	int len1 = 0, len2 = 0;
 	BOOL NumFlag = FALSE;
 
-	sfg = (lParamSort < 0) ? 1 : 0;	//Ascending order / descending order
-	ghed = ABS(lParamSort) - 1;		//Sorts the header
-
 	if (lParam1 == 0 || lParam2 == 0) {
 		return 0;
 	}
+
+	sfg = (lParamSort < 0) ? 1 : 0;	//Ascending order / descending order
+	ghed = ABS(lParamSort) - 1;		//Sorts the header
 
 	wbuf1 = TEXT("\0");
 	wbuf2 = TEXT("\0");
 
 	switch (ghed) {
 	// 件名
-	case 0:
+	case SORT_SUBJ:
 		if (((MAILITEM *)lParam1)->Subject != NULL)
 			wbuf1 = ((MAILITEM *)lParam1)->Subject;
 		if (((MAILITEM *)lParam2)->Subject != NULL)
@@ -645,7 +652,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		break;
 
 	//When the sender (transmission box it is, addressee)
-	case 1:
+	case SORT_FROM:
 		if (MAILBOX_SEND == SelBox) {
 			if (((MAILITEM *)lParam1)->To != NULL)
 				wbuf1 = ((MAILITEM *)lParam1)->To;
@@ -662,7 +669,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		break;
 
 	//Date
-	case 2:
+	case SORT_DATE:
 		if (((MAILITEM *)lParam1)->Date != NULL) {
 			wbuf1 = ((MAILITEM *)lParam1)->Date;
 #ifdef UNICODE
@@ -694,7 +701,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 		break;
 
 	//Size
-	case 3:
+	case SORT_SIZE:
 		if (((MAILITEM *)lParam1)->Size != NULL)
 			len1 = _ttoi(((MAILITEM *)lParam1)->Size);
 		if (((MAILITEM *)lParam2)->Size != NULL)

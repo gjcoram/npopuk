@@ -179,6 +179,10 @@
 #define SORT_NO					100					//of socket processing Sort flag
 #define SORT_ICON				101
 #define SORT_THREAD				102
+#define SORT_SUBJ				0					// watch for swap of LvColumnOrder
+#define SORT_FROM				1
+#define SORT_DATE				2
+#define SORT_SIZE				3
 
 #define POP_ERR					-2					//pop3 command flag
 #define POP_QUIT				-1
@@ -983,7 +987,7 @@ TCHAR *replace_env_var(TCHAR *buf);
 #endif
 
 // View
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop);
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 int SetWordBreak(HWND hWnd, HMENU hMenu);
@@ -1085,6 +1089,9 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
+#ifndef _WIN32_WCE
+void ListViewSortMenuCheck(int sort_flag);
+#endif
 void DeleteMBMenu(int EntryNum);
 void SelectMBMenu(int EntryNum);
 int GetSelectedMBMenu(void);
