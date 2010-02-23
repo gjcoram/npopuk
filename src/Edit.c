@@ -1273,7 +1273,7 @@ static void SetEditMenu(HWND hWnd)
 	HMENU hMenu;
 	MAILITEM *tpMailItem;
 	BOOL editable;
-	int i, j;
+	DWORD i, j;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC

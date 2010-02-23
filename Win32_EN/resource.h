@@ -82,9 +82,9 @@
 #define IDC_SORTITEM3                   200
 #define IDC_SORTITEM4                   201
 #define IDC_STATIC_SORT                 202
-#define IDC_AUTOSORT1                   203
-#define IDC_AUTOSORT2                   204
-#define IDC_AUTOSORT3                   205
+#define IDC_AUTOSORT0                   203
+#define IDC_AUTOSORT1                   204
+#define IDC_AUTOSORT2                   205
 #define IDI_ICON_FWD                    210
 #define IDI_ICON_REPL                   211
 #define IDI_ICON_REPLFWD                212
@@ -354,6 +354,7 @@
 #define ID_KEY_CTRLENTER                40017
 #define ID_MENUITEM_DELETE              40018
 #define ID_MENUITEM_LISTINIT            40019
+#define ID_MENUITEM_FILESORT            40020
 #define ID_MENUITEM_ICONSORT            40021
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
@@ -389,6 +390,10 @@
 #define ID_MENUITEM_ABOUT               40053
 #define ID_MENUITEM_ABOUT_SSL           40054
 #define ID_MENUITEM_VISIT_WEB           40055
+#define ID_MENUITEM_FROMSORT            40056
+#define ID_MENUITEM_SUBJSORT            40057
+#define ID_MENUITEM_DATESORT            40058
+#define ID_MENUITEM_SIZESORT            40059
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_KEY_DELETE                   40065

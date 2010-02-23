@@ -364,7 +364,7 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 /*
  * FindEditString - EDIT内の文字列を検索する
  */
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop)
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end)
 {
 	DWORD dwStart;
 	DWORD dwEnd;
@@ -379,6 +379,12 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	if ((dwStart + 1U) != FindPos) {
 		FindPos = dwStart;
 	}
+	// ReplaceAll only in selection
+	if (start > 0 && FindPos < start) {
+		FindPos = start;
+	} else if (end > 0 && FindPos > end) {
+		return FALSE;
+	}
 
 	// エディットから文字列を取得する
 	AllocGetText(hEdit, &buf);
@@ -388,7 +394,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	}
 
 	// 検索文字列が見つからなかった場合
-	if (*p == TEXT('\0') || len < 0) {
+	if (*p == TEXT('\0') || len < 0 || (end > 0 && p > buf + end)) {
 		mem_free(&buf);
 		return FALSE;
 	}
@@ -422,12 +428,18 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		if ((st + 1U) != FindPos) {
 			FindPos = st;
 		}
+		// ReplaceAll only in selection
+		if (start > 0 && FindPos < start) {
+			FindPos = start;
+		} else if (end > 0 && FindPos > end) {
+			return FALSE;
+		}
 		p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		if (Loop == TRUE && *p == TEXT('\0')) {
 			p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		}
 		// 検索文字列が見つからなかった場合
-		if (*p == TEXT('\0') || len < 0) {
+		if (*p == TEXT('\0') || len < 0 || (end > 0 && p > buf + end)) {
 			mem_free(&buf);
 			return FALSE;
 		}
@@ -443,12 +455,18 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		if ((dwStart + 1U) != FindPos) {
 			FindPos = dwStart;
 		}
+		// ReplaceAll only in selection
+		if (start > 0 && FindPos < start) {
+			FindPos = start;
+		} else if (end > 0 && FindPos > end) {
+			return FALSE;
+		}
 		p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		if (Loop == TRUE && *p == TEXT('\0')) {
 			p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 		}
 		// 検索文字列が見つからなかった場合
-		if (*p == TEXT('\0')) {
+		if (*p == TEXT('\0') || len < 0 || (end > 0 && p > buf + end)) {
 			mem_free(&buf);
 			return FALSE;
 		}
@@ -922,7 +940,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SetHeaderSize(hWnd);
 #ifndef UNICODE
 	if (UnicodeEdit == 0) {
-		int i, j;
+		DWORD i, j;
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, (WPARAM)0, (LPARAM)TEXT("あ"));
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -1078,7 +1096,7 @@ static void EndWindow(HWND hWnd)
 static void SetViewMenu(HWND hWnd)
 {
 	HMENU hMenu;
-	int i, j;
+	DWORD i, j;
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -1771,7 +1789,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	while (Done == FALSE) {
 		if (FirstLoop == TRUE && hWnd != MainWnd) {
 			// 本文から検索して見つかった位置を選択状態にする
-			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE) == TRUE) {
+			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0) == TRUE) {
 				break;
 			}
 
@@ -1779,7 +1797,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			if (op.AllMsgFind == 0) {
 				// clear selection and search again
 				SendMessage(hEdit, EM_SETSEL, 0, 0);
-				if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE) == TRUE) {
+				if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0) == TRUE) {
 					break;
 				}
 			}
@@ -1863,7 +1881,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					hEdit = GetDlgItem(hViewWnd, IDC_EDIT_BODY);
 				}
 				if (hEdit != NULL) {
-					FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE);
+					FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0);
 				}
 				break;
 			}
@@ -2038,8 +2056,8 @@ static void OpenURL(HWND hWnd)
 	TCHAR *buf;
 	TCHAR *str;
 	TCHAR *p, *r, *s;
-	int i, j, k;
-	int len;
+	DWORD i, j;
+	int k, len;
 	int MailToFlag = 0;
 	BOOL key_ctl = GetKeyState(VK_CONTROL);
 

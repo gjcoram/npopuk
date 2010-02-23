@@ -3637,10 +3637,10 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		EnableSortColumns(hDlg, (op.LvAutoSort != 0));
 #else
 		if (op.LvAutoSort == 0) { // Added PHH 11-Nov-2003
-			SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_SETCHECK, 1, 0);
+			SendDlgItemMessage(hDlg, IDC_AUTOSORT0, BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, FALSE);
 		} else {
-			SendDlgItemMessage(hDlg, (op.LvAutoSort == 1) ? IDC_AUTOSORT2 : IDC_AUTOSORT3,
+			SendDlgItemMessage(hDlg, (op.LvAutoSort == 1) ? IDC_AUTOSORT1 : IDC_AUTOSORT2,
 				BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, TRUE);
 		}
@@ -3680,25 +3680,21 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.LvAutoSort = SendDlgItemMessage(hDlg, IDC_COMBO_SORT, CB_GETCURSEL, 0, 0);
 			op.LvSortItem = SendDlgItemMessage(hDlg, IDC_COMBO_SORTCOL, CB_GETCURSEL, 0, 0) + 1;
 #else
-			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1) { // Added PHH 11-Nov-2003
-				op.LvAutoSort = 0;	
+			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT0, BM_GETCHECK, 0, 0) == 1) { // Added PHH 11-Nov-2003
+				op.LvAutoSort = 0; // all in file order
 			} else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT2, BM_GETCHECK, 0, 0) == 1) {
-				op.LvAutoSort = 1;
-			} else if (SendDlgItemMessage(hDlg, IDC_AUTOSORT3, BM_GETCHECK, 0, 0) == 1) {
-				op.LvAutoSort = 2;
-			} else {
-				op.LvAutoSort = 1;
+				op.LvAutoSort = 2; // all by column
+			} else { // if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1)
+				op.LvAutoSort = 1; // saveboxes by column
 			}
 			
 			if (SendDlgItemMessage(hDlg, IDC_SORTITEM1, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 1;
-			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1) {
-				op.LvSortItem = 2;
 			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM3, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 3;
 			} else if (SendDlgItemMessage(hDlg, IDC_SORTITEM4, BM_GETCHECK, 0, 0) == 1) {
 				op.LvSortItem = 4;
-			} else {
+			} else { // if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1)
 				op.LvSortItem = 2;
 			}
 #endif
@@ -3735,11 +3731,11 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			}
 		case IDC_COMBO_SORTCOL:
 #else
+		case IDC_AUTOSORT0:
 		case IDC_AUTOSORT1:
 		case IDC_AUTOSORT2:
-		case IDC_AUTOSORT3:
 			redraw = TRUE;
-			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT1, BM_GETCHECK, 0, 0) == 1) {
+			if (SendDlgItemMessage(hDlg, IDC_AUTOSORT0, BM_GETCHECK, 0, 0) == 1) {
 				enable = FALSE;
 			} else {
 				enable = TRUE;
@@ -4088,7 +4084,7 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_FIND:
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
-			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE) == FALSE) {
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, 0, 0) == FALSE) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
 			}
 			break;
@@ -8303,6 +8299,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	BOOL enable = FALSE;
+	static DWORD orig_sel_start = 0, orig_sel_end = 0;
 	int command;
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -8436,25 +8433,31 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				{
 					HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
+					orig_sel_start = 0;
+					orig_sel_end = 0;
 					if (hEdit != NULL) {
-						int i, j;
+						DWORD i, j;
+						SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
 						if (command == IDC_REPLACE) {
 							FindOrReplace = 2;
-							SendMessage(hEdit, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
 							if (i < j) {
 								TCHAR *buf = NULL;
 								AllocGetText(hEdit, &buf);
 								if (buf != NULL) {
-									int len = lstrlen(FindStr);
-									if ( ((j-i) == len) &&
-										( (str_cmp_n_t(FindStr, buf+i, len) == 0)
-										|| (op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)
-										|| (op.Wildcards == TRUE && str_find(FindStr, buf+i, op.MatchCase, FindParts, &len) == buf+i))) {
+									unsigned int len = lstrlen(FindStr);
+									if ( (((j-i) == len) &&
+										 ((str_cmp_n_t(FindStr, buf+i, len) == 0)
+											|| (op.MatchCase == FALSE && str_cmp_ni_t(FindStr, buf+i, len) == 0)))
+										|| ((op.Wildcards == TRUE && str_find(FindStr, buf+i, op.MatchCase, FindParts, &len) == buf+i)) ) {
 										FindOrReplace = 4;
 									}
 									mem_free(&buf);
 								}
 							}
+						} else if (command == IDC_REPLACE_ALL && i < j) {
+							orig_sel_start = i;
+							orig_sel_end = j;
+							SendMessage(hEdit, EM_SETSEL, 0, 0);
 						} else {
 							SendMessage(hEdit, EM_SETSEL, 0, 0);
 						}
@@ -8502,11 +8505,14 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				while (done == FALSE) {
 					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards,
-							(FindOrReplace == 3) ? FALSE : TRUE);
+							(FindOrReplace == 3) ? FALSE : TRUE, orig_sel_start, orig_sel_end);
 					if (found && FindOrReplace == 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
 						ReplaceCnt++;
 					} else {
+						if (FindOrReplace == 3 && orig_sel_start < orig_sel_end) {
+							SendMessage(hEdit, EM_SETSEL, orig_sel_start, orig_sel_end);
+						}
 						done = TRUE;
 						if (found) {
 							show_msg = FALSE;

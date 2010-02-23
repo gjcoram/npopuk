@@ -298,13 +298,7 @@ void ini_read_general(HWND hWnd)
 
 	op.LvDefSelectPos = profile_get_int(GENERAL, TEXT("LvDefSelectPos"), 1);
 	op.LvAutoSort = profile_get_int(GENERAL, TEXT("LvAutoSort"), 1);
-#ifdef _WIN32_WCE_PPC
-////////////////////// MRP ////////////////////
-	op.LvSortItem = profile_get_int(GENERAL, TEXT("LvSortItem"), 13);
-#else
 	op.LvSortItem = profile_get_int(GENERAL, TEXT("LvSortItem"), 3);
-////////////////////// --- ////////////////////
-#endif
 	op.LvThreadView = profile_get_int(GENERAL, TEXT("LvThreadView"), 0);
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
