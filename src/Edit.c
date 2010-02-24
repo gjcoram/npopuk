@@ -2060,6 +2060,13 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			break;
 
+		case ID_MENUITEM_SAVE:
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (SaveViewMail(NULL, hWnd, MAILBOX_SEND, tpMailItem, op.ViewFileHeader, FALSE) == FALSE) {
+				ErrorMessage(hWnd, STR_ERR_SAVE);
+			}
+			break;
+
 		case ID_MENUITEM_NEXTMAIL:
 			tpMailItem = View_NextPrev(hWnd, +1, FALSE);
 			if (tpMailItem != NULL) {
