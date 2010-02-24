@@ -141,7 +141,6 @@ static void View_Scroll(HWND hWnd, int dir);
 static int FindLargerImage(HWND hWnd, int id, BOOL ask);
 static void OpenURL(HWND hWnd);
 static void SetReMessage(HWND hWnd, int ReplyFlag);
-static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc);
 static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex);
 static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark);
 static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem);
@@ -2751,7 +2750,7 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 /*
  * SaveViewMail - メールをファイルに保存
  */
-static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc)
+BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc)
 {
 	MULTIPART **tpPart = NULL;
 	HANDLE hFile;
@@ -2762,10 +2761,12 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 	
 	if (fname == NULL) {
 		// ファイルの作成
-		if (tpMailItem->Subject != NULL) {
+		if (tpMailItem->Subject != NULL && *tpMailItem->Subject != TEXT('\0')) {
 			str_cpy_n_t(path, tpMailItem->Subject, BUF_SIZE - 50);
 			filename_conv(path);
 			lstrcpy(path + lstrlen(path), TEXT(".txt"));
+		} else if (MailBoxIndex == MAILBOX_SEND) {
+			str_join_t(path, EDIT_FILE, TEXT(".txt"), (TCHAR *)-1);
 		} else {
 			lstrcpy(path, TEXT(".txt"));
 		}
@@ -2785,7 +2786,7 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 		return FALSE;
 	}
 
-	if (ViewSrc == TRUE) {
+	if (ViewSrc == TRUE && MailBoxIndex != MAILBOX_SEND) {
 		char *cbuf;
 		BOOL added = FALSE;
 		if (tpMailItem->MailBox == NULL && (MailBox + MailBoxIndex)->Name != NULL) {
@@ -2829,20 +2830,24 @@ static BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tp
 		}
 		mem_free(&tmp);
 
-		buf = MIME_body_decode(tpMailItem, ViewSrc, TRUE, &tpPart, &cnt, &idx);
+		if (MailBoxIndex == MAILBOX_SEND) {
+			AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+		} else {
+			buf = MIME_body_decode(tpMailItem, ViewSrc, TRUE, &tpPart, &cnt, &idx);
 
-		// GJC remove HTML tags
-		if (ViewSrc == FALSE && op.StripHtmlTags == 1 && lstrcmp(op.ViewFileSuffix, TEXT("txt")) == 0 &&
-			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-			|| (idx != -1 && (tpPart[idx])->ContentType != NULL &&
-			str_cmp_ni((tpPart[idx])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			tmp = strip_html_tags(buf, 0);
-			if (tmp != NULL) {
-				mem_free(&buf);
-				buf = tmp;
+			// GJC remove HTML tags
+			if (ViewSrc == FALSE && op.StripHtmlTags == 1 && lstrcmp(op.ViewFileSuffix, TEXT("txt")) == 0 &&
+				((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
+				|| (idx != -1 && (tpPart[idx])->ContentType != NULL &&
+				str_cmp_ni((tpPart[idx])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
+				tmp = strip_html_tags(buf, 0);
+				if (tmp != NULL) {
+					mem_free(&buf);
+					buf = tmp;
+				}
 			}
+			multipart_free(&tpPart, cnt);
 		}
-		multipart_free(&tpPart, cnt);
 	}
 
 	// 本文の保存

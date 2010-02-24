@@ -92,9 +92,7 @@
 #define SENDBOX_FILE			TEXT("SendBox.dat")
 
 #define VIEW_FILE				TEXT("$npop_view")
-#ifdef _WIN32_WCE
 #define EDIT_FILE				TEXT("$npop_edit")
-#endif
 
 #define LOG_FILE				TEXT("nPOPuk.log")
 
@@ -1000,6 +998,7 @@ BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 BOOL AttachDecode(HWND hWnd, int id, int DoWhat);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
+BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc);
 BOOL ShellOpen(TCHAR *FileName);
 
 // Edit
