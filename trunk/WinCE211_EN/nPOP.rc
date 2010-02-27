@@ -1433,6 +1433,7 @@ BEGIN
         MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
         MENUITEM SEPARATOR
         MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
+        MENUITEM "Sa&ve as",                    ID_MENUITEM_SAVE
         MENUITEM SEPARATOR
         MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
         MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
