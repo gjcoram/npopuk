@@ -514,6 +514,7 @@ typedef struct _OPTION {
 	int CheckEndExec;
 	int CheckEndExecNoDelMsg;
 	int TimeoutInterval;
+	int ReorderSendbox;
 
 	int ViewClose;
 	int ViewCloseNoNext;
