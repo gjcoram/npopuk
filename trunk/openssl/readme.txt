@@ -1,4 +1,4 @@
-readme.txt for openssl (version 0.9.8l)
+readme.txt for openssl (version 0.9.8m)
 
 Please review LICENSE.txt
 
@@ -17,7 +17,9 @@ Please review LICENSE.txt
 5) nmake -f ntlib.mak
 
    You may need to replace crypto\cversion.c with the version here;
-   there may be other minor tweaks necessary.
+   there may be other minor tweaks necessary.  I found that they 
+   can all be handled by changing things like 
+   #include <openssl/asn1.h> to #include "asn1.h"
 
 6) The .lib files should now be in "out32"
 
