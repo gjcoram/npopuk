@@ -817,6 +817,9 @@ $(OBJ_D)\t1_lib.obj: $(SRC_D)\ssl\t1_lib.c
 $(OBJ_D)\t1_enc.obj: $(SRC_D)\ssl\t1_enc.c
 	$(CC) /Fo$(OBJ_D)\t1_enc.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\t1_enc.c
 
+$(OBJ_D)\t1_reneg.obj: $(SRC_D)\ssl\t1_reneg.c
+	$(CC) /Fo$(OBJ_D)\t1_reneg.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\t1_reneg.c
+
 $(OBJ_D)\d1_meth.obj: $(SRC_D)\ssl\d1_meth.c
 	$(CC) /Fo$(OBJ_D)\d1_meth.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\d1_meth.c
 

@@ -165,7 +165,7 @@ SSLOBJ=$(OBJ_D)\s2_meth.obj \
 	$(OBJ_D)\s23_meth.obj $(OBJ_D)\s23_srvr.obj $(OBJ_D)\s23_clnt.obj \
 	$(OBJ_D)\s23_lib.obj $(OBJ_D)\s23_pkt.obj $(OBJ_D)\t1_meth.obj \
 	$(OBJ_D)\t1_srvr.obj $(OBJ_D)\t1_clnt.obj $(OBJ_D)\t1_lib.obj \
-	$(OBJ_D)\t1_enc.obj $(OBJ_D)\ssl_lib.obj \
+	$(OBJ_D)\t1_enc.obj $(OBJ_D)\t1_reneg.obj $(OBJ_D)\ssl_lib.obj \
 	$(OBJ_D)\ssl_err2.obj $(OBJ_D)\ssl_cert.obj $(OBJ_D)\ssl_sess.obj \
 	$(OBJ_D)\ssl_ciph.obj $(OBJ_D)\ssl_stat.obj $(OBJ_D)\ssl_rsa.obj \
 	$(OBJ_D)\ssl_asn1.obj $(OBJ_D)\ssl_txt.obj $(OBJ_D)\ssl_algs.obj \
@@ -808,6 +808,9 @@ $(OBJ_D)\t1_lib.obj: $(SRC_D)\ssl\t1_lib.c
 
 $(OBJ_D)\t1_enc.obj: $(SRC_D)\ssl\t1_enc.c
 	$(CC) /Fo$(OBJ_D)\t1_enc.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\t1_enc.c
+
+$(OBJ_D)\t1_reneg.obj: $(SRC_D)\ssl\t1_reneg.c
+	$(CC) /Fo$(OBJ_D)\t1_reneg.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\t1_reneg.c
 
 $(OBJ_D)\ssl_lib.obj: $(SRC_D)\ssl\ssl_lib.c
 	$(CC) /Fo$(OBJ_D)\ssl_lib.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\ssl_lib.c
