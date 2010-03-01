@@ -178,7 +178,7 @@ SSLOBJ=$(OBJ_D)\s2_meth.obj \
 	$(OBJ_D)\ssl_err2.obj $(OBJ_D)\ssl_cert.obj $(OBJ_D)\ssl_sess.obj \
 	$(OBJ_D)\ssl_ciph.obj $(OBJ_D)\ssl_stat.obj $(OBJ_D)\ssl_rsa.obj \
 	$(OBJ_D)\ssl_asn1.obj $(OBJ_D)\ssl_txt.obj $(OBJ_D)\ssl_algs.obj \
-	$(OBJ_D)\bio_ssl.obj $(OBJ_D)\ssl_err.obj 
+	$(OBJ_D)\bio_ssl.obj $(OBJ_D)\ssl_err.obj $(OBJ_D)\t1_reneg.obj
 
 CRYPTOOBJ=$(OBJ_D)\cryptlib.obj \
 	$(OBJ_D)\dyn_lck.obj $(OBJ_D)\mem.obj $(OBJ_D)\mem_clr.obj \
