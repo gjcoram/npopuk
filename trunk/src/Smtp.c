@@ -57,6 +57,7 @@ static int send_end_cmd;						// メール送信完了時のコマンド
 MAILITEM *SmtpFwdMessage = NULL;
 
 // 外部参照
+extern HWND MainWnd;
 extern OPTION op;
 extern BOOL gSendAndQuit;
 extern TCHAR *DataDir;
@@ -89,6 +90,7 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, TCHAR *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
+static void reorder_sendbox();
 
 /*
  * HMAC_MD5 - MD5のダイジェストを生成する
@@ -1391,6 +1393,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		tpMailItem->Mark = tpMailItem->MailStatus = ICON_SENTMAIL;
+		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			i = ListView_GetMemToItem(hListView, tpMailItem);
@@ -1399,17 +1402,19 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 				UpdateWindow(hListView);
 			}
 		}
-		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
-		if (op.AutoSave != 0) {
-			// 送信箱をファイルに保存
-			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
-		}
+		
 		if (tpMailItem->FwdAttach && tpMailItem->References) {
 			ClearFwdHold(tpMailItem);
 		}
 
-		// 次の送信メールの取得
+		// check if there are other messages queued for sending
 		i = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, mailbox_name_to_index(send_mail_box->Name));
+		if (i == -1) {
+			reorder_sendbox();
+		}
+		if (op.AutoSave == 1 || (i == -1 && op.AutoSave == 2)) {
+			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
+		}
 		if (i == -1) {
 			// メール送信終了
 			SetSocStatusTextT(hWnd, TEXT(CMD_QUIT));
@@ -1464,8 +1469,8 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			}
 		}
 		(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
+		reorder_sendbox();
 		if (op.AutoSave != 0) {
-			// 送信箱をファイルに保存
 			file_save_mailbox(SENDBOX_FILE, DataDir, MAILBOX_SEND, FALSE, TRUE, 2);
 		}
 		if (tpMailItem->FwdAttach && tpMailItem->References) {
@@ -1604,6 +1609,52 @@ SOCKET smtp_send_mail(HWND hWnd, MAILBOX *tpMailBox, MAILITEM *tpMailItem, int e
 		return -1;
 	}
 	return soc;
+}
+
+/*
+ * reorder_sendbox - make sure drafts (unsent messages) stay at the end
+ */
+static void reorder_sendbox()
+{
+	if (op.ReorderSendbox) {
+		MAILITEM **tpMailList = (MailBox + MAILBOX_SEND)->tpMailItem;
+		int i, j, cnt = (MailBox + MAILBOX_SEND)->MailItemCnt;
+		BOOL did = FALSE;
+
+		SwitchCursor(FALSE);
+		for (i=0; i < cnt-1; i++) {
+			MAILITEM *tpItem1, *tpItem2;
+			tpItem1 = *(tpMailList + i);
+			tpItem2 = *(tpMailList + i + 1);
+			if (tpItem2->MailStatus == ICON_SENTMAIL 
+				&& (tpItem1->MailStatus == ICON_NON
+					|| tpItem1->MailStatus == ICON_SEND
+					|| tpItem1->MailStatus == ICON_ERROR)) {
+				*(tpMailList + i) = tpItem2;
+				*(tpMailList + i + 1) = tpItem1;
+				did = TRUE;
+				for (j = i - 1; j >=0; j--) {
+					// tpItem2 is the Sent message we're moving up
+					tpItem1 = *(tpMailList + j);
+					if (tpItem1->MailStatus == ICON_NON
+							|| tpItem1->MailStatus == ICON_SEND
+							|| tpItem1->MailStatus == ICON_ERROR) {
+						*(tpMailList + j) = tpItem2;
+						*(tpMailList + j + 1) = tpItem1;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+		if (did) {
+			if (SelBox == MAILBOX_SEND) {
+				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), MailBox + MAILBOX_SEND, FALSE);
+			}
+			(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
+		}
+		SwitchCursor(TRUE);
+	}
 }
 
 /*

@@ -211,7 +211,7 @@ static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag);
 static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
 static void SetMailboxMark(int Box, int Status);
-static void AutoSave_Mailboxes(HWND hWnd, BOOL ReorderSendbox);
+static void AutoSave_Mailboxes(HWND hWnd);
 static BOOL AdvOptionEditor(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static BOOL InitApplication(HINSTANCE hInstance);
@@ -4152,50 +4152,11 @@ static void SetMailboxMark(int Box, int Status)
 /*
  * AutoSave_Mailboxes - save MailBox.dat files (GJC)
  */
-static void AutoSave_Mailboxes(HWND hWnd, BOOL ReorderSendbox)
+static void AutoSave_Mailboxes(HWND hWnd)
 {
 	TCHAR buf[BUF_SIZE];
 	BOOL DidOne = FALSE;
 	int i;
-
-	if (ReorderSendbox) {
-		// move unsent items below sent ones
-		MAILITEM **tpMailList = (MailBox + MAILBOX_SEND)->tpMailItem;
-		int i, j, cnt = (MailBox + MAILBOX_SEND)->MailItemCnt;
-		BOOL did = FALSE;
-
-		SwitchCursor(FALSE);
-		for (i=0; i < cnt-1; i++) {
-			MAILITEM *tpItem1, *tpItem2;
-			tpItem1 = *(tpMailList + i);
-			tpItem2 = *(tpMailList + i + 1);
-			if (tpItem2->MailStatus == ICON_SENTMAIL 
-				&& (tpItem1->MailStatus == ICON_NON
-					|| tpItem1->MailStatus == ICON_SEND
-					|| tpItem1->MailStatus == ICON_ERROR)) {
-				*(tpMailList + i) = tpItem2;
-				*(tpMailList + i + 1) = tpItem1;
-				did = TRUE;
-				for (j = i - 1; j >=0; j--) {
-					// tpItem2 is the Sent message we're moving up
-					tpItem1 = *(tpMailList + j);
-					if (tpItem1->MailStatus == ICON_NON
-							|| tpItem1->MailStatus == ICON_SEND
-							|| tpItem1->MailStatus == ICON_ERROR) {
-						*(tpMailList + j) = tpItem2;
-						*(tpMailList + j + 1) = tpItem1;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-		if (did && SelBox == MAILBOX_SEND) {
-			ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), MailBox + MAILBOX_SEND, FALSE);
-			(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
-		}
-		SwitchCursor(TRUE);
-	}
 
 	if (op.AutoSave == 0) {
 		return;
@@ -4695,7 +4656,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					SetMailboxMark(RecvBox, STATUS_DONE);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
-					AutoSave_Mailboxes(hWnd, FALSE);
+					AutoSave_Mailboxes(hWnd);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
 					SetMailboxMark(RecvBox, STATUS_DONE);
@@ -4814,7 +4775,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.AutoSave == 2) {
-				AutoSave_Mailboxes(hWnd, FALSE);
+				AutoSave_Mailboxes(hWnd);
 			}
 
 			do {
@@ -4830,7 +4791,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 				EndSocketFunc(hWnd, TRUE);
-				AutoSave_Mailboxes(hWnd, FALSE);
+				AutoSave_Mailboxes(hWnd);
 				NewMail_Message(hWnd, NewMailCnt);
 				AutoCheckFlag = FALSE;
 				break;
@@ -4883,7 +4844,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			ExecCheckFlag = FALSE;
 			if (op.AutoSave == 2) {
-				AutoSave_Mailboxes(hWnd, op.ReorderSendbox);
+				AutoSave_Mailboxes(hWnd);
 			}
 
 			CheckBox++;
@@ -4897,7 +4858,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				//Round execution end
 				gSockFlag = FALSE;
 				EndSocketFunc(hWnd, TRUE);
-				AutoSave_Mailboxes(hWnd, op.ReorderSendbox);
+				AutoSave_Mailboxes(hWnd);
 				NewMail_Message(hWnd, NewMailCnt);
 				break;
 			}
@@ -6274,7 +6235,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				g_soc = -1;
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				if (op.SocLog > 0) log_flush();
-				AutoSave_Mailboxes(hWnd, ExecFlag && op.ReorderSendbox);
+				AutoSave_Mailboxes(hWnd);
 				SetItemCntStatusText(NULL, FALSE);
 				SetUnreadCntTitle(TRUE);
 				if (AllCheck == FALSE) {
