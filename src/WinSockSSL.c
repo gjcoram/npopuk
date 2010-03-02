@@ -740,7 +740,8 @@ static OPENSSL_INFO *ssl_init(
 	if (ssl_type == -1) {
 		return 0;
 	}
-	si = mem_calloc(sizeof(OPENSSL_INFO)); // LocalAlloc(LPTR, sizeof(OPENSSL_INFO));
+	//si = mem_calloc(sizeof(OPENSSL_INFO)); // would appear to be a memory leak, since si is freed with LocalFree
+	si = LocalAlloc(LPTR, sizeof(OPENSSL_INFO));
 	if (si == NULL) {
 		return 0;
 	}
