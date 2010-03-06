@@ -706,7 +706,9 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		keycode = LOWORD(wParam);
 		if (keycode == VK_DELETE) {
 			return 0;
-		} else if (keycode == VK_RETURN || keycode == VK_ESCAPE) {
+		} else if (keycode == VK_RETURN) {
+			SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+		} else if (keycode == VK_ESCAPE) {
 			SendMessage(GetParent(hWnd), WM_CLOSE, 0, 0);
 		}
 		break;
