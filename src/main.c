@@ -1908,9 +1908,6 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 #endif
 		return ListView_NotifyProc(hWnd, lParam);
-	} else if (CForm->hwndFrom == GetDlgItem(MainWnd, IDC_MBMENU)) {
-		int b = 5;
-		b++;
 	} else if (CForm->hwndFrom == GetWindow(GetDlgItem(hWnd, IDC_LISTVIEW), GW_CHILD)) {
 		return ListViewHeaderNotifyProc(hWnd, lParam);
 	}
@@ -2048,6 +2045,19 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 			}
 			break;
 #else
+		case WM_RBUTTONDOWN:
+			{
+				POINT apos;
+				DWORD sel;
+				GetCursorPos((LPPOINT)&apos);
+				ScreenToClient(hWnd, &apos);
+				sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, (LPARAM)MAKELPARAM(apos.x, apos.y));
+				if (HIWORD(sel) == 0) {
+					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+				}
+			}
+			return 0;
+
 		case WM_RBUTTONUP:
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 			return 0;
