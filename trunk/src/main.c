@@ -2054,6 +2054,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, (LPARAM)MAKELPARAM(apos.x, apos.y));
 				if (HIWORD(sel) == 0) {
 					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+					mailbox_select(MainWnd, sel);
 				}
 			}
 			return 0;
