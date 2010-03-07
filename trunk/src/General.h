@@ -995,6 +995,7 @@ int SetWordBreak(HWND hWnd);
 #endif
 MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView);
 void View_FindMail(HWND hWnd, BOOL FindSet);
+void View_Scroll(HWND hWnd, int dir, BOOL ViewWnd);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
 BOOL AttachDecode(HWND hWnd, int id, int DoWhat);

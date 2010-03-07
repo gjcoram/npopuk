@@ -30,6 +30,7 @@
 
 #define ID_APP_TIMER		1
 #define ID_WAIT_TIMER		2
+#define ID_HIDECARET_TIMER	3
 
 #define REPLY_SUBJECT		TEXT("Re:")
 #define WNDPROC_KEY			TEXT("OldWndProc")
@@ -708,10 +709,58 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			return 0;
 		} else if (keycode == VK_RETURN) {
 			SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+			return 0;
+		} else if (keycode == VK_BACK) {
+			SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_PREVMAIL, 0);
+			return 0;
 		} else if (keycode == VK_ESCAPE) {
 			SendMessage(GetParent(hWnd), WM_CLOSE, 0, 0);
+			return 0;
+		} else if (op.ViewWindowCursor == 0) {
+			short key_sh, key_ctl, key_alt;
+			key_sh  = GetKeyState(VK_SHIFT);
+			key_ctl = GetKeyState(VK_CONTROL);
+			key_alt = GetKeyState(VK_MENU);
+			switch(keycode) {
+			case VK_LEFT:
+				if (key_sh >= 0) {
+					if (op.EditWordBreakFlag == 1) {
+						View_Scroll(hWnd, -1, FALSE);
+					} else {
+						SendMessage(hWnd, WM_HSCROLL, SB_LINELEFT, 0);
+					}
+				}
+				return 0;
+
+			case VK_RIGHT:
+				if (key_sh >= 0) {
+					if (op.EditWordBreakFlag == 1) {
+						View_Scroll(hWnd, +1, FALSE);
+					} else {
+						SendMessage(hWnd, WM_HSCROLL, SB_LINERIGHT, 0);
+					}
+				}
+				return 0;
+
+			case VK_UP:
+				if (key_ctl < 0 || key_alt < 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_PREVMAIL, 0);
+				} else if (key_sh >= 0) {
+					SendMessage(hWnd, WM_VSCROLL, SB_LINEUP, 0);
+				}
+				return 0;
+
+			case VK_DOWN:
+				if (key_ctl < 0 || key_alt < 0) {
+					SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+				} else if (key_sh >= 0) {
+					SendMessage(hWnd, WM_VSCROLL, SB_LINEDOWN, 0);
+				}
+				return 0;
+			}
 		}
 		break;
+
 	case WM_COMMAND:
 		switch(GET_WM_COMMAND_ID(wParam,lParam)) {
 		case ID_MENUITEM_FIND:
@@ -1113,6 +1162,9 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	if (tpMailItem->MailStatus == ICON_SENTMAIL) {
 		// GJC don't edit sent mail
 		SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+		if (op.ViewWindowCursor == 0) {
+			SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
+		}
 #ifdef _WIN32_WCE_PPC
 	} else {
 		SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
@@ -1833,6 +1885,12 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 	case WM_SETFOCUS:
 		SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
+		if (op.ViewWindowCursor == 0) {
+			tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+			if (tpMailItem != NULL && tpMailItem->MailStatus == ICON_SENTMAIL) {
+				HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+			}
+		}
 		FocusWnd = hWnd;
 		break;
 
@@ -1991,6 +2049,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				ShowWindow(hWnd, SW_SHOW);
 				UpdateWindow(hWnd);
 			}
+			break;
+
+		case ID_HIDECARET_TIMER:
+			KillTimer(hWnd, wParam);
+			HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
 			break;
 		}
 		break;
@@ -2515,6 +2578,9 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 				if (sent) {
 					SetSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+					if (op.ViewWindowCursor == 0) {
+						HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
+					}
 #ifdef _WIN32_WCE_PPC
 				} else {
 					SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
