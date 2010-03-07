@@ -39,7 +39,7 @@
 #define IDC_EDIT_BODY				2003
 
 #define ID_CLICK_TIMER				1
-#define ID_HIDECARET_TIMER			2
+#define ID_HIDECARET_TIMER			3
 
 #ifdef _WIN32_WCE
 #define MENU_ATTACH_POS				8
@@ -137,7 +137,6 @@ static void EndWindow(HWND hWnd);
 static void SetViewMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL BodyOnly);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
-static void View_Scroll(HWND hWnd, int dir);
 static int FindLargerImage(HWND hWnd, int id, BOOL ask);
 static void OpenURL(HWND hWnd);
 static void SetReMessage(HWND hWnd, int ReplyFlag);
@@ -615,7 +614,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			} else if (GetKeyState(VK_CONTROL) < 0) {
 				View_NextUnreadMail(GetParent(hWnd));
 			} else {
-				View_Scroll(hWnd, +1);
+				View_Scroll(hWnd, +1, TRUE);
 			}
 		}
 	case WM_DEADCHAR:
@@ -637,14 +636,12 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 					SendMessage(GetParent(hWnd), WM_COMMAND, ID_KEY_LEFT, 0);
 				}
 				return 0;
-				break;
 
 			case VK_RIGHT:
 				if (key_sh >= 0) {
 					SendMessage(GetParent(hWnd), WM_COMMAND, ID_KEY_RIGHT, 0);
 				}
 				return 0;
-				break;
 
 			case VK_UP:
 				if (key_ctl < 0 || key_alt < 0) {
@@ -653,7 +650,6 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 					SendMessage(hWnd, WM_VSCROLL, SB_LINEUP, 0);
 				}
 				return 0;
-				break;
 
 			case VK_DOWN:
 				if (key_ctl < 0 && key_alt < 0) {
@@ -664,7 +660,6 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 					SendMessage(hWnd, WM_VSCROLL, SB_LINEDOWN, 0);
 				}
 				return 0;
-				break;
 			}
 		}
 		break;
@@ -1602,7 +1597,7 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 /*
  * View_Scroll - page up or down, switch messages if at end
  */
-static void View_Scroll(HWND hWnd, int dir)
+void View_Scroll(HWND hWnd, int dir, BOOL ViewWnd)
 {
 	TEXTMETRIC lptm;
 	SCROLLINFO ScrollInfo;
@@ -1637,9 +1632,12 @@ static void View_Scroll(HWND hWnd, int dir)
 		SendMessage(hWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
 		if (Next == TRUE) {
 			HWND hParent = GetParent(hWnd);
-			// ŽŸ‚Ì–¢ŠJ••ƒ[ƒ‹‚ÖˆÚ“®‚·‚é
-			if (View_NextUnreadMail(hParent) == NULL && op.ViewCloseNoNext == 1) {
-				SendMessage(hParent, WM_CLOSE, 0, 0);
+			if (ViewWnd == TRUE) {
+				if (View_NextUnreadMail(hParent) == NULL && op.ViewCloseNoNext == 1) {
+					SendMessage(hParent, WM_CLOSE, 0, 0);
+				}
+			} else {
+				SendMessage(hParent, WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
 			}
 		}
 	} else {
@@ -1648,8 +1646,12 @@ static void View_Scroll(HWND hWnd, int dir)
 		}
 		SendMessage(hWnd, WM_VSCROLL, SB_PAGEUP, 0);
 		if (Next == TRUE) {
-			if (View_NextPrev(hViewWnd, -1, TRUE) == NULL && op.ViewCloseNoNext == 1) {
-				SendMessage(hViewWnd, WM_CLOSE, 0, 0);
+			if (ViewWnd == TRUE) {
+				if (View_NextPrev(hViewWnd, -1, TRUE) == NULL && op.ViewCloseNoNext == 1) {
+					SendMessage(hViewWnd, WM_CLOSE, 0, 0);
+				}
+			} else {
+				SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENUITEM_PREVMAIL, 0);
 			}
 		}
 
@@ -3366,7 +3368,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_KEY_LEFT:
 			if (op.WordBreakFlag == 1) {
-				View_Scroll(GetDlgItem(hWnd, IDC_EDIT_BODY), -1);
+				View_Scroll(GetDlgItem(hWnd, IDC_EDIT_BODY), -1, TRUE);
 			} else {
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_HSCROLL, SB_LINELEFT, 0);
 			}
@@ -3374,7 +3376,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_KEY_RIGHT:
 			if (op.WordBreakFlag == 1) {
-				View_Scroll(GetDlgItem(hWnd, IDC_EDIT_BODY), +1);
+				View_Scroll(GetDlgItem(hWnd, IDC_EDIT_BODY), +1, TRUE);
 			} else {
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_HSCROLL, SB_LINERIGHT, 0);
 			}
