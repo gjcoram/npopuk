@@ -1394,6 +1394,7 @@ void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 	TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON, 
 		x, y, 0, hWnd, NULL);
 #endif
+	PostMessage(hWnd, WM_COMMAND, ID_SEL_RESTORE, 0);
 	PostMessage(hWnd, WM_NULL, 0, 0);
 }
 
@@ -1924,6 +1925,9 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
  */
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	static int tmpselbox = -1;
+	DWORD sel;
+
 	switch (msg) {
 #ifdef OVERRIDE_WM_CHAR
 		case WM_CHAR:
@@ -2032,6 +2036,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				rg.dwFlags = SHRG_RETURNCMD;
 
 				if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+					sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, lParam);
+					if (HIWORD(sel) == 0) {
+						tmpselbox = SelBox;
+						SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+						SelBox = sel;
+					}
 					SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 					return 0;
 				}
@@ -2041,21 +2051,22 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #elif defined (_WIN32_WCE)
 		case WM_LBUTTONUP:
 			if (GetKeyState(VK_MENU) < 0) {
+				sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, lParam);
+				if (HIWORD(sel) == 0) {
+					tmpselbox = SelBox;
+					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+					SelBox = sel;
+				}
 				SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 			}
 			break;
 #else
 		case WM_RBUTTONDOWN:
-			{
-				POINT apos;
-				DWORD sel;
-				GetCursorPos((LPPOINT)&apos);
-				ScreenToClient(hWnd, &apos);
-				sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, (LPARAM)MAKELPARAM(apos.x, apos.y));
-				if (HIWORD(sel) == 0) {
-					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
-					mailbox_select(MainWnd, sel);
-				}
+			sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, lParam);
+			if (HIWORD(sel) == 0) {
+				tmpselbox = SelBox;
+				SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+				SelBox = sel;
 			}
 			return 0;
 
@@ -2088,6 +2099,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					SetWindowSize(GetParent(hWnd), 0, 0);
 				}
 #endif
+			} else if (LOWORD(wParam) == ID_SEL_RESTORE) {
+				if (tmpselbox >= 0) {
+					SelBox = tmpselbox;
+					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)SelBox, 0);
+					tmpselbox = -1;
+				}
 			} else {
 				// pass mailbox commands to main window
 				SendMessage(GetParent(hWnd), msg, wParam, lParam);
@@ -5394,8 +5411,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//of account Account on portable
 		case ID_MENUITEM_MOVEUPMAILBOX:
-			mailbox_move_up(hWnd, TRUE);
-			if (op.AutoSave != 0) {
+			if (mailbox_move_up(hWnd, TRUE) == TRUE && op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);
@@ -5404,8 +5420,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Account under portable
 		case ID_MENUITEM_MOVEDOWNMAILBOX:
-			mailbox_move_down(hWnd, TRUE);
-			if (op.AutoSave != 0) {
+			if (mailbox_move_down(hWnd, TRUE) == TRUE && op.AutoSave != 0) {
 				SwitchCursor(FALSE);
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
 				SwitchCursor(TRUE);

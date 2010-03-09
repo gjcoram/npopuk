@@ -292,7 +292,7 @@ BEGIN
     CONTROL         "&From template",IDC_CHECK_TEMPL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,25,20,90,10
     CONTROL         "Create new &savebox",IDC_RADIO_MBOXSAVE,"Button",
-                    BS_AUTORADIOBUTTON,10,40,90,10
+                    BS_AUTORADIOBUTTON,10,35,90,10
     LTEXT           "&Name:",IDC_STATIC,25,50,25,10
     EDITTEXT        IDC_MBOX_NAME,52,48,58,13,ES_AUTOHSCROLL
     CONTROL         "&Import savebox",IDC_RADIO_IMPORTSBOX,"Button",
