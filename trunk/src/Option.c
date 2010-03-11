@@ -6625,7 +6625,7 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 			rg.dwFlags = SHRG_RETURNCMD;
 
 			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-				ShowMenu(hWnd, hEDITPOPUP, 0, 0);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 0, FALSE);
 				return 0;
 			}
 		}
@@ -6692,7 +6692,7 @@ static LRESULT CALLBACK EditTextCallback(HWND hWnd, UINT msg, WPARAM wParam, LPA
 			rg.dwFlags = SHRG_RETURNCMD;
 
 			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
-				ShowMenu(hWnd, hEDITPOPUP, 0, 0);
+				ShowMenu(hWnd, hEDITPOPUP, 0, 0, FALSE);
 				return 0;
 			}
 		}
@@ -7831,14 +7831,14 @@ static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam,
 		rg.dwFlags = SHRG_RETURNCMD;
 		if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
 			if (op.UsePOOMAddressBook == 0 && ListView_GetSelectedCount(hDlg) > 0) {
-				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0);
+				ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0, FALSE);
 			}
 			return 0;
 		}
 	}
 #else
 	if (msg == WM_LBUTTONUP && GetKeyState(VK_MENU) < 0 && op.UsePOOMAddressBook == 0) {
-		ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0);
+		ShowMenu(GetParent(hDlg), hADPOPUP, 0, 0, FALSE);
 		return 0;
 	}
 #endif
