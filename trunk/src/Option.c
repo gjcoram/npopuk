@@ -8016,7 +8016,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 #ifndef _WIN32_WCE
 	case WM_CONTEXTMENU:
-		ShowMenu(hDlg, hADPOPUP, 0, 0);
+		ShowMenu(hDlg, hADPOPUP, 0, 0, FALSE);
 		break;
 #endif
 

@@ -449,21 +449,21 @@ void mailbox_swap_files(HWND hWnd, int i, int j)
 }
 
 /*
- * mailbox_move_up - メールボックスの位置を上に移動する
+ * mailbox_move_up - move selected mailbox up one position in the list
  */
-void mailbox_move_up(HWND hWnd, BOOL select)
+BOOL mailbox_move_up(HWND hWnd, BOOL select)
 {
 	MAILBOX *TmpMailBox;
 	int i;
 
 	if(SelBox <= MAILBOX_USER || MailBoxCnt <= MAILBOX_USER + 1){
-		return;
+		return FALSE;
 	}
 
 	//Position of memory portable
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(TmpMailBox == NULL){
-		return;
+		return FALSE;
 	}
 	mailbox_swap_files(hWnd, SelBox, SelBox-1);
 	for(i = 0; i < MailBoxCnt; i++){
@@ -488,24 +488,25 @@ void mailbox_move_up(HWND hWnd, BOOL select)
 		SelectMBMenu(SelBox);
 		mailbox_menu_rebuild(hWnd, FALSE);
 	}
+	return TRUE;
 }
 
 /*
- * mailbox_move_down - メールボックスの位置を下に移動する
+ * mailbox_move_down - move selected mailbox down one position in the list
  */
-void mailbox_move_down(HWND hWnd, BOOL select)
+BOOL mailbox_move_down(HWND hWnd, BOOL select)
 {
 	MAILBOX *TmpMailBox;
 	int i;
 
 	if(SelBox < MAILBOX_USER || SelBox >= MailBoxCnt - 1 || MailBoxCnt <= MAILBOX_USER + 1){
-		return;
+		return FALSE;
 	}
 
 	//メモリの位置を移動
 	TmpMailBox = (MAILBOX *)mem_calloc(sizeof(MAILBOX) * MailBoxCnt);
 	if(TmpMailBox == NULL){
-		return;
+		return FALSE;
 	}
 	mailbox_swap_files(hWnd, SelBox, SelBox+1);
 	for(i = 0; i < MailBoxCnt; i++){
@@ -530,6 +531,7 @@ void mailbox_move_down(HWND hWnd, BOOL select)
 		SelectMBMenu(SelBox);
 		mailbox_menu_rebuild(hWnd, FALSE);
 	}
+	return TRUE;
 }
 
 /*

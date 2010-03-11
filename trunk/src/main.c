@@ -44,6 +44,7 @@
 #define ID_AUTOCHECK_TIMER		6
 #define ID_TIMEOUT_TIMER		7
 #define ID_NEWMAIL_TIMER		8
+#define ID_RESTORESEL_TIMER		9
 
 #define STATUS_DONE				0
 #define STATUS_CHECK			1
@@ -1305,7 +1306,7 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 /*
  * ShowMenu - post pop-up menu
  */
-void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
+void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL timer)
 {
 	HWND hListView;
 	RECT WndRect;
@@ -1394,7 +1395,9 @@ void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag)
 	TrackPopupMenu(GetSubMenu(hMenu, mpos), TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_LEFTBUTTON, 
 		x, y, 0, hWnd, NULL);
 #endif
-	PostMessage(hWnd, WM_COMMAND, ID_SEL_RESTORE, 0);
+	if (timer) {
+		SetTimer(hWnd, ID_RESTORESEL_TIMER, 10, NULL);
+	}
 	PostMessage(hWnd, WM_NULL, 0, 0);
 }
 
@@ -1926,6 +1929,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	static int tmpselbox = -1;
+	static BOOL pending = FALSE;
 	DWORD sel;
 
 	switch (msg) {
@@ -2074,6 +2078,17 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 			return 0;
 #endif
+		case WM_TIMER:
+			if (wParam == ID_RESTORESEL_TIMER && pending == FALSE) {
+				KillTimer(hWnd, wParam);
+				if (tmpselbox >= 0) {
+					SelBox = tmpselbox;
+					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)SelBox, 0);
+					tmpselbox = -1;
+				}
+				return 0;
+			}
+			break;
 
 		case WM_COMMAND:
 			if (LOWORD(wParam) == ID_MENU) {
@@ -2092,22 +2107,44 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEDOWNMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox < MailBoxCnt-1)));
 
 				SendMessage(hWnd, WM_NULL, 0, 0);
-				ShowMenu(hWnd, hMBPOPUP, 0, 0);
+				ShowMenu(hWnd, hMBPOPUP, 0, 0, TRUE);
 #ifdef _WIN32_WCE
 			} else if (LOWORD(wParam) == ID_MENUITEM_MBP_SETSIZE) {
 				if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBP_SIZE), hWnd, MBWidthProc, 0)) {
 					SetWindowSize(GetParent(hWnd), 0, 0);
 				}
 #endif
-			} else if (LOWORD(wParam) == ID_SEL_RESTORE) {
-				if (tmpselbox >= 0) {
-					SelBox = tmpselbox;
-					SendMessage(hWnd, LB_SETCURSEL, (WPARAM)SelBox, 0);
-					tmpselbox = -1;
+			} else if (LOWORD(wParam) == ID_MENUITEM_DELETEMAILBOX) {
+				TCHAR msg[MSG_SIZE];
+				sel = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
+				if (sel == MAILBOX_SEND || sel == RecvBox) {
+					break;
+				}
+				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+sel)->Name) ? (MailBox+sel)->Name : STR_MAILBOX_NONAME);
+				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+					break;
+				}
+				if (sel == SelBox) {
+					if (op.LazyLoadMailboxes > 0) {
+						// make sure SelBox-1 is loaded before deleting
+						mailbox_select(hWnd, SelBox-1);
+						mailbox_delete(hWnd, sel, TRUE, FALSE);
+					} else {
+						mailbox_select(hWnd, mailbox_delete(hWnd, sel, TRUE, FALSE));
+					}
+				} else {
+					mailbox_delete(hWnd, sel, TRUE, FALSE);
+				}
+				if (op.AutoSave != 0) {
+					SwitchCursor(FALSE);
+					ini_save_setting(hWnd, TRUE, FALSE, NULL);
+					SwitchCursor(TRUE);
 				}
 			} else {
 				// pass mailbox commands to main window
+				pending = TRUE;
 				SendMessage(GetParent(hWnd), msg, wParam, lParam);
+				pending = FALSE;
 			}
 			return 0;
 	}
@@ -5063,7 +5100,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
 				if (op.MBMenuWidth > 0) {
-					ShowMenu(hWnd, hMBPOPUP, 0, 4);
+					ShowMenu(hWnd, hMBPOPUP, 0, 4, FALSE);
 				} else {
 					if (GetDroppedStateMBMenu() == FALSE) {
 						SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
@@ -5074,12 +5111,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1);
+			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1, FALSE);
 			break;
 
 		//In position of mouse pop rise menu indicatory
 		case ID_MENU:
-			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 0);
+			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 0, FALSE);
 			break;
 
 		//====== file =========
@@ -6128,7 +6165,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
 		EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_STOP, (g_soc == -1));
 		SendMessage(hWnd, WM_NULL, 0, 0);
-		ShowMenu(hWnd, hPOPUP, 0, 2);
+		ShowMenu(hWnd, hPOPUP, 0, 2, FALSE);
 #else
 		switch (lParam) {
 #ifdef _WIN32_WCE
@@ -6136,7 +6173,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_ALLCHECK, !(g_soc == -1));
 			EnableMenuItem(GetSubMenu(hPOPUP, 0), ID_MENUITEM_STOP, (g_soc == -1));
 			SendMessage(hWnd, WM_NULL, 0, 0);
-			ShowMenu(hWnd, hPOPUP, 0, 2);
+			ShowMenu(hWnd, hPOPUP, 0, 2, FALSE);
 			break;
 #else
 		case WM_LBUTTONDOWN:
@@ -6167,7 +6204,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					}
 				}
 				SendMessage(hWnd, WM_NULL, 0, 0);
-				ShowMenu(hWnd, hPOPUP, 0, 0);
+				ShowMenu(hWnd, hPOPUP, 0, 0, FALSE);
 			}
 			break;
 #endif
