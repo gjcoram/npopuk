@@ -696,7 +696,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 #else
 	case WM_CONTEXTMENU:
 		SetViewMenu(GetParent(hWnd));
-		ShowMenu(GetParent(hWnd), hViewPop, 0, 0);
+		ShowMenu(GetParent(hWnd), hViewPop, 0, 0, FALSE);
 		return 0;
 #endif
 	}

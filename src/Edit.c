@@ -2066,7 +2066,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32_WCE
 		case ID_MENU:
 			SetEditMenu(hWnd);
-			ShowMenu(hWnd, hEditPop, 0, 0);
+			ShowMenu(hWnd, hEditPop, 0, 0, FALSE);
 			break;
 #endif
 
