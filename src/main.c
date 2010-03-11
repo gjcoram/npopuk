@@ -2116,24 +2116,24 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #endif
 			} else if (LOWORD(wParam) == ID_MENUITEM_DELETEMAILBOX) {
 				TCHAR msg[MSG_SIZE];
-				sel = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
-				if (sel == MAILBOX_SEND || sel == RecvBox) {
+				int DelBox = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
+				if (DelBox == MAILBOX_SEND || DelBox == RecvBox) {
 					break;
 				}
-				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+sel)->Name) ? (MailBox+sel)->Name : STR_MAILBOX_NONAME);
+				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+DelBox)->Name) ? (MailBox+DelBox)->Name : STR_MAILBOX_NONAME);
 				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 					break;
 				}
-				if (sel == SelBox) {
+				if (DelBox == SelBox) {
 					if (op.LazyLoadMailboxes > 0) {
 						// make sure SelBox-1 is loaded before deleting
 						mailbox_select(hWnd, SelBox-1);
-						mailbox_delete(hWnd, sel, TRUE, FALSE);
+						mailbox_delete(hWnd, DelBox, TRUE, FALSE);
 					} else {
-						mailbox_select(hWnd, mailbox_delete(hWnd, sel, TRUE, FALSE));
+						mailbox_select(hWnd, mailbox_delete(hWnd, DelBox, TRUE, FALSE));
 					}
 				} else {
-					mailbox_delete(hWnd, sel, TRUE, FALSE);
+					mailbox_delete(hWnd, DelBox, TRUE, FALSE);
 				}
 				if (op.AutoSave != 0) {
 					SwitchCursor(FALSE);

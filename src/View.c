@@ -688,7 +688,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 #else
 		if (GetKeyState(VK_MENU) < 0) {
 			SetViewMenu(GetParent(hWnd));
-			ShowMenu(GetParent(hWnd), hViewPop, 0, 0);
+			ShowMenu(GetParent(hWnd), hViewPop, 0, 0, FALSE);
 			return 0;
 		}
 #endif
@@ -3332,7 +3332,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #ifdef _WIN32_WCE_PPC
 		case ID_MENU:
 			SetViewMenu(hWnd);
-			ShowMenu(hWnd, hViewPop, 0, 0);
+			ShowMenu(hWnd, hViewPop, 0, 0, FALSE);
 			break;
 
 		case IDC_EDIT_BODY:
