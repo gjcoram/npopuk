@@ -126,7 +126,7 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 		RecvBox++;
 	}
 
-	// rename files above Index, watching out for collisions
+	// rename files of mailboxes numbered higher than Index, watching out for collisions
 	for (i = MailBoxCnt-1; Add == 1 && i >= Index; i--) {
 		if ((MailBox + i)->Filename == NULL) {
 			TCHAR defname[BUF_SIZE], oldname[BUF_SIZE];

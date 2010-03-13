@@ -2114,15 +2114,47 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					SetWindowSize(GetParent(hWnd), 0, 0);
 				}
 #endif
+			} else if (LOWORD(wParam) == ID_MENUITEM_ADDMAILBOX) {
+				int i, below;
+				if (MailBoxCnt >= MAX_MAILBOX_CNT) {
+					ErrorMessage(hWnd, STR_ERR_TOOMANYMAILBOXES);
+					return 0;
+				}
+				pending = TRUE;
+				below = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
+				if (tmpselbox == -1) {
+					tmpselbox = SelBox;
+				}
+				SelBox = mailbox_create(hWnd, 1, below + 1, FALSE, FALSE);
+				i = SetMailBoxType(hWnd, 0);
+				if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
+					mailbox_delete(hWnd, SelBox, FALSE, FALSE);
+					pending = FALSE;
+					return 0;
+				} else if (i == MAILBOX_IMPORT_SAVE) {
+					if (ImportSavebox(hWnd) == FALSE) {
+						mailbox_delete(hWnd, SelBox, FALSE, FALSE);
+						pending = FALSE;
+						return 0;
+					}
+					(MailBox+SelBox)->Type = MAILBOX_TYPE_SAVE;
+					(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
+				}
+				if (op.AutoSave != 0) {
+					SwitchCursor(FALSE);
+					ini_save_setting(hWnd, FALSE, FALSE, NULL);
+					SwitchCursor(TRUE);
+				}
+				pending = FALSE;
 			} else if (LOWORD(wParam) == ID_MENUITEM_DELETEMAILBOX) {
 				TCHAR msg[MSG_SIZE];
 				int DelBox = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
 				if (DelBox == MAILBOX_SEND || DelBox == RecvBox) {
-					break;
+					return 0;
 				}
 				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+DelBox)->Name) ? (MailBox+DelBox)->Name : STR_MAILBOX_NONAME);
 				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
-					break;
+					return 0;
 				}
 				if (DelBox == SelBox) {
 					if (op.LazyLoadMailboxes > 0) {
