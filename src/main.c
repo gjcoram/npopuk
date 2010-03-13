@@ -2125,7 +2125,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				if (tmpselbox == -1) {
 					tmpselbox = SelBox;
 				}
-				SelBox = mailbox_create(hWnd, 1, below + 1, FALSE, FALSE);
+				SelBox = mailbox_create(hWnd, 1, below + 1, TRUE, -1);
 				i = SetMailBoxType(hWnd, 0);
 				if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
 					mailbox_delete(hWnd, SelBox, FALSE, FALSE);

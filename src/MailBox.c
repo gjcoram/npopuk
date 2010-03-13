@@ -171,9 +171,9 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 			SelectMBMenu(i);
 			Index = i;
 			mailbox_menu_rebuild(hWnd, FALSE);
-		} else {
+		} else if (SelFlag == FALSE) {
 			SelectMBMenu(SelBox);
-		}
+		} // else SelFlag == -1, from MBPane context menu
 	}
 	//Only guaranty of memory
 	return Index;
