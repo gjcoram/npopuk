@@ -2543,7 +2543,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			i = SetMailBoxType(hDlg, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			ret = TRUE;
-			if (i == -1 || (i == 0 && SetMailBoxOption(hDlg) == FALSE)) {
+			if (i == -1 || (i == 0 && SetMailBoxOption(hDlg, FALSE) == FALSE)) {
 				mailbox_delete(hDlg, SelBox, FALSE, FALSE);
 				ret = FALSE;
 			} else if (i == MAILBOX_IMPORT_SAVE) {
@@ -2614,7 +2614,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			if (tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 				ret = SetSaveBoxName(hDlg);
 			} else {
-				ret = SetMailBoxOption(hDlg);
+				ret = SetMailBoxOption(hDlg, FALSE);
 			}
 			if (ret == TRUE) {
 				p = tpMailBox->Name;
@@ -2746,7 +2746,7 @@ BOOL CALLBACK StartConfigProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 /*
  * SetMailBoxOption - アカウントの設定を行う
  */
-BOOL SetMailBoxOption(HWND hWnd)
+BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
@@ -2820,7 +2820,9 @@ BOOL SetMailBoxOption(HWND hWnd)
 		DeleteMBMenu(SelBox);
 		InsertMBMenu(SelBox, new_name);
 	}
-	mailbox_select(hWnd, SelBox);
+	if (SelFlag) {
+		mailbox_select(hWnd, SelBox);
+	}
 	return TRUE;
 }
 

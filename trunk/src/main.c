@@ -2127,7 +2127,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				}
 				SelBox = mailbox_create(hWnd, 1, below + 1, TRUE, -1);
 				i = SetMailBoxType(hWnd, 0);
-				if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
+				if (i == -1 || (i == 0 && SetMailBoxOption(hWnd, FALSE) == FALSE)) {
 					mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 					pending = FALSE;
 					return 0;
@@ -2139,6 +2139,10 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					}
 					(MailBox+SelBox)->Type = MAILBOX_TYPE_SAVE;
 					(MailBox+SelBox)->NeedsSave = MAILITEMS_CHANGED;
+					DeleteMBMenu(SelBox);
+					InsertMBMenu(SelBox,
+						(((MailBox + SelBox)->Name == NULL || *(MailBox + SelBox)->Name == TEXT('\0'))
+						? STR_MAILBOX_NONAME : (MailBox + SelBox)->Name));
 				}
 				if (op.AutoSave != 0) {
 					SwitchCursor(FALSE);
@@ -4424,7 +4428,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
-			SetMailBoxOption(hWnd);
+			SetMailBoxOption(hWnd, TRUE);
 			ini_save_setting(hWnd, FALSE, FALSE, NULL);
 		}
 
@@ -5341,7 +5345,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, mailbox_create(hWnd, 1, old_selbox + 1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
-			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd) == FALSE)) {
+			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd, TRUE) == FALSE)) {
 				mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 				mailbox_select(hWnd, old_selbox);
 				break;
@@ -5370,7 +5374,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (SetSaveBoxName(hWnd) == FALSE) {
 					break;
 				}
-			} else if (SetMailBoxOption(hWnd) == FALSE) {
+			} else if (SetMailBoxOption(hWnd, FALSE) == FALSE) {
 				break;
 			}
 			if (op.AutoSave != 0) {
