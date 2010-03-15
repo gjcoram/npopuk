@@ -2760,7 +2760,12 @@ BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailIte
 	TCHAR *buf;
 	TCHAR *tmp;
 	int len = 0, cnt = 0, idx;
+	BOOL retval = TRUE;
 	
+	if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {
+		return FALSE;
+	}
+
 	if (fname == NULL) {
 		// ファイルの作成
 		if (tpMailItem->Subject != NULL && *tpMailItem->Subject != TEXT('\0')) {
@@ -2772,12 +2777,9 @@ BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailIte
 		} else {
 			lstrcpy(path, TEXT(".txt"));
 		}
-		// ファイル名の取得
+		// FileSave dialog to choose path and filename
 		if (filename_select(hWnd, path, TEXT("txt"), STR_TEXT_FILTER, FILE_SAVE_MSG, &op.SavedSaveDir) == FALSE) {
 			return TRUE;
-		}
-		if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {
-			return FALSE;
 		}
 		fname = path;
 	}
@@ -2852,15 +2854,12 @@ BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailIte
 		}
 	}
 
-	// 本文の保存
-	if (buf != NULL && file_write_ascii(hFile, buf, lstrlen(buf)) == FALSE) {
-		CloseHandle(hFile);
-		mem_free(&buf);
-		return FALSE;
+	if (buf != NULL) {
+		retval = file_write_ascii(hFile, buf, lstrlen(buf));
 	}
 	CloseHandle(hFile);
 	mem_free(&buf);
-	return TRUE;
+	return retval;
 }
 
 /*
