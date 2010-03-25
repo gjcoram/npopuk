@@ -557,6 +557,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetControlFont(hDlg);
 		SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME STR_UNICODE);
 		SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
+		ShowWindow(GetDlgItem(hDlg, IDC_VISIT_OPENSSL), SW_HIDE);
 		if ((int)lParam == ID_MENUITEM_ABOUT) {
 			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT);
 		} else {
