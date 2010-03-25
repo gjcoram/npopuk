@@ -855,6 +855,7 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if ((int)lParam == ID_MENUITEM_ABOUT) {
 			SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), APP_NAME STR_UNICODE TEXT(" (SSL)"));
 			SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_WEB_ADDR);
+			ShowWindow(GetDlgItem(hDlg, IDC_VISIT_OPENSSL), SW_HIDE);
 #ifdef _WIN32_WCE
 			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_TEXT TEXT("\r\n") STR_ABOUT_OPENSSL);
 #else
@@ -870,7 +871,8 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// 0 = SSLEAY_VERSION
 			SetWindowText(GetDlgItem(hDlg, IDC_APPNAME), SSLeay_version(0));
 #endif
-			SetWindowText(GetDlgItem(hDlg, IDC_VISIT_WEB), STR_OPENSSL_WEB_ADDR);
+			SetWindowText(GetDlgItem(hDlg, IDC_VISIT_OPENSSL), STR_OPENSSL_WEB_ADDR);
+			ShowWindow(GetDlgItem(hDlg, IDC_VISIT_WEB), SW_HIDE);
 			SetWindowText(GetDlgItem(hDlg, IDC_ABOUT_TEXT), STR_ABOUT_OPENSSL);
 #ifdef _WIN32_WCE
 			ShowWindow(GetDlgItem(hDlg, IDC_VISIT_WM_HELP), SW_HIDE);
@@ -931,6 +933,9 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case IDC_VISIT_WEB:
 			ShellOpen(STR_WEB_ADDR);
+			break;
+		case IDC_VISIT_OPENSSL:
+			ShellOpen(STR_OPENSSL_WEB_ADDR);
 			break;
 
 #ifdef _WIN32_WCE
