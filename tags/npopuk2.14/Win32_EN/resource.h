@@ -290,6 +290,7 @@
 #define IDC_CHECK_INIPASS               1106
 #define IDC_RADIO_FILLIN                1107
 #define IDC_RADIO_FIX_UIDL              1108
+#define IDC_VISIT_OPENSSL               1109
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202
