@@ -574,6 +574,7 @@ void ini_read_general(HWND hWnd)
 		// value was in minutes before, now in seconds
 		op.TimeoutInterval *= 60;
 	}
+	op.SSLMaxLoopCount = profile_get_int(GENERAL, TEXT("SSLMaxLoopCount"), 9000000);
 	op.ReorderSendbox = profile_get_int(GENERAL, TEXT("ReorderSendbox"), 1);
 
 	op.ViewClose = profile_get_int(GENERAL, TEXT("ViewClose"), 1);
@@ -1302,6 +1303,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("CheckEndExec"), op.CheckEndExec);
 	profile_write_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), op.CheckEndExecNoDelMsg);
 	profile_write_int(GENERAL, TEXT("TimeoutInterval"), op.TimeoutInterval);
+	profile_write_int(GENERAL, TEXT("SSLMaxLoopCount"), op.SSLMaxLoopCount);
 	profile_write_int(GENERAL, TEXT("ReorderSendbox"), op.ReorderSendbox);
 
 	profile_write_int(GENERAL, TEXT("ViewClose"), op.ViewClose);

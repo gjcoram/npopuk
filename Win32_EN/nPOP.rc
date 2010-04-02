@@ -1682,6 +1682,7 @@ BEGIN
     ID_MENUITEM_ALLCHECK    "Check all accounts"
     ID_MENUITEM_ALLEXEC     "Update all accounts"
     ID_MENUITEM_STOP        "Stop"
+    ID_MENUITEM_ADDRESS     "Address book"
     ID_MENUITEM_RAS_CONNECT "Dial-up Connect"
     ID_MENUITEM_RAS_DISCONNECT "Dial-up Disconnect"
     ID_MENUITEM_FLAGMARK    "Flag for follow-up"
