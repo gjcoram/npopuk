@@ -31,7 +31,6 @@ extern int _stricmp(const char *, const char *);
 /* Define */
 #define CRLF_LEN				2
 #define MAX_DEPTH				9
-#define MAX_LOOP_SSL_WAIT		1000000
 
 #ifdef _WIN32_WCE
 #define RECV_SIZE				4096		// 受信バッファサイズ
@@ -735,8 +734,9 @@ static OPENSSL_INFO *ssl_init(
 {
 	OPENSSL_INFO *si;
 	SSL_METHOD *sslm;
+	SYSTEMTIME st;
 	long verify_result;
-	int ret, e, loop_cnt;
+	int ret, e, loop_cnt, hflag, tstart, tnow;
 
 	if (ssl_type == -1) {
 		return 0;
@@ -814,23 +814,35 @@ static OPENSSL_INFO *ssl_init(
 		return 0;
 	}
 	// SSL開始
-	loop_cnt = 0;
-	for (loop_cnt = 0; loop_cnt < op.SSLMaxLoopCount; loop_cnt++) {
-		ret = SSL_connect(si->ssl);
-		e = SSL_get_error(si->ssl, ret);
-		if (e == SSL_ERROR_WANT_CONNECT ||
-			e == SSL_ERROR_WANT_READ ||
-			e == SSL_ERROR_WANT_WRITE) {
-			continue;
+	GetLocalTime(&st);
+	tstart = st.wMinute * 60 + st.wSecond;
+	hflag = st.wHour + 1;
+	while (hflag) {
+		for (loop_cnt = 0; loop_cnt < 1000; loop_cnt++) {
+			ret = SSL_connect(si->ssl);
+			e = SSL_get_error(si->ssl, ret);
+			if (e == SSL_ERROR_WANT_CONNECT ||
+				e == SSL_ERROR_WANT_READ ||
+				e == SSL_ERROR_WANT_WRITE) {
+				continue;
+			}
+			hflag = 0;
+			break;
 		}
-		break;
+		if (hflag) {
+			// check timeout
+			GetLocalTime(&st);
+			tnow = st.wMinute * 60 + st.wSecond;
+			if (hflag != st.wHour + 1) {
+				// wrapped an hour
+				tnow += 60*60;
+			}
+			if (tnow - tstart > op.TimeoutInterval) {
+				break;
+			}
+		}
 	}
-	if (op.SocLog > 2) {
-		TCHAR msg[MSG_SIZE];
-		wsprintf(msg, TEXT(" ssl_init loop_cnt=%d\r\n"), loop_cnt);
-		log_save(msg);
-	}
-	if (loop_cnt > op.SSLMaxLoopCount) {
+	if (hflag) {
 		SSL_free(si->ssl);
 		SSL_CTX_free(si->ctx);
 		LocalFree(si);

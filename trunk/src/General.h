@@ -514,7 +514,6 @@ typedef struct _OPTION {
 	int CheckEndExec;
 	int CheckEndExecNoDelMsg;
 	int TimeoutInterval;
-	int SSLMaxLoopCount;
 	int ReorderSendbox;
 
 	int ViewClose;
