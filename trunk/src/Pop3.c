@@ -764,7 +764,11 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	init_recv = FALSE;
 	mail_received = 0;
-	disable_top = (op.ListDownload != 0) ? TRUE : FALSE;
+	if (tpMailBox->UseGlobalRecv) {
+		disable_top = (op.ListDownload != 0) ? TRUE : FALSE;
+	} else {
+		disable_top = (tpMailBox->ListDownload != 0) ? TRUE : FALSE;
+	}
 
 	// UIDLの初期化
 	if (uidl_init(tpMailBox->MailCnt) == FALSE) {
@@ -1070,9 +1074,13 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		for (r = p; *r != ' ' && *r != '\0'; r++);
 		mail_size = len = a2i(p);
 		if (disable_top == FALSE) {
-			// 受信バッファの初期サイズ
-			len = (len > 0 && len < (op.ListGetLine + HEAD_LINE) * LINE_LEN)
-				? len : ((op.ListGetLine + HEAD_LINE) * LINE_LEN);
+			int numchars;
+			if (tpMailBox->UseGlobalRecv) {
+				numchars = (op.ListGetLine + HEAD_LINE) * LINE_LEN;
+			} else {
+				numchars = (tpMailBox->ListGetLine + HEAD_LINE) * LINE_LEN;
+			}
+			len = (len > 0 && len < numchars) ? len : numchars;
 		}
 	}
 	receiving_data = FALSE;
@@ -1091,7 +1099,14 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 		return POP_RETR;
 	}
-	return send_command_top(hWnd, soc, list_get_no, ErrStr, op.ListGetLine, POP_TOP);
+
+	if (tpMailBox->UseGlobalRecv) {
+		len = op.ListGetLine;
+	} else {
+		len = tpMailBox->ListGetLine;
+	}
+
+	return send_command_top(hWnd, soc, list_get_no, ErrStr, len, POP_TOP);
 }
 
 /*

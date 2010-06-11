@@ -124,6 +124,7 @@ static int GetFilterActionInt(TCHAR *buf);
 static TCHAR *GetFilterActionString(int i);
 static void SetFilterList(HWND hListView);
 static void EnableRasOption(HWND hDlg, int Flag);
+static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1819,6 +1820,143 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 /*
+ * RecvSetProc - Recv options for an account
+ */
+static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL enable;
+	int oldglob, newlsm;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		SetControlFont(hDlg);
+
+		SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_SETCHECK, tpOptionMailBox->UseGlobalRecv, 0);
+
+		if (tpOptionMailBox->UseGlobalRecv) {
+			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, op.ListGetLine, FALSE);
+
+			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
+			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
+
+			switch (op.ListSaveMode) {
+			case 0:
+				SendDlgItemMessage(hDlg, IDC_RADIO_NOSAVE, BM_SETCHECK, 1, 0);
+				break;
+			case 1:
+				SendDlgItemMessage(hDlg, IDC_RADIO_HEADSAVE, BM_SETCHECK, 1, 0);
+				break;
+			case 2:
+				SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_SETCHECK, 1, 0);
+				break;
+			}
+
+			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), FALSE);
+			//EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SHOWHEAD), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_NOSAVE), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_HEADSAVE), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_ALLSAVE), FALSE);
+		} else {
+			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->ListGetLine, FALSE);
+
+			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, tpOptionMailBox->ListDownload, 0);
+			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, tpOptionMailBox->ShowHeader, 0);
+
+			switch (tpOptionMailBox->ListSaveMode) {
+			case 0:
+				SendDlgItemMessage(hDlg, IDC_RADIO_NOSAVE, BM_SETCHECK, 1, 0);
+				break;
+			case 1:
+				SendDlgItemMessage(hDlg, IDC_RADIO_HEADSAVE, BM_SETCHECK, 1, 0);
+				break;
+			case 2:
+				SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_SETCHECK, 1, 0);
+				break;
+			}
+
+			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), !tpOptionMailBox->ListDownload);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), !tpOptionMailBox->ListDownload);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), TRUE);
+			//EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SHOWHEAD), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_NOSAVE), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_HEADSAVE), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_ALLSAVE), TRUE);
+		}
+		break;
+
+	case WM_NOTIFY:
+		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_EDIT_READLINE:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+			break;
+
+		case IDC_CHECK_LISTDOWNLOAD:
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) == 0) {
+				enable = !SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), enable);
+				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable);
+			}
+			break;
+
+		case IDC_CHECK_GLOBAL_RECV:
+			enable = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) ? FALSE : TRUE;
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), enable);
+			//EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SHOWHEAD), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_NOSAVE), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_HEADSAVE), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_ALLSAVE), enable);
+			if (enable && SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0)) {
+				enable = FALSE;
+			}
+			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable);
+			break;
+
+		case IDOK:
+			oldglob = tpOptionMailBox->UseGlobalRecv;
+			tpOptionMailBox->UseGlobalRecv = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0);
+			if (tpOptionMailBox->UseGlobalRecv == 0) {
+				tpOptionMailBox->ListGetLine = GetDlgItemInt(hDlg, IDC_EDIT_READLINE, NULL, FALSE);
+				tpOptionMailBox->ListDownload = SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
+				//tpOptionMailBox->ShowHeader = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_GETCHECK, 0, 0);
+
+				if (SendDlgItemMessage(hDlg, IDC_RADIO_NOSAVE, BM_GETCHECK, 0, 0) == 1) {
+					newlsm = 0;
+				} else if (SendDlgItemMessage(hDlg, IDC_RADIO_HEADSAVE, BM_GETCHECK, 0, 0) == 1) {
+					newlsm = 1;
+				} else { // if (SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_GETCHECK, 0, 0) == 1) {
+					newlsm = 2;
+				}
+				if ( (oldglob == 0 && tpOptionMailBox->ListSaveMode != newlsm) ||
+					 (oldglob != 0 && op.ListSaveMode != newlsm) ) {
+					tpOptionMailBox->NeedsSave |= MAILITEMS_CHANGED;
+					tpOptionMailBox->ListSaveMode = newlsm;
+				}
+			} else {
+				if (tpOptionMailBox->ListSaveMode != op.ListSaveMode) {
+					tpOptionMailBox->ListSaveMode = op.ListSaveMode;
+					tpOptionMailBox->NeedsSave |= MAILITEMS_CHANGED;
+				}
+			}
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
  * GetConfigFile - open and parse internet mail configuration file
  */
 static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
@@ -2750,7 +2888,7 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
-	HPROPSHEETPAGE hpsp[5];
+	HPROPSHEETPAGE hpsp[6];
 	TCHAR old_name[BUF_SIZE], new_name[BUF_SIZE];
 
 	tpOptionMailBox = (MailBox + SelBox);
@@ -2774,12 +2912,12 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 	psp.pfnDlgProc = SmtpSetProc;
 	hpsp[1] = CreatePropertySheetPage(&psp);
 
-	//Signature
+	// Signature
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_SIG);
 	psp.pfnDlgProc = MakeSetProc;
 	hpsp[2] = CreatePropertySheetPage(&psp);
 
-	//Filter
+	// Filter
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_FILTER);
 	psp.pfnDlgProc = FilterSetProc;
 	hpsp[3] = CreatePropertySheetPage(&psp);
@@ -2788,6 +2926,11 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_RAS);
 	psp.pfnDlgProc = RasSetProc;
 	hpsp[4] = CreatePropertySheetPage(&psp);
+
+	// Recv
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_ACCOUNT_RECV);
+	psp.pfnDlgProc = RecvSetProc;
+	hpsp[5] = CreatePropertySheetPage(&psp);
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof_PROPSHEETHEADER;
@@ -2885,7 +3028,7 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				newlsm = 0;
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_HEADSAVE, BM_GETCHECK, 0, 0) == 1) {
 				newlsm = 1;
-			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_GETCHECK, 0, 0) == 1) {
+			} else { // if (SendDlgItemMessage(hDlg, IDC_RADIO_ALLSAVE, BM_GETCHECK, 0, 0) == 1) {
 				newlsm = 2;
 			}
 			if (op.ListSaveMode != newlsm) {
@@ -4829,6 +4972,11 @@ static BOOL CALLBACK SendMoreProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		tpMailItem = (MAILITEM *)lParam;
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 
+		if ((MailBox+SelBox)->UseReplyToForFrom) {
+			SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYISFROM);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYTO);
+		}
 		SetReplyToCombo(hDlg, tpMailItem);
 
 		/////////////////////// MRP //////////////////////
@@ -5561,7 +5709,11 @@ static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem)
 	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
 	cnt = 0;
 	sel = -1;
-	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
+	if (tpMailBox->UseReplyToForFrom == 0) {
+		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
+	} else {
+		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_DEFAULT_FROM);
+	}
 	if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
 		sel = cnt = 1;
@@ -5742,9 +5894,12 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendDlgItemMessage(hDlg, IDC_CHECK_MARKSEND, BM_SETCHECK, 1, 0);
 			}
 		} else {
-
 			if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) != NULL) {
-
+				if ((MailBox+mb)->UseReplyToForFrom) {
+					SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYISFROM);
+				} else {
+					SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYTO);
+				}
 				SetReplyToCombo(hDlg, tpMailItem);
 
 				/////////////////////// MRP //////////////////////
@@ -6165,6 +6320,11 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) != NULL) {
 						// GJC update reply-to
+						if ((MailBox+i)->UseReplyToForFrom) {
+							SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYISFROM);
+						} else {
+							SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYTO);
+						}
 						if (tpTmpMailItem->DefReplyTo == TRUE) {
 							sel = 0;
 							p = (MailBox + i)->ReplyTo;

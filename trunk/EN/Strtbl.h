@@ -412,6 +412,9 @@
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
 #define STR_FWD_ORIG_MSG			TEXT(" (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
+#define STR_DEFAULT_FROM			TEXT("(Default)")
+#define STR_REPLYTO                 TEXT("R&eplyTo:")
+#define STR_REPLYISFROM             TEXT("   From:")
 
 // Mail Prop
 #define STR_MAILPROP_HEADER			TEXT("Header")
