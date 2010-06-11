@@ -560,7 +560,7 @@ BEGIN
     LTEXT           "&Account:",IDC_STATIC,6,8,29,10
     COMBOBOX        IDC_COMBO_SMTP,40,5,85,130,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "R&eplyTo:",IDC_STATIC,135,8,30,10
+    LTEXT           "R&eplyTo:",IDC_REPLY_OR_FROM,135,8,30,10
     COMBOBOX        IDC_COMBO_REPLYTO,168,5,117,75,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP | CBS_AUTOHSCROLL
     PUSHBUTTON      "&To:",IDC_BUTTON_TO,5,25,30,12
@@ -731,6 +731,30 @@ BEGIN
                     BS_AUTORADIOBUTTON,10,85,105,10
     CONTROL         "&Nothing saved",IDC_RADIO_NOSAVE,"Button",
                     BS_AUTORADIOBUTTON,10,99,105,10
+END
+
+IDD_DIALOG_ACCOUNT_RECV DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Recv"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Use global option",IDC_CHECK_GLOBAL_RECV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,10,120,10
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,32,95,10
+    EDITTEXT        IDC_EDIT_READLINE,111,30,40,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "&Download entire body when checking",
+                    IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,50,165,10
+//    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,15,54,120,10
+    GROUPBOX        "Account messages",IDC_STATIC,15,72,185,58
+    CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,85,120,10
+    CONTROL         "&Only header is saved",IDC_RADIO_HEADSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,100,105,10
+    CONTROL         "&Nothing saved",IDC_RADIO_NOSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,114,105,10
 END
 
 IDD_DIALOG_OPTION_SEND DIALOGEX 0, 0, 217, 158

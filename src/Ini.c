@@ -1040,6 +1040,17 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->RasEntry = profile_alloc_string(buf, TEXT("RasEntry"), TEXT(""));
 		(MailBox + num)->RasReCon = profile_get_int(buf, TEXT("RasReCon"), 0);
 
+		// Recv
+		(MailBox + num)->UseGlobalRecv = profile_get_int(buf, TEXT("UseGlobalRecv"), 1);
+		if ((MailBox + num)->UseGlobalRecv == 0) {
+			(MailBox + num)->ShowHeader = profile_get_int(buf, TEXT("ShowHeader"), 0);
+			(MailBox + num)->ListGetLine = profile_get_int(buf, TEXT("ListGetLine"), 50);
+			(MailBox + num)->ListDownload = profile_get_int(buf, TEXT("ListDownload"), 0);
+			(MailBox + num)->ListSaveMode = profile_get_int(buf, TEXT("ListSaveMode"), 2);
+		} else {
+			(MailBox + num)->ListSaveMode = op.ListSaveMode;
+		}
+
 		if (op.LazyLoadMailboxes == 0) {
 			if ((MailBox+num)->Filename == NULL) {
 				wsprintf(buf, TEXT("MailBox%d.dat"), i);
@@ -1731,6 +1742,21 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_int(buf, TEXT("RasMode"), (MailBox + j)->RasMode);
 		profile_write_string(buf, TEXT("RasEntry"), (MailBox + j)->RasEntry);
 		profile_write_int(buf, TEXT("RasReCon"), (MailBox + j)->RasReCon);
+
+		// Recv
+		profile_write_int(buf, TEXT("UseGlobalRecv"), (MailBox + j)->UseGlobalRecv);
+		if ((MailBox + j)->UseGlobalRecv) {
+			profile_delete_key(buf, TEXT("ShowHeader"));
+			profile_delete_key(buf, TEXT("ListGetLine"));
+			profile_delete_key(buf, TEXT("ListDownload"));
+			profile_delete_key(buf, TEXT("ListSaveMode"));
+		} else {
+			profile_write_int(buf, TEXT("ShowHeader"), (MailBox + j)->ShowHeader);
+			profile_write_int(buf, TEXT("ListGetLine"), (MailBox + j)->ListGetLine);
+			profile_write_int(buf, TEXT("ListDownload"), (MailBox + j)->ListDownload);
+			profile_write_int(buf, TEXT("ListSaveMode"), (MailBox + j)->ListSaveMode);
+		}
+
 	}
 	// GJC clear keys from deleted mailboxes
 	found = TRUE;

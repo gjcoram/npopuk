@@ -4271,14 +4271,14 @@ static void AutoSave_Mailboxes(HWND hWnd)
 			continue;
 		}
 		if ((tpMailBox->NeedsSave & MAILITEMS_CHANGED) && 
-			((op.ListSaveMode != 0) || (tpMailBox->Type == MAILBOX_TYPE_SAVE))) {
+			((tpMailBox->ListSaveMode != 0) || (tpMailBox->Type == MAILBOX_TYPE_SAVE))) {
 			if (tpMailBox->Filename == NULL) {
 				wsprintf(buf, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
 			} else {
 				lstrcpy(buf, tpMailBox->Filename);
 			}
 			file_save_mailbox(buf, DataDir, i, FALSE, TRUE,
-				(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+				(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 			DidOne = TRUE;
 		}
 	}
@@ -5453,7 +5453,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					lstrcpy(buf, tpMailBox->Filename);
 				}
 				file_save_mailbox(buf, DataDir, SelBox, FALSE, FALSE,
-					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 			}
 			break;
 

@@ -651,6 +651,13 @@ typedef struct _MAILBOX {
 	TCHAR *RasEntry;
 	int RasReCon;
 
+	// Recv
+	int UseGlobalRecv;
+	int ListGetLine;
+	int ListDownload;
+	int ShowHeader;
+	int ListSaveMode;
+
 	// MailItem
 	struct _MAILITEM **tpMailItem;
 	int MailItemCnt;

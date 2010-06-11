@@ -23,6 +23,7 @@
 #define IDR_MENU_VIEW                   112
 #define IDB_TOOLBAR                     116
 #define IDB_TOOLBAR_VIEW                117
+#define IDD_DIALOG_ACCOUNT_RECV         118
 #define IDD_DIALOG_OPTION_RECV          119
 #define IDD_DIALOG_INPUTPASS            120
 #define IDI_ICON_NEW                    121
@@ -59,6 +60,7 @@
 #define IDD_DIALOG_FILTER               154
 #define IDD_DIALOG_FILTER_EDIT          155
 #define IDI_ICON_FLAG                   156
+#define IDC_CHECK_GLOBAL_RECV           157
 #define IDD_DIALOG_INITMAILBOX          160
 #define IDI_ICON_ERROR                  161
 #define IDI_ICON_CHECK                  162
@@ -356,6 +358,7 @@
 #define IDR_ADDRESS_POPUP               1245
 #define IDR_MENU_EDIT_POPUP             1246
 #define IDC_SHOW_NAVIG                  1247
+#define IDC_REPLY_OR_FROM               1248
 #define IDD_DIALOG_SAVEATTACH           1250
 #define IDC_BUTTON_ALLSEL               1251
 #define IDC_BUTTON_NOSEL                1252
