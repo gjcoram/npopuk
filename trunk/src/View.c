@@ -1392,11 +1392,15 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			} else {
 				str = STR_MSG_PARTIAL;
 			}
-			p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(str) + 1));
-			if (p != NULL) {
-				str_join_t(p, buf, TEXT("\r\n\r\n"), str, (TCHAR *)-1);
-				mem_free(&buf);
-				buf = p;
+			if (buf == NULL) {
+				buf = alloc_copy_t(str);
+			} else {
+				p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 4 + lstrlen(str) + 1));
+				if (p != NULL) {
+					str_join_t(p, buf, TEXT("\r\n\r\n"), str, (TCHAR *)-1);
+					mem_free(&buf);
+					buf = p;
+				}
 			}
 		}
 		if (MultiPartCnt >= 2 && op.ViewShowAttach) {
