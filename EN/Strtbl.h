@@ -372,6 +372,7 @@
 #define STR_FILTER_ACTION			TEXT("Action")
 #define STR_FILTER_ITEM1			TEXT("Item 1")
 #define STR_FILTER_CONTENT1			TEXT("Content 1")
+#define STR_FILTER_SAMPLE			TEXT("*v1agra*")
 #define STR_FILTER_BOOLEAN			TEXT("Op")
 #define STR_FILTER_ITEM2			TEXT("Item 2")
 #define STR_FILTER_CONTENT2			TEXT("Content 2")
@@ -412,7 +413,6 @@
 #define STR_FWDATT_PREFIX			TEXT("Fwd:")
 #define STR_FWD_ORIG_MSG			TEXT(" (original message)")
 #define STR_OMIT_REPLYTO			TEXT("(Omit)")
-#define STR_DEFAULT_FROM			TEXT("(Default)")
 #define STR_REPLYTO                 TEXT("R&eplyTo:")
 #define STR_REPLYISFROM             TEXT("   From:")
 
