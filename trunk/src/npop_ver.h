@@ -19,7 +19,7 @@
 #define NPOPMAJOR  2
 #define NPOPMINOR 15
 #define NPOPBETA  3
-#define NPOPPATCH 1
+#define NPOPPATCH 2
 
 
 // convert text, blanks, or zeroes to zeroes
@@ -66,7 +66,8 @@
 
 #else
 #if NPOPPATCH
-#define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c "t" #d
+//#define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c "t" #d
+#define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c "p" #d
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d)
 //#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Test " #d
 #define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Patch " #d

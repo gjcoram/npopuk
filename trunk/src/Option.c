@@ -945,6 +945,12 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD1));
 		SetComboItem(GetDlgItem(hDlg, IDC_COMBO_HEAD2));
 
+		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT1, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT2, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_FILTER_FWDADDR, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_COMBO_HEAD1, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_COMBO_HEAD2, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+
 #ifdef _WIN32_WCE_PPC
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_CONTENT1),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
@@ -995,6 +1001,8 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			EnableWindow(GetDlgItem(hDlg, IDC_COMBO_FILT2BOX), FALSE);
 			ShowWindow(GetDlgItem(hDlg, IDC_FILTER_FWDADDR), SW_HIDE);
 			SendDlgItemMessage(hDlg, IDC_FILTER_AND, BM_SETCHECK, 1, 0);
+			SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT1, WM_SETTEXT, 0, (LPARAM)STR_FILTER_SAMPLE);
+			SendDlgItemMessage(hDlg, IDC_COMBO_HEAD1, WM_SETTEXT, 0, (LPARAM)TEXT("Subject:"));
 			break;
 		}
 
@@ -1070,7 +1078,6 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 3, buf, BUF_SIZE - 1);
 		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT1, WM_SETTEXT, 0, (LPARAM)buf);
-		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT1, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 4, buf, BUF_SIZE - 1);
@@ -1089,7 +1096,6 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 6, buf, BUF_SIZE - 1);
 		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT2, WM_SETTEXT, 0, (LPARAM)buf);
-		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT2, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		break;
 
 	case WM_CLOSE:
@@ -5043,6 +5049,9 @@ static BOOL CALLBACK SendMoreProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 						}
 						i += sbox;
 						p = (MailBox + i)->ReplyTo;
+						if ((p == NULL || *p == TEXT('\0')) && (MailBox+i)->UseReplyToForFrom == 1) {
+							p = (MailBox + i)->MailAddress;
+						}
 						if (((p == NULL || *p == TEXT('\0')) && lstrcmp(buf, STR_OMIT_REPLYTO) != 0)
 							|| (p != NULL && *p != TEXT('\0') && lstrcmp(buf, p) != 0)) {
 							tpMailItem->DefReplyTo = FALSE;
@@ -5707,16 +5716,18 @@ static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem)
 
 	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETEXTENDEDUI, TRUE, 0);
 	SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_SETHORIZONTALEXTENT, (WPARAM)100, 0);
-	cnt = 0;
+	cnt = -1;
 	sel = -1;
 	if (tpMailBox->UseReplyToForFrom == 0) {
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
-	} else {
-		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_DEFAULT_FROM);
+		cnt++;
+	} else if (mb_replyto == NULL) {
+		mb_replyto = tpMailBox->MailAddress;
 	}
 	if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)tpMailItem->ReplyTo);
-		sel = cnt = 1;
+		sel = (tpMailBox->UseReplyToForFrom == 0) ? 1 : 0;
+		cnt++;
 	}
 	// global replyto
 	if (op.AltReplyTo != NULL && *op.AltReplyTo != TEXT('\0')) {
@@ -6319,15 +6330,26 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					SetButtonText(GetDlgItem(hDlg, IDC_BUTTON_CC), STR_SETSEND_BTN_CC, BtnFlag);
 
 					if (GetDlgItem(hDlg, IDC_COMBO_REPLYTO) != NULL) {
+						BOOL has = FALSE;
 						// GJC update reply-to
+						buf[0]=TEXT('\0');
+						SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETLBTEXT, 0, (LPARAM)buf);
+						has = (lstrcmp(buf, STR_OMIT_REPLYTO) == 0) ? TRUE : FALSE;
 						if ((MailBox+i)->UseReplyToForFrom) {
+							if (has == TRUE)
+								SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_DELETESTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
 							SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYISFROM);
 						} else {
+							if (has == FALSE)
+								SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_INSERTSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
 							SendDlgItemMessage(hDlg, IDC_REPLY_OR_FROM, WM_SETTEXT, 0, (LPARAM)STR_REPLYTO);
 						}
 						if (tpTmpMailItem->DefReplyTo == TRUE) {
 							sel = 0;
 							p = (MailBox + i)->ReplyTo;
+							if ((p == NULL || *p == TEXT('\0')) && (MailBox+i)->UseReplyToForFrom == 1) {
+								p = (MailBox + i)->MailAddress;
+							}
 							if (p != NULL && *p != TEXT('\0')) {
 								int cnt = SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_GETCOUNT, 0, 0);
 								for (j=0; j < cnt; j++) {
@@ -6374,6 +6396,9 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						}
 						i += sbox;
 						p = (MailBox + i)->ReplyTo;
+						if ((p == NULL || *p == TEXT('\0')) && (MailBox+i)->UseReplyToForFrom == 1) {
+							p = (MailBox + i)->MailAddress;
+						}
 						if (((p == NULL || *p == TEXT('\0')) && lstrcmp(buf, STR_OMIT_REPLYTO) != 0)
 							|| (p != NULL && *p != TEXT('\0') && lstrcmp(buf, p) != 0)) {
 							tpTmpMailItem->DefReplyTo = FALSE;
@@ -6497,7 +6522,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (tpMailItem->To != NULL) {
 					delete_ctrl_char(tpMailItem->To);
 				}
-				// Œ–¼
+				//Subject
 				AllocGetText(GetDlgItem(hDlg, IDC_EDIT_TITLE), &tpMailItem->Subject);
 				if (tpMailItem->Subject != NULL) {
 					delete_ctrl_char(tpMailItem->Subject);
