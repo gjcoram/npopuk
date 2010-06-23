@@ -5721,7 +5721,7 @@ static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem)
 	if (tpMailBox->UseReplyToForFrom == 0) {
 		SendDlgItemMessage(hDlg, IDC_COMBO_REPLYTO, CB_ADDSTRING, 0, (LPARAM)STR_OMIT_REPLYTO);
 		cnt++;
-	} else if (mb_replyto == NULL) {
+	} else if (mb_replyto == NULL || *mb_replyto == TEXT('\0')) {
 		mb_replyto = tpMailBox->MailAddress;
 	}
 	if (tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
