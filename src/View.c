@@ -3715,7 +3715,9 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				break;
 			}
 			if (tpMailItem->Attach != NULL || tpMailItem->Attach != NULL) {
-				if (top_attach_item == NULL) {
+				if (*tpMailItem->Attach == TEXT('_') && *(tpMailItem->Attach+1) == TEXT('\0')) {
+					MessageBox(hWnd, STR_MSG_ATT_DEL, STR_TITLE_ATTACHED, MB_OK);
+				} else if (top_attach_item == NULL) {
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ATTACH), hWnd, SetAttachProc, (LPARAM)tpMailItem);
 					attach_item_free();
 				}
