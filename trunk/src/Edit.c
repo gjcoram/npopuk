@@ -283,7 +283,7 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 		strPrefix = op.FwdSubject;
 		tpMailItem->AttachSize = 0;
 
-		if (tpReMailItem->Attach != NULL) {
+		if (tpReMailItem->Attach != NULL && (*tpReMailItem->Attach != TEXT('_') || *(tpReMailItem->Attach+1) != TEXT('\0'))) {
 			// forwarding one's own message from MAILBOX_SEND (or savebox)
 			tpMailItem->Attach = alloc_copy_t(tpReMailItem->Attach);
 			tpMailItem->AttachSize = tpReMailItem->AttachSize;
