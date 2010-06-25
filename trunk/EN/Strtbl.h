@@ -197,6 +197,7 @@
 #define STR_MSG_MARK_HELD			TEXT("Marked message is held for forwarding")
 #define STR_MSG_ATT_HELD			TEXT("Attachments of this message are held for forwarding")
 #define STR_MSG_NOATT				TEXT("Attached file not found; verify attachment list")
+#define STR_MSG_ATT_DEL				TEXT("Attachments were deleted; re-download message to view")
 #define STR_MSG_NOFWD				TEXT("Original message not found to forward attachments")
 #define STR_MSG_NOBODY				TEXT("Message body not downloaded. Open anyway?")
 #define STR_MSG_NEWMAIL				TEXT("You've got new mail!")
