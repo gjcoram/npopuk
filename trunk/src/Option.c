@@ -8412,7 +8412,8 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ADDR_GRP_COMBOL:
 			hiw = HIWORD(wParam);
-			if (hiw == CBN_CLOSEUP || hiw == CBN_SELCHANGE) {
+			if (hiw == CBN_CLOSEUP || (hiw == CBN_SELCHANGE &&
+						SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, CB_GETDROPPEDSTATE, 0, 0) == FALSE)) {
 				hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
 				ListView_SetRedraw(hListView, FALSE);
 				SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
