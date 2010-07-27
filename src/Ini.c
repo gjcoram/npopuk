@@ -469,6 +469,7 @@ void ini_read_general(HWND hWnd)
 	op.QuotationBreak = profile_get_int(GENERAL, TEXT("QuotationBreak"), 1);
 	op.ReSubject = profile_alloc_string(GENERAL, TEXT("ReSubject"), TEXT("Re: "));
 	op.FwdSubject = profile_alloc_string(GENERAL, TEXT("FwdSubject"), TEXT("Fwd: "));	// Added PHH 4-Oct-2003
+	op.ReFwdPrefixes = profile_alloc_string(GENERAL, TEXT("ReFwdPrefixes"), TEXT("Re:,Fwd:"));
 	len = profile_get_string(GENERAL, TEXT("ReHeader"), TEXT("\\n--------------------------------------------------\\n%f wrote:\\n(%d)\\n"), conv_buf, INI_BUF_SIZE - 1);
 	op.ReHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (op.ReHeader != NULL) {
@@ -1263,6 +1264,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("QuotationBreak"), op.QuotationBreak);
 	profile_write_string(GENERAL, TEXT("ReSubject"), op.ReSubject);
 	profile_write_string(GENERAL, TEXT("FwdSubject"), op.FwdSubject);		// Added PHH 4-10-2003
+	profile_write_string(GENERAL, TEXT("ReFwdPrefixes"), op.ReFwdPrefixes);
 	EncodeCtrlChar(op.ReHeader, conv_buf);
 	profile_write_string(GENERAL, TEXT("ReHeader"), conv_buf);
 	EncodeCtrlChar(op.FwdHeader, conv_buf);
@@ -1880,6 +1882,7 @@ void ini_free(BOOL free_all)
 	mem_free(&op.QuotationChar);
 	mem_free(&op.ReSubject);
 	mem_free(&op.FwdSubject);
+	mem_free(&op.ReFwdPrefixes);
 	mem_free(&op.ReHeader);
 	mem_free(&op.FwdHeader);
 	mem_free(&op.AltReplyTo);
