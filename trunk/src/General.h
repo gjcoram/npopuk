@@ -464,6 +464,7 @@ typedef struct _OPTION {
 	int QuotationBreak;
 	TCHAR *ReSubject;
 	TCHAR *FwdSubject;		// Added PHH 4-10-2003
+	TCHAR *ReFwdPrefixes;
 	TCHAR *ReHeader;
 	TCHAR *FwdHeader;
 	TCHAR *AltReplyTo;

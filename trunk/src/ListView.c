@@ -649,6 +649,39 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 			wbuf1 = ((MAILITEM *)lParam1)->Subject;
 		if (((MAILITEM *)lParam2)->Subject != NULL)
 			wbuf2 = ((MAILITEM *)lParam2)->Subject;
+		if (op.ReFwdPrefixes && *op.ReFwdPrefixes != TEXT('\0')) {
+			// remove Re: and Fwd: for sorting
+			TCHAR *p, *q, *pfx; 
+			p = op.ReFwdPrefixes, q = wbuf1;
+			pfx = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(op.ReFwdPrefixes) + 1));
+			while (pfx && *q != TEXT('\0') && *p != TEXT('\0')) {
+				p = str_cpy_f_t(pfx, p, TEXT(','));
+				len1 = lstrlen(pfx);
+				if (str_cmp_ni_t(q, pfx, len1) == 0) {
+					q += len1;
+					if (*q == TEXT(' ')) q++;
+					p = op.ReFwdPrefixes; // start over (Re: Re: Re:)
+				}
+			}
+			if (*q != TEXT('\0')) {
+				// if we didn't take everything away
+				wbuf1 = q;
+			}
+			p = op.ReFwdPrefixes, q = wbuf2;
+			while (pfx && *q != TEXT('\0') && *p != TEXT('\0')) {
+				p = str_cpy_f_t(pfx, p, TEXT(','));
+				len1 = lstrlen(pfx);
+				if (str_cmp_ni_t(q, pfx, len1) == 0) {
+					q += len1;
+					if (*q == TEXT(' ')) q++;
+					p = op.ReFwdPrefixes; // start over (Re: Re: Re:)
+				}
+			}
+			if (*q != TEXT('\0')) {
+				// if we didn't take everything away
+				wbuf2 = q;
+			}
+		}
 		break;
 
 	//When the sender (transmission box it is, addressee)
