@@ -32,7 +32,7 @@ extern int _stricmp(const char *, const char *);
 #define CRLF_LEN				2
 #define MAX_DEPTH				9
 
-#ifdef _WIN32_WCE
+#ifdef _WCE_OLD
 #define RECV_SIZE				4096		// 受信バッファサイズ
 #else
 #define RECV_SIZE				32768		// 受信バッファサイズ
@@ -247,7 +247,7 @@ int recv_proc(HWND hWnd, SOCKET soc)
 	int len;
 
 	// 受信用バッファの確保
-	if (recv_buf == NULL && (recv_buf = (char *)mem_alloc(RECV_SIZE)) == NULL) {
+	if (recv_buf == NULL && (recv_buf = (char *)mem_alloc(RECV_SIZE+1)) == NULL) {
 		return SELECT_MEM_ERROR;
 	}
 	// 受信

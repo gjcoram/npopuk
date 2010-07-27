@@ -21,7 +21,7 @@
 /* Define */
 #define OK_LEN					3			// "+OK" ÇÃÉoÉCÉgêî
 
-#ifdef _WIN32_WCE
+#ifdef _WCE_OLD
 #define MAIL_BUF_SIZE			4096		//Early size
 #else
 #define MAIL_BUF_SIZE			32768		//of buffer for mail reception Early size
