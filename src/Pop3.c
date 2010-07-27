@@ -1325,8 +1325,8 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	}
 
 	if ((int)tpMailItem != -1 && disable_uidl == FALSE) {
-		// メールアイテムにUIDLを設定
-		if ((p = uidl_get(list_get_no)) != NULL) {
+		p = uidl_get(list_get_no);
+		if (p != NULL) {
 			tpMailItem->UIDL = alloc_copy_t(p);
 		} else {
 			uidl_item = tpMailItem;
@@ -1497,12 +1497,6 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	SetSocStatusTextT(hWnd, STR_STATUS_RECVDONE);
 
 	get_no = item_get_number_to_index(tpMailBox, download_get_no);
-	if (op.SocLog > 1) {
-		TCHAR msg[MSG_SIZE];
-		wsprintf(msg, TEXT("exec_proc_retr: soc=%s, get_no=%d\r\n"),
-			((soc==-1)?TEXT("-1"):TEXT("OK")), get_no);
-		log_save(msg);
-	}
 	if (get_no == -1) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_MAILSYNC);
 		mem_free(&tpMailBox->LastMessageId);

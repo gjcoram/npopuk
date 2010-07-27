@@ -4911,7 +4911,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[BUF_SIZE];
+				TCHAR msg[50];
 				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), CheckBox);
 				log_save(msg);
 			}
@@ -5619,7 +5619,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[BUF_SIZE];
+				TCHAR msg[50];
 				wsprintf(msg, TEXT("Check: box=%d\r\n"), SelBox);
 				log_save(msg);
 			}
@@ -5732,7 +5732,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				i = SelBox;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[BUF_SIZE];
+				TCHAR msg[50];
 				wsprintf(msg, TEXT("Update: box=%d, delete=%d\r\n"), i, ServerDelete);
 				log_save(msg);
 			}
@@ -5784,7 +5784,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[BUF_SIZE];
+				TCHAR msg[50];
 				wsprintf(msg, TEXT("Update all: delete=%d\r\n"), SelBox, ServerDelete);
 				log_save(msg);
 			}
