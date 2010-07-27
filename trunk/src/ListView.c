@@ -654,7 +654,8 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 			TCHAR *p, *q, *pfx; 
 			p = op.ReFwdPrefixes, q = wbuf1;
 			pfx = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(op.ReFwdPrefixes) + 1));
-			while (pfx && *q != TEXT('\0') && *p != TEXT('\0')) {
+			if (!pfx) break;
+			while (*q != TEXT('\0') && *p != TEXT('\0')) {
 				p = str_cpy_f_t(pfx, p, TEXT(','));
 				len1 = lstrlen(pfx);
 				if (str_cmp_ni_t(q, pfx, len1) == 0) {
@@ -668,7 +669,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				wbuf1 = q;
 			}
 			p = op.ReFwdPrefixes, q = wbuf2;
-			while (pfx && *q != TEXT('\0') && *p != TEXT('\0')) {
+			while (*q != TEXT('\0') && *p != TEXT('\0')) {
 				p = str_cpy_f_t(pfx, p, TEXT(','));
 				len1 = lstrlen(pfx);
 				if (str_cmp_ni_t(q, pfx, len1) == 0) {
@@ -681,6 +682,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				// if we didn't take everything away
 				wbuf2 = q;
 			}
+			mem_free(&pfx);
 		}
 		break;
 
