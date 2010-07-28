@@ -5007,6 +5007,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1 || ShowError == TRUE) {
 				break;
 			}
+			if (op.EnableLAN == 0 && op.RasCon == 0 && op.RasNoCheck == 1 && !GetRasStatus()) {
+				break;
+			}
 			if (op.SocLog > 1) log_save(TEXT("Auto check\r\n"));
 			AutoCheckCnt = 0;
 			AutoCheckFlag = TRUE;
