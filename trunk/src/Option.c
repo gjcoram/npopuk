@@ -6799,6 +6799,9 @@ static LRESULT CALLBACK AddrCompleteCallback(HWND hWnd, UINT msg, WPARAM wParam,
 		case ID_MENUITEM_PASTE:
 			SendMessage(hWnd, WM_PASTE, 0, 0);
 			break;
+		case ID_MENUITEM_ALLSELECT:
+			SendMessage(hWnd, EM_SETSEL, 0, -1);
+			break;
 		}
 		break;
 	case WM_LBUTTONDOWN:

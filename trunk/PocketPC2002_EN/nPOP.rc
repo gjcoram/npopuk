@@ -505,6 +505,7 @@ BEGIN
         MENUITEM "Cut",                         ID_MENUITEM_CUT
         MENUITEM "Copy",                        ID_MENUITEM_COPY
         MENUITEM "Paste",                       ID_MENUITEM_PASTE
+        MENUITEM "Select all",                  ID_MENUITEM_ALLSELECT
     END
 END
 

@@ -459,6 +459,7 @@ BEGIN
         MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
         MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
         MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+        MENUITEM "Delete attachments",  ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
         MENUITEM "Thread mode",         ID_MENUITEM_THREADVIEW
