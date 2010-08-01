@@ -1398,7 +1398,9 @@ void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL timer)
 	if (timer) {
 		SetTimer(hWnd, ID_RESTORESEL_TIMER, 10, NULL);
 	}
+#ifndef _WIN32_WCE_PPC
 	PostMessage(hWnd, WM_NULL, 0, 0);
+#endif
 }
 
 /*
