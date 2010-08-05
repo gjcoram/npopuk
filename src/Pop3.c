@@ -753,7 +753,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			return (op.NoEmptyMailbox == 2) ? POP_QUIT : POP_ERR;
 		}
 		tpMailBox->ListInitMsg = TRUE;
-		if (op.SocLog > 1) log_save(TEXT("Clearing mailbox: server says 0 messages\r\n"));
+		if (op.SocLog > 1) log_save_a("Clearing mailbox: server says 0 messages\r\n");
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 		SetItemCntStatusText(tpMailBox, FALSE);
 		return POP_QUIT;
@@ -1966,7 +1966,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		TCHAR ErrStr[BUF_SIZE] = TEXT("");
 		char end[2] = ".";
 		int salvage = POP_ERR;
-		if (op.SocLog > 1) log_save(STR_MSG_SALVAGING);
+		if (op.SocLog > 1) log_save_a(STR_MSG_SALVAGING);
 		if (command_status == POP_RETR) {
 			salvage = exec_proc_retr(hWnd, -1, end, 1, ErrStr, tpMailBox, ShowFlag);
 		} else if (command_status == POP_TOP) {
@@ -1991,7 +1991,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
  * pop_log_download_rate - log bytes per second
  */
 static void pop_log_download_rate() {
-	TCHAR msg[MSG_SIZE];
+	char msg[MSG_SIZE];
 	SYSTEMTIME st;
 	TCHAR *units = TEXT("Bytes");
 	int diff, diffms, rate = 0;
@@ -2008,9 +2008,9 @@ static void pop_log_download_rate() {
 	if (diffms > 0) {
 		rate = (recvlen * 1000) / diffms;
 	}
-	wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
+	sprintf(msg, "%d %s received in %d seconds (%d %s/s)\r\n",
 		recvlen, units, diff, rate, units);
-	log_save(msg);
+	log_save_a(msg);
 }
 /*
  * claim_mail_buf

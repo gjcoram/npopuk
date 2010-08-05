@@ -2774,12 +2774,12 @@ int remove_duplicate_headers(char *buf)
 			|| str_cmp_ni(p, HEAD_READ2, strlen(HEAD_READ2)) == 0) {
 				// skip
 				did_one = TRUE;
-				while (*p != '\0' && (*(p-1) != '\r' || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+				while (*p != '\0' && ((p > buf && *(p-1) != '\r') || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
 					p++;
 				}
 				p++;
 		} else {
-				while (*p != '\0' && (*(p-1) != '\r' || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+				while (*p != '\0' && ((p > buf && *(p-1) != '\r') || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
 					*(r++) = *(p++);
 				}
 				*(r++) = *(p++);

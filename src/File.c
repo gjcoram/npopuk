@@ -99,10 +99,9 @@ void log_flush(void)
 		log_close();
 }
 
+#ifdef UNICODE
 /*
  * log_save - write string to log file.  buf assumed to end with \r\n
- * would be nice to avoid alloc/free for unicode, especially since most
- * messages are ascii anyway
  */
 BOOL log_save(TCHAR *buf)
 {
@@ -115,11 +114,33 @@ BOOL log_save(TCHAR *buf)
 		}
 	}
 
-#ifdef UNICODE
 	ascii = alloc_tchar_to_char(buf);
-#else
-	ascii = buf;
+	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
+
+#ifdef FLUSH_ON_EVERY_WRITE
+	if (ret != FALSE)
+		ret = FlushFileBuffers(hLogFile);
 #endif
+
+	if (ret == FALSE)
+		log_close();
+	mem_free(&ascii);
+	return ret;
+}
+#endif
+
+/*
+ * log_save - write ascii string to log file.  buf assumed to end with \r\n
+ */
+BOOL log_save_a(char *ascii)
+{
+	BOOL ret;
+
+	if (hLogFile == NULL || hLogFile == (HANDLE)-1) {
+		if (log_open() == FALSE) {
+			return FALSE;
+		}
+	}
 
 	ret = WriteFile(hLogFile, ascii, strlen(ascii), &ret, NULL);
 #ifdef FLUSH_ON_EVERY_WRITE
@@ -128,9 +149,7 @@ BOOL log_save(TCHAR *buf)
 #endif
 	if (ret == FALSE)
 		log_close();
-#ifdef UNICODE
-	mem_free(&ascii);
-#endif
+
 	return ret;
 }
 

@@ -835,7 +835,12 @@ void smtp_free(void);
 
 // File
 void log_flush(void);
+BOOL log_save_a(char *buf);
+#ifdef UNICODE
 BOOL log_save(TCHAR *buf);
+#else
+#define log_save log_save_a
+#endif
 BOOL log_header(TCHAR *buf);
 BOOL dir_check(const TCHAR *path);
 BOOL dir_create(TCHAR *path);
