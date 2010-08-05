@@ -4913,9 +4913,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[50];
-				wsprintf(msg, TEXT("CheckTimer: box=%d\r\n"), CheckBox);
-				log_save(msg);
+				char msg[50];
+				sprintf(msg, "CheckTimer: box=%d\r\n", CheckBox);
+				log_save_a(msg);
 			}
 			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
@@ -5012,7 +5012,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.EnableLAN == 0 && op.RasCon == 0 && op.RasNoCheck == 1 && !GetRasStatus()) {
 				break;
 			}
-			if (op.SocLog > 1) log_save(TEXT("Auto check\r\n"));
+			if (op.SocLog > 1) log_save_a("Auto check\r\n");
 			AutoCheckCnt = 0;
 			AutoCheckFlag = TRUE;
 			AllCheck = TRUE;
@@ -5624,9 +5624,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[50];
-				wsprintf(msg, TEXT("Check: box=%d\r\n"), SelBox);
-				log_save(msg);
+				char msg[50];
+				sprintf(msg, "Check: box=%d\r\n", SelBox);
+				log_save_a(msg);
 			}
 			AllCheck = FALSE;
 			ExecFlag = FALSE;
@@ -5659,7 +5659,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				SaveBoxesLoaded = do_saveboxes; // may become false if filter is added
 			}
-			if (op.SocLog > 1) log_save(TEXT("Check all\r\n"));
+			if (op.SocLog > 1) log_save_a("Check all\r\n");
 			AutoCheckCnt = 0; // reset autocheck timer
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
@@ -5737,9 +5737,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				i = SelBox;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[50];
-				wsprintf(msg, TEXT("Update: box=%d, delete=%d\r\n"), i, ServerDelete);
-				log_save(msg);
+				char msg[50];
+				sprintf(msg, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
+				log_save_a(msg);
 			}
 			AutoCheckFlag = FALSE;
 			// ダイヤルアップ開始
@@ -5789,9 +5789,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			if (op.SocLog > 1) {
-				TCHAR msg[50];
-				wsprintf(msg, TEXT("Update all: delete=%d\r\n"), SelBox, ServerDelete);
-				log_save(msg);
+				char msg[50];
+				sprintf(msg, "Update all: delete=%d\r\n", SelBox);
+				log_save_a(msg);
 			}
 
 			AutoCheckFlag = FALSE;
@@ -6108,9 +6108,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								break;
 							}
 							if (op.SocLog > 1) {
-								TCHAR msg[BUF_SIZE];
-								wsprintf(msg, TEXT("Check: box=%d\r\n"), SelBox);
-								log_save(msg);
+								char msg[BUF_SIZE];
+								sprintf(msg, "Check: box=%d\r\n", SelBox);
+								log_save_a(msg);
 							}
 							AllCheck = FALSE;
 							ExecFlag = FALSE;
@@ -7048,7 +7048,7 @@ void DropMBMenu(BOOL drop)
 void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime)
 {
 	g_bTimedOut = TRUE;
-	if (op.SocLog > 1) log_save(TEXT("MessageBoxTimer timed out\r\n"));
+	if (op.SocLog > 1) log_save_a("MessageBoxTimer timed out\r\n");
 	if (g_hwndTimedOwner)
 		EnableWindow(g_hwndTimedOwner, TRUE);
 	PostQuitMessage(TIMEOUT_QUIT_WPARAM);

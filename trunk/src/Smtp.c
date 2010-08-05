@@ -430,12 +430,20 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
 		if (op.SocLog > 1) {
-			TCHAR buf[256];
-			if (len > 200) *(p+200) = TEXT('\0'); // prevent buffer overflow
-			wsprintf(buf, TEXT("%s failed for %s\r\n"), CMD_RCPT_TO, p);
-			log_save(buf);
+			char buf[256];
+			char *pa;
+#ifdef UNICODE
+			pa = alloc_tchar_to_char(p);
+#else
+			pa = p;
+#endif
+			if (len > 200) *(pa+200) = '\0'; // prevent buffer overflow
+			sprintf(buf, "%s failed for %a\r\n", CMD_RCPT_TO, pa);
+#ifdef UNICODE
+			mem_free(&pa);
+#endif
+			log_save_a(buf);
 		}
-		mem_free(&p);
 		return (TCHAR *)-1;
 	}
 	mem_free(&p);
@@ -1633,7 +1641,7 @@ static void reorder_sendbox()
 				*(tpMailList + i) = tpItem2;
 				*(tpMailList + i + 1) = tpItem1;
 				did = TRUE;
-				for (j = i - 1; j >=0; j--) {
+				for (j = i - 1; j >= 0; j--) {
 					// tpItem2 is the Sent message we're moving up
 					tpItem1 = *(tpMailList + j);
 					if (tpItem1->MailStatus == ICON_NON
