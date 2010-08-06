@@ -1506,8 +1506,8 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 		} else {
 			mem_free(&body);
 		}
-//	} else if (*TextIndex == -1 && tpMailItem->Body != NULL) {
-//		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
+	} else if (*TextIndex == -1 && tpMailItem->Body != NULL && op.ViewShowAttach) {
+		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
 	}
 
 	if (wenc_ret == NULL && tpMailItem->Body != NULL) {
