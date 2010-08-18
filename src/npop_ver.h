@@ -18,7 +18,7 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 15
-#define NPOPBETA  5
+#define NPOPBETA  6
 #define NPOPPATCH 0
 
 
@@ -94,8 +94,8 @@
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "p" #d
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("p") TEXT(#d)
 #define MKVERLNGHELP(a,b,c,d) #a "." #b " patch " #d
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("p") TEXT(#d) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("p") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("p") TEXT(#d) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("p") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".zip")
 #else
 // Real release
 #define MKVERSTRHELP(a,b,c,d) #a "." #b
@@ -103,8 +103,8 @@
 #define MKVERLNGHELP(a,b,c,d) #a "." #b
 #define MKBLDSTR(a,b,c,d)
 #define MKBLDSTRSSL(a,b,c,d)
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("ssl_") BUILDSTR TEXT(".zip")
 #endif
 
 #elif NPOPBETA == NPOPBETA_RELEASE_CAND
@@ -112,8 +112,8 @@
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "rc" #d
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("rc") TEXT(#d)
 #define MKVERLNGHELP(a,b,c,d) #a "." #b " Release Candidate " #d
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("rc") TEXT(#d) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("rc") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("rc") TEXT(#d) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("rc") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".zip")
 
 #else
 // Beta releases, with and without patch number
@@ -123,22 +123,22 @@
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d)
 //#define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Test " #d
 #define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c " Patch " #d
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("p") TEXT(#d) TEXT("ssl_") BUILDSTR TEXT(".zip")
 #elif NPOPBETA
 #define MKVERSTRHELP(a,b,c,d) #a "." #b "b" #c
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b) TEXT("b") TEXT(#c)
 #define MKVERLNGHELP(a,b,c,d) #a "." #b " Beta " #c
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("b") TEXT(#c) TEXT("ssl_") BUILDSTR TEXT(".zip")
 
 #else
 // not a patch, not a beta, not a real release, not a release candidate ... what is it?
 #define MKVERSTRHELP(a,b,c,d) #a "." #b
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b)
 #define MKVERLNGHELP(a,b,c,d) #a "." #b
-#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("_") BUILDSTR TEXT(".exe")
-#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("ssl_") BUILDSTR TEXT(".exe")
+#define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("_") BUILDSTR TEXT(".zip")
+#define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("ssl_") BUILDSTR TEXT(".zip")
 #endif
 #endif
 

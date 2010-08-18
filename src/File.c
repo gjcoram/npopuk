@@ -1453,13 +1453,17 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	strcpy_s(pathBackup, BUF_SIZE-5, path);
 	strcat_s(pathBackup, BUF_SIZE, TEXT(".bak"));
 #endif
-	if (DeleteFile(pathBackup) == 0 && op.SocLog > 3) { //GJCdelete
-		TCHAR msg[MSG_SIZE];
-		DWORD err = GetLastError();
-		wsprintf(msg, TEXT("Failed to delete old backup file %s (err=%X)\r\n"), pathBackup, err);
-		log_save(msg);
-		if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, msg, MSG_SIZE-1, NULL)) {
+	// DeleteFile(pathBackup);
+	// how to ensure the drive is ready?
+	if (file_get_size(pathBackup) != -1) {
+		if (DeleteFile(pathBackup) == 0 && op.SocLog > 3) { //GJCdelete
+			TCHAR msg[MSG_SIZE];
+			DWORD err = GetLastError();
+			wsprintf(msg, TEXT("Failed to delete old backup file %s (err=%X)\r\n"), pathBackup, err);
 			log_save(msg);
+			if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, msg, MSG_SIZE-1, NULL)) {
+				log_save(msg);
+			}
 		}
 	}
 	// Create the backup file.
