@@ -430,7 +430,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
 		if (op.SocLog > 1) {
-			char buf[256];
+			char buf[BUF_SIZE];
 			char *pa;
 #ifdef UNICODE
 			pa = alloc_tchar_to_char(p);
@@ -438,7 +438,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 			pa = p;
 #endif
 			if (len > 200) *(pa+200) = '\0'; // prevent buffer overflow
-			sprintf(buf, "%s failed for %a\r\n", CMD_RCPT_TO, pa);
+			sprintf_s(buf, BUF_SIZE, "%s failed for %a\r\n", CMD_RCPT_TO, pa);
 #ifdef UNICODE
 			mem_free(&pa);
 #endif

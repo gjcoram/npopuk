@@ -41,6 +41,8 @@
 #include "stdafx.h"
 #elif defined(_WIN32_WCE)
 #define MENU_HEIGHT 26
+#else
+extern int sprintf_s();
 #endif
 #include "resource.h"
 #include "Strtbl.h"
@@ -514,6 +516,7 @@ typedef struct _OPTION {
 	int SendAttachIndividually;
 	int CheckEndExec;
 	int CheckEndExecNoDelMsg;
+	int DeletePerUpdateLimit;
 	int TimeoutInterval;
 	int ReorderSendbox;
 

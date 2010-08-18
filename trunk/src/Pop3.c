@@ -61,6 +61,7 @@ static int recvcnt = 0;
 static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
 static int delete_get_no;					// 削除メール位置
+static int deletes_remaining = 0;
 static BOOL init_recv;						// 新着取得位置初期化フラグ
 static int mail_received;					// １件目受信フラグ
 static BOOL receiving_uidl;					// UIDLレスポンス受信中
@@ -1403,6 +1404,12 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
+			if (--deletes_remaining <= 0) {
+				if (get_no != -1 && op.SocLog > 1) {
+					log_save_a("DELE stopped by DeletePerUpdateLimit");
+				}
+				get_no = -1;
+			}
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1575,6 +1582,12 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
+			if (--deletes_remaining <= 0) {
+				if (get_no != -1 && op.SocLog > 1) {
+					log_save_a("DELE stopped by DeletePerUpdateLimit");
+				}
+				get_no = -1;
+			}
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1758,6 +1771,12 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		return POP_ERR;
 	}
 	get_no = item_get_next_delete_mark(tpMailBox, TRUE, get_no, &delete_get_no);
+	if (--deletes_remaining <= 0) {
+		if (get_no != -1 && op.SocLog > 1) {
+			log_save_a("DELE stopped by DeletePerUpdateLimit");
+		}
+		get_no = -1;
+	}
 	if (get_no != -1) {
 		// 削除メールの確認コマンドを送信
 		return exec_send_check_command(hWnd, soc, get_no, ErrStr, tpMailBox);
@@ -1840,6 +1859,7 @@ BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 			if (PopBeforeSmtpFlag == TRUE) {
 				command_status = POP_QUIT;
 			} else {
+				deletes_remaining = (op.DeletePerUpdateLimit > 0) ? op.DeletePerUpdateLimit : 65535;
 				SetSocStatusTextT(hWnd, TEXT(CMD_STAT));
 				if (send_buf(soc, CMD_STAT"\r\n") == -1) {
 					lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
@@ -1913,6 +1933,7 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 	case POP_PASS:
 		command_status = login_proc(hWnd, soc, buf, len, ErrStr, tpMailBox);
 		if (command_status == POP_LOGIN) {
+			deletes_remaining = (op.DeletePerUpdateLimit > 0) ? op.DeletePerUpdateLimit : 65535;
 			command_status = exec_proc_init(hWnd, soc, buf, len, ErrStr, tpMailBox, ShowFlag);
 		}
 		break;
@@ -1991,7 +2012,7 @@ BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
  * pop_log_download_rate - log bytes per second
  */
 static void pop_log_download_rate() {
-	char msg[MSG_SIZE];
+	TCHAR msg[MSG_SIZE];
 	SYSTEMTIME st;
 	TCHAR *units = TEXT("Bytes");
 	int diff, diffms, rate = 0;
@@ -2008,9 +2029,9 @@ static void pop_log_download_rate() {
 	if (diffms > 0) {
 		rate = (recvlen * 1000) / diffms;
 	}
-	sprintf(msg, "%d %s received in %d seconds (%d %s/s)\r\n",
+	wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
 		recvlen, units, diff, rate, units);
-	log_save_a(msg);
+	log_save(msg);
 }
 /*
  * claim_mail_buf

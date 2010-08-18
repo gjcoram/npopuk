@@ -56,7 +56,7 @@
 #define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\n{Cc: %c\r\n}Subject: %s\r\nDate: %D\r\nMessage-ID: %i\r\n\r\n")
 
 /* Global Variables */
-static WNDPROC EditWindowProcedure;
+static WNDPROC ViewWindowProcedure;
 HWND hViewWnd = NULL;
 BOOL ViewReopen;
 #ifdef _WIN32_WCE_PPC
@@ -128,9 +128,9 @@ static void SetHeaderSize(HWND hWnd);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam);
 #endif
-static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
-static void SetEditSubClass(HWND hWnd);
-static void DelEditSubClass(HWND hWnd);
+static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
+static void SetViewSubClass(HWND hWnd);
+static void DelViewSubClass(HWND hWnd);
 static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void EndWindow(HWND hWnd);
@@ -602,9 +602,9 @@ int SetWordBreak(HWND hWnd)
 }
 
 /*
- * SubClassEditProc - サブクラス化したウィンドウプロシージャ
+ * SubClassViewProc - message handler for View window
  */
-static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_CHAR:
@@ -700,25 +700,25 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		return 0;
 #endif
 	}
-	return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
+	return CallWindowProc(ViewWindowProcedure, hWnd, msg, wParam, lParam);
 }
 
 /*
- * SetEditSubClass - ウィンドウのサブクラス化
+ * SetViewSubClass - ウィンドウのサブクラス化
  */
-static void SetEditSubClass(HWND hWnd)
+static void SetViewSubClass(HWND hWnd)
 {
 	SendMessage(hWnd, EM_LIMITTEXT, 1, 0);
-	EditWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (long)SubClassEditProc);
+	ViewWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (long)SubClassViewProc);
 }
 
 /*
- * DelEditSubClass - ウィンドウクラスを標準のものに戻す
+ * DelViewSubClass - ウィンドウクラスを標準のものに戻す
  */
-static void DelEditSubClass(HWND hWnd)
+static void DelViewSubClass(HWND hWnd)
 {
-	SetWindowLong(hWnd, GWL_WNDPROC, (long)EditWindowProcedure);
-	EditWindowProcedure = NULL;
+	SetWindowLong(hWnd, GWL_WNDPROC, (long)ViewWindowProcedure);
+	ViewWindowProcedure = NULL;
 }
 
 /*
@@ -958,10 +958,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifndef _WCE_OLD
 	// IMEをオフにする
+if (op.SocLog > 5) // GJCdelete
 	ImmAssociateContext(GetDlgItem(hWnd, IDC_EDIT_BODY), (HIMC)NULL);
 #endif
 
-	SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 	if (op.ViewWindowCursor == 0) {
 		SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
 	}
@@ -1062,7 +1063,7 @@ static void EndWindow(HWND hWnd)
 	DigestMessageNum = -1;
 	DigestMessageCnt = 0;
 
-	DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	DelViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	DestroyWindow(hViewToolBar);
@@ -3337,28 +3338,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SetViewMenu(hWnd);
 			ShowMenu(hWnd, hViewPop, 0, 0, FALSE);
 			break;
-
-		case IDC_EDIT_BODY:
-			switch (HIWORD(wParam)) {
-			case EN_SETFOCUS:
-				SHSipPreference(hWnd, (SipFlag) ? SIP_UP : SIP_DOWN);
-				break;
-			case EN_KILLFOCUS:
-				SHSipPreference(hWnd, SIP_DOWN);
-				break;
-			}
-			break;
-#elif defined _WIN32_WCE_LAGENDA
-		case IDC_EDIT_BODY:
-			switch (HIWORD(wParam)) {
-			case EN_SETFOCUS:
-				SipShowIM((SipFlag) ? SIPF_ON : SIPF_OFF);
-				break;
-			case EN_KILLFOCUS:
-				SipShowIM(SIPF_OFF);
-				break;
-			}
-			break;
 #endif
 
 		case ID_KEY_UP:
@@ -3626,7 +3605,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_WORDBREAK:
-			DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+			DelViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
 			op.WordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW));
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -3634,7 +3613,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #else
 			op.WordBreakFlag = SetWordBreak(hWnd);
 #endif
-			SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+			SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 			if (op.ViewWindowCursor == 0) {
 				HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
 			}

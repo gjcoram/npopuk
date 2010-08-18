@@ -568,6 +568,7 @@ void ini_read_general(HWND hWnd)
 	op.SendAttachIndividually = profile_get_int(GENERAL, TEXT("SendAttachIndividually"), 1);
 	op.CheckEndExec = profile_get_int(GENERAL, TEXT("CheckEndExec"), 0);
 	op.CheckEndExecNoDelMsg = profile_get_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), 1);
+	op.DeletePerUpdateLimit = profile_get_int(GENERAL, TEXT("DeletePerUpdateLimit"), 0);
 	op.TimeoutInterval = profile_get_int(GENERAL, TEXT("TimeoutInterval"), -1);
 	if (op.TimeoutInterval <= 0) {
 		op.TimeoutInterval = 120;
@@ -1314,6 +1315,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("SendAttachIndividually"), op.SendAttachIndividually);
 	profile_write_int(GENERAL, TEXT("CheckEndExec"), op.CheckEndExec);
 	profile_write_int(GENERAL, TEXT("CheckEndExecNoDelMsg"), op.CheckEndExecNoDelMsg);
+	profile_write_int(GENERAL, TEXT("DeletePerUpdateLimit"), op.DeletePerUpdateLimit);
 	profile_write_int(GENERAL, TEXT("TimeoutInterval"), op.TimeoutInterval);
 	profile_write_int(GENERAL, TEXT("ReorderSendbox"), op.ReorderSendbox);
 
