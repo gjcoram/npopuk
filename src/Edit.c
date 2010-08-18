@@ -90,8 +90,8 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem);
 static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem);
 #ifndef _WIN32_WCE
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
-#endif
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam);
+#endif
 static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void SetEditMenu(HWND hWnd);
@@ -884,17 +884,17 @@ static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam)
 /*
  * NotifyProc - Notification message
  */
+#ifndef _WIN32_WCE
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 {
 	NMHDR *CForm = (NMHDR *)lParam;
 
-#ifndef _WIN32_WCE
 	if (CForm->code == TTN_NEEDTEXT) {
 		return TbNotifyProc(hWnd, lParam);
 	}
-#endif
 	return FALSE;
 }
+#endif
 
 /*
  * InitWindow - Initialization
@@ -2059,7 +2059,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_NOTIFY:
+#ifdef _WIN32_WCE
+		return FALSE;
+#else
 		return NotifyProc(hWnd, lParam);
+#endif
 
 	case WM_COMMAND:
 		switch (GET_WM_COMMAND_ID(wParam,lParam)) {
@@ -2672,7 +2676,7 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 	ExistFlag = TRUE;
 	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL, FALSE);
 	if (ret == EDIT_INSIDEEDIT && tpMailItem->Mark == ICON_SEND) {
-		ret = ICON_SEND;
+		ret = EDIT_SEND;
 	}
 	item_free(&tpMailItem, 1);
 	ExistFlag = FALSE;
