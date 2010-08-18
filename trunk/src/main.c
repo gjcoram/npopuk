@@ -2577,6 +2577,7 @@ static BOOL InitWindow(HWND hWnd)
 		((op.MBMenuWidth>0) ? op.MBMenuWidth : 0)) == NULL) {
 		return FALSE;
 	}
+
 	SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
 	if (hListFont != NULL) {
 		//Font of list view setting
@@ -2680,11 +2681,14 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			   rcClient.right - op.MBMenuWidth, newHeight, TRUE);
 	} else {
 		// combobar
-		int comboHeight;
+		int comboHeight, comboDropped = 200;
+		if (newHeight > comboDropped) {
+			comboDropped  = newHeight;
+		}
 		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &subwinRect);
 		comboHeight = subwinRect.bottom - subwinRect.top;
 
-		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, rcClient.right, comboHeight, TRUE);
+		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, rcClient.right, comboDropped, TRUE);
 
 		newTop += comboHeight;
 		newHeight -= comboHeight;
@@ -4914,7 +4918,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				char msg[50];
-				sprintf(msg, "CheckTimer: box=%d\r\n", CheckBox);
+				sprintf_s(msg, 50, "CheckTimer: box=%d%s", CheckBox, "\r\n");
 				log_save_a(msg);
 			}
 			//Mail reception start
@@ -5050,18 +5054,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (CmdLine != NULL) {
 #ifdef _WIN32_WCE
-				if (CommandLine(hWnd, CmdLine) == TRUE && Edit_MailToSet(hInst, hWnd, CmdLine, -1) == EDIT_INSIDEEDIT) {
-					ShowWindow(hWnd, SW_HIDE);
-					if (gSendAndQuit == TRUE) {
-						SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
+				if (CommandLine(hWnd, CmdLine) == TRUE) {
+					int ret = Edit_MailToSet(hInst, hWnd, CmdLine, -1);
+					if (ret == EDIT_INSIDEEDIT || ret == EDIT_SEND) {
+						ShowWindow(hWnd, SW_HIDE);
+						if (gSendAndQuit == TRUE) {
+							SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
+						}
 					}
 				}
 #else
-				if (CommandLine(hWnd, CmdLine) == TRUE) {
-					if (Edit_MailToSet(hInst, hWnd, CmdLine, -1) == EDIT_INSIDEEDIT) {
-						if (gSendAndQuit == TRUE && hEditWnd != NULL) {
-							SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
-						}
+				if (CommandLine(hWnd, CmdLine) == TRUE) { 
+					int ret = Edit_MailToSet(hInst, hWnd, CmdLine, -1);
+					if (ret == EDIT_SEND && gSendAndQuit == TRUE && hEditWnd != NULL) {
+						SendMessage(hEditWnd, WM_COMMAND, ID_MENUITEM_SEND, 0);
 					//} else if (gSendAndQuit == TRUE) {
 					//	PostQuitMessage(1);
 					}
@@ -5625,7 +5631,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				char msg[50];
-				sprintf(msg, "Check: box=%d\r\n", SelBox);
+				sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
 			AllCheck = FALSE;
@@ -5738,7 +5744,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				char msg[50];
-				sprintf(msg, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
+				sprintf_s(msg, 50, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
 				log_save_a(msg);
 			}
 			AutoCheckFlag = FALSE;
@@ -5790,7 +5796,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (op.SocLog > 1) {
 				char msg[50];
-				sprintf(msg, "Update all: delete=%d\r\n", SelBox);
+				sprintf_s(msg, 50, "Update all: delete=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
 
@@ -6108,8 +6114,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								break;
 							}
 							if (op.SocLog > 1) {
-								char msg[BUF_SIZE];
-								sprintf(msg, "Check: box=%d\r\n", SelBox);
+								char msg[50];
+								sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 								log_save_a(msg);
 							}
 							AllCheck = FALSE;
