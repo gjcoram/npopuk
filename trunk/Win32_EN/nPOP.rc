@@ -530,7 +530,8 @@ CAPTION "About"
 FONT 8, "Tahoma", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,121,46,14
-    LTEXT           "Static",IDC_APPNAME,31,8,107,8
+    LTEXT           "Static",IDC_APPNAME,31,4,107,8
+    LTEXT           "Build",IDC_BUILDNAME,31,12,107,8
     ICON            IDI_ICON_MAIN,IDC_STATIC,7,2,21,20
     EDITTEXT        IDC_ABOUT_TEXT,3,52,150,64,ES_MULTILINE | ES_READONLY | 
                     WS_VSCROLL

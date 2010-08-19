@@ -296,6 +296,7 @@
 #define IDC_RADIO_SAVE                  1095 
 #define IDC_PRIORITY                    1096
 #define IDC_APPNAME                     1097
+#define IDC_BUILDNAME                   1098
 #define IDC_CHECK_USEPOOM               1098
 #define IDC_POOMNAMECOMMENT             1099
 #define IDC_CHECK_PARANOID              1100

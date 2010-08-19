@@ -33,14 +33,14 @@ int QuotedPrintable_encode_length(unsigned char *buf, int break_size, const BOOL
 void QuotedPrintable_encode(unsigned char *buf, char *ret, int break_size, const BOOL body);
 
 char *URL_decode(char *buf, char *ret);
-void URL_encode(unsigned char *buf, char *ret);
+void URL_encode(unsigned char *buf, char *ret, BOOL sp_conv);
 
 #ifdef UNICODE
 TCHAR *URL_decode_t(TCHAR *buf, TCHAR *ret);
 void URL_encode_t(TCHAR *buf, TCHAR *ret);
 #else
 #define URL_decode_t URL_decode
-#define URL_encode_t URL_encode
+#define URL_encode_t(buf, ret) URL_encode(buf, ret, FALSE)
 #endif
 
 #endif

@@ -59,7 +59,7 @@ MAILITEM *SmtpFwdMessage = NULL;
 // ŠO•”ŽQÆ
 extern HWND MainWnd;
 extern OPTION op;
-extern BOOL gSendAndQuit;
+extern int gAutoSend;
 extern TCHAR *DataDir;
 extern ADDRESSBOOK *AddressBook;
 extern MAILBOX *MailBox;
@@ -1488,8 +1488,9 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		break;
 
 	case SMTP_QUIT:
-		if (gSendAndQuit == TRUE) {
-			SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
+		if (gAutoSend == AUTOSEND_AND_QUIT) {
+if (op.SocLog > 1) log_save_a("GJC debug: posting quit message\r\n"); //GJCdelete
+			PostMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
 		}
 		break;
 	}

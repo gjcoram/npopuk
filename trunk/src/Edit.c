@@ -57,7 +57,7 @@ static int g_menu_height;
 
 //External reference
 extern OPTION op;
-extern BOOL gSendAndQuit;
+extern int gAutoSend;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern TCHAR *DataDir;
@@ -1390,7 +1390,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		mem_free(&tmp);
 
 		//of type dependence letter When subject is not set, information of transmission is indicated
-		if (EndFlag == 0 && gSendAndQuit == FALSE 
+		if (EndFlag == 0 && gAutoSend == FALSE
 			&& (tpMailItem->Subject == NULL || *tpMailItem->Subject == TEXT('\0'))) {
 #ifdef _WIN32_WCE
 			int res = IDD_DIALOG_SETSEND;
@@ -2103,7 +2103,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 
 		case ID_MENUITEM_SEND:
-			if (gSendAndQuit == FALSE
+			if (gAutoSend == FALSE
 				&& ParanoidMessageBox(hWnd, STR_Q_SENDMAIL,
 				STR_TITLE_SEND, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				break;
@@ -2673,6 +2673,9 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 		item_free(&tpMailItem, 1);
 		return FALSE;
 	}
+	if (tpMailItem->Mark == ICON_SEND && gAutoSend == FALSE) {
+		gAutoSend = AUTOSEND_NO_QUIT;
+	}
 	ExistFlag = TRUE;
 	ret = Edit_InitInstance(hInstance, hWnd, rebox, tpMailItem, EDIT_NEW, NULL, FALSE);
 	if (ret == EDIT_INSIDEEDIT && tpMailItem->Mark == ICON_SEND) {
@@ -2831,7 +2834,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
 
-		if (gSendAndQuit == TRUE) {
+		if (gAutoSend) {
 			if (tpMailItem->To == NULL || (tpMailItem->Subject == NULL && tpMailItem->Body == NULL)) {
 				return FALSE;
 			}
@@ -3044,7 +3047,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		ErrorMessage(hWnd, STR_ERR_INIT);
 		return EDIT_NONEDIT;
 	}
-	if ( (NoAppFlag == FALSE) && (OpenFlag != EDIT_NEW || (gSendAndQuit == FALSE && tpMailItem->Mark != ICON_SEND))
+	if ( (NoAppFlag == FALSE) && (OpenFlag != EDIT_NEW || (gAutoSend == FALSE && tpMailItem->Mark != ICON_SEND))
 		&& ((op.DefEditApp == 1 && key >= 0) || (op.DefEditApp == 0 && key < 0))) {
 		ShowWindow(hEditWnd, SW_HIDE);
 		SetTimer(hEditWnd, ID_APP_TIMER, 1, NULL);

@@ -170,6 +170,9 @@ extern int sprintf_s();
 #define EDIT_OUTSIDEEDIT		2
 #define EDIT_SEND				3
 
+#define AUTOSEND_NO_QUIT		1
+#define AUTOSEND_AND_QUIT		2
+
 #define SELECT_MEM_ERROR		-2					//of transmission mail compilation Return value
 #define SELECT_SOC_ERROR		-1
 #define SELECT_SOC_CLOSE		0
