@@ -153,6 +153,7 @@ BOOL log_save_a(char *ascii)
 	return ret;
 }
 
+
 /*
  * log_header - Write a header to the log.
  */
@@ -164,12 +165,25 @@ BOOL log_header(char *buf)
 	char *p;
 	BOOL ret;
 
+#ifdef _WIN32_WCE
+	TCHAR tDay[BUF_SIZE];
+	TCHAR tTime[BUF_SIZE];
+	if (GetDateFormat(0, 0, NULL, NULL, tDay, BUF_SIZE - 1) == 0) {
+		return FALSE;
+	}
+	if (GetTimeFormat(0, 0, NULL, NULL, tTime, BUF_SIZE - 1) == 0) {
+		return FALSE;
+	}
+	tchar_to_char(tDay,  fDay,  BUF_SIZE);
+	tchar_to_char(tTime, fTime, BUF_SIZE);
+#else
 	if (GetDateFormatA(0, 0, NULL, NULL, fDay, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
 	if (GetTimeFormatA(0, 0, NULL, NULL, fTime, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
+#endif
 	p = mem_alloc(sizeof(char) * (strlen(LOG_SEP) + strlen(fDay) + 1 + strlen(fTime) + 2 + strlen(buf) + 2 + 2));
 	if (p == NULL) {
 		return FALSE;

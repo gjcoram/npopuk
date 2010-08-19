@@ -952,7 +952,7 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 			encode_info_free(top_eb);
 			return NULL;
 		}
-		URL_encode(eb->encode_buf, tmp);
+		URL_encode(eb->encode_buf, tmp, TRUE);
 		mem_free(&eb->encode_buf);
 		eb->encode_buf = tmp;
 

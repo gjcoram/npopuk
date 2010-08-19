@@ -283,6 +283,7 @@
 #define IDC_COMBO_ENCODE                1096
 #define IDC_PRIORITY                    1097
 #define IDC_APPNAME                     1098
+#define IDC_BUILDNAME                   1099
 #define IDC_CHECK_PARANOID              1100
 #define IDC_ABOUT_TEXT                  1101
 #define IDC_DELIV                       1102

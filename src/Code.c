@@ -465,7 +465,7 @@ char *URL_decode(char *buf, char *ret)
 /*
  * URL_encode - URL encoding (RFC 2396)
  */
-void URL_encode(unsigned char *buf, char *ret)
+void URL_encode(unsigned char *buf, char *ret, BOOL sp_conv)
 {
 	unsigned char *p;
 	char *r;
@@ -475,7 +475,8 @@ void URL_encode(unsigned char *buf, char *ret)
 			(*p >= 'a' && *p <= 'z') ||
 			(*p >= '0' && *p <= '9')) {
 			*(r++) = *p;
-		} else if (*p == ' ') {
+		} else if (sp_conv && *p == ' ') {
+			// allowed per RFC 2047
 			*(r++) = '_';
 		} else {
 			*(r++) = '%';
