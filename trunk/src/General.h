@@ -844,7 +844,7 @@ BOOL log_save(TCHAR *buf);
 #else
 #define log_save log_save_a
 #endif
-BOOL log_header(TCHAR *buf);
+BOOL log_header(char *buf);
 BOOL dir_check(const TCHAR *path);
 BOOL dir_create(TCHAR *path);
 BOOL dir_delete(TCHAR *Path, TCHAR *file);

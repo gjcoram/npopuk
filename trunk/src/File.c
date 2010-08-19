@@ -156,26 +156,26 @@ BOOL log_save_a(char *ascii)
 /*
  * log_header - Write a header to the log.
  */
-BOOL log_header(TCHAR *buf)
+BOOL log_header(char *buf)
 {
-#define LOG_SEP				TEXT("\r\n-------------------------------- ")
-	TCHAR fDay[BUF_SIZE];
-	TCHAR fTime[BUF_SIZE];
-	TCHAR *p;
+#define LOG_SEP				"\r\n-------------------------------- "
+	char fDay[BUF_SIZE];
+	char fTime[BUF_SIZE];
+	char *p;
 	BOOL ret;
 
-	if (GetDateFormat(0, 0, NULL, NULL, fDay, BUF_SIZE - 1) == 0) {
+	if (GetDateFormatA(0, 0, NULL, NULL, fDay, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
-	if (GetTimeFormat(0, 0, NULL, NULL, fTime, BUF_SIZE - 1) == 0) {
+	if (GetTimeFormatA(0, 0, NULL, NULL, fTime, BUF_SIZE - 1) == 0) {
 		return FALSE;
 	}
-	p = mem_alloc(sizeof(TCHAR) * (lstrlen(LOG_SEP) + lstrlen(fDay) + 1 + lstrlen(fTime) + 2 + lstrlen(buf) + 2 + 2));
+	p = mem_alloc(sizeof(char) * (strlen(LOG_SEP) + strlen(fDay) + 1 + strlen(fTime) + 2 + strlen(buf) + 2 + 2));
 	if (p == NULL) {
 		return FALSE;
 	}
-	str_join_t(p, LOG_SEP, fDay, TEXT(" "), fTime, TEXT(" ("), buf, TEXT(")\r\n"), (TCHAR *)-1);
-	ret = log_save(p);
+	str_join(p, LOG_SEP, fDay, " ", fTime, " (", buf, ")\r\n", (char *)-1);
+	ret = log_save_a(p);
 	mem_free(&p);
 	return ret;
 }
