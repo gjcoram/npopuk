@@ -956,12 +956,6 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
 #endif
 
-#ifndef _WCE_OLD
-	// IME‚ðƒIƒt‚É‚·‚é
-if (op.SocLog > 5) // GJCdelete
-	ImmAssociateContext(GetDlgItem(hWnd, IDC_EDIT_BODY), (HIMC)NULL);
-#endif
-
 	SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 	if (op.ViewWindowCursor == 0) {
 		SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);

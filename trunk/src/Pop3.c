@@ -61,7 +61,7 @@ static int recvcnt = 0;
 static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
 static int delete_get_no;					// 削除メール位置
-static int deletes_remaining = 0;
+static int deletes_remaining = 65535;
 static BOOL init_recv;						// 新着取得位置初期化フラグ
 static int mail_received;					// １件目受信フラグ
 static BOOL receiving_uidl;					// UIDLレスポンス受信中
@@ -1404,12 +1404,6 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
-			if (--deletes_remaining <= 0) {
-				if (get_no != -1 && op.SocLog > 1) {
-					log_save_a("DELE stopped by DeletePerUpdateLimit");
-				}
-				get_no = -1;
-			}
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1582,12 +1576,6 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	if (get_no == -1) {
 		if (ServerDelete == TRUE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
-			if (--deletes_remaining <= 0) {
-				if (get_no != -1 && op.SocLog > 1) {
-					log_save_a("DELE stopped by DeletePerUpdateLimit");
-				}
-				get_no = -1;
-			}
 		}
 		if (get_no == -1) {
 			return POP_QUIT;
@@ -1660,6 +1648,7 @@ static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 	mem_free(&UIDL);
 	// 削除コマンドの送信
+	deletes_remaining--;
 	if (send_command(hWnd, soc, TEXT(CMD_DELE), delete_get_no, ErrStr) == FALSE) {
 		return POP_ERR;
 	}
@@ -1734,6 +1723,7 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		return POP_ERR;
 	}
 	// 削除コマンドの送信
+	deletes_remaining--;
 	if (send_command(hWnd, soc, TEXT(CMD_DELE), delete_get_no, ErrStr) == FALSE) {
 		return POP_ERR;
 	}
@@ -1748,7 +1738,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	MAILITEM *tpMailItem;
 	HWND hListView;
 	int i, j;
-	int get_no;
+	int get_no, del_stop;
 
 	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
@@ -1770,30 +1760,37 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		tpMailBox->LastMessageId = NULL;
 		return POP_ERR;
 	}
+	
+	del_stop = -1;
 	get_no = item_get_next_delete_mark(tpMailBox, TRUE, get_no, &delete_get_no);
-	if (--deletes_remaining <= 0) {
-		if (get_no != -1 && op.SocLog > 1) {
-			log_save_a("DELE stopped by DeletePerUpdateLimit");
-		}
-		get_no = -1;
-	}
 	if (get_no != -1) {
-		// 削除メールの確認コマンドを送信
-		return exec_send_check_command(hWnd, soc, get_no, ErrStr, tpMailBox);
+		if (deletes_remaining > 0) {
+			return exec_send_check_command(hWnd, soc, get_no, ErrStr, tpMailBox);
+		} else if (op.SocLog > 1) {
+			log_save_a("DELE stopped by DeletePerUpdateLimit\r\n");
+			del_stop = get_no;
+		}
 	}
 
-	// 削除処理完了
+	// remove deleted messages from ListView
+	deletes_remaining = (op.DeletePerUpdateLimit > 0) ? op.DeletePerUpdateLimit : 65535;
 	if (ShowFlag == TRUE) {
 		// リストビューから削除
 		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		ListView_SetRedraw(hListView, FALSE);
-		while ((get_no =  ListView_GetNextDeleteItem(hListView, -1)) != -1) {
+		while ((get_no = ListView_GetNextDeleteItem(hListView, -1)) != -1) {
+			if (--deletes_remaining < 0) {
+				break;
+			}
 			ListView_DeleteItem(hListView, get_no);
 		}
 		ListView_SetRedraw(hListView, TRUE);
 	}
-	// メールアイテムの解放
+	// remove deleted messages from Mailbox
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+		if (i == del_stop) {
+			break;
+		}
 		tpMailItem = *(tpMailBox->tpMailItem + i);
 		if (tpMailItem == NULL || tpMailItem->Mark != ICON_DEL) {
 			continue;
