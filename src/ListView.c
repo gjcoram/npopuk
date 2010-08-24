@@ -698,6 +698,12 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 				wbuf1 = ((MAILITEM *)lParam1)->From;
 			if (((MAILITEM *)lParam2)->From != NULL)
 				wbuf2 = ((MAILITEM *)lParam2)->From;
+			if (op.LvSortFromAddressOnly) {
+				if (((MAILITEM *)lParam1)->From_email != NULL)
+					wbuf1 = ((MAILITEM *)lParam1)->From_email;
+				if (((MAILITEM *)lParam2)->From_email != NULL)
+					wbuf2 = ((MAILITEM *)lParam2)->From_email;
+			}
 		}
 		while (*wbuf1 == TEXT('"') || *wbuf1 == TEXT('<')) wbuf1++;
 		while (*wbuf2 == TEXT('"') || *wbuf2 == TEXT('<')) wbuf2++;

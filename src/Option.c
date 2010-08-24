@@ -3795,10 +3795,19 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				BM_SETCHECK, 1, 0);
 			EnableSortColumns(hDlg, TRUE);
 		}
+		if (op.LvSortFromAddressOnly) {
+			SendDlgItemMessage(hDlg, IDC_SORT_FROM_EMAIL, BM_SETCHECK, 1, 0);
+		}
+		EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), FALSE);
+		EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), FALSE);
 		if (abs(op.LvSortItem) == 1) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM1, BM_SETCHECK, 1, 0);
 		} else if (abs(op.LvSortItem) == 2) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_SETCHECK, 1, 0);
+			if (op.LvAutoSort != 0) {
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), TRUE);
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), TRUE);
+			}
 		} else if (abs(op.LvSortItem) == 3) {
 			SendDlgItemMessage(hDlg, IDC_SORTITEM3, BM_SETCHECK, 1, 0);
 		} else if (abs(op.LvSortItem) == 4) {
@@ -3847,6 +3856,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				op.LvSortItem = 4;
 			} else { // if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1)
 				op.LvSortItem = 2;
+				op.LvSortFromAddressOnly = SendDlgItemMessage(hDlg, IDC_SORT_FROM_EMAIL, BM_GETCHECK, 0, 0);
 			}
 #endif
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_SORTORDER, BM_GETCHECK, 0, 0) == 1) 
@@ -3892,11 +3902,26 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				enable = TRUE;
 			}
 			retval = EnableSortColumns(hDlg, enable);
+			if (enable && SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1) {
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), TRUE);
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), TRUE);
+			} else {
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), FALSE);
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), FALSE);
+			}
 			break;
 		case IDC_SORTITEM1:
 		case IDC_SORTITEM2:
 		case IDC_SORTITEM3:
 		case IDC_SORTITEM4:
+			if (SendDlgItemMessage(hDlg, IDC_SORTITEM2, BM_GETCHECK, 0, 0) == 1
+				&& SendDlgItemMessage(hDlg, IDC_AUTOSORT0, BM_GETCHECK, 0, 0) == 0) {
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), TRUE);
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), TRUE);
+			} else {
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_EMAIL), FALSE);
+				EnableWindow(GetDlgItem(hDlg, IDC_SORT_FROM_TEXT), FALSE);
+			}
 #endif
 		case IDC_CHECK_SORTORDER:
 		case IDC_COL_FSDZ:
