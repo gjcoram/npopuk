@@ -87,6 +87,8 @@
 #define IDC_AUTOSORT0                   203
 #define IDC_AUTOSORT1                   204
 #define IDC_AUTOSORT2                   205
+#define IDC_SORT_FROM_EMAIL             206
+#define IDC_SORT_FROM_TEXT              207
 #define IDI_ICON_FWD                    210
 #define IDI_ICON_REPL                   211
 #define IDI_ICON_REPLFWD                212

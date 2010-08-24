@@ -153,6 +153,7 @@ void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override)
 
 	// need to allocate new copies of the strings
 	tpToMailItem->From = alloc_copy_t(tpFromMailItem->From);
+	tpToMailItem->From_email = alloc_copy_t(tpFromMailItem->From_email);
 	tpToMailItem->To = alloc_copy_t(tpFromMailItem->To);
 	tpToMailItem->Cc = alloc_copy_t(tpFromMailItem->Cc);
 	tpToMailItem->Bcc = alloc_copy_t(tpFromMailItem->Bcc);
@@ -313,6 +314,7 @@ void item_free(MAILITEM **tpMailItem, int cnt)
 			continue;
 		}
 		mem_free(&(*(tpMailItem + i))->From);
+		mem_free(&(*(tpMailItem + i))->From_email);
 		mem_free(&(*(tpMailItem + i))->To);
 		mem_free(&(*(tpMailItem + i))->Cc);
 		mem_free(&(*(tpMailItem + i))->Bcc);
@@ -793,6 +795,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 		// Šù‘¶‚Ìî•ñ‚ð‰ð•ú
 		mem_free(&tpMailItem->Subject);
 		mem_free(&tpMailItem->From);
+		mem_free(&tpMailItem->From_email);
 		mem_free(&tpMailItem->To);
 		mem_free(&tpMailItem->Cc);
 		mem_free(&tpMailItem->ReplyTo);
@@ -826,6 +829,13 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 	item_get_mime_content(buf, HEAD_SUBJECT, &tpMailItem->Subject, FALSE);
 	// From
 	item_get_mime_content(buf, HEAD_FROM, &tpMailItem->From, FALSE);
+	if (t = tpMailItem->From) {
+		TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(t) + 1));
+		if (p != NULL) {
+			GetMailAddress(t, p, NULL, FALSE);
+			tpMailItem->From_email = p;
+		}
+	}
 	// To
 	item_get_mime_content(buf, HEAD_TO, &tpMailItem->To, TRUE);
 	// Cc
@@ -1132,9 +1142,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 #ifdef UNICODE
 	char *din, *dout;
 #endif
-	///////////// MRP /////////////////////
 	TCHAR *Temp;
-	///////////// --- /////////////////////
 
 	tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
 	if (tpMailItem == NULL) {
@@ -1142,6 +1150,13 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	}
 	item_get_content_t(buf, HEAD_SUBJECT, &tpMailItem->Subject);
 	item_get_content_t(buf, HEAD_FROM, &tpMailItem->From);
+	if (Temp = tpMailItem->From) {
+		TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Temp) + 1));
+		if (p != NULL) {
+			GetMailAddress(Temp, p, NULL, FALSE);
+			tpMailItem->From_email = p;
+		}
+	}
 	item_get_content_t(buf, HEAD_TO, &tpMailItem->To);
 	item_get_content_t(buf, HEAD_CC, &tpMailItem->Cc);
 	item_get_content_t(buf, HEAD_BCC, &tpMailItem->Bcc);

@@ -299,6 +299,7 @@ void ini_read_general(HWND hWnd)
 	op.LvDefSelectPos = profile_get_int(GENERAL, TEXT("LvDefSelectPos"), 1);
 	op.LvAutoSort = profile_get_int(GENERAL, TEXT("LvAutoSort"), 1);
 	op.LvSortItem = profile_get_int(GENERAL, TEXT("LvSortItem"), 3);
+	op.LvSortFromAddressOnly = profile_get_int(GENERAL, TEXT("LvSortFromAddressOnly"), 0);
 	op.LvThreadView = profile_get_int(GENERAL, TEXT("LvThreadView"), 0);
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
@@ -1178,6 +1179,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("LvDefSelectPos"), op.LvDefSelectPos);
 	profile_write_int(GENERAL, TEXT("LvAutoSort"), op.LvAutoSort);
 	profile_write_int(GENERAL, TEXT("LvSortItem"), op.LvSortItem);
+	profile_write_int(GENERAL, TEXT("LvSortFromAddressOnly"), op.LvSortFromAddressOnly);
 	profile_write_int(GENERAL, TEXT("LvThreadView"), op.LvThreadView);
 	profile_write_int(GENERAL, TEXT("LvStyle"), op.LvStyle);
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx);

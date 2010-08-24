@@ -948,6 +948,9 @@ BEGIN
                     BS_AUTORADIOBUTTON,10,25,90,10
     CONTROL         "All mailboxes &by column",IDC_AUTOSORT2,"Button",
                     BS_AUTORADIOBUTTON,10,40,90,10
+    CONTROL         "Use bare e-mail address",IDC_SORT_FROM_EMAIL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,55,90,10
+    LTEXT           "when sorting by 'From'",IDC_SORT_FROM_TEXT,27,65,80,10
     GROUPBOX        "Column",IDC_STATIC,108,25,85,60
     CONTROL         "Subjec&t",IDC_SORTITEM1,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,114,40,40,10
@@ -979,7 +982,8 @@ BEGIN
     CONTROL         "&Scan all mailboxes for unread mail",
                     IDC_CHECK_SCANALLFORUNREAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,10,10,190,10
-    LTEXT           "When message is marked for deletion, move to",IDC_STATIC,10,25,205,10
+    LTEXT           "When message is marked for deletion, move to",
+                    IDC_STATIC,10,25,205,10
     CONTROL         "&Next message",IDC_VIEWNEXTDEL_NEXT,"Button",
                     BS_AUTOCHECKBOX,15,37,60,10
     CONTROL         "that is &unread",IDC_VIEWNEXTDEL_UNREAD,"Button",

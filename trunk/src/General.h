@@ -401,6 +401,7 @@ typedef struct _OPTION {
 	int LvDefSelectPos;
 	int LvAutoSort;
 	int LvSortItem;
+	int LvSortFromAddressOnly;
 	int LvThreadView;
 	int LvStyle;
 	int LvStyleEx;
@@ -688,6 +689,7 @@ typedef struct _MAILITEM {
 	HANDLE hProcess;
 
 	TCHAR *From;
+	TCHAR *From_email;
 	TCHAR *To;
 	TCHAR *Cc;
 	TCHAR *Bcc;
