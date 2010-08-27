@@ -828,7 +828,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = mbi.hwndMB;
 
 	CommandBar_AddToolTips(hViewToolBar, 15, szTips);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, 16, 16);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, TB_ICONSIZE, TB_ICONSIZE);
 #ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif
@@ -954,6 +954,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #ifdef _WIN32_WCE
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
+#endif
+
+#ifndef _WCE_OLD
+	// disable IME?
+	ImmAssociateContext(GetDlgItem(hWnd, IDC_EDIT_BODY), (HIMC)NULL);
 #endif
 
 	SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
@@ -1666,11 +1671,12 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	HWND hEdit = NULL;
 	TCHAR *buf = NULL;
 	DWORD dwStart, dwEnd;
-	BOOL Init = FALSE, FirstLoop = TRUE, Done = FALSE;
+	BOOL Init = FALSE, FirstLoop = TRUE, Done = FALSE, Same = FALSE;
 	int i = 0;
 
 	FindOrReplace = 1;
 	if (hWnd != MainWnd) {
+		Same = TRUE;
 		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY); // used here & far below
 		if (FindSet == TRUE || FindStr == NULL) {
 #ifdef UNICODE
@@ -1751,7 +1757,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 
 	if (hWnd == MainWnd) {
 		HWND hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
-		FindBox = SelBox;
+		MAILITEM *selitem;
 		i = 0;
 		if (ListView_GetSelectedCount(hListView) > 0) {
 			i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
@@ -1759,7 +1765,23 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				i = 0;
 			}
 		}
-		FindMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		selitem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		if (FindBox == SelBox && FindMailItem == selitem) {
+			hEdit = NULL;
+			if (SelBox == MAILBOX_SEND && FindMailItem->hEditWnd != NULL) {
+				hEdit = GetDlgItem(FindMailItem->hEditWnd, IDC_EDIT_BODY);
+			} else if (hViewWnd != NULL &&
+					FindMailItem == (MAILITEM *)GetWindowLong(hViewWnd, GWL_USERDATA)) {
+				hEdit = GetDlgItem(hViewWnd, IDC_EDIT_BODY);
+			}
+			if (hEdit != NULL) {
+				Same = TRUE;
+				_SetForegroundWindow(GetParent(hEdit));
+			}
+		} else {
+			FindBox = SelBox;
+			FindMailItem = selitem;
+		}
 	} else if (hWnd == hViewWnd) {
 		FindBox = vSelBox;
 		FindMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -1787,7 +1809,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	}
 
 	while (Done == FALSE) {
-		if (FirstLoop == TRUE && hWnd != MainWnd) {
+		if (FirstLoop == TRUE && Same == TRUE) {
 			// ñ{ï∂Ç©ÇÁåüçıÇµÇƒå©Ç¬Ç©Ç¡ÇΩà íuÇëIëèÛë‘Ç…Ç∑ÇÈ
 			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0) == TRUE) {
 				break;
