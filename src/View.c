@@ -1668,6 +1668,7 @@ void View_Scroll(HWND hWnd, int dir, BOOL ViewWnd)
 void View_FindMail(HWND hWnd, BOOL FindSet)
 {
 	MAILBOX *tpMailBox;
+	MAILITEM *lastEditFind = NULL;
 	HWND hEdit = NULL;
 	TCHAR *buf = NULL;
 	DWORD dwStart, dwEnd;
@@ -1808,6 +1809,10 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		FirstLoop = FALSE;
 	}
 
+	if (FindBox == MAILBOX_SEND) {
+		lastEditFind = FindMailItem;
+	}
+
 	while (Done == FALSE) {
 		if (FirstLoop == TRUE && Same == TRUE) {
 			// –{•¶‚©‚çŒŸõ‚µ‚ÄŒ©‚Â‚©‚Á‚½ˆÊ’u‚ð‘I‘ðó‘Ô‚É‚·‚é
@@ -1828,11 +1833,15 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			TCHAR *s, *sbody;
 
 			if (FindBox == MAILBOX_SEND) {
+				if (FindMailItem->RedirectTo == NULL) {
 #ifdef UNICODE
-				sbody = alloc_char_to_tchar(FindMailItem->Body);
+					sbody = alloc_char_to_tchar(FindMailItem->Body);
 #else
-				sbody = FindMailItem->Body;
+					sbody = FindMailItem->Body;
 #endif
+				} else {
+					sbody = NULL;
+				}
 			} else if (FindMailItem->Body != NULL) {
 				MULTIPART **findMultiPart = NULL;
 				int cnt, TextIndex;
@@ -1877,6 +1886,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 #endif
 					EndWindow(hViewWnd);
 					hViewWnd = NULL;
+				} else if (lastEditFind != NULL && lastEditFind->hEditWnd != NULL) {
+					EndEditWindow(lastEditFind->hEditWnd, FALSE);
 				}
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
