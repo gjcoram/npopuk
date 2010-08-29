@@ -2439,7 +2439,7 @@ static BOOL InitWindow(HWND hWnd)
 	hMainToolBar = mbi.hwndMB;
 
 	CommandBar_AddToolTips(hMainToolBar, 15, szTips);
-	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 13, 16, 16);
+	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 13, TB_ICONSIZE, TB_ICONSIZE);
 #ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif

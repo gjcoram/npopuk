@@ -1,5 +1,5 @@
-nPOPuk v2.15rc1                            readme-uk215.txt
-                                               28 July 2010
+nPOPuk v2.15                               readme-uk215.txt
+                                                29 Aug 2010
 -----------------------------------------------------------
 
 
@@ -80,6 +80,9 @@ include the following features:
 
 * Ability to ignore "Re:" or "Fwd:" when sorting the
   main window's list of messages by subject.
+
+* Ability to sort by the bare e-mail address when sorting
+  the main window's list of messages by the 'From' column.
 
 * Navigation buttons to move forward/backward between
   sent messages in the Outbox.
