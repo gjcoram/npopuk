@@ -4918,11 +4918,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SetMailMenu(hWnd);
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "CheckTimer: box=%d%s", CheckBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
 			break;
@@ -5629,11 +5631,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 			AllCheck = FALSE;
 			ExecFlag = FALSE;
 			KeyShowHeader = FALSE;
@@ -5742,11 +5746,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				i = SelBox;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
 				log_save_a(msg);
 			}
+#endif
 			AutoCheckFlag = FALSE;
 			// ダイヤルアップ開始
 			if (op.RasCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
@@ -5794,11 +5800,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (MailMarkCheck(hWnd, FALSE) == FALSE) {
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update all: delete=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
@@ -6113,11 +6121,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 								break;
 							}
+#ifndef _WCE_OLD
 							if (op.SocLog > 1) {
 								char msg[50];
 								sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 								log_save_a(msg);
 							}
+#endif
 							AllCheck = FALSE;
 							ExecFlag = FALSE;
 							KeyShowHeader = FALSE;
