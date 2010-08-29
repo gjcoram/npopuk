@@ -101,8 +101,6 @@
 #define MKVERSTRHELP(a,b,c,d) #a "." #b
 #define MKVERTXTHELP(a,b,c,d) TEXT(#a) TEXT(".") TEXT(#b)
 #define MKVERLNGHELP(a,b,c,d) #a "." #b
-#define MKBLDSTR(a,b,c,d)
-#define MKBLDSTRSSL(a,b,c,d)
 #define MKBLDSTR(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("_") BUILDSTR TEXT(".zip")
 #define MKBLDSTRSSL(a,b,c,d) TEXT("npopuk") TEXT(#a) TEXT(#b) TEXT("ssl_") BUILDSTR TEXT(".zip")
 #endif
