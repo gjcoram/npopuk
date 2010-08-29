@@ -1489,7 +1489,6 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 
 	case SMTP_QUIT:
 		if (gAutoSend == AUTOSEND_AND_QUIT) {
-if (op.SocLog > 1) log_save_a("GJC debug: posting quit message\r\n"); //GJCdelete
 			PostMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
 		}
 		break;
