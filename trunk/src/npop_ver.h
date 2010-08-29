@@ -18,8 +18,8 @@
 
 #define NPOPMAJOR  2
 #define NPOPMINOR 15
-#define NPOPBETA  7
-#define NPOPPATCH 2
+#define NPOPBETA  100
+#define NPOPPATCH 0
 
 
 // convert text, blanks, or zeroes to zeroes
