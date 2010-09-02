@@ -2933,7 +2933,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	TCHAR ErrStr[BUF_SIZE];
 	int BoxIndex;
 
-	BoxIndex = mailbox_name_to_index(tpMailItem->MailBox);
+	BoxIndex = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 	if (BoxIndex == -1) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
 		SocketErrorMessage(hWnd, STR_ERR_SELECTMAILBOX, MAILBOX_SEND);
@@ -3504,7 +3504,11 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 			if (tpMailItem->FwdAttach != NULL) {
 				MAILITEM *tpFwdMailItem = NULL;
 				int k, kk;
-				if ((k = mailbox_name_to_index(tpMailItem->MailBox)) != -1) {
+				k = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+				if (k == -1) {
+					k = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_SAVE);
+				}
+				if (k != -1) {
 					if ((MailBox + k)->Loaded
 							&& (kk = item_find_thread(MailBox + k, tpMailItem->References,
 														(MailBox+k)->MailItemCnt)) != -1) {
@@ -4918,13 +4922,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SetMailMenu(hWnd);
 				break;
 			}
-#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "CheckTimer: box=%d%s", CheckBox, "\r\n");
 				log_save_a(msg);
 			}
-#endif
 			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
 			break;
@@ -5051,7 +5053,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_NEWMAIL_TIMER:
 			KillTimer(hWnd, wParam);
 			if (InitialAccount != NULL) {
-				int i = mailbox_name_to_index(InitialAccount);
+				int i = mailbox_name_to_index(InitialAccount, MAILBOX_TYPE_ACCOUNT);
+				if (i == -1) {
+					i = mailbox_name_to_index(InitialAccount, MAILBOX_TYPE_SAVE);
+				}
 				mailbox_select(hWnd, i);
 				mem_free(&InitialAccount);
 				InitialAccount = NULL;
@@ -5386,7 +5391,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		// アカウントの設定
 		case ID_MENUITEM_SETMAILBOX:
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
-				if (SetSaveBoxName(hWnd) == FALSE) {
+				if (SetSaveBoxOption(hWnd) == FALSE) {
 					break;
 				}
 			} else if (SetMailBoxOption(hWnd, FALSE) == FALSE) {
@@ -5631,13 +5636,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 				break;
 			}
-#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
-#endif
 			AllCheck = FALSE;
 			ExecFlag = FALSE;
 			KeyShowHeader = FALSE;
@@ -5746,13 +5749,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				i = SelBox;
 			}
-#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
 				log_save_a(msg);
 			}
-#endif
 			AutoCheckFlag = FALSE;
 			// ダイヤルアップ開始
 			if (op.RasCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
@@ -5800,13 +5801,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (MailMarkCheck(hWnd, FALSE) == FALSE) {
 				break;
 			}
-#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update all: delete=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
-#endif
 
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
@@ -6121,13 +6120,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 								break;
 							}
-#ifndef _WCE_OLD
 							if (op.SocLog > 1) {
 								char msg[50];
 								sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 								log_save_a(msg);
 							}
-#endif
 							AllCheck = FALSE;
 							ExecFlag = FALSE;
 							KeyShowHeader = FALSE;
@@ -6417,7 +6414,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		wkSendMailItem = (MAILITEM *)lParam;
 		NewMailCnt = -1;
 		SmtpWait = 0;
-		CheckBox = mailbox_name_to_index(wkSendMailItem->MailBox);
+		CheckBox = mailbox_name_to_index(wkSendMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 		if (CheckBox != -1 && (MailBox + CheckBox)->PopBeforeSmtp != 0) {
 			// POP before SMTP
 			AutoCheckFlag = FALSE;

@@ -1817,7 +1817,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			lstrcpy(buf, tpMailBox->Filename);
 		}
 		if (file_save_mailbox(buf, SaveDir, j, is_backup, FALSE,
-			(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode) == FALSE) {
+			(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode) == FALSE) {
 			rc = FALSE;
 		}
 	}

@@ -892,7 +892,7 @@ void mailbox_select(HWND hWnd, int Sel)
 /*
  * mailbox_name_to_index - メールボックスの名前からメールボックスのインデックスを取得する
  */
-int mailbox_name_to_index(TCHAR *Name)
+int mailbox_name_to_index(TCHAR *Name, int Type)
 {
 	int i;
 
@@ -900,8 +900,10 @@ int mailbox_name_to_index(TCHAR *Name)
 		return -1;
 	}
 	for(i = 0; i < MailBoxCnt; i++){
-		if(lstrcmpi((MailBox + i)->Name, Name) == 0){
-			return i;
+		if (Type == (MailBox + i)->Type) { // MAILBOX_TYPE_SAVE or account
+			if(lstrcmpi((MailBox + i)->Name, Name) == 0){
+				return i;
+			}
 		}
 	}
 	return -1;

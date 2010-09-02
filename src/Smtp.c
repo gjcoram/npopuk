@@ -429,7 +429,6 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
-#ifndef _WCE_OLD
 		if (op.SocLog > 1) {
 			char buf[BUF_SIZE];
 			char *pa;
@@ -446,9 +445,6 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 			log_save_a(buf);
 		}
 		return (TCHAR *)-1;
-#else
-		; // no-op on _WCE_OLD
-#endif
 	}
 	mem_free(&p);
 	return ((*address != TEXT('\0')) ? address + 1 : address);
@@ -706,7 +702,11 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	if (tpMailItem->FwdAttach != NULL  && *(tpMailItem->FwdAttach) != TEXT('\0')) {
 		// GJC - find original message to forward attachments
 		int i, j;
-		if ((i = mailbox_name_to_index(tpMailItem->MailBox)) != -1) {
+		i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+		if (i == -1) {
+			i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_SAVE);
+		}
+		if (i != -1) {
 			if ((j = item_find_thread(MailBox + i, tpMailItem->References, (MailBox+i)->MailItemCnt)) != -1) {
 				tpFwdMailItem = (*((MailBox + i)->tpMailItem + j));
 			}
@@ -1420,7 +1420,8 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		}
 
 		// check if there are other messages queued for sending
-		i = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, mailbox_name_to_index(send_mail_box->Name));
+		i = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, 
+				mailbox_name_to_index(send_mail_box->Name, MAILBOX_TYPE_ACCOUNT));
 		if (i == -1) {
 			reorder_sendbox();
 		}

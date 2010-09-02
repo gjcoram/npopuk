@@ -117,7 +117,11 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 	ListView_AddColumn(hListView, LVCFMT_RIGHT, *(op.LvColSize + 3), STR_LIST_LVHEAD_SIZE, 3);
 
 	//of header Setting
+#ifdef _WIN32_WCE
 	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, ICONCOUNT, ICONCOUNT);
+#else
+	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR32 | ILC_MASK, ICONCOUNT, ICONCOUNT);
+#endif
 	ImageListIconAdd(IconList, IDI_ICON_NON);
 	ImageListIconAdd(IconList, IDI_ICON_MAIN);
 	ImageListIconAdd(IconList, IDI_ICON_READ);

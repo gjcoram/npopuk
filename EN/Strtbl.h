@@ -89,6 +89,7 @@
 #define STR_ERR_FILEEXIST			TEXT("Can't find file %s")
 #define STR_ERR_FILE_TOO_LARGE		TEXT("File %s too large")
 #define STR_ERR_FILENAME			TEXT("Invalid character in filename")
+#define STR_ERR_RENAME				TEXT("Failed to rename file")
 #define STR_ERR_FILECONFLICT		TEXT("'%s' conflicts with filename for %s")
 #define STR_ERR_NOFILENAME			TEXT("No file name specified")
 #define STR_ERR_NOSELECT			TEXT("Nothing selected")
@@ -517,6 +518,7 @@
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_ENCODE			TEXT("Encoding")
 #define STR_TITLE_NEWMBOX			TEXT("Create mailbox")
+#define STR_TITLE_EDITSBOX			TEXT("Savebox options")
 
 #define STR_SF_TITLE				TEXT("Select file")
 #define STR_SF_LV_NAME				TEXT("Name")

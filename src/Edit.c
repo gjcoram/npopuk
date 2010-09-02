@@ -206,7 +206,7 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 	int i;
 
 	//of pause Acquisition
-	i = mailbox_name_to_index(tpMailItem->MailBox);
+	i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 	if (i != -1) {
 		MyMailAddress = (MailBox + i)->MailAddress;
 	}
@@ -478,7 +478,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		}
 		len += GetReplyBodySize(mBody, quotchar);
 
-		i = mailbox_name_to_index(tpMailItem->MailBox);
+		i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 		if (i!= -1) {
 			sig = (MailBox + i)->Signature;
 		} else {
@@ -532,7 +532,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		if (is_fwd && (op.SignForward == 0 || op.SignForward == 2)) {
 			return;
 		}
-		i = mailbox_name_to_index(tpMailItem->MailBox);
+		i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 		if (i == -1 || (MailBox + i)->Signature == NULL || *(MailBox + i)->Signature == TEXT('\0')) {
 			return;
 		}
@@ -1778,7 +1778,7 @@ static BOOL ReadEditMail(HWND hWnd, long id, MAILITEM *tpMailItem, BOOL ReadFlag
 		tpMailItem->Body = alloc_tchar_to_char(tmp);
 		mem_free(&tmp);
 #else
-		tpMailItem->Body = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+		tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (len + 1));
 		if (tpMailItem->Body != NULL) {
 			SetDot(p, tpMailItem->Body);
 		}
