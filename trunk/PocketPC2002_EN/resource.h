@@ -96,8 +96,10 @@
 #define IDI_ICON_REPLFWD                212
 #define IDC_DATE_FORMAT                 213
 #define IDC_TIME_FORMAT                 214
-#define IDD_DIALOG_MBOXTYPE             219
-#define IDC_MBOX_NAME                   220
+#define IDD_DIALOG_SBOXEDIT             215
+#define IDD_DIALOG_MBOXTYPE             216
+#define IDC_MBOX_NAME                   217
+#define IDC_MBOX_FILE                   218
 #define IDC_RADIO_MBOXIN                221
 #define IDC_CHECK_TEMPL                 222
 #define IDC_RADIO_MBOXSAVE              223

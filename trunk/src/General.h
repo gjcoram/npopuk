@@ -111,7 +111,7 @@ extern int sprintf_s();
 #define MAX_TRAY_CNT			10					// see ID_MENUITEM_TRAYCHECK
 
 #define SICONSIZE				16					//Size of listview icons
-#define TB_ICONSIZE				16					//Toolbar buttons
+#define TB_ICONSIZE				32					//Toolbar buttons
 
 #define TABSTOPLEN				8					// TAB Stop
 
@@ -121,7 +121,9 @@ extern int sprintf_s();
 
 #define MAILBOX_SEND			0
 #define MAILBOX_USER			1
+#define MAILBOX_TYPE_ACCOUNT	0
 #define MAILBOX_TYPE_SAVE		1
+//#define MAILBOX_TYPE_IMAP		?
 #define MAILBOX_IMPORT_SAVE		2
 #define MAILBOX_ADD_SAVE		10
 
@@ -919,7 +921,7 @@ BOOL mailbox_unread_check(int index, BOOL NewFlag);
 int mailbox_next_unread(HWND hWnd, int index, int endindex);
 void mailbox_select(HWND hWnd, int Sel);
 BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach);
-int mailbox_name_to_index(TCHAR *Name);
+int mailbox_name_to_index(TCHAR *Name, int Type);
 void filter_sbox_check(HWND hWnd, TCHAR *ConvertName);
 void filter_free(MAILBOX *tpMailBox);
 ADDRESSBOOK *addressbook_copy(void);
@@ -1040,7 +1042,7 @@ void SetSip(HWND hDlg, int edit_notify);
 int AllocGetText(HWND hEdit, TCHAR **buf);
 int SetMailBoxType(HWND hWnd, int Type);
 BOOL ImportSavebox(HWND hWnd);
-BOOL SetSaveBoxName(HWND hWnd);
+BOOL SetSaveBoxOption(HWND hWnd);
 BOOL CALLBACK StartConfigProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag);
 BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

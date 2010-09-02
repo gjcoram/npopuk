@@ -189,8 +189,8 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 
 	// 自分のメールアドレスの取得
 	if ((MailBox + SelBox)->Type == MAILBOX_TYPE_SAVE) {
-		i = mailbox_name_to_index(tpMailItem->MailBox);
-		if (i != -1 && (MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+		i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+		if (i != -1) {
 			MyMailAddress = (MailBox + i)->MailAddress;
 		}
 	} else {

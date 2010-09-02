@@ -686,7 +686,7 @@ int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIn
 		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND) {
 			continue;
 		}
-		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox);
+		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 		if (MailBoxIndex == BoxIndex) {
 			return i;
 		} else if (MailBoxIndex == MAILBOX_SEND) {
@@ -1961,7 +1961,7 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 		for (i = 0; i < op.GlobalFilterCnt; i++) {
 			dw = do_what[i];
 			if (dw == FILTER_COPY || dw == FILTER_MOVE) {
-				sbox = mailbox_name_to_index((*(op.tpFilter + i))->SaveboxName);
+				sbox = mailbox_name_to_index((*(op.tpFilter + i))->SaveboxName, MAILBOX_TYPE_SAVE);
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
 				}
@@ -1987,7 +1987,7 @@ static BOOL item_filter_execute(MAILBOX *tpMailBox, MAILITEM *tpMailItem, int fr
 		for (i = 0; i < tpMailBox->FilterCnt; i++) {
 			dw = do_what[op.GlobalFilterCnt + i];
 			if (dw == FILTER_COPY || dw == FILTER_MOVE) {
-				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName);
+				sbox = mailbox_name_to_index((*(tpMailBox->tpFilter + i))->SaveboxName, MAILBOX_TYPE_SAVE);
 				if (sbox != -1) {
 					error |= item_filter_domovecopy(tpMailBox, tpMailItem, refilter, dw, sbox);
 				}

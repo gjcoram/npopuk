@@ -1955,6 +1955,10 @@ BOOL file_rename(HWND hWnd, TCHAR *Source, TCHAR *Destin)
 
 	ret = MoveFile(source_path, destin_path);
 
+	if (ret == 0 && file_get_size(source_path) == -1) {
+		ret = 1;
+	}
+
 	if (ret) {
 		// need to delete backup file, lest it be found next time we file_read_mailbox
 		TCHAR pathBackup[BUF_SIZE];

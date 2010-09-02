@@ -107,7 +107,9 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
 static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox);
+static BOOL SboxNameCheck(TCHAR *newname, HWND hDlg);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SboxEditProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos);
 static void MailboxFilenameUpdate(HWND hListView, int Start, int Stop);
@@ -2040,6 +2042,53 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 	return ret;
 }
 
+/* 
+ * SboxNameCheck
+*/
+static BOOL SboxNameCheck(TCHAR *newname, HWND hDlg) {
+	BOOL ret = TRUE;
+	TCHAR *p;
+	int i;
+
+	if (newname == NULL || *newname == TEXT('\0')) {
+		ErrorMessage(hDlg, STR_ERR_NOSBOXNAME);
+		ret = FALSE;
+	}
+	for (p = newname; *p != TEXT('\0') && ret; p++) {
+		if (*p == TEXT('\\') || *p == TEXT('/') || *p == TEXT(':') 
+			|| *p == TEXT('*') || *p == TEXT('?') || *p == TEXT('\"')
+			|| *p == TEXT('<') || *p == TEXT('>') || *p == TEXT('|')) {
+			ret = FALSE;
+			ErrorMessage(hDlg, STR_ERR_FILENAME);
+			break;
+		}
+	}
+	for (i = 0; i < MailBoxCnt-1 && ret; i++) {
+		TCHAR fname[BUF_SIZE];
+		MAILBOX *tpMailBox;
+		if (i == SelBox) continue;
+		tpMailBox = (MailBox + i);
+		if (i == MAILBOX_SEND) {
+			wsprintf(fname, SENDBOX_FILE);
+		} else if (tpMailBox->Filename == NULL) {
+			wsprintf(fname, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
+		} else {
+			lstrcpy(fname, tpMailBox->Filename);
+		}
+		if (lstrcmp(newname, fname) == 0) {
+			TCHAR msg[MSG_SIZE];
+			ret = FALSE;
+			wsprintf(msg, STR_ERR_FILECONFLICT, newname, 
+				(tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
+				? STR_MAILBOX_NONAME : tpMailBox->Name);
+			ErrorMessage(hDlg, msg);
+			break;
+		}
+	}
+
+	return ret;
+}
+
 /*
  * MboxTypeProc - set type: Account or SaveBox (GJC)
 */
@@ -2138,6 +2187,146 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 	return ret;
 }
 
+/*
+ * SboxEditProc - set SaveBox options (GJC)
+*/
+static BOOL CALLBACK SboxEditProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	MAILBOX *mbox = (MailBox + SelBox);
+	BOOL ret = TRUE;
+	int i, cnt = 0, sel = -1;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_EDITSBOX, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		if (mbox == NULL) {
+			ret = FALSE;
+			break;
+		}
+		SendDlgItemMessage(hDlg, IDC_MBOX_NAME, WM_SETTEXT, 0, (LPARAM)mbox->Name);
+		SendDlgItemMessage(hDlg, IDC_MBOX_NAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_MBOX_FILE, WM_SETTEXT, 0, (LPARAM)mbox->Filename);
+		SendDlgItemMessage(hDlg, IDC_MBOX_FILE, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, (LPARAM)TEXT(""));
+		if (mbox->DefAccount == NULL || *mbox->DefAccount == TEXT('\0')) {
+			sel = 0;
+		}
+		for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+			MAILBOX *tpMailBox = MailBox + i;
+			if (tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+				SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_ADDSTRING, 0, 
+					((tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0')) ?
+					(LPARAM)STR_MAILBOX_NONAME : (LPARAM)tpMailBox->Name));
+				cnt++;
+				if (sel == -1 && tpMailBox->Name != NULL && lstrcmp(tpMailBox->Name, mbox->DefAccount) == 0) {
+					sel = cnt;
+				}
+			}
+		}
+		SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_SETCURSEL, sel, 0);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_MBOX_NAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_MBOX_FILE),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_MBOX_NAME:
+		case IDC_MBOX_FILE:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
+		case IDOK:
+			if (mbox != NULL) {
+				TCHAR buf[BUF_SIZE];
+				TCHAR *tmp = NULL;
+				sel = 0;
+				AllocGetText(GetDlgItem(hDlg, IDC_MBOX_FILE), &tmp);
+				if (tmp == NULL || *tmp == TEXT('\0')) {
+					// trying to un-set Filename
+					if (mbox->Filename != NULL && *mbox->Filename != TEXT('\0')) {
+						i = lstrlen(TEXT("MailBox%d.dat")) + 5;
+						mem_free(&tmp);
+						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR *) * i);
+						if (tmp != NULL) {
+							wsprintf(tmp, TEXT("MailBox%d.dat"), SelBox);
+							sel = 2;
+						}
+					}
+				} else if (mbox->Filename == NULL) {
+					i = lstrlen(TEXT("MailBox%d.dat")) + 5;
+					mbox->Filename = (TCHAR *)mem_alloc(sizeof(TCHAR *) * i);
+					if (mbox->Filename != NULL) {
+						wsprintf(mbox->Filename, TEXT("MailBox%d.dat"), SelBox);
+						sel = 3;
+					}
+				} else if (lstrcmp(tmp, mbox->Filename) != 0) {
+					sel = 1;
+				}
+
+				if (sel != 0) {
+					ret = SboxNameCheck(tmp, hDlg);
+					if (ret == TRUE) {
+						if (file_rename(hDlg, mbox->Filename, tmp) != 0) {
+							mem_free(&mbox->Filename);
+							if (sel == 2) {
+								mbox->Filename = NULL;
+								mem_free(&tmp);
+							} else {
+								mbox->Filename = tmp;
+							}
+						} else {
+							ErrorMessage(hDlg, STR_ERR_RENAME);
+							ret = FALSE;
+						}
+					}
+				} else {
+					mem_free(&tmp);
+				}
+				if (ret == FALSE) {
+					SetFocus(GetDlgItem(hDlg, IDC_MBOX_FILE));
+					SendDlgItemMessage(hDlg, IDC_MBOX_FILE, EM_SETSEL, 0, -1);
+					mem_free(&tmp);
+					break;
+				}
+				AllocGetText(GetDlgItem(hDlg, IDC_MBOX_NAME), &mbox->Name);
+				sel = SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETCURSEL, 0, 0);
+				*buf = TEXT('\0');
+				if (sel > 0) {
+					SendDlgItemMessage(hDlg, IDC_COMBO_SMTP, CB_GETLBTEXT, sel, (LPARAM)buf);
+				}
+				mem_free(&mbox->DefAccount);
+				mbox->DefAccount = alloc_copy_t(buf);
+			}
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return ret;
+}
+
 /* 
  * SetMailBoxType - set type: Account or SaveBox (GJC)
  */
@@ -2170,7 +2359,6 @@ static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	BOOL breakout = FALSE;
 	BOOL ret = TRUE;
 	long fsize;
-	int i;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -2251,41 +2439,7 @@ static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			}
 			tmp = NULL;
 			AllocGetText(GetDlgItem(hDlg, IDC_IMPORT_SBOXFILE), &tmp);
-			if (tmp == NULL || *tmp == TEXT('\0')) {
-				mem_free(&Filename);
-				mem_free(&tmp);
-				ErrorMessage(hDlg, STR_ERR_NOSBOXNAME);
-				break;
-			}
-			for (p = tmp; *p != TEXT('\0') && breakout == FALSE; p++) {
-				if (*p == TEXT('\\') || *p == TEXT('/') || *p == TEXT(':') 
-					|| *p == TEXT('*') || *p == TEXT('?') || *p == TEXT('\"')
-					|| *p == TEXT('<') || *p == TEXT('>') || *p == TEXT('|')) {
-					breakout = TRUE;
-					ErrorMessage(hDlg, STR_ERR_FILENAME);
-				}
-			}
-			for (i = 0; i < MailBoxCnt-1 && breakout == FALSE; i++) {
-				TCHAR Name[BUF_SIZE];
-				if (i == SelBox) continue;
-				tpMailBox = (MailBox + i);
-				if (i == MAILBOX_SEND) {
-					wsprintf(Name, SENDBOX_FILE);
-				} else if (tpMailBox->Filename == NULL) {
-					wsprintf(Name, TEXT("MailBox%d.dat"), i - MAILBOX_USER);
-				} else {
-					lstrcpy(Name, tpMailBox->Filename);
-				}
-				if (lstrcmp(tmp, Name) == 0) {
-					breakout = TRUE;
-					wsprintf(msg, STR_ERR_FILECONFLICT, tmp, 
-						(tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
-						? STR_MAILBOX_NONAME : tpMailBox->Name);
-					ErrorMessage(hDlg, msg);
-					break;
-				}
-			}
-			if (breakout) {
+			if (SboxNameCheck(tmp, hDlg) == FALSE) {
 				mem_free(&Filename);
 				mem_free(&tmp);
 				break;
@@ -2346,15 +2500,18 @@ BOOL ImportSavebox(HWND hWnd)
 }
 
 /*
- * SetSaveBoxName - change name of SaveBox (GJC)
+ * SetSaveBoxOption - change options of SaveBox (GJC)
  */
-BOOL SetSaveBoxName(HWND hWnd)
+BOOL SetSaveBoxOption(HWND hWnd)
 {
 	TCHAR old_name[BUF_SIZE], new_name[BUF_SIZE];
+	TCHAR *old_file;
 	int i, j;
+	BOOL ret = FALSE;
 
 	wsprintf(old_name, TEXT("%s"), (MailBox + SelBox)->Name);
-	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MBOXTYPE), hWnd, MboxTypeProc, (LPARAM)MAILBOX_TYPE_SAVE) == TRUE) {
+	old_file = (MailBox + SelBox)->Filename;
+	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SBOXEDIT), hWnd, SboxEditProc, (LPARAM)MAILBOX_TYPE_SAVE) == TRUE) {
 		if ((MailBox + SelBox)->Name != NULL) {
 			wsprintf(new_name, TEXT("%s"), (MailBox + SelBox)->Name);
 		} else {
@@ -2387,10 +2544,12 @@ BOOL SetSaveBoxName(HWND hWnd)
 					}
 				}
 			}
-			return TRUE;
+			ret = TRUE;
+		} else if ((MailBox + SelBox)->Filename != old_file) {
+			ret = TRUE;
 		}
 	}
-	return FALSE;
+	return ret;
 }
 
 /*
@@ -2756,7 +2915,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SelBox = sel + MAILBOX_USER;
 			tpMailBox = MailBox + SelBox;
 			if (tpMailBox->Type == MAILBOX_TYPE_SAVE) {
-				ret = SetSaveBoxName(hDlg);
+				ret = SetSaveBoxOption(hDlg);
 			} else {
 				ret = SetMailBoxOption(hDlg, FALSE);
 			}
@@ -2766,6 +2925,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					p = STR_MAILBOX_NONAME;
 				}
 				ListView_SetItemText(hListView, sel, 0, p);
+				MailboxFilenameUpdate(hListView, sel, sel);
 				SelBox = oldsel;
 				SelectMBMenu(SelBox);
 				if (op.AutoSave != 0) {
@@ -5406,7 +5566,10 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef UNICODE
 				char *ContentType;
 #endif
-				i = mailbox_name_to_index(tpMailItem->MailBox);
+				i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+				if (i == -1) {
+					i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_SAVE);
+				}
 				if (i != -1) {
 					j = item_find_thread(MailBox + i, tpMailItem->References, (MailBox+i)->MailItemCnt);
 					if ( j!= -1) {
@@ -5709,10 +5872,10 @@ static void SetReplyToCombo(HWND hDlg, MAILITEM *tpMailItem)
 		mb_replyto = tpMailBox->ReplyTo;
 	}
 	if (tpMailItem->MailBox != NULL) {
-		i = mailbox_name_to_index(tpMailItem->MailBox);
+		i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
 		if (i != -1) {
 			tpMailBox = MailBox + i;
-			if (tpMailBox != NULL && tpMailBox->Type != MAILBOX_TYPE_SAVE) {
+			if (tpMailBox != NULL) {
 				mb_replyto = tpMailBox->ReplyTo;
 			}
 		}
@@ -5883,7 +6046,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (tpMailBox == NULL || tpMailBox->Type == MAILBOX_TYPE_SAVE) {
 				continue;
 			}
-			if ((mb == -1 && SelBox == i) || (tpMailItem->MailBox != NULL && mailbox_name_to_index(tpMailItem->MailBox) == i)) {
+			if ((mb == -1 && SelBox == i) || (tpMailItem->MailBox != NULL && mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT) == i)) {
 				j = i;
 				mb = cnt;
 				if (tpMailBox->MyAddr2Bcc) {
@@ -8446,6 +8609,11 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						break;
 					}
 				}
+			} else {
+				for (i = 0; i < AD_COL_CNT; i++) {
+					op.AddColSize[i] = ListView_GetColumnWidth(hListView, i+1);
+				}
+				GetWindowRect(hDlg, &op.AddrRect);
 			}
 
 			if (AddressBook->tpAddrItem != NULL) {
@@ -8469,10 +8637,6 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				// ƒAƒhƒŒƒX’ ‚ð•Û‘¶
 				file_save_address_book(ADDRESS_FILE, DataDir, AddressBook);
 			}
-			for (i = 0; i < AD_COL_CNT; i++) {
-				op.AddColSize[i] = ListView_GetColumnWidth(hListView, i+1);
-			}
-			GetWindowRect(hDlg, &op.AddrRect);
 			EndDialog(hDlg, TRUE);
 			break;
 
@@ -9002,7 +9166,7 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				*sel = 0;
 			} else {
 				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
-				*sel = mailbox_name_to_index(Name);
+				*sel = mailbox_name_to_index(Name, MAILBOX_TYPE_SAVE);
 			}
 			EndDialog(hDlg, TRUE);
 			break;
