@@ -2116,16 +2116,12 @@ static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_MBOX_NAME),
 			GWL_WNDPROC, (DWORD)EditTextCallback);
 #endif
-		if (Type == MAILBOX_TYPE_SAVE || Type == MAILBOX_ADD_SAVE) {
-			SendMessage(hDlg, WM_SETTEXT, 0, (Type == MAILBOX_TYPE_SAVE) ?
-				(LPARAM)STR_TITLE_RENAMESBOX : (LPARAM)STR_TITLE_ADDSBOX);
+		if (Type == MAILBOX_ADD_SAVE) {
+			SendMessage(hDlg, WM_SETTEXT, 0, (LPARAM)STR_TITLE_ADDSBOX);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_MBOXIN), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_TEMPL), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_IMPORTSBOX), FALSE);
 			SendDlgItemMessage(hDlg, IDC_RADIO_MBOXSAVE, BM_SETCHECK, BST_CHECKED, 0);
-			if (Type == MAILBOX_TYPE_SAVE) {
-				SendMessage(GetDlgItem(hDlg, IDC_RADIO_MBOXSAVE), WM_SETTEXT, 0, (LPARAM)STR_RADIO_RENAMESBOX);
-			}
 		} else {
 			SendDlgItemMessage(hDlg, IDC_RADIO_MBOXIN, BM_SETCHECK, BST_CHECKED, 0);
 			EnableWindow(GetDlgItem(hDlg, IDC_MBOX_NAME), FALSE);
@@ -2263,7 +2259,7 @@ static BOOL CALLBACK SboxEditProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 						mem_free(&tmp);
 						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR *) * i);
 						if (tmp != NULL) {
-							wsprintf(tmp, TEXT("MailBox%d.dat"), SelBox);
+							wsprintf(tmp, TEXT("MailBox%d.dat"), SelBox - MAILBOX_USER);
 							sel = 2;
 						}
 					}
@@ -2271,7 +2267,7 @@ static BOOL CALLBACK SboxEditProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					i = lstrlen(TEXT("MailBox%d.dat")) + 5;
 					mbox->Filename = (TCHAR *)mem_alloc(sizeof(TCHAR *) * i);
 					if (mbox->Filename != NULL) {
-						wsprintf(mbox->Filename, TEXT("MailBox%d.dat"), SelBox);
+						wsprintf(mbox->Filename, TEXT("MailBox%d.dat"), SelBox - MAILBOX_USER);
 						sel = 3;
 					}
 				} else if (lstrcmp(tmp, mbox->Filename) != 0) {

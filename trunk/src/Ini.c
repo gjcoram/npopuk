@@ -1567,6 +1567,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			profile_write_string(buf, TEXT("DefAccount"), (MailBox + j)->DefAccount);
 			// no other settings for SaveBox-type mailboxes
 			continue;
+		} else {
+			profile_delete_key(buf, TEXT("DefAccount"));
 		}
 
 		// Server

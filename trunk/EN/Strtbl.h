@@ -242,8 +242,6 @@
 #define STR_TITLE_ATTACHED			TEXT("Attachment")
 #define STR_TITLE_COPY2				TEXT("Copy to:")
 #define STR_TITLE_MOVE2				TEXT("Move to:")
-#define STR_TITLE_RENAMESBOX		TEXT("Rename SaveBox")
-#define STR_RADIO_RENAMESBOX		TEXT("Rename &savebox")
 #define STR_TITLE_ADDSBOX			TEXT("Add SaveBox")
 #define STR_TITLE_ADD_ADDR			TEXT("Add Addresses")
 
