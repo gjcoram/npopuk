@@ -304,6 +304,7 @@ void ini_read_general(HWND hWnd)
 	op.LvStyle = profile_get_int(GENERAL, TEXT("LvStyle"), LVS_SHOWSELALWAYS | LVS_REPORT);
 	op.LvStyleEx = profile_get_int(GENERAL, TEXT("LvStyleEx"), LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 	op.LvColumnOrder = profile_alloc_string(GENERAL, TEXT("LvColumnOrder"), TEXT("SFDZ"));
+	op.ContextMenuOption = profile_get_int(GENERAL, TEXT("ContextMenuOption"), 1);
 	op.MBMenuWidth = profile_get_int(GENERAL, TEXT("MBMenuWidth"), 130);
 	if (op.MBMenuWidth == 0) {
 		op.MBMenuWidth = 130; // upgrade from previous default
@@ -1184,6 +1185,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("LvStyle"), op.LvStyle);
 	profile_write_int(GENERAL, TEXT("LvStyleEx"), op.LvStyleEx);
 	profile_write_string(GENERAL, TEXT("LvColumnOrder"), op.LvColumnOrder);
+	profile_write_int(GENERAL, TEXT("ContextMenuOption"), op.ContextMenuOption);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth);
 	profile_write_int(GENERAL, TEXT("MBMenuMinWidth"), op.MBMenuMinWidth);
 	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount);

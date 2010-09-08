@@ -51,7 +51,7 @@ extern int sprintf_s();
 
 /* Define */
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
-#define APP_VERSION_NUM			2011
+#define APP_VERSION_NUM			2012
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
@@ -407,6 +407,7 @@ typedef struct _OPTION {
 	int LvStyle;
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
+	int ContextMenuOption;
 	int MBMenuWidth;
 	int MBMenuMinWidth;
 	int MBMenuHeight; // not saved in INI, for resizing
