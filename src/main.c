@@ -5167,7 +5167,21 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1, FALSE);
+			if (op.ContextMenuOption == 0) {
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+				ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 1, FALSE);
+#elif defined(_WIN32_WCE_LAGENDA)
+				ShowMenu(hWnd, hMainMenu, MailMenuPos, 1, FALSE);
+#else
+				ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 1, FALSE);
+#endif
+#else
+				ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 1, FALSE);
+#endif
+			} else {
+				ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1, FALSE);
+			}
 			break;
 
 		//In position of mouse pop rise menu indicatory

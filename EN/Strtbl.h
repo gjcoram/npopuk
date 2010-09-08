@@ -496,6 +496,10 @@
 #define STR_LIST_PPCMENU_RECVMARK	TEXT("&Mark to download")
 #define STR_LIST_PPCMENU_DELLIST		TEXT("Delete from &list")
 
+#define STR_LIST_SAVE_ALL			TEXT("Header and body are saved")
+#define STR_LIST_SAVE_HEAD			TEXT("Only header is saved")
+#define STR_LIST_SAVE_NONE			TEXT("Nothing saved")
+
 #ifdef _WIN32_WCE_PPC
 #define STR_TITLE_SMTPAUTH			TEXT("SMTP-AUTH")
 #define STR_TITLE_SETSSL			TEXT("Set SSL")

@@ -221,9 +221,9 @@ END
 // Bitmap
 //
 
-IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view.bmp"
-IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit.bmp"
-IDB_TOOLBAR             BITMAP                  "..\\res\\tbar_main.bmp"
+IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view32.bmp"
+IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit32.bmp"
+IDB_TOOLBAR             BITMAP                  "..\\res\\tbar_main32.bmp"
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -742,21 +742,23 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "&Use global option",IDC_CHECK_GLOBAL_RECV,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,10,120,10
-    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,32,95,10
-    EDITTEXT        IDC_EDIT_READLINE,111,30,40,12,ES_AUTOHSCROLL | 
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,32,85,10
+    EDITTEXT        IDC_EDIT_READLINE,105,30,40,12,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,15,50,165,10
 //    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,15,54,120,10
-    GROUPBOX        "Account messages",IDC_STATIC,15,72,185,58
+    GROUPBOX        "Account messages",IDC_STATIC,15,70,185,60
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
                     BS_AUTORADIOBUTTON,20,85,120,10
     CONTROL         "&Only header is saved",IDC_RADIO_HEADSAVE,"Button",
                     BS_AUTORADIOBUTTON,20,100,105,10
     CONTROL         "&Nothing saved",IDC_RADIO_NOSAVE,"Button",
-                    BS_AUTORADIOBUTTON,20,114,105,10
+                    BS_AUTORADIOBUTTON,20,115,105,10
+    LTEXT           "&Filename:",IDC_STATIC,5,142,30,10
+    EDITTEXT        IDC_MBOX_FILE,40,140,105,12,ES_AUTOHSCROLL
 END
 
 IDD_DIALOG_OPTION_SEND DIALOGEX 0, 0, 217, 158
