@@ -61,29 +61,29 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_MAIN           ICON                    "..\\res\\ico_main.ico"
-IDI_ICON_DEL            ICON                    "..\\res\\icon_del.ico"
-IDI_ICON_DOWN           ICON                    "..\\res\\ico_down.ico"
-IDI_ICON_NEW            ICON                    "..\\res\\icon_new.ico"
-IDI_ICON_NON            ICON                    "..\\res\\ico_none.ico"
-IDI_ICON_SENTMAIL       ICON                    "..\\res\\ico_sent.ico"
-IDI_ICON_SEND           ICON                    "..\\res\\ico_send.ico"
-IDI_ICON_NOCHECK        ICON                    "..\\res\\ico_nchk.ico"
-IDI_ICON_CHECK          ICON                    "..\\res\\icon_chk.ico"
-IDI_ICON_CLIP           ICON                    "..\\res\\icon_cli.ico"
-IDI_ICON_READ           ICON                    "..\\res\\ico_read.ico"
-IDI_ICON_CLIP_HIGH      ICON                    "..\\res\\ico_clhi.ico"
-IDI_ICON_CLIP_LOW       ICON                    "..\\res\\ico_cllo.ico"
-IDI_ICON_LOW            ICON                    "..\\res\\icon_low.ico"
-IDI_ICON_HIGH           ICON                    "..\\res\\ico_high.ico"
-IDI_ICON_FWD            ICON                    "..\\res\\icon_fwd.ico"
-IDI_ICON_REPL           ICON                    "..\\res\\ico_repl.ico"
-IDI_ICON_REPLFWD        ICON                    "..\\res\\ico_refw.ico"
-IDI_ICON_ERROR          ICON                    "..\\res\\icon_err.ico"
-IDI_ICON_HTML           ICON                    "..\\res\\ico_html.ico"
-IDI_ICON_HTML_HIGH      ICON                    "..\\res\\ico_h_hi.ico"
-IDI_ICON_HTML_LOW       ICON                    "..\\res\\ico_h_lo.ico"
-IDI_ICON_FLAG           ICON                    "..\\res\\ico_flag.ico"
+IDI_ICON_MAIN           ICON                    "..\\res32\\ico_main.ico"
+IDI_ICON_DEL            ICON                    "..\\res32\\icon_del.ico"
+IDI_ICON_DOWN           ICON                    "..\\res32\\ico_down.ico"
+IDI_ICON_NEW            ICON                    "..\\res32\\icon_new.ico"
+IDI_ICON_NON            ICON                    "..\\res32\\ico_none.ico"
+IDI_ICON_SENTMAIL       ICON                    "..\\res32\\ico_sent.ico"
+IDI_ICON_SEND           ICON                    "..\\res32\\ico_send.ico"
+IDI_ICON_NOCHECK        ICON                    "..\\res32\\ico_nchk.ico"
+IDI_ICON_CHECK          ICON                    "..\\res32\\icon_chk.ico"
+IDI_ICON_CLIP           ICON                    "..\\res32\\icon_cli.ico"
+IDI_ICON_READ           ICON                    "..\\res32\\ico_read.ico"
+IDI_ICON_CLIP_HIGH      ICON                    "..\\res32\\ico_clhi.ico"
+IDI_ICON_CLIP_LOW       ICON                    "..\\res32\\ico_cllo.ico"
+IDI_ICON_LOW            ICON                    "..\\res32\\icon_low.ico"
+IDI_ICON_HIGH           ICON                    "..\\res32\\ico_high.ico"
+IDI_ICON_FWD            ICON                    "..\\res32\\icon_fwd.ico"
+IDI_ICON_REPL           ICON                    "..\\res32\\ico_repl.ico"
+IDI_ICON_REPLFWD        ICON                    "..\\res32\\ico_refw.ico"
+IDI_ICON_ERROR          ICON                    "..\\res32\\icon_err.ico"
+IDI_ICON_HTML           ICON                    "..\\res32\\ico_html.ico"
+IDI_ICON_HTML_HIGH      ICON                    "..\\res32\\ico_h_hi.ico"
+IDI_ICON_HTML_LOW       ICON                    "..\\res32\\ico_h_lo.ico"
+IDI_ICON_FLAG           ICON                    "..\\res32\\ico_flag.ico"
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
@@ -164,6 +164,7 @@ BEGIN
     "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
     "V",            ID_MENUITEM_PASTEQUOT,  VIRTKEY, SHIFT, CONTROL,
                                                     NOINVERT
+    VK_BACK,        ID_KEY_DELWORD,         VIRTKEY, CONTROL, NOINVERT
     VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
     VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
 END
@@ -221,9 +222,9 @@ END
 // Bitmap
 //
 
-IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view32.bmp"
-IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit32.bmp"
-IDB_TOOLBAR             BITMAP                  "..\\res\\tbar_main32.bmp"
+IDB_TOOLBAR_VIEW        BITMAP                  "..\\res32\\tbar_view32.bmp"
+IDB_TOOLBAR_EDIT        BITMAP                  "..\\res32\\tbar_edit32.bmp"
+IDB_TOOLBAR             BITMAP                  "..\\res32\\tbar_main32.bmp"
 #endif    // Japanese resources
 /////////////////////////////////////////////////////////////////////////////
 

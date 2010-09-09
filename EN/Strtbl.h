@@ -331,6 +331,7 @@
 
 // Mail view
 #define STR_VIEW_HEAD_FROM			TEXT("From: ")
+#define STR_VIEW_HEAD_TO			TEXT("\r\nTo: ")
 #define STR_VIEW_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 #define STR_VIEW_HEAD_DATE			TEXT("\r\nDate: ")
 
