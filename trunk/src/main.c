@@ -5098,6 +5098,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_COMMAND: {
 		BOOL mark_del = FALSE;
 		int sort_val = 0;
+		int menu_flag = 0;
 		int mbox, command_id = GET_WM_COMMAND_ID(wParam, lParam);
 		switch (command_id) {
 		//of message compilation
@@ -5147,6 +5148,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//In position of selective item pop rise menu indicatory
 		case ID_KEY_SHOWMENU:
 		case ID_KEY_ESC:
+			menu_flag = 1;
 			if (IsWindowVisible(hWnd) == 0 ||
 #ifndef _WIN32_WCE
 				IsIconic(hWnd) != 0 ||
@@ -5167,26 +5169,25 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+			// and fall through to post the menu
+			
+		//In position of mouse pop rise menu indicatory
+		case ID_MENU:
 			if (op.ContextMenuOption == 0) {
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
-				ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, 1, FALSE);
+				ShowMenu(hWnd, SHGetSubMenu(hMainToolBar, ID_MENUITEM_MAIL), 0, menu_flag, FALSE);
 #elif defined(_WIN32_WCE_LAGENDA)
-				ShowMenu(hWnd, hMainMenu, MailMenuPos, 1, FALSE);
+				ShowMenu(hWnd, hMainMenu, MailMenuPos, menu_flag, FALSE);
 #else
-				ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, 1, FALSE);
+				ShowMenu(hWnd, CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0), MailMenuPos, menu_flag, FALSE);
 #endif
 #else
-				ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, 1, FALSE);
+				ShowMenu(hWnd, GetMenu(hWnd), MailMenuPos, menu_flag, FALSE);
 #endif
 			} else {
-				ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 1, FALSE);
+				ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, menu_flag, FALSE);
 			}
-			break;
-
-		//In position of mouse pop rise menu indicatory
-		case ID_MENU:
-			ShowMenu(hWnd, hMainPop, (SelBox==MAILBOX_SEND) ? 1 : 0, 0, FALSE);
 			break;
 
 		//====== file =========
