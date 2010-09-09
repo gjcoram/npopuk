@@ -2313,6 +2313,43 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_PASTE , 0, 0);
 			break;
 
+		case ID_KEY_DELWORD:
+			{
+				TCHAR *p, *buf;
+				int ss, se, ls;
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&ss, (LPARAM)&se);
+				if (se < ss) break;
+				buf = NULL;
+				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+				if (buf == NULL) {
+					break;
+				}
+				se = ss;
+				for (p = buf, ls = 0; p < buf + ss; p++) {
+#ifndef UNICODE
+					if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p+1) != TEXT('\0')) {
+						p++;
+					}
+#endif
+					if (*p == TEXT(' ') || *p == TEXT('\t') || *p == TEXT('\n') || *p == TEXT('\r')) {
+						ls = p - buf + 1;
+					}
+				}
+				if (ls == se && p > buf) {
+					// cursor is after whitespace
+					ls--;
+					if (*p == TEXT('\n') && p > buf && *(p-1) == TEXT('\r')) {
+						ls--;
+					}
+				}
+				if (ls < se) {
+					SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, (WPARAM)ls, (LPARAM)se);
+					SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_CLEAR, 0, 0);
+				}
+				mem_free(&buf);
+			}
+			break;
+
 		case ID_MENUITEM_PASTEQUOT:
 		#ifdef UNICODE
 			if (IsClipboardFormatAvailable(CF_UNICODETEXT) != 0) {

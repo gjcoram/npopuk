@@ -181,11 +181,12 @@ static void SetWindowString(HWND hWnd, TCHAR *MailBoxName, TCHAR *MailBoxName2, 
  */
 static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 {
-	TCHAR *MyMailAddress = NULL;
 	TCHAR *buf, *p;
 	int len = 0;
-	int i;
+#ifdef _WIN32_WCE
+	TCHAR *MyMailAddress = NULL;
 	BOOL ToFlag = FALSE;
+	int i;
 
 	// 自分のメールアドレスの取得
 	if ((MailBox + SelBox)->Type == MAILBOX_TYPE_SAVE) {
@@ -209,8 +210,16 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 			mem_free(&buf);
 		}
 	}
+	if (ToFlag == TRUE) {
+		len += SetCcAddressSize(tpMailItem->To);
+	}
+#else
+	len += lstrlen(STR_VIEW_HEAD_TO);
+	if (tpMailItem->From != NULL) {
+		len += lstrlen(tpMailItem->To);
+	}
+#endif
 
-	// 作成する文字列のサイズを計算
 	len += lstrlen(STR_VIEW_HEAD_FROM);
 	if (tpMailItem->From != NULL) {
 		len += lstrlen(tpMailItem->From);
@@ -218,9 +227,6 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	len += lstrlen(STR_VIEW_HEAD_SUBJECT);
 	if (tpMailItem->Subject != NULL) {
 		len += lstrlen(tpMailItem->Subject);
-	}
-	if (ToFlag == TRUE) {
-		len += SetCcAddressSize(tpMailItem->To);
 	}
 	len += SetCcAddressSize(tpMailItem->Cc);
 	len += SetCcAddressSize(tpMailItem->Bcc);
@@ -238,10 +244,15 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	*buf = TEXT('\0');
 
 	// 表示する文字列を作成する
+#ifdef _WIN32_WCE
 	p = str_join_t(buf, STR_VIEW_HEAD_FROM, tpMailItem->From, STR_VIEW_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
 	if (ToFlag == TRUE) {
 		p = SetCcAddress(TEXT("To"), tpMailItem->To, p);
 	}
+#else
+	p = str_join_t(buf, STR_VIEW_HEAD_FROM, tpMailItem->From, STR_VIEW_HEAD_TO, tpMailItem->To,
+		STR_VIEW_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
+#endif
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
 	if (op.ViewShowDate == 1) {
@@ -309,7 +320,11 @@ static void SetHeaderSize(HWND hWnd)
 		SelectObject(hdc, hFont);
 	}
 	ReleaseDC(hHeader, hdc);
+#ifdef _WIN32_WCE
 	HLine = (op.ViewShowDate == 1) ? 3 : 2;
+#else
+	HLine = (op.ViewShowDate == 1) ? 4 : 3;
+#endif
 	FontHeight = (lptm.tmHeight + lptm.tmExternalLeading) * HLine;
 
 	// 一時的に設定してサイズを再計算する
