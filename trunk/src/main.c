@@ -80,6 +80,7 @@ static TCHAR *InitialAccount = NULL;
 int gAutoSend = FALSE;
 BOOL gCheckAndQuit = FALSE;
 BOOL gDoingQuit = FALSE;
+BOOL gAllSelect = FALSE;
 BOOL first_start = FALSE;					// 初回起動フラグ
 BOOL SaveBoxesLoaded = FALSE;
 BOOL PPCFlag;								// PsPCフラグ
@@ -1414,6 +1415,10 @@ int SetMailMenu(HWND hWnd)
 	int RecvBoxFlag, SaveTypeFlag, SendBoxFlag;
 	int MoveBoxFlag;
 	int i, retval = -1;
+
+	if (gAllSelect) {
+		return retval;
+	}
 
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -6058,7 +6063,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Entirely the selective
 		case ID_MENUITEM_ALLSELECT:
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
+			gAllSelect = TRUE;
 			ListView_SetItemState(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
+			gAllSelect = FALSE;
+			SetMailMenu(hWnd);
 			break;
 
 #ifdef _WIN32_WCE_PPC
