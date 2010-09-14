@@ -111,7 +111,11 @@ extern int sprintf_s();
 #define MAX_TRAY_CNT			10					// see ID_MENUITEM_TRAYCHECK
 
 #define SICONSIZE				16					//Size of listview icons
+#ifdef _WIN32_WCE
+#define TB_ICONSIZE				16					//Toolbar buttons
+#else
 #define TB_ICONSIZE				32					//Toolbar buttons
+#endif
 
 #define TABSTOPLEN				8					// TAB Stop
 

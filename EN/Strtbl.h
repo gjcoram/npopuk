@@ -181,6 +181,7 @@
 #define STR_Q_RASDISCON				TEXT("Disconnect dial-up connection?")
 #define STR_Q_QUEUEDMAIL_EXIT		TEXT("Messages marked for sending haven't been sent.\r\nExit anyway?")
 #define STR_Q_EXITSAVE				TEXT("Save files?")
+#define STR_Q_SAVEINI				TEXT("Configuration file needs saving.\r\nSave now?")
 #define STR_Q_UPGRADE				TEXT("Import settings from nPOP to nPOPuk?")
 #define STR_Q_ADV_OPT				TEXT("Open advanced global options editor?")
 #define STR_Q_USEPOOM				TEXT("Using PocketContacts will replace existing items in Address book.\r\nProceed anyway?")

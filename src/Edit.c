@@ -2926,8 +2926,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 
 		//Transmission information setting
+		if (OpenFlag == EDIT_REPLYALL) {
 #ifdef _WIN32_WCE
-		{
 			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 				res = IDD_DIALOG_SETSEND_WIDE;
@@ -2937,14 +2937,16 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 #endif
 			}
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
-		}
 #else
-		mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-			(LPARAM)tpMailItem);
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
 #endif
-		if (mkdlg == FALSE) {
-			item_free(&tpMailItem, 1);
-			return EDIT_NONEDIT;
+			if (mkdlg == FALSE) {
+				item_free(&tpMailItem, 1);
+				return EDIT_NONEDIT;
+			}
+		} else if (tpMailItem->Mark == MARK_REPLYING) {
+			tpMailItem->Mark = op.AutoQuotation;
 		}
 		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_REPLY, seltext);
 		tpMailItem->Mark = 0;
