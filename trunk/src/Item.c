@@ -1150,13 +1150,6 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	}
 	item_get_content_t(buf, HEAD_SUBJECT, &tpMailItem->Subject);
 	item_get_content_t(buf, HEAD_FROM, &tpMailItem->From);
-	if (Temp = tpMailItem->From) {
-		TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Temp) + 1));
-		if (p != NULL) {
-			GetMailAddress(Temp, p, NULL, FALSE);
-			tpMailItem->From_email = p;
-		}
-	}
 	item_get_content_t(buf, HEAD_TO, &tpMailItem->To);
 	item_get_content_t(buf, HEAD_CC, &tpMailItem->Cc);
 	item_get_content_t(buf, HEAD_BCC, &tpMailItem->Bcc);
@@ -1398,6 +1391,24 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		tpMailItem->Multipart = MULTIPART_CONTENT;
 	//} else {
 	//	tpMailItem->Multipart = MULTIPART_NONE;
+	}
+
+	if (tpMailItem->MailStatus == ICON_SENTMAIL || tpMailItem->MailStatus == ICON_SEND) {
+		if (Temp = tpMailItem->To) {
+			TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Temp) + 1));
+			if (p != NULL) {
+				GetMailAddress(Temp, p, NULL, FALSE);
+				tpMailItem->From_email = p;
+			}
+		}
+	} else {
+		if (Temp = tpMailItem->From) {
+			TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(Temp) + 1));
+			if (p != NULL) {
+				GetMailAddress(Temp, p, NULL, FALSE);
+				tpMailItem->From_email = p;
+			}
+		}
 	}
 	return tpMailItem;
 }

@@ -107,7 +107,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static int ListView_AddOptionItem(HWND hListView, TCHAR *buf, long lp);
 static TCHAR *ListView_AllocGetText(HWND hListView, int Index, int Col);
 static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox);
-static BOOL MailboxFilenameCheck(TCHAR *newname, MAILBOX *mbox, BOOL null_ok, BOOL rename, HWND hDlg);
+static BOOL MailboxFilenameCheck(TCHAR *name, MAILBOX *mbox, BOOL null_ok, BOOL rename, HWND hDlg);
 static BOOL CALLBACK MboxTypeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SboxEditProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK ImportSboxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -2144,6 +2144,13 @@ static BOOL MailboxFilenameCheck(TCHAR *name, MAILBOX *mbox, BOOL null_ok, BOOL 
 				mbox->Filename = NULL;
 			} else {
 				mbox->Filename = alloc_copy_t(newname);
+			}
+			if (op.AutoSave == 0) {
+				if (MessageBox(hDlg, STR_TITLE_SAVE, STR_Q_SAVEINI, MB_YESNO) == IDYES) {
+					SwitchCursor(FALSE);
+					ini_save_setting(hDlg, FALSE, FALSE, NULL);
+					SwitchCursor(TRUE);
+				}
 			}
 		} else {
 			ErrorMessage(hDlg, STR_ERR_RENAME);
@@ -9145,11 +9152,10 @@ BOOL CALLBACK EnableSortColumns(HWND hDlg, BOOL EnableFlag) {
 
 BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	TCHAR Name[BUF_SIZE];
-	int i, j;
-	int *sel;
+	static TCHAR last_selected[BUF_SIZE] = TEXT("\0");
 	BOOL skip_vselbox = FALSE;
-	static int last_selected = 1;
+	int i, j, k;
+	int *sel;
 	
 	switch(uMsg)
 	{
@@ -9163,7 +9169,7 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetWindowText(GetDlgItem(hDlg, IDC_MOVECOPYTEXT), i ? STR_TITLE_MOVE2 : STR_TITLE_COPY2);
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)STR_LIST_MENU_NEW);
-		for (i = MAILBOX_USER, j = 0; i < MailBoxCnt; i++) {
+		for (i = MAILBOX_USER, j = 0, k = -1; i < MailBoxCnt; i++) {
 			if ((i == SelBox && skip_vselbox == FALSE) || (i == vSelBox && skip_vselbox == TRUE)) {
 				continue;
 			}
@@ -9172,26 +9178,31 @@ BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (!name) name = STR_MAILBOX_NONAME;
 				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_ADDSTRING, 0, (LPARAM)name);
 				j++;
+				if (lstrcmp(name, last_selected) == 0) {
+					k = j;
+				}
 			}
 		}
-		if (last_selected == 0) {
-			last_selected = j; // the new one created last time
-		} else if (last_selected > j) {
-			last_selected = 1; // mailbox was deleted
+		if (k == -1) {
+			if (lstrcmp(STR_LIST_MENU_NEW, last_selected) == 0) {
+				k = j; // the new one created last time
+			} else {
+				k = 1; // mailbox was deleted
+			}
 		}
-		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, last_selected, 0);
+		SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_SETCURSEL, k, 0);
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK:
-			last_selected = SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_GETCURSEL, 0, 0);
+			i = SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, CB_GETCURSEL, 0, 0);
+			SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)last_selected);
 			sel = (int*)GetWindowLong(hDlg, GWL_USERDATA);
-			if (last_selected == 0) {
+			if (i == 0) {
 				*sel = 0;
 			} else {
-				SendDlgItemMessage(hDlg, IDC_SAVEBOX_COMBO, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)Name);
-				*sel = mailbox_name_to_index(Name, MAILBOX_TYPE_SAVE);
+				*sel = mailbox_name_to_index(last_selected, MAILBOX_TYPE_SAVE);
 			}
 			EndDialog(hDlg, TRUE);
 			break;

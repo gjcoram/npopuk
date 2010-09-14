@@ -576,6 +576,15 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 					p = tpMailItem->RedirectTo;
 				else
 					p = tpMailItem->To;
+			} else if (tpMailItem->MailStatus == ICON_SENTMAIL || tpMailItem->MailStatus == ICON_SEND) {
+				r = hLVItem->pszText;
+				*(r++) = TEXT('T');
+				*(r++) = TEXT('o');
+				*(r++) = TEXT(':');
+				*(r++) = TEXT(' ');
+				p = tpMailItem->To;
+				str_cpy_n_t(r, p, BUF_SIZE - (r - hLVItem->pszText) - 1);
+				return;
 			} else {
 				p = tpMailItem->From;
 			}
@@ -698,13 +707,25 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 			if (((MAILITEM *)lParam2)->To != NULL)
 				wbuf2 = ((MAILITEM *)lParam2)->To;
 		} else {
-			if (((MAILITEM *)lParam1)->From != NULL)
-				wbuf1 = ((MAILITEM *)lParam1)->From;
-			if (((MAILITEM *)lParam2)->From != NULL)
-				wbuf2 = ((MAILITEM *)lParam2)->From;
+			int ms = ((MAILITEM *)lParam1)->MailStatus;
+			if (ms == ICON_SENTMAIL || ms == ICON_SEND) {
+				if (((MAILITEM *)lParam1)->To != NULL)
+					wbuf1 = ((MAILITEM *)lParam1)->To;
+			} else {
+				if (((MAILITEM *)lParam1)->From != NULL)
+					wbuf1 = ((MAILITEM *)lParam1)->From;
+			}
+			ms = ((MAILITEM *)lParam2)->MailStatus;
+			if (ms == ICON_SENTMAIL || ms == ICON_SEND) {
+				if (((MAILITEM *)lParam2)->To != NULL)
+					wbuf2 = ((MAILITEM *)lParam2)->To;
+			} else {
+				if (((MAILITEM *)lParam2)->From != NULL)
+					wbuf2 = ((MAILITEM *)lParam2)->From;
+			}
 			if (op.LvSortFromAddressOnly) {
 				if (((MAILITEM *)lParam1)->From_email != NULL)
-					wbuf1 = ((MAILITEM *)lParam1)->From_email;
+						wbuf1 = ((MAILITEM *)lParam1)->From_email;
 				if (((MAILITEM *)lParam2)->From_email != NULL)
 					wbuf2 = ((MAILITEM *)lParam2)->From_email;
 			}
