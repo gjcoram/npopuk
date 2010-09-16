@@ -45,6 +45,8 @@
 #define ID_TIMEOUT_TIMER		7
 #define ID_NEWMAIL_TIMER		8
 #define ID_RESTORESEL_TIMER		9
+//#define ID_RASWAIT_TIMER		10 // in General.h
+#define ID_ITEMCHANGE_TIMER		11
 
 #define STATUS_DONE				0
 #define STATUS_CHECK			1
@@ -80,7 +82,6 @@ static TCHAR *InitialAccount = NULL;
 int gAutoSend = FALSE;
 BOOL gCheckAndQuit = FALSE;
 BOOL gDoingQuit = FALSE;
-BOOL gAllSelect = FALSE;
 BOOL first_start = FALSE;					// 初回起動フラグ
 BOOL SaveBoxesLoaded = FALSE;
 BOOL PPCFlag;								// PsPCフラグ
@@ -1416,14 +1417,14 @@ int SetMailMenu(HWND hWnd)
 	int MoveBoxFlag;
 	int i, retval = -1;
 
-	if (gAllSelect) {
-		return retval;
-	}
-
-#ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
 	LPARAM lpras;
-	int xflag, xsize = GetSystemMetrics(SM_CXSCREEN);
+	int xflag, xsize;
+#endif
+	
+#ifdef _WIN32_WCE
+#ifdef _WIN32_WCE_PPC
+	xsize = GetSystemMetrics(SM_CXSCREEN);
 	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 	hToolBar = hMainToolBar;
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -5054,6 +5055,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SocketErrorMessage(hWnd, STR_ERR_SOCK_TIMEOUT, RecvBox);
 			break;
 
+			//When selection changes (SetMailMenu once
+		case ID_ITEMCHANGE_TIMER:
+			KillTimer(hWnd, wParam);
+			i = SetMailMenu(hWnd);
+			if (i >= 0 && op.ItemPlaySound) {
+				// GJC sound if single selection, based on mailitem's Mark
+				PlayMarkSound(i, SelBox);
+			}
+			break;
+
 		//When starting waiting
 		case ID_NEWMAIL_TIMER:
 			KillTimer(hWnd, wParam);
@@ -6063,10 +6074,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//Entirely the selective
 		case ID_MENUITEM_ALLSELECT:
 			SetFocus(GetDlgItem(hWnd, IDC_LISTVIEW));
-			gAllSelect = TRUE;
 			ListView_SetItemState(GetDlgItem(hWnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
-			gAllSelect = FALSE;
-			SetMailMenu(hWnd);
 			break;
 
 #ifdef _WIN32_WCE_PPC
@@ -6460,11 +6468,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_LV_EVENT:
 		switch (wParam) {
 		case LVN_ITEMCHANGED:
-			// GJC sound if single selection, based on mailitem's Mark
-			i = SetMailMenu(hWnd);
-			if (i >= 0 && op.ItemPlaySound) {
-				PlayMarkSound(i, SelBox);
-			}
+			SetTimer(hWnd, ID_ITEMCHANGE_TIMER, 1, NULL);
 			break;
 
 #ifdef _WIN32_WCE_LAGENDA
