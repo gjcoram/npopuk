@@ -1139,7 +1139,10 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+	if (op.OptionalScrollbar) {
+		AppendMenu(GetSubMenu(hEditPop, 0), MF_STRING, ID_MENUITEM_SCROLLBAR, STR_EDIT_SCROLLBARS);
+		CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+	}
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else

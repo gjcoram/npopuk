@@ -6866,16 +6866,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// HBITMAP b = LoadImage(NULL, _T("c:\test.bmp"), IMAGE_BITMAP, 0, 0, IR_LOADFROMFILE); //returns a valid HBITMAP.
 	// GetBitmapDimensionEx
 
-	//of main window From resource pop rise menu load
+	// tray icon pop-up
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
+	// main window context menu
 	hMainPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MAINPOP));
+	// view window context menu
 	hViewPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_VIEWPOP));
+	// mailbox pane context menu
 	hMBPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_MBPOPUP));
+	// address book context menu
 	hADPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ADDRESS_POPUP));
 #ifdef _WIN32_WCE
+	// edit window context menu (Win32 edit window class has its own context menu)
 	hEditPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDITPOP));
 #endif
 #ifdef _WIN32_WCE_PPC
+	// for single-line edittext widgets
 	hEDITPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDIT_POPUP));
 #endif
 
