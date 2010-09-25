@@ -1924,6 +1924,7 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 			lstrcpy(fname, TargetBox->Filename);
 		}
 		file_append_savebox(fname, TargetBox, tpMailItem, 2);
+		TargetBox->NewMail++;
 	} else {
 		int j = item_find_thread(TargetBox, tpMailItem->MessageID, TargetBox->MailItemCnt);
 		if (j == -1) {

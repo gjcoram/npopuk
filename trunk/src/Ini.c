@@ -309,7 +309,7 @@ void ini_read_general(HWND hWnd)
 	if (op.MBMenuWidth == 0) {
 		op.MBMenuWidth = 130; // upgrade from previous default
 	}
-	op.MBMenuMinWidth = profile_get_int(GENERAL, TEXT("MBMenuMinWidth"), 25);
+	op.MBMenuMinWidth = profile_get_int(GENERAL, TEXT("MBMenuMinWidth"), 35);
 	if (op.MBMenuWidth > 0 && op.MBMenuWidth < op.MBMenuMinWidth) {
 		op.MBMenuWidth = op.MBMenuMinWidth;
 	} else if (op.MBMenuWidth < 0 && op.MBMenuWidth > -op.MBMenuMinWidth){
@@ -432,6 +432,8 @@ void ini_read_general(HWND hWnd)
 	op.EditWordBreakFlag = profile_get_int(GENERAL, TEXT("EditWordBreakFlag"), 1);
 
 #ifdef _WIN32_WCE_PPC
+	op.OptionalScrollbar = profile_get_int(GENERAL, TEXT("OptionalScrollbar"), 1); //gjc set to 0
+
 ////////////////////// MRP ////////////////////
 	op.ViewShowDate = profile_get_int(GENERAL, TEXT("ViewShowDate"), 1);
 #else
@@ -1243,6 +1245,9 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("ListSaveMode"), op.ListSaveMode);
 	profile_write_int(GENERAL, TEXT("WordBreakFlag"), op.WordBreakFlag);
 	profile_write_int(GENERAL, TEXT("EditWordBreakFlag"), op.EditWordBreakFlag);
+#ifdef _WIN32_WCE_PPC
+	profile_write_int(GENERAL, TEXT("OptionalScrollbar"), op.OptionalScrollbar);
+#endif
 	profile_write_int(GENERAL, TEXT("ViewShowDate"), op.ViewShowDate);
 	profile_write_int(GENERAL, TEXT("MatchCase"), op.MatchCase);
 	profile_write_int(GENERAL, TEXT("Wildcards"), op.Wildcards);

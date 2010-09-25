@@ -442,6 +442,9 @@ typedef struct _OPTION {
 	int ListSaveMode;
 	int WordBreakFlag;
 	int EditWordBreakFlag;
+#ifdef _WIN32_WCE_PPC
+	int OptionalScrollbar;
+#endif
 	int ViewShowDate;
 	int MatchCase;
 	int Wildcards;
@@ -1016,9 +1019,9 @@ TCHAR *replace_env_var(TCHAR *buf);
 BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-int SetWordBreak(HWND hWnd, HMENU hMenu);
+int SetWordBreak(HWND hWnd, HMENU hMenu, int cmd);
 #else
-int SetWordBreak(HWND hWnd);
+int SetWordBreak(HWND hWnd, int cmd);
 #endif
 MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView);
 void View_FindMail(HWND hWnd, BOOL FindSet);
