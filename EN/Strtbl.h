@@ -356,6 +356,7 @@
 #define STR_EDIT_HEAD_TO			TEXT("\r\nTo: ")
 #define STR_EDIT_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 #define STR_REPLACE_DONE			TEXT("Done")
+#define STR_EDIT_SCROLLBARS			TEXT("Scrollbars")
 
 // SSL, SMTP-AUTH
 #define STR_SSL_AUTO				TEXT("Auto")

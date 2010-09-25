@@ -348,7 +348,7 @@ BEGIN
         MENUITEM "&Find",                       ID_MENUITEM_FIND
         MENUITEM "Find &next",                  ID_MENUITEM_NEXTFIND
         MENUITEM SEPARATOR
-        MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "&Wrap text",                  ID_MENUITEM_WORDBREAK
         MENUITEM "Show &date",                  ID_MENUITEM_SHOW_DATE
     END
 END
@@ -385,7 +385,7 @@ BEGIN
         MENUITEM "Find &next",                  ID_MENUITEM_NEXTFIND
         MENUITEM "&Replace",                    ID_MENUITEM_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "&Word wrap",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "&Wrap text",                  ID_MENUITEM_WORDBREAK
     END
 END
 
@@ -472,7 +472,7 @@ BEGIN
         MENUITEM "Paste",               ID_MENUITEM_PASTE
         MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
-        MENUITEM "Word wrap",           ID_MENUITEM_WORDBREAK
+        MENUITEM "Wrap text",           ID_MENUITEM_WORDBREAK
     END
 END
 
@@ -486,7 +486,7 @@ BEGIN
         MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
         MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
         MENUITEM SEPARATOR
-        MENUITEM "Word wrap",           ID_MENUITEM_WORDBREAK
+        MENUITEM "Wrap text",           ID_MENUITEM_WORDBREAK
     END
 END
 
@@ -873,10 +873,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Send"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "Show '&Outbox' on 'Save to Outbox'",
+    CONTROL         "&Show 'Outbox' on 'Save to Outbox'",
                     IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,5,124,10
-    LTEXT           "&Word wrap at:",IDC_STATIC,5,19,50,10
+                    WS_TABSTOP,5,5,126,10
+    LTEXT           "&Line wrap at:",IDC_STATIC,5,19,50,10
     EDITTEXT        IDC_EDIT_BREAKCNT,58,17,25,12,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "characters",IDC_STATIC,85,19,55,10
     CONTROL         "&Quoted lines do not word wrap",IDC_CHECK_QBREAK,"Button",
@@ -890,7 +890,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,60,124,10
     CONTROL         "Check q&ueued (",IDC_CHECK_QUEUE_EXIT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,73,65,10
-    CONTROL         "and failed",IDC_CHECK_SENDERR_EXIT,"Button",
+    CONTROL         "and &failed",IDC_CHECK_SENDERR_EXIT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,70,73,45,10
     LTEXT           ") on exit",IDC_STATIC,115,74,30,10
     PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,86,65,15

@@ -63,6 +63,7 @@ BOOL ViewReopen;
 HWND hViewToolBar;
 char ViewMenuOpened = 0;
 int LastXSize_V = 0;
+BOOL ViewScrollbars = 1;
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -529,9 +530,9 @@ void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag)
  * SetWordBreak - ê‹ÇËï‘ÇµÇÃêÿÇËë÷Ç¶
  */
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-int SetWordBreak(HWND hWnd, HMENU hMenu)
+int SetWordBreak(HWND hWnd, HMENU hMenu, int cmd)
 #else
-int SetWordBreak(HWND hWnd)
+int SetWordBreak(HWND hWnd, int cmd)
 #endif
 {
 	HWND hEdit;
@@ -562,22 +563,52 @@ int SetWordBreak(HWND hWnd)
 
 	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
 	i = GetWindowLong(hEdit, GWL_STYLE);
-	if (i & WS_HSCROLL) {
-		i ^= WS_HSCROLL;
+	if (cmd == ID_MENUITEM_WORDBREAK) {
+		if (i & WS_HSCROLL) {
+			i ^= WS_HSCROLL;
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-		SetWordBreakMenu(hWnd, hMenu, MF_CHECKED);
+			SetWordBreakMenu(hWnd, hMenu, MF_CHECKED);
 #else
-		SetWordBreakMenu(hWnd, NULL, MF_CHECKED);
+			SetWordBreakMenu(hWnd, NULL, MF_CHECKED);
 #endif
-		ret = 1;
+			ret = 1;
+		} else {
+			i |= WS_HSCROLL;
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetWordBreakMenu(hWnd, hMenu, MF_UNCHECKED);
+#else
+			SetWordBreakMenu(hWnd, NULL, MF_UNCHECKED);
+#endif
+			ret = 0;
+		}
+#ifdef _WIN32_WCE_PPC
 	} else {
-		i |= WS_HSCROLL;
-#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
-		SetWordBreakMenu(hWnd, hMenu, MF_UNCHECKED);
-#else
-		SetWordBreakMenu(hWnd, NULL, MF_UNCHECKED);
+		if (i & WS_VSCROLL) {
+			// had VSCROLL, so we must want to disable the scrollbars
+			i &= ~(WS_HSCROLL | WS_VSCROLL);
+			if (hWnd == hViewWnd) {
+				ViewScrollbars = 0;
+				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_UNCHECKED);
+				ret = op.WordBreakFlag;
+			} else {
+				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_UNCHECKED);
+				ret = op.EditWordBreakFlag;
+			}
+		} else {
+			i |= WS_VSCROLL;
+			if (hWnd == hViewWnd) {
+				ViewScrollbars = 1;
+				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+				ret = op.WordBreakFlag;
+			} else {
+				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+				ret = op.EditWordBreakFlag;
+			}
+			if (!ret) {
+				i |= WS_HSCROLL;
+			}
+		}
 #endif
-		ret = 0;
 	}
 
 	ModifyFlag = SendMessage(hEdit, EM_GETMODIFY, 0, 0);
@@ -960,6 +991,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -1151,6 +1183,13 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	// ÉÅÉjÉÖÅ[Çèâä˙âªÇ∑ÇÈ
 	while (DeleteMenu(hMenu, MENU_ATTACH_POS, MF_BYPOSITION) == TRUE);
 	while (DeleteMenu(hPopMenu, MENU_ATTACH_POP, MF_BYPOSITION) == TRUE);
+
+#ifdef _WIN32_WCE_PPC
+	if (op.OptionalScrollbar) {
+		AppendMenu(hPopMenu, MF_STRING, ID_MENUITEM_SCROLLBAR, STR_EDIT_SCROLLBARS);
+		CheckMenuItem(hMenu, ID_MENUITEM_SCROLLBAR, (ViewScrollbars == 1) ? MF_CHECKED : MF_UNCHECKED);
+	}
+#endif
 
 	if (DigestMaster != NULL) {
 		AppendMenu(hMenu, MF_STRING, ID_RETURN_TO_MASTER, STR_VIEW_RETURN);
@@ -3647,13 +3686,14 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_WORDBREAK:
+		case ID_MENUITEM_SCROLLBAR:
 			DelViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
-			op.WordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW));
+			op.WordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), command_id);
 #elif defined(_WIN32_WCE_LAGENDA)
-			op.WordBreakFlag = SetWordBreak(hWnd, hViewMenu);
+			op.WordBreakFlag = SetWordBreak(hWnd, hViewMenu, command_id;
 #else
-			op.WordBreakFlag = SetWordBreak(hWnd);
+			op.WordBreakFlag = SetWordBreak(hWnd, command_id);
 #endif
 			SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 			if (op.ViewWindowCursor == 0) {

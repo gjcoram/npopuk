@@ -1139,6 +1139,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -1800,6 +1801,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	static BOOL SipFlag = TRUE;
 #endif
 	BOOL dlg;
+	int command_id;
 
 	switch (msg) {
 	case WM_CREATE:
@@ -2066,7 +2068,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 #endif
 
 	case WM_COMMAND:
-		switch (GET_WM_COMMAND_ID(wParam,lParam)) {
+		command_id = GET_WM_COMMAND_ID(wParam,lParam);
+		switch (command_id) {
 #ifdef _WIN32_WCE
 		case ID_MENU:
 			SetEditMenu(hWnd);
@@ -2597,6 +2600,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_WORDBREAK:
+		case ID_MENUITEM_SCROLLBAR:
 			{
 				BOOL sent = FALSE;
 				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -2610,11 +2614,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				if (!sent) {
 					DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 				}
-				op.EditWordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT));
+				op.EditWordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), command_id);
 #elif defined(_WIN32_WCE_LAGENDA)
-				op.EditWordBreakFlag = SetWordBreak(hWnd, hViewMenu);
+				op.EditWordBreakFlag = SetWordBreak(hWnd, hViewMenu, command_id);
 #else
-				op.EditWordBreakFlag = SetWordBreak(hWnd);
+				op.EditWordBreakFlag = SetWordBreak(hWnd, command_id);
 #endif
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_LIMITTEXT, (WPARAM)EditMaxLength, 0);
 				if (sent) {

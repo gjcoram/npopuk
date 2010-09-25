@@ -4108,7 +4108,7 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
 		if((MailBox + i)->NewMail > 0) {
 			// GJC - check if there still is new mail; if not, update drop-down list
-			if (CheckMsgs == TRUE && item_get_next_new((MailBox + i), -1, NULL) == -1) {
+			if (CheckMsgs == TRUE && (MailBox + i)->Loaded && item_get_next_new((MailBox + i), -1, NULL) == -1) {
 				(MailBox + i)->NewMail = 0;
 			} else {
 				UnreadMailBox++;
@@ -6861,6 +6861,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		return 0;
 	}
+
+	// loading user-specified bitmaps
+	// HBITMAP b = LoadImage(NULL, _T("c:\test.bmp"), IMAGE_BITMAP, 0, 0, IR_LOADFROMFILE); //returns a valid HBITMAP.
+	// GetBitmapDimensionEx
 
 	//of main window From resource pop rise menu load
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
