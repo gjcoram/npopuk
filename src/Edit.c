@@ -45,6 +45,9 @@ static BOOL ProcessFlag;
 #ifdef _WIN32_WCE_PPC
 char EditMenuOpened = 0;
 #endif
+#ifdef _WIN32_WCE_SP
+BOOL EditScrollbars = 1;
+#endif
 
 #ifdef _WIN32_WCE
 static WNDPROC EditWindowProcedure;
@@ -1139,10 +1142,12 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hEditToolBar, ID_MENUITEM_EDIT), (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
+#ifdef _WIN32_WCE_SP
+	DeleteMenu(GetSubMenu(hEditPop, 0), ID_MENUITEM_DRAGSELECT, MF_BYCOMMAND);
 	if (op.OptionalScrollbar) {
-		AppendMenu(GetSubMenu(hEditPop, 0), MF_STRING, ID_MENUITEM_SCROLLBAR, STR_EDIT_SCROLLBARS);
-		CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+		AppendMenu(GetSubMenu(hEditPop, 0), MF_STRING, ID_MENUITEM_DRAGSELECT, STR_EDIT_DRAGSEL);
 	}
+#endif
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.EditWordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -2303,22 +2308,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 #endif
 
-		case ID_MENUITEM_UNDO:
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_UNDO, 0, 0);
-			break;
-
-		case ID_MENUITEM_CUT:
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_CUT , 0, 0);
-			break;
-
-		case ID_MENUITEM_COPY:
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_COPY , 0, 0);
-			break;
-
-		case ID_MENUITEM_PASTE:
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_PASTE , 0, 0);
-			break;
-
 		case ID_KEY_DELWORD:
 			{
 				TCHAR *p, *buf;
@@ -2602,8 +2591,31 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			break;
 
+		case ID_MENUITEM_UNDO:
+			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_UNDO, 0, 0);
+			break;
+
+		case ID_MENUITEM_PASTE:
+			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_PASTE , 0, 0);
+			break;
+
+		case ID_MENUITEM_CUT:
+		case ID_MENUITEM_COPY:
+			SendDlgItemMessage(hWnd, IDC_EDIT_BODY,
+				(command_id == ID_MENUITEM_CUT) ? WM_CUT : WM_COPY , 0, 0);
+#ifndef _WIN32_WCE_SP
+			break;
+#else
+			if (EditScrollbars == 1) {
+				break;
+			}
+			// else fall through to restore the scrollbars
+#endif
+
 		case ID_MENUITEM_WORDBREAK:
-		case ID_MENUITEM_SCROLLBAR:
+#ifdef _WIN32_WCE_SP
+		case ID_MENUITEM_DRAGSELECT:
+#endif
 			{
 				BOOL sent = FALSE;
 				tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -2613,6 +2625,9 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				if (sent) {
 					DelSentSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 				}
+#ifdef _WIN32_WCE_SP
+				EditScrollbars = (EditScrollbars) ? FALSE : TRUE;
+#endif
 #ifdef _WIN32_WCE_PPC
 				if (!sent) {
 					DelEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
