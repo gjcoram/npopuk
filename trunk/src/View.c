@@ -63,7 +63,9 @@ BOOL ViewReopen;
 HWND hViewToolBar;
 char ViewMenuOpened = 0;
 int LastXSize_V = 0;
-BOOL ViewScrollbars = 1;
+#endif
+#ifdef _WIN32_WCE_SP
+BOOL ViewScrollbars = TRUE;
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -541,6 +543,9 @@ int SetWordBreak(HWND hWnd, int cmd)
 #ifndef _WIN32_WCE
 	RECT ToolbarRect;
 #endif
+#ifdef _WIN32_WCE_SP
+	DWORD first=0;
+#endif
 	TCHAR *buf;
 	int hHeight = 0, tHeight = 0;
 	int len, ret;
@@ -581,27 +586,28 @@ int SetWordBreak(HWND hWnd, int cmd)
 #endif
 			ret = 0;
 		}
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE_SP
 	} else {
 		if (i & WS_VSCROLL) {
 			// had VSCROLL, so we must want to disable the scrollbars
 			i &= ~(WS_HSCROLL | WS_VSCROLL);
 			if (hWnd == hViewWnd) {
-				ViewScrollbars = 0;
-				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_UNCHECKED);
+				ViewScrollbars = FALSE;
+				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_DRAGSELECT, MF_CHECKED);
 				ret = op.WordBreakFlag;
 			} else {
-				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_UNCHECKED);
+				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_DRAGSELECT, MF_CHECKED);
 				ret = op.EditWordBreakFlag;
 			}
+			first = SendMessage(hEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
 		} else {
 			i |= WS_VSCROLL;
 			if (hWnd == hViewWnd) {
-				ViewScrollbars = 1;
-				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+				ViewScrollbars = TRUE;
+				CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_DRAGSELECT, MF_UNCHECKED);
 				ret = op.WordBreakFlag;
 			} else {
-				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
+				CheckMenuItem(GetSubMenu(hEditPop, 0), ID_MENUITEM_DRAGSELECT, MF_UNCHECKED);
 				ret = op.EditWordBreakFlag;
 			}
 			if (!ret) {
@@ -642,6 +648,11 @@ int SetWordBreak(HWND hWnd, int cmd)
 	SetFocus(hEdit);
 
 	SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)buf);
+#ifdef _WIN32_WCE_SP
+	if (cmd == ID_MENUITEM_DRAGSELECT && first > 0) {
+		SendMessage(hEdit, EM_LINESCROLL, 0, first);
+	}
+#endif
 	SendMessage(hEdit, EM_SETMODIFY, (WPARAM)ModifyFlag, 0);
 	mem_free(&buf);
 	return ret;
@@ -991,7 +1002,6 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
-	CheckMenuItem(GetSubMenu(hViewPop, 0), ID_MENUITEM_SCROLLBAR, MF_CHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
 	SetWordBreakMenu(hWnd, hViewMenu, (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #else
@@ -1184,10 +1194,11 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 	while (DeleteMenu(hMenu, MENU_ATTACH_POS, MF_BYPOSITION) == TRUE);
 	while (DeleteMenu(hPopMenu, MENU_ATTACH_POP, MF_BYPOSITION) == TRUE);
 
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE_SP
+	DeleteMenu(hPopMenu, ID_MENUITEM_DRAGSELECT, MF_BYCOMMAND);
 	if (op.OptionalScrollbar) {
-		AppendMenu(hPopMenu, MF_STRING, ID_MENUITEM_SCROLLBAR, STR_EDIT_SCROLLBARS);
-		CheckMenuItem(hMenu, ID_MENUITEM_SCROLLBAR, (ViewScrollbars == 1) ? MF_CHECKED : MF_UNCHECKED);
+		AppendMenu(hPopMenu, MF_STRING, ID_MENUITEM_DRAGSELECT, STR_EDIT_DRAGSEL);
+		CheckMenuItem(hPopMenu, ID_MENUITEM_DRAGSELECT, (ViewScrollbars == 1) ? MF_UNCHECKED : MF_CHECKED);
 	}
 #endif
 
@@ -3669,10 +3680,6 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 #endif
 
-		case ID_MENUITEM_COPY:
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_COPY , 0, 0);
-			break;
-
 		case ID_MENUITEM_ALLSELECT:
 			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_SETSEL, 0, -1);
 			break;
@@ -3685,8 +3692,21 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			View_FindMail(hWnd, FALSE);
 			break;
 
+		case ID_MENUITEM_COPY:
+			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_COPY , 0, 0);
+#ifndef _WIN32_WCE_SP
+			break;
+#else
+			if (ViewScrollbars) {
+				break;
+			}
+			// else fall through to restore the scrollbars
+#endif
+
 		case ID_MENUITEM_WORDBREAK:
-		case ID_MENUITEM_SCROLLBAR:
+#ifdef _WIN32_WCE_SP
+		case ID_MENUITEM_DRAGSELECT:
+#endif
 			DelViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
 #ifdef _WIN32_WCE_PPC
 			op.WordBreakFlag = SetWordBreak(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), command_id);
