@@ -69,6 +69,9 @@ extern HWND FocusWnd;
 extern HFONT hListFont;
 extern HWND hViewWnd;
 extern HFONT hViewFont;
+#ifdef LOAD_USER_IMAGES
+extern HBITMAP EditBmp;
+#endif
 extern int font_charset;
 extern int FindOrReplace;
 
@@ -1002,7 +1005,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	hEditToolBar = mbi.hwndMB;
     CommandBar_AddToolTips(hEditToolBar, 11, szTips);
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 9, TB_ICONSIZE, TB_ICONSIZE);
+#ifdef LOAD_USER_IMAGES
+	if (EditBmp)
+		CommandBar_AddBitmap(hEditToolBar, NULL, (int)EditBmp, TB_EDITBUTTONS, op.EditBmpSize, op.EditBmpSize);
+	else
+#endif
+		CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, TB_EDITBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
+
 #ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif
@@ -1045,7 +1054,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	CommandBar_AddToolTips(hEditToolBar, 11, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_EDIT_HPC : (WORD)IDR_MENU_EDIT;
 	CommandBar_InsertMenubar(hEditToolBar, hInst, idMenu, 0);
-	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, 9, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hEditToolBar, hInst, IDB_TOOLBAR_EDIT, TB_EDITBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hEditToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hEditToolBar, 0, 0);
 
@@ -1053,8 +1062,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #endif
 #else
 	// Win32
-	hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 9, hInst, IDB_TOOLBAR_EDIT,
-		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	if (EditBmp) {
+		hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, TB_EDITBUTTONS, NULL, (UINT)EditBmp,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, op.EditBmpSize, op.EditBmpSize, sizeof(TBBUTTON));
+	} else {
+		hEditToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, TB_EDITBUTTONS, hInst, IDB_TOOLBAR_EDIT,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	}
 	SetWindowLong(hEditToolBar, GWL_STYLE, GetWindowLong(hEditToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hEditToolBar, TB_SETINDENT, 5, 0);
 	ShowWindow(hEditToolBar,SW_SHOW);

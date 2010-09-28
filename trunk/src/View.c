@@ -109,6 +109,9 @@ extern HWND hEditWnd;
 #endif
 extern HWND FocusWnd;
 extern HFONT hListFont;
+#ifdef LOAD_USER_IMAGES
+extern HBITMAP ViewBmp;
+#endif
 extern MAILBOX *MailBox;
 extern ATTACH_ITEM *top_attach_item;
 extern SOCKET g_soc;
@@ -885,7 +888,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = mbi.hwndMB;
 
 	CommandBar_AddToolTips(hViewToolBar, 15, szTips);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, TB_ICONSIZE, TB_ICONSIZE);
+#ifdef LOAD_USER_IMAGES
+	if (ViewBmp)
+		CommandBar_AddBitmap(hViewToolBar, NULL, (int)ViewBmp, TB_VIEWBUTTONS, op.ViewBmpSize, op.ViewBmpSize);
+	else
+#endif
+		CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, TB_VIEWBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
+
 #ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif
@@ -928,14 +937,19 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	CommandBar_AddToolTips(hViewToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_VIEW_HPC : (WORD)IDR_MENU_VIEW;
 	CommandBar_InsertMenubar(hViewToolBar, hInst, idMenu, 0);
-	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, 13, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, TB_VIEWBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
 	CommandBar_AddButtons(hViewToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 	CommandBar_AddAdornments(hViewToolBar, 0, 0);
 #endif
 #else
 	// Win32
-	hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, 13, hInst, IDB_TOOLBAR_VIEW,
-		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	if (ViewBmp) {
+		hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, TB_VIEWBUTTONS, NULL, (UINT)ViewBmp,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, op.ViewBmpSize, op.ViewBmpSize, sizeof(TBBUTTON));
+	} else {
+		hViewToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_VTB, TB_VIEWBUTTONS, hInst, IDB_TOOLBAR_VIEW,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	}
 	SetWindowLong(hViewToolBar, GWL_STYLE, GetWindowLong(hViewToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hViewToolBar, TB_SETINDENT, 5, 0);
 	ShowWindow(hViewToolBar, SW_SHOW);
