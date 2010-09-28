@@ -84,6 +84,12 @@ extern int sprintf_s();
 #define _WCE_NEW				1
 #endif
 #endif
+#if !defined(_WIN32_WCE) || (defined(_WIN32_WCE_PPC) && WIN32_PLATFORM_PSPC >= 310)
+#define	LOAD_USER_IMAGES		1
+#if !defined(LR_LOADFROMFILE)
+#define LR_LOADFROMFILE			0x0
+#endif
+#endif
 
 #define MAIN_WND_CLASS			TEXT("nPOPMainWndClass")
 #define VIEW_WND_CLASS			TEXT("nPOPViewWndClass")
@@ -110,12 +116,15 @@ extern int sprintf_s();
 #define MAX_MAILBOX_CNT			1000				// see ID_MENUITEM_COPY2MBOX
 #define MAX_TRAY_CNT			10					// see ID_MENUITEM_TRAYCHECK
 
-#define SICONSIZE				16					//Size of listview icons
+#define SICONSIZE				16					// Size of listview icons
+#define TB_ICONSIZE				16					// Size of default toolbar buttons
 #ifdef _WIN32_WCE
-#define TB_ICONSIZE				16					//Toolbar buttons
+#define TB_MAINBUTTONS			13					// number of buttons on main toolbar
 #else
-#define TB_ICONSIZE				32					//Toolbar buttons
+#define TB_MAINBUTTONS			18					// number of buttons on main toolbar
 #endif
+#define TB_EDITBUTTONS			9					// number of buttons on edit toolbar
+#define TB_VIEWBUTTONS			13					// number of buttons on view toolbar
 
 #define TABSTOPLEN				8					// TAB Stop
 
@@ -392,6 +401,11 @@ typedef struct _OPTION {
 #endif
 	RECT AddrRect;
 	RECT MblRect;
+#ifdef LOAD_USER_IMAGES
+	int MainBmpSize;
+	int EditBmpSize;
+	int ViewBmpSize;
+#endif
 
 	int Version;
 	int osPlatformId, osMajorVer, osMinorVer;

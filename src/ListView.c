@@ -22,24 +22,40 @@
 /* Global Variables */
 // äOïîéQè∆
 extern OPTION op;
-
+extern TCHAR *AppDir;
 extern HINSTANCE hInst;
 extern int SelBox;
 extern MAILBOX *MailBox;
 
 /* Local Function Prototypes */
-static int ImageListIconAdd(HIMAGELIST IconList, int Index);
+static int ImageListIconAdd(HIMAGELIST IconList, int Index, TCHAR *Filename);
 static void ListView_GetDispItem(LV_ITEM *hLVItem);
 static int GetIconSortStatus(MAILITEM *tpMailItem);
 
 /*
  * ImageListIconAdd - of the item information which In image list adding idea contest
  */
-static int ImageListIconAdd(HIMAGELIST IconList, int Index)
+static int ImageListIconAdd(HIMAGELIST IconList, int Index, TCHAR *Filename)
 {
 	HICON hIcon = NULL;
 	int ret;
 
+#ifdef LOAD_USER_IMAGES
+	// loading user-supplied icons
+	TCHAR fpath[BUF_SIZE];
+	wsprintf(fpath, TEXT("%sRES\\%s"), AppDir, Filename);
+	hIcon = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
+	if (hIcon == NULL) {
+		TCHAR msg[MSG_SIZE];
+		DWORD err = GetLastError();
+		wsprintf(msg, TEXT("Failed to load image %s (err=%X)\r\n"), fpath, err);
+		log_save(msg);
+		if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, msg, MSG_SIZE-1, NULL)) {
+			log_save(msg);
+		}
+	}
+	if (hIcon == NULL)
+#endif
 	hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(Index), IMAGE_ICON,
 		SICONSIZE, SICONSIZE, 0);
 
@@ -122,27 +138,28 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 #else
 	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR32 | ILC_MASK, ICONCOUNT, ICONCOUNT);
 #endif
-	ImageListIconAdd(IconList, IDI_ICON_NON);
-	ImageListIconAdd(IconList, IDI_ICON_MAIN);
-	ImageListIconAdd(IconList, IDI_ICON_READ);
-	ImageListIconAdd(IconList, IDI_ICON_DOWN);
-	ImageListIconAdd(IconList, IDI_ICON_DEL);
-	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL);
-	ImageListIconAdd(IconList, IDI_ICON_SEND);
-	ImageListIconAdd(IconList, IDI_ICON_ERROR);
-	ImageListIconAdd(IconList, IDI_ICON_FLAG);
+
+	ImageListIconAdd(IconList, IDI_ICON_NON, TEXT("icon_non.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_MAIN, TEXT("ico_main.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_READ, TEXT("ico_read.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_DOWN, TEXT("ico_down.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_DEL, TEXT("icon_del.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL, TEXT("ico_sent.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_SEND, TEXT("ico_send.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_ERROR, TEXT("icon_err.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_FLAG, TEXT("ico_flag.ico"));
 
 	//Overlay
-	ImageListIconAdd(IconList, IDI_ICON_NEW);
+	ImageListIconAdd(IconList, IDI_ICON_NEW, TEXT("icon_new.ico"));
 	ImageList_SetOverlayImage(IconList, 9, ICON_NEW_MASK);
 
 	// GJC overlays for replied, forwarded
-	ImageListIconAdd(IconList, IDI_ICON_REPL);
+	ImageListIconAdd(IconList, IDI_ICON_REPL, TEXT("ico_repl.ico"));
 	ImageList_SetOverlayImage(IconList, 10, ICON_REPL_MASK);
-	ImageListIconAdd(IconList, IDI_ICON_FWD);
+	ImageListIconAdd(IconList, IDI_ICON_FWD, TEXT("icon_fwd.ico"));
 	ImageList_SetOverlayImage(IconList, 11, ICON_FWD_MASK);
 	// could do this with ImageList_Merge
-	ImageListIconAdd(IconList, IDI_ICON_REPLFWD);
+	ImageListIconAdd(IconList, IDI_ICON_REPLFWD, TEXT("ico_refw.ico"));
 	ImageList_SetOverlayImage(IconList, 12, (ICON_REPL_MASK | ICON_FWD_MASK));
 
 	ListView_SetImageList(hListView, IconList, LVSIL_SMALL);
@@ -150,14 +167,14 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 	// State icons
 	// state = (multipart*3) + priority(0=normal,1=high,2=low)
 	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, 8, 8);
-	ImageListIconAdd(IconList, IDI_ICON_HIGH);      // 1
-	ImageListIconAdd(IconList, IDI_ICON_LOW);       // 2
-	ImageListIconAdd(IconList, IDI_ICON_HTML);      // 3
-	ImageListIconAdd(IconList, IDI_ICON_HTML_HIGH); // 4
-	ImageListIconAdd(IconList, IDI_ICON_HTML_LOW);  // 5
-	ImageListIconAdd(IconList, IDI_ICON_CLIP);      // 6
-	ImageListIconAdd(IconList, IDI_ICON_CLIP_HIGH); // 7
-	ImageListIconAdd(IconList, IDI_ICON_CLIP_LOW);  // 8
+	ImageListIconAdd(IconList, IDI_ICON_HIGH, TEXT("ico_high.ico"));      // 1
+	ImageListIconAdd(IconList, IDI_ICON_LOW, TEXT("icon_low.ico"));       // 2
+	ImageListIconAdd(IconList, IDI_ICON_HTML, TEXT("ico_html.ico"));      // 3
+	ImageListIconAdd(IconList, IDI_ICON_HTML_HIGH, TEXT("ico_h_hi.ico")); // 4
+	ImageListIconAdd(IconList, IDI_ICON_HTML_LOW, TEXT("ico_h_lo.ico"));  // 5
+	ImageListIconAdd(IconList, IDI_ICON_CLIP, TEXT("icon_cli.ico"));      // 6
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_HIGH, TEXT("ico_clhi.ico")); // 7
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_LOW, TEXT("ico_cllo.ico"));  // 8
 	
 	ListView_SetImageList(hListView, IconList, LVSIL_STATE);
 

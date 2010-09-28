@@ -85,6 +85,9 @@ BOOL gDoingQuit = FALSE;
 BOOL first_start = FALSE;					// 初回起動フラグ
 BOOL SaveBoxesLoaded = FALSE;
 BOOL PPCFlag;								// PsPCフラグ
+#ifdef LOAD_USER_IMAGES
+HBITMAP MainBmp = NULL, EditBmp = NULL, ViewBmp = NULL;
+#endif
 #ifndef _WIN32_WCE
 static int confirm_flag;					// 認証フラグ
 #endif
@@ -94,9 +97,9 @@ HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HFONT hListFont = NULL;						// ListViewのフォント
 HFONT hViewFont = NULL;						// 表示のフォント
 int font_charset;
-static HICON TrayIcon_Main;					// タスクトレイアイコン (待機)
-static HICON TrayIcon_Check;				// タスクトレイアイコン (チェック中)
-static HICON TrayIcon_Mail;					// タスクトレイアイコン (新着あり)
+static HICON TrayIcon_Main = NULL;			// タスクトレイアイコン (待機)
+static HICON TrayIcon_Check = NULL;			// タスクトレイアイコン (チェック中)
+static HICON TrayIcon_Mail = NULL;			// タスクトレイアイコン (新着あり)
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hMainPop, hPOPUP, hMBPOPUP;	// pop-up menus for main window, systray, mbpane
 HMENU hADPOPUP, hViewPop=NULL;				// pop-up menus for Address list, View window
@@ -2445,7 +2448,13 @@ static BOOL InitWindow(HWND hWnd)
 	hMainToolBar = mbi.hwndMB;
 
 	CommandBar_AddToolTips(hMainToolBar, 15, szTips);
-	CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, 13, TB_ICONSIZE, TB_ICONSIZE);
+#ifdef LOAD_USER_IMAGES
+	if (MainBmp)
+		CommandBar_AddBitmap(hMainToolBar, NULL, (int)MainBmp, TB_MAINBUTTONS, op.MainBmpSize, op.MainBmpSize);
+	else
+#endif
+		CommandBar_AddBitmap(hMainToolBar, hInst, IDB_TOOLBAR, TB_MAINBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
+
 #ifndef _WIN32_WCE_SP
 	CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif
@@ -2498,7 +2507,7 @@ static BOOL InitWindow(HWND hWnd)
 	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
 	// else HPC2000 (Jornada 690, 720)
 	CommandBar_AddToolTips(hToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
-	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, 13, TB_ICONSIZE, TB_ICONSIZE);
+	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, TB_MAINBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
 
 	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW_HPC, 0);
@@ -2519,8 +2528,13 @@ static BOOL InitWindow(HWND hWnd)
 #else
 	// Win32
 	MailMenuPos = 3;
-	hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, 17, hInst, IDB_TOOLBAR,
-		tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	if (MainBmp) {
+		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, NULL, (UINT)MainBmp,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, op.MainBmpSize, op.MainBmpSize, sizeof(TBBUTTON));
+	} else {
+		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, hInst, IDB_TOOLBAR,
+			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+	}
 	SetWindowLong(hToolBar, GWL_STYLE,
 		GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hToolBar, TB_SETINDENT, 5, 0);
@@ -4451,12 +4465,26 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 
 		//of control inside window Setting
-		TrayIcon_Main = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_NOCHECK),
-			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
-		TrayIcon_Check = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_CHECK),
-			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
-		TrayIcon_Mail = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN),
-			IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
+#ifdef LOAD_USER_IMAGES
+		{
+			TCHAR fpath[BUF_SIZE];
+			wsprintf(fpath, TEXT("%sRES\\ico_nchk.ico"), AppDir);
+			TrayIcon_Main = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
+			wsprintf(fpath, TEXT("%sRES\\icon_chk.ico"), AppDir);
+			TrayIcon_Check = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
+			wsprintf(fpath, TEXT("%sRES\\ico_main.ico"), AppDir);
+			TrayIcon_Mail = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
+		}
+#endif
+		if (!TrayIcon_Main)
+			TrayIcon_Main = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_NOCHECK),
+				IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
+		if (!TrayIcon_Check)
+			TrayIcon_Check = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_CHECK),
+				IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
+		if (!TrayIcon_Mail)
+			TrayIcon_Mail = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN),
+				IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
 		if (op.ShowTrayIcon == 1 && TrayIcon_Main != NULL) {
 			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
@@ -6806,6 +6834,56 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitCommonControls();
 	initRas();
 
+#ifdef LOAD_USER_IMAGES
+	// loading user-supplied bitmaps
+	{
+		BITMAP bitmap;
+		TCHAR fpath[BUF_SIZE];
+		wsprintf(fpath, TEXT("%sRES\\tbar_main.bmp"), AppDir);
+#ifdef _WIN32_WCE_PPC
+		MainBmp = SHLoadImageFile(fpath);
+#else
+		MainBmp = LoadImage(NULL, fpath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+#endif
+		if (MainBmp) {
+			GetObject(MainBmp, sizeof(BITMAP), &bitmap);
+			op.MainBmpSize = bitmap.bmHeight;
+			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_MAINBUTTONS) {
+				DeleteObject(MainBmp);
+				MainBmp = NULL;
+			}
+		}
+		wsprintf(fpath, TEXT("%sRES\\tbar_edit.bmp"), AppDir);
+#ifdef _WIN32_WCE_PPC
+		EditBmp = SHLoadImageFile(fpath);
+#else
+		EditBmp = LoadImage(NULL, fpath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+#endif
+		if (EditBmp) {
+			GetObject(EditBmp, sizeof(BITMAP), &bitmap);
+			op.EditBmpSize = bitmap.bmHeight;
+			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_EDITBUTTONS) {
+				DeleteObject(EditBmp);
+				EditBmp = NULL;
+			}
+		}
+		wsprintf(fpath, TEXT("%sRES\\tbar_view.bmp"), AppDir);
+#ifdef _WIN32_WCE_PPC
+		ViewBmp = SHLoadImageFile(fpath);
+#else
+		ViewBmp = LoadImage(NULL, fpath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+#endif
+		if (ViewBmp) {
+			GetObject(ViewBmp, sizeof(BITMAP), &bitmap);
+			op.ViewBmpSize = bitmap.bmHeight;
+			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_VIEWBUTTONS) {
+				DeleteObject(ViewBmp);
+				ViewBmp = NULL;
+			}
+		}
+	}
+#endif
+
 #ifdef _WIN32_WCE_LAGENDA
 	SipShowIM(SIPF_OFF);
 #endif
@@ -6822,6 +6900,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FreeRas();
 #ifndef _WCE_OLD
 		charset_uninit();
+#endif
+#ifdef LOAD_USER_IMAGES
+		DeleteObject(MainBmp);
+		DeleteObject(EditBmp);
+		DeleteObject(ViewBmp);
 #endif
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
@@ -6853,6 +6936,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #ifndef _WCE_OLD
 		charset_uninit();
 #endif
+#ifdef LOAD_USER_IMAGES
+		DeleteObject(MainBmp);
+		DeleteObject(EditBmp);
+		DeleteObject(ViewBmp);
+#endif
 		if (hMutex != NULL) {
 			CloseHandle(hMutex);
 		}
@@ -6861,10 +6949,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		return 0;
 	}
-
-	// loading user-specified bitmaps
-	// HBITMAP b = LoadImage(NULL, _T("c:\test.bmp"), IMAGE_BITMAP, 0, 0, IR_LOADFROMFILE); //returns a valid HBITMAP.
-	// GetBitmapDimensionEx
 
 	// tray icon pop-up
 	hPOPUP = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_POPUP));
@@ -6909,6 +6993,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	mem_free(&DefaultDataDir);
 	mem_free(&IniFile);
 	mem_free(&InitialAccount);
+#ifdef LOAD_USER_IMAGES
+	DeleteObject(MainBmp);
+	DeleteObject(EditBmp);
+	DeleteObject(ViewBmp);
+#endif
 	DestroyMenu(hPOPUP);
 	DestroyMenu(hMainPop);
 	DestroyMenu(hViewPop);
