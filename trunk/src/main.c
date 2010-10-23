@@ -6686,7 +6686,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		case LVN_ITEMACTIVATE:
-			SendMessage(hWnd, WM_COMMAND, ID_MAILITEM_OPEN, 0);
+			if (op.PreviewPaneHeight <= 0) {
+				SendMessage(hWnd, WM_COMMAND, ID_MAILITEM_OPEN, 0);
+			}
 			break;
 
 #else	// _WIN32_WCE_PPC
