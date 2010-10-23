@@ -74,7 +74,6 @@ extern HWND MainWnd;
 #ifdef _WIN32_WCE_PPC
 extern HWND hMainToolBar;
 #endif
-extern HWND FocusWnd;
 extern HFONT hListFont;
 extern HMENU hADPOPUP, hEDITPOPUP;
 extern TCHAR *g_Pass;

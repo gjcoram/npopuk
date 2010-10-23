@@ -28,14 +28,17 @@ extern int SelBox;
 extern MAILBOX *MailBox;
 
 /* Local Function Prototypes */
-static int ImageListIconAdd(HIMAGELIST IconList, int Index, TCHAR *Filename);
 static void ListView_GetDispItem(LV_ITEM *hLVItem);
 static int GetIconSortStatus(MAILITEM *tpMailItem);
 
 /*
  * ImageListIconAdd - of the item information which In image list adding idea contest
  */
+#ifdef LOAD_USER_IMAGES
 static int ImageListIconAdd(HIMAGELIST IconList, int Index, TCHAR *Filename)
+#else
+static int ImageListIconAdd(HIMAGELIST IconList, int Index)
+#endif
 {
 	HICON hIcon = NULL;
 	int ret;
@@ -43,7 +46,7 @@ static int ImageListIconAdd(HIMAGELIST IconList, int Index, TCHAR *Filename)
 #ifdef LOAD_USER_IMAGES
 	// loading user-supplied icons
 	TCHAR fpath[BUF_SIZE];
-	wsprintf(fpath, TEXT("%sRES\\%s"), AppDir, Filename);
+	wsprintf(fpath, TEXT("%sResource\\%s"), AppDir, Filename);
 	hIcon = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
 	if (hIcon == NULL) {
 		TCHAR msg[MSG_SIZE];
@@ -85,13 +88,10 @@ void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubIte
 /*
  * CreateListView - リストビューの作成と初期化
  */
-HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
+HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left, int Right)
 {
 	HIMAGELIST IconList;
-	RECT rcClient;
 	HWND hListView;
-
-	GetClientRect(hWnd, &rcClient);
 
 #ifdef _WIN32_WCE
 #define WS_EX_STYLE		0
@@ -108,7 +108,7 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 		WS_VISIBLE | WS_CHILD | WS_TABSTOP | op.LvStyle,
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
-		Left, Top, rcClient.right, rcClient.bottom - Top - Bottom,
+		Left, Top, Right, Bottom,
 		hWnd, (HMENU)IDC_LISTVIEW, hInst, NULL);
 	if (hListView == NULL) {
 		return NULL;
@@ -139,6 +139,7 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR32 | ILC_MASK, ICONCOUNT, ICONCOUNT);
 #endif
 
+#ifdef LOAD_USER_IMAGES
 	ImageListIconAdd(IconList, IDI_ICON_NON, TEXT("icon_non.ico"));
 	ImageListIconAdd(IconList, IDI_ICON_MAIN, TEXT("ico_main.ico"));
 	ImageListIconAdd(IconList, IDI_ICON_READ, TEXT("ico_read.ico"));
@@ -177,6 +178,46 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left)
 	ImageListIconAdd(IconList, IDI_ICON_CLIP_LOW, TEXT("ico_cllo.ico"));  // 8
 	
 	ListView_SetImageList(hListView, IconList, LVSIL_STATE);
+#else
+	ImageListIconAdd(IconList, IDI_ICON_NON);
+	ImageListIconAdd(IconList, IDI_ICON_MAIN);
+	ImageListIconAdd(IconList, IDI_ICON_READ);
+	ImageListIconAdd(IconList, IDI_ICON_DOWN);
+	ImageListIconAdd(IconList, IDI_ICON_DEL);
+	ImageListIconAdd(IconList, IDI_ICON_SENTMAIL);
+	ImageListIconAdd(IconList, IDI_ICON_SEND);
+	ImageListIconAdd(IconList, IDI_ICON_ERROR);
+	ImageListIconAdd(IconList, IDI_ICON_FLAG);
+
+	//Overlay
+	ImageListIconAdd(IconList, IDI_ICON_NEW);
+	ImageList_SetOverlayImage(IconList, 9, ICON_NEW_MASK);
+
+	// GJC overlays for replied, forwarded
+	ImageListIconAdd(IconList, IDI_ICON_REPL);
+	ImageList_SetOverlayImage(IconList, 10, ICON_REPL_MASK);
+	ImageListIconAdd(IconList, IDI_ICON_FWD);
+	ImageList_SetOverlayImage(IconList, 11, ICON_FWD_MASK);
+	// could do this with ImageList_Merge
+	ImageListIconAdd(IconList, IDI_ICON_REPLFWD);
+	ImageList_SetOverlayImage(IconList, 12, (ICON_REPL_MASK | ICON_FWD_MASK));
+
+	ListView_SetImageList(hListView, IconList, LVSIL_SMALL);
+
+	// State icons
+	// state = (multipart*3) + priority(0=normal,1=high,2=low)
+	IconList = ImageList_Create(SICONSIZE, SICONSIZE, ILC_COLOR | ILC_MASK, 8, 8);
+	ImageListIconAdd(IconList, IDI_ICON_HIGH);      // 1
+	ImageListIconAdd(IconList, IDI_ICON_LOW);       // 2
+	ImageListIconAdd(IconList, IDI_ICON_HTML);      // 3
+	ImageListIconAdd(IconList, IDI_ICON_HTML_HIGH); // 4
+	ImageListIconAdd(IconList, IDI_ICON_HTML_LOW);  // 5
+	ImageListIconAdd(IconList, IDI_ICON_CLIP);      // 6
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_HIGH); // 7
+	ImageListIconAdd(IconList, IDI_ICON_CLIP_LOW);  // 8
+	
+	ListView_SetImageList(hListView, IconList, LVSIL_STATE);
+#endif
 
 	return hListView;
 }
@@ -516,19 +557,21 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 	//The item is put in selective state the
 	if ((j = ListView_GetItemCount(hListView)) > 0) {
 		ListView_EnsureVisible(hListView, j - 1, TRUE);
-		//Acquisition
-		i = ListView_GetNextUnreadItem(hListView, -1, ListView_GetItemCount(hListView));
-		if (SelBox < MAILBOX_USER || i == -1) {
-			//of not yet opening position The last mail is selected the
-			index = (op.LvDefSelectPos == 0) ? 0 : j - 1;
-			ListView_SetItemState(hListView, index,
-				LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-		} else {
-			//The not yet opening mail is selected the
-			ListView_SetItemState(hListView, i,
-				LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-			index = (i <= 0) ? 0 : (i - 1);
-			ListView_EnsureVisible(hListView, index, TRUE);
+		if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
+			//Acquisition
+			i = ListView_GetNextUnreadItem(hListView, -1, ListView_GetItemCount(hListView));
+			if (SelBox < MAILBOX_USER || i == -1) {
+				//of not yet opening position The last mail is selected the
+				index = (op.LvDefSelectPos == 0) ? 0 : j - 1;
+				ListView_SetItemState(hListView, index,
+					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+			} else {
+				//The not yet opening mail is selected the
+				ListView_SetItemState(hListView, i,
+					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+				index = (i <= 0) ? 0 : (i - 1);
+				ListView_EnsureVisible(hListView, index, TRUE);
+			}
 		}
 	}
 	ListView_SetRedraw(hListView, TRUE);

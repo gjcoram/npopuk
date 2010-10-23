@@ -40,7 +40,7 @@ extern BOOL SaveBoxesLoaded;
 
 /* Local Function Prototypes */
 static void ini_get_encode_info(void);
-static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret);
+static void get_sound_file(TCHAR *name, TCHAR **ret);
 static void ini_check_window_pos(RECT *rect, RECT *scr_rect, int def_w, int def_l);
 
 /*
@@ -170,10 +170,10 @@ static void ini_get_encode_info(void)
 /*
  * get_sound_file
  */
-static void get_sound_file(TCHAR *dir, TCHAR *name, TCHAR **ret)
+static void get_sound_file(TCHAR *name, TCHAR **ret)
 {
 	TCHAR buf[BUF_SIZE];
-	wsprintf(buf, TEXT("%s\\%s"), dir, name);
+	wsprintf(buf, TEXT("%sResource\\%s"), AppDir, name);
 	if (file_get_size(buf) > 0) {
 		*ret = alloc_copy_t(buf);
 	}
@@ -189,7 +189,7 @@ void ini_read_general(HWND hWnd)
 	UINT char_set;
 	TCHAR conv_buf[INI_BUF_SIZE];
 	TCHAR tmp[BUF_SIZE];
-	int len, width, t, i;
+	int len, width, height, t, i;
 
 	hdc = GetDC(hWnd);
 #ifndef _WIN32_WCE
@@ -312,7 +312,7 @@ void ini_read_general(HWND hWnd)
 	op.MBMenuMinWidth = profile_get_int(GENERAL, TEXT("MBMenuMinWidth"), 35);
 	if (op.MBMenuWidth > 0 && op.MBMenuWidth < op.MBMenuMinWidth) {
 		op.MBMenuWidth = op.MBMenuMinWidth;
-	} else if (op.MBMenuWidth < 0 && op.MBMenuWidth > -op.MBMenuMinWidth){
+	} else if (op.MBMenuWidth <= 0 && op.MBMenuWidth > -op.MBMenuMinWidth){
 		op.MBMenuWidth = -op.MBMenuMinWidth;
 	}
 	width = GetSystemMetrics(SM_CXSCREEN);
@@ -321,6 +321,27 @@ void ini_read_general(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
+	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), 200);
+	op.PreviewPaneMinHeight = profile_get_int(GENERAL, TEXT("PreviewPaneMinHeight"), 35);
+	if (op.PreviewPaneHeight > 0 && op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+		op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+	} else if (op.PreviewPaneHeight <= 0 && op.PreviewPaneHeight > -op.PreviewPaneMinHeight){
+		op.PreviewPaneHeight = -op.PreviewPaneMinHeight;
+	}
+	height = GetSystemMetrics(SM_CYSCREEN);
+	if (op.PreviewPaneHeight > height) {
+		op.PreviewPaneHeight = height / 2;
+	} else if (op.PreviewPaneHeight > height / 2) {
+		op.PreviewPaneHeight = -op.PreviewPaneHeight; // hide it (too big)
+	}
+	len = profile_get_string(GENERAL, TEXT("PreviewHeader"), TEXT("From: %F\\nTo: %T\\n{CC: %C\\n}Subject: %S\\nDate: %D\\n\\n"), conv_buf, INI_BUF_SIZE - 1);
+	op.PreviewHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+	if (op.PreviewHeader != NULL) {
+		DecodeCtrlChar(conv_buf, op.PreviewHeader);
+	}
+	op.AutoPreview = profile_get_int(GENERAL, TEXT("AutoPreview"), 0);
+	op.PreviewedIsReadTime = profile_get_int(GENERAL, TEXT("PreviewedIsReadTime"), 5);
+
 	op.SaveboxListCount = profile_get_int(GENERAL, TEXT("SaveboxListCount"), 10);
 
 	t = profile_get_int(GENERAL, TEXT("MoveAllMailBox"), 1);
@@ -527,39 +548,24 @@ void ini_read_general(HWND hWnd)
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""));
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0);
-	op.SoundDirSetting = profile_alloc_string(GENERAL, TEXT("SoundDirectory"), TEXT("DataFileDir\\SOUNDS\\"));
-	len = lstrlen(TEXT("DataFileDir\\"));
-	if (str_cmp_n_t(op.SoundDirSetting, TEXT("DataFileDir\\"), len) == 0) {
-		wsprintf(tmp, TEXT("%s%s"), DataDir, op.SoundDirSetting + len);
-		op.SoundDirectory = alloc_copy_t(tmp);
-	} else {
-		len = lstrlen(TEXT("AppDir\\"));
-		if (str_cmp_n_t(op.SoundDirSetting, TEXT("AppDir\\"), len) == 0) {
-			wsprintf(tmp, TEXT("%s%s"), AppDir, op.SoundDirSetting + len);
-			op.SoundDirectory = alloc_copy_t(tmp);
-		} else {
-			op.SoundDirectory = alloc_copy_t(op.SoundDirSetting);
+	if (op.ItemPlaySound > 0) {
+		wsprintf(tmp, TEXT("%sResource"), AppDir);
+		if (dir_check(tmp)) {
+			get_sound_file(TEXT("NEW.WAV"), &op.ItemNewSoundFile);
+			get_sound_file(TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
+			get_sound_file(TEXT("FULL.WAV"), &op.ItemFullSoundFile);
+			get_sound_file(TEXT("ATTACH.WAV"), &op.ItemAttachSoundFile);
+			get_sound_file(TEXT("ATTACH_HTML.WAV"), &op.ItemHtmlSoundFile);
+			get_sound_file(TEXT("NO_ICON.WAV"), &op.ItemNonSoundFile);
+			get_sound_file(TEXT("UNREAD.WAV"), &op.ItemUnreadSoundFile);
+			get_sound_file(TEXT("READ.WAV"), &op.ItemReadSoundFile);
+			get_sound_file(TEXT("DOWNLOAD.WAV"), &op.ItemDownSoundFile);
+			get_sound_file(TEXT("DELETE.WAV"), &op.ItemDelSoundFile);
+			get_sound_file(TEXT("SEND.WAV"), &op.ItemSendSoundFile);
+			get_sound_file(TEXT("SENT.WAV"), &op.ItemSentSoundFile);
+			get_sound_file(TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
+			get_sound_file(TEXT("FLAG.WAV"), &op.ItemFlagSoundFile);
 		}
-	}
-	len = lstrlen(op.SoundDirectory) - 1;
-	if ( *(op.SoundDirectory + len) == TEXT('\\') ) {
-		*(op.SoundDirectory + len) = TEXT('\0');
-	}
-	if (op.ItemPlaySound > 0 && op.SoundDirectory != NULL) {
-		get_sound_file(op.SoundDirectory, TEXT("NEW.WAV"), &op.ItemNewSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("FULL.WAV"), &op.ItemFullSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("ATTACH.WAV"), &op.ItemAttachSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("ATTACH_HTML.WAV"), &op.ItemHtmlSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("NO_ICON.WAV"), &op.ItemNonSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("UNREAD.WAV"), &op.ItemUnreadSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("READ.WAV"), &op.ItemReadSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("DOWNLOAD.WAV"), &op.ItemDownSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("DELETE.WAV"), &op.ItemDelSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("SEND.WAV"), &op.ItemSendSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("SENT.WAV"), &op.ItemSentSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
-		get_sound_file(op.SoundDirectory, TEXT("FLAG.WAV"), &op.ItemFlagSoundFile);
 	}
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0);
@@ -1190,6 +1196,12 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("ContextMenuOption"), op.ContextMenuOption);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth);
 	profile_write_int(GENERAL, TEXT("MBMenuMinWidth"), op.MBMenuMinWidth);
+	profile_write_int(GENERAL, TEXT("PreviewPaneHeight"), op.PreviewPaneHeight);
+	profile_write_int(GENERAL, TEXT("PreviewPaneMinHeight"), op.PreviewPaneMinHeight);
+	EncodeCtrlChar(op.PreviewHeader, conv_buf);
+	profile_write_string(GENERAL, TEXT("PreviewHeader"), conv_buf);
+	profile_write_int(GENERAL, TEXT("AutoPreview"), op.AutoPreview);
+	profile_write_int(GENERAL, TEXT("PreviewedIsReadTime"), op.PreviewedIsReadTime);
 	profile_write_int(GENERAL, TEXT("SaveboxListCount"), op.SaveboxListCount);
 	profile_write_int(GENERAL, TEXT("ScanAllForUnread"), op.ScanAllForUnread);
 	profile_write_int(GENERAL, TEXT("DelIsMarkDel"), op.DelIsMarkDel);
@@ -1312,7 +1324,6 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("ExecEndSound"), op.ExecEndSound);
 	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile);
 	profile_write_int(GENERAL, TEXT("ItemPlaySound"), op.ItemPlaySound);
-	profile_write_string(GENERAL, TEXT("SoundDirectory"), op.SoundDirSetting);
 
 	profile_write_int(GENERAL, TEXT("AutoCheck"), op.AutoCheck);
 	profile_write_int(GENERAL, TEXT("AutoCheckTime"), op.AutoCheckTime);
@@ -1887,6 +1898,7 @@ void ini_free(BOOL free_all)
 		mem_free(&op.Password);
 	}
 	mem_free(&op.LvColumnOrder);
+	mem_free(&op.PreviewHeader);
 	mem_free(&op.AddressShowGroup);
 	mem_free(&op.view_font.name);
 	mem_free(&op.lv_font.name);
@@ -1908,8 +1920,6 @@ void ini_free(BOOL free_all)
 	mem_free(&op.TimeFormat);
 	mem_free(&op.NewMailSoundFile);
 	mem_free(&op.ExecEndSoundFile);
-	mem_free(&op.SoundDirectory);
-	mem_free(&op.SoundDirSetting);
 	mem_free(&op.ItemNewSoundFile);
 	mem_free(&op.ItemPartialSoundFile);
 	mem_free(&op.ItemFullSoundFile);

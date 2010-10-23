@@ -51,6 +51,7 @@ BOOL EditScrollbars = 1;
 
 #ifdef _WIN32_WCE
 static WNDPROC EditWindowProcedure;
+extern WNDPROC PreviewWindowProcedure;
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -686,9 +687,9 @@ static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem)
 }
 
 /*
- * SubClassSentProc - event handler for sent mail window
+ * SubClassSentProc - event handler for sent mail and preview windows
  */
-static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	WPARAM keycode;
 	switch (msg) {
@@ -784,7 +785,11 @@ static LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		}
 	}
 #ifdef _WIN32_WCE
-	return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
+	if (hWnd == hEditWnd) {
+		return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
+	} else {
+		return CallWindowProc(PreviewWindowProcedure, hWnd, msg, wParam, lParam);
+	}
 #else
 	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
 #endif

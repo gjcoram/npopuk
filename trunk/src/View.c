@@ -1600,10 +1600,12 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 		if (j == -1) {
 			return NULL;
 		}
-		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-		ListView_SetItemState(hListView,
-			j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-		ListView_EnsureVisible(hListView, j, TRUE);
+		if (op.PreviewPaneHeight <= 0) {
+			ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
+			ListView_SetItemState(hListView,
+				j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+			ListView_EnsureVisible(hListView, j, TRUE);
+		}
 
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	}

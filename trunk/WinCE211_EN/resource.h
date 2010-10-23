@@ -360,6 +360,7 @@
 #define IDR_ADDRESS_POPUP               1245
 #define IDR_MENU_EDIT_POPUP             1246
 #define IDC_REPLY_OR_FROM               1248
+#define ID_MENUITEM_PREVPANE            1249
 #define IDD_DIALOG_SAVEATTACH           1250
 #define IDC_BUTTON_ALLSEL               1251
 #define IDC_BUTTON_NOSEL                1252

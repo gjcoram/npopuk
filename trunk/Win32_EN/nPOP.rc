@@ -382,6 +382,7 @@ BEGIN
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
         MENUITEM "Su&mmary...",                 ID_MENUITEM_MAILBOXES
+        MENUITEM "Pre&view pane",               ID_MENUITEM_PREVPANE
         MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
         POPUP "&Sort by"

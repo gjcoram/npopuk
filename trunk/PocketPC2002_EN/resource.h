@@ -363,6 +363,7 @@
 #define IDR_MENU_EDIT_POPUP             1246
 #define IDC_SHOW_NAVIG                  1247
 #define IDC_REPLY_OR_FROM               1248
+#define ID_MENUITEM_PREVPANE            1249
 #define IDD_DIALOG_SAVEATTACH           1250
 #define IDC_BUTTON_ALLSEL               1251
 #define IDC_BUTTON_NOSEL                1252
@@ -389,6 +390,7 @@
 #define ID_MENUITEM_DELETE              40018
 #define ID_MENUITEM_LISTINIT            40019
 #define ID_MENUITEM_ABOUT               40020
+#define ID_MENUITEM_DRAGSELECT          40021
 #define ID_MENUITEM_ADDMAILBOX          40022
 #define ID_MENUITEM_DELETEMAILBOX       40023
 #define ID_MESSAGE_DOWNLOAD             40024
