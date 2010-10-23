@@ -215,6 +215,8 @@
 #define STR_MSG_ADDR_ALREADY		TEXT("All addresses already in address book")
 #define STR_MSG_BYWAYOF				TEXT("%s (by way of %s)")
 #define STR_MSG_SALVAGING			"Salvaging received mail data\r\n"
+#define STR_MSG_SELECT_PREVIEW		TEXT("Select a message to preview.")
+#define STR_MSG_SINGLE_PREVIEW		TEXT("Select a single message to preview.")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -356,7 +358,7 @@
 #define STR_EDIT_HEAD_TO			TEXT("\r\nTo: ")
 #define STR_EDIT_HEAD_SUBJECT		TEXT("\r\nSubject: ")
 #define STR_REPLACE_DONE			TEXT("Done")
-#define STR_EDIT_SCROLLBARS			TEXT("Scrollbars")
+#define STR_EDIT_DRAGSEL			TEXT("Drag-select")
 
 // SSL, SMTP-AUTH
 #define STR_SSL_AUTO				TEXT("Auto")

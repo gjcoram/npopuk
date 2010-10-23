@@ -238,6 +238,7 @@ BEGIN
             MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
             MENUITEM SEPARATOR
             MENUITEM "&Mailbox pane",               ID_MENUITEM_MBOXPANE
+            MENUITEM "Pre&view pane",               ID_MENUITEM_PREVPANE
             MENUITEM "&Summary",                    ID_MENUITEM_MAILBOXES
             MENUITEM SEPARATOR
             MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT

@@ -331,7 +331,8 @@
 #define IDC_LIST_MAILBOXES              1234
 #define IDC_BUTTON_SAVE                 1235
 #define ID_MENUITEM_MBOXPANE            1236
-#define ID_MENUITEM_SAVEMAILBOX         1237
+#define ID_MENUITEM_PREVPANE            1237
+#define ID_MENUITEM_SAVEMAILBOX         1238
 #define IDR_MENU_MAINPOP                1240
 #define IDR_MENU_SENDBOXPOP             1241
 #define IDR_MENU_EDITPOP                1242

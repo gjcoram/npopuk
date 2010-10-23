@@ -84,11 +84,10 @@ extern int sprintf_s();
 #define _WCE_NEW				1
 #endif
 #endif
-#if !defined(_WIN32_WCE) || (defined(_WIN32_WCE_PPC) && WIN32_PLATFORM_PSPC >= 310)
+
+//#if !defined(_WIN32_WCE) || (defined(_WIN32_WCE_PPC) && WIN32_PLATFORM_PSPC >= 310)
+#if !defined(_WIN32_WCE)
 #define	LOAD_USER_IMAGES		1
-#if !defined(LR_LOADFROMFILE)
-#define LR_LOADFROMFILE			0x0
-#endif
 #endif
 
 #define MAIN_WND_CLASS			TEXT("nPOPMainWndClass")
@@ -425,10 +424,15 @@ typedef struct _OPTION {
 	int LvStyle;
 	int LvStyleEx;
 	TCHAR *LvColumnOrder;
-	int ContextMenuOption;
+	TCHAR *PreviewHeader;
+	int PreviewPaneHeight;
+	int PreviewPaneMinHeight;
+	int AutoPreview;
+	int PreviewedIsReadTime;
 	int MBMenuWidth;
 	int MBMenuMinWidth;
 	int MBMenuHeight; // not saved in INI, for resizing
+	int ContextMenuOption;
 	int SaveboxListCount;
 	int ScanAllForUnread;
 	int DeletedIsNotNew;
@@ -516,8 +520,6 @@ typedef struct _OPTION {
 	int ItemPlaySound;
 	TCHAR *NewMailSoundFile;
 	TCHAR *ExecEndSoundFile;
-	TCHAR *SoundDirSetting; // in ini file, may be relative to DataDir or AppDir
-	TCHAR *SoundDirectory; // actual path
 	TCHAR *ItemNewSoundFile;
 	TCHAR *ItemPartialSoundFile;
 	TCHAR *ItemFullSoundFile;
@@ -704,9 +706,9 @@ typedef struct _MAILITEM {
 	int PrevNo;
 	int NextNo;
 	int Indent;
+	int HasHeader;  // 0=no, 1=full headers, 2=stripped of duplicates
 	BOOL New;
 	BOOL Download;
-	int HasHeader;  // 0=no, 1=full headers, 2=stripped of duplicates
 	BOOL DefReplyTo;
 	HWND hEditWnd;
 	HANDLE hProcess;
@@ -1057,6 +1059,7 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox);
 void Edit_ConfigureWindow(HWND thisEditWnd, BOOL editable);
 int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox,
 					   MAILITEM *tpReMailItem, int OpenFlag, TCHAR *seltext, BOOL NoAppFlag);
+LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Option
 void SetControlFont(HWND pWnd);
@@ -1088,7 +1091,7 @@ BOOL CALLBACK DigestReplyProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 // ListView
 void ListView_AddColumn(HWND hListView, int fmt, int cx, TCHAR *buf, int iSubItem);
-HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left);
+HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left, int Right);
 void ListView_SetRedraw(HWND hListView, BOOL DrawFlag);
 int ListView_InsertItemEx(HWND hListView, TCHAR *buf, int len, int Img, long lp, int iItem);
 void ListView_MoveItem(HWND hListView, int SelectItem, int Move, int ColCnt);
@@ -1126,7 +1129,7 @@ void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);
 void ErrorSocketEnd(HWND hWnd, int BoxIndex);
 void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL timer);
-int SetMailMenu(HWND hWnd);
+void SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);

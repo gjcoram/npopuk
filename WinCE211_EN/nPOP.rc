@@ -1422,6 +1422,7 @@ BEGIN
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM "Su&mmary",                    ID_MENUITEM_MAILBOXES
         MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
+        MENUITEM "Pre&view pane",               ID_MENUITEM_PREVPANE
         MENUITEM SEPARATOR
         MENUITEM "&Sort by icon",               ID_MENUITEM_ICONSORT
         MENUITEM "&Thread mode\tCtrl+T",        ID_MENUITEM_THREADVIEW
