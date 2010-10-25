@@ -2730,9 +2730,9 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	int newTop, newHeight, Left, Right;
 
 #ifdef _WIN32_WCE
-	if (hWnd == NULL) {
+	if (hWnd == NULL || gListView == NULL) {
 #else
-	if (hWnd == NULL || IsIconic(hWnd) != 0) {
+	if (hWnd == NULL || gListView == NULL || IsIconic(hWnd) != 0) {
 #endif
 		return FALSE;
 	}
