@@ -768,6 +768,52 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 		break;
 
+#ifndef _WIN32_WCE
+		case WM_EXITSIZEMOVE:
+#else
+		case WM_SIZE: 
+#endif
+			{
+				RECT rcRect;
+				int left, lv_height, pp_height, dh;
+
+				GetWindowRect(GetDlgItem(MainWnd, IDC_LISTVIEW), &rcRect);
+				lv_height = rcRect.bottom - rcRect.top;
+
+				GetWindowRect(hWnd, &rcRect);
+				// new height of preview pane
+				pp_height = rcRect.bottom - rcRect.top;
+				if (pp_height < op.PreviewPaneMinHeight) {
+					pp_height = op.PreviewPaneMinHeight;
+				}
+				dh = op.PreviewPaneHeight - pp_height;
+				lv_height += dh;
+				if (lv_height < 2*op.PreviewPaneMinHeight) {
+					dh = 2*op.PreviewPaneMinHeight - lv_height;
+					lv_height += dh;
+					pp_height -= dh;
+				}
+
+				left = (op.MBMenuWidth>0) ? op.MBMenuWidth : 0;
+
+				MoveWindow(hWnd, left, op.ToolBarHeight+lv_height,
+					op.PreviewPaneWidth, pp_height, TRUE);
+				MoveWindow(GetDlgItem(MainWnd, IDC_LISTVIEW), left, op.ToolBarHeight,
+					op.PreviewPaneWidth, lv_height, TRUE);
+				op.PreviewPaneHeight = pp_height;
+			}
+			break;
+
+#ifndef _WIN32_WCE
+		case WM_GETMINMAXINFO:
+			{
+				LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
+				minmax->ptMinTrackSize.x = op.PreviewPaneWidth - 5;
+				minmax->ptMaxTrackSize.x = op.PreviewPaneWidth;
+			}
+			break;
+#endif
+
 	case WM_COMMAND:
 		switch(GET_WM_COMMAND_ID(wParam,lParam)) {
 		case ID_MENUITEM_FIND:

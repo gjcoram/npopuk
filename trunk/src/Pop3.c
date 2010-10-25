@@ -1246,20 +1246,24 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		if (ShowFlag == TRUE) {
 			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
-			st =  INDEXTOSTATEIMAGEMASK(st);
+			st = INDEXTOSTATEIMAGEMASK(st);
 			if (tpMailItem->New) {
 				st |= INDEXTOOVERLAYMASK(ICON_NEW_MASK);
 			}
 
 			if (first_new_msg) {
+				int st2 = LVIS_FOCUSED;
 				if (op.ClearNewOverlay == 1) {
 					// clear new overlay from existing messages when new(er) mail received
 					ListView_SetItemState(hListView, -1, 0, INDEXTOOVERLAYMASK(ICON_NEW_MASK));
 					ListView_RedrawItems(hListView, 0, ListView_GetItemCount(hListView));
 				}
-				// êVíÖà íuÇÃëIë
-				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
-				st |= (LVIS_FOCUSED | LVIS_SELECTED);
+				if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
+					st2 |= LVIS_SELECTED;
+				}
+				// de-select all messages, then set up to select this new message
+				ListView_SetItemState(hListView, -1, 0, st2);
+				st |= st2;
 			}
 			st |= ((tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL)
 				? LVIS_CUT : 0);
