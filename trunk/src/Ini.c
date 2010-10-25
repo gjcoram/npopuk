@@ -310,6 +310,9 @@ void ini_read_general(HWND hWnd)
 		op.MBMenuWidth = 130; // upgrade from previous default
 	}
 	op.MBMenuMinWidth = profile_get_int(GENERAL, TEXT("MBMenuMinWidth"), 35);
+	if (op.MBMenuMinWidth < 0) {
+		op.MBMenuMinWidth = -op.MBMenuMinWidth;
+	}
 	if (op.MBMenuWidth > 0 && op.MBMenuWidth < op.MBMenuMinWidth) {
 		op.MBMenuWidth = op.MBMenuMinWidth;
 	} else if (op.MBMenuWidth <= 0 && op.MBMenuWidth > -op.MBMenuMinWidth){
@@ -327,6 +330,9 @@ void ini_read_general(HWND hWnd)
 	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), -200);
 #endif
 	op.PreviewPaneMinHeight = profile_get_int(GENERAL, TEXT("PreviewPaneMinHeight"), 35);
+	if (op.PreviewPaneMinHeight < 0) {
+		op.PreviewPaneMinHeight = -op.PreviewPaneMinHeight;
+	}
 	if (op.PreviewPaneHeight > 0 && op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
 		op.PreviewPaneHeight = op.PreviewPaneMinHeight;
 	} else if (op.PreviewPaneHeight <= 0 && op.PreviewPaneHeight > -op.PreviewPaneMinHeight){
