@@ -1583,6 +1583,7 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 		// else return to master
 		tpMailItem = DigestMaster;
 	} else {
+		int st = LVIS_FOCUSED;
 		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 
@@ -1602,10 +1603,10 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 		}
 		if (op.PreviewPaneHeight <= 0) {
 			ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-			ListView_SetItemState(hListView,
-				j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-			ListView_EnsureVisible(hListView, j, TRUE);
+			st |= LVIS_SELECTED;
 		}
+		ListView_SetItemState(hListView, j, st, st);
+		ListView_EnsureVisible(hListView, j, TRUE);
 
 		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
 	}
@@ -1623,8 +1624,7 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
 	HWND hListView;
-	int Index;
-	int i, j;
+	int Index, i, j, st = LVIS_FOCUSED;
 
 	if (SelBox == MAILBOX_SEND) {
 		return NULL;
@@ -1667,9 +1667,11 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 			ListView_GetItemCount(hListView));
 		SwitchCursor(TRUE);
 	}
-	ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-	ListView_SetItemState(hListView,
-		j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+	if (op.PreviewPaneHeight <= 0) {
+		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
+		st |= LVIS_SELECTED;
+	}
+	ListView_SetItemState(hListView, j, st, st);
 	ListView_EnsureVisible(hListView, j, TRUE);
 
 	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
@@ -1955,7 +1957,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			}
 #endif
 			if (Found == TRUE) {
-				int idx;
+				int idx, st = LVIS_FOCUSED;
 				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 				if (hWnd != NULL && hWnd != MainWnd && hWnd != hViewWnd) {
 					EndEditWindow(hWnd, FALSE);
@@ -1973,10 +1975,13 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
 				}
-				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+				if (op.PreviewPaneHeight <= 0) {
+					ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+					st |= LVIS_SELECTED;
+				}
 				idx = ListView_GetMemToItem(hListView, FindMailItem);
 				ListView_EnsureVisible(hListView, idx, TRUE);
-				ListView_SetItemState(hListView, idx, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+				ListView_SetItemState(hListView, idx, st, st);
 				SwitchCursor(TRUE);
 				OpenItem(MainWnd, TRUE, TRUE);
 				if (FindBox == MAILBOX_SEND) {
@@ -3234,10 +3239,13 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 		while ((i = ListView_GetNextItem(hListView, i, 0)) != -1) {
 			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 			if (tpMailItem == delItem) {
+				int st = LVIS_FOCUSED;
 				ListView_DeleteItem(hListView, i);
-				ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-				ListView_SetItemState(hListView,
-					i, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+				if (op.PreviewPaneHeight <= 0) {
+					ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
+					st |= LVIS_SELECTED;
+				}
+				ListView_SetItemState(hListView, i, st, st);
 				ListView_EnsureVisible(hListView, i, TRUE);
 				tpNextMail = (MAILITEM *)ListView_GetlParam(hListView, i);
 				break;

@@ -423,10 +423,12 @@ typedef struct _OPTION {
 	int LvThreadView;
 	int LvStyle;
 	int LvStyleEx;
+	int ToolBarHeight; // not saved in INI, for resizing
 	TCHAR *LvColumnOrder;
 	TCHAR *PreviewHeader;
 	int PreviewPaneHeight;
 	int PreviewPaneMinHeight;
+	int PreviewPaneWidth; // not saved in INI, for resizing
 	int AutoPreview;
 	int PreviewedIsReadTime;
 	int MBMenuWidth;

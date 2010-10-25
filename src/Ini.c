@@ -322,9 +322,9 @@ void ini_read_general(HWND hWnd)
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
 #ifdef _WIN32_WCE
-	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), 100);
+	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), -100);
 #else
-	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), 200);
+	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), -200);
 #endif
 	op.PreviewPaneMinHeight = profile_get_int(GENERAL, TEXT("PreviewPaneMinHeight"), 35);
 	if (op.PreviewPaneHeight > 0 && op.PreviewPaneHeight < op.PreviewPaneMinHeight) {

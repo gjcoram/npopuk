@@ -556,22 +556,22 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 
 	//The item is put in selective state the
 	if ((j = ListView_GetItemCount(hListView)) > 0) {
+		int st = LVIS_FOCUSED;
 		ListView_EnsureVisible(hListView, j - 1, TRUE);
 		if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
-			//Acquisition
-			i = ListView_GetNextUnreadItem(hListView, -1, ListView_GetItemCount(hListView));
-			if (SelBox < MAILBOX_USER || i == -1) {
-				//of not yet opening position The last mail is selected the
-				index = (op.LvDefSelectPos == 0) ? 0 : j - 1;
-				ListView_SetItemState(hListView, index,
-					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-			} else {
-				//The not yet opening mail is selected the
-				ListView_SetItemState(hListView, i,
-					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-				index = (i <= 0) ? 0 : (i - 1);
-				ListView_EnsureVisible(hListView, index, TRUE);
-			}
+			st |= LVIS_SELECTED;
+		}
+		//Acquisition
+		i = ListView_GetNextUnreadItem(hListView, -1, ListView_GetItemCount(hListView));
+		if (SelBox < MAILBOX_USER || i == -1) {
+			//of not yet opening position The last mail is selected the
+			index = (op.LvDefSelectPos == 0) ? 0 : j - 1;
+			ListView_SetItemState(hListView, index, st, st);
+		} else {
+			//The not yet opening mail is selected the
+			ListView_SetItemState(hListView, i, st, st);
+			index = (i <= 0) ? 0 : (i - 1);
+			ListView_EnsureVisible(hListView, index, TRUE);
 		}
 	}
 	ListView_SetRedraw(hListView, TRUE);

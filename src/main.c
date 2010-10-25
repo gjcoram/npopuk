@@ -2027,7 +2027,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				MoveWindow(gListView, op.MBMenuWidth, top.y,
 					top.x-op.MBMenuWidth, height, TRUE);
 				MoveWindow(GetDlgItem(MainWnd, IDC_TB), op.MBMenuWidth, 0,
-					top.x-op.MBMenuWidth, TB_ICONSIZE, TRUE);
+					top.x-op.MBMenuWidth, op.ToolBarHeight, TRUE);
 			}
 			break;
 
@@ -2343,7 +2343,8 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 #ifdef _WIN32_WCE_PPC
 		WS_BORDER |
 #endif
-		WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ((op.WordBreakFlag == 1) ? 0 : WS_HSCROLL),
+		WS_VISIBLE | WS_CHILD | ES_MULTILINE  | WS_SIZEBOX |
+		WS_VSCROLL | ((op.WordBreakFlag == 1) ? 0 : WS_HSCROLL),
 		Left, Top, width, height, hWnd, (HMENU)IDC_EDIT_BODY, hInst, NULL);
 	if (hViewFont != NULL) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
@@ -2512,7 +2513,7 @@ static BOOL InitWindow(HWND hWnd)
 	CommandBar_AddButtons(hMainToolBar, sizeof(tbButton) / sizeof(TBBUTTON), tbButton);
 #endif
 
-	Top = 0;
+	op.ToolBarHeight = 0;
 	i = 0;
 	hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 	PPCFlag = TRUE;
@@ -2548,7 +2549,7 @@ static BOOL InitWindow(HWND hWnd)
 	style &= ~WS_CLIPCHILDREN;
 	SetWindowLong(hCSOBar, GWL_STYLE, style);
 
-	Top = g_menu_height = CSOBar_Height(hCSOBar);
+	op.ToolBarHeight = g_menu_height = CSOBar_Height(hCSOBar);
 	i = 0;
 	CheckMenuItem(GetSubMenu(hMainMenu, 1), ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
 	hMenu = GetSubMenu(hMainMenu, 0);
@@ -2574,7 +2575,7 @@ static BOOL InitWindow(HWND hWnd)
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 14, tbButton);
 	}
 	CommandBar_AddAdornments(hToolBar, 0, 0);
-	Top = CommandBar_Height(hToolBar);
+	op.ToolBarHeight = CommandBar_Height(hToolBar);
 	i = 0;
 	hMenu = CommandBar_GetMenu(hToolBar, 0);
 #endif
@@ -2594,10 +2595,11 @@ static BOOL InitWindow(HWND hWnd)
 	ShowWindow(hToolBar,SW_SHOW);
 
 	GetWindowRect(hToolBar, &ToolbarRect);
-	Top = ToolbarRect.bottom - ToolbarRect.top;
+	op.ToolBarHeight = ToolbarRect.bottom - ToolbarRect.top;
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 	hMenu = GetMenu(hWnd);
 #endif
+	Top = op.ToolBarHeight;
 
 	CheckMenuItem(hMenu, ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
@@ -2742,17 +2744,11 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 	GetClientRect(hWnd, &rcClient);
 	newHeight = rcClient.bottom; // rcClient.top = 0 always
+
 	// Toolbar
-#ifdef _WIN32_WCE_PPC
-	newTop = 0;
-#elif defined _WIN32_WCE
-	newTop = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
+	newTop = op.ToolBarHeight;
 	newHeight -= newTop;
-#else
-	GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
-	newTop = (subwinRect.bottom - subwinRect.top);
-	newHeight -= newTop;
-#endif
+
 	// Status bar
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &subwinRect);
 	newHeight -= (subwinRect.bottom - subwinRect.top);
@@ -2780,10 +2776,19 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		newHeight -= comboHeight;
 	}
 	if (op.PreviewPaneHeight > 0) {
+		int oldHeight, dh;
+		GetWindowRect(gListView, &subwinRect);
+		oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
+		dh = oldHeight - newHeight;
+		op.PreviewPaneHeight -= dh/2;
+		if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+			op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+		}
 		newHeight -= op.PreviewPaneHeight;
 	}
 	MoveWindow(gListView, Left, newTop, Right, newHeight, TRUE);
 	if (op.PreviewPaneHeight > 0) {
+		op.PreviewPaneWidth = Right;
 		MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), Left, newTop+newHeight,
 		   Right, op.PreviewPaneHeight, TRUE);
 	}
@@ -5553,25 +5558,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				int top, left, height, width;
 
 				op.PreviewPaneHeight = -op.PreviewPaneHeight;
-#ifdef _WIN32_WCE_PPC
-				top = 0;
-				height = -MENU_HEIGHT;
-#elif defined(_WIN32_WCE)
-				top = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
-				height = -top;
-#else
-				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
-				top = rcRect.bottom - rcRect.top;
-				height = -rcRect.bottom;
-#endif
-				GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &rcRect);
-				height += rcRect.top;
+				top = op.ToolBarHeight;
+				left = (op.MBMenuWidth > 0) ? op.MBMenuWidth : 0;
 
 				GetWindowRect(gListView, &rcRect);
-				left = (op.MBMenuWidth > 0) ? op.MBMenuWidth : 0;
 				width = rcRect.right - rcRect.left;
+				// when op.PreviewPaneHeight < 0, the next line grows IDC_LISTVIEW
+				height = rcRect.bottom - rcRect.top - op.PreviewPaneHeight;
 				if (op.PreviewPaneHeight > 0) {
-					height -= op.PreviewPaneHeight;
 					CreatePreviewPane(hWnd, left, top+height, width, op.PreviewPaneHeight);
 				} else {
 					HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
@@ -5594,32 +5588,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			{
 				RECT rcRect;
 				HMENU hMenu;
-				int dTop, dBottom, tmp, height, width, left;
+				int dTop, dBottom, mbh, height, width, left;
 				op.MBMenuWidth = -op.MBMenuWidth;
 				if (MBPaneWndProc != NULL) {
 					SetWindowLong(GetDlgItem(hWnd, IDC_MBMENU), GWL_WNDPROC, (DWORD)MBPaneWndProc);
 				}
 				DestroyWindow(GetDlgItem(hWnd, IDC_MBMENU));
-#ifdef _WIN32_WCE_PPC
-				dTop = 0;
-				height = -MENU_HEIGHT;
-#elif defined(_WIN32_WCE)
-				dTop = CommandBar_Height(GetDlgItem(hWnd, IDC_CB));
-				height = -dTop;
-#else
-				GetWindowRect(GetDlgItem(hWnd, IDC_TB), &rcRect);
-				dTop = rcRect.bottom - rcRect.top;
-				height = -rcRect.bottom;
-#endif
+				dTop = op.ToolBarHeight;
+
 				GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &rcRect);
 				dBottom = rcRect.bottom - rcRect.top;
-				height += rcRect.top;
-				tmp = CreateMBMenu(hWnd, dTop, dBottom);
-				if (tmp > 0) {
-					dTop += tmp;
-					height -= tmp;
-				}
-				SelectMBMenu(SelBox);
+
 				GetWindowRect(gListView, &rcRect);
 				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
@@ -5629,9 +5608,22 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					width = rcRect.right - rcRect.left;
 				}
 #endif
+				op.PreviewPaneWidth = width;
+
+				mbh = CreateMBMenu(hWnd, dTop, dBottom);
+				if (mbh > 0) {
+					dTop += mbh;
+					height = rcRect.bottom - rcRect.top - mbh;
+				} else {
+					height = op.MBMenuHeight;
+					if (op.PreviewPaneHeight > 0) {
+						height -= op.PreviewPaneHeight;
+					}
+				}
+				SelectMBMenu(SelBox);
+
 				left = (op.MBMenuWidth>0) ? op.MBMenuWidth : 0;
 				if (op.PreviewPaneHeight > 0) {
-					height -= op.PreviewPaneHeight;
 					MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY),
 						left, dTop+height, width, op.PreviewPaneHeight, TRUE);
 				}
@@ -6645,10 +6637,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					if (SelBox != MAILBOX_SEND) {
 						MULTIPART **tpMultiPart = NULL;
 						body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
-						if (op.PreviewedIsReadTime > 0) {
-							SetTimer(hWnd, ID_PREVIEW_TIMER, 1000*op.PreviewedIsReadTime, NULL);
-						} else if (op.PreviewedIsReadTime == 0) {
-							SetMailStats(hWnd, ICON_READ);
+						if (tpMailItem->MailStatus != ICON_READ) {
+							if (op.PreviewedIsReadTime > 0) {
+								SetTimer(hWnd, ID_PREVIEW_TIMER, 1000*op.PreviewedIsReadTime, NULL);
+							} else if (op.PreviewedIsReadTime == 0) {
+								SetMailStats(hWnd, ICON_READ);
+							}
 						}
 						multipart_free(&tpMultiPart, cnt);
 					} else {
