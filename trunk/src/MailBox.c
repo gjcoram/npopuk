@@ -896,12 +896,12 @@ int mailbox_name_to_index(TCHAR *Name, int Type)
 {
 	int i;
 
-	if(Name == NULL){
+	if (Name == NULL) {
 		return -1;
 	}
-	for(i = 0; i < MailBoxCnt; i++){
+	for (i = 0; i < MailBoxCnt; i++) {
 		if (Type == (MailBox + i)->Type) { // MAILBOX_TYPE_SAVE or account
-			if(lstrcmpi((MailBox + i)->Name, Name) == 0){
+			if (lstrcmpi((MailBox + i)->Name, Name) == 0) {
 				return i;
 			}
 		}
@@ -1048,11 +1048,13 @@ ADDRESSBOOK *addressbook_copy(void)
 		for (i = 0; i < tmpAddrBook->ItemCnt; i++) {
 			olditem = *(AddressBook->tpAddrItem + i);
 			newitem = *(tmpAddrBook->tpAddrItem + i) = (ADDRESSITEM *)mem_calloc(sizeof(ADDRESSITEM));
-			newitem->MailAddress = alloc_copy_t(olditem->MailAddress);
-			newitem->AddressOnly = alloc_copy_t(olditem->AddressOnly);
-			newitem->Comment = alloc_copy_t(olditem->Comment);
-			newitem->Group = alloc_copy_t(olditem->Group);
-			newitem->Num = olditem->Num;
+			if (olditem != NULL && newitem != NULL) {
+				newitem->MailAddress = alloc_copy_t(olditem->MailAddress);
+				newitem->AddressOnly = alloc_copy_t(olditem->AddressOnly);
+				newitem->Comment = alloc_copy_t(olditem->Comment);
+				newitem->Group = alloc_copy_t(olditem->Group);
+				newitem->Num = olditem->Num;
+			}
 		}
 	}
 	return tmpAddrBook;
@@ -1152,7 +1154,8 @@ void addr_list_add(TCHAR *AddrList) {
 		*cmmt = TEXT('\0');
 		GetMailAddress(AddrList, addr, cmmt, FALSE);
 		for (i = 0; i < AddressBook->ItemCnt; i++) {
-			if (lstrcmp(addr, (*(AddressBook->tpAddrItem + i))->AddressOnly) == 0) {
+			TCHAR *ao = (*(AddressBook->tpAddrItem + i))->AddressOnly;
+			if (ao != NULL && lstrcmp(addr, ao) == 0) {
 				addit = FALSE;
 				break;
 			}

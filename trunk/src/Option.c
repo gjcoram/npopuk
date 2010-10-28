@@ -7311,7 +7311,8 @@ BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				*addr = TEXT('\0');
 				GetMailAddress(item, addr, NULL, FALSE);
 				for (j = 0; j < AddressBook->ItemCnt; j++) {
-					if (lstrcmp(addr, (*(AddressBook->tpAddrItem + j))->AddressOnly) == 0) {
+					TCHAR *ao = (*(AddressBook->tpAddrItem + j))->AddressOnly;
+					if (ao != NULL && lstrcmp(addr, ao) == 0) {
 						ListView_SetItemState(hListView, i, 0, LVNI_SELECTED);
 						break;
 					}
@@ -8285,8 +8286,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		ListView_AddColumn(hListView, LVCFMT_LEFT, op.AddColSize[0], STR_ADDRESSLIST_MAILADDRESS, 1);
 		ListView_AddColumn(hListView, LVCFMT_LEFT, op.AddColSize[1], STR_ADDRESSLIST_COMMENT, 2);
 		ListView_AddColumn(hListView, LVCFMT_LEFT, op.AddColSize[2], STR_ADDRESSLIST_GROUP, 3);
-		ListView_SetExtendedListViewStyle(hListView,
-			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 		tpTmpAddressBook->EditNum = -1;
 		AddrSortFlag = op.AddressSort;
@@ -9060,10 +9060,13 @@ BOOL CALLBACK NewMailMessageProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				i = ListView_GetItemCount(hListView);
 				j = ListView_GetNewItem(hListView, (MailBox + sBox));
 				if (i > 0 && j != -1) {
+					int st = LVIS_FOCUSED;
 					ListView_EnsureVisible(hListView, i - 1, TRUE);
 					ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-					ListView_SetItemState(hListView, j,
-						LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+					if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
+						st |= LVIS_SELECTED;
+					}
+					ListView_SetItemState(hListView, j, st, st);
 					ListView_EnsureVisible(hListView, (j <= 0) ? 0 : (j - 1), TRUE);
 				}
 			}
