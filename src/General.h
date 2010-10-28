@@ -517,6 +517,7 @@ typedef struct _OPTION {
 	int ActiveNewMailMessage;
 	int ClearNewOverlay;
 
+	int HasResourceDir; // detected at start-up, not saved in INI
 	int NewMailSound;
 	int ExecEndSound;
 	int ItemPlaySound;

@@ -1667,8 +1667,8 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 			ListView_GetItemCount(hListView));
 		SwitchCursor(TRUE);
 	}
+	ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 	if (op.PreviewPaneHeight <= 0) {
-		ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
 		st |= LVIS_SELECTED;
 	}
 	ListView_SetItemState(hListView, j, st, st);
@@ -1975,8 +1975,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
 				}
+				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				if (op.PreviewPaneHeight <= 0) {
-					ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 					st |= LVIS_SELECTED;
 				}
 				idx = ListView_GetMemToItem(hListView, FindMailItem);
@@ -3241,8 +3241,8 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 			if (tpMailItem == delItem) {
 				int st = LVIS_FOCUSED;
 				ListView_DeleteItem(hListView, i);
+				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				if (op.PreviewPaneHeight <= 0) {
-					ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
 					st |= LVIS_SELECTED;
 				}
 				ListView_SetItemState(hListView, i, st, st);

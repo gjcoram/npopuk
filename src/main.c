@@ -1991,43 +1991,33 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #endif
 			{
 				RECT paneRect;
-				POINT top;
-				int height;
+				int height, width, dw;
+
 				GetWindowRect(hWnd, &paneRect);
-#ifdef _WIN32_WCE
-				op.MBMenuWidth = paneRect.right;
-#else
-				op.MBMenuWidth = paneRect.right - paneRect.left;
-				top.x = paneRect.left;
-				top.y = paneRect.top;
-				ScreenToClient(MainWnd, &top);
-				if (op.MBMenuWidth < op.MBMenuMinWidth) {
-					op.MBMenuWidth = op.MBMenuMinWidth;
-					top.x = 1;
+				width = paneRect.right - paneRect.left;
+				if (width < op.MBMenuMinWidth) {
+					width = op.MBMenuMinWidth;
 				}
-				if (top.x > 0) {
-					MoveWindow(hWnd, 0, top.y, op.MBMenuWidth, op.MBMenuHeight, TRUE);
-				}
-#endif
+				dw = width - op.MBMenuWidth; // > 0 if it was made larger
+				op.MBMenuWidth = width;
+				MoveWindow(hWnd, 0, op.ToolBarHeight, width, op.MBMenuHeight, TRUE);
+
 #ifdef _WIN32_WCE_PPC
-				top.x = GetSystemMetrics(SM_CXSCREEN);
-				top.y = 0;
+				width = GetSystemMetrics(SM_CXSCREEN) - op.MBMenuWidth;
 #else
 				GetWindowRect(gListView, &paneRect);
-				top.x = paneRect.right;
-				top.y = paneRect.top;
-				ScreenToClient(MainWnd, &top);
+				width = paneRect.right - paneRect.left - dw;
 #endif
 				height = op.MBMenuHeight;
 				if (op.PreviewPaneHeight > 0) {
 					height -= op.PreviewPaneHeight;
-					MoveWindow(GetDlgItem(MainWnd, IDC_EDIT_BODY), op.MBMenuWidth, top.y+height,
-						top.x-op.MBMenuWidth, op.PreviewPaneHeight, TRUE);
+					op.PreviewPaneWidth = width;
+					MoveWindow(GetDlgItem(MainWnd, IDC_EDIT_BODY), op.MBMenuWidth, 
+						op.ToolBarHeight+height, width, op.PreviewPaneHeight, TRUE);
 				}
-				MoveWindow(gListView, op.MBMenuWidth, top.y,
-					top.x-op.MBMenuWidth, height, TRUE);
-				MoveWindow(GetDlgItem(MainWnd, IDC_TB), op.MBMenuWidth, 0,
-					top.x-op.MBMenuWidth, op.ToolBarHeight, TRUE);
+				MoveWindow(gListView, op.MBMenuWidth, op.ToolBarHeight, width, height, TRUE);
+				MoveWindow(GetDlgItem(MainWnd, IDC_TB), 0, 0, op.MBMenuWidth+width,
+					op.ToolBarHeight, TRUE);
 			}
 			break;
 
@@ -2035,7 +2025,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		case WM_GETMINMAXINFO:
 			{
 				LPMINMAXINFO minmax = (LPMINMAXINFO)lParam;
-				minmax->ptMinTrackSize.y = op.MBMenuHeight - 10;
+				minmax->ptMinTrackSize.y = op.MBMenuHeight - 5;
 				minmax->ptMaxTrackSize.y = op.MBMenuHeight;
 			}
 			break;
@@ -3269,7 +3259,8 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 				ret = TRUE;
 				break;
 			} else {
-				int ans = MessageBox(hWnd, (held == FALSE) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
+				int ans, st;
+				ans = MessageBox(hWnd, (held == FALSE) ? STR_Q_DELSERVERMAIL : STR_Q_DELSERVERNOHOLD,
 					(MailBox + i)->Name, MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 				if (ans == IDYES) {
 					ret = TRUE;
@@ -3278,8 +3269,11 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 					mailbox_select(hWnd, i);
 					if ((i = ListView_GetNextDeleteItem(gListView, -1)) != -1) {
 						ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
-						ListView_SetItemState(gListView, i,
-							LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+						st = LVIS_FOCUSED;
+						if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
+							st |= LVIS_SELECTED;
+						}
+						ListView_SetItemState(gListView, i, st, st);
 						ListView_EnsureVisible(gListView, i, TRUE);
 					}
 					return FALSE;
@@ -3665,10 +3659,13 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	}
 	SetItemCntStatusText(NULL, FALSE);
 	if (SelPoint != -1) {
+		int st = LVIS_FOCUSED;
 		//of mail item The item which is added is selected the
 		ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
-		ListView_SetItemState(gListView, SelPoint,
-			LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+		if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
+			st |= LVIS_SELECTED;
+		}
+		ListView_SetItemState(gListView, SelPoint,	st, st);
 		ListView_EnsureVisible(gListView, SelPoint, TRUE);
 		SendDlgItemMessage(hWnd, IDC_LISTVIEW, WM_VSCROLL, SB_LINEDOWN, 0);
 	}
@@ -4053,10 +4050,13 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 
 			i = ListView_GetNextUnreadItem(gListView, -1, ListView_GetItemCount(gListView));
 			if (i != -1) {
+				int st = LVIS_FOCUSED;
+				if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
+					st |= LVIS_SELECTED;
+				}
 				//The not yet opening mail is selected the
-				ListView_SetItemState(gListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
-				ListView_SetItemState(gListView, i,
-					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+				ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
+				ListView_SetItemState(gListView, i, st, st);
 			}
 
 		}
@@ -4943,7 +4943,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			gSockFlag = FALSE;
 
 			//Transmission
-			SendMail(hWnd, (MAILITEM *)wkSendMailItem, SMTP_SENDEND);
+			if (SendMail(hWnd, (MAILITEM *)wkSendMailItem, SMTP_SENDEND) == FALSE) {
+				if (gAutoSend == AUTOSEND_AND_QUIT && op.SendIgnoreError == 1) {
+					PostMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
+				}
+			}
 			wkSendMailItem = NULL;
 			break;
 
@@ -5338,11 +5342,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// ƒAƒhƒŒƒX’ 
 		case ID_MENUITEM_ADDRESS:
+if (op.SocLog > 2) log_save(TEXT("DBG: received ID_MENUITEM_ADDRESS\r\n"));
 			{
 				// GJC make temporary addressbook for editing
 				ADDRESSBOOK *tpTmpAddressBook = addressbook_copy();
 				if (tpTmpAddressBook != NULL) {
 					tpTmpAddressBook->GetAddrList = FALSE;
+if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS),
 						hWnd, AddressListProc, (LPARAM)tpTmpAddressBook);
 					addressbook_free(tpTmpAddressBook);

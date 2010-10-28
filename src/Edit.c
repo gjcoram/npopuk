@@ -77,6 +77,7 @@ extern int font_charset;
 extern int FindOrReplace;
 
 extern MAILBOX *MailBox;
+extern int MailBoxCnt;
 extern int SelBox;
 
 extern SOCKET g_soc;
@@ -1580,9 +1581,11 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				int state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 				ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK);
 				ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-				ListView_SetItemState(hListView, i,
-					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
-
+				state = LVIS_FOCUSED;
+				if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
+					state |= LVIS_SELECTED;
+				}
+				ListView_SetItemState(hListView, i, state, state);
 				ListView_EnsureVisible(hListView, i, TRUE);
 				ListView_RedrawItems(hListView, i, i);
 				UpdateWindow(hListView);
@@ -2180,8 +2183,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 		case ID_MENUITEM_SEND:
 			if (gAutoSend == FALSE
-				&& ParanoidMessageBox(hWnd, STR_Q_SENDMAIL,
-				STR_TITLE_SEND, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+				&& ParanoidMessageBox(hWnd, STR_Q_SENDMAIL,	STR_TITLE_SEND,
+										MB_ICONQUESTION | MB_YESNO) == IDNO) {
 				break;
 			}
 			if (g_soc != -1 || gSockFlag == TRUE) {
@@ -2245,8 +2248,11 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					state = ListView_ComputeState(tpTmpMailItem->Priority, tpTmpMailItem->Multipart);
 					ListView_SetItemState(hListView, j, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK)
 					ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
-					ListView_SetItemState(hListView,
-						j, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+					state = LVIS_FOCUSED;
+					if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
+						state |= LVIS_SELECTED;
+					}
+					ListView_SetItemState(hListView, j, state, state);
 					ListView_RedrawItems(hListView, j, j);
 					ListView_EnsureVisible(hListView, j, TRUE);
 					UpdateWindow(hListView);
@@ -2959,11 +2965,49 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->DefReplyTo = TRUE;
 
 		if (gAutoSend) {
+			int i = -1;
 			if (tpMailItem->To == NULL || (tpMailItem->Subject == NULL && tpMailItem->Body == NULL)) {
 				return FALSE;
 			}
+			if (tpMailItem->MailBox != NULL) {
+				i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+				if (i == -1) {
+					mem_free(&tpMailItem->MailBox);
+					i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_SAVE);
+					if ((MailBox + i)->DefAccount != NULL && *(MailBox + i)->DefAccount != TEXT('\0')) {
+						tpMailItem->MailBox = alloc_copy_t((MailBox + i)->DefAccount);
+						i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+					} else {
+						tpMailItem->MailBox = NULL;
+					}
+				}
+			}
 			if (tpMailItem->MailBox == NULL) {
-				tpMailItem->MailBox = alloc_copy_t((MailBox + SelBox)->Name);
+				if (SelBox != MAILBOX_SEND && (MailBox + SelBox)->Type != MAILBOX_TYPE_SAVE) {
+					i = SelBox;
+					tpMailItem->MailBox = alloc_copy_t((MailBox + SelBox)->Name);
+				} else {
+					for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+						if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+							tpMailItem->MailBox = alloc_copy_t((MailBox + i)->Name);
+							break;
+						}
+					}
+				}
+			}
+			if (i != -1 && (MailBox+i)->MyAddr2Bcc) {
+				if (tpMailItem->Bcc == NULL) {
+					tpMailItem->Bcc = alloc_copy_t( (MailBox+i)->BccAddr );
+				} else {
+					TCHAR *tmp;
+					int len = lstrlen(tpMailItem->Bcc) + lstrlen( (MailBox+i)->BccAddr ) + 3;
+					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR)*len);
+					if (tmp != NULL) {
+						str_join_t(tmp, tpMailItem->Bcc, TEXT(", "), (MailBox+i)->BccAddr, (TCHAR*)-1);
+						mem_free(&tpMailItem->Bcc);
+						tpMailItem->Bcc = tmp;
+					}
+				}
 			}
 		} else {
 			int res = IDD_DIALOG_SETSEND;

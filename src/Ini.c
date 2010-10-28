@@ -553,29 +553,33 @@ void ini_read_general(HWND hWnd)
 	op.PromptIniEdit = profile_get_int(GENERAL, TEXT("PromptIniEdit"), 0);
 #endif
 
+	wsprintf(tmp, TEXT("%sResource"), AppDir);
+	if (dir_check(tmp)) {
+		op.HasResourceDir = 1;
+	} else {
+		op.HasResourceDir = 0;
+	}
 	op.NewMailSound = profile_get_int(GENERAL, TEXT("NewMailSound"), 1);
 	op.NewMailSoundFile = profile_alloc_string(GENERAL, TEXT("NewMailSoundFile"), TEXT(""));
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0);
 	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""));
 	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0);
-	if (op.ItemPlaySound > 0) {
-		wsprintf(tmp, TEXT("%sResource"), AppDir);
-		if (dir_check(tmp)) {
-			get_sound_file(TEXT("NEW.WAV"), &op.ItemNewSoundFile);
-			get_sound_file(TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
-			get_sound_file(TEXT("FULL.WAV"), &op.ItemFullSoundFile);
-			get_sound_file(TEXT("ATTACH.WAV"), &op.ItemAttachSoundFile);
-			get_sound_file(TEXT("ATTACH_HTML.WAV"), &op.ItemHtmlSoundFile);
-			get_sound_file(TEXT("NO_ICON.WAV"), &op.ItemNonSoundFile);
-			get_sound_file(TEXT("UNREAD.WAV"), &op.ItemUnreadSoundFile);
-			get_sound_file(TEXT("READ.WAV"), &op.ItemReadSoundFile);
-			get_sound_file(TEXT("DOWNLOAD.WAV"), &op.ItemDownSoundFile);
-			get_sound_file(TEXT("DELETE.WAV"), &op.ItemDelSoundFile);
-			get_sound_file(TEXT("SEND.WAV"), &op.ItemSendSoundFile);
-			get_sound_file(TEXT("SENT.WAV"), &op.ItemSentSoundFile);
-			get_sound_file(TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
-			get_sound_file(TEXT("FLAG.WAV"), &op.ItemFlagSoundFile);
-		}
+
+	if (op.ItemPlaySound > 0 && op.HasResourceDir) {
+		get_sound_file(TEXT("NEW.WAV"), &op.ItemNewSoundFile);
+		get_sound_file(TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
+		get_sound_file(TEXT("FULL.WAV"), &op.ItemFullSoundFile);
+		get_sound_file(TEXT("ATTACH.WAV"), &op.ItemAttachSoundFile);
+		get_sound_file(TEXT("ATTACH_HTML.WAV"), &op.ItemHtmlSoundFile);
+		get_sound_file(TEXT("NO_ICON.WAV"), &op.ItemNonSoundFile);
+		get_sound_file(TEXT("UNREAD.WAV"), &op.ItemUnreadSoundFile);
+		get_sound_file(TEXT("READ.WAV"), &op.ItemReadSoundFile);
+		get_sound_file(TEXT("DOWNLOAD.WAV"), &op.ItemDownSoundFile);
+		get_sound_file(TEXT("DELETE.WAV"), &op.ItemDelSoundFile);
+		get_sound_file(TEXT("SEND.WAV"), &op.ItemSendSoundFile);
+		get_sound_file(TEXT("SENT.WAV"), &op.ItemSentSoundFile);
+		get_sound_file(TEXT("ERROR.WAV"), &op.ItemErrorSoundFile);
+		get_sound_file(TEXT("FLAG.WAV"), &op.ItemFlagSoundFile);
 	}
 
 	op.AutoCheck = profile_get_int(GENERAL, TEXT("AutoCheck"), 0);

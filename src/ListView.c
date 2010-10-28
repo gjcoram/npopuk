@@ -44,17 +44,19 @@ static int ImageListIconAdd(HIMAGELIST IconList, int Index)
 	int ret;
 
 #ifdef LOAD_USER_IMAGES
-	// loading user-supplied icons
-	TCHAR fpath[BUF_SIZE];
-	wsprintf(fpath, TEXT("%sResource\\%s"), AppDir, Filename);
-	hIcon = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
-	if (hIcon == NULL) {
-		TCHAR msg[MSG_SIZE];
-		DWORD err = GetLastError();
-		wsprintf(msg, TEXT("Failed to load image %s (err=%X)\r\n"), fpath, err);
-		log_save(msg);
-		if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, msg, MSG_SIZE-1, NULL)) {
+	if (op.HasResourceDir) {
+		// loading user-supplied icons
+		TCHAR fpath[BUF_SIZE];
+		wsprintf(fpath, TEXT("%sResource\\%s"), AppDir, Filename);
+		hIcon = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
+		if (hIcon == NULL && op.SocLog > 1) {
+			TCHAR msg[MSG_SIZE];
+			DWORD err = GetLastError();
+			wsprintf(msg, TEXT("Failed to load image %s (err=%X)\r\n"), fpath, err);
 			log_save(msg);
+			if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, msg, MSG_SIZE-1, NULL)) {
+				log_save(msg);
+			}
 		}
 	}
 	if (hIcon == NULL)
