@@ -104,6 +104,7 @@ extern OPTION op;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
+extern HWND mListView;	// mail list
 #ifdef _WIN32_WCE
 extern HWND hEditWnd;
 #endif
@@ -1366,7 +1367,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 	int LvFocus, TextIndex = -1;
 	BOOL redraw = FALSE;
 	BOOL IsAttach = FALSE;
-	HWND hListView;
 
 	if (tpMailItem == NULL) { // || tpMailItem->Body == NULL) {
 		return;
@@ -1385,9 +1385,8 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 	if (BodyOnly == FALSE) {
 		if (IsAttach == FALSE) {
-			hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 			vSelBox = SelBox;
-			LvFocus = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+			LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 
 			// 開封済みにする
 			if (tpMailItem->MailStatus != ICON_NON && tpMailItem->MailStatus < ICON_SENTMAIL) {
@@ -1407,9 +1406,9 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				redraw = TRUE;
 			}
 			if (redraw == TRUE) {
-				ListView_SetItemState(hListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
-				ListView_RedrawItems(hListView, LvFocus, LvFocus);
-				UpdateWindow(hListView);
+				ListView_SetItemState(mListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
+				ListView_RedrawItems(mListView, LvFocus, LvFocus);
+				UpdateWindow(mListView);
 			}
 
 			// ウィンドウタイトルの設定
@@ -1559,7 +1558,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 {
 	MAILITEM *tpMailItem;
-	HWND hListView;
 	int Index;
 	int j;
 
@@ -1584,31 +1582,30 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 		tpMailItem = DigestMaster;
 	} else {
 		int st = LVIS_FOCUSED;
-		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 
 		if (SelBox == MAILBOX_SEND || AttachMailItem == NULL || tpMailItem != AttachMailItem) {
-			Index = ListView_GetMemToItem(hListView, tpMailItem);
+			Index = ListView_GetMemToItem(mListView, tpMailItem);
 		} else {
-			Index = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+			Index = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
 		}
 
 		if (dir > 0) {
-			j = ListView_GetNextMailItem(hListView, Index);
+			j = ListView_GetNextMailItem(mListView, Index);
 		} else {
-			j = ListView_GetPrevMailItem(hListView, Index);
+			j = ListView_GetPrevMailItem(mListView, Index);
 		}
 		if (j == -1) {
 			return NULL;
 		}
 		if (op.PreviewPaneHeight <= 0) {
-			ListView_SetItemState(hListView, -1, 0, LVIS_SELECTED);
+			ListView_SetItemState(mListView, -1, 0, LVIS_SELECTED);
 			st |= LVIS_SELECTED;
 		}
-		ListView_SetItemState(hListView, j, st, st);
-		ListView_EnsureVisible(hListView, j, TRUE);
+		ListView_SetItemState(mListView, j, st, st);
+		ListView_EnsureVisible(mListView, j, TRUE);
 
-		tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, j);
 	}
 	if (isView) {
 		SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
@@ -1623,7 +1620,6 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 static MAILITEM *View_NextUnreadMail(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
-	HWND hListView;
 	int Index, i, j, st = LVIS_FOCUSED;
 
 	if (SelBox == MAILBOX_SEND) {
@@ -1632,19 +1628,18 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 	if (DigestMessageNum > 0 && DigestMaster != NULL) {
 		return View_NextPrev(hWnd, +1, TRUE);
 	}
-	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 	if (AttachMailItem == NULL || tpMailItem != AttachMailItem) {
-		Index = ListView_GetMemToItem(hListView, tpMailItem);
+		Index = ListView_GetMemToItem(mListView, tpMailItem);
 	} else {
-		Index = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+		Index = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
 	}
 
 	// 未開封メールのインデックスを取得
-	j = ListView_GetNextUnreadItem(hListView, Index,
-		ListView_GetItemCount(hListView));
+	j = ListView_GetNextUnreadItem(mListView, Index,
+		ListView_GetItemCount(mListView));
 	if (j == -1) {
-		j = ListView_GetNextUnreadItem(hListView, -1, Index);
+		j = ListView_GetNextUnreadItem(mListView, -1, Index);
 	}
 	if (j == -1) {
 		if (op.ScanAllForUnread == 0) {
@@ -1663,18 +1658,18 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 		}
 		// メールボックスの選択
 		mailbox_select(MainWnd, i);
-		j = ListView_GetNextUnreadItem(hListView, -1,
-			ListView_GetItemCount(hListView));
+		j = ListView_GetNextUnreadItem(mListView, -1,
+			ListView_GetItemCount(mListView));
 		SwitchCursor(TRUE);
 	}
-	ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+	ListView_SetItemState(mListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 	if (op.PreviewPaneHeight <= 0) {
 		st |= LVIS_SELECTED;
 	}
-	ListView_SetItemState(hListView, j, st, st);
-	ListView_EnsureVisible(hListView, j, TRUE);
+	ListView_SetItemState(mListView, j, st, st);
+	ListView_EnsureVisible(mListView, j, TRUE);
 
-	tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, j);
+	tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, j);
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 	ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 	SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
@@ -1840,16 +1835,15 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	SwitchCursor(FALSE);
 
 	if (hWnd == MainWnd) {
-		HWND hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		MAILITEM *selitem;
 		i = 0;
-		if (ListView_GetSelectedCount(hListView) > 0) {
-			i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+		if (ListView_GetSelectedCount(mListView) > 0) {
+			i = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 			if (i < 0) {
 				i = 0;
 			}
 		}
-		selitem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		selitem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (FindBox == SelBox && FindMailItem == selitem) {
 			hEdit = NULL;
 			if (SelBox == MAILBOX_SEND && FindMailItem->hEditWnd != NULL) {
@@ -1958,7 +1952,6 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 #endif
 			if (Found == TRUE) {
 				int idx, st = LVIS_FOCUSED;
-				HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 				if (hWnd != NULL && hWnd != MainWnd && hWnd != hViewWnd) {
 					EndEditWindow(hWnd, FALSE);
 				} else if (hWnd == hViewWnd && FindBox == MAILBOX_SEND) {
@@ -1975,15 +1968,15 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				if (FindBox != SelBox) {
 					mailbox_select(hWnd, FindBox);
 				}
-				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+				ListView_SetItemState(mListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				if (op.PreviewPaneHeight <= 0) {
 					st |= LVIS_SELECTED;
 				}
-				idx = ListView_GetMemToItem(hListView, FindMailItem);
-				ListView_EnsureVisible(hListView, idx, TRUE);
-				ListView_SetItemState(hListView, idx, st, st);
+				idx = ListView_GetMemToItem(mListView, FindMailItem);
+				ListView_EnsureVisible(mListView, idx, TRUE);
+				ListView_SetItemState(mListView, idx, st, st);
 				SwitchCursor(TRUE);
-				OpenItem(MainWnd, TRUE, TRUE);
+				OpenItem(MainWnd, TRUE, TRUE, FALSE);
 				if (FindBox == MAILBOX_SEND) {
 #ifdef _WIN32_WCE
 					ShowWindow(hEditWnd, SW_SHOW);
@@ -2857,10 +2850,9 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 		}
 	}
 	if (hWnd != MainWnd && SelBox == vSelBox) {
-		HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-		i = ListView_GetMemToItem(hListView, tpMailItem);
-		ListView_SetItemState(hListView, i, LVIS_CUT, LVIS_CUT);
-		ListView_RedrawItems(hListView, i, i);
+		i = ListView_GetMemToItem(mListView, tpMailItem);
+		ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
+		ListView_RedrawItems(mListView, i, i);
 	}
 
 	multipart_free(&tpPart, cnt);
@@ -3048,11 +3040,9 @@ static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex)
  */
 static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 {
-	HWND hListView;
 	int i, cut = LVIS_CUT;
 
-	hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-	i = ListView_GetMemToItem(hListView, tpMailItem);
+	i = ListView_GetMemToItem(mListView, tpMailItem);
 
 	if (mark == ICON_MAIL && (tpMailItem->MailStatus == ICON_READ || tpMailItem->MailStatus == ICON_MAIL)) {
 		tpMailItem->MailStatus = (tpMailItem->MailStatus == ICON_READ) ? ICON_MAIL : ICON_READ;
@@ -3076,11 +3066,11 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 		if (tpMailItem->Download == TRUE) {
 			cut = 0;
 		}
-		ListView_SetItemState(hListView, i, cut, LVIS_CUT);
-		ListView_SetItemState(hListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
-		ListView_RedrawItems(hListView, i, i);
+		ListView_SetItemState(mListView, i, cut, LVIS_CUT);
+		ListView_SetItemState(mListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
+		ListView_RedrawItems(mListView, i, i);
 	}
-	UpdateWindow(hListView);
+	UpdateWindow(mListView);
 }
 
 /*
@@ -3228,26 +3218,24 @@ static void GetMarkStatus(HWND hWnd, MAILITEM *tpMailItem)
  * ViewDeleteItem - delete item from list (not from server)
  */
 static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
-	HWND hListView = NULL;
 	MAILITEM *tpNextMail = NULL;
 	int i;
 
 	// delete item from listview
 	if (SelBox == vSelBox) {
-		hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
 		i = -1;
-		while ((i = ListView_GetNextItem(hListView, i, 0)) != -1) {
-			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		while ((i = ListView_GetNextItem(mListView, i, 0)) != -1) {
+			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 			if (tpMailItem == delItem) {
 				int st = LVIS_FOCUSED;
-				ListView_DeleteItem(hListView, i);
-				ListView_SetItemState(hListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+				ListView_DeleteItem(mListView, i);
+				ListView_SetItemState(mListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
 				if (op.PreviewPaneHeight <= 0) {
 					st |= LVIS_SELECTED;
 				}
-				ListView_SetItemState(hListView, i, st, st);
-				ListView_EnsureVisible(hListView, i, TRUE);
-				tpNextMail = (MAILITEM *)ListView_GetlParam(hListView, i);
+				ListView_SetItemState(mListView, i, st, st);
+				ListView_EnsureVisible(mListView, i, TRUE);
+				tpNextMail = (MAILITEM *)ListView_GetlParam(mListView, i);
 				break;
 			}
 		}
@@ -3989,7 +3977,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					}
 					if (SelBox == mbox) {
 						SwitchCursor(FALSE);
-						ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
+						ListView_ShowItem(mListView, (MailBox + SelBox), FALSE);
 						SwitchCursor(TRUE);
 						SetItemCntStatusText(NULL, FALSE);
 					}
@@ -4065,11 +4053,10 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 
 		// 一覧のアイコンの設定
 		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL && ((MAILITEM *)lpParam)->Mark != ICON_FLAG) {
-			HWND hListView = GetDlgItem(MainWnd, IDC_LISTVIEW);
-			int LvFocus = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
+			int LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 			((MAILITEM *)lpParam)->Mark = ((MAILITEM *)lpParam)->MailStatus;
-			ListView_RedrawItems(hListView, LvFocus, LvFocus);
-			UpdateWindow(hListView);
+			ListView_RedrawItems(mListView, LvFocus, LvFocus);
+			UpdateWindow(mListView);
 		}
 		return FALSE;
 	}

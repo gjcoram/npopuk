@@ -30,8 +30,8 @@
 
 #define HEAD_LINE				30			// ヘッダー長
 #define LINE_LEN				80
-
 #define REDRAWCNT				100			// ステータスバー再設定数
+#define IDC_EDIT_BODY			2003
 
 #define CMD_USER				"USER"
 #define CMD_PASS				"PASS"
@@ -88,7 +88,8 @@ extern OPTION op;
 extern int command_status;
 extern int NewMailCnt;
 extern TCHAR *g_Pass;
-extern HWND hViewWnd;						// 表示ウィンドウ
+extern HWND hViewWnd;		// view window
+extern HWND mListView;		// mail list
 
 extern BOOL ShowMsgFlag;
 extern BOOL NewMail_Flag;
@@ -321,10 +322,12 @@ static void uidl_free(void)
  */
 static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
-	HWND hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	if (tpMailBox->ListInitMsg == TRUE) {
 		if (ShowFlag == TRUE) {
-			ListView_DeleteAllItems(hListView);
+			ListView_DeleteAllItems(mListView);
+			if (op.PreviewPaneHeight > 0) {
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)STR_MSG_SELECT_PREVIEW);
+			}
 		}
 		item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);
 		mem_free((void **)&tpMailBox->tpMailItem);
@@ -844,7 +847,6 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 {
 	MAILITEM *tpMailItem;
 	MAILITEM *tpLastMailItem;
-	HWND hListView;
 	int No, i, last_match;
 	SetSocStatusTextT(hWnd, TEXT("uidl_all"));
 
@@ -892,9 +894,8 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		// else "filling in", fall through to check UIDLs
 	}
 
-	hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 	if (ShowFlag == TRUE) {
-		ListView_SetRedraw(hListView, FALSE);
+		ListView_SetRedraw(mListView, FALSE);
 	}
 	SwitchCursor(FALSE);
 	// 現在表示されているメール一覧とUIDLを比較して番号を振り直す
@@ -911,7 +912,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 			uidl_free();
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			if (ShowFlag == TRUE) {
-				ListView_SetRedraw(hListView, TRUE);
+				ListView_SetRedraw(mListView, TRUE);
 			}
 			SwitchCursor(TRUE);
 			return POP_ERR;
@@ -919,9 +920,9 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		case 0:
 			// UIDLのリストに存在しないメールは解放する
 			if (ShowFlag == TRUE) {
-				No = ListView_GetMemToItem(hListView, tpMailItem);
+				No = ListView_GetMemToItem(mListView, tpMailItem);
 				if (tpMailItem != NULL && ((tpMailItem->ReFwd & REFWD_FWDHOLD) == 0)) {
-					ListView_DeleteItem(hListView, No);
+					ListView_DeleteItem(mListView, No);
 				}
 			}
 			item_free((tpMailBox->tpMailItem + i), 1);
@@ -957,7 +958,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 	// 削除されたメールを一覧から消す
 	item_resize_mailbox(tpMailBox);
 	if (ShowFlag == TRUE) {
-		ListView_SetRedraw(hListView, TRUE);
+		ListView_SetRedraw(mListView, TRUE);
 	}
 	SwitchCursor(TRUE);
 	SetItemCntStatusText(tpMailBox, FALSE);
@@ -1117,7 +1118,6 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 {
 	MAILITEM *tpMailItem;
 	LV_ITEM lvi;
-	HWND hListView;
 	TCHAR *p;
 	char *new_message_id;
 	int i, nOldMailCnt = NewMailCnt;
@@ -1185,7 +1185,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	// 受信の最大アイテム数分のメモリを確保
 	if (mail_received == 0) {
 		if (ShowFlag == TRUE) {
-			ListView_SetItemCount(GetDlgItem(hWnd, IDC_LISTVIEW), tpMailBox->MailCnt);
+			ListView_SetItemCount(mListView, tpMailBox->MailCnt);
 		}
 		if (item_set_count(tpMailBox, tpMailBox->MailCnt) == FALSE) {
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
@@ -1244,7 +1244,6 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		tpMailItem->No = list_get_no;
 
 		if (ShowFlag == TRUE) {
-			hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 			st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 			st = INDEXTOSTATEIMAGEMASK(st);
 			if (tpMailItem->New) {
@@ -1255,20 +1254,20 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 				int st2 = LVIS_FOCUSED;
 				if (op.ClearNewOverlay == 1) {
 					// clear new overlay from existing messages when new(er) mail received
-					ListView_SetItemState(hListView, -1, 0, INDEXTOOVERLAYMASK(ICON_NEW_MASK));
-					ListView_RedrawItems(hListView, 0, ListView_GetItemCount(hListView));
+					ListView_SetItemState(mListView, -1, 0, INDEXTOOVERLAYMASK(ICON_NEW_MASK));
+					ListView_RedrawItems(mListView, 0, ListView_GetItemCount(mListView));
 				}
 				if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
 					st2 |= LVIS_SELECTED;
 				}
 				// de-select all messages, then set up to select this new message
-				ListView_SetItemState(hListView, -1, 0, st2);
+				ListView_SetItemState(mListView, -1, 0, st2);
 				st |= st2;
 			}
 			st |= ((tpMailItem->Download == FALSE && tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL)
 				? LVIS_CUT : 0);
 			lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
-			lvi.iItem = ListView_GetItemCount(hListView);
+			lvi.iItem = ListView_GetItemCount(mListView);
 			lvi.iSubItem = 0;
 			lvi.state = st;
 			lvi.stateMask = LVIS_OVERLAYMASK | LVIS_STATEIMAGEMASK | LVIS_CUT | LVIS_FOCUSED | LVIS_SELECTED;
@@ -1278,13 +1277,13 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			lvi.lParam = (long)tpMailItem;
 
 			//of new arrival position The item is added to list view the
-			i = ListView_InsertItem(hListView, &lvi);
+			i = ListView_InsertItem(mListView, &lvi);
 			if (mail_received == 0) {
-				ListView_EnsureVisible(hListView, i, TRUE);
+				ListView_EnsureVisible(mListView, i, TRUE);
 			}
 			// 一行下へスクロール
 			if (op.RecvScroll == 1) {
-				SendMessage(hListView, WM_VSCROLL, SB_LINEDOWN, 0);
+				SendMessage(mListView, WM_VSCROLL, SB_LINEDOWN, 0);
 			}
 			SetItemCntStatusText(tpMailBox, FALSE);
 			EndThreadSortFlag = TRUE;
@@ -1444,7 +1443,6 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
 	MAILITEM *tpMailItem;
-	HWND hListView;
 	int i, size;
 	int get_no;
 
@@ -1551,15 +1549,14 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 
 	if (ShowFlag == TRUE) {
-		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
 		// リストビューの更新
-		i = ListView_GetMemToItem(hListView, tpMailItem);
+		i = ListView_GetMemToItem(mListView, tpMailItem);
 		if (i != -1) {
 			int state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
-			ListView_SetItemState(hListView, i, INDEXTOSTATEIMAGEMASK(state),
+			ListView_SetItemState(mListView, i, INDEXTOSTATEIMAGEMASK(state),
 				LVIS_CUT | LVIS_STATEIMAGEMASK);
-			ListView_RedrawItems(hListView, i, i);
-			UpdateWindow(hListView);
+			ListView_RedrawItems(mListView, i, i);
+			UpdateWindow(mListView);
 			SetItemCntStatusText(tpMailBox, FALSE);
 		}
 	}
@@ -1740,7 +1737,6 @@ static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
 	MAILITEM *tpMailItem;
-	HWND hListView;
 	int i, j;
 	int get_no, del_stop;
 
@@ -1779,16 +1775,14 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	// remove deleted messages from ListView
 	deletes_remaining = (op.DeletePerUpdateLimit > 0) ? op.DeletePerUpdateLimit : 65535;
 	if (ShowFlag == TRUE) {
-		// リストビューから削除
-		hListView = GetDlgItem(hWnd, IDC_LISTVIEW);
-		ListView_SetRedraw(hListView, FALSE);
-		while ((get_no = ListView_GetNextDeleteItem(hListView, -1)) != -1) {
+		ListView_SetRedraw(mListView, FALSE);
+		while ((get_no = ListView_GetNextDeleteItem(mListView, -1)) != -1) {
 			if (--deletes_remaining < 0) {
 				break;
 			}
-			ListView_DeleteItem(hListView, get_no);
+			ListView_DeleteItem(mListView, get_no);
 		}
-		ListView_SetRedraw(hListView, TRUE);
+		ListView_SetRedraw(mListView, TRUE);
 	}
 	// remove deleted messages from Mailbox
 	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
