@@ -1135,7 +1135,7 @@ void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL timer);
 void SetMailMenu(HWND hWnd);
 void SetUnreadCntTitle(BOOL CheckMsgs);
 BOOL MessageFunc(HWND hWnd, MSG *msg);
-void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag);
+void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel);
 BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL del);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void ResetTimeoutTimer();

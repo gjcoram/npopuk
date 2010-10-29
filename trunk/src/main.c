@@ -98,7 +98,7 @@ static int confirm_flag;					// 認証フラグ
 
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
-HWND gListView;
+HWND mListView;								// mail list
 HFONT hListFont = NULL;						// ListViewのフォント
 HFONT hViewFont = NULL;						// 表示のフォント
 int font_charset;
@@ -1052,7 +1052,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 		return;
 	}
 
-	ItemCnt = ListView_GetItemCount(gListView);
+	ItemCnt = ListView_GetItemCount(mListView);
 	dsize = tpMailBox->DiskSize;
 	if (dsize < 0) {
 		wsprintf(dtmp, STR_STATUS_MAILSIZE_KB, TEXT("?"));
@@ -1352,7 +1352,7 @@ void ShowMenu(HWND hWnd, HMENU hMenu, int mpos, int PosFlag, BOOL timer)
 	case 1: // pop-up at position of selection
 	case 4:	// VK_APPS (menu key) to post hMBPOPUP
 		if (PosFlag == 1) {
-			hListView = gListView;
+			hListView = mListView;
 			i = ListView_GetNextItem(hListView, -1, LVNI_FOCUSED);
 		} else {
 			hListView = GetDlgItem(hWnd, IDC_MBMENU);
@@ -1449,11 +1449,11 @@ void SetMailMenu(HWND hWnd)
 	hMenu = GetMenu(hWnd);
 	hToolBar = GetDlgItem(hWnd, IDC_TB);
 #endif
-	if (hMenu == NULL || gListView == NULL) {
+	if (hMenu == NULL || mListView == NULL) {
 		return;
 	}
 
-	i = ListView_GetSelectedCount(gListView);
+	i = ListView_GetSelectedCount(mListView);
 	if (i != 1 && op.PreviewPaneHeight > 0) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, 
 			(LPARAM)((i>1) ? STR_MSG_SINGLE_PREVIEW : STR_MSG_SELECT_PREVIEW));
@@ -1468,8 +1468,8 @@ void SetMailMenu(HWND hWnd)
 	Markable = SendBoxFlag;
 	i = -1;
 	if (SelBox == MAILBOX_SEND) {
-		while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+		while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 			if (tpMailItem != NULL && tpMailItem->MailStatus != ICON_SENTMAIL) {
 				Markable = 1;
 				break;
@@ -1872,11 +1872,11 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam)
 		LvSortFlag = (ABS(LvSortFlag) == (col + 1)) ? (LvSortFlag * -1) : (col + 1);
 		//of sort Sort
 		SwitchCursor(FALSE);
-		ListView_SortItems(gListView, CompareFunc, LvSortFlag);
+		ListView_SortItems(mListView, CompareFunc, LvSortFlag);
 		SwitchCursor(TRUE);
 
-		ListView_EnsureVisible(gListView,
-			ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+		ListView_EnsureVisible(mListView,
+			ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 
 		if (op.LvAutoSort == 2 || (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
 			op.LvSortItem = LvSortFlag;
@@ -1911,7 +1911,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	NMHDR *CForm = (NMHDR *)lParam;
 
-	if (CForm->hwndFrom == gListView) {
+	if (CForm->hwndFrom == mListView) {
 #ifdef _WIN32_WCE_PPC
 		if (CForm->code == GN_CONTEXTMENU) {
 			//Pop rise menu indicatory
@@ -1920,7 +1920,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 #endif
 		return ListView_NotifyProc(hWnd, lParam);
-	} else if (CForm->hwndFrom == GetWindow(gListView, GW_CHILD)) {
+	} else if (CForm->hwndFrom == GetWindow(mListView, GW_CHILD)) {
 		return ListViewHeaderNotifyProc(hWnd, lParam);
 	}
 #ifndef _WIN32_WCE
@@ -2005,7 +2005,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 #ifdef _WIN32_WCE_PPC
 				width = GetSystemMetrics(SM_CXSCREEN) - op.MBMenuWidth;
 #else
-				GetWindowRect(gListView, &paneRect);
+				GetWindowRect(mListView, &paneRect);
 				width = paneRect.right - paneRect.left - dw;
 #endif
 				height = op.MBMenuHeight;
@@ -2015,7 +2015,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					MoveWindow(GetDlgItem(MainWnd, IDC_EDIT_BODY), op.MBMenuWidth, 
 						op.ToolBarHeight+height, width, op.PreviewPaneHeight, TRUE);
 				}
-				MoveWindow(gListView, op.MBMenuWidth, op.ToolBarHeight, width, height, TRUE);
+				MoveWindow(mListView, op.MBMenuWidth, op.ToolBarHeight, width, height, TRUE);
 				MoveWindow(GetDlgItem(MainWnd, IDC_TB), 0, 0, op.MBMenuWidth+width,
 					op.ToolBarHeight, TRUE);
 			}
@@ -2649,18 +2649,18 @@ static BOOL InitWindow(HWND hWnd)
 	}
 
 	//List view
-	gListView = CreateListView(hWnd, Top, Height, Left, Right);
-	if (gListView == NULL) {
+	mListView = CreateListView(hWnd, Top, Height, Left, Right);
+	if (mListView == NULL) {
 		return FALSE;
 	}
 
-	SetFocus(gListView);
+	SetFocus(mListView);
 	if (hListFont != NULL) {
 		//Font of list view setting
-		SendMessage(gListView, WM_SETFONT, (WPARAM)hListFont, MAKELPARAM(TRUE, 0));
+		SendMessage(mListView, WM_SETFONT, (WPARAM)hListFont, MAKELPARAM(TRUE, 0));
 	}
 	//List view to subclass is converted the
-	SetListViewSubClass(gListView);
+	SetListViewSubClass(mListView);
 
 #ifdef _WIN32_WCE
 	//Idea contest of window setting
@@ -2709,7 +2709,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	Height = (comboRect.bottom - comboRect.top) + g_menu_height;
 
 	if (op.MBMenuWidth > 0) MessageBox(hWnd, TEXT("SetWindowSize not ready!"), TEXT("ERROR"), MB_OK);
-	MoveWindow(gListView, 0, Height,
+	MoveWindow(mListView, 0, Height,
 		rcClient.right, rcClient.bottom - Height - (StatusRect.bottom - StatusRect.top), TRUE);
 	return ret;
 }
@@ -2720,9 +2720,9 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	int newTop, newHeight, Left, Right;
 
 #ifdef _WIN32_WCE
-	if (hWnd == NULL || gListView == NULL) {
+	if (hWnd == NULL || mListView == NULL) {
 #else
-	if (hWnd == NULL || gListView == NULL || IsIconic(hWnd) != 0) {
+	if (hWnd == NULL || mListView == NULL || IsIconic(hWnd) != 0) {
 #endif
 		return FALSE;
 	}
@@ -2767,7 +2767,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	}
 	if (op.PreviewPaneHeight > 0) {
 		int oldHeight, dh;
-		GetWindowRect(gListView, &subwinRect);
+		GetWindowRect(mListView, &subwinRect);
 		oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
 		dh = oldHeight - newHeight;
 		op.PreviewPaneHeight -= dh/2;
@@ -2776,14 +2776,14 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 		newHeight -= op.PreviewPaneHeight;
 	}
-	MoveWindow(gListView, Left, newTop, Right, newHeight, TRUE);
+	MoveWindow(mListView, Left, newTop, Right, newHeight, TRUE);
 	if (op.PreviewPaneHeight > 0) {
 		op.PreviewPaneWidth = Right;
 		MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY), Left, newTop+newHeight,
 		   Right, op.PreviewPaneHeight, TRUE);
 	}
 
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 	return TRUE;
 }
 #endif
@@ -2894,9 +2894,9 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 
 	//INI and Mailbox Retention
 	{
-		if (gListView != NULL) {
+		if (mListView != NULL) {
 			for (i = 0; i < LV_COL_CNT; i++) {
-				op.LvColSize[i] = ListView_GetColumnWidth(gListView, i);
+				op.LvColSize[i] = ListView_GetColumnWidth(mListView, i);
 			}
 		}
 	}
@@ -2924,7 +2924,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	SwitchCursor(FALSE);
 
-	ListView_DeleteAllItems(gListView);
+	ListView_DeleteAllItems(mListView);
 
 	//of setting every of account The message window is closed the
 	if (MsgWnd != NULL) {
@@ -2974,12 +2974,12 @@ static BOOL EndWindow(HWND hWnd)
 	DestroyIcon(TrayIcon_Mail);
 
 	//of idea contest Cancellation
-	DelListViewSubClass(gListView);
+	DelListViewSubClass(mListView);
 
 	//of subclass conversion of list view Cancellation
-	hImgList = ListView_SetImageList(gListView, NULL, LVSIL_SMALL);
+	hImgList = ListView_SetImageList(mListView, NULL, LVSIL_SMALL);
 	ImageList_Destroy((void *)hImgList);
-	hImgList = ListView_SetImageList(gListView, NULL, LVSIL_STATE);
+	hImgList = ListView_SetImageList(mListView, NULL, LVSIL_STATE);
 	ImageList_Destroy((void *)hImgList);
 
 	//of image list Cancellation
@@ -3001,7 +3001,7 @@ static BOOL EndWindow(HWND hWnd)
 		DelPreviewSubClass(previewWnd);
 		DestroyWindow(previewWnd);
 	}
-	DestroyWindow(gListView);
+	DestroyWindow(mListView);
 	DestroyWindow(GetDlgItem(hWnd, IDC_STATUS));
 
 	//of window Cancellation
@@ -3267,14 +3267,14 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 					break;
 				} else if (ans == IDCANCEL) {
 					mailbox_select(hWnd, i);
-					if ((i = ListView_GetNextDeleteItem(gListView, -1)) != -1) {
-						ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
+					if ((i = ListView_GetNextDeleteItem(mListView, -1)) != -1) {
+						ListView_SetItemState(mListView, -1, 0, LVIS_SELECTED);
 						st = LVIS_FOCUSED;
 						if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
 							st |= LVIS_SELECTED;
 						}
-						ListView_SetItemState(gListView, i, st, st);
-						ListView_EnsureVisible(gListView, i, TRUE);
+						ListView_SetItemState(mListView, i, st, st);
+						ListView_EnsureVisible(mListView, i, TRUE);
 					}
 					return FALSE;
 				} else { // IDNO
@@ -3399,20 +3399,20 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 /*
  * OpenItem - アイテムを開く
  */
-void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
+void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel)
 {
 	MAILITEM *tpMailItem;
 	int i;
 
-	if (ListView_GetSelectedCount(gListView) <= 0) {
+	if (CheckSel && ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
-	i = ListView_GetNextItem(gListView, -1, LVNI_FOCUSED);
+	i = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 	if (i == -1) {
 		return;
 	}
-	ListView_EnsureVisible(gListView, i, TRUE);
-	tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	ListView_EnsureVisible(mListView, i, TRUE);
+	tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 	if (tpMailItem == NULL) {
 		return;
 	}
@@ -3441,18 +3441,18 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag)
 			(MailBox + SelBox)->NeedsSave = MARKS_CHANGED;
 			if (tpMailItem->Mark == ICON_DOWN) {
 				tpMailItem->Mark = ICON_NON;
-				ListView_SetItemState(gListView, i, LVIS_CUT, LVIS_CUT);
+				ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 			} else {
 				tpMailItem->Mark = ICON_DOWN;
-				ListView_SetItemState(gListView, i, 0, LVIS_CUT);
+				ListView_SetItemState(mListView, i, 0, LVIS_CUT);
 			}
-			ListView_RedrawItems(gListView, i, i);
-			UpdateWindow(gListView);
+			ListView_RedrawItems(mListView, i, i);
+			UpdateWindow(mListView);
 			return;
 		}
 	}
 	if (View_InitInstance(hInst,
-		(LPVOID)ListView_GetlParam(gListView, i), NoAppFlag) == TRUE) {
+		(LPVOID)ListView_GetlParam(mListView, i), NoAppFlag) == TRUE) {
 #ifdef _WIN32_WCE
 		ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -3467,7 +3467,7 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 	int i;
 
 	// will choose the item with focus, even if it isn't selected (or if several are selected)
-	i = ListView_GetNextItem(gListView, -1, LVNI_FOCUSED);
+	i = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 	if (i < 0)
 		return;
 
@@ -3482,17 +3482,17 @@ static void ReMessageItem(HWND hWnd, int ReplyFlag)
 #endif
 		}
 		DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc,
-				(LPARAM)ListView_GetlParam(gListView, i));
+				(LPARAM)ListView_GetlParam(mListView, i));
 #else
 		DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-			(LPARAM)ListView_GetlParam(gListView, i));
+			(LPARAM)ListView_GetlParam(mListView, i));
 #endif
 		// Refresh the screen with any changes
-		ListView_RedrawItems(gListView, i, i);
-		UpdateWindow(gListView);
+		ListView_RedrawItems(mListView, i, i);
+		UpdateWindow(mListView);
 	} else {
 		if (Edit_InitInstance(hInst, hWnd, SelBox,
-			(MAILITEM *)ListView_GetlParam(gListView, i), ReplyFlag, NULL, FALSE) == EDIT_INSIDEEDIT) {
+			(MAILITEM *)ListView_GetlParam(mListView, i), ReplyFlag, NULL, FALSE) == EDIT_INSIDEEDIT) {
 #ifdef _WIN32_WCE
 			ShowWindow(hWnd, SW_HIDE);
 #endif
@@ -3514,7 +3514,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	BOOL retval = TRUE;
 
 	if (tpSingleItem == NULL) {
-		if ((i = ListView_GetSelectedCount(gListView)) <= 0) {
+		if ((i = ListView_GetSelectedCount(mListView)) <= 0) {
 			ErrorMessage(hWnd, STR_ERR_NOSELECT);
 			return FALSE;
 		}
@@ -3550,11 +3550,11 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	i = -1;
 	while (1) {
 		if (tpSingleItem == NULL) {
-			i = ListView_GetNextItem(gListView, i, LVNI_SELECTED);
+			i = ListView_GetNextItem(mListView, i, LVNI_SELECTED);
 			if (i == -1) {
 				break;
 			}
-			tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+			tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 			if (tpMailItem == NULL) {
 				continue;
 			}
@@ -3571,14 +3571,14 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 				retval = FALSE;
 				break;
 			}
-			j = ListView_InsertItemEx(gListView,
+			j = ListView_InsertItemEx(mListView,
 				(TCHAR *)LPSTR_TEXTCALLBACK, 0, I_IMAGECALLBACK, (long)tpTmpMailItem,
-				ListView_GetItemCount(gListView));
+				ListView_GetItemCount(mListView));
 
 			state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
-			ListView_SetItemState(gListView, j, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK)
-			ListView_RedrawItems(gListView, j, j);
-			UpdateWindow(gListView);
+			ListView_SetItemState(mListView, j, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK)
+			ListView_RedrawItems(mListView, j, j);
+			UpdateWindow(mListView);
 			if (tpMailItem->Attach != NULL) {
 				TCHAR fpath[BUF_SIZE];
 				TCHAR *f = tpMailItem->Attach;
@@ -3661,12 +3661,12 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	if (SelPoint != -1) {
 		int st = LVIS_FOCUSED;
 		//of mail item The item which is added is selected the
-		ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
+		ListView_SetItemState(mListView, -1, 0, LVIS_SELECTED);
 		if (op.PreviewPaneHeight <=0 || op.AutoPreview) {
 			st |= LVIS_SELECTED;
 		}
-		ListView_SetItemState(gListView, SelPoint,	st, st);
-		ListView_EnsureVisible(gListView, SelPoint, TRUE);
+		ListView_SetItemState(mListView, SelPoint,	st, st);
+		ListView_EnsureVisible(mListView, SelPoint, TRUE);
 		SendDlgItemMessage(hWnd, IDC_LISTVIEW, WM_VSCROLL, SB_LINEDOWN, 0);
 	}
 	SwitchCursor(TRUE);
@@ -3681,14 +3681,14 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	MAILITEM *tpMailItem;
 	int cnt, i;
 
-	if ((cnt = ListView_GetSelectedCount(gListView)) <= 0) {
+	if ((cnt = ListView_GetSelectedCount(mListView)) <= 0) {
 		return;
 	}
 	if (Ask == TRUE && op.ExpertMode != 1) {
 		BOOL held = FALSE;
 		i = -1;
-		while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+		while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+			MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 			if (tpMailItem != NULL && tpMailItem->ReFwd & REFWD_FWDHOLD) {
 				held = TRUE;
 				break;
@@ -3709,13 +3709,13 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	}
 
 	SwitchCursor(FALSE);
-	ListView_SetRedraw(gListView, FALSE);
-	while ((i = ListView_GetNextItem(gListView, -1, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	ListView_SetRedraw(mListView, FALSE);
+	while ((i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL) {
 			tpMailItem->Mark = -1;
 		}
-		ListView_DeleteItem(gListView, i);
+		ListView_DeleteItem(mListView, i);
 	}
 	//As for memory in NULL setting
 	for (i = 0; i < (MailBox + SelBox)->MailItemCnt; i++) {
@@ -3730,7 +3730,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	}
 	item_resize_mailbox(MailBox + SelBox);
 
-	ListView_SetRedraw(gListView, TRUE);
+	ListView_SetRedraw(mListView, TRUE);
 	SetItemCntStatusText(NULL, FALSE);
 	SwitchCursor(TRUE);
 }
@@ -3742,7 +3742,7 @@ static void ListDeleteAttach(HWND hWnd)
 	int i;
 	BOOL did_one = FALSE;
 
-	if ((i = ListView_GetSelectedCount(gListView)) <= 0) {
+	if ((i = ListView_GetSelectedCount(mListView)) <= 0) {
 		return;
 	}
 	if (ParanoidMessageBox(hWnd, STR_Q_DELATTACH, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
@@ -3750,24 +3750,24 @@ static void ListDeleteAttach(HWND hWnd)
 	}
 
 	SwitchCursor(FALSE);
-	ListView_SetRedraw(gListView, FALSE);
+	ListView_SetRedraw(mListView, FALSE);
 	i = -1;
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL && tpMailItem->Multipart > MULTIPART_ATTACH) {
 			if (tpMailItem->ReFwd & REFWD_FWDHOLD) {
 				MessageBox(hWnd, STR_MSG_ATT_HELD, STR_TITLE_DELETE, MB_OK);
 				continue;
 			}
 			DeleteAttachFile(hWnd, tpMailItem);
-			ListView_SetItemState(gListView, i, LVIS_CUT, LVIS_CUT);
+			ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 			did_one = TRUE;
 		}
 	}
 	if (did_one == TRUE) {
 		(MailBox+SelBox)->NeedsSave |= MAILITEMS_CHANGED;
 	}
-	ListView_SetRedraw(gListView, TRUE);
+	ListView_SetRedraw(mListView, TRUE);
 	SwitchCursor(TRUE);
 }
 
@@ -3781,15 +3781,15 @@ static void SetDownloadMark(HWND hWnd)
 	int SendOrDownIcon = ((SelBox == MAILBOX_SEND) ? ICON_SEND : ICON_DOWN);
 	int i;
 
-	if (ListView_GetSelectedCount(gListView) <= 0) {
+	if (ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
 	(MailBox+SelBox)->NeedsSave |= MARKS_CHANGED;
 
 	// if one is unset, then set them all; else clear them all
 	i = -1;
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
@@ -3799,8 +3799,8 @@ static void SetDownloadMark(HWND hWnd)
 		}
 	}
 	i = -1;
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
@@ -3808,17 +3808,17 @@ static void SetDownloadMark(HWND hWnd)
 			MarkedOne = TRUE;
 			if (set == TRUE) {
 				tpMailItem->Mark = SendOrDownIcon;
-				ListView_SetItemState(gListView, i, 0, LVIS_CUT);
+				ListView_SetItemState(mListView, i, 0, LVIS_CUT);
 			} else {
 				tpMailItem->Mark = tpMailItem->MailStatus;
 				if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
-					ListView_SetItemState(gListView, i, LVIS_CUT, LVIS_CUT);
+					ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 				}
 			}
-			ListView_RedrawItems(gListView, i, i);
+			ListView_RedrawItems(mListView, i, i);
 		}
 	}
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 	if (SelBox == MAILBOX_SEND && MarkedOne == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
 	}
@@ -3837,15 +3837,15 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 	int i;
 	BOOL set = Clear; // Clear == TRUE when called to move to savebox
 
-	if (ListView_GetSelectedCount(gListView) <= 0) {
+	if (ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
 	(MailBox+SelBox)->NeedsSave |= MARKS_CHANGED;
 
 	// if one is unset, then set them all; else clear them all
 	i = -1;
-	while (set == FALSE && (i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while (set == FALSE && (i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
@@ -3855,26 +3855,26 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 	}
 
 	i = -1;
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
 		if (set == TRUE) {
 			tpMailItem->Mark = Mark;
-			ListView_SetItemState(gListView, i, 0, LVIS_CUT);
+			ListView_SetItemState(mListView, i, 0, LVIS_CUT);
 			if (Clear == TRUE) { // && Mark == ICON_DEL
 				tpMailItem->ReFwd &= ~(REFWD_FWDHOLD);
 			}
 		} else {
 			tpMailItem->Mark = tpMailItem->MailStatus;
 			if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
-				ListView_SetItemState(gListView, i, LVIS_CUT, LVIS_CUT);
+				ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 			}
 		}
-		ListView_RedrawItems(gListView, i, i);
+		ListView_RedrawItems(mListView, i, i);
 	}
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
@@ -3890,14 +3890,14 @@ static void UnMark(HWND hWnd)
 	int i;
 	BOOL unmarked_one = FALSE;
 
-	if (ListView_GetSelectedCount(gListView) <= 0) {
+	if (ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
 	i = -1;
 	(MailBox+SelBox)->NeedsSave |= MARKS_CHANGED;
 
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL) {
 			continue;
 		}
@@ -3914,11 +3914,11 @@ static void UnMark(HWND hWnd)
 			tpMailItem->Mark = tpMailItem->MailStatus;
 		}
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
-			ListView_SetItemState(gListView, i, LVIS_CUT, LVIS_CUT);
+			ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 		}
-		ListView_RedrawItems(gListView, i, i);
+		ListView_RedrawItems(mListView, i, i);
 	}
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 
 	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
@@ -3944,29 +3944,29 @@ void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox)
 		(MailBox+rebox)->NeedsSave |= MARKS_CHANGED;
 	}
 	
-	if (gListView == NULL) {
+	if (mListView == NULL) {
 		return;
 	}
 
 	i = -1;
-	while (!found && (i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while (!found && (i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL && tpMailItem == tpReMailItem) {
 			found = TRUE;
 		}
 	}
 	if (!found) i = -1;
-	while (!found && (i = ListView_GetNextItem(gListView, i, 0)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while (!found && (i = ListView_GetNextItem(mListView, i, 0)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL && tpMailItem == tpReMailItem) {
 			found = TRUE;
 		}
 	}
 	if (found == TRUE) {
-		ListView_SetItemState(gListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
-		ListView_RedrawItems(gListView, i, i);
+		ListView_SetItemState(mListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
+		ListView_RedrawItems(mListView, i, i);
 	}
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
@@ -3981,14 +3981,14 @@ static void SetMailStats(HWND hWnd, int St)
 	MAILITEM *tpMailItem;
 	int i;
 
-	if (ListView_GetSelectedCount(gListView) <= 0) {
+	if (ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
 	(MailBox+SelBox)->NeedsSave |= MARKS_CHANGED;
 
 	i = -1;
-	while ((i = ListView_GetNextItem(gListView, i, LVNI_SELECTED)) != -1) {
-		tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, i);
+	while ((i = ListView_GetNextItem(mListView, i, LVNI_SELECTED)) != -1) {
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem == NULL ||
 			tpMailItem->MailStatus == ICON_NON || tpMailItem->MailStatus >= ICON_SENTMAIL) {
 			continue;
@@ -3999,15 +3999,15 @@ static void SetMailStats(HWND hWnd, int St)
 		}
 		if (St == ICON_READ) {
 			tpMailItem->New = FALSE;
-			ListView_SetItemState(gListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
+			ListView_SetItemState(mListView, i, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 		} else if (St == ICON_MAIL) {
 			// also clear re/fwd overlay
 			tpMailItem->ReFwd &= ~(ICON_REFWD_MASK);
-			ListView_SetItemState(gListView, i, 0, LVIS_OVERLAYMASK);
+			ListView_SetItemState(mListView, i, 0, LVIS_OVERLAYMASK);
 		}
-		ListView_RedrawItems(gListView, i, i);
+		ListView_RedrawItems(mListView, i, i);
 	}
-	UpdateWindow(gListView);
+	UpdateWindow(mListView);
 	SetItemCntStatusText(NULL, FALSE);
 }
 
@@ -4044,24 +4044,24 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		SwitchCursor(FALSE);
 		if (op.LvThreadView == 1) {
 			item_create_thread(MailBox + SelBox);
-			ListView_SortItems(gListView, CompareFunc, SORT_THREAD + 1);
+			ListView_SortItems(mListView, CompareFunc, SORT_THREAD + 1);
 		} else if (op.LvAutoSort == 2) {
-			ListView_SortItems(gListView, CompareFunc, op.LvSortItem);
+			ListView_SortItems(mListView, CompareFunc, op.LvSortItem);
 
-			i = ListView_GetNextUnreadItem(gListView, -1, ListView_GetItemCount(gListView));
+			i = ListView_GetNextUnreadItem(mListView, -1, ListView_GetItemCount(mListView));
 			if (i != -1) {
 				int st = LVIS_FOCUSED;
 				if (op.PreviewPaneHeight <= 0 || op.AutoPreview) {
 					st |= LVIS_SELECTED;
 				}
 				//The not yet opening mail is selected the
-				ListView_SetItemState(gListView, -1, 0, LVIS_SELECTED);
-				ListView_SetItemState(gListView, i, st, st);
+				ListView_SetItemState(mListView, -1, 0, LVIS_SELECTED);
+				ListView_SetItemState(mListView, i, st, st);
 			}
 
 		}
-		ListView_EnsureVisible(gListView,
-			ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+		ListView_EnsureVisible(mListView,
+			ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 		SwitchCursor(TRUE);
 
 		EndThreadSortFlag = FALSE;
@@ -4673,7 +4673,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SipFlag = sai.fSipUp;
 			SetWindowSize(hWnd, 0, 0);
 
-			ListView_EnsureVisible(gListView, ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+			ListView_EnsureVisible(mListView, ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 		}
 		if (LastXSize != GetSystemMetrics(SM_CXSCREEN)) {
 			SetMailMenu(hWnd);
@@ -4685,7 +4685,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (SPI_SETSIPINFO == wParam && GetForegroundWindow() == hWnd) {
 			SipFlag = SetWindowSize(hWnd, 0, 0);
 
-			ListView_EnsureVisible(gListView, ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+			ListView_EnsureVisible(mListView, ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 		}
 		break;
 #endif
@@ -4847,7 +4847,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #elif defined _WIN32_WCE_LAGENDA
 		SipShowIM((SipFlag) ? SIPF_ON : SIPF_OFF);
 #endif
-		SetFocus(gListView);
+		SetFocus(mListView);
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
 			SetTrayIcon(hWnd, TrayIcon_Main);
@@ -5230,7 +5230,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (SelBox != GetSelectedMBMenu()) {
 					mailbox_select(hWnd, GetSelectedMBMenu());	
 				}
-				SetFocus(gListView);
+				SetFocus(mListView);
 				SwitchCursor(TRUE);
 			} else if (op.MBMenuWidth > 0 && HIWORD(wParam) == LBN_SELCHANGE) {
 				mailbox_select(hWnd, GetSelectedMBMenu());
@@ -5260,7 +5260,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_KEY_TAB:
 			{
 				HWND fWnd = GetFocus();
-				if (fWnd == gListView) {
+				if (fWnd == mListView) {
 					if (op.PreviewPaneHeight > 0) {
 						SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 					} else {
@@ -5269,7 +5269,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				} else if (fWnd == GetDlgItem(hWnd, IDC_EDIT_BODY)) {
 					SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
 				} else {
-					SetFocus(gListView);
+					SetFocus(mListView);
 					if (SelBox != GetSelectedMBMenu()) {
 						mailbox_select(hWnd, GetSelectedMBMenu());
 					}
@@ -5293,14 +5293,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					ShowMenu(hWnd, hMBPOPUP, 0, 4, FALSE);
 				} else {
 					if (GetDroppedStateMBMenu() == FALSE) {
-						SetFocus(gListView);
+						SetFocus(mListView);
 					} else {
 						DropMBMenu(TRUE);
 					}
 				}
 				break;
 			}
-			SetFocus(gListView);
+			SetFocus(mListView);
 			// and fall through to post the menu
 			
 		//In position of mouse pop rise menu indicatory
@@ -5567,7 +5567,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 				top = op.ToolBarHeight;
 				left = (op.MBMenuWidth > 0) ? op.MBMenuWidth : 0;
 
-				GetWindowRect(gListView, &rcRect);
+				GetWindowRect(mListView, &rcRect);
 				width = rcRect.right - rcRect.left;
 				// when op.PreviewPaneHeight < 0, the next line grows IDC_LISTVIEW
 				height = rcRect.bottom - rcRect.top - op.PreviewPaneHeight;
@@ -5578,7 +5578,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 					DelPreviewSubClass(previewWnd);
 					DestroyWindow(previewWnd);
 				}
-				MoveWindow(gListView, left, top, width, height, TRUE);
+				MoveWindow(mListView, left, top, width, height, TRUE);
 #ifdef _WIN32_WCE_PPC
 				hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 #elif defined(_WIN32_WCE)
@@ -5605,7 +5605,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 				GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &rcRect);
 				dBottom = rcRect.bottom - rcRect.top;
 
-				GetWindowRect(gListView, &rcRect);
+				GetWindowRect(mListView, &rcRect);
 				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
 #ifdef _WIN32_WCE
@@ -5634,7 +5634,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 						left, dTop+height, width, op.PreviewPaneHeight, TRUE);
 				}
 
-				MoveWindow(gListView, left, dTop, width, height, TRUE);
+				MoveWindow(mListView, left, dTop, width, height, TRUE);
 #ifdef _WIN32_WCE_PPC
 				hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 #elif defined(_WIN32_WCE)
@@ -5755,10 +5755,10 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 #endif
 			//Sort
 			SwitchCursor(FALSE);
-			ListView_SortItems(gListView, CompareFunc, LvSortFlag);
+			ListView_SortItems(mListView, CompareFunc, LvSortFlag);
 			SwitchCursor(TRUE);
 
-			ListView_EnsureVisible(gListView, ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+			ListView_EnsureVisible(mListView, ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 
 			if (op.LvAutoSort == 2 || (MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
 				op.LvSortItem = LvSortFlag;
@@ -5770,11 +5770,11 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 			SwitchCursor(FALSE);
 			if (op.LvThreadView == 1) {
 				op.LvThreadView = 0;
-				ListView_SortItems(gListView, CompareFunc, LvSortFlag);
+				ListView_SortItems(mListView, CompareFunc, LvSortFlag);
 			} else {
 				op.LvThreadView = 1;
 				item_create_thread(MailBox + SelBox);
-				ListView_SortItems(gListView, CompareFunc, SORT_THREAD + 1);
+				ListView_SortItems(mListView, CompareFunc, SORT_THREAD + 1);
 			}
 			SwitchCursor(TRUE);
 
@@ -5790,7 +5790,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 			ListViewSortMenuCheck(LvSortFlag);
 #endif
 
-			ListView_EnsureVisible(gListView, ListView_GetNextItem(gListView, -1, LVNI_FOCUSED), TRUE);
+			ListView_EnsureVisible(mListView, ListView_GetNextItem(mListView, -1, LVNI_FOCUSED), TRUE);
 			break;
 
 		//Initialization
@@ -6059,7 +6059,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 		case ID_KEY_ENTER:
 			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
 				if (op.MBMenuWidth > 0) {
-					SetFocus(gListView);
+					SetFocus(mListView);
 				} else {
 					DropMBMenu(!GetDroppedStateMBMenu());
 				}
@@ -6068,11 +6068,11 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 			// else fall through
 
 		case ID_MAILITEM_OPEN:
-			OpenItem(hWnd, FALSE, FALSE);
+			OpenItem(hWnd, FALSE, FALSE, TRUE);
 			break;
 
 		case ID_MENUITEM_OPEN:
-			OpenItem(hWnd, TRUE, FALSE);
+			OpenItem(hWnd, TRUE, FALSE, TRUE);
 			break;
 
 		//Reply
@@ -6159,7 +6159,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 		case ID_MENUITEM_SAVECOPY:
 			{
 				int i, cnt = 0, Target = -1;
-				if (ListView_GetSelectedCount(gListView) <= 0) {
+				if (ListView_GetSelectedCount(mListView) <= 0) {
 					break;
 				}
 				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
@@ -6210,7 +6210,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 						}
 					}
 					if (SelBox == MAILBOX_SEND && Target == MAILBOX_SEND && mark_del == FALSE) {
-						OpenItem(hWnd, TRUE, FALSE);
+						OpenItem(hWnd, TRUE, FALSE, TRUE);
 					}
 				}
 			}
@@ -6225,8 +6225,8 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 
 		//Entirely the selective
 		case ID_MENUITEM_ALLSELECT:
-			SetFocus(gListView);
-			ListView_SetItemState(gListView, -1, LVIS_SELECTED, LVIS_SELECTED);
+			SetFocus(mListView);
+			ListView_SetItemState(mListView, -1, LVIS_SELECTED, LVIS_SELECTED);
 			break;
 
 #ifdef _WIN32_WCE_PPC
@@ -6326,7 +6326,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 			if (command_id == ID_MENUITEM_COPY2NEW || command_id == ID_MENUITEM_MOVE2NEW) {
 				// GJC - copy/move to new SaveBox
 				int old_selbox, newbox;
-				if (ListView_GetSelectedCount(gListView) <= 0) {
+				if (ListView_GetSelectedCount(mListView) <= 0) {
 					break;
 				}
 				old_selbox = SelBox;
@@ -6622,10 +6622,10 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 		case LVN_ITEMCHANGED:
 			KillTimer(hWnd, ID_PREVIEW_TIMER);
 			SetTimer(hWnd, ID_ITEMCHANGE_TIMER, 1, NULL);
-			i = ListView_GetSelectedCount(gListView);
+			i = ListView_GetSelectedCount(mListView);
 			if (i == 1) {
-				MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(gListView, 
-					ListView_GetNextItem(gListView, -1, LVNI_SELECTED));
+				MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, 
+					ListView_GetNextItem(mListView, -1, LVNI_SELECTED));
 				if (op.ItemPlaySound) {
 					// GJC sound if single selection, based on mailitem's Mark
 					j = tpMailItem->Mark;
@@ -6682,7 +6682,7 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 
 #ifdef _WIN32_WCE_PPC
 		case LVN_BEGINDRAG:
-			SetCapture(gListView);
+			SetCapture(mListView);
 			break;
 
 		case LVN_ITEMACTIVATE:
