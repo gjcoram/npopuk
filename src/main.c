@@ -5220,6 +5220,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_COMMAND: {
 		BOOL mark_del = FALSE;
+		HWND fWnd;
 		int sort_val = 0;
 		int menu_flag = 0;
 		int mbox, command_id = GET_WM_COMMAND_ID(wParam, lParam);
@@ -5258,21 +5259,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// Toggle focus between combo and the list view
 		case ID_KEY_TAB:
-			{
-				HWND fWnd = GetFocus();
-				if (fWnd == mListView) {
-					if (op.PreviewPaneHeight > 0) {
-						SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
-					} else {
-						SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
-					}
-				} else if (fWnd == GetDlgItem(hWnd, IDC_EDIT_BODY)) {
-					SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
+			fWnd = GetFocus();
+			if (fWnd == mListView) {
+				if (op.PreviewPaneHeight > 0) {
+					SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
 				} else {
-					SetFocus(mListView);
-					if (SelBox != GetSelectedMBMenu()) {
-						mailbox_select(hWnd, GetSelectedMBMenu());
-					}
+					SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
+				}
+			} else if (fWnd == GetDlgItem(hWnd, IDC_EDIT_BODY)) {
+				SetFocus(GetDlgItem(hWnd, IDC_MBMENU));
+			} else {
+				SetFocus(mListView);
+				if (SelBox != GetSelectedMBMenu()) {
+					mailbox_select(hWnd, GetSelectedMBMenu());
 				}
 			}
 			break;
@@ -5342,13 +5341,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// ƒAƒhƒŒƒX’ 
 		case ID_MENUITEM_ADDRESS:
-if (op.SocLog > 2) log_save(TEXT("DBG: received ID_MENUITEM_ADDRESS\r\n"));
 			{
 				// GJC make temporary addressbook for editing
 				ADDRESSBOOK *tpTmpAddressBook = addressbook_copy();
 				if (tpTmpAddressBook != NULL) {
 					tpTmpAddressBook->GetAddrList = FALSE;
-if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 					DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS),
 						hWnd, AddressListProc, (LPARAM)tpTmpAddressBook);
 					addressbook_free(tpTmpAddressBook);
@@ -6160,6 +6157,11 @@ if (op.SocLog > 2) log_save(TEXT("DBG: opening dialog box\r\n"));
 			{
 				int i, cnt = 0, Target = -1;
 				if (ListView_GetSelectedCount(mListView) <= 0) {
+					break;
+				}
+				fWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+				if (GetFocus() == fWnd) {
+					SendMessage(fWnd, WM_COPY, 0, 0);
 					break;
 				}
 				if (SelBox == MAILBOX_SEND && command_id == ID_MENUITEM_SAVECOPY) {
