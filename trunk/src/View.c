@@ -258,10 +258,11 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	}
 #else
 	p = str_join_t(buf, STR_VIEW_HEAD_FROM, tpMailItem->From, STR_VIEW_HEAD_TO, tpMailItem->To,
-		STR_VIEW_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
+		(TCHAR *)-1);
 #endif
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
+	p = str_join_t(p, STR_VIEW_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
 	if (op.ViewShowDate == 1) {
 		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->FmtDate, (TCHAR *)-1);
 	}
@@ -1837,7 +1838,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	if (hWnd == MainWnd) {
 		MAILITEM *selitem;
 		i = 0;
-		if (ListView_GetSelectedCount(mListView) > 0) {
+		if (ListView_GetSelectedCount(mListView) > 0 || op.PreviewPaneHeight > 0) {
 			i = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 			if (i < 0) {
 				i = 0;
