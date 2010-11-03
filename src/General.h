@@ -925,7 +925,7 @@ int item_get_number_to_index(MAILBOX *tpMailBox, int No);
 int item_get_next_download_mark(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No);
 int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No);
-int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors);
+int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors, BOOL ForSend);
 int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
 BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download, MAILBOX *tpMailBox);
 MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size);

@@ -262,7 +262,9 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 #endif
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
+#ifndef _WIN32_WCE
 	p = str_join_t(p, STR_VIEW_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
+#endif
 	if (op.ViewShowDate == 1) {
 		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->FmtDate, (TCHAR *)-1);
 	}

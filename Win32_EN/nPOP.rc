@@ -136,6 +136,8 @@ BEGIN
                                                     NOINVERT
     VK_F6,          ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_F6,          ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
+    VK_F8,          ID_MENUITEM_PREVPANE,   VIRTKEY, NOINVERT
+    VK_F9,          ID_MENUITEM_MBOXPANE,   VIRTKEY, NOINVERT
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
     VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
@@ -382,8 +384,8 @@ BEGIN
         MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
         MENUITEM SEPARATOR
         MENUITEM "Su&mmary...",                 ID_MENUITEM_MAILBOXES
-        MENUITEM "Pre&view pane",               ID_MENUITEM_PREVPANE
-        MENUITEM "Mail&box pane",               ID_MENUITEM_MBOXPANE
+        MENUITEM "Pre&view pane\tF8",           ID_MENUITEM_PREVPANE
+        MENUITEM "Mail&box pane\tF9",           ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
         POPUP "&Sort by"
         BEGIN
@@ -1008,6 +1010,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,140,187,10
     CONTROL         "S&how cursor in view window",IDC_VIEWWND_CURSOR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,154,187,10
+    CONTROL         "Auto-select message for &preview",IDC_AUTO_PREVIEW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,187,10
 END
 
 IDD_DIALOG_OPTION_ETC DIALOGEX 0, 0, 217, 187

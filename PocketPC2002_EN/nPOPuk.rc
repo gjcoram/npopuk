@@ -993,6 +993,8 @@ BEGIN
                     1,107,147,10
     CONTROL         "S&how navigation buttons",IDC_SHOW_NAVIG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,1,119,147,10
+    CONTROL         "Auto-select message for &preview",IDC_AUTO_PREVIEW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,131,147,10
 END
 
 IDD_DIALOG_OPTION_CHECK DIALOG DISCARDABLE  0, 0, 160, 103

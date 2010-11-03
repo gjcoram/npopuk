@@ -642,7 +642,7 @@ int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No)
 /*
  * item_get_next_send_mark - check Outbox for send and/or error mark
  */
-int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors)
+int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors, BOOL ForSend)
 {
 	MAILITEM *tpMailItem;
 	int i, ret = -1;
@@ -652,7 +652,7 @@ int item_get_next_send_mark(MAILBOX *tpMailBox, int CheckErrors)
 		if (tpMailItem != NULL) {
 			if (CheckErrors != FALSE && tpMailItem->Mark == ICON_ERROR) {
 				return i;
-			} else if (tpMailItem->Mark == ICON_SEND) {
+			} else if (tpMailItem->Mark == ICON_SEND && (ForSend == FALSE || tpMailItem->hEditWnd == NULL)) {
 				if (CheckErrors != ICON_ERROR) {
 					return i;
 				} else {
@@ -683,7 +683,7 @@ int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIn
 	}
 	for (i = Index + 1; i < tpMailBox->MailItemCnt; i++) {
 		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND) {
+		if (tpMailItem == NULL || tpMailItem->Mark != ICON_SEND || tpMailItem->hEditWnd != NULL) {
 			continue;
 		}
 		BoxIndex = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);

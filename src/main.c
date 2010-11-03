@@ -105,6 +105,7 @@ int font_charset;
 static HICON TrayIcon_Main = NULL;			// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check = NULL;			// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail = NULL;			// タスクトレイアイコン (新着あり)
+BOOL ResizingPreview = FALSE;
 BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
 static HMENU hMainPop, hPOPUP, hMBPOPUP;	// pop-up menus for main window, systray, mbpane
 HMENU hADPOPUP, hViewPop=NULL;				// pop-up menus for Address list, View window
@@ -1999,25 +2000,30 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					width = op.MBMenuMinWidth;
 				}
 				dw = width - op.MBMenuWidth; // > 0 if it was made larger
-				op.MBMenuWidth = width;
-				MoveWindow(hWnd, 0, op.ToolBarHeight, width, op.MBMenuHeight, TRUE);
+				if (dw != 0) {
+					op.MBMenuWidth = width;
+					if (paneRect.left != 0) {
+						MoveWindow(hWnd, 0, op.ToolBarHeight, width, op.MBMenuHeight, TRUE);
+					}
 
 #ifdef _WIN32_WCE_PPC
-				width = GetSystemMetrics(SM_CXSCREEN) - op.MBMenuWidth;
+					width = GetSystemMetrics(SM_CXSCREEN) - op.MBMenuWidth;
 #else
-				GetWindowRect(mListView, &paneRect);
-				width = paneRect.right - paneRect.left - dw;
+					GetWindowRect(mListView, &paneRect);
+					width = paneRect.right - paneRect.left - dw;
 #endif
-				height = op.MBMenuHeight;
-				if (op.PreviewPaneHeight > 0) {
-					height -= op.PreviewPaneHeight;
-					op.PreviewPaneWidth = width;
-					MoveWindow(GetDlgItem(MainWnd, IDC_EDIT_BODY), op.MBMenuWidth, 
-						op.ToolBarHeight+height, width, op.PreviewPaneHeight, TRUE);
+					height = op.MBMenuHeight;
+					if (op.PreviewPaneHeight > 0) {
+						height -= op.PreviewPaneHeight;
+						op.PreviewPaneWidth = width;
+						MoveWindow(GetDlgItem(MainWnd, IDC_EDIT_BODY), op.MBMenuWidth, 
+							op.ToolBarHeight+height, width, op.PreviewPaneHeight, TRUE);
+					}
+					MoveWindow(mListView, op.MBMenuWidth, op.ToolBarHeight, width, height, TRUE);
+					MoveWindow(GetDlgItem(MainWnd, IDC_TB), 0, 0, op.MBMenuWidth+width,
+						op.ToolBarHeight, TRUE);
 				}
-				MoveWindow(mListView, op.MBMenuWidth, op.ToolBarHeight, width, height, TRUE);
-				MoveWindow(GetDlgItem(MainWnd, IDC_TB), 0, 0, op.MBMenuWidth+width,
-					op.ToolBarHeight, TRUE);
+				return 0;
 			}
 			break;
 
@@ -2287,7 +2293,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		MBPaneWndProc = NULL;
 		SendDlgItemMessage(hWnd, IDC_MBMENU, CB_SETEXTENDEDUI, TRUE, 0);
 		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &rcClient);
-		ret = rcClient.bottom - rcClient.top;
+		ret = op.MBMenuHeight = rcClient.bottom - rcClient.top;
 	}
 
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
@@ -2355,8 +2361,8 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 static void DelPreviewSubClass(HWND hWnd)
 {
 #ifdef _WIN32_WCE
-	SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)PreviewWindowProcedure);
-	PreviewWindowProcedure = NULL;
+//	SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)PreviewWindowProcedure);
+//	PreviewWindowProcedure = NULL;
 #else
 	WNDPROC OldWndProc = (WNDPROC)GetProp(hWnd, WNDPROC_KEY);
 	if (OldWndProc) {
@@ -2759,7 +2765,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			comboDropped  = newHeight;
 		}
 		GetWindowRect(GetDlgItem(hWnd, IDC_MBMENU), &subwinRect);
-		comboHeight = subwinRect.bottom - subwinRect.top;
+		comboHeight = op.MBMenuHeight = subwinRect.bottom - subwinRect.top;
 
 		MoveWindow(GetDlgItem(hWnd, IDC_MBMENU), 0, newTop, Right, comboDropped, TRUE);
 		newTop += comboHeight;
@@ -3288,7 +3294,7 @@ static BOOL MailMarkCheck(HWND hWnd, BOOL IsAfterCheck)
 	}
 	if (IsAfterCheck == FALSE && op.CheckAfterUpdate == 1) {
 		ret = TRUE;
-	} else if (ret == FALSE && item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE) != -1) {
+	} else if (ret == FALSE && item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE, TRUE) != -1) {
 		ret = TRUE;
 	} else if (IsAfterCheck == FALSE && ret == FALSE) {
 		MessageBox(hWnd, (held) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK, STR_TITLE_ALLEXEC,
@@ -3313,7 +3319,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 
 	//When it is the transmission box, it transmits the
 	if (BoxIndex == MAILBOX_SEND) {
-		if (item_get_next_send_mark(tpMailBox, FALSE) == -1) {
+		if (item_get_next_send_mark(tpMailBox, FALSE, TRUE) == -1) {
 			return FALSE;
 		}
 		AllCheck = TRUE;
@@ -4129,7 +4135,7 @@ static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag)
 		}
 		if (ServerDelete == FALSE &&
 			item_get_next_download_mark((MailBox + SocBox), -1, NULL) == -1 &&
-			item_get_next_send_mark((MailBox + SocBox), FALSE) == -1) {
+			item_get_next_send_mark((MailBox + SocBox), FALSE, TRUE) == -1) {
 			return FALSE;
 		}
 		AutoCheckFlag = FALSE;
@@ -4808,7 +4814,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 		}
 		if (op.CheckQueuedOnExit > 0 && gAutoSend == FALSE
-			&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
+			&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2), FALSE) != -1) {
 #ifdef _WIN32_WCE_PPC
 			// watch out for quit messages from task managers
 			MSG msg;
@@ -5075,7 +5081,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			CheckBox++;
 			if (CheckBox >= MailBoxCnt) {
 				KillTimer(hWnd, wParam);
-				if (item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE) != -1) {
+				if (item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE, TRUE) != -1) {
 					// 送信
 					ExecItem(hWnd, MAILBOX_SEND);
 					break;
@@ -5475,7 +5481,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_QUIT:
 			gDoingQuit = TRUE;
 			if (op.CheckQueuedOnExit > 0 && gAutoSend == FALSE
-				&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2)) != -1) {
+				&& item_get_next_send_mark((MailBox + MAILBOX_SEND), (op.CheckQueuedOnExit == 2), FALSE) != -1) {
 				if (MessageBox(hWnd, STR_Q_QUEUEDMAIL_EXIT, WINDOW_TITLE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 					mailbox_select(hWnd, MAILBOX_SEND);
 					gDoingQuit = FALSE;
@@ -5562,6 +5568,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 				op.PreviewPaneHeight = -op.PreviewPaneHeight;
 				top = op.ToolBarHeight;
+				if (op.MBMenuWidth <= 0) {
+					top += op.MBMenuHeight;
+				}
 				left = (op.MBMenuWidth > 0) ? op.MBMenuWidth : 0;
 
 				GetWindowRect(mListView, &rcRect);
@@ -5605,6 +5614,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				GetWindowRect(mListView, &rcRect);
 				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
 				width = rcRect.right - rcRect.left - op.MBMenuWidth;
+
 #ifdef _WIN32_WCE
 				if (op.MBMenuWidth > 0) {
 					// IDC_LISTVIEW has already been resized by MBPaneProc
@@ -5627,8 +5637,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 				left = (op.MBMenuWidth>0) ? op.MBMenuWidth : 0;
 				if (op.PreviewPaneHeight > 0) {
+					ResizingPreview = TRUE;
 					MoveWindow(GetDlgItem(hWnd, IDC_EDIT_BODY),
 						left, dTop+height, width, op.PreviewPaneHeight, TRUE);
+					ResizingPreview = FALSE;
 				}
 
 				MoveWindow(mListView, left, dTop, width, height, TRUE);
@@ -5922,7 +5934,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				if (ServerDelete == FALSE &&
 					item_get_next_download_mark((MailBox + SelBox), -1, NULL) == -1 &&
-					item_get_next_send_mark((MailBox + SelBox), FALSE) == -1) {
+					item_get_next_send_mark((MailBox + SelBox), FALSE, TRUE) == -1) {
 
 					MessageBox(hWnd, (ans == -2) ? STR_MSG_MARK_HELD : STR_MSG_NOMARK,
 						STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
@@ -6689,6 +6701,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case LVN_ITEMACTIVATE:
 			if (op.PreviewPaneHeight <= 0) {
+				SendMessage(hWnd, WM_COMMAND, ID_MAILITEM_OPEN, 0);
+			}
+			break;
+
+		case NM_DBLCLK:
+			if (op.PreviewPaneHeight > 0) {
 				SendMessage(hWnd, WM_COMMAND, ID_MAILITEM_OPEN, 0);
 			}
 			break;
