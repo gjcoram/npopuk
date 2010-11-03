@@ -3819,6 +3819,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_SETCHECK, op.ViewCloseNoNext, 0);
 		SendDlgItemMessage(hDlg, IDC_VIEWSHOWATTACH, BM_SETCHECK, op.ViewShowAttach, 0);
 		SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_SETCHECK, op.ViewAppMsgSource, 0);
+		SendDlgItemMessage(hDlg, IDC_AUTO_PREVIEW, BM_SETCHECK, op.AutoPreview, 0);
 #ifndef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_SETCHECK, op.ViewWindowCursor, 0);
 #else
@@ -3827,7 +3828,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #endif
 
 		ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_BACK), SW_HIDE);
-		if (GetSystemMetrics(SM_CYSCREEN) > 700) {
+		if (GetSystemMetrics(SM_CYSCREEN) > 600) {
 			ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_MORE), SW_HIDE);
 		} else {
 			MoveWindow(GetDlgItem(hDlg, IDC_VIEWCLOSENONEXT), 5, 14, 200, 16, FALSE);
@@ -3839,7 +3840,11 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #ifdef _WIN32_WCE_PPC
 			MoveWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), 5, 74, 200, 16, FALSE);
 			ShowWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), SW_HIDE);
+			MoveWindow(GetDlgItem(hDlg, IDC_AUTO_PREVIEW), 5, 94, 200, 16, FALSE);
+#else
+			MoveWindow(GetDlgItem(hDlg, IDC_AUTO_PREVIEW), 5, 74, 200, 16, FALSE);
 #endif
+			ShowWindow(GetDlgItem(hDlg, IDC_AUTO_PREVIEW), SW_HIDE);
 		}
 #endif
 		break;
@@ -3861,6 +3866,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			ShowWindow(GetDlgItem(hDlg, IDC_VIEWCLOSENONEXT), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_VIEWSHOWATTACH), hide);
 			ShowWindow(GetDlgItem(hDlg, IDC_VIEWAPP_MSGSRC), hide);
+			ShowWindow(GetDlgItem(hDlg, IDC_AUTO_PREVIEW), hide);
 #ifdef _WIN32_WCE_PPC
 			ShowWindow(GetDlgItem(hDlg, IDC_SHOW_NAVIG), hide);
 #endif
@@ -3894,6 +3900,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.ViewCloseNoNext = SendDlgItemMessage(hDlg, IDC_VIEWCLOSENONEXT, BM_GETCHECK, 0, 0);
 			op.ViewShowAttach = SendDlgItemMessage(hDlg, IDC_VIEWSHOWATTACH, BM_GETCHECK, 0, 0);
 			op.ViewAppMsgSource = SendDlgItemMessage(hDlg, IDC_VIEWAPP_MSGSRC, BM_GETCHECK, 0, 0);
+			op.AutoPreview = SendDlgItemMessage(hDlg, IDC_AUTO_PREVIEW, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
 			op.ViewWindowCursor = SendDlgItemMessage(hDlg, IDC_VIEWWND_CURSOR, BM_GETCHECK, 0, 0);
 #elif defined(_WIN32_WCE_PPC)

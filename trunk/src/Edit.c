@@ -50,7 +50,7 @@ BOOL EditScrollbars = 1;
 #endif
 
 #ifdef _WIN32_WCE
-static WNDPROC EditWindowProcedure;
+static WNDPROC EditWindowProcedure = NULL;
 extern WNDPROC PreviewWindowProcedure;
 #endif
 
@@ -71,6 +71,7 @@ extern HWND mListView;	// mail list
 extern HFONT hListFont;
 extern HWND hViewWnd;
 extern HFONT hViewFont;
+extern BOOL ResizingPreview;
 #ifdef LOAD_USER_IMAGES
 extern HBITMAP EditBmp;
 #endif
@@ -694,6 +695,9 @@ static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem)
 LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	WPARAM keycode;
+#ifdef _WIN32_WCE
+	BOOL is_edit = (hEditWnd != NULL) && (hWnd == GetDlgItem(hEditWnd, IDC_EDIT_BODY));
+#endif
 	switch (msg) {
 	case WM_CHAR:
 		if ((TCHAR)wParam == TEXT(' ')) {
@@ -772,15 +776,20 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 #ifndef _WIN32_WCE
 		case WM_EXITSIZEMOVE:
+			{
 #else
 		case WM_SIZE: 
+			if (!is_edit && ResizingPreview == FALSE) {
 #endif
-			{
 				RECT rcRect;
-				int left, lv_height, pp_height, dh;
+				int top, left, lv_height, pp_height, dh;
 
 				GetWindowRect(mListView, &rcRect);
 				lv_height = rcRect.bottom - rcRect.top;
+				top = op.ToolBarHeight;
+				if (op.MBMenuWidth <= 0) {
+					top += op.MBMenuHeight;
+				}
 
 				GetWindowRect(hWnd, &rcRect);
 				// new height of preview pane
@@ -797,11 +806,10 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 				}
 
 				left = (op.MBMenuWidth>0) ? op.MBMenuWidth : 0;
-
-				MoveWindow(hWnd, left, op.ToolBarHeight+lv_height,
-					op.PreviewPaneWidth, pp_height, TRUE);
-				MoveWindow(mListView, left, op.ToolBarHeight,
-					op.PreviewPaneWidth, lv_height, TRUE);
+				ResizingPreview = TRUE;
+				MoveWindow(hWnd, left, top+lv_height, op.PreviewPaneWidth, pp_height, TRUE);
+				MoveWindow(mListView, left, top, op.PreviewPaneWidth, lv_height, TRUE);
+				ResizingPreview = FALSE;
 				op.PreviewPaneHeight = pp_height;
 			}
 			break;
@@ -833,7 +841,7 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 	}
 #ifdef _WIN32_WCE
-	if (hWnd == hEditWnd) {
+	if (is_edit) {
 		return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
 	} else {
 		return CallWindowProc(PreviewWindowProcedure, hWnd, msg, wParam, lParam);
@@ -1552,7 +1560,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		if (tpMailItem->Mark != ICON_FLAG) {
 			tpMailItem->Mark = ICON_NON;
 		}
-		if (GetStarMBMenu() && item_get_next_send_mark((MailBox + MAILBOX_SEND), TRUE) == -1) {
+		if (GetStarMBMenu() && item_get_next_send_mark((MailBox + MAILBOX_SEND), TRUE, FALSE) == -1) {
 			SetStarMBMenu(FALSE);
 		}
 

@@ -960,9 +960,7 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 	}
 
 	switch (CForm->code) {
-#ifndef _WIN32_WCE_PPC
 	case NM_DBLCLK:				// ダブルクリック
-#endif
 	case NM_CLICK:				// クリック
 	case NM_RCLICK:				// 右クリック
 		return SendMessage(hWnd, WM_LV_EVENT, CForm->code, lParam);
