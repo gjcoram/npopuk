@@ -234,6 +234,7 @@ static HWND InitInstance(HINSTANCE hInstance, int CmdShow);
 void CALLBACK MessageBoxTimer(HWND hWnd, UINT uiMsg, UINT idEvent, DWORD dwTime);
 static int TimedMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle, DWORD dwTimeout);
 static void PlayMarkSound(int mark, int box);
+static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL GetDroppedStateMBMenu(void);
 static void DropMBMenu(BOOL drop);
 
@@ -5579,6 +5580,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				height = rcRect.bottom - rcRect.top - op.PreviewPaneHeight;
 				if (op.PreviewPaneHeight > 0) {
 					CreatePreviewPane(hWnd, left, top+height, width, op.PreviewPaneHeight);
+					i = ListView_GetSelectedCount(mListView);
+					if (i == 1) {
+						MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, 
+							ListView_GetNextItem(mListView, -1, LVNI_SELECTED));
+						PopulatePreviewPane(hWnd, tpMailItem);
+					}
 				} else {
 					HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
 					DelPreviewSubClass(previewWnd);
@@ -6652,35 +6659,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					PlayMarkSound(j, SelBox);
 				}
 				if (op.PreviewPaneHeight > 0) {
-					TCHAR *buf, *body, *p;
-					int len, cnt, TextIndex;
-					if (SelBox != MAILBOX_SEND) {
-						MULTIPART **tpMultiPart = NULL;
-						body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
-						if (tpMailItem->MailStatus != ICON_READ) {
-							if (op.PreviewedIsReadTime > 0) {
-								SetTimer(hWnd, ID_PREVIEW_TIMER, 1000*op.PreviewedIsReadTime, NULL);
-							} else if (op.PreviewedIsReadTime == 0) {
-								SetMailStats(hWnd, ICON_READ);
-							}
-						}
-						multipart_free(&tpMultiPart, cnt);
-					} else {
-						body = alloc_char_to_tchar(tpMailItem->Body);
-					}
-					if (body == NULL) {
-						body = alloc_copy_t(TEXT(""));
-					}
-					len = CreateHeaderStringSize(op.PreviewHeader, tpMailItem, NULL);
-					len += lstrlen(body) + 1;
-					buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-					if (buf != NULL) {
-						p = CreateHeaderString(op.PreviewHeader, buf, tpMailItem, NULL);
-						str_join_t(p, body, (TCHAR *)-1);
-						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
-						mem_free(&buf);
-					}
-					mem_free(&body);
+					PopulatePreviewPane(hWnd, tpMailItem);
 				}
 			}
 			break;
@@ -7513,6 +7492,42 @@ static void PlayMarkSound(int mark, int box)
 		}
 	}
 	return;
+}
+
+/*
+ * PopulatePreviewPane - put contents into preview pane
+ */
+static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem)
+{
+	TCHAR *buf, *body, *p;
+	int len, cnt, TextIndex;
+	if (SelBox != MAILBOX_SEND) {
+		MULTIPART **tpMultiPart = NULL;
+		body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
+		if (tpMailItem->MailStatus != ICON_READ) {
+			if (op.PreviewedIsReadTime > 0) {
+				SetTimer(hWnd, ID_PREVIEW_TIMER, 1000*op.PreviewedIsReadTime, NULL);
+			} else if (op.PreviewedIsReadTime == 0) {
+				SetMailStats(hWnd, ICON_READ);
+			}
+		}
+		multipart_free(&tpMultiPart, cnt);
+	} else {
+		body = alloc_char_to_tchar(tpMailItem->Body);
+	}
+	if (body == NULL) {
+		body = alloc_copy_t(TEXT(""));
+	}
+	len = CreateHeaderStringSize(op.PreviewHeader, tpMailItem, NULL);
+	len += lstrlen(body) + 1;
+	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+	if (buf != NULL) {
+		p = CreateHeaderString(op.PreviewHeader, buf, tpMailItem, NULL);
+		str_join_t(p, body, (TCHAR *)-1);
+		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)buf);
+		mem_free(&buf);
+	}
+	mem_free(&body);
 }
 
 /***
