@@ -71,6 +71,7 @@ extern HWND mListView;	// mail list
 extern HFONT hListFont;
 extern HWND hViewWnd;
 extern HFONT hViewFont;
+extern HMENU hViewPop;
 extern BOOL ResizingPreview;
 #ifdef LOAD_USER_IMAGES
 extern HBITMAP EditBmp;
@@ -699,6 +700,38 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 	BOOL is_edit = (hEditWnd != NULL) && (hWnd == GetDlgItem(hEditWnd, IDC_EDIT_BODY));
 #endif
 	switch (msg) {
+
+#ifdef _WIN32_WCE
+	case WM_LBUTTONDOWN:
+#ifdef _WIN32_WCE_PPC
+		{
+			SHRGINFO rg;
+
+			rg.cbSize = sizeof(SHRGINFO);
+			rg.hwndClient = hWnd;
+			rg.ptDown.x = LOWORD(lParam);
+			rg.ptDown.y = HIWORD(lParam);
+			rg.dwFlags = SHRG_RETURNCMD;
+
+			if (SHRecognizeGesture(&rg) == GN_CONTEXTMENU) {
+//				SendMessage(GetParent(hWnd), WM_COMMAND, ID_MENU, 0);
+				ShowMenu(hWnd, hViewPop, (is_edit) ? 1 : 2, 0, FALSE);
+				return 0;
+			}
+		}
+#else
+		if (GetKeyState(VK_MENU) < 0) {
+			ShowMenu(hWnd, hViewPop, 1, 0, FALSE);
+			return 0;
+		}
+#endif
+		break;
+//#else
+//	case WM_CONTEXTMENU:
+//		ShowMenu(GetParent(hWnd), hViewPop, 1, 0, FALSE);
+//		return 0;
+#endif
+
 	case WM_CHAR:
 		if ((TCHAR)wParam == TEXT(' ')) {
 			if (GetKeyState(VK_SHIFT) < 0) {
@@ -837,6 +870,10 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		case ID_MENUITEM_REPLACE:
 		case ID_MENUITEM_PASTEQUOT:
 		case ID_MENUITEM_REFLOW:
+			return 0;
+
+		case ID_MENUITEM_ALLSELECT:
+			SendMessage(hWnd, EM_SETSEL, 0, -1);
 			return 0;
 		}
 	}

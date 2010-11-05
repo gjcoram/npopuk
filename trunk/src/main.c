@@ -2654,6 +2654,7 @@ static BOOL InitWindow(HWND hWnd)
 		Height -= op.PreviewPaneHeight;
 		CreatePreviewPane(hWnd, Left, Top+Height, Right, op.PreviewPaneHeight);
 	}
+	op.PreviewPaneWidth = Right;
 
 	//List view
 	mListView = CreateListView(hWnd, Top, Height, Left, Right);
