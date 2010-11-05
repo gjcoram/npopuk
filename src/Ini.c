@@ -463,7 +463,7 @@ void ini_read_general(HWND hWnd)
 	op.EditWordBreakFlag = profile_get_int(GENERAL, TEXT("EditWordBreakFlag"), 1);
 
 #ifdef _WIN32_WCE_PPC
-	op.OptionalScrollbar = profile_get_int(GENERAL, TEXT("OptionalScrollbar"), 1); //gjc set to 0
+	op.OptionalScrollbar = profile_get_int(GENERAL, TEXT("OptionalScrollbar"), 1);
 
 ////////////////////// MRP ////////////////////
 	op.ViewShowDate = profile_get_int(GENERAL, TEXT("ViewShowDate"), 1);
