@@ -7508,6 +7508,18 @@ static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem)
 	if (SelBox != MAILBOX_SEND) {
 		MULTIPART **tpMultiPart = NULL;
 		body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
+
+		if (op.StripHtmlTags == 1 &&
+			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
+			|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
+			str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
+			p = strip_html_tags(body, 2);
+			if (p != NULL) {
+				mem_free(&body);
+				body = p;
+			}
+		}
+
 		if (tpMailItem->MailStatus != ICON_READ) {
 			if (op.PreviewedIsReadTime > 0) {
 				SetTimer(hWnd, ID_PREVIEW_TIMER, 1000*op.PreviewedIsReadTime, NULL);
