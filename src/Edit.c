@@ -872,10 +872,19 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		case ID_MENUITEM_REFLOW:
 			return 0;
 
+		case ID_MENUITEM_PREVPANE:
+			SendMessage(MainWnd, WM_COMMAND, ID_MENUITEM_PREVPANE, 0);
+			return 0;
+
+		case ID_MENUITEM_COPY:
+			SendMessage(hWnd, WM_COPY, 0, 0);
+			return 0;
+
 		case ID_MENUITEM_ALLSELECT:
 			SendMessage(hWnd, EM_SETSEL, 0, -1);
 			return 0;
 		}
+		break;
 	}
 #ifdef _WIN32_WCE
 	if (is_edit) {
