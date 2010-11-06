@@ -5579,20 +5579,24 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				width = rcRect.right - rcRect.left;
 				// when op.PreviewPaneHeight < 0, the next line grows IDC_LISTVIEW
 				height = rcRect.bottom - rcRect.top - op.PreviewPaneHeight;
+				MoveWindow(mListView, left, top, width, height, TRUE);
+
 				if (op.PreviewPaneHeight > 0) {
 					CreatePreviewPane(hWnd, left, top+height, width, op.PreviewPaneHeight);
 					i = ListView_GetSelectedCount(mListView);
 					if (i == 1) {
-						MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, 
-							ListView_GetNextItem(mListView, -1, LVNI_SELECTED));
+						MAILITEM *tpMailItem;
+						i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
+						tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 						PopulatePreviewPane(hWnd, tpMailItem);
+						ListView_EnsureVisible(mListView, i, TRUE);
 					}
 				} else {
 					HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
 					DelPreviewSubClass(previewWnd);
 					DestroyWindow(previewWnd);
 				}
-				MoveWindow(mListView, left, top, width, height, TRUE);
+
 #ifdef _WIN32_WCE_PPC
 				hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
 #elif defined(_WIN32_WCE)
@@ -5621,15 +5625,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 				GetWindowRect(mListView, &rcRect);
 				// when op.MBMenuWidth < 0, the next line grows IDC_LISTVIEW
-				width = rcRect.right - rcRect.left - op.MBMenuWidth;
-
-#ifdef _WIN32_WCE
-				if (op.MBMenuWidth > 0) {
-					// IDC_LISTVIEW has already been resized by MBPaneProc
-					width = rcRect.right - rcRect.left;
-				}
-#endif
-				op.PreviewPaneWidth = width;
+				op.PreviewPaneWidth = width = rcRect.right - rcRect.left - op.MBMenuWidth;
 
 				mbh = CreateMBMenu(hWnd, dTop, dBottom);
 				if (mbh > 0) {
@@ -6247,6 +6243,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Entirely the selective
 		case ID_MENUITEM_ALLSELECT:
+			if (op.PreviewPaneWidth > 0) {
+				HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+				if (GetFocus() == previewWnd) {
+					SendMessage(previewWnd, EM_SETSEL, 0, -1);
+					break;
+				}
+			}
 			SetFocus(mListView);
 			ListView_SetItemState(mListView, -1, LVIS_SELECTED, LVIS_SELECTED);
 			break;
