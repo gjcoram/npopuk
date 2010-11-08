@@ -1388,7 +1388,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 	if (BodyOnly == FALSE) {
 		if (IsAttach == FALSE) {
-			vSelBox = SelBox;
 			LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 
 			// 開封済みにする
@@ -1408,7 +1407,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 				tpMailItem->Mark = tpMailItem->MailStatus;
 				redraw = TRUE;
 			}
-			if (redraw == TRUE) {
+			if (redraw == TRUE && vSelBox == SelBox) {
 				ListView_SetItemState(mListView, LvFocus, INDEXTOOVERLAYMASK(tpMailItem->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 				ListView_RedrawItems(mListView, LvFocus, LvFocus);
 				UpdateWindow(mListView);
@@ -1560,13 +1559,21 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
  */
 MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 {
-	MAILITEM *tpMailItem;
+	MAILITEM *tpMailItem = NULL;
+	MAILBOX *tpMailBox = NULL;
 	int Index;
 	int j;
 
-	if ((isView == TRUE && SelBox == MAILBOX_SEND) || (isView == FALSE && SelBox != MAILBOX_SEND)) {
-		return NULL;
+	if (op.PreviewPaneHeight <= 0) {
+		if ((isView == TRUE && SelBox == MAILBOX_SEND) || (isView == FALSE && SelBox != MAILBOX_SEND)) {
+			return NULL;
+		}
+	} else if (isView == FALSE && SelBox != MAILBOX_SEND) {
+		tpMailBox = MailBox + MAILBOX_SEND;
+	} else if (isView == TRUE && vSelBox != -1 && vSelBox != SelBox) {
+		tpMailBox = MailBox + vSelBox;
 	}
+
 	if (SelBox != MAILBOX_SEND && DigestMessageNum > 0 && DigestMaster != NULL) {
 		j = DigestMessageNum + dir;
 		if (j > 0 && j < DigestMessageCnt) {
@@ -1583,6 +1590,32 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 		}
 		// else return to master
 		tpMailItem = DigestMaster;
+	} else if (tpMailBox != NULL) {
+		// updating View window or SentMail window, with preview pane active
+		// (SelBox may be different from mailbox of viewed message)
+		MAILITEM *tpViewItem, *tpTmpItem;
+		BOOL stop_on_next = FALSE;
+
+		tpViewItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
+
+		for (j = 0; j < tpMailBox->MailItemCnt; j++) {
+			tpTmpItem = *(tpMailBox->tpMailItem + j);
+			if (tpTmpItem == NULL) {
+				continue;
+			}
+			if (tpTmpItem == tpViewItem) {
+				if (dir < 0) {
+					break;
+				} else {
+					stop_on_next = TRUE;
+				}
+			} else if (dir < 0) {
+				tpMailItem = tpTmpItem;
+			} else if (dir > 0 && stop_on_next == TRUE) {
+				tpMailItem = tpTmpItem;
+				break;
+			}
+		}
 	} else {
 		int st = LVIS_FOCUSED;
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -1610,7 +1643,7 @@ MAILITEM *View_NextPrev(HWND hWnd, int dir, BOOL isView)
 
 		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, j);
 	}
-	if (isView) {
+	if (isView && tpMailItem != NULL) {
 		SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 		ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 	}
@@ -1632,47 +1665,97 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 		return View_NextPrev(hWnd, +1, TRUE);
 	}
 	tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
-	if (AttachMailItem == NULL || tpMailItem != AttachMailItem) {
-		Index = ListView_GetMemToItem(mListView, tpMailItem);
-	} else {
-		Index = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
-	}
 
-	// 未開封メールのインデックスを取得
-	j = ListView_GetNextUnreadItem(mListView, Index,
-		ListView_GetItemCount(mListView));
-	if (j == -1) {
-		j = ListView_GetNextUnreadItem(mListView, -1, Index);
-	}
-	if (j == -1) {
-		if (op.ScanAllForUnread == 0) {
-			return NULL;
-		}
+	if (op.PreviewPaneHeight > 0 && vSelBox != -1 && vSelBox != SelBox) {
+		MAILITEM *tpRetItem = NULL;
+		BOOL stop_on_next = FALSE;
 
-		// 次の未開封があるメールボックスのインデックスを取得
-		SwitchCursor(FALSE);
-		i = mailbox_next_unread(hWnd, SelBox + 1, MailBoxCnt);
-		if (i == -1) {
-			i = mailbox_next_unread(hWnd, MAILBOX_USER, SelBox);
-		}
-		if (i == -1) {
+		while (1) {
+			MAILBOX *tpMailBox = MailBox + vSelBox;
+
+			for (j = 0; j < tpMailBox->MailItemCnt; j++) {
+				MAILITEM *tpTmpItem = *(tpMailBox->tpMailItem + j);
+				if (tpTmpItem == NULL) {
+					continue;
+				}
+				if (tpTmpItem->MailStatus == ICON_MAIL) {
+					tpRetItem = tpTmpItem;
+					if (stop_on_next == TRUE) {
+						break;
+					}
+					// else we haven't gotten to the current message yet;
+					// there might be an unread one after the current
+				}
+				if (tpTmpItem == tpMailItem) {
+					stop_on_next = TRUE;
+				}
+			}
+			if (tpRetItem != NULL || op.ScanAllForUnread == 0) {
+				break;
+			}
+			SwitchCursor(FALSE);
+			i = mailbox_next_unread(hWnd, vSelBox + 1, MailBoxCnt);
+			if (i == -1) {
+				i = mailbox_next_unread(hWnd, MAILBOX_USER, vSelBox);
+			}
 			SwitchCursor(TRUE);
-			return NULL;
+			if (i == -1) {
+				break;
+			}
+			vSelBox = i;
+			stop_on_next = TRUE; // ought to be TRUE already, but ...
 		}
-		// メールボックスの選択
-		mailbox_select(MainWnd, i);
-		j = ListView_GetNextUnreadItem(mListView, -1,
-			ListView_GetItemCount(mListView));
-		SwitchCursor(TRUE);
-	}
-	ListView_SetItemState(mListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
-	if (op.PreviewPaneHeight <= 0) {
-		st |= LVIS_SELECTED;
-	}
-	ListView_SetItemState(mListView, j, st, st);
-	ListView_EnsureVisible(mListView, j, TRUE);
+		if (tpRetItem == NULL) {
+			return NULL;
+		} else {
+			tpMailItem = tpRetItem;
+		}
 
-	tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, j);
+	} else {
+		if (AttachMailItem == NULL || tpMailItem != AttachMailItem) {
+			Index = ListView_GetMemToItem(mListView, tpMailItem);
+		} else {
+			Index = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
+		}
+
+		// 未開封メールのインデックスを取得
+		j = ListView_GetNextUnreadItem(mListView, Index,
+			ListView_GetItemCount(mListView));
+		if (j == -1) {
+			j = ListView_GetNextUnreadItem(mListView, -1, Index);
+		}
+		if (j == -1) {
+			if (op.ScanAllForUnread == 0) {
+				return NULL;
+			}
+
+			// find the next mailbox with unread mail
+			SwitchCursor(FALSE);
+			i = mailbox_next_unread(hWnd, SelBox + 1, MailBoxCnt);
+			if (i == -1) {
+				i = mailbox_next_unread(hWnd, MAILBOX_USER, SelBox);
+			}
+			if (i == -1) {
+				SwitchCursor(TRUE);
+				return NULL;
+			}
+			// メールボックスの選択
+			mailbox_select(MainWnd, i);
+			vSelBox = i;
+			j = ListView_GetNextUnreadItem(mListView, -1,
+				ListView_GetItemCount(mListView));
+			SwitchCursor(TRUE);
+		}
+		ListView_SetItemState(mListView, -1, 0, LVIS_FOCUSED | LVIS_SELECTED);
+		if (op.PreviewPaneHeight <= 0) {
+			st |= LVIS_SELECTED;
+		}
+		ListView_SetItemState(mListView, j, st, st);
+		ListView_EnsureVisible(mListView, j, TRUE);
+
+		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, j);
+	}
+
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 	ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 	SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
@@ -4064,6 +4147,7 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		return FALSE;
 	}
 
+	vSelBox = SelBox;
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_MODFYMESSAGE, 0, (LPARAM)lpParam);
 		return TRUE;
