@@ -1638,8 +1638,6 @@ BEGIN
         MENUITEM "Copy",                ID_MENUITEM_COPY
         MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
         MENUITEM SEPARATOR
-        MENUITEM "Wrap text",           ID_MENUITEM_WORDBREAK
-        MENUITEM SEPARATOR
         MENUITEM "Hide this pane",      ID_MENUITEM_PREVPANE
     END
 END
