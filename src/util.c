@@ -482,8 +482,8 @@ void DateAdd(SYSTEMTIME *sTime, char *tz)
 		if (*tz == '-') {
 			itz *= -1;
 		}
+		itz = (itz / 100) * 60 + itz - (itz / 100) * 100;
 	}
-	itz = (itz / 100) * 60 + itz - (itz / 100) * 100;
 
 	// ç∑ÇÃåvéZ
 	diff = tmz - itz;
@@ -2594,7 +2594,8 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 		
 		if (*p == TEXT('<')) {
 			// strip <tags>
-			if (str_cmp_ni_t(p, TEXT("<a "), lstrlen(TEXT("<a "))) == 0) {
+			if (str_cmp_ni_t(p, TEXT("<a "), lstrlen(TEXT("<a "))) == 0
+				|| str_cmp_ni_t(p, TEXT("<a\r\n"), lstrlen(TEXT("<a\r\n"))) == 0) {
 				// <a style="link" href="http://www.nowhere.com"> -> <http://www.nowhere.com>
 				for (; *p != TEXT('\0') && *p != TEXT('>'); p++) {
 					if (str_cmp_ni_t(p, TEXT("href=\""), lstrlen(TEXT("href=\""))) == 0) {
