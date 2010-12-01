@@ -51,7 +51,7 @@ extern int sprintf_s();
 
 /* Define */
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
-#define APP_VERSION_NUM			2012
+#define APP_VERSION_NUM			2016
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
