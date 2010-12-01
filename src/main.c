@@ -1458,7 +1458,8 @@ void SetMailMenu(HWND hWnd)
 	i = ListView_GetSelectedCount(mListView);
 	if (i != 1 && op.PreviewPaneHeight > 0) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, 
-			(LPARAM)((i>1) ? STR_MSG_SINGLE_PREVIEW : STR_MSG_SELECT_PREVIEW));
+			(LPARAM) ((op.ExpertMode) ? TEXT("") :
+				((i>1) ? STR_MSG_SINGLE_PREVIEW : STR_MSG_SELECT_PREVIEW)));
 	}
 	SelFlag = (i <= 0) ? 0 : 1;
 	SocFlag = (g_soc != -1 || gSockFlag == TRUE) ? 0 : 1;
@@ -3412,7 +3413,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel)
 	MAILITEM *tpMailItem;
 	int i;
 
-	if (CheckSel && ListView_GetSelectedCount(mListView) <= 0) {
+	if (CheckSel && op.PreviewPaneHeight <= 0 && ListView_GetSelectedCount(mListView) <= 0) {
 		return;
 	}
 	i = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);

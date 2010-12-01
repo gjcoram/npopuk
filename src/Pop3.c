@@ -326,7 +326,8 @@ static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		if (ShowFlag == TRUE) {
 			ListView_DeleteAllItems(mListView);
 			if (op.PreviewPaneHeight > 0) {
-				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, (LPARAM)STR_MSG_SELECT_PREVIEW);
+				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETTEXT, 0, 
+					(LPARAM)((op.ExpertMode) ? TEXT("") : STR_MSG_SELECT_PREVIEW));
 			}
 		}
 		item_free(tpMailBox->tpMailItem, tpMailBox->MailItemCnt);

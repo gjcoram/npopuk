@@ -721,7 +721,7 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 #else
 		if (GetKeyState(VK_MENU) < 0) {
-			ShowMenu(hWnd, hViewPop, 1, 0, FALSE);
+			ShowMenu(hWnd, hViewPop, (is_edit) ? 1 : 2, 0, FALSE);
 			return 0;
 		}
 #endif
