@@ -429,6 +429,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 
 	// メールアドレスの送信
 	if (send_address(hWnd, soc, TEXT(CMD_RCPT_TO), p, ErrStr) == FALSE) {
+#ifndef _WCE_OLD
 		if (op.SocLog > 1) {
 			char buf[BUF_SIZE];
 			char *pa;
@@ -444,6 +445,7 @@ static TCHAR *send_rcpt_to(HWND hWnd, SOCKET soc, TCHAR *address, TCHAR *ErrStr)
 #endif
 			log_save_a(buf);
 		}
+#endif
 		return (TCHAR *)-1;
 	}
 	mem_free(&p);
