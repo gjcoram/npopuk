@@ -2224,7 +2224,7 @@ static int FindLargerImage(HWND hWnd, int id, BOOL ask)
 	name = (*(vMultiPart + id))->Filename;
 	end = (*(vMultiPart + id))->ePos;
 	if (name == NULL || end == NULL) {
-		return FALSE;
+		return IDNO;
 	}
 	len = end - (*(vMultiPart + id))->sPos;
 	for (i = id+1; i < MultiPartCnt; i++) {
@@ -2579,12 +2579,8 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 	BOOL is_digest = FALSE, is_msg = FALSE, save_embed = FALSE;
 	BOOL ret = TRUE;
 
-	if ((*(vMultiPart + id))->ePos == NULL) {
-		if (DoWhat == DECODE_SAVE_ALL) {
-			return FALSE; // saved as much as we can
-		} else if (id == MultiPartTextIndex) {
-			; // 
-		} else if (IDCANCEL == MessageBox(hWnd, STR_Q_PARTIAL_ATTACH, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_OKCANCEL)) {
+	if ((*(vMultiPart + id))->ePos == NULL && id != MultiPartTextIndex) {
+		if (IDCANCEL == MessageBox(hWnd, STR_Q_PARTIAL_ATTACH, STR_TITLE_ATTACHED, MB_ICONQUESTION | MB_OKCANCEL)) {
 			return FALSE;
 		}
 	}
