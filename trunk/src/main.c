@@ -3431,11 +3431,16 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel)
 				(LPARAM)tpMailItem) == TRUE) {
 				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 			}
-		} else if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
-			// GJC: don't edit sent mail
-			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
+		} else {
+			int ret = Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag);
+			if (ret == EDIT_INSIDEEDIT) {
+				// GJC: don't edit sent mail
+				Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
+			}
 #ifdef _WIN32_WCE
-			ShowWindow(hWnd, SW_HIDE);
+			if (ret == EDIT_INSIDEEDIT || ret == EDIT_REOPEN) {
+				ShowWindow(hWnd, SW_HIDE);
+			}
 #endif
 		}
 		_SetForegroundWindow(tpMailItem->hEditWnd);

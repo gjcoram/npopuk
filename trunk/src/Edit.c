@@ -2967,7 +2967,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		_SetForegroundWindow(hEditWnd);
 		SendMessage(hEditWnd, WM_CLOSE, 0, 0);
 		if (hEditWnd != NULL) {
-			return EDIT_INSIDEEDIT;
+			return EDIT_REOPEN;
 		}
 	}
 #endif
@@ -2990,7 +2990,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				}
 				_SetForegroundWindow(tpReMailItem->hEditWnd);
 			}
-			return EDIT_INSIDEEDIT;
+			return EDIT_REOPEN;
 		}
 #endif
 		tpMailItem = tpReMailItem;

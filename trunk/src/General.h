@@ -187,6 +187,7 @@ extern int sprintf_s();
 #define EDIT_INSIDEEDIT			1
 #define EDIT_OUTSIDEEDIT		2
 #define EDIT_SEND				3
+#define EDIT_REOPEN				4
 
 #define AUTOSEND_NO_QUIT		1
 #define AUTOSEND_AND_QUIT		2
