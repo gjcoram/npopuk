@@ -2072,9 +2072,12 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 */
 static BOOL MailboxFilenameCheck(TCHAR *name, MAILBOX *mbox, BOOL null_ok, BOOL rename, HWND hDlg) {
 	BOOL ret = TRUE;
-	TCHAR *p, *newname = name, *oldname = mbox->Filename;
+	TCHAR *p, *newname = name, *oldname = NULL;
 	int what = 0, i;
 
+	if (mbox != NULL) {
+		oldname = mbox->Filename;
+	}
 	if (null_ok) {
 		if (name == NULL || *name == TEXT('\0')) {
 			// trying to un-set Filename
