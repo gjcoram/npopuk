@@ -1502,6 +1502,7 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_REMESSEGE, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_ALLREMESSEGE, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_FORWARD, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_REDIRECT, !SelFlag);
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RECV, !(SocFlag & SaveTypeFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_ALLCHECK, !SocFlag);
@@ -5568,6 +5569,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		case ID_MENUITEM_MAILBOXES:
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
+			break;
+
+		case ID_MENUITEM_NEXTMAIL:
+		case ID_MENUITEM_PREVMAIL:
+			if (op.PreviewPaneHeight > 0) {
+				i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
+				ListView_SetItemState(mListView, i, 0, LVIS_SELECTED);
+				i += (command_id == ID_MENUITEM_PREVMAIL) ? -1 : +1;
+				ListView_SetItemState(mListView, i, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+			}
 			break;
 
 		case ID_MENUITEM_PREVPANE:

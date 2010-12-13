@@ -141,8 +141,8 @@ BEGIN
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
     VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
-    VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
-    VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
+//    VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
+//    VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, CONTROL, NOINVERT
     VK_TAB,         ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
