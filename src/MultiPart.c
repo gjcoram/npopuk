@@ -156,6 +156,7 @@ static BOOL get_content_value(char *Content, char *Attribute, char *ret)
 			for (; *p != '\0' && *p != ';'; p++);
 			if (*p == ';') {
 				p++;
+				for (; *p == ' '; p++);
 				if (*p == '\r' && *(p+1) == '\n' && (*(p+2) == ' ' || *(p+2) == '\t')) {
 					p+=3;
 				}
