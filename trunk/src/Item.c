@@ -884,7 +884,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 				lstrcpy(p, TEXT("mixed"));
 				p += lstrlen(TEXT("mixed"));
 				while (*q != TEXT('\0')) {
-					(*p++) = (*q++);
+					*(p++) = *(q++);
 				}
 				*p = TEXT('\0');
 			}

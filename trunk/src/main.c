@@ -6095,13 +6095,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//====== mail =========
 		//Open the dropdown menu if focus on combobox
 		case ID_KEY_ENTER:
-			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
+			fWnd = GetFocus();
+			if (fWnd == GetDlgItem(hWnd, IDC_MBMENU)) {
 				if (op.MBMenuWidth > 0) {
 					SetFocus(mListView);
 				} else {
 					DropMBMenu(!GetDroppedStateMBMenu());
 				}
 				break;
+			} else if (op.PreviewPaneWidth > 0) {
+				HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+				if (fWnd == previewWnd) {
+					SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+					break;
+				}
 			}
 			// else fall through
 
