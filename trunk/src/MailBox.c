@@ -111,6 +111,7 @@ int mailbox_create(HWND hWnd, int Add, int Index, BOOL ShowFlag, BOOL SelFlag)
 	(TmpMailBox + Index)->Type = 0;
 	(TmpMailBox + Index)->Loaded = 1;
 	(TmpMailBox + Index)->UseGlobalRecv = 1;
+	(TmpMailBox + Index)->ListSaveMode = op.ListSaveMode;
 	(TmpMailBox + Index)->Port = POP_PORT;
 	(TmpMailBox + Index)->SmtpPort = SMTP_PORT;
 

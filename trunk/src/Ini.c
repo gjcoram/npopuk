@@ -1837,13 +1837,16 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	//Retention
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
 		MAILBOX *tpMailBox = MailBox + j;
-		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE
-			|| (tpMailBox->NeedsSave == 0 && SaveAll == FALSE)) {
+		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE) {
 			continue;
 		}
 		if (op.WriteMbox != tpMailBox->WasMbox) {
 			tpMailBox->NeedsSave |= MBOX_FORMAT_CHANGED;
 		}
+		if (SaveAll == FALSE &&	tpMailBox->NeedsSave == 0) {
+			continue;
+		}
+
 		//of mail inside mailbox Mail item
 		if (tpMailBox->Filename == NULL) {
 			wsprintf(buf, TEXT("MailBox%d.dat"), j - MAILBOX_USER);

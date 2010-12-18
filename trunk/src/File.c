@@ -876,6 +876,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	len = 7; // = tstrlen(MBOX_DELIMITER);
 	p = MsgStart;
 	while (FileSize > p - MsgStart && *p != '\0') {
+		int slashr = 0;
 		if (encrypted) {
 			r = GetBodyPointa(p);
 			if (r == NULL) break;
@@ -943,13 +944,21 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			}
 		} else {
 			for (t = r = p; *r != '\0'; r++) {
-				if (*r == '\r' && *(r + 1) == '\n') {
+				if (*r == '\r' || *r == '\n') {
 					if (*t == '.' && (r - t) == 1) {
-						t -= 2;
+						t--;
+						if (*(t - 1) == '\r') {
+							t--;
+						}
 						for (; FileSize > r - MsgStart && (*r == '\r' || *r == '\n'); r++);
 						break;
 					}
-					t = r + 2;
+					if (*r == '\r' && *(r + 1) == '\n') {
+						r++;
+					} else {
+						++slashr;
+					}
+					t = r + 1;
 				}
 			}
 		}
@@ -959,10 +968,18 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 				if (tpMailItem->Multipart == MULTIPART_ATTACH) {
 					tpMailItem->AttachSize -= (t - p);
 				}
-				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1));
+				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
 				if (tpMailItem->Body != NULL) {
-					for (s = tpMailItem->Body; p < t; p++, s++) {
+					for (s = tpMailItem->Body; p < t && slashr >= 0; p++, s++) {
+						if (*p == '\n' && (s == tpMailItem->Body || *(s - 1) != '\r')) {
+							*(s++) = '\r';
+							--slashr;
+						}
 						*s = *p;
+						if (*p == '\r' && *(p + 1) != '\n') {
+							*(s++) = '\n';
+							--slashr;
+						}
 					}
 					*s = '\0';
 					if (encrypted) {
@@ -1481,7 +1498,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		}
 	}
 	// Create the backup file.
-	if (MoveFile(path, pathBackup) == 0 && op.SocLog > 1) {
+	if (MoveFile(path, pathBackup) == 0 && op.SocLog > 1 && file_get_size(path) != -1) {
 		TCHAR msg[MSG_SIZE];
 		DWORD err = GetLastError();
 		wsprintf(msg, TEXT("Failed to create backup file %s (err=%X)\r\n"), pathBackup, err);
