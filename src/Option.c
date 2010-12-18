@@ -2918,7 +2918,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					lstrcpy(buf, tpMailBox->Filename);
 				}
 				file_save_mailbox(buf, DataDir, mbox, FALSE, FALSE,
-					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 
 				dsize = tpMailBox->DiskSize;
 				if (dsize < 0) {
@@ -3234,7 +3234,7 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			if (op.ListSaveMode != newlsm) {
 				int i;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE && (MailBox + i)->UseGlobalRecv) {
 						(MailBox + i)->NeedsSave |= MAILITEMS_CHANGED;
 					}
 				}
@@ -4354,7 +4354,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 									lstrcpy(fname, tpMailBox->Filename);
 								}
 								file_save_mailbox(fname, DataDir, mbox, FALSE, FALSE,
-									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 							}
 						}
 					}
