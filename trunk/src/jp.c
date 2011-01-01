@@ -3,7 +3,7 @@
  *
  * jp.c (Japanese encode)
  *
- * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
+ * Copyright (C) 1996-2010 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
  */
@@ -302,6 +302,9 @@ char *iso2022jp_sjis(char *buf, char *ret)
 						*(r++) = c;
 					}
 				}
+				if (c == '\0') {
+					break;
+				}
 			} else if (c == '(') {
 				if ((c = *(p++)) == 'H' || c == 'J' || c == 'B') {
 					jiskanji = FALSE;
@@ -313,15 +316,24 @@ char *iso2022jp_sjis(char *buf, char *ret)
 						*(r++) = c;
 					}
 				}
+				if (c == '\0') {
+					break;
+				}
 			} else if (c == '*') {
 				if ((c = *(p++)) == 'B') {
 					hankaku = FALSE;
 				} else if (c == 'I') {
 					hankaku = TRUE;
 				}
+				if (c == '\0') {
+					break;
+				}
 			} else if (hankaku == TRUE && c == 'N') {
 				c = *(p++);
 				*(r++) = c + 0x80;
+				if (c == '\0') {
+					break;
+				}
 			} else if (c == 'K') {
 				jiskanji = TRUE;
 			} else if (c == 'H') {
