@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -2776,15 +2776,25 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		newHeight -= comboHeight;
 	}
 	if (op.PreviewPaneHeight > 0) {
-		int oldHeight, dh;
-		GetWindowRect(mListView, &subwinRect);
-		oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
-		dh = oldHeight - newHeight;
-		op.PreviewPaneHeight -= dh/2;
-		if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
-			op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+		if (newHeight < 2 * op.PreviewPaneMinHeight) {
+			// not enough room -- hide preview window
+			HMENU hMenu = GetMenu(hWnd);
+			HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+			DelPreviewSubClass(previewWnd);
+			DestroyWindow(previewWnd);
+			CheckMenuItem(hMenu, ID_MENUITEM_PREVPANE, MF_UNCHECKED);
+			op.PreviewPaneHeight = -op.PreviewPaneHeight;
+		} else {
+			int oldHeight, dh;
+			GetWindowRect(mListView, &subwinRect);
+			oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
+			dh = oldHeight - newHeight;
+			op.PreviewPaneHeight -= dh/2;
+			if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+				op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+			}
+			newHeight -= op.PreviewPaneHeight;
 		}
-		newHeight -= op.PreviewPaneHeight;
 	}
 	MoveWindow(mListView, Left, newTop, Right, newHeight, TRUE);
 	if (op.PreviewPaneHeight > 0) {
@@ -7543,15 +7553,25 @@ static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem)
 		MULTIPART **tpMultiPart = NULL;
 		body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
 
-		if (op.StripHtmlTags == 1 &&
-			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-			|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
-			str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			p = strip_html_tags(body, 2);
-			if (p != NULL) {
-				mem_free(&body);
-				body = p;
+		if (op.StripHtmlTags == 1) {
+			TCHAR *ctype = tpMailItem->ContentType;
+			if (TextIndex != -1) {
+				ctype = alloc_char_to_tchar((tpMultiPart[TextIndex])->ContentType);
 			}
+			if (ctype != NULL &&
+				(str_cmp_ni_t(ctype, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+				|| str_cmp_ni_t(ctype, TEXT("text/x-aol"), lstrlen(TEXT("text/x-aol"))) == 0)) {
+
+				p = strip_html_tags(body, 2);
+				if (p != NULL) {
+					mem_free(&body);
+					body = p;
+				}
+			}
+			if (TextIndex != -1) {
+				mem_free(&ctype);
+			}
+
 		}
 
 		if (tpMailItem->MailStatus != ICON_READ) {
