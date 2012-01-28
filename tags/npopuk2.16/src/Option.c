@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -2072,9 +2072,12 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 */
 static BOOL MailboxFilenameCheck(TCHAR *name, MAILBOX *mbox, BOOL null_ok, BOOL rename, HWND hDlg) {
 	BOOL ret = TRUE;
-	TCHAR *p, *newname = name, *oldname = mbox->Filename;
+	TCHAR *p, *newname = name, *oldname = NULL;
 	int what = 0, i;
 
+	if (mbox != NULL) {
+		oldname = mbox->Filename;
+	}
 	if (null_ok) {
 		if (name == NULL || *name == TEXT('\0')) {
 			// trying to un-set Filename
@@ -2915,7 +2918,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					lstrcpy(buf, tpMailBox->Filename);
 				}
 				file_save_mailbox(buf, DataDir, mbox, FALSE, FALSE,
-					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+					(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 
 				dsize = tpMailBox->DiskSize;
 				if (dsize < 0) {
@@ -3231,7 +3234,7 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			if (op.ListSaveMode != newlsm) {
 				int i;
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
+					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE && (MailBox + i)->UseGlobalRecv) {
 						(MailBox + i)->NeedsSave |= MAILITEMS_CHANGED;
 					}
 				}
@@ -4351,7 +4354,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 									lstrcpy(fname, tpMailBox->Filename);
 								}
 								file_save_mailbox(fname, DataDir, mbox, FALSE, FALSE,
-									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : op.ListSaveMode);
+									(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 							}
 						}
 					}

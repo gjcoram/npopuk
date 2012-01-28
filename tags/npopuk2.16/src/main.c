@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1502,6 +1502,7 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_REMESSEGE, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_ALLREMESSEGE, !SelFlag);
 	EnableMenuItem(hMenu, ID_MENUITEM_FORWARD, !SelFlag);
+	EnableMenuItem(hMenu, ID_MENUITEM_REDIRECT, !SelFlag);
 
 	EnableMenuItem(hMenu, ID_MENUITEM_RECV, !(SocFlag & SaveTypeFlag & SendBoxFlag));
 	EnableMenuItem(hMenu, ID_MENUITEM_ALLCHECK, !SocFlag);
@@ -2775,15 +2776,32 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		newHeight -= comboHeight;
 	}
 	if (op.PreviewPaneHeight > 0) {
-		int oldHeight, dh;
-		GetWindowRect(mListView, &subwinRect);
-		oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
-		dh = oldHeight - newHeight;
-		op.PreviewPaneHeight -= dh/2;
-		if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
-			op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+		if (newHeight < 2 * op.PreviewPaneMinHeight) {
+			// not enough room -- hide preview window
+			HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+			HMENU hMenu;
+#ifdef _WIN32_WCE_PPC
+			hMenu = SHGetSubMenu(hMainToolBar, ID_MENUITEM_FILE);
+#elif defined(_WIN32_WCE)
+			hMenu = CommandBar_GetMenu(GetDlgItem(hWnd, IDC_CB), 0);
+#else
+			hMenu = GetMenu(hWnd);
+#endif
+			DelPreviewSubClass(previewWnd);
+			DestroyWindow(previewWnd);
+			CheckMenuItem(hMenu, ID_MENUITEM_PREVPANE, MF_UNCHECKED);
+			op.PreviewPaneHeight = -op.PreviewPaneHeight;
+		} else {
+			int oldHeight, dh;
+			GetWindowRect(mListView, &subwinRect);
+			oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
+			dh = oldHeight - newHeight;
+			op.PreviewPaneHeight -= dh/2;
+			if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+				op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+			}
+			newHeight -= op.PreviewPaneHeight;
 		}
-		newHeight -= op.PreviewPaneHeight;
 	}
 	MoveWindow(mListView, Left, newTop, Right, newHeight, TRUE);
 	if (op.PreviewPaneHeight > 0) {
@@ -3431,11 +3449,16 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel)
 				(LPARAM)tpMailItem) == TRUE) {
 				(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 			}
-		} else if (Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag) == EDIT_INSIDEEDIT) {
-			// GJC: don't edit sent mail
-			Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
+		} else {
+			int ret = Edit_InitInstance(hInst, hWnd, -1, tpMailItem, EDIT_OPEN, NULL, NoAppFlag);
+			if (ret == EDIT_INSIDEEDIT) {
+				// GJC: don't edit sent mail
+				Edit_ConfigureWindow(tpMailItem->hEditWnd, (tpMailItem->MailStatus == ICON_SENTMAIL) ? FALSE : TRUE);
+			}
 #ifdef _WIN32_WCE
-			ShowWindow(hWnd, SW_HIDE);
+			if (ret == EDIT_INSIDEEDIT || ret == EDIT_REOPEN) {
+				ShowWindow(hWnd, SW_HIDE);
+			}
 #endif
 		}
 		_SetForegroundWindow(tpMailItem->hEditWnd);
@@ -5041,11 +5064,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SetMailMenu(hWnd);
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "CheckTimer: box=%d%s", CheckBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 			//Mail reception start
 			RecvMailList(hWnd, CheckBox, FALSE);
 			break;
@@ -5563,6 +5588,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_MAILBOXES), hWnd, MailBoxSummaryProc, 0);
 			break;
 
+		case ID_MENUITEM_NEXTMAIL:
+		case ID_MENUITEM_PREVMAIL:
+			if (op.PreviewPaneHeight > 0) {
+				i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED);
+				ListView_SetItemState(mListView, i, 0, LVIS_SELECTED);
+				i += (command_id == ID_MENUITEM_PREVMAIL) ? -1 : +1;
+				ListView_SetItemState(mListView, i, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+			}
+			break;
+
 		case ID_MENUITEM_PREVPANE:
 			{
 				RECT rcRect;
@@ -5834,11 +5869,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 			AllCheck = FALSE;
 			ExecFlag = FALSE;
 			KeyShowHeader = FALSE;
@@ -5947,11 +5984,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 				i = SelBox;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update: box=%d, delete=%d\r\n", i, ServerDelete);
 				log_save_a(msg);
 			}
+#endif
 			AutoCheckFlag = FALSE;
 			// ダイヤルアップ開始
 			if (op.RasCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
@@ -5999,11 +6038,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (MailMarkCheck(hWnd, FALSE) == FALSE) {
 				break;
 			}
+#ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
 				sprintf_s(msg, 50, "Update all: delete=%d%s", SelBox, "\r\n");
 				log_save_a(msg);
 			}
+#endif
 
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
@@ -6071,13 +6112,20 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//====== mail =========
 		//Open the dropdown menu if focus on combobox
 		case ID_KEY_ENTER:
-			if (GetFocus() == GetDlgItem(hWnd, IDC_MBMENU)) {
+			fWnd = GetFocus();
+			if (fWnd == GetDlgItem(hWnd, IDC_MBMENU)) {
 				if (op.MBMenuWidth > 0) {
 					SetFocus(mListView);
 				} else {
 					DropMBMenu(!GetDroppedStateMBMenu());
 				}
 				break;
+			} else if (op.PreviewPaneWidth > 0) {
+				HWND previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+				if (fWnd == previewWnd) {
+					SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_NEXTMAIL, 0);
+					break;
+				}
 			}
 			// else fall through
 
@@ -6329,11 +6377,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 							if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
 								break;
 							}
+#ifndef _WCE_OLD
 							if (op.SocLog > 1) {
 								char msg[50];
 								sprintf_s(msg, 50, "Check: box=%d%s", SelBox, "\r\n");
 								log_save_a(msg);
 							}
+#endif
 							AllCheck = FALSE;
 							ExecFlag = FALSE;
 							KeyShowHeader = FALSE;
@@ -7510,15 +7560,25 @@ static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem)
 		MULTIPART **tpMultiPart = NULL;
 		body = MIME_body_decode(tpMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
 
-		if (op.StripHtmlTags == 1 &&
-			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-			|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
-			str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			p = strip_html_tags(body, 2);
-			if (p != NULL) {
-				mem_free(&body);
-				body = p;
+		if (op.StripHtmlTags == 1) {
+			TCHAR *ctype = tpMailItem->ContentType;
+			if (TextIndex != -1) {
+				ctype = alloc_char_to_tchar((tpMultiPart[TextIndex])->ContentType);
 			}
+			if (ctype != NULL &&
+				(str_cmp_ni_t(ctype, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+				|| str_cmp_ni_t(ctype, TEXT("text/x-aol"), lstrlen(TEXT("text/x-aol"))) == 0)) {
+
+				p = strip_html_tags(body, 2);
+				if (p != NULL) {
+					mem_free(&body);
+					body = p;
+				}
+			}
+			if (TextIndex != -1) {
+				mem_free(&ctype);
+			}
+
 		}
 
 		if (tpMailItem->MailStatus != ICON_READ) {

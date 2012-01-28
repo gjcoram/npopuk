@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -94,11 +94,14 @@ static TCHAR *AllocURLDecode(TCHAR *buf)
 static TCHAR *StrNextContentT(TCHAR *p)
 {
 	while (1) {
-		for (; !(*p == TEXT('\r') && *(p + 1) == TEXT('\n')) && *p != TEXT('\0'); p++);
+		for (; *p != TEXT('\r') && *p != TEXT('\n') && *p != TEXT('\0'); p++);
 		if (*p == TEXT('\0')) {
 			break;
 		}
-		p += 2;
+		p++;
+		if (*p == TEXT('\n') && *(p - 1) == TEXT('\r')) {
+			p++;
+		}
 		if (*p == TEXT(' ') || *p == TEXT('\t')) {
 			continue;
 		}
@@ -114,11 +117,14 @@ static TCHAR *StrNextContentT(TCHAR *p)
 static char *StrNextContent(char *p)
 {
 	while (1) {
-		for (; !(*p == '\r' && *(p + 1) == '\n') && *p != '\0'; p++);
+		for (; *p != '\r' && *p != '\n' && *p != '\0'; p++);
 		if (*p == '\0') {
 			break;
 		}
-		p += 2;
+		p++;
+		if (*p == '\n' && *(p - 1) == '\r') {
+			p++;
+		}
 		if (*p == ' ' || *p == '\t') {
 			continue;
 		}
@@ -142,7 +148,7 @@ TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str)
 		if (str_cmp_ni_t(p, str, len) != 0) {
 			// 次のコンテンツに移動する
 			p = StrNextContentT(p);
-			if (*p == TEXT('\0') || (*p == TEXT('\r') && *(p + 1) == TEXT('\n'))) {
+			if (*p == TEXT('\0') || *p == TEXT('\r') || *p == TEXT('\n')) {
 				break;
 			}
 			continue;
@@ -170,7 +176,7 @@ char *GetHeaderStringPoint(char *buf, char *str)
 		if (str_cmp_ni(p, str, len) != 0) {
 			// 次のコンテンツに移動する
 			p = StrNextContent(p);
-			if (*p == '\0' || (*p == '\r' && *(p + 1) == '\n')) {
+			if (*p == '\0' || *p == '\r' || *p == '\n') {
 				break;
 			}
 			continue;
@@ -193,8 +199,11 @@ int GetHeaderStringSizeT(TCHAR *buf, BOOL CrLfFlag)
 	int i = 0;
 
 	while (*p != TEXT('\0')) {
-		if (*p == TEXT('\r') && *(p + 1) == TEXT('\n')) {
-			p += 2;
+		if (*p == TEXT('\r') || *p == TEXT('\n')) {
+			p++;
+			if (*p == TEXT('\n') && *(p - 1) == TEXT('\r')) {
+				p++;
+			}
 			if (*p != TEXT(' ') && *p != TEXT('\t')) {
 				break;
 			}
@@ -221,8 +230,11 @@ int GetHeaderStringSize(char *buf, BOOL CrLfFlag)
 	int i = 0;
 
 	while (*p != '\0') {
-		if (*p == '\r' && *(p + 1) == '\n') {
-			p += 2;
+		if (*p == '\r' || *p == '\n') {
+			p++;
+			if (*p == '\n' && *(p - 1) == '\r') {
+				p++;
+			}
 			if (*p != ' ' && *p != '\t') {
 				break;
 			}
@@ -250,8 +262,11 @@ BOOL GetHeaderStringT(TCHAR *buf, TCHAR *ret, BOOL CrLfFlag)
 	p = buf;
 	r = ret;
 	while (*p != TEXT('\0')) {
-		if (*p == TEXT('\r') && *(p + 1) == TEXT('\n')) {
-			p += 2;
+		if (*p == TEXT('\r') || *p == TEXT('\n')) {
+			p++;
+			if (*p == TEXT('\n') && *(p - 1) == TEXT('\r')) {
+				p++;
+			}
 			if (*p != TEXT(' ') && *p != TEXT('\t')) {
 				break;
 			}
@@ -280,8 +295,11 @@ BOOL GetHeaderString(char *buf, char *ret, BOOL CrLfFlag)
 	p = buf;
 	r = ret;
 	while (*p != '\0') {
-		if (*p == '\r' && *(p + 1) == '\n') {
-			p += 2;
+		if (*p == '\r' || *p == '\n') {
+			p++;
+			if (*p == '\n' && *(p - 1) == '\r') {
+				p++;
+			}
 			if (*p != ' ' && *p != '\t') {
 				break;
 			}
@@ -302,19 +320,31 @@ BOOL GetHeaderString(char *buf, char *ret, BOOL CrLfFlag)
 
 /*
  * GetBodyPointaT - Body位置のを取得 (TCHAR)
+ * \r\n\r\n -- or (from unix) \n\n or (from mac) \r\r
  */
 TCHAR *GetBodyPointaT(TCHAR *buf)
 {
 	TCHAR *p = buf;
 
 	while (1) {
-		for (; *p != TEXT('\0') && !(*p == TEXT('\r') && *(p + 1) == TEXT('\n')); p++);
+		for (; *p != TEXT('\0') && *p != TEXT('\r') && *p != TEXT('\n'); p++);
 		if (*p == TEXT('\0')) {
 			break;
-		}
-		p += 2;
-		if (*p == TEXT('\r') || *(p + 1) == TEXT('\n')) {
-			return (p + 2);
+		} else if (*p == TEXT('\r')) {
+			p++;
+			if (*p == TEXT('\n')) {
+				p++;
+				if (*p == TEXT('\r') && *(p + 1) == TEXT('\n')) {
+					return (p + 2);
+				}
+			} else if (*p == TEXT('\r')) {
+				return (p + 1);
+			}
+		} else { // *p == TEXT('\n')
+			p++;
+			if (*p == TEXT('\n')) {
+				return (p + 1);
+			}
 		}
 	}
 	return NULL;
@@ -329,13 +359,24 @@ char *GetBodyPointa(char *buf)
 	char *p = buf;
 
 	while (1) {
-		for (; *p != '\0' && !(*p == '\r' && *(p + 1) == '\n'); p++);
+		for (; *p != '\0' && *p != '\r' && *p != '\n'; p++);
 		if (*p == '\0') {
 			break;
-		}
-		p += 2;
-		if (*p == '\r' || *(p + 1) == '\n') {
-			return (p + 2);
+		} else if (*p == '\r') {
+			p++;
+			if (*p == '\n') {
+				p++;
+				if (*p == '\r' && *(p + 1) == '\n') {
+					return (p + 2);
+				}
+			} else if (*p == '\r') {
+				return (p + 1);
+			}
+		} else { // *p == '\n'
+			p++;
+			if (*p == '\n') {
+				return (p + 1);
+			}
 		}
 	}
 	return NULL;

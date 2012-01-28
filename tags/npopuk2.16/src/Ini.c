@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -324,10 +324,13 @@ void ini_read_general(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
-	height = GetSystemMetrics(SM_CYSCREEN);
 #ifdef _WIN32_WCE
+	height = GetSystemMetrics(SM_CYSCREEN);
+	height -= MENU_HEIGHT;
 	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), -height/2);
 #else
+	height = op.MainRect.bottom - op.MainRect.top;
+	height -= 75; // allow for menubar, toolbar, status bar
 	op.PreviewPaneHeight = profile_get_int(GENERAL, TEXT("PreviewPaneHeight"), -200);
 #endif
 	op.PreviewPaneMinHeight = profile_get_int(GENERAL, TEXT("PreviewPaneMinHeight"), 35);
@@ -872,11 +875,8 @@ BOOL ini_read_setting(HWND hWnd)
 			(MailBox + num)->NewMailSoundFile = NULL;
 		}
 		// Type
-		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 2);
-		if ((MailBox + num)->Type == 2) {
-			TCHAR msg[BUF_SIZE];
-			wsprintf(msg, TEXT("ERROR loading mailbox %d"), num);
-		}
+		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0);
+
 		(MailBox + num)->WasMbox = -1; // unknown, updated when loaded
 		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
 			// GJC - SaveBox type (not an account)
@@ -1837,13 +1837,16 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	//Retention
 	for (j = MAILBOX_USER; j < MailBoxCnt; j++) {
 		MAILBOX *tpMailBox = MailBox + j;
-		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE
-			|| (tpMailBox->NeedsSave == 0 && SaveAll == FALSE)) {
+		if (tpMailBox == NULL || tpMailBox->Loaded == FALSE) {
 			continue;
 		}
 		if (op.WriteMbox != tpMailBox->WasMbox) {
 			tpMailBox->NeedsSave |= MBOX_FORMAT_CHANGED;
 		}
+		if (SaveAll == FALSE &&	tpMailBox->NeedsSave == 0) {
+			continue;
+		}
+
 		//of mail inside mailbox Mail item
 		if (tpMailBox->Filename == NULL) {
 			wsprintf(buf, TEXT("MailBox%d.dat"), j - MAILBOX_USER);
