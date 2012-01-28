@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -884,7 +884,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, int download, 
 				lstrcpy(p, TEXT("mixed"));
 				p += lstrlen(TEXT("mixed"));
 				while (*q != TEXT('\0')) {
-					(*p++) = (*q++);
+					*(p++) = *(q++);
 				}
 				*p = TEXT('\0');
 			}
@@ -1441,7 +1441,7 @@ static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret)
 		return ret;
 	}
 	wret = mem_alloc(sizeof(TCHAR) * (lstrlen(header) + 1 + lstrlen(buf) + 2 + 1));
-	if (buf == NULL) {
+	if (wret == NULL) {
 		return ret;
 	}
 	str_join_t(wret, header, TEXT(" "), buf, TEXT("\r\n"), (TCHAR *)-1);
@@ -1829,41 +1829,41 @@ static int item_check_filter(FILTER *tpFilter, char *buf, int *do_what_i, int fl
 		for (fret = 1; j > 0; j--) {
 			fret *= 2;
 		}
-		if (do_what_i != NULL) {
-			*do_what_i = fret;
-		}
 		switch (fret) {
-		case FILTER_UNRECV:
-		case FILTER_RECV:
-			RetFlag |= fret;
-			break;
-
 		case FILTER_DOWNLOADMARK:
 		case FILTER_DELETEMARK:
-			// マークフラグ
-			if (!(RetFlag & (FILTER_DOWNLOADMARK | FILTER_DELETEMARK))) {
-				RetFlag |= fret;
+			if (RetFlag & (FILTER_DOWNLOADMARK | FILTER_DELETEMARK)) {
+				fret = 0;
 			}
 			break;
 
 		case FILTER_COPY:
 		case FILTER_MOVE:
-			if (!(RetFlag & FILTER_MOVE)) {
-				RetFlag |= fret;
+			if (RetFlag & FILTER_MOVE) {
+				fret = 0;
 			}
 			break;
 
 		case FILTER_PRIORITY:
 		case FILTER_FORWARD:
-			if (!(RetFlag * FILTER_UNRECV)) {
-				RetFlag |= fret;
+			if (RetFlag & FILTER_UNRECV) {
+				fret = 0;
 			}
 			break;
 
-		default:  // FILTER_READICON
-			RetFlag |= fret;
+		//case FILTER_UNRECV:
+		//case FILTER_RECV:
+		//case FILTER_READICON
+		default:
 			break;
 		}
+		if (fret) {
+			RetFlag |= fret;
+			if (do_what_i != NULL) {
+				*do_what_i = fret;
+			}
+		}
+
 	}
 	return RetFlag;
 }

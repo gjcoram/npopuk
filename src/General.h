@@ -19,6 +19,13 @@
 #define strcpy_s(dest,size,src) strcpy(dest,src)
 #define strcat_s(dest,size,append) strcat(dest,append)
 #define sprintf_s(dest, size, fmtstr, arg1, arg2) sprintf(dest, fmtstr, arg1, arg2)
+#ifndef _WIN32_WCE
+extern int sprintf();
+#endif
+#elif defined(_WIN32_WCE)
+#define sprintf_s(dest, size, fmtstr, arg1, arg2) sprintf(dest, fmtstr, arg1, arg2)
+#else
+extern int sprintf_s();
 #endif
 
 /* Include Files */
@@ -41,8 +48,6 @@
 #include "stdafx.h"
 #elif defined(_WIN32_WCE)
 #define MENU_HEIGHT 26
-#else
-extern int sprintf_s();
 #endif
 #include "resource.h"
 #include "Strtbl.h"
@@ -182,6 +187,7 @@ extern int sprintf_s();
 #define EDIT_INSIDEEDIT			1
 #define EDIT_OUTSIDEEDIT		2
 #define EDIT_SEND				3
+#define EDIT_REOPEN				4
 
 #define AUTOSEND_NO_QUIT		1
 #define AUTOSEND_AND_QUIT		2

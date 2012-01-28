@@ -735,9 +735,9 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 	case WM_CHAR:
 		if ((TCHAR)wParam == TEXT(' ')) {
 			if (GetKeyState(VK_SHIFT) < 0) {
-				SendMessage(hWnd, WM_VSCROLL, SB_PAGEUP, 0);
+				View_Scroll(hWnd, -1, FALSE);
 			} else {
-				SendMessage(hWnd, WM_VSCROLL, SB_PAGEDOWN, 0);
+				View_Scroll(hWnd, +1, FALSE);
 			}
 		} else if (wParam == 0x03) { // 0x03 is ascii for ctrl-C
 			SendMessage(hWnd, WM_COPY, 0, 0);
@@ -2967,7 +2967,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		_SetForegroundWindow(hEditWnd);
 		SendMessage(hEditWnd, WM_CLOSE, 0, 0);
 		if (hEditWnd != NULL) {
-			return EDIT_INSIDEEDIT;
+			return EDIT_REOPEN;
 		}
 	}
 #endif
@@ -2990,7 +2990,7 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				}
 				_SetForegroundWindow(tpReMailItem->hEditWnd);
 			}
-			return EDIT_INSIDEEDIT;
+			return EDIT_REOPEN;
 		}
 #endif
 		tpMailItem = tpReMailItem;
