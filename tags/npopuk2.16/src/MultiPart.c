@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -660,7 +660,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 #endif
 			return MP_ERROR_ALLOC;
 		}
-		wsprintf(fname, TEXT("%s%s"), Filename, FwdAttach);
+		str_join_t(fname, Filename, FwdAttach, (TCHAR *)-1);
 	} else if (have_file == TRUE) {
 		fname = Filename;
 		len = lstrlen(Filename);

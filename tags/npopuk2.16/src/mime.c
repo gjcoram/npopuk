@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -906,7 +906,6 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 	TCHAR *r, *t;
 	char *tmp;
 	TCHAR *p;
-	int Len;
 	int cnt = 0;
 	int i;
 
@@ -922,10 +921,11 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 	}
 
 	if (*p == TEXT('\0')) {
+		// got to the end of wbuf without finding an 8-bit char, no encoding necessary
 		i = (lstrlen(TEXT("\r\n filename=\"\"")) + lstrlen(wbuf));
 		ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i + 1));
 		if (ret != NULL) {
-			wsprintf(ret, TEXT("\r\n filename=\"%s\""), wbuf);
+			str_join_t(ret, TEXT("\r\n filename=\""), wbuf, TEXT("\""), (TCHAR *)-1);
 		}
 		return ret;
 	}
@@ -967,14 +967,15 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		t = eb->encode_buf;
 #endif
 		if (cnt == 0) {
-			Len = wsprintf(r, TEXT("\r\n filename*%d*=%s''%s"), cnt, charset_t, t);
+			r = str_join_t(r, TEXT("\r\n filename*0*="), charset_t, TEXT("''"), t, (TCHAR *)-1);
 		} else {
-			Len = wsprintf(r, TEXT("\r\n filename*%d*=%s"), cnt, t);
+			TCHAR cnt_str[20];
+			wsprintf(cnt_str, TEXT("%d"), cnt);
+			r = str_join_t(r, TEXT("\r\n filename*"), cnt_str, TEXT("*="), t, (TCHAR *)-1);
 		}
 #ifdef UNICODE
 		mem_free(&t);
 #endif
-		r += Len;
 		cnt++;
 
 		if (eb->next != NULL) {
@@ -1121,7 +1122,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype
 			encode = TRUE;
 			break;
 		}
-		if (*p == '\r' && *(p+1) == '\n') {
+		if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
 			i = 0;
 			p++;
 		}

@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -6234,7 +6234,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						len += lstrlen(mb_autobcc) + 2; // ", "
 						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 						if (tmp != NULL) {
-							wsprintf(tmp, TEXT("%s, %s"), tpTmpMailItem->Bcc, mb_autobcc);
+							str_join_t(tmp, tpTmpMailItem->Bcc, TEXT(", "), mb_autobcc, (TCHAR *)-1);
 							mem_free(&tpTmpMailItem->Bcc);
 							tpTmpMailItem->Bcc = tmp;
 						}
@@ -6524,7 +6524,7 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									len = lstrlen(tpTmpMailItem->Bcc) + lstrlen(mb_autobcc) + 5;
 									tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
 									if (tmp != NULL) {
-										wsprintf(tmp, TEXT("%s,\r\n %s"), tpTmpMailItem->Bcc, mb_autobcc);
+										str_join_t(tmp, tpTmpMailItem->Bcc, TEXT(",\r\n "), mb_autobcc, (TCHAR *)-1);
 										mem_free(&tpTmpMailItem->Bcc);
 										tpTmpMailItem->Bcc = tmp;
 									}
@@ -8090,7 +8090,7 @@ static BOOL CALLBACK EditAddressProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 										EndDialog(hDlg, FALSE);
 										break;
 									}
-									wsprintf(tmp, TEXT("%s, %s"), AddrItem->Group, buf);
+									str_join_t(tmp, AddrItem->Group, TEXT(", "), buf, (TCHAR *)-1);
 									mem_free(&AddrItem->Group);
 									AddrItem->Group = tmp;
 								}
@@ -8921,10 +8921,17 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				if (show_msg == TRUE) {
 					TCHAR *msg, *title;
+					int len = 0;
 					if (FindOrReplace == 3 && ReplaceCnt > 0) {
 						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(STR_MSG_REPLACED_N) + 7));
 					} else {
-						msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) + lstrlen(STR_MSG_NOFIND) + 1));
+						len = lstrlen(FindStr);
+						if (len > 100) {
+							// don't put a very long search string in the message box
+							msg = alloc_copy_t(STR_MSG_NOFIND_DUM);
+						} else {
+							msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + lstrlen(STR_MSG_NOFIND) + 1));
+						}
 					}
 					if (msg == NULL) {
 						EndDialog(hDlg, FALSE);
@@ -8934,7 +8941,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						wsprintf(msg, STR_MSG_REPLACED_N, ReplaceCnt);
 						title = STR_TITLE_FIND;
 					} else {
-						wsprintf(msg, STR_MSG_NOFIND, FindStr);
+						if (len <= 100) {
+							wsprintf(msg, STR_MSG_NOFIND, FindStr);
+						}
 						title = STR_TITLE_REPLACE;
 					}
 					MessageBox(hDlg, msg, title, MB_ICONINFORMATION);

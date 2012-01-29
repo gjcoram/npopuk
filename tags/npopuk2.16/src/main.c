@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1466,7 +1466,7 @@ void SetMailMenu(HWND hWnd)
 	RecvBoxFlag = (SelBox == RecvBox) ? 0 : 1;
 	SaveTypeFlag = ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) ? 0 : 1;
 	SendBoxFlag = (SelBox == MAILBOX_SEND) ? 0 : 1;
-	MoveBoxFlag = (MailBoxCnt <= 3) ? 0 : 1;
+	MoveBoxFlag = (MailBoxCnt < 3) ? 0 : 1;
 
 	Markable = SendBoxFlag;
 	i = -1;
@@ -2305,14 +2305,13 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 		TCHAR *p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
 			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
 		if ((MailBox + i)->NewMail) {
-			TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
+			TCHAR buf[BUF_SIZE];
 #ifdef _WIN32_WCE_PPC
-			wsprintf(q, TEXT("* %s"), p);
+			wsprintf(buf, TEXT("* %s"), p);
 #else
-			wsprintf(q, TEXT("%s *"), p);
+			wsprintf(buf, TEXT("%s *"), p);
 #endif
-			AddMBMenu(q);
-			mem_free(&q);
+			AddMBMenu(buf);
 		} else {
 			AddMBMenu(p);
 		}
@@ -2742,7 +2741,10 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 #endif
 	SendDlgItemMessage(hWnd, IDC_STATUS, WM_SIZE, wParam, lParam);
 
-	GetClientRect(hWnd, &rcClient);
+	if (GetClientRect(hWnd, &rcClient) == 0 || rcClient.bottom == 0) {
+		// this occurs somehow on Win7, and IsIconic is non-zero
+		return FALSE;
+	}
 	newHeight = rcClient.bottom; // rcClient.top = 0 always
 
 	// Toolbar
@@ -3540,8 +3542,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
 	MAILITEM *tpTmpMailItem;
-	TCHAR *buf, *title;
-	TCHAR msgbuf[BUF_SIZE];
+	TCHAR *title;
 	int i, j, SelPoint = -1;
 	BOOL retval = TRUE;
 
@@ -3560,12 +3561,13 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	}
 	tpMailBox = MailBox + TargetBox;
 	if (ask && TargetBox != MAILBOX_SEND && op.SaveMsg == 1) {
+		TCHAR msg[MSG_SIZE];
 		if (del) {
-			wsprintf(msgbuf, STR_Q_MOVE, i, tpMailBox->Name);
+			wsprintf(msg, STR_Q_MOVE, i, tpMailBox->Name);
 		} else {
-			wsprintf(msgbuf, STR_Q_COPY, i, tpMailBox->Name);
+			wsprintf(msg, STR_Q_COPY, i, tpMailBox->Name);
 		}
-		if (ParanoidMessageBox(hWnd, msgbuf, title, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+		if (ParanoidMessageBox(hWnd, msg, title, MB_ICONQUESTION | MB_YESNO) == IDNO) {
 			return FALSE;
 		}
 	}
@@ -3657,17 +3659,12 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 					item_free((tpMailBox->tpMailItem + j), 1);
 				} else {
 					// Selected message is incomplete but saved is complete, verify desire to overwrite
-					buf = (TCHAR *)mem_alloc(
-						sizeof(TCHAR) * (lstrlen(tpMailItem->Subject) + lstrlen(STR_Q_OVERWRITE) + 1));
-					if (buf != NULL) {
-						wsprintf(buf, STR_Q_OVERWRITE, tpMailItem->Subject);
-						SwitchCursor(TRUE);
-						if (MessageBox(hWnd, buf, title, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
-							mem_free(&buf);
-							retval = FALSE;
-							continue;
-						}
-						mem_free(&buf);
+					TCHAR msg[MSG_SIZE];
+					wsprintf(msg, STR_Q_OVERWRITE, tpMailItem->Subject);
+					SwitchCursor(TRUE);
+					if (MessageBox(hWnd, msg, title, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+						retval = FALSE;
+						continue;
 					}
 					item_free((tpMailBox->tpMailItem + j), 1);
 				}
