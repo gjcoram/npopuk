@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -353,12 +353,11 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 						}
 #ifdef UNICODE
 						fn_t = alloc_char_to_tchar(fname);
-						wsprintf(p, TEXT("%s"), fn_t);
+						p = str_join_t(p, fn_t, (TCHAR*)-1);
 						mem_free(&fn_t);
 #else
-						wsprintf(p, "%s", fname);
+						p = str_join(p, fname, (TCHAR*)-1);
 #endif
-						p += tstrlen(fname);
 						size = (*(tpMultiPart + i))->ePos - (*(tpMultiPart + i))->hPos;
 						if (size > 0) tpMailItem->AttachSize += size;
 						j++;
