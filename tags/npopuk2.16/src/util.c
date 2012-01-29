@@ -715,6 +715,7 @@ int DateConv(char *buf, char *ret, BOOL for_sort)
 	if (i == -1) i = FormatDateConv("w, d m y h:n t", buf, &gTime);
 	if (i == -1) i = FormatDateConv("w d m y h:n:s t", buf, &gTime);
 	if (i == -1) i = FormatDateConv("w m d h:n:s y t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("d m y h:n t", buf, &gTime);
 	if (i == -1) {
 		tstrcpy(ret, buf);
 		return -1;
