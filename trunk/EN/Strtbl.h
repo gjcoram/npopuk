@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -87,7 +87,7 @@
 #define STR_ERR_CANTDELETE			TEXT("Error deleting old backup file %s; please delete manually.")
 #define STR_ERR_LOADMAILBOX			TEXT("Error loading %s")
 #define STR_ERR_FILEEXIST			TEXT("Can't find file %s")
-#define STR_ERR_FILE_TOO_LARGE		TEXT("File %s too large")
+#define STR_ERR_FILE_TOO_LARGE		TEXT("File too large: %s")
 #define STR_ERR_FILENAME			TEXT("Invalid character in filename")
 #define STR_ERR_RENAME				TEXT("Failed to rename file")
 #define STR_ERR_FILECONFLICT		TEXT("'%s' conflicts with filename for %s")
@@ -205,6 +205,7 @@
 #define STR_MSG_NEWMAIL				TEXT("You've got new mail!")
 #define STR_MSG_NONEWMAIL			TEXT("No new mail!")
 #define STR_MSG_NOFIND				TEXT("'%s' not found")
+#define STR_MSG_NOFIND_DUM			TEXT("Search string not found")
 #define STR_MSG_REPLACED_N			TEXT("Replaced %d instances")
 #define STR_MSG_NEWVERSION			TEXT("%s was created with a newer version of %s.\r\n")\
 									TEXT("Some incompatibilities may exist.\r\nProceed anyway?")

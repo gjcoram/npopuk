@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -436,6 +436,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		int st;
 		WCHAR *wbuf;
 
+		// UNICODE is not defined; can't use char_to_tchar macros
 		len = MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0);
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 		if (wbuf == NULL) {
@@ -2087,14 +2088,23 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		FirstLoop = FALSE;
 
 		if (op.AllMsgFind == 0) {
-			buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(FindStr) + lstrlen(STR_MSG_NOFIND) + 1));
-			if (buf == NULL) {
+			TCHAR *msg;
+			int len = lstrlen(FindStr);
+			if (len > 100) {
+				// don't put a very long search string in the message box
+				msg = alloc_copy_t(STR_MSG_NOFIND_DUM);
+			} else {
+				msg = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + lstrlen(STR_MSG_NOFIND) + 1));
+			}
+			if (msg == NULL) {
 				break;
 			}
-			wsprintf(buf, STR_MSG_NOFIND, FindStr);
+			if (len <= 100) {
+				wsprintf(msg, STR_MSG_NOFIND, FindStr);
+			}
 			SwitchCursor(TRUE);
-			MessageBox(hWnd, buf, STR_TITLE_FIND, MB_ICONINFORMATION);
-			mem_free(&buf);
+			MessageBox(hWnd, msg, STR_TITLE_FIND, MB_ICONINFORMATION);
+			mem_free(&msg);
 			break;
 		}
 

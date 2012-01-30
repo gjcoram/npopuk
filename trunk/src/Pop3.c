@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1230,7 +1230,11 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			&& (NewMail_Flag == FALSE) && (ShowMsgFlag == FALSE);
 
 		if (soc == -1) {
+			// salvaging: mark error
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
+		} else if (disable_top) {
+			// RETR was used, message is fully downloaded
+			tpMailItem->Download = TRUE;
 		}
 
 		// V’…ƒtƒ‰ƒO‚Ìœ‹Ž
@@ -1544,6 +1548,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		return POP_ERR;
 	}
 	if (soc == -1) {
+		// salvaging: mark error
 		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 		tpMailItem->Download = FALSE;
 	}

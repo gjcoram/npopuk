@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -142,7 +142,7 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left, int Right)
 #endif
 
 #ifdef LOAD_USER_IMAGES
-	ImageListIconAdd(IconList, IDI_ICON_NON, TEXT("icon_non.ico"));
+	ImageListIconAdd(IconList, IDI_ICON_NON, TEXT("ico_none.ico"));
 	ImageListIconAdd(IconList, IDI_ICON_MAIN, TEXT("ico_main.ico"));
 	ImageListIconAdd(IconList, IDI_ICON_READ, TEXT("ico_read.ico"));
 	ImageListIconAdd(IconList, IDI_ICON_DOWN, TEXT("ico_down.ico"));
