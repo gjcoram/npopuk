@@ -25,6 +25,7 @@
 #define STR_DEFAULT_BURA			TEXT("")
 #define STR_DEFAULT_OIDA			TEXT("")
 
+#define STR_DEFAULT_CODEPAGE		TEXT("CP_ACP")
 #define STR_DEFAULT_HEAD_CHARSET	TEXT("")
 #define STR_DEFAULT_HEAD_ENCODE		0		// 0-7bit 1-8bit 2-base64 3-quoted-printable
 #define STR_DEFAULT_BODY_CHARSET	TEXT("")
@@ -167,6 +168,7 @@
 #define STR_Q_COPY					TEXT("Copy %d mail to %s?")
 #define STR_Q_MOVE					TEXT("Move %d mail to %s?")
 #define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
+#define STR_Q_UNICODE				TEXT("Message text contains Unicode; it cannot be sent correctly.  Proceed anyway?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
 #define STR_Q_ADDADDRESS			TEXT("Edit addresses (%d) when adding to the address book?")
 #ifdef _WIN32_WCE
@@ -218,6 +220,7 @@
 #define STR_MSG_SALVAGING			"Salvaging received mail data\r\n"
 #define STR_MSG_SELECT_PREVIEW		TEXT("Select a message to preview.")
 #define STR_MSG_SINGLE_PREVIEW		TEXT("Select a single message to preview.")
+#define STR_MSG_POSITIVE			TEXT("Number must be greater than 0.")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -240,6 +243,7 @@
 #define STR_TITLE_OPTION			TEXT("Global Options")
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")
+#define STR_TITLE_CONFPASSWORD		TEXT("Configure")
 #define STR_TITLE_FIND				TEXT("Find")
 #define STR_TITLE_REPLACE			TEXT("Replace")
 #define STR_TITLE_ALLFIND			TEXT("Look up '%s'")

@@ -65,11 +65,16 @@ static BOOL is_8bit_char_t(TCHAR *str)
 	int i;
 	BOOL bret;
 
-	len = WideCharToMultiByte(CP_ACP, 0, str, 1, NULL, 0, NULL, &bret);
-	if (bret == TRUE) {
-		return TRUE;
+	if (CP_int == CP_UTF8 || CP_int == CP_UTF7) {
+		len = WideCharToMultiByte(CP_int, 0, str, 1, NULL, 0, NULL, NULL);
+	} else {
+		len = WideCharToMultiByte(CP_int, 0, str, 1, NULL, 0, NULL, &bret);
+		if (bret == TRUE) {
+			// str contains character not in the charset
+			return TRUE;
+		}
 	}
-	WideCharToMultiByte(CP_ACP, 0, str, 1, buf, len, NULL, NULL);
+	WideCharToMultiByte(CP_int, 0, str, 1, buf, len, NULL, NULL);
 	for (i = 0; i < len; i++) {
 		if ((unsigned char)*buf & (unsigned char)0x80) {
 			return TRUE;
@@ -121,7 +126,7 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 		WCHAR *wcharset;
 		WCHAR *wbuf;
 
-		wcharset = alloc_char_to_wchar(CP_ACP, charset);
+		wcharset = alloc_char_to_wchar(CP_int, charset);
 		wbuf = alloc_char_to_wchar(cp, buf);
 		ret = charset_encode(wcharset, wbuf, -1);
 		mem_free(&wcharset);
@@ -170,7 +175,7 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 		WCHAR *wcharset;
 		WCHAR *wret;
 
-		wcharset = alloc_char_to_wchar(CP_ACP, charset);
+		wcharset = alloc_char_to_wchar(CP_int, charset);
 		wret = charset_decode(wcharset, buf, -1);
 		mem_free(&wcharset);
 		ret = alloc_wchar_to_char(cp, wret);
@@ -241,7 +246,7 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 	case TEXT('\"'):
 		for (p++; *p != TEXT('\0'); p++) {
 #ifdef UNICODE
-			if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
+			if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -276,7 +281,7 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 	default:
 		for (; *p != TEXT('\0'); p++) {
 #ifdef UNICODE
-			if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
+			if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -326,7 +331,7 @@ static int get_encode_wrap_len(TCHAR *buf, int len, int *enc_len)
 			return i;
 		}
 #ifdef UNICODE
-		if ( (nb = WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL)) > 1) {
+		if ( (nb = WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL)) > 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -465,9 +470,9 @@ static ENCODE_INFO *encode_info_create(TCHAR *buf, TCHAR *charset, BOOL Address,
 		}
 	}
 
-	// エンコード
+	// encode each piece
 	for (eb = top_eb.next; eb != NULL; eb = eb->next) {
-		if (eb->encode == TRUE && (eb->encode_buf = MIME_charset_encode(CP_ACP, eb->buf, charset)) != NULL) {
+		if (eb->encode == TRUE && (eb->encode_buf = MIME_charset_encode(CP_int, eb->buf, charset)) != NULL) {
 			mem_free(&eb->buf);
 		} else {
 #ifdef UNICODE
@@ -543,13 +548,10 @@ static int MIME_encode_size(ENCODE_INFO *eb, TCHAR *charset_t, int encoding)
 /*
  * MIME_encode - MIMEエンコード (RFC 2047, RFC 2045)
  */
-TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen)
+char *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen)
 {
 	ENCODE_INFO *top_eb, *eb;
-#ifdef UNICODE
-	TCHAR *ret;
-#endif
-	char *cret;
+	char *ret;
 	char *EncType;
 	char *charset;
 	char *tmp;
@@ -577,15 +579,15 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 
 	// エンコード後のバッファ確保
 	i = MIME_encode_size(eb, charset_t, encoding);
-	cret = (char *)mem_alloc(i + 1);
-	if (cret == NULL) {
+	ret = (char *)mem_alloc(i + 1);
+	if (ret == NULL) {
 		encode_info_free(top_eb);
 #ifdef UNICODE
 		mem_free(&charset);
 #endif
 		return NULL;
 	}
-	r = cret;
+	r = ret;
 
 	for (; eb != NULL; eb = eb->next) {
 		if (eb->encode_buf == NULL) {
@@ -605,7 +607,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 				tmp = (char *)mem_alloc(tstrlen(eb->encode_buf) * 2 + 4 + 1);
 				if (tmp == NULL) {
 					encode_info_free(top_eb);
-					mem_free(&cret);
+					mem_free(&ret);
 #ifdef UNICODE
 					mem_free(&charset);
 #endif
@@ -622,7 +624,7 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 				tmp = (char *)mem_alloc(tstrlen(eb->encode_buf) * 3 + 1);
 				if (tmp == NULL) {
 					encode_info_free(top_eb);
-					mem_free(&cret);
+					mem_free(&ret);
 #ifdef UNICODE
 					mem_free(&charset);
 #endif
@@ -644,21 +646,39 @@ TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, in
 	*r = '\0';
 
 	encode_info_free(top_eb);
-
 #ifdef UNICODE
 	mem_free(&charset);
-
-	// TCHAR に変換
-	ret = alloc_char_to_tchar(cret);
-	if (ret == NULL) {
-		mem_free(&cret);
-		return NULL;
-	}
-	mem_free(&cret);
-	return ret;
-#else
-	return cret;
 #endif
+
+	return ret;
+}
+
+/*
+ * MIME_encode_opt - encode if needed
+ */
+char *MIME_encode_opt(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen)
+{
+	char *ret = NULL;
+	TCHAR *p;
+
+	for (p = wbuf; *p != TEXT('\0'); p++) {
+		if (is_8bit_char_t(p) == TRUE) {
+			break;
+		}
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			p++;
+		}
+#endif
+	}
+
+	if (*p == TEXT('\0')) {
+		// got to the end of wbuf without finding an 8-bit char, no encoding necessary
+		ret = alloc_tchar_to_char(wbuf);
+	} else {
+		ret = MIME_encode(wbuf, Address, charset_t, encoding, headerlen);
+	}
+	return ret;
 }
 
 /*
@@ -706,7 +726,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 			if (ret != NULL) {
 				// コピー
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+				MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
 #else
 				str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);
 #endif
@@ -788,13 +808,13 @@ int MIME_decode(char *buf, TCHAR *ret)
 			continue;
 		}
 #ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, 0, charset_st, (charset_en - charset_st), charset, (charset_en - charset_st));
+		MultiByteToWideChar(CP_int, 0, charset_st, (charset_en - charset_st), charset, (charset_en - charset_st));
 		*(charset + (charset_en - charset_st)) = TEXT('\0');
 #else
 		str_cpy_n_t(charset, charset_st, (charset_en - charset_st) + 1);
 #endif
 		// 文字コードの変換
-		retbuf = MIME_charset_decode(CP_ACP, dec_buf, charset);
+		retbuf = MIME_charset_decode(CP_int, dec_buf, charset);
 		if (retbuf != NULL) {
 			mem_free(&dec_buf);
 		} else {
@@ -835,7 +855,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 		if (ret != NULL) {
 			// コピー
 #ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+			MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
 #else
 			str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);
 #endif
@@ -899,13 +919,11 @@ static int MIME_rfc2231_encode_size(ENCODE_INFO *eb, TCHAR *charset_t)
 /*
  * MIME_rfc2231_encode - ファイル名のエンコード (RFC 2231)
  */
-TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
+char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 {
 	ENCODE_INFO *top_eb, *eb;
-	TCHAR *ret;
-	TCHAR *r, *t;
-	char *tmp;
-	TCHAR *p;
+	char *ret, *tmp, *r, *charset;
+	TCHAR *p, *t;
 	int cnt = 0;
 	int i;
 
@@ -922,10 +940,18 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 
 	if (*p == TEXT('\0')) {
 		// got to the end of wbuf without finding an 8-bit char, no encoding necessary
-		i = (lstrlen(TEXT("\r\n filename=\"\"")) + lstrlen(wbuf));
-		ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i + 1));
+#ifdef UNICODE
+		tmp = alloc_tchar_to_char(wbuf);
+		if (tmp == NULL) {
+			return NULL;
+		}
+#else
+		tmp = wbuf;
+#endif
+		i = (tstrlen("\r\n filename=\"\"") + tstrlen(tmp));
+		ret = (char *)mem_alloc(sizeof(char) * (i + 1));
 		if (ret != NULL) {
-			str_join_t(ret, TEXT("\r\n filename=\""), wbuf, TEXT("\""), (TCHAR *)-1);
+			str_join(ret, "\r\n filename=\"", tmp, "\"", (char *)-1);
 		}
 		return ret;
 	}
@@ -938,18 +964,20 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 
 	// compute encoded string length
 	i = MIME_rfc2231_encode_size(eb, charset_t);
-	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (i + 1));
+	ret = (char *)mem_alloc(sizeof(char) * (i + 1));
 	if (ret == NULL) {
 		encode_info_free(top_eb);
 		return NULL;
 	}
 	r = ret;
+	charset = alloc_tchar_to_char(charset_t);
 
 	for (; eb != NULL; eb = eb->next) {
 		// URLエンコード
 		tmp = (char *)mem_alloc(tstrlen(eb->encode_buf) * 3 + 1);
 		if (tmp == NULL) {
 			encode_info_free(top_eb);
+			mem_free(&charset);
 			return NULL;
 		}
 		URL_encode(eb->encode_buf, tmp, TRUE);
@@ -961,17 +989,18 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		t = alloc_char_to_tchar(eb->encode_buf);
 		if (t == NULL) {
 			encode_info_free(top_eb);
+			mem_free(&charset);
 			return NULL;
 		}
 #else
 		t = eb->encode_buf;
 #endif
 		if (cnt == 0) {
-			r = str_join_t(r, TEXT("\r\n filename*0*="), charset_t, TEXT("''"), t, (TCHAR *)-1);
+			r = str_join(r, "\r\n filename*0*=", charset, "''", t, (char *)-1);
 		} else {
-			TCHAR cnt_str[20];
-			wsprintf(cnt_str, TEXT("%d"), cnt);
-			r = str_join_t(r, TEXT("\r\n filename*"), cnt_str, TEXT("*="), t, (TCHAR *)-1);
+			char cnt_str[10];
+			sprintf_s(cnt_str, 9, "%d", cnt);
+			r = str_join(r, "\r\n filename*", cnt_str, "*=", t, (char *)-1);
 		}
 #ifdef UNICODE
 		mem_free(&t);
@@ -979,10 +1008,11 @@ TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		cnt++;
 
 		if (eb->next != NULL) {
-			*(r++) = TEXT(';');
+			*(r++) = ';';
 		}
 	}
 	encode_info_free(top_eb);
+	mem_free(&charset);
 	return ret;
 }
 
@@ -1036,12 +1066,12 @@ char *MIME_rfc2231_decode(char *buf)
 		mem_free(&lang);
 		return NULL;
 	}
-	wret = MIME_charset_decode(CP_ACP, tmp, wcharset);
+	wret = MIME_charset_decode(CP_int, tmp, wcharset);
 	mem_free(&wcharset);
 	ret = alloc_tchar_to_char(wret);
 	mem_free(&wret);
 #else
-	ret = MIME_charset_decode(CP_ACP, tmp, charset);
+	ret = MIME_charset_decode(CP_int, tmp, charset);
 #endif
 	if (ret != NULL) {
 		mem_free(&tmp);
@@ -1122,6 +1152,11 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype
 			encode = TRUE;
 			break;
 		}
+#ifndef UNICODE
+		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
+			p++;
+		}
+#endif
 		if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
 			i = 0;
 			p++;
@@ -1286,23 +1321,26 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
  */
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 {
-	char *ret = body;
+	char *ret;
 	BOOL check_slash_n = TRUE;
-	if (body == NULL) {
+
+	// body is a pointer into the full wire-form buffer, need to take a copy to modify
+	ret = alloc_copy(body);
+	if (ret == NULL) {
 		return NULL;
 	}
 
 	if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("text"), lstrlen(TEXT("text"))) != 0) {
 		// don't try to decode non-text
-		return body;
+		return ret;
 	} else if (tpMailItem->Encoding != NULL) {
 		// decoding always takes fewer characters, so do it in-place
 		if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_BASE64), lstrlen(TEXT(ENCODE_BASE64))) == 0) {
-			base64_decode(body, body, TRUE);
+			base64_decode(ret, ret, TRUE);
 			check_slash_n = FALSE; // handled in base64_decode
 		} else if (str_cmp_ni_t(tpMailItem->Encoding, TEXT(ENCODE_Q_PRINT), lstrlen(TEXT(ENCODE_Q_PRINT))) == 0) {
-			QuotedPrintable_decode(body, body, TRUE);
+			QuotedPrintable_decode(ret, ret, TRUE);
 			check_slash_n = FALSE; // handled in QP_decode
 		}
 		// else encoding is assumed 7bit or 8bit
@@ -1310,22 +1348,19 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 	if (check_slash_n == TRUE) {
 		char *p, *q;
 		int incr = 0, len = 0;
-		for (p = body; *p != '\0'; p++, len++) {
+		for (p = ret; *p != '\0'; p++, len++) {
 #ifdef HANDLE_BARE_SLASH_R
 			if (*p == '\r' && *(p+1) != '\n') {
 				incr++;
 			}
 #endif
-			if (*p == '\n' && (p == body || (p > body && *(p-1) != '\r'))) {
+			if (*p == '\n' && (p == ret || (p > ret && *(p-1) != '\r'))) {
 				incr++;
 			}
 		}
 		if (incr > 0) {
-			ret = q = (char *)mem_alloc(len + incr + 1);
-			if (ret == NULL) {
-				ret = body;
-			}
-			for (p = body; *p != '\0'; p++) {
+			q = (char *)mem_alloc(len + incr + 1);
+			for (p = ret; *p != '\0'; p++) {
 				if (q != NULL) {
 					*q = *p;
 				}
@@ -1335,7 +1370,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 						if (*(p+1) == '\r') {
 							*(++p) = '\n'; // \r\r -> \r\n
 						} else {
-							*p = ' ';
+							*p = ' '; // \r -> ' ', working in-place
 						}
 					} else {
 						q++;
@@ -1349,7 +1384,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 						if (*(p+1) == '\n') {
 							*(p++) = '\r'; // \n\n -> \r\n
 						} else {
-							*p = ' ';
+							*p = ' '; // \n -> ' ', working in-place
 						}
 					} else {
 						*(q++) = '\r';
@@ -1362,11 +1397,14 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 			}
 			if (q != NULL) {
 				*q = '\0';
+				mem_free(&ret);
+				ret = q;
 			}
 		}
 	}
-	mem_free(&tpMailItem->Encoding);
-	tpMailItem->Encoding = NULL;
+	// now saving wire-form; still need the Encoding
+	// mem_free(&tpMailItem->Encoding);
+	// tpMailItem->Encoding = NULL;
 	return ret;
 }
 
@@ -1388,15 +1426,54 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 
 	*cnt = 0;
 	if (ViewSrc == TRUE) {
+		char *head;
+		body = tpMailItem->Body;
+#ifdef UNICODE
+		ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
+		buf = MIME_body_decode_charset(body, ContentType);
+		mem_free(&ContentType);
+#else
+		buf = MIME_body_decode_charset(body, tpMailItem->ContentType);
+#endif
+		if (buf == NULL) {
+#ifdef UNICODE
+			buf = alloc_char_to_tchar(body);
+#else
+			buf = body;
+#endif
+		}
+
 		// put full headers in for view source
-		i = item_to_string_size(tpMailItem, 2, TRUE, FALSE);
-		body = (char *)mem_alloc(sizeof(char) * (i + 1));
-		*body = '\0';
-		item_to_string(body, tpMailItem, 2, TRUE, FALSE);
-		buf = alloc_char_to_tchar(body);
-		mem_free(&body);
+		// this is goofy, because item_to_string converts everything to char,
+		// and we really want TCHAR here
+		i = item_to_string_size(tpMailItem, 2, FALSE, FALSE);
+		head = (char *)mem_alloc(sizeof(char) * (i + 1));
+		if (head != NULL) {
+			*head = '\0';
+			item_to_string(head, tpMailItem, 2, FALSE, FALSE);
+#ifdef UNICODE
+			wenc_ret = alloc_char_to_tchar(head);
+			mem_free(&head);
+#else
+			wenc_ret = head;
+#endif
+		}
+
+		if (wenc_ret != NULL && *wenc_ret!= TEXT('\0')) {
+			if (buf != NULL && *buf != TEXT('\0')) {
+				i = lstrlen(wenc_ret) + lstrlen(buf) + 3;
+				r = (TCHAR *)mem_alloc(sizeof(TCHAR) * i);
+				str_join_t(r, wenc_ret, TEXT("\r\n"), buf, (TCHAR *)-1);
+				mem_free(&wenc_ret);
+				mem_free(&buf);
+				buf = r;
+			} else {
+				buf = wenc_ret;
+			}
+		}
+
 		if (buf != NULL && *buf != TEXT('\0')) {
-			DelDot(buf, buf);
+			// DelDot(buf, buf);
 			return buf;
 		}
 	}

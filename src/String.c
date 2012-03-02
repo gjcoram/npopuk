@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -264,7 +264,7 @@ char * __cdecl str_join(char *ret, ... )
 /*
  * str_cpy_t - 文字列をコピーして最後の文字のアドレスを返す
  */
-TCHAR *str_cpy_t(TCHAR *ret, TCHAR *buf)
+TCHAR *str_cpy_t(TCHAR *ret, const TCHAR *buf)
 {
 	if (buf == NULL) {
 		*ret = TEXT('\0');
@@ -279,7 +279,7 @@ TCHAR *str_cpy_t(TCHAR *ret, TCHAR *buf)
  * str_cpy - 文字列をコピーして最後の文字のアドレスを返す
  */
 #ifdef UNICODE
-char *str_cpy(char *ret, char *buf)
+char *str_cpy(char *ret, const char *buf)
 {
 	if (buf == NULL) {
 		*ret = '\0';
@@ -294,7 +294,7 @@ char *str_cpy(char *ret, char *buf)
 /*
  * str_cpy_n_t - 指定された文字数まで文字列をコピーする
  */
-void str_cpy_n_t(TCHAR *ret, TCHAR *buf, int len)
+void str_cpy_n_t(TCHAR *ret, const TCHAR *buf, int len)
 {
 	if (len <= 0) return;
 	while (--len && (*(ret++) = *(buf++)));
@@ -305,7 +305,7 @@ void str_cpy_n_t(TCHAR *ret, TCHAR *buf, int len)
  * str_cpy_n - 指定された文字数まで文字列をコピーする
  */
 #ifdef UNICODE
-void str_cpy_n(char *ret, char *buf, int len)
+void str_cpy_n(char *ret, const char *buf, int len)
 {
 	while (--len && (*(ret++) = *(buf++)));
 	*ret = '\0';

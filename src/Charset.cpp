@@ -6,10 +6,10 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopuk.org.uk
  */
-
-/* charset functions not supported on WinCE 2.0 */
-#if (!defined(_WIN32_WCE) || (_WIN32_WCE >= 211))
 
 /* Include Files */
 #define _INC_OLE
@@ -19,19 +19,30 @@
 
 extern "C" {
 #include "Charset.h"
+#include "General.h"
 #include "Memory.h"
 #include "String.h"
+extern TCHAR *AppDir;
 }
 
 /* Define */
 
+/* Struct */
+typedef struct _CHARSET {
+	WCHAR *name;
+	WCHAR chars[256];
+	_CHARSET *next;
+} CHARSET;
+
 /* Global Variables */
 MIMECPINFO* mimeCPInfos;
 ULONG lFetchedCelt;
+CHARSET *LoadedCharsets = NULL;
 
 /* Local Function Prototypes */
 static void codepage_init(void);
 static void codepage_free(void);
+static CHARSET *charset_load(WCHAR *charset);
 
 /*
  * charset_init - OLEの初期化
@@ -54,6 +65,13 @@ void charset_uninit()
 		codepage_free();
 	}
 	CoUninitialize();
+	CHARSET *next, *lcs = LoadedCharsets;
+	while (lcs) {
+		next = lcs->next;
+		mem_free((void **)&lcs->name);
+		mem_free((void **)&lcs);
+		lcs = next;
+	}
 }
 
 /*
@@ -96,7 +114,7 @@ static void codepage_init(void)
 }
 
 /*
- * codepage_init - コードページ情報の解放
+ * codepage_free - コードページ情報の解放
  */
 static void codepage_free(void)
 {
@@ -113,7 +131,7 @@ static void codepage_free(void)
 DWORD charset_to_cp(const BYTE charset)
 {
 #ifdef UNICODE
-	return CP_ACP;
+	return CP_int;
 #else
 	if (mimeCPInfos == NULL) {
 		codepage_init();
@@ -123,7 +141,7 @@ DWORD charset_to_cp(const BYTE charset)
 			return mimeCPInfos[i].uiFamilyCodePage;
 		}
 	}
-	return CP_ACP;
+	return CP_int;
 #endif
 }
 
@@ -175,32 +193,132 @@ WCHAR *charset_decode(WCHAR *charset, char *buf, UINT len)
 	MIMECSETINFO mimeInfo;
 	DWORD mode = 0;
 	DWORD encoding;
-	WCHAR *wret;
+	WCHAR *wret = NULL;
 	UINT ret_len;
 
 	CoCreateInstance(__uuidof(CMultiLanguage), NULL, CLSCTX_ALL, __uuidof(IMultiLanguage), (void**)&pMultiLanguage);
-	if (pMultiLanguage == NULL) {
-		return NULL;
-	}
-	mimeInfo.uiCodePage = 0;
-	mimeInfo.uiInternetEncoding = 0;
-	pMultiLanguage->GetCharsetInfo(charset, &mimeInfo);
-	encoding = (mimeInfo.uiInternetEncoding == 0) ? mimeInfo.uiCodePage : mimeInfo.uiInternetEncoding;
+	if (pMultiLanguage != NULL) {
+		mimeInfo.uiCodePage = 0;
+		mimeInfo.uiInternetEncoding = 0;
+		pMultiLanguage->GetCharsetInfo(charset, &mimeInfo);
+		encoding = (mimeInfo.uiInternetEncoding == 0) ? mimeInfo.uiCodePage : mimeInfo.uiInternetEncoding;
 
-	ret_len = 0;
-	if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, NULL, &ret_len) != S_OK) {
-		pMultiLanguage->Release();
-		return NULL;
+		ret_len = 0;
+		if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, NULL, &ret_len) == S_OK) {
+			wret = (WCHAR *)mem_alloc(sizeof(WCHAR) * (ret_len + 1));
+		}
 	}
-	wret = (WCHAR *)mem_alloc(sizeof(WCHAR) * (ret_len + 1));
-	if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, wret, &ret_len) != S_OK) {
-		mem_free((void **)&wret);
-		pMultiLanguage->Release();
-		return NULL;
+	if (wret != NULL) {
+		if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, wret, &ret_len) != S_OK) {
+			mem_free((void **)&wret);
+			wret = NULL;
+		}
 	}
-	*(wret + ret_len) = L'\0';
+	if (wret == NULL) {
+		CHARSET *lcs = LoadedCharsets;
+		while (lcs) {
+			if (lstrcmpiW(lcs->name, charset) == 0) {
+				break;
+			}
+			lcs = lcs->next;
+		}
+		if (lcs == NULL) {
+			lcs = charset_load(charset);
+			if (lcs != NULL) {
+				lcs->next = LoadedCharsets;
+				LoadedCharsets = lcs;
+			}
+		}
+		if (lcs) {
+			UINT i;
+			ret_len = strlen(buf);
+			wret = (WCHAR *)mem_alloc(sizeof(WCHAR) * (ret_len + 1));
+			for (i = 0; i < ret_len; i++) {
+				wret[i] = lcs->chars[ (unsigned char) buf[i] ];
+			}
+		}
+	}
+	if (wret != NULL) {
+		*(wret + ret_len) = L'\0';
+	}
 	pMultiLanguage->Release();
 	return wret;
+}
+
+static int hex_val(int c)
+{
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	return -1; // invalid
+}
+
+/*
+ * charset_load - look for file charset.txt
+ *                format assumed to follow examples at
+ *                ftp://ftp.unicode.org/Public/MAPPINGS/
+ *                0x00 0x0000 # comment\n
+ */
+
+static CHARSET *charset_load(WCHAR *charset) {
+	TCHAR fpath[BUF_SIZE];
+	CHARSET *ret = NULL;
+	long len;
+	BOOL ok = TRUE;
+
+	wsprintf(fpath, TEXT("%sResource\\%s.txt"), AppDir, charset);
+	len = file_get_size(fpath);
+	if (len > 256 * 8) { // must be at least this long
+		char *buf, *p;
+		buf	= file_read(fpath, len);
+		if (buf != NULL) {
+			ret = (CHARSET *)mem_calloc(sizeof(CHARSET));
+		}
+		for (p = buf; p && ok; p++) {
+			while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+			if (*p == '\0') break;
+			if (*p == '#') { // comment (until newline)
+				while (*p != '\0' && *p != '\n') p++;
+			} else {
+				int pos=-1, val=-1, a, b, c, d;
+				if (*p == '0' && (*(p+1) == 'x' || *(p+1) == 'X') && *(p+2) && *(p+3)) {
+					a = hex_val(*(p+2));
+					b = hex_val(*(p+3));
+					if (a >= 0 && b >= 0) {
+						pos = 16 * a + b;
+					}
+				}
+				p+=4;
+				while (*p == ' ' || *p == '\t') p++;
+				if (*p == '0' && (*(p+1) == 'x' || *(p+1) == 'X')
+					&& *(p+2) && *(p+3) && *(p+4) && *(p+5)) {
+					a = hex_val(*(p+2));
+					b = hex_val(*(p+3));
+					c = hex_val(*(p+4));
+					d = hex_val(*(p+5));
+					if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
+						val = ((((a * 16) + b) * 16) + c) * 16 + d;
+					}
+				}
+				if (val >= 0 && val < 0xFFFE && pos >= 0 && pos < 256) {
+					ret->chars[pos] = val;
+					while(*p != '\0' && *p != '\n') p++;
+				} else {
+					ok = FALSE;
+					break;
+				}
+			}
+		}
+		mem_free((void**)&buf);
+		if (ok) {
+			ret->name = (WCHAR *)mem_alloc(sizeof(WCHAR) * (lstrlenW(charset) + 1));
+			lstrcpyW(ret->name, charset);
+		} else {
+			mem_free((void**)&ret);
+			ret = NULL;
+		}
+	}
+	return ret;
 }
 
 /*
@@ -229,7 +347,7 @@ HRESULT charset_enum(HWND hWnd)
 #else
 		char *buf;
 
-		buf = alloc_wchar_to_char(CP_ACP, mimeCPInfos[i].wszBodyCharset);
+		buf = alloc_wchar_to_char(CP_int, mimeCPInfos[i].wszBodyCharset);
 		if (buf == NULL) {
 			return E_FAIL;
 		}
@@ -269,15 +387,14 @@ void set_default_encode(const UINT cp, TCHAR **HeadCharset, TCHAR **BodyCharset)
 			}
 #else
 			if (*HeadCharset == NULL) {
-				*HeadCharset = alloc_wchar_to_char(CP_ACP, mimeCPInfos[i].wszHeaderCharset);
+				*HeadCharset = alloc_wchar_to_char(CP_int, mimeCPInfos[i].wszHeaderCharset);
 			}
 			if (*BodyCharset == NULL) {
-				*BodyCharset = alloc_wchar_to_char(CP_ACP, mimeCPInfos[i].wszBodyCharset);
+				*BodyCharset = alloc_wchar_to_char(CP_int, mimeCPInfos[i].wszBodyCharset);
 			}
 #endif
 			return;
 		}
 	}
 }
-#endif // _WCE_OLD
 /* End of source */

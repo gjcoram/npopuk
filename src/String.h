@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopuk.org.uk
  */
 
 #ifndef _INC_STRING_H
@@ -16,25 +19,25 @@
 
 /* Define */
 #ifdef UNICODE
-#define tchar_to_char_size(wbuf) (WideCharToMultiByte(CP_ACP, 0, wbuf, -1, NULL, 0, NULL, NULL))
+#define tchar_to_char_size(wbuf) (WideCharToMultiByte(CP_int, 0, wbuf, -1, NULL, 0, NULL, NULL))
 #else
 #define tchar_to_char_size(wbuf) (lstrlen(wbuf) + 1)
 #endif
 
 #ifdef UNICODE
-#define tchar_to_char(wbuf, ret, len) (WideCharToMultiByte(CP_ACP, 0, wbuf, -1, ret, len, NULL, NULL))
+#define tchar_to_char(wbuf, ret, len) (WideCharToMultiByte(CP_int, 0, wbuf, -1, ret, len, NULL, NULL))
 #else
 #define tchar_to_char(wbuf, ret, len) (str_cpy_n_t(ret, wbuf, len))
 #endif
 
 #ifdef UNICODE
-#define char_to_tchar_size(buf) (MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0))
+#define char_to_tchar_size(buf) (MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0))
 #else
 #define char_to_tchar_size(buf) (lstrlen(buf) + 1)
 #endif
 
 #ifdef UNICODE
-#define char_to_tchar(buf, wret, len) (MultiByteToWideChar(CP_ACP, 0, buf, -1, wret, len))
+#define char_to_tchar(buf, wret, len) (MultiByteToWideChar(CP_int, 0, buf, -1, wret, len))
 #else
 #define char_to_tchar(buf, wret, len) (str_cpy_n_t(wret, buf, len))
 #endif
@@ -64,6 +67,9 @@
 #endif
 
 /* Struct */
+
+/* Global Variables */
+extern int CP_int;
 
 /* Function Prototypes */
 int a2i(const char *str);
@@ -97,15 +103,15 @@ char * __cdecl str_join(char *ret, ... );
 #define str_join str_join_t
 #endif
 
-TCHAR *str_cpy_t(TCHAR *ret, TCHAR *buf);
+TCHAR *str_cpy_t(TCHAR *ret, const TCHAR *buf);
 #ifdef UNICODE
-char *str_cpy(char *ret, char *buf);
+char *str_cpy(char *ret, const char *buf);
 #else
 #define str_cpy str_cpy_t
 #endif
-void str_cpy_n_t(TCHAR *ret, TCHAR *buf, int len);
+void str_cpy_n_t(TCHAR *ret, const TCHAR *buf, int len);
 #ifdef UNICODE
-void str_cpy_n(char *ret, char *buf, int len);
+void str_cpy_n(char *ret, const char *buf, int len);
 #else
 #define str_cpy_n str_cpy_n_t
 #endif

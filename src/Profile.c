@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -20,6 +20,7 @@
 #include "Memory.h"
 #include "Profile.h"
 #include "Strtbl.h"
+#include "String.h"
 
 /* Define */
 #define BUF_SIZE				256
@@ -50,7 +51,6 @@ static int section_count;
 static int section_size;
 
 /* Local Function Prototypes */
-static void str_cpy_n(TCHAR *ret, const TCHAR *buf, int len);
 static BOOL trim(TCHAR *buf);
 static int str2hash(const TCHAR *str);
 static BOOL write_ascii_file(const HANDLE hFile, const TCHAR *buf, const int len);
@@ -61,15 +61,6 @@ static int section_find(const TCHAR *section_name);
 static BOOL key_add(SECTION_INFO *si, const TCHAR *key_name, const TCHAR *str, const BOOL comment_flag);
 static int key_find(const SECTION_INFO *si, const TCHAR *key_name);
 static BOOL profile_write_data(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *str);
-
-/*
- * str_cpy_n - 文字列のコピー
- */
-static void str_cpy_n(TCHAR *ret, const TCHAR *buf, int len)
-{
-	while (--len && (*(ret++) = *(buf++)));
-	*ret = TEXT('\0');
-}
 
 /*
  * trim - remove spaces and tabs from both ends of buf
@@ -116,11 +107,11 @@ static BOOL write_ascii_file(const HANDLE hFile, const TCHAR *buf, const int len
 	DWORD ret;
 	int clen;
 
-	clen = WideCharToMultiByte(CP_ACP, 0, buf, -1, NULL, 0, NULL, NULL);
+	clen = WideCharToMultiByte(CP_UTF8, 0, buf, -1, NULL, 0, NULL, NULL);
 	if ((str = (char *)mem_alloc(clen + 1)) == NULL) {
 		return FALSE;
 	}
-	WideCharToMultiByte(CP_ACP, 0, buf, -1, str, clen, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, buf, -1, str, clen, NULL, NULL);
 	if (WriteFile(hFile, str, clen - 1, &ret, NULL) == FALSE) {
 		mem_free(&str);
 		return FALSE;
@@ -177,7 +168,7 @@ static BOOL section_add(const TCHAR *section_name)
 		section_info = tmp_section;
 	}
 	// セクション追加
-	str_cpy_n((section_info + section_count)->section_name, section_name, BUF_SIZE);
+	str_cpy_n_t((section_info + section_count)->section_name, section_name, BUF_SIZE);
 	trim((section_info + section_count)->section_name);
 	(section_info + section_count)->hash = str2hash((section_info + section_count)->section_name);
 
@@ -238,7 +229,7 @@ static BOOL key_add(SECTION_INFO *si, const TCHAR *key_name, const TCHAR *str, c
 	if ((si->key_info + si->key_count)->string == NULL) {
 		return FALSE;
 	}
-	str_cpy_n((si->key_info + si->key_count)->key_name, key_name, BUF_SIZE);
+	str_cpy_n_t((si->key_info + si->key_count)->key_name, key_name, BUF_SIZE);
 	trim((si->key_info + si->key_count)->key_name);
 	if (comment_flag == FALSE) {
 		(si->key_info + si->key_count)->hash = str2hash((si->key_info + si->key_count)->key_name);
@@ -301,7 +292,9 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 	DWORD ret;
 	long file_size;
 #ifdef UNICODE
+	int i, CP_ini;
 	long len;
+	char *p;
 #endif
 
 	// ファイルを開く
@@ -333,13 +326,50 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 	CloseHandle(hFile);
 	*(cbuf + file_size) = '\0';
 
+
 #ifdef UNICODE
-	len = MultiByteToWideChar(CP_ACP, 0, cbuf, -1, NULL, 0);
+	// check if old format: nPOP uses CP_ACP (and has no Version)
+	// nPOPuk used CP_ACP for Version < 3000
+	// (except for a beta of 2.17 that supported op.Codepage)
+	// Starting with Version = 3000, nPOPuk used CP_UTF8 (and ignored op.Codepage)
+	CP_ini = CP_ACP;
+	i = 0;
+	for (p = cbuf; *p != '\0'; p++) {
+		if (*p == '[') {
+			if (i == 0) i = 1;
+			else break; // left [GENERAL] for next section
+		}
+		if (str_cmp_n(p, "Version=", 8) == 0) {
+			p += 8;
+			if (atoi(p) >= 3000) {
+				CP_ini = CP_UTF8;
+				break;
+			}
+		} else if (str_cmp_n(p, "Codepage=", 9) == 0) {
+			p += 9;
+			if (*p == '\"') p++;
+			if (str_cmp_n(p, "CP_ACP", 6) == 0) {
+				CP_ini = CP_ACP;
+			}if (str_cmp_n(p, "CP_UTF8", 7) == 0) {
+				CP_ini = CP_UTF8;
+			} else {
+				CP_ini = atoi(p);
+			}
+		}
+		while (*p != '\0') {
+			if (*p == '\r' && *(p+1) == '\n') {
+				p += 2;
+				break;
+			}
+			p++;
+		}
+	}
+	len = MultiByteToWideChar(CP_ini, 0, cbuf, -1, NULL, 0);
 	if ((buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1))) == NULL) {
 		mem_free(&cbuf);
 		return FALSE;
 	}
-	MultiByteToWideChar(CP_ACP, 0, cbuf, -1, buf, len);
+	MultiByteToWideChar(CP_ini, 0, cbuf, -1, buf, len);
 	file_size = len;
 	mem_free(&cbuf);
 #else
@@ -586,14 +616,14 @@ long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const 
 
 	// セクションの検索
 	if ((section_index = section_find(section_name)) == -1) {
-		str_cpy_n(ret, default_str, size);
+		str_cpy_n_t(ret, default_str, size);
 		return lstrlen(ret);
 	}
 
 	// キーの検索
 	key_index = key_find((section_info + section_index), key_name);
 	if (key_index == -1 || ((section_info + section_index)->key_info + key_index)->string == NULL) {
-		str_cpy_n(ret, default_str, size);
+		str_cpy_n_t(ret, default_str, size);
 		return lstrlen(ret);
 	}
 
@@ -606,10 +636,10 @@ long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const 
 		if ((len = lstrlen(p)) > 0 && *(p + len - 1) == TEXT('\"')) {
 			*(p + len - 1) = TEXT('\0');
 		}
-		str_cpy_n(ret, p, size);
+		str_cpy_n_t(ret, p, size);
 		mem_free(&buf);
 	} else {
-		str_cpy_n(ret, ((section_info + section_index)->key_info + key_index)->string, size);
+		str_cpy_n_t(ret, ((section_info + section_index)->key_info + key_index)->string, size);
 	}
 	return lstrlen(ret);
 }

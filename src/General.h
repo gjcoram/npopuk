@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2010 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -56,7 +56,10 @@ extern int sprintf_s();
 
 /* Define */
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
-#define APP_VERSION_NUM			2016
+#define APP_VERSION_NUM			3000
+// switch to wire-form and UTF8 storage
+#define STATUS_REVISION_NPOPUK3 300000
+
 ////////////////////// MRP ////////////////////
 #define HIGH_PRIORITY			TEXT("High")
 #define NORMAL_PRIORITY			TEXT("Normal")
@@ -111,9 +114,9 @@ extern int sprintf_s();
 #define RAS_WAIT_EVENT			TEXT("RAS_WAIT_EVENT")
 #define ID_RASWAIT_TIMER		10
 
-#define BUF_SIZE				256					//of process Buffer size
-#define MSG_SIZE				300					//BUF_SIZE + some text
-#define MULTI_BUF_SIZE			1024
+#define BUF_SIZE				256					// Buffer size
+#define MSG_SIZE				300					// BUF_SIZE + some text
+#define MULTI_BUF_SIZE			1024				// Note: wsprintf only handles up to 1024!
 #define MAXSIZE					32768
 #define EDITMAXSIZE				60000
 
@@ -125,7 +128,7 @@ extern int sprintf_s();
 #ifdef _WIN32_WCE
 #define TB_MAINBUTTONS			13					// number of buttons on main toolbar
 #else
-#define TB_MAINBUTTONS			18					// number of buttons on main toolbar
+#define TB_MAINBUTTONS			21					// number of buttons on main toolbar
 #endif
 #define TB_EDITBUTTONS			9					// number of buttons on edit toolbar
 #define TB_VIEWBUTTONS			13					// number of buttons on view toolbar
@@ -149,6 +152,11 @@ extern int sprintf_s();
 #define MAILITEMS_CHANGED		1					// for NeedsSave
 #define MARKS_CHANGED			2
 #define MBOX_FORMAT_CHANGED		4
+
+#define MAIL2ITEM_TOP			0					// for item_mail_to_item
+#define MAIL2ITEM_RETR			1
+#define MAIL2ITEM_IMPORT		2
+#define MAIL2ITEM_WIRE			3
 
 #define IDC_MBMENU				400					//Control ID
 #define IDC_LISTVIEW			401
@@ -388,6 +396,7 @@ extern int sprintf_s();
 typedef struct _OPTION {
 	int StartPass;
 	int ShowPass;
+	int ConfigPass;
 	int ScrambleMailboxes;
 	TCHAR *Password;
 
@@ -465,6 +474,7 @@ typedef struct _OPTION {
 	int ListGetLine;
 	int ListDownload;
 	int ShowHeader;
+	int GetRecent;
 	int ListSaveMode;
 	int WordBreakFlag;
 	int EditWordBreakFlag;
@@ -491,6 +501,7 @@ typedef struct _OPTION {
 	// SSL
 	TCHAR *CAFile;
 
+	TCHAR *Codepage;
 	TCHAR *HeadCharset;
 	int HeadEncoding;
 	TCHAR *BodyCharset;
@@ -645,6 +656,7 @@ typedef struct _MAILBOX {
 	SSL_INFO PopSSLInfo;
 	int NoRETR;
 	int NoUIDL;
+	int MessageSizeDelta;
 	unsigned long PopIP;
 
 	int MailCnt; // count on server
@@ -698,6 +710,7 @@ typedef struct _MAILBOX {
 	int ListGetLine;
 	int ListDownload;
 	int ShowHeader;
+	int GetRecent;
 	int ListSaveMode;
 
 	// MailItem
@@ -739,6 +752,7 @@ typedef struct _MAILITEM {
 	TCHAR *UIDL;
 	TCHAR *InReplyTo;
 	TCHAR *References;
+	char *WireForm;
 	char *Body;
 
 	TCHAR *MailBox;
@@ -858,7 +872,6 @@ BOOL CALLBACK AboutBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL pop3_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 BOOL pop3_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
-char *claim_mail_buf(char *buf);
 void pop3_free(void);
 #ifdef _WIN32_WCE_PPC
 HWND findTodayPlugin(WCHAR *wTodayItem);
@@ -933,8 +946,10 @@ int item_get_next_delete_mark(MAILBOX *tpMailBox, BOOL hold, int Index, int *No)
 int item_get_next_new(MAILBOX *tpMailBox, int Index, int *No);
 int item_get_next_send_mark(MAILBOX *tpMailBox, BOOL CheckErrors, BOOL ForSend);
 int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIndex);
-BOOL item_mail_to_item(MAILITEM *tpMailItem, char *buf, int Size, BOOL download, MAILBOX *tpMailBox);
-MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char *buf, int Size);
+void item_set_flags(MAILITEM *tpMailItem, MAILBOX *tpMailBox, int code);
+void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox);
+BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, BOOL download, int status, MAILBOX *tpMailBox);
+MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int status);
 MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import);
 int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
 char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
@@ -1032,7 +1047,8 @@ TCHAR *SetAttachList(TCHAR *buf, TCHAR *ret);
 char *GetMIME2Extension(char *MIMEStr, char *Filename);
 TCHAR *CreateCommandLine(TCHAR *buf, TCHAR *filename, BOOL spFlag);
 TCHAR *strip_html_tags(TCHAR *buf, int insert_notice);
-int remove_duplicate_headers(char *buf);
+int remove_superfluous_headers(char *buf, BOOL dups);
+int remove_npopuk_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 void rot13_cpy(char *dest, char *start, char *end);
 void rot13(char *start, char *end);
@@ -1089,7 +1105,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 void attach_item_free();
 BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CheckDependence(HWND hWnd, int Ctl, TCHAR **buf);
+BOOL CheckDependence(HWND hEdit, TCHAR *buf);
 BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1119,6 +1135,7 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
 int ListView_ComputeState(int Priority, int Multipart);
 
 // main
+BOOL ConfirmPass(HWND hWnd, TCHAR *ps, BOOL Show);
 void SwitchCursor(const BOOL Flag);
 #ifdef _WIN32_WCE
 #define _SetForegroundWindow		SetForegroundWindow

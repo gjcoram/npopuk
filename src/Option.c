@@ -1846,12 +1846,29 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			enable = FALSE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, op.ListGetLine, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
+			if (op.GetRecent > 0) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
+				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, op.GetRecent, FALSE);
+			} else {
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
+				if (op.GetRecent == 0)
+					op.GetRecent = -20;
+				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -op.GetRecent, FALSE);
+			}
 			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
 		} else {
 			newlsm = tpOptionMailBox->ListSaveMode;
 			enable = TRUE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->ListGetLine, FALSE);
+			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->GetRecent, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, tpOptionMailBox->ListDownload, 0);
+			if (tpOptionMailBox->GetRecent > 0) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
+				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, tpOptionMailBox->GetRecent, FALSE);
+			} else {
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
+				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -tpOptionMailBox->GetRecent, FALSE);
+			}
 			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, tpOptionMailBox->ShowHeader, 0);
 		}
 
@@ -1877,6 +1894,9 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), enable && !tpOptionMailBox->ListDownload);
 		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable && !tpOptionMailBox->ListDownload);
 		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), enable);
+		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETRECENT), enable);
+		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable && (tpOptionMailBox->GetRecent > 0));
+		EnableWindow(GetDlgItem(hDlg, IDC_TEXT_GETRECENT), enable);
 		//EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SHOWHEAD), enable);
 #ifdef _WIN32_WCE
 		EnableWindow(GetDlgItem(hDlg, IDC_COMBO_MESSAGES), enable);
@@ -1924,6 +1944,13 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 			break;
 
+		case IDC_CHECK_GETRECENT:
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) == 0) {
+				enable = SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0);
+				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
+			}
+			break;
+
 		case IDC_CHECK_GLOBAL_RECV:
 			enable = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) ? FALSE : TRUE;
 			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), enable);
@@ -1935,6 +1962,13 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_HEADSAVE), enable);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_ALLSAVE), enable);
 #endif
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETRECENT), enable);
+			if (enable && SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0)==0) {
+				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), FALSE);
+			}  else {
+				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
+			}
+			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_GETRECENT), enable);
 			if (enable && SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0)) {
 				enable = FALSE;
 			}
@@ -1953,6 +1987,20 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			oldglob = tpOptionMailBox->UseGlobalRecv;
 			tpOptionMailBox->UseGlobalRecv = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0);
 			if (tpOptionMailBox->UseGlobalRecv == 0) {
+				int num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
+				if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
+					if (num <= 0) {
+						MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
+						// would like to prevent the property box from closing ...
+						num = 20;
+					}
+					tpOptionMailBox->GetRecent = num;
+				} else {
+					if (num <= 0) {
+						num = 20;
+					}
+					tpOptionMailBox->GetRecent = -num;
+				}
 				tpOptionMailBox->ListGetLine = GetDlgItemInt(hDlg, IDC_EDIT_READLINE, NULL, FALSE);
 				tpOptionMailBox->ListDownload = SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
 				//tpOptionMailBox->ShowHeader = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_GETCHECK, 0, 0);
@@ -2880,6 +2928,12 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			i = SetMailBoxType(hDlg, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			ret = TRUE;
+#ifndef _WIN32_WCE
+			if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
+				i = -1;
+			}
+#endif
 			if (i == -1 || (i == 0 && SetMailBoxOption(hDlg, FALSE) == FALSE)) {
 				mailbox_delete(hDlg, SelBox, FALSE, FALSE);
 				ret = FALSE;
@@ -2944,6 +2998,12 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			if (ListView_GetSelectedCount(hListView) != 1) {
 				break;
 			}
+#ifndef _WIN32_WCE
+			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
+				break;
+			}
+#endif
 			sel = ListView_GetNextItem(hListView, -1, LVIS_SELECTED);
 			oldsel = SelBox;
 			SelBox = sel + MAILBOX_USER;
@@ -2973,6 +3033,12 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_BUTTON_DELETE:
 		case ID_LV_DELETE:
 			oldsel = SelBox;
+#ifndef _WIN32_WCE
+			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
+				break;
+			}
+#endif
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
 			sel = ListView_GetSelectedCount(hListView);
 			if (sel <= 0) {
@@ -3174,7 +3240,7 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
  */
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	int newlsm = 0;
+	int newlsm = 0, num;
 	BOOL enable;
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -3184,6 +3250,16 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
+		if (op.GetRecent > 0) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
+			SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, op.GetRecent, FALSE);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), FALSE);
+			if (op.GetRecent == 0)
+				op.GetRecent = -20;
+			SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -op.GetRecent, FALSE);
+		}
 
 		switch (op.ListSaveMode) {
 		case 0:
@@ -3218,7 +3294,27 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable);
 			break;
 
+		case IDC_CHECK_GETRECENT:
+			enable = SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0);
+			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
+			break;
+
 		case IDOK:
+			num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
+				if (num <= 0) {
+					MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
+					// would like to prevent the property box from closing ...
+					num = 20;
+				}
+				op.GetRecent = num;
+			} else {
+				if (num <= 0) {
+					num = 20;
+				}
+				op.GetRecent = -num;
+			}
+
 			op.ListGetLine = GetDlgItemInt(hDlg, IDC_EDIT_READLINE, NULL, FALSE);
 
 			op.ListDownload = SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
@@ -4154,6 +4250,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		// on advanced tab for PPC
 		SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_SETCHECK, op.StartPass, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_SETCHECK, op.ShowPass, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_CONFIGPASS, BM_SETCHECK, op.ConfigPass, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_PASS, WM_SETTEXT, 0, (LPARAM)op.Password);
 
 		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_MINSIZEHIDE), op.ShowTrayIcon);
@@ -4247,6 +4344,7 @@ static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			// on advanced tab for PPC
 			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
 			op.ShowPass = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWPASS, BM_GETCHECK, 0, 0);
+			op.ConfigPass = SendDlgItemMessage(hDlg, IDC_CHECK_CONFIGPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
 #endif
 			AllocGetText(GetDlgItem(hDlg, IDC_DATE_FORMAT), &op.DateFormat);
@@ -4273,6 +4371,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 	case WM_INITDIALOG:
 #ifdef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_SETCHECK, op.StartPass, 0);
+		//SendDlgItemMessage(hDlg, IDC_CHECK_CONFIGPASS, BM_SETCHECK, op.ConfigPass, 0);
 		SendDlgItemMessage(hDlg, IDC_EDIT_PASS, WM_SETTEXT, 0, (LPARAM)op.Password);
 #endif // _WIN32_WCE
 
@@ -4330,6 +4429,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDOK:
 #ifdef _WIN32_WCE
 			op.StartPass = SendDlgItemMessage(hDlg, IDC_CHECK_STARTPASS, BM_GETCHECK, 0, 0);
+			//op.ConfigPass = SendDlgItemMessage(hDlg, IDC_CHECK_CONFIGPASS, BM_GETCHECK, 0, 0);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_PASS), &op.Password);
 #endif
 			{
@@ -4820,7 +4920,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 #define LV_TITLE_BCC	TEXT("Bcc:")
 	MAILITEM *tpMailItem;
 	ADDRESSBOOK *tpTmpAddressBook;
-	HWND hListView;
+	HWND hListView, hEdit;
 	TCHAR buf[BUF_SIZE], buf2[BUF_SIZE];
 	TCHAR *p;
 	int SelectItem;
@@ -5016,7 +5116,10 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case IDC_BUTTON_TO:
 		case IDC_BUTTON_CC:
 		case IDC_BUTTON_BCC:
-			if (CheckDependence(hDlg, IDC_EDIT_MAILADDRESS, &p) == FALSE) {
+			p = NULL;
+			hEdit = GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS);
+			AllocGetText(hEdit, &p);
+			if (CheckDependence(hEdit, p) == FALSE) {
 				mem_free(&p);
 				break;
 			}
@@ -5871,29 +5974,47 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 /*
  * CheckDependence - EDITに機種依存文字が含まれていないかチェックする
+ *		Checks something about the Japanese characters,
+ *		and also whether the non-Unicode version of the program is getting Unicode text
  */
-BOOL CheckDependence(HWND hWnd, int Ctl, TCHAR **buf)
+BOOL CheckDependence(HWND hEdit, TCHAR *buf)
 {
 	int i;
 	BOOL ret = TRUE;
-	*buf = NULL;
 
-	AllocGetText(GetDlgItem(hWnd, Ctl), buf);
-	if (*buf == NULL) {
+	if (buf == NULL) {
 		return TRUE;
 	}
-	if ((i = IsDependenceString(*buf)) != -1 &&
-		MessageBox(hWnd, STR_Q_DEPENDENCE,
+	if ((i = IsDependenceString(buf)) != -1 &&
+		MessageBox(GetParent(hEdit), STR_Q_DEPENDENCE,
 		WINDOW_TITLE, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
-		SetFocus(GetDlgItem(hWnd, Ctl));
+		SetFocus(hEdit);
 #ifdef UNICODE
-		SendDlgItemMessage(hWnd, Ctl, EM_SETSEL, i, i + 1);
+		SendMessage(hEdit, EM_SETSEL, i, i + 1);
 #else
-		SendDlgItemMessage(hWnd, Ctl, EM_SETSEL, i, i + 2);
+		SendMessage(hEdit, EM_SETSEL, i, i + 2);
 #endif
-		SendDlgItemMessage(hWnd, Ctl, EM_SCROLLCARET, 0, 0);
+		SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
 		ret = FALSE;
 	}
+#ifndef UNICODE
+	if (IsWindowUnicode(hEdit)) {
+		WCHAR *wbuf, *tmp;
+		i = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0) + 1;
+		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * i);
+		if (wbuf != NULL) {
+			GetWindowTextW(hEdit, wbuf, i);
+			tmp = alloc_char_to_wchar(CP_ACP, buf);
+			if (lstrcmpW(wbuf, tmp) != 0 &&
+				MessageBox(GetParent(hEdit), STR_Q_UNICODE,	WINDOW_TITLE, 
+					MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
+				ret = FALSE;
+			}
+			mem_free(&tmp);
+			mem_free(&wbuf);
+		}
+	}
+#endif
 	return ret;
 }
 
@@ -6619,12 +6740,20 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDOK:
 			//Check
-			ret = CheckDependence(hDlg, IDC_EDIT_TO, &p);
-			mem_free(&p);
-			if (ret == FALSE) break;
-			ret = CheckDependence(hDlg, IDC_EDIT_TITLE, &p);
-			mem_free(&p);
-			if (ret == FALSE) break;
+			{
+				HWND hEdit;
+				p = NULL;
+				hEdit = GetDlgItem(hDlg, IDC_EDIT_TO);
+				AllocGetText(hEdit, &p);
+				ret = CheckDependence(hEdit, p);
+				mem_free(&p); p = NULL;
+				if (ret == FALSE) break;
+				hEdit = GetDlgItem(hDlg, IDC_EDIT_TITLE);
+				AllocGetText(hEdit, &p);
+				ret = CheckDependence(hEdit, p);
+				mem_free(&p); p = NULL;
+				if (ret == FALSE) break;
+			}
 
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {

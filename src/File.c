@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2008 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -676,7 +676,7 @@ BOOL file_copy_to_datadir(HWND hWnd, TCHAR *Source, TCHAR *FileName)
 {
 	TCHAR path[BUF_SIZE];
 	TCHAR pathBackup[BUF_SIZE];
-	TCHAR msg[BUF_SIZE];
+	TCHAR msg[MSG_SIZE];
 	long fsize;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
@@ -727,7 +727,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	HANDLE hMapFile;
 #endif
 	TCHAR path[BUF_SIZE];
-	char *p, *q, *r, *s, *t, *max;
+	char *p;
 	///////////// MRP /////////////////////
 	TCHAR pathBackup[BUF_SIZE];
 	///////////// --- /////////////////////
@@ -834,12 +834,11 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	if (cnt == 1 && MboxFormat == 0) {
 		int cnt2 = file_get_mail_count(MsgStart, FileSize, 1);
 		if (cnt2 > 1) {
-			TCHAR *temp;
-			item_get_content_t(MsgStart, HEAD_X_STATUS, &temp);
-			if (temp != NULL) {
-				int rev = _ttoi(temp)/100000;
+			char *s = GetHeaderStringPoint(MsgStart, HEAD_X_STATUS);
+			if (s != NULL) {
+				int rev = atoi(s)/100000;
 				if (rev == 1) {
-					TCHAR *title, msg[BUF_SIZE];
+					TCHAR *title, msg[MSG_SIZE];
 					title = tpMailBox->Name;
 					if (title == NULL || *title == TEXT('\0')) {
 						title = STR_MAILBOX_NONAME;
@@ -850,7 +849,6 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 						MboxFormat = 1;
 					}
 				}
-				mem_free(&temp);
 			}
 		}
 	}
@@ -876,8 +874,10 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	len = 7; // = tstrlen(MBOX_DELIMITER);
 	p = MsgStart;
 	while (FileSize > p - MsgStart && *p != '\0') {
-		int slashr = 0;
+		char *q, *r, *s, *t, *max;
+		int code;
 		if (encrypted) {
+			// decrypt the headers
 			r = GetBodyPointa(p);
 			if (r == NULL) break;
 			q = (char *)mem_alloc(sizeof(char) * (r - p + 1));
@@ -886,163 +886,252 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		} else {
 			q = p;
 		}
-		// From header mail item acquisition
-		tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, q, Import);
-		if (encrypted) {
-			mem_free(&q);
-		}
-		if (tpMailItem != NULL && tpMailItem->MailStatus == ICON_MAIL) {
-			tpMailBox->UnreadCnt++;
+
+		code = 0;
+		s = GetHeaderStringPoint(q, HEAD_X_STATUS);
+		if (s != NULL) {
+			code = atoi(s);
 		}
 
-		// Body position Position of end of mail acquisition
-		if (MboxFormat) {
-			tpMailItem->HasHeader = 1;
-			r = GetHeaderStringPoint(p, HEAD_X_STATUS); // X-Status is always the last header written by nPOPuk
-			if (r != NULL && r > p) {
-				if (tpMailItem != NULL) tpMailItem->HasHeader = 2;
-				while (*r != '\0' && (*(r-1) != '\r' || *r != '\n')) {
-					r++;
+		if (code >= STATUS_REVISION_NPOPUK3 || (code == 0 && Import)) {
+			// saved in new "wire-form" format, or importing from non-nPOPuk MBOX format
+			int m2i = (Import) ? MAIL2ITEM_IMPORT : MAIL2ITEM_WIRE;
+			char *buf = NULL;
+
+			tpMailItem = *(tpMailBox->tpMailItem + i) = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+
+			if (s != NULL) {
+				if (code > 0) {
+					item_set_flags(tpMailItem, tpMailBox, code);
 				}
-				if (*r == '\n') {
-					r++;
-					if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
-						if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
-					} else if (*r == '\r' && *(r+1) == '\n') {
-						r += 2;
-						if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
-					}
-					p = r;
-				} else if (*r == '\0') {
-					break;
+				item_get_npop_headers(q, tpMailItem, tpMailBox);
+				p = s;
+				while (*p != '\0' && *p != '\r' && *p != '\n') {
+					p++;
+				}
+				while (*p == '\r' || *p == '\n') {
+					p++;
 				}
 			}
-		} else {
-			// discard all header lines
+
 			if (encrypted) {
-				p = r;
-			} else {
-				p = GetBodyPointa(p);
+				mem_free(&q);
 			}
-			if (p == NULL) {
-				break;
-			}
-		}
 
-		// Find end of message
-		if (MboxFormat) {
-			max = MsgStart + FileSize - len;
-			for (t = r = p; r < max; r++) {
-				if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
-					t = r;
-					r += 2;
-					break;
-				}
-			}
-			if ( r >= max ) {
-				t = r = max + len;
-			}
-		} else {
-			for (t = r = p; *r != '\0'; r++) {
-				if (*r == '\r' || *r == '\n') {
-					if (*t == '.' && (r - t) == 1) {
-						t--;
-						if (*(t - 1) == '\r') {
-							t--;
-						}
-						for (; FileSize > r - MsgStart && (*r == '\r' || *r == '\n'); r++);
+			// Find end of message
+			if (MboxFormat) {
+				max = MsgStart + FileSize - len;
+				for (t = r = p; r < max; r++) {
+					if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
+						t = r;
+						r += 2;
 						break;
 					}
+				}
+				if ( r >= max ) {
+					t = r = max + len;
+				}
+			} else {
+				for (t = r = p; *r != '\0'; r++) {
 					if (*r == '\r' && *(r + 1) == '\n') {
-						r++;
-					} else {
-						++slashr;
+						if (*t == '.' && (r - t) == 1) {
+							t -= 2;
+							for (; FileSize > r - MsgStart && (*r == '\r' || *r == '\n'); r++);
+							break;
+						}
+						t = r + 2;
 					}
-					t = r + 1;
 				}
 			}
-		}
-		if (tpMailItem != NULL) {
-			//Body copy
 			if ((t - p) > 0) {
-				if (tpMailItem->Multipart == MULTIPART_ATTACH) {
-					tpMailItem->AttachSize -= (t - p);
-				}
-				tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
-				if (tpMailItem->Body != NULL) {
-					for (s = tpMailItem->Body; p < t && slashr >= 0; p++, s++) {
-						if (*p == '\n' && (s == tpMailItem->Body || *(s - 1) != '\r')) {
-							*(s++) = '\r';
-							--slashr;
-						}
+				buf = (char *)mem_alloc(sizeof(char) * (t - p + 1));
+				if (buf != NULL) {
+					for (s = buf; p < t; p++, s++) {
 						*s = *p;
-						if (*p == '\r' && *(p + 1) != '\n') {
-							*(s++) = '\n';
-							--slashr;
-						}
 					}
 					*s = '\0';
 					if (encrypted) {
-						rot13(tpMailItem->Body, s);
+						rot13(buf, s);
 					}
-					if (tpMailItem->HasHeader == 1 || (MboxFormat == 1 && tpMailItem->Encoding != NULL)) {
-						// strip duplicate headers and/or convert from foreign MBOX format
-						char *newbody;
-						int len, header_size;
-						BOOL free_t = FALSE;
-						if (tpMailItem->HasHeader == 1) {
-							s = GetBodyPointa(tpMailItem->Body);
-							header_size = remove_duplicate_headers(tpMailItem->Body);
-							tpMailItem->HasHeader = 2;
-							tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
-						} else {
-							s = tpMailItem->Body;
-							header_size = 0;
-						}
-						if (tpMailItem->Encoding != NULL) {
-							t = MIME_body_decode_transfer(tpMailItem, s);
-							if (t != s) {
-								free_t = TRUE;
-							}
-						} else {
-							t = s;
-						}
-						len = tstrlen(t);
+				}
+			}
+			CP_int = CP_UTF8;
+			item_mail_to_item(tpMailItem, &buf, -1, m2i, 0, tpMailBox);
+// GJClater -- this doesn't belong here
+// where do I convert from old format to new? or maybe I don't ever do that ...
+//			if (code > 0 && code < STATUS_REVISION_NPOPUK3) {
+//				remove_npopuk_headers(tpMailItem->WireForm);
+//			}
+			p = r;
 
-						newbody = (char *)mem_alloc(sizeof(char) * (len + header_size + 1));
-						if (newbody == NULL) {
-							if (header_size > 0) {
-								// shift body backwards (after removing duplicate headers)
-								tstrcpy(tpMailItem->Body + header_size, t);
-							}
-							// else the body is smaller than the allocated space; big deal
-						} else {
-							str_cpy_n(newbody, tpMailItem->Body, header_size + 1);
-							tstrcpy(newbody + header_size, t);
-							mem_free(&tpMailItem->Body);
-							tpMailItem->Body = newbody;
+		} else {
+			// old style mailitem
+			int slashr = 0;
+			if (lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
+				// nPOPuk 2.16 and earlier did all MultiByteToWideChar conversions
+				// using CP_ACP.
+				CP_int = CP_ACP;
+			}
+			tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, q, Import);
+			CP_int = CP_UTF8;
+
+			if (encrypted) {
+				mem_free(&q);
+			}
+			if (tpMailItem != NULL && tpMailItem->MailStatus == ICON_MAIL) {
+				tpMailBox->UnreadCnt++;
+			}
+
+			// Body position Position of end of mail acquisition
+			if (MboxFormat) {
+				tpMailItem->HasHeader = 1;
+				// r = GetHeaderStringPoint(p, HEAD_X_STATUS); // X-Status is always the last header written by nPOPuk
+				r = s;
+				if (r != NULL && r > p) {
+					if (tpMailItem != NULL) tpMailItem->HasHeader = 2;
+					while (*r != '\0' && (*(r-1) != '\r' || *r != '\n')) {
+						r++;
+					}
+					if (*r == '\n') {
+						r++;
+						if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
+							if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
+						} else if (*r == '\r' && *(r+1) == '\n') {
+							r += 2;
+							if (tpMailItem != NULL) tpMailItem->HasHeader = 0;
 						}
-						if (free_t == TRUE) {
-							mem_free(&t);
-						}
+						p = r;
+					} else if (*r == '\0') {
+						break;
 					}
 				}
-			}
-			if (tpMailItem->Body == NULL && (tpMailItem->MailStatus < ICON_SENTMAIL || tpMailBox == MailBox + MAILBOX_SEND)) {
-				if (tpMailItem->Download == TRUE || tpMailBox == MailBox + MAILBOX_SEND) {
-					tpMailItem->Body = (char *)mem_alloc(sizeof(char));
-					if (tpMailItem->Body != NULL) {
-						*tpMailItem->Body = '\0';
-					}
+			} else {
+				// discard all header lines
+				if (encrypted) {
+					p = r;
 				} else {
-					tpMailItem->MailStatus = ICON_NON;
-					if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL && tpMailItem->Mark != ICON_SEND) {
-						tpMailItem->Mark = ICON_NON;
+					p = GetBodyPointa(p);
+				}
+				if (p == NULL) {
+					break;
+				}
+			}
+
+			// Find end of message
+			if (MboxFormat) {
+				max = MsgStart + FileSize - len;
+				for (t = r = p; r < max; r++) {
+					if (str_cmp_n(r, MBOX_DELIMITER, len) == 0) {
+						t = r;
+						r += 2;
+						break;
+					}
+				}
+				if ( r >= max ) {
+					t = r = max + len;
+				}
+			} else {
+				for (t = r = p; *r != '\0'; r++) {
+					if (*r == '\r' || *r == '\n') {
+						if (*t == '.' && (r - t) == 1) {
+							t--;
+							if (*(t - 1) == '\r') {
+								t--;
+							}
+							for (; FileSize > r - MsgStart && (*r == '\r' || *r == '\n'); r++);
+							break;
+						}
+						if (*r == '\r' && *(r + 1) == '\n') {
+							r++;
+						} else {
+							++slashr;
+						}
+						t = r + 1;
 					}
 				}
 			}
+			if (tpMailItem != NULL) {
+				//Body copy
+				if ((t - p) > 0) {
+					if (tpMailItem->Multipart == MULTIPART_ATTACH) {
+						tpMailItem->AttachSize -= (t - p);
+					}
+					tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
+					if (tpMailItem->Body != NULL) {
+						for (s = tpMailItem->Body; p < t && slashr >= 0; p++, s++) {
+							if (*p == '\n' && (s == tpMailItem->Body || *(s - 1) != '\r')) {
+								*(s++) = '\r';
+								--slashr;
+							}
+							*s = *p;
+							if (*p == '\r' && *(p + 1) != '\n') {
+								*(s++) = '\n';
+								--slashr;
+							}
+						}
+						*s = '\0';
+						if (encrypted) {
+							rot13(tpMailItem->Body, s);
+						}
+						if (tpMailItem->HasHeader == 1 || (MboxFormat == 1 && tpMailItem->Encoding != NULL)) {
+							// strip duplicate headers and/or convert from foreign MBOX format
+							char *newbody;
+							int len, header_size;
+							BOOL free_t = FALSE;
+							if (tpMailItem->HasHeader == 1) {
+								header_size = remove_superfluous_headers(tpMailItem->Body, TRUE);
+								s = tpMailItem->Body + header_size;
+								tpMailItem->HasHeader = 2;
+								tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
+							} else {
+								s = tpMailItem->Body;
+								header_size = 0;
+							}
+							if (tpMailItem->Encoding != NULL) {
+								t = MIME_body_decode_transfer(tpMailItem, s);
+								if (t != s) {
+									free_t = TRUE;
+								}
+							} else {
+								t = s;
+							}
+							len = tstrlen(t);
+
+							newbody = (char *)mem_alloc(sizeof(char) * (len + header_size + 1));
+							if (newbody == NULL) {
+								// failed to allocate a smaller buffer, just use Body, which is bigger than necessary
+								if (header_size > 0) {
+									// shift body backwards (after removing duplicate headers)
+									tstrcpy(tpMailItem->Body + header_size, t);
+								}
+							} else {
+								str_cpy_n(newbody, tpMailItem->Body, header_size + 1);
+								tstrcpy(newbody + header_size, t);
+								mem_free(&tpMailItem->Body);
+								tpMailItem->Body = newbody;
+							}
+							if (free_t == TRUE) {
+								mem_free(&t);
+							}
+						}
+					}
+				}
+				if (tpMailItem->Body == NULL && (tpMailItem->MailStatus < ICON_SENTMAIL || tpMailBox == MailBox + MAILBOX_SEND)) {
+					if (tpMailItem->Download == TRUE || tpMailBox == MailBox + MAILBOX_SEND) {
+						tpMailItem->Body = (char *)mem_alloc(sizeof(char));
+						if (tpMailItem->Body != NULL) {
+							*tpMailItem->Body = '\0';
+						}
+					} else {
+						tpMailItem->MailStatus = ICON_NON;
+						if (tpMailItem->Mark != ICON_DOWN && tpMailItem->Mark != ICON_DEL && tpMailItem->Mark != ICON_SEND) {
+							tpMailItem->Mark = ICON_NON;
+						}
+					}
+				}
+			}
+			p = r;
 		}
-		p = r;
 		i++;
 	}
 
@@ -1119,7 +1208,8 @@ MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id)
 	char *p, *r;
 	long FileSize, FilePtr, ReadSize;
 	int MsgStart, MsgEnd, MboxFormat = -1, encrypted = 0;
-	int len, hlen = tstrlen(HEAD_MESSAGEID), mlen = tstrlen(MBOX_DELIMITER), idlen = tstrlen(m_id);
+	int len, hlen = tstrlen(HEAD_MESSAGEID), slen = tstrlen(HEAD_X_STATUS);
+	int code = 0, mlen = tstrlen(MBOX_DELIMITER), idlen = tstrlen(m_id);
 	BOOL Found = FALSE, InHeader = TRUE;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
@@ -1185,6 +1275,10 @@ MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id)
 					if (str_cmp_n(p, m_id, idlen) == 0) {
 						Found = TRUE;
 					}
+				} else if (str_cmp_ni(p+2, HEAD_X_STATUS, slen) == 0) {
+					// check for new vs old format (code >= 300000)
+					p += slen + 3;
+					code = atoi(p);
 				} else if (*(p+2) == '\r' && *(p+3) == '\n') {
 					InHeader = FALSE;
 				}
@@ -1231,8 +1325,17 @@ MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id)
 			CloseHandle(hFile);
 			return NULL;
 		}
-		tpMailItem = item_string_to_item(NULL, tmp, FALSE);
-		mem_free(&tmp);
+		if (code >= STATUS_REVISION_NPOPUK3) {
+			tpMailItem = (MAILITEM *)mem_calloc(sizeof(MAILITEM));
+			item_mail_to_item(tpMailItem, &tmp, -1, MAIL2ITEM_WIRE, 0, NULL);
+		} else {
+			CP_int = CP_ACP;
+			tpMailItem = item_string_to_item(NULL, tmp, FALSE);
+			CP_int = CP_UTF8;
+			// what about tpMailItem->Body?  item_string_to_item doesn't set it
+			// file_read_mailbox sets it after the call to item_string_to_item
+			mem_free(&tmp);
+		}
 	}
 	CloseHandle(hFile);
 
@@ -1474,6 +1577,9 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	if (op.ScrambleMailboxes && op.WriteMbox == 0) {
 		rot13(s,p);
 	}
+	// adjust length for writing to what's actually used;
+	// item_to_string_size can overestimate the length
+	len = p - tmp;
 #endif	// DIV_SAVE
 
 	///////////// MRP /////////////////////
