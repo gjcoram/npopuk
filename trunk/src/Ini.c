@@ -24,6 +24,7 @@
 /* Global Variables */
 OPTION op;
 BOOL ConvertFromNPOP = FALSE;
+int CP_int = CP_ACP;
 
 // ŠO•”ŽQÆ
 extern HINSTANCE hInst;
@@ -248,6 +249,21 @@ void ini_read_general(HWND hWnd)
 
 	op.StatusBarCharWidth = profile_get_int(GENERAL, TEXT("StatusBarCharWidth"), 7);
 
+	// only used in beta versions of nPOPuk 2.17
+	op.Codepage = profile_alloc_string(GENERAL, TEXT("Codepage"), STR_DEFAULT_CODEPAGE);
+	if (lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
+		CP_int = CP_ACP;
+	} else if (lstrcmpi(op.Codepage, TEXT("CP_UTF8")) == 0) {
+		CP_int = CP_UTF8;
+	} else {
+#ifdef UNICODE
+		char *buf = alloc_tchar_to_char(op.Codepage);
+		CP_int = atoi(buf);
+		mem_free(&buf);
+#else
+		CP_int = atoi(op.Codepage);
+#endif
+	}
 	op.HeadCharset = profile_alloc_string(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET);
 	op.HeadEncoding = profile_get_int(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE);
 	op.BodyCharset = profile_alloc_string(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET);
@@ -382,6 +398,7 @@ void ini_read_general(HWND hWnd)
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0);
+	op.ConfigPass = profile_get_int(GENERAL, TEXT("ConfigPass"), 0);
 	op.ScrambleMailboxes = profile_get_int(GENERAL, TEXT("ScrambleMailboxes"), 0);
 
 #ifdef _WIN32_WCE
@@ -452,6 +469,7 @@ void ini_read_general(HWND hWnd)
 #endif
 
 	op.ShowHeader = profile_get_int(GENERAL, TEXT("ShowHeader"), 0);
+	op.GetRecent = profile_get_int(GENERAL, TEXT("GetRecent"), -20);
 #ifdef _WIN32_WCE_PPC
 ////////////////////// MRP ////////////////////
 	op.ListGetLine = profile_get_int(GENERAL, TEXT("ListGetLine"), 50);
@@ -934,6 +952,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->NoRETR = profile_get_int(buf, TEXT("NoRETR"), 0);
 		// Disable UIDL
 		(MailBox + num)->NoUIDL = profile_get_int(buf, TEXT("NoUIDL"), 0);
+		// Yahoo! sometimes misreports size
+		(MailBox + num)->MessageSizeDelta = profile_get_int(buf, TEXT("MessageSizeDelta"), 0);
 
 		// MailCnt
 		(MailBox + num)->MailCnt = profile_get_int(buf, TEXT("MailCnt"), 0);
@@ -1070,6 +1090,7 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->UseGlobalRecv = profile_get_int(buf, TEXT("UseGlobalRecv"), 1);
 		if ((MailBox + num)->UseGlobalRecv == 0) {
 			(MailBox + num)->ShowHeader = profile_get_int(buf, TEXT("ShowHeader"), 0);
+			(MailBox + num)->GetRecent = profile_get_int(buf, TEXT("GetRecent"), -20);
 			(MailBox + num)->ListGetLine = profile_get_int(buf, TEXT("ListGetLine"), 50);
 			(MailBox + num)->ListDownload = profile_get_int(buf, TEXT("ListDownload"), 0);
 			(MailBox + num)->ListSaveMode = profile_get_int(buf, TEXT("ListSaveMode"), 2);
@@ -1167,6 +1188,8 @@ void ini_write_general(void)
 
 	profile_write_int(GENERAL, TEXT("StatusBarCharWidth"), op.StatusBarCharWidth);
 
+	// only used in beta versions of nPOPuk 2.17
+	// profile_write_string(GENERAL, TEXT("Codepage"), op.Codepage);
 	profile_write_string(GENERAL, TEXT("HeadCharset"), op.HeadCharset);
 	profile_write_int(GENERAL, TEXT("HeadEncoding"), op.HeadEncoding);
 	profile_write_string(GENERAL, TEXT("BodyCharset"), op.BodyCharset);
@@ -1231,6 +1254,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("FixContentType"), op.FixContentType);
 	profile_write_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	profile_write_int(GENERAL, TEXT("ShowPass"), op.ShowPass);
+	profile_write_int(GENERAL, TEXT("ConfigPass"), op.ConfigPass);
 	profile_write_int(GENERAL, TEXT("ScrambleMailboxes"), op.ScrambleMailboxes);
 
 	profile_write_int(GENERAL, TEXT("LvColSize-0"), op.LvColSize[0]);
@@ -1266,6 +1290,7 @@ void ini_write_general(void)
 #endif
 
 	profile_write_int(GENERAL, TEXT("ShowHeader"), op.ShowHeader);
+	profile_write_int(GENERAL, TEXT("GetRecent"), op.GetRecent);
 	profile_write_int(GENERAL, TEXT("ListGetLine"), op.ListGetLine);
 	profile_write_int(GENERAL, TEXT("ListDownload"), op.ListDownload);
 	profile_write_int(GENERAL, TEXT("ListSaveMode"), op.ListSaveMode);
@@ -1628,6 +1653,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		// Disable UIDL
 		profile_write_int(buf, TEXT("NoUIDL"), (MailBox + j)->NoUIDL);
 
+		profile_write_int(buf, TEXT("MessageSizeDelta"), (MailBox + j)->MessageSizeDelta);
+
 		// MailCnt
 		profile_write_int(buf, TEXT("MailCnt"), (MailBox + j)->MailCnt);
 		// MailSize
@@ -1787,11 +1814,13 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_int(buf, TEXT("UseGlobalRecv"), (MailBox + j)->UseGlobalRecv);
 		if ((MailBox + j)->UseGlobalRecv) {
 			profile_delete_key(buf, TEXT("ShowHeader"));
+			profile_delete_key(buf, TEXT("GetRecent"));
 			profile_delete_key(buf, TEXT("ListGetLine"));
 			profile_delete_key(buf, TEXT("ListDownload"));
 			profile_delete_key(buf, TEXT("ListSaveMode"));
 		} else {
 			profile_write_int(buf, TEXT("ShowHeader"), (MailBox + j)->ShowHeader);
+			profile_write_int(buf, TEXT("GetRecent"), (MailBox + j)->GetRecent);
 			profile_write_int(buf, TEXT("ListGetLine"), (MailBox + j)->ListGetLine);
 			profile_write_int(buf, TEXT("ListDownload"), (MailBox + j)->ListDownload);
 			profile_write_int(buf, TEXT("ListSaveMode"), (MailBox + j)->ListSaveMode);
@@ -1930,6 +1959,7 @@ void ini_free(BOOL free_all)
 	mem_free(&op.AltReplyTo);
 	mem_free(&op.Bura);
 	mem_free(&op.Oida);
+	mem_free(&op.Codepage);
 	mem_free(&op.HeadCharset);
 	mem_free(&op.BodyCharset);
 	mem_free(&op.TimeZone);

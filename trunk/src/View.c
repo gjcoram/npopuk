@@ -437,16 +437,16 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		WCHAR *wbuf;
 
 		// UNICODE is not defined; can't use char_to_tchar macros
-		len = MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0);
+		len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 		if (wbuf == NULL) {
 			mem_free(&buf);
 			return FALSE;
 		}
-		MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf, len);
+		MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
 		// 検索位置の取得
 		SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-		st = WideCharToMultiByte(CP_ACP, 0, wbuf, dwStart, NULL, 0, NULL, NULL);
+		st = WideCharToMultiByte(CP_int, 0, wbuf, dwStart, NULL, 0, NULL, NULL);
 		mem_free(&wbuf);
 		// 現在位置が前回検索位置と違う場合は現在位置を検索位置にする
 		if ((st + 1U) != FindPos) {
@@ -467,8 +467,8 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 			mem_free(&buf);
 			return FALSE;
 		}
-		st = MultiByteToWideChar(CP_ACP, 0, buf, p - buf, NULL, 0);
-		// len = MultiByteToWideChar(CP_ACP, 0, strFind, -1, NULL, 0) - 1;
+		st = MultiByteToWideChar(CP_int, 0, buf, p - buf, NULL, 0);
+		// len = MultiByteToWideChar(CP_int, 0, strFind, -1, NULL, 0) - 1;
 		// 文字列が見つかった場合はその位置を選択状態にする
 		SendMessage(hEdit, EM_SETSEL, st, st + len);
 		FindPos = p - buf;
@@ -1441,18 +1441,31 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 	} else {
 		TCHAR *attachlist;
 		BOOL has_digest = FALSE;
-		// マルチパートの展開
-		buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &vMultiPart, &MultiPartCnt, &TextIndex);
+
+		if (ViewSrc && tpMailItem->WireForm != NULL) {
+			buf = alloc_char_to_tchar(tpMailItem->WireForm);
+		} else {
+			buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &vMultiPart, &MultiPartCnt, &TextIndex);
+		}
 
 		// GJC remove HTML tags
-		if (ViewSrc == FALSE && op.StripHtmlTags == 1 &&
-			((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-			|| (TextIndex != -1 && (vMultiPart[TextIndex])->ContentType != NULL &&
-			str_cmp_ni((vMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-			p = strip_html_tags(buf, (tpMailItem->Download && op.ViewShowAttach) ? 1 : 2);
-			if (p != NULL) {
-				mem_free(&buf);
-				buf = p;
+		if (ViewSrc == FALSE && op.StripHtmlTags == 1) {
+			TCHAR *ctype = tpMailItem->ContentType;
+			if (TextIndex != -1) {
+				ctype = alloc_char_to_tchar((vMultiPart[TextIndex])->ContentType);
+			}
+			if (ctype != NULL &&
+				(str_cmp_ni_t(ctype, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+				|| str_cmp_ni_t(ctype, TEXT("text/x-aol"), lstrlen(TEXT("text/x-aol"))) == 0)) {
+
+				p = strip_html_tags(buf, (tpMailItem->Download && op.ViewShowAttach) ? 1 : 2);
+				if (p != NULL) {
+					mem_free(&buf);
+					buf = p;
+				}
+			}
+			if (TextIndex != -1) {
+				mem_free(&ctype);
 			}
 		}
 		if (tpMailItem->Download == FALSE) {
@@ -1870,20 +1883,20 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				if (dwStart != dwEnd) {
 					AllocGetText(hEdit, &buf);
 					if (buf != NULL) {
-						len = MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0);
+						len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
 						wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 						if (wbuf == NULL) {
 							mem_free(&buf);
 							return;
 						}
-						MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf, len);
+						MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
 					
-						len = WideCharToMultiByte(CP_ACP, 0, wbuf + dwStart, dwEnd - dwStart, NULL, 0, NULL, NULL);
+						len = WideCharToMultiByte(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, NULL, 0, NULL, NULL);
 						mem_free(&FindStr);
 						findparts_free();
 						FindStr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 						if (FindStr != NULL) {
-							WideCharToMultiByte(CP_ACP, 0, wbuf + dwStart, dwEnd - dwStart, FindStr, len + 1, NULL, NULL);
+							WideCharToMultiByte(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, FindStr, len + 1, NULL, NULL);
 							*(FindStr + len) = TEXT('\0');
 							Init = TRUE;
 						}
@@ -2357,13 +2370,13 @@ static void OpenURL(HWND hWnd)
 		WCHAR *wbuf, *wstr;
 		WCHAR *wst, *wen, *wr;
 
-		len = MultiByteToWideChar(CP_ACP, 0, buf, -1, NULL, 0);
+		len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 		if (wbuf == NULL) {
 			mem_free(&buf);
 			return;
 		}
-		MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf, len);
+		MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
 
 		for (wst = wbuf + i; wst > wbuf && *wst != L'\r' && *wst != L'\n' && *wst != L'\t' && *wst != L' '; wst--);
 		if (wst != wbuf) wst++;
@@ -2383,13 +2396,13 @@ static void OpenURL(HWND hWnd)
 		mem_free(&wbuf);
 		mem_free(&buf);
 
-		len = WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
+		len = WideCharToMultiByte(CP_int, 0, wstr, -1, NULL, 0, NULL, NULL);
 		str = (char *)mem_alloc(len + 1);
 		if (str == NULL) {
 			mem_free(&wstr);
 			return;
 		}
-		WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, len, NULL, NULL);
+		WideCharToMultiByte(CP_int, 0, wstr, -1, str, len, NULL, NULL);
 		mem_free(&wstr);
 	} else {
 		str = (TCHAR *)mem_alloc(sizeof(TCHAR) * (j - i + 2));
@@ -2783,8 +2796,9 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 		if (AttachMailItem == NULL) {
 			ret = FALSE;
 		} else {
-			ret = item_mail_to_item(AttachMailItem, dstr, endpoint - dstr, 2, NULL);
+			ret = item_mail_to_item(AttachMailItem, &dstr, endpoint - dstr, MAIL2ITEM_IMPORT, 0, NULL);
 			if (ret == TRUE) {
+
 				if (AttachMailItem->Body == NULL) {
 					ret = FALSE;
 				} else {
@@ -3042,14 +3056,23 @@ BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailIte
 			buf = MIME_body_decode(tpMailItem, ViewSrc, TRUE, &tpPart, &cnt, &idx);
 
 			// GJC remove HTML tags
-			if (ViewSrc == FALSE && op.StripHtmlTags == 1 && lstrcmp(op.ViewFileSuffix, TEXT("txt")) == 0 &&
-				((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-				|| (idx != -1 && (tpPart[idx])->ContentType != NULL &&
-				str_cmp_ni((tpPart[idx])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-				tmp = strip_html_tags(buf, 0);
-				if (tmp != NULL) {
-					mem_free(&buf);
-					buf = tmp;
+			if (ViewSrc == FALSE && op.StripHtmlTags == 1 && lstrcmp(op.ViewFileSuffix, TEXT("txt")) == 0) {
+				TCHAR *ctype = tpMailItem->ContentType;
+				if (idx != -1) {
+					ctype = alloc_char_to_tchar((tpPart[idx])->ContentType);
+				}
+				if (ctype != NULL &&
+					(str_cmp_ni_t(ctype, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+					|| str_cmp_ni_t(ctype, TEXT("text/x-aol"), lstrlen(TEXT("text/x-aol"))) == 0)) {
+
+					tmp = strip_html_tags(buf, 0);
+					if (tmp != NULL) {
+						mem_free(&buf);
+						buf = tmp;
+					}
+				}
+				if (idx != -1) {
+					mem_free(&ctype);
 				}
 			}
 			multipart_free(&tpPart, cnt);

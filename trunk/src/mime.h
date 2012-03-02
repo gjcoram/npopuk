@@ -25,9 +25,10 @@
 /* Function Prototypes */
 char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset);
 TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset);
-TCHAR *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen);
+char *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen);
+char *MIME_encode_opt(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen);
 BOOL MIME_decode(char *buf, TCHAR *ret);
-TCHAR *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t);
+char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t);
 char *MIME_rfc2231_decode(char *buf);
 BOOL MIME_create_encode_header(TCHAR *charset, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding);
 char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr);

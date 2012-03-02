@@ -434,6 +434,7 @@ static int check_last_mail(HWND hWnd, SOCKET soc, BOOL check_flag, TCHAR *ErrStr
 		// 前回最後に取得した位置から変化なしなのでそのまま取得開始
 		list_get_no++;
 		if (list_get_no > tpMailBox->MailCnt) {
+			uidl_missing = FALSE;
 			return POP_QUIT;
 		}
 	}
@@ -699,8 +700,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 {
 	MAILITEM *tpMailItem = NULL;
 	char *p, *r, *t;
-	int get_no;
-	int ret;
+	int get_no, recent, ret;
 
 	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
 	// 前コマンド結果に'.'が付いている場合はスキップする
@@ -771,8 +771,10 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	mail_received = 0;
 	if (tpMailBox->UseGlobalRecv) {
 		disable_top = (op.ListDownload != 0) ? TRUE : FALSE;
+		recent = op.GetRecent;
 	} else {
 		disable_top = (tpMailBox->ListDownload != 0) ? TRUE : FALSE;
+		recent = tpMailBox->GetRecent;
 	}
 
 	// UIDLの初期化
@@ -799,7 +801,7 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			ret = POP_LIST;
 		}
 	} else if (tpMailBox->LastNo > tpMailBox->MailCnt) {
-		// 前回最後に取得したメール数より少ない
+		// the server has fewer messages -> figure out which should be deleted
 		if (disable_uidl == FALSE) {
 			receiving_uidl = FALSE;
 			SetSocStatusTextT(hWnd, TEXT(CMD_UIDL));
@@ -809,9 +811,13 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			}
 			ret = POP_UIDL_ALL;
 		} else {
-			// 1件目から取得
+			// UIDL disallowed, have to initialize mailbox
 			init_mailbox(hWnd, tpMailBox, ShowFlag);
-			list_get_no = 1;
+			if (recent > 0 && tpMailBox->MailCnt > recent) {
+				list_get_no = tpMailBox->MailCnt - recent + 1;
+			} else {
+				list_get_no = 1;
+			}
 			if (send_command(hWnd, soc, TEXT(CMD_LIST), list_get_no, ErrStr) == FALSE) {
 				return POP_ERR;
 			}
@@ -820,6 +826,25 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	} else {
 		// 前回最後に取得したメールの位置が変わっていないかチェック
 		list_get_no = tpMailBox->LastNo;
+		if (recent > 0) {
+			int start_at = tpMailBox->MailCnt - recent + 1;
+			if (list_get_no < start_at) {
+				list_get_no = start_at;
+			} else {
+				// make sure we have all messages from start_at to LastNo
+				// in case GetRecent was increased
+				int i;
+				for (i = start_at; i < list_get_no; i++) {
+					get_no = item_get_number_to_index(tpMailBox, i);
+					if (get_no == -1) {
+						list_get_no = i;
+						uidl_missing = TRUE;
+log_save_a("set udil missing pout 1\r\n");
+						break;
+					}
+				}
+			}
+		}
 		get_no = item_get_number_to_index(tpMailBox, list_get_no);
 		if (get_no != -1) {
 			tpMailItem = *(tpMailBox->tpMailItem + get_no);
@@ -973,6 +998,18 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		tpMailBox->LastNo = tpLastMailItem->No;
 	}
 	list_get_no = tpMailBox->LastNo + 1;
+	if (tpMailBox->ListInitMsg == FALSE) {
+		int recent = (tpMailBox->UseGlobalRecv) ? op.GetRecent : tpMailBox->GetRecent;
+		if (recent > 0 && tpMailBox->MailCnt > recent) {
+			list_get_no = tpMailBox->MailCnt - recent + 1;
+			uidl_missing = FALSE;
+		}
+	}
+{
+	char buf[256];
+	sprintf_s(buf, 256, "list get no=%d  uidl_missing=%d\r\n", list_get_no, uidl_missing);
+	log_save_a(buf);
+}
 	if (uidl_missing) {
 		i = uidl_find_missing(hWnd, 0);
 		if (i == -1) {
@@ -1048,7 +1085,20 @@ static int list_proc_uidl_set(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 	}
 	// 次のメールを取得
 	list_get_no++;
+	if (uidl_missing) {
+		int recent = (tpMailBox->UseGlobalRecv) ? op.GetRecent : tpMailBox->GetRecent;
+		if (recent > 0) {
+			while (list_get_no <= tpMailBox->MailCnt) {
+				int get_no = item_get_number_to_index(tpMailBox, list_get_no);
+				if (get_no == -1) {
+					break;
+				}
+				list_get_no++;
+			}
+		}
+	}
 	if (list_get_no > tpMailBox->MailCnt) {
+		uidl_missing = FALSE;
 		return POP_QUIT;
 	}
 	if (send_command(hWnd, soc, TEXT(CMD_LIST), list_get_no, ErrStr) == FALSE) {
@@ -1074,7 +1124,7 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	mail_size = -1;
 	if (check_response(buf) == TRUE) {
 		p = skip_response(buf);
-		for (r = p; *r != ' ' && *r != '\0'; r++);
+		for (r = p; *r != ' ' && *r != '\0'; r++); // GJC: what's this for?
 		mail_size = len = a2i(p);
 		if (disable_top == FALSE) {
 			int numchars;
@@ -1122,7 +1172,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	TCHAR *p;
 	char *new_message_id;
 	int i, nOldMailCnt = NewMailCnt;
-	int st;
+	int st = 0;
 
 	// TOPレスポンスの1行目
 	if (receiving_data == FALSE) {
@@ -1133,10 +1183,26 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		}
 		// レスポンスの解析
 		if (check_response(buf) == TRUE) {
+			char *p, *r = buf + OK_LEN;
 			receiving_data = TRUE;
 			recvlen = 0;
 			recvcnt = REDRAWCNT;
 			GetLocalTime(&recv_clock);
+			// Yahoo! sometimes responds +OK nnn octets, and nnn != mail_size reported earlier
+			for (; *r == ' '; r++); // skip spaces
+			for (p = r; *p != '\0' && *p != '\r' && *p != '\n'; p++) {
+				if (strcmp(p, "octets") == 0) {
+					int new_size = a2i(r);
+					if (new_size > mail_size - 10) {
+						if (op.SocLog > 1) {
+							char msg[100];
+							sprintf_s(msg, 99, " message size updated from %d to %d", mail_size, new_size);
+							log_save_a(msg);
+						}
+						mail_size = new_size;
+					}
+				}
+			}
 			return POP_TOP;
 		}
 		if (disable_top == FALSE && tpMailBox->NoRETR == 0) {
@@ -1204,6 +1270,10 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 		if (*p == '\0') {
 			return POP_ERR;
 		}
+		st = ICON_ERROR;
+	} else if (disable_top) {
+		// using RETR, message is fully downloaded (even if server messes up reported size)
+		st = ICON_DOWN;
 	}
 	if (op.SocLog > 1) {
 		pop_log_download_rate();
@@ -1211,7 +1281,10 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 	new_message_id = item_get_message_id(mail_buf);
 	// ヘッダからアイテムを作成
-	tpMailItem = item_header_to_item(tpMailBox, mail_buf, mail_size);
+	tpMailItem = item_header_to_item(tpMailBox, &mail_buf, mail_size, st);
+	if (mail_buf == NULL) {
+		mail_buf_size = 0;
+	}
 	if (tpMailItem == NULL) {
 		mem_free(&new_message_id);
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
@@ -1228,14 +1301,6 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	if ((int)tpMailItem != -1) {
 		BOOL first_new_msg = (tpMailItem->New == TRUE) && (mail_received != 1)
 			&& (NewMail_Flag == FALSE) && (ShowMsgFlag == FALSE);
-
-		if (soc == -1) {
-			// salvaging: mark error
-			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
-		} else if (disable_top) {
-			// RETR was used, message is fully downloaded
-			tpMailItem->Download = TRUE;
-		}
 
 		// 新着フラグの除去
 		if (first_new_msg && op.ClearNewOverlay == 1) {
@@ -1448,8 +1513,7 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
 	MAILITEM *tpMailItem;
-	int i, size;
-	int get_no;
+	int i, size, get_no, st = 0;
 
 	if (receiving_data == FALSE) {
 		// 前コマンド結果に'.'が付いている場合はスキップする
@@ -1535,6 +1599,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		if (tpMailItem->Body != NULL && strlen(tpMailItem->Body) > mail_buf_len) {
 			return POP_ERR;
 		}
+		st = ICON_ERROR;
 	}
 
 	if (op.SocLog > 1) {
@@ -1542,15 +1607,12 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	}
 
 	// convert mail_buf to message structure
-	item_mail_to_item(tpMailItem, mail_buf, -1, TRUE, tpMailBox);
-	if (tpMailItem == NULL) {
+	item_mail_to_item(tpMailItem, &mail_buf, -1, MAIL2ITEM_RETR, st, tpMailBox);
+	if (mail_buf == NULL) {
+		mail_buf_size = 0;
+	} else {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return POP_ERR;
-	}
-	if (soc == -1) {
-		// salvaging: mark error
-		tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
-		tpMailItem->Download = FALSE;
 	}
 	tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 
@@ -2033,19 +2095,6 @@ static void pop_log_download_rate() {
 	wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
 		recvlen, units, diff, rate, units);
 	log_save(msg);
-}
-/*
- * claim_mail_buf
- */
-char *claim_mail_buf(char *buf)
-{
-	if (buf == mail_buf) {
-		mail_buf = NULL;
-		mail_buf_size = 0;
-		return buf;
-	} else {
-		return NULL;
-	}
 }
 
 /*

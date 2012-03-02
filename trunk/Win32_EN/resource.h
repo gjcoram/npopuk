@@ -220,6 +220,7 @@
 #define IDC_CHECK_CLOSEHIDE             1044
 #define IDC_CHECK_SHOWPASS              1045
 #define IDC_CHECK_UPDATEAFTERCHECK      1045
+#define IDC_CHECK_CONFIGPASS            1046
 #define IDC_CHECK_SCANALLFORUNREAD      1046
 #define IDC_CHECK_STARTPASS             1047
 #define IDC_COMBO_ENTRY                 1048
@@ -345,7 +346,10 @@
 #define IDC_BUTTON_NOSEL                1252
 #define IDC_EDIT_SAVEDIR                1253
 #define IDC_BUTTON_FILE_BROWSE          1254
-#define ID_MENUITEM_VIEWIMAGE           1255
+#define IDC_CHECK_GETRECENT             1255
+#define IDC_EDIT_NUMRECENT              1256
+#define IDC_TEXT_GETRECENT              1257
+#define ID_MENUITEM_VIEWIMAGE           1258
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

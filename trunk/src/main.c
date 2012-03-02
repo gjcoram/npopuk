@@ -186,9 +186,6 @@ extern HANDLE hEvent;
 
 /* Local Function Prototypes */
 static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
-#ifndef _WIN32_WCE
-static BOOL ConfirmPass(HWND hWnd, TCHAR *ps);
-#endif
 static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon);
 static void SetTrayIcon(HWND hWnd, HICON hIcon);
 static void FreeAllMailBox(void);
@@ -839,12 +836,12 @@ static BOOL CommandLine(HWND hWnd, TCHAR *buf)
  * ConfirmPass - パスワードの確認
  */
 #ifndef _WIN32_WCE
-static BOOL ConfirmPass(HWND hWnd, TCHAR *ps)
+BOOL ConfirmPass(HWND hWnd, TCHAR *ps, BOOL Show)
 {
 	// ShowPass
 	gPassSt = 0;
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_INPUTPASS), NULL, InputPassProc,
-		(LPARAM)STR_TITLE_SHOWPASSWORD) == FALSE) {
+		((Show == TRUE) ? (LPARAM)STR_TITLE_SHOWPASSWORD : (LPARAM)STR_TITLE_CONFPASSWORD)) == FALSE) {
 		return FALSE;
 	}
 	confirm_flag = 2;
@@ -1429,6 +1426,7 @@ void SetMailMenu(HWND hWnd)
 	int RecvBoxFlag, SaveTypeFlag, SendBoxFlag;
 	int MoveBoxFlag;
 	int i;
+	LPARAM mklng;
 
 #ifdef _WIN32_WCE_PPC
 	LPARAM lpras;
@@ -1529,6 +1527,13 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_ALLEXEC, (LPARAM)MAKELONG(SocFlag, 0));
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_STOP, (LPARAM)MAKELONG(!SocFlag, 0));
 
+#ifndef _WIN32_WCE
+	mklng = (LPARAM)MAKELONG(SelFlag, 0);
+	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_REMESSEGE, mklng);
+	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_ALLREMESSEGE, mklng);
+	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FORWARD, mklng);
+#endif
+
 	if (SelBox == MAILBOX_SEND) {
 		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_SENDMARK,
 			(LPARAM)MAKELONG((SelFlag & Markable & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
@@ -1537,15 +1542,13 @@ void SetMailMenu(HWND hWnd)
 			(LPARAM)MAKELONG((SelFlag & SaveTypeFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
 	}
 
+	mklng = (LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0);
 	if (SendBoxFlag & SaveTypeFlag) {
-		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK,
-			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELMARK, mklng);
 	} else {
-		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELETE,
-			(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+		SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_DELETE, mklng);
 	}
-	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK,
-		(LPARAM)MAKELONG((SelFlag & !(!RecvBoxFlag && ExecFlag == TRUE)), 0));
+	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_FLAGMARK, mklng);
 
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
@@ -1576,8 +1579,9 @@ void SetMailMenu(HWND hWnd)
 #endif	// _WIN32_WCE_PPC
 
 #if !defined(_WIN32_WCE)
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    (LPARAM)MAKELONG(op.EnableLAN, 0));
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, (LPARAM)MAKELONG(op.EnableLAN, 0));
+	mklng = (LPARAM)MAKELONG(op.EnableLAN, 0);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    mklng);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, mklng);
 #endif
 
 #endif	//_WIN32_WCE_LAGENDA
@@ -2132,6 +2136,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					ErrorMessage(hWnd, STR_ERR_TOOMANYMAILBOXES);
 					return 0;
 				}
+
 				pending = TRUE;
 				below = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
 				if (tmpselbox == -1) {
@@ -2139,6 +2144,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				}
 				SelBox = mailbox_create(hWnd, 1, below + 1, TRUE, -1);
 				i = SetMailBoxType(hWnd, 0);
+#ifndef _WIN32_WCE
+				if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+					i = -1;
+				}
+#endif
 				if (i == -1 || (i == 0 && SetMailBoxOption(hWnd, FALSE) == FALSE)) {
 					mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 					pending = FALSE;
@@ -2168,6 +2179,13 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				if (DelBox == MAILBOX_SEND || DelBox == RecvBox) {
 					return 0;
 				}
+#ifndef _WIN32_WCE
+				if ((MailBox+DelBox)->Type != MAILBOX_TYPE_SAVE && op.ConfigPass == 1 &&
+					op.Password != NULL && *op.Password != TEXT('\0') &&
+					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+					break;
+				}
+#endif
 				wsprintf(msg, STR_Q_DELMAILBOX, ((MailBox+DelBox)->Name) ? (MailBox+DelBox)->Name : STR_MAILBOX_NONAME);
 				if (MessageBox(hWnd, msg, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 					return 0;
@@ -2428,28 +2446,36 @@ static BOOL InitWindow(HWND hWnd)
 		{4,	ID_MENUITEM_STOP,			TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{5,	ID_MENUITEM_NEWMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+#ifdef _WIN32_WCE
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{6,	ID_MENUITEM_DOWNMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{7,	ID_MENUITEM_SENDMARK,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{8,	ID_MENUITEM_DELMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{9,	ID_MENUITEM_DELETE,			TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
-#ifdef _WIN32_WCE
 		{10,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{11,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{12,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #else
-		{10,ID_MENUITEM_READMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{11,ID_MENUITEM_UNREADMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{12,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{6,	ID_MENUITEM_REMESSEGE,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{7,	ID_MENUITEM_ALLREMESSEGE,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{8,	ID_MENUITEM_FORWARD,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{13,ID_MENUITEM_FIND,			TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{14,ID_MENUITEM_NEXTFIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{9,	ID_MENUITEM_DOWNMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{10,ID_MENUITEM_SENDMARK,		TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{11,ID_MENUITEM_DELMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{12,ID_MENUITEM_DELETE,			TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{13,ID_MENUITEM_READMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{14,ID_MENUITEM_UNREADMAIL,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{15,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{15,ID_MENUITEM_ADDRESS,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{16,ID_MENUITEM_FIND,			TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{17,ID_MENUITEM_NEXTFIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
-		{16,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{17,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{18,ID_MENUITEM_ADDRESS,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
+		{19,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		{20,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #endif
 	};
 #endif // _WIN32_WCE_SP
@@ -4647,7 +4673,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (op.ShowPass == 1 &&
 			(IsWindowVisible(hWnd) == 0 || IsIconic(hWnd) != 0) &&
 			op.Password != NULL && *op.Password != TEXT('\0') &&
-			ConfirmPass(hWnd, op.Password) == FALSE) {
+			ConfirmPass(hWnd, op.Password, TRUE) == FALSE) {
 			break;
 		}
 		if (CommandLine(hWnd, ((PCOPYDATASTRUCT)lParam)->lpData) == TRUE) {
@@ -5359,7 +5385,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.ShowPass == 1 &&
 				(IsWindowVisible(hWnd) == 0 || IsIconic(hWnd) != 0) &&
 				op.Password != NULL && *op.Password != TEXT('\0') &&
-				ConfirmPass(hWnd, op.Password) == FALSE) {
+				ConfirmPass(hWnd, op.Password, TRUE) == FALSE) {
 				break;
 			}
 #endif
@@ -5386,16 +5412,25 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//Option
 		case ID_MENUITEM_OPTION:
-			if (((GetKeyState(VK_SHIFT) < 0) 
-					&& ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
-#ifdef _WIN32_WCE_PPC
-				|| (op.PromptIniEdit
-					&& MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO | MB_DEFBUTTON2) == IDYES)
+			{
+				int key = GetKeyState(VK_SHIFT);
+#ifndef _WIN32_WCE
+				if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+					break;
+				}
 #endif
-					) {
-				ret = AdvOptionEditor(hWnd);
-			} else {
-				ret = SetOption(hWnd);
+				if (((key < 0) 
+						&& ParanoidMessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO) == IDYES)
+#ifdef _WIN32_WCE_PPC
+					|| (op.PromptIniEdit
+						&& MessageBox(hWnd, STR_Q_ADV_OPT, WINDOW_TITLE, MB_YESNO | MB_DEFBUTTON2) == IDYES)
+#endif
+						) {
+					ret = AdvOptionEditor(hWnd);
+				} else {
+					ret = SetOption(hWnd);
+				}
 			}
 
 			SwitchCursor(FALSE);
@@ -5542,6 +5577,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			mailbox_select(hWnd, mailbox_create(hWnd, 1, old_selbox + 1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
+#ifndef _WIN32_WCE
+			if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+				i = -1;
+			}
+#endif
 			if (i == -1 || (i == 0 && SetMailBoxOption(hWnd, TRUE) == FALSE)) {
 				mailbox_delete(hWnd, SelBox, FALSE, FALSE);
 				mailbox_select(hWnd, old_selbox);
@@ -5571,8 +5612,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (SetSaveBoxOption(hWnd) == FALSE) {
 					break;
 				}
-			} else if (SetMailBoxOption(hWnd, FALSE) == FALSE) {
-				break;
+			} else {
+#ifndef _WIN32_WCE
+				if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+					break;
+				}
+#endif
+				if (SetMailBoxOption(hWnd, FALSE) == FALSE) {
+					break;
+				}
 			}
 			if (op.AutoSave != 0) {
 				SwitchCursor(FALSE);
@@ -5710,6 +5759,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//of account Deletion
 		case ID_MENUITEM_DELETEMAILBOX:
 			if (SelBox == MAILBOX_SEND || SelBox == RecvBox) {
+				break;
+			}
+			if ((MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE &&
+				op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 				break;
 			}
 			{
@@ -6327,7 +6381,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (op.ShowPass == 1 &&
 				(IsWindowVisible(hWnd) == 0 || IsIconic(hWnd) != 0) &&
 				op.Password != NULL && *op.Password != TEXT('\0') &&
-				ConfirmPass(hWnd, op.Password) == FALSE) {
+				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 				break;
 			}
 			ShowWindow(hWnd, SW_SHOW);
@@ -6465,7 +6519,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			(wParam == SC_RESTORE || wParam == SC_MAXIMIZE) &&
 			(IsWindowVisible(hWnd) == 0 || IsIconic(hWnd) != 0) &&
 			op.Password != NULL && *op.Password != TEXT('\0') &&
-			ConfirmPass(hWnd, op.Password) == FALSE) {
+			ConfirmPass(hWnd, op.Password, TRUE) == FALSE) {
 			return 0;
 		}
 		return DefWindowProc(hWnd, msg, wParam, lParam);

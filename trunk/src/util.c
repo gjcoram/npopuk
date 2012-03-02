@@ -715,6 +715,7 @@ int DateConv(char *buf, char *ret, BOOL for_sort)
 	if (i == -1) i = FormatDateConv("w, d m y h:n t", buf, &gTime);
 	if (i == -1) i = FormatDateConv("w d m y h:n:s t", buf, &gTime);
 	if (i == -1) i = FormatDateConv("w m d h:n:s y t", buf, &gTime);
+	if (i == -1) i = FormatDateConv("d m y h:n t", buf, &gTime);
 	if (i == -1) {
 		tstrcpy(ret, buf);
 		return -1;
@@ -1634,7 +1635,7 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
+		if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -1749,7 +1750,7 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_ACP, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
+		if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -2787,14 +2788,17 @@ TCHAR *strip_html_tags(TCHAR *buf, int insert_notice)
 }
 
 /*
- * remove_duplicate_headers - remove headers that nPOPuk stores separately (GJC)
+ * remove_superfluous_headers - remove unnecessary header lines (GJC)
+ *		if (dups == TRUE), remove those that nPOPuk stores separately
+ *		if (dups == FALSE), remove those that nPOPuk doesn't care about
  */
-int remove_duplicate_headers(char *buf)
+int remove_superfluous_headers(char *buf, BOOL dups)
 {
-	BOOL did_one = FALSE;
+	BOOL skip, did_one = FALSE;
 	char *p, *r;
 	p = r = buf;
 	while (*p != '\0') {
+		skip = FALSE;
 		if (str_cmp_n(p, HEAD_SUBJECT, strlen(HEAD_SUBJECT)) == 0
 			|| str_cmp_ni(p, HEAD_FROM, strlen(HEAD_FROM)) == 0
 			|| str_cmp_ni(p, HEAD_TO, strlen(HEAD_TO)) == 0
@@ -2808,12 +2812,71 @@ int remove_duplicate_headers(char *buf)
 			|| str_cmp_ni(p, HEAD_INREPLYTO, strlen(HEAD_INREPLYTO)) == 0
 			|| str_cmp_ni(p, HEAD_REFERENCES, strlen(HEAD_REFERENCES)) == 0
 			|| str_cmp_ni(p, HEAD_IMPORTANCE, strlen(HEAD_IMPORTANCE)) == 0
-		//	|| str_cmp_ni(p, HEAD_X_PRIORITY, strlen(HEAD_X_PRIORITY)) == 0
-		//	|| str_cmp_ni(p, HEAD_PRIORITY, strlen(HEAD_PRIORITY)) == 0
+			|| str_cmp_ni(p, HEAD_X_PRIORITY, strlen(HEAD_X_PRIORITY)) == 0
+			|| str_cmp_ni(p, HEAD_PRIORITY, strlen(HEAD_PRIORITY)) == 0
 			|| str_cmp_ni(p, HEAD_READ1, strlen(HEAD_READ1)) == 0
 			|| str_cmp_ni(p, HEAD_READ2, strlen(HEAD_READ2)) == 0
 			|| str_cmp_ni(p, HEAD_DELIVERY, strlen(HEAD_DELIVERY)) == 0
 			|| str_cmp_ni(p, HEAD_READ2, strlen(HEAD_READ2)) == 0) {
+
+			skip = (dups) ? TRUE : FALSE;
+
+		} else {
+			skip = (dups) ? FALSE : TRUE;
+		}
+		if (skip) {
+				did_one = TRUE;
+				while (*p != '\0' && ((p > buf && *(p-1) != '\r') || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+					p++;
+				}
+				p++;
+		} else {
+				while (*p != '\0' && ((p > buf && *(p-1) != '\r') || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {
+					// if did_one == FALSE, r==p and the next line is pointless, but we still need to advance r and p
+					*(r++) = *(p++);
+				}
+				*(r++) = *(p++);
+		}
+
+		if (*p == '\r' && *(p+1) == '\n') {
+			// reached end of header lines
+			*(r++) = *(p++);
+			*(r++) = *(p++);
+			if (dups == TRUE) {
+				// only deal with header lines				
+				if (did_one) {
+					*r = '\0';
+				}
+			} else {
+				if (did_one) {
+					while (*p != '\0') {
+						*(r++) = *(p++);
+					}
+				} else {
+					while (*r != '\0') {
+						r++;
+					}
+				}
+			}
+			break;
+		}
+	}
+	return (r - buf);
+}
+
+/* 
+ * remove_npopuk_headers - remove nPOPuk-specific headers from old-format message (GJC)
+ */
+int remove_npopuk_headers(char *buf)
+{
+	BOOL did_one = FALSE;
+	char *p, *r;
+	p = r = buf;
+	while (*p != '\0') {
+			if (str_cmp_n(p, HEAD_X_UIDL, strlen(HEAD_X_UIDL)) == 0
+			|| str_cmp_ni(p, HEAD_X_MAILBOX, strlen(HEAD_X_MAILBOX)) == 0
+			|| str_cmp_ni(p, HEAD_X_NO, strlen(HEAD_X_NO)) == 0
+			|| str_cmp_ni(p, HEAD_X_STATUS, strlen(HEAD_X_STATUS)) == 0) {
 				// skip
 				did_one = TRUE;
 				while (*p != '\0' && ((p > buf && *(p-1) != '\r') || *p != '\n' || *(p+1) == ' ' || *(p+1) == '\t')) {

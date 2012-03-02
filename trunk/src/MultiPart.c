@@ -604,7 +604,6 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 	BOOL have_file, have_fwdatt;
 #ifdef UNICODE
 	char *cp, *cr, *ftmp;
-	TCHAR *wtmp;
 	TCHAR dtmp[3];
 	char ctmp[3];
 #endif
@@ -787,11 +786,11 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 			// ファイル名のエンコード
 			p = NULL;
 			if (op.EncodeType == 1) {
-#ifdef UNICODE
-				wtmp = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding, 10); // 10==lstrlen(TEXT(" filename="))
-				fname = wtmp;
-#else
+				// use header encoding, not rfc2231, for filename
 				p = MIME_encode(fname, FALSE, op.HeadCharset, op.HeadEncoding, 10); // 10==lstrlen(TEXT(" filename="))
+#ifdef UNICODE
+				fname = alloc_char_to_tchar(p);
+#else
 				fname = p;
 #endif
 			}
@@ -807,13 +806,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				mem_free(&p);
 				return MP_ERROR_ALLOC;
 			}
-#ifdef UNICODE
-			wtmp = MIME_rfc2231_encode(fname, op.HeadCharset);
-			ef = alloc_tchar_to_char(wtmp);
-			mem_free(&wtmp);
-#else
 			ef = MIME_rfc2231_encode(fname, op.HeadCharset);
-#endif
 			if (ef == NULL) {
 #ifndef WSAASYNC
 				encatt_free(EncAtt, attnum);
@@ -827,11 +820,13 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 				return MP_ERROR_ALLOC;
 			}
 
+			if (op.EncodeType == 1) {
 #ifdef UNICODE
-			cfname = alloc_tchar_to_char(fname);
+				cfname = alloc_tchar_to_char(fname);
 #else
-			cfname = fname;
+				cfname = fname;
 #endif
+			}
 
 			// Partの追加
 #ifndef WSAASYNC

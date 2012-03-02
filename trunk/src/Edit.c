@@ -454,14 +454,23 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		} else {
 			mBody = MIME_body_decode(tpReMailItem, FALSE, TRUE, &tpMultiPart, &cnt, &TextIndex);
 
-			if (op.StripHtmlTags == 1 &&
-				((tpMailItem->ContentType != NULL && str_cmp_ni_t(tpMailItem->ContentType, TEXT("text/html"), lstrlen(TEXT("text/html")))==0)
-				|| (TextIndex != -1 && (tpMultiPart[TextIndex])->ContentType != NULL &&
-				str_cmp_ni((tpMultiPart[TextIndex])->ContentType, "text/html", tstrlen("text/html")) == 0))) {
-				p = strip_html_tags(mBody, 0);
-				if (p != NULL) {
-					mem_free(&mBody);
-					mBody = p;
+			if (op.StripHtmlTags == 1) {
+				TCHAR *ctype = tpMailItem->ContentType;
+				if (TextIndex != -1) {
+					ctype = alloc_char_to_tchar((tpMultiPart[TextIndex])->ContentType);
+				}
+				if (ctype != NULL &&
+					(str_cmp_ni_t(ctype, TEXT("text/html"), lstrlen(TEXT("text/html"))) == 0
+					|| str_cmp_ni_t(ctype, TEXT("text/x-aol"), lstrlen(TEXT("text/x-aol"))) == 0)) {
+
+					p = strip_html_tags(mBody, 0);
+					if (p != NULL) {
+						mem_free(&mBody);
+						mBody = p;
+					}
+				}
+				if (TextIndex != -1) {
+					mem_free(&ctype);
 				}
 			}
 
@@ -1491,7 +1500,8 @@ static void SetEditMenu(HWND hWnd)
  */
 static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int EndFlag, BOOL MarkFlag)
 {
-	TCHAR *buf, *tmp;
+	HWND hEdit;
+	TCHAR *buf = NULL;
 	TCHAR numbuf[10];
 #ifdef _WIN32_WCE
 	unsigned int len;
@@ -1509,13 +1519,14 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		}
 	}
 
+	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
+	len = AllocGetText(hEdit, &buf);
 	if (BodyFlag == FALSE) {
 		//of selected position of editing box Check
-		if (EndFlag == 0 && CheckDependence(hWnd, IDC_EDIT_BODY, &tmp) == FALSE) {
-			mem_free(&tmp);
+		if (EndFlag == 0 && CheckDependence(hEdit, buf) == FALSE) {
+			mem_free(&buf);
 			return FALSE;
 		}
-		mem_free(&tmp);
 
 		//of type dependence letter When subject is not set, information of transmission is indicated
 		if (EndFlag == 0 && gAutoSend == FALSE
@@ -1535,6 +1546,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				(LPARAM)tpMailItem);
 #endif
 			if (mkdlg == FALSE) {
+				mem_free(&buf);
 				return FALSE;
 			}
 		}
@@ -1542,14 +1554,9 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		//Setting text
 		SwitchCursor(FALSE);
 		mem_free(&tpMailItem->Body);
-		len = SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXTLENGTH, 0, 0) + 1;
-		buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 		if (len > 0 && buf != NULL) {
-			*buf = TEXT('\0');
-			SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
-
 			//Automatic operation lapel
-			tmp = (TCHAR *)mem_alloc(
+			TCHAR *tmp = (TCHAR *)mem_alloc(
 				sizeof(TCHAR) * (WordBreakStringSize(buf, op.QuotationChar, op.WordBreakSize, op.QuotationBreak) + 1));
 			if (tmp != NULL) {
 				WordBreakString(buf, tmp, op.QuotationChar, op.WordBreakSize, op.QuotationBreak);
@@ -1570,14 +1577,17 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset)) == NULL) {
 #endif
 #ifdef UNICODE
+				// GJC - check here if tmp can be represented in charset?
 				tpMailItem->Body = alloc_tchar_to_char(tmp);
+				mem_free(&tmp);
 #else
-				tpMailItem->Body = alloc_copy(tmp);
+				tpMailItem->Body = tmp;
 #endif
 #ifndef _WCE_OLD
+			} else {
+				mem_free(&tmp);
 			}
 #endif
-			mem_free(&tmp);
 		} else if (len == 0) {
 			*buf = TEXT('\0');
 #ifdef UNICODE
