@@ -23,6 +23,7 @@
 /* Struct */
 
 /* Function Prototypes */
+BOOL is_8bit_char_t(TCHAR *str);
 char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset);
 TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset);
 char *MIME_encode(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding, int headerlen);

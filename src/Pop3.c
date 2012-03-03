@@ -839,7 +839,6 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 					if (get_no == -1) {
 						list_get_no = i;
 						uidl_missing = TRUE;
-log_save_a("set udil missing pout 1\r\n");
 						break;
 					}
 				}

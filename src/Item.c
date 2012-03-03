@@ -1212,7 +1212,7 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int stat
 		return NULL;
 	}
 	// ƒwƒbƒ_‚Æ–{•¶‚ðÝ’è
-	item_mail_to_item(tpMailItem, buf, Size, MAIL2ITEM_TOP, status, NULL);
+	item_mail_to_item(tpMailItem, buf, Size, MAIL2ITEM_TOP, status, tpMailBox);
 	tpMailItem->New = TRUE;
 
 	// Adding to list of mail information
@@ -1585,6 +1585,9 @@ char *item_create_wireform(MAILITEM *tpMailItem, int WriteMbox)
 	char *p = buf, *tmp;
 
 	// ensure charsets are saved with the message, in case default charset is changed
+
+	// ... or is US-ASCII the default charset, and if-and-only-iff any non-ascii char is used,
+	// then we set the encoding ?
 	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
 	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 	if (tpMailItem->HeadCharset == NULL) {
