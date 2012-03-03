@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,..\EN"
+				AdditionalIncludeDirectories=".,..\EN,..\openssl\inc32"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;WSAASYNC;_WIN32_IE=0x0500;UNICODE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
