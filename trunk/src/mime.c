@@ -44,7 +44,6 @@ typedef struct _ENCODE_INFO {
 } ENCODE_INFO;
 
 /* Local Function Prototypes */
-static BOOL is_8bit_char_t(TCHAR *str);
 static TCHAR *get_token(TCHAR *p, BOOL *encode, int *enc_len);
 static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len);
 static int get_encode_wrap_len(TCHAR *buf, int len, int *enc_len);
@@ -57,30 +56,10 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType);
 /*
  * is_8bit_char_t - 8bit文字が含まれるかチェック
  */
-static BOOL is_8bit_char_t(TCHAR *str)
+BOOL is_8bit_char_t(TCHAR *str)
 {
 #ifdef UNICODE
-	char buf[BUF_SIZE];
-	int len;
-	int i;
-	BOOL bret;
-
-	if (CP_int == CP_UTF8 || CP_int == CP_UTF7) {
-		len = WideCharToMultiByte(CP_int, 0, str, 1, NULL, 0, NULL, NULL);
-	} else {
-		len = WideCharToMultiByte(CP_int, 0, str, 1, NULL, 0, NULL, &bret);
-		if (bret == TRUE) {
-			// str contains character not in the charset
-			return TRUE;
-		}
-	}
-	WideCharToMultiByte(CP_int, 0, str, 1, buf, len, NULL, NULL);
-	for (i = 0; i < len; i++) {
-		if ((unsigned char)*buf & (unsigned char)0x80) {
-			return TRUE;
-		}
-	}
-	return FALSE;
+	return ((*str & 0xFFF0) ? TRUE : FALSE);
 #else
 	return (((unsigned char)*str & (unsigned char)0x80) ? TRUE : FALSE);
 #endif
@@ -665,11 +644,7 @@ char *MIME_encode_opt(TCHAR *wbuf, BOOL Address, TCHAR *charset_t, int encoding,
 		if (is_8bit_char_t(p) == TRUE) {
 			break;
 		}
-#ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-			p++;
-		}
-#endif
+		// if IsDBCSLeadByte((BYTE)*p) then it must be 8bit
 	}
 
 	if (*p == TEXT('\0')) {
@@ -931,11 +906,7 @@ char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		if (is_8bit_char_t(p) == TRUE) {
 			break;
 		}
-#ifndef UNICODE
-		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
-			p++;
-		}
-#endif
+		// if IsDBCSLeadByte((BYTE)*p) then it must be 8bit
 	}
 
 	if (*p == TEXT('\0')) {
@@ -1153,6 +1124,7 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype
 			break;
 		}
 #ifndef UNICODE
+		// need to check this, in case the trail byte is \r or \n
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 			p++;
 		}

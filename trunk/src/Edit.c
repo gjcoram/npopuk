@@ -1500,18 +1500,6 @@ static void SetEditMenu(HWND hWnd)
  */
 static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int EndFlag, BOOL MarkFlag)
 {
-	HWND hEdit;
-	TCHAR *buf = NULL;
-	TCHAR numbuf[10];
-#ifdef _WIN32_WCE
-	unsigned int len;
-#else
-	int len;
-#endif
-	int i;
-	long size;
-	BOOL mkdlg;
-
 	if (tpMailItem == NULL && hWnd != NULL) {
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 		if (tpMailItem == NULL) {
@@ -1519,36 +1507,31 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		}
 	}
 
-	hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
-	len = AllocGetText(hEdit, &buf);
-	if (BodyFlag == FALSE) {
-		//of selected position of editing box Check
+	if (BodyFlag == TRUE) {
+		// body was created elsewhere:
+		// - external editor
+		// - forward filter
+		// - redirect
+		// need to check character set somehow
+
+	} else {
+		HWND hEdit;
+		TCHAR *buf = NULL;
+#ifdef _WIN32_WCE
+	unsigned int len;
+#else
+	int len;
+#endif
+		BOOL mkdlg;
+		BOOL charset_problem = FALSE;
+
+		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY);
+		len = AllocGetText(hEdit, &buf);
+
+		// Check the buffer for Unicode&Japanese problems
 		if (EndFlag == 0 && CheckDependence(hEdit, buf) == FALSE) {
 			mem_free(&buf);
 			return FALSE;
-		}
-
-		//of type dependence letter When subject is not set, information of transmission is indicated
-		if (EndFlag == 0 && gAutoSend == FALSE
-			&& (tpMailItem->Subject == NULL || *tpMailItem->Subject == TEXT('\0'))) {
-#ifdef _WIN32_WCE
-			int res = IDD_DIALOG_SETSEND;
-			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
-				res = IDD_DIALOG_SETSEND_WIDE;
-#ifdef _WIN32_WCE_PPC
-			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
-				res = IDD_DIALOG_SETSEND_SHORT;
-#endif
-			}
-			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
-#else
-			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
-				(LPARAM)tpMailItem);
-#endif
-			if (mkdlg == FALSE) {
-				mem_free(&buf);
-				return FALSE;
-			}
 		}
 
 		//Setting text
@@ -1572,22 +1555,53 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			}
 			mem_free(&buf);
 			tpMailItem->BodyEncoding = op.BodyEncoding;
-#ifndef _WCE_OLD
-			if (tpMailItem->BodyCharset == NULL ||
-				(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset)) == NULL) {
-#endif
+			if (tpMailItem->BodyCharset == NULL || lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
+				// check to see if we need a charset (if there are any non-ascii characters)
+				TCHAR *p;
+				for (p = tmp; *p != TEXT('\0'); p++) {
+					if (is_8bit_char_t(p) == TRUE) {
+						if (lstrcmpi(op.BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
+							charset_problem = TRUE;
+						} else {
+							tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
+						}
+						break;
+					}
+					// if IsDBCSLeadByte((BYTE)*p) then it must be 8bit
+				}
+			}
+			if (tpMailItem->BodyCharset != NULL && charset_problem == FALSE
+					&& lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) != 0) {
+				tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset);
+				if (tpMailItem->Body == NULL) {
+					charset_problem = TRUE;
+				} else {
+					mem_free(&tmp);
+				}
+			} else {
 #ifdef UNICODE
-				// GJC - check here if tmp can be represented in charset?
 				tpMailItem->Body = alloc_tchar_to_char(tmp);
 				mem_free(&tmp);
 #else
 				tpMailItem->Body = tmp;
 #endif
-#ifndef _WCE_OLD
-			} else {
-				mem_free(&tmp);
 			}
-#endif
+			if (charset_problem) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, STR_Q_SWITCH_TO_UTF8, ((tpMailItem->BodyCharset == NULL) ? op.BodyCharset : tpMailItem->BodyCharset));
+				SwitchCursor(TRUE);
+				if (MessageBox(hWnd, msg, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+					mem_free(&tmp);
+					return FALSE;
+				} else {
+					SwitchCursor(FALSE);
+					mem_free(&tpMailItem->BodyCharset);
+					tpMailItem->BodyCharset = alloc_char_to_tchar(CHARSET_UTF_8);
+					tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset);
+					mem_free(&tmp);
+				}
+			}
+
 		} else if (len == 0) {
 			*buf = TEXT('\0');
 #ifdef UNICODE
@@ -1598,15 +1612,43 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 #endif
 		}
 		SwitchCursor(TRUE);
+
+		// When subject is not set, bring up Property dialog
+		if (EndFlag == 0 && gAutoSend == FALSE
+			&& (tpMailItem->Subject == NULL || *tpMailItem->Subject == TEXT('\0'))) {
+#ifdef _WIN32_WCE
+			int res = IDD_DIALOG_SETSEND;
+			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+				res = IDD_DIALOG_SETSEND_WIDE;
+#ifdef _WIN32_WCE_PPC
+			} else if (GetSystemMetrics(SM_CYSCREEN) <= 260) {
+				res = IDD_DIALOG_SETSEND_SHORT;
+#endif
+			}
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
+#else
+			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
+				(LPARAM)tpMailItem);
+#endif
+			if (mkdlg == FALSE) {
+				mem_free(&buf);
+				return FALSE;
+			}
+		}
 	}
 
 	//Setting size
-	mem_free(&tpMailItem->Size);
-	size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body)) : 0;
-	if (size < 0) size = 0;
-	size += tpMailItem->AttachSize;
-	wsprintf(numbuf, TEXT("%d"), size);
-	tpMailItem->Size = alloc_copy_t(numbuf);
+	{
+		TCHAR numbuf[10];
+		long size;
+
+		mem_free(&tpMailItem->Size);
+		size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body)) : 0;
+		if (size < 0) size = 0;
+		size += tpMailItem->AttachSize;
+		wsprintf(numbuf, TEXT("%d"), size);
+		tpMailItem->Size = alloc_copy_t(numbuf);
+	}
 
 	if (MarkFlag == TRUE) {
 		tpMailItem->Mark = ICON_SEND;
@@ -1638,7 +1680,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 	}
 	if (EndFlag == 0 || EndFlag == EDIT_SEND) {
 		if (SelBox == MAILBOX_SEND) {
-			i = ListView_GetMemToItem(mListView, tpMailItem);
+			int i = ListView_GetMemToItem(mListView, tpMailItem);
 			if (i != -1) {
 				int state = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);
 				ListView_SetItemState(mListView, i, INDEXTOSTATEIMAGEMASK(state), LVIS_STATEIMAGEMASK);
