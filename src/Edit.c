@@ -1518,9 +1518,9 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		HWND hEdit;
 		TCHAR *buf = NULL;
 #ifdef _WIN32_WCE
-	unsigned int len;
+		unsigned int len;
 #else
-	int len;
+		int len;
 #endif
 		BOOL mkdlg;
 		BOOL charset_problem = FALSE;
@@ -1529,7 +1529,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		len = AllocGetText(hEdit, &buf);
 
 		// Check the buffer for Unicode&Japanese problems
-		if (EndFlag == 0 && CheckDependence(hEdit, buf) == FALSE) {
+		if (EndFlag == 0 && CheckDependence(hEdit, buf, NULL) == FALSE) {
 			mem_free(&buf);
 			return FALSE;
 		}
@@ -1553,16 +1553,18 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			if (tmp != NULL) {
 				SetDot(buf, tmp);
 			}
-			mem_free(&buf);
+			// keep buf for wire-form
 			tpMailItem->BodyEncoding = op.BodyEncoding;
 			if (tpMailItem->BodyCharset == NULL || lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
 				// check to see if we need a charset (if there are any non-ascii characters)
 				TCHAR *p;
+				BOOL cs_is_ascii = (lstrcmpi(op.BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) ? TRUE : FALSE;
 				for (p = tmp; *p != TEXT('\0'); p++) {
 					if (is_8bit_char_t(p) == TRUE) {
-						if (lstrcmpi(op.BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
+						if (cs_is_ascii) {
 							charset_problem = TRUE;
 						} else {
+							// use the global option BodyCharset (and do the conversion below)
 							tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
 						}
 						break;
@@ -1598,19 +1600,29 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 					mem_free(&tpMailItem->BodyCharset);
 					tpMailItem->BodyCharset = alloc_char_to_tchar(CHARSET_UTF_8);
 					tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset);
+					if (tpMailItem->BodyEncoding < ENC_TYPE_BASE64) {
+						tpMailItem->BodyEncoding = ENC_TYPE_Q_PRINT;
+					}
 					mem_free(&tmp);
 				}
 			}
 
 		} else if (len == 0) {
-			*buf = TEXT('\0');
+			if (buf == NULL) {
+				buf = alloc_copy_t(TEXT(""));
+			} else {
+				*buf = TEXT('\0');
+			}
 #ifdef UNICODE
 			tpMailItem->Body = alloc_tchar_to_char(buf);
-			mem_free(&buf);
 #else
-			tpMailItem->Body = buf;
+			tpMailItem->Body = alloc_copy(buf);
 #endif
 		}
+		mem_free(&tpMailItem->WireForm);
+		tpMailItem->WireForm = item_create_wireform(tpMailItem, buf);
+		mem_free(&buf);
+
 		SwitchCursor(TRUE);
 
 		// When subject is not set, bring up Property dialog
@@ -3158,8 +3170,29 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 			SetReplyMessage(tpMailItem, tpReMailItem, rebox, OpenFlag);
 		}
 
+		mkdlg = FALSE;
+		if (OpenFlag == EDIT_REPLY) {
+			// reply doesn't bring up Property dialog
+			// need to check To: and Subject: for charset problems
+			TCHAR *hcharset = tpMailItem->HeadCharset;
+			if (hcharset == NULL) {
+				hcharset = op.HeadCharset;
+			}
+			mkdlg = CheckDependence(NULL, tpMailItem->To, hcharset);
+			if (mkdlg == TRUE) {
+				mkdlg = CheckDependence(NULL, tpMailItem->Subject, hcharset);
+			}
+			if (mkdlg == TRUE) {
+				mkdlg = CheckDependence(NULL, tpMailItem->Cc, hcharset);
+			}
+			if (mkdlg == TRUE) {
+				mkdlg = CheckDependence(NULL, tpMailItem->Bcc, hcharset);
+			}
+			mkdlg = (mkdlg == TRUE) ? FALSE : TRUE;
+		}
+
 		//Transmission information setting
-		if (OpenFlag == EDIT_REPLYALL) {
+		if (OpenFlag == EDIT_REPLYALL || mkdlg != FALSE) {
 #ifdef _WIN32_WCE
 			int res = IDD_DIALOG_SETSEND;
 			if (GetSystemMetrics(SM_CXSCREEN) >= 450) {

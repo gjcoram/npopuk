@@ -19,6 +19,10 @@
 #define HEAD_LINELEN			800
 #define HEAD_ENCODE_LINELEN		76
 #define BODY_ENCODE_LINELEN		76
+#define ENC_TYPE_7BIT			0
+#define ENC_TYPE_8BIT			1
+#define ENC_TYPE_BASE64			2
+#define ENC_TYPE_Q_PRINT		3
 
 /* Struct */
 

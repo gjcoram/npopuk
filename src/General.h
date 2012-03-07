@@ -157,6 +157,7 @@ extern int sprintf_s();
 #define MAIL2ITEM_RETR			1
 #define MAIL2ITEM_IMPORT		2
 #define MAIL2ITEM_WIRE			3
+#define MAIL2ITEM_ATTACH		4
 
 #define IDC_MBMENU				400					//Control ID
 #define IDC_LISTVIEW			401
@@ -388,7 +389,6 @@ extern int sprintf_s();
 #define PARM_BODY				TEXT("/body:")
 #define PARM_ATTACH				TEXT("/attach:")
 #define PARM_MAILTO				TEXT("mailto:")
-
 
 #define ABS(n)					((n < 0) ? (-n) : n)				// â‘Î’l
 
@@ -951,6 +951,7 @@ void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox);
 BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, BOOL download, int status, MAILBOX *tpMailBox);
 MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int status);
 MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import);
+char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body);
 int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
 char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);
 int item_find_thread(MAILBOX *tpMailBox, TCHAR *p, int Index);
@@ -1105,7 +1106,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 void attach_item_free();
 BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CheckDependence(HWND hEdit, TCHAR *buf);
+BOOL CheckDependence(HWND hEdit, TCHAR *buf, TCHAR *charset);
 BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK MailPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

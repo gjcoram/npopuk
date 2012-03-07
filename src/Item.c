@@ -719,7 +719,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, int download)
 			tpMailItem->Mark = tpMailItem->MailStatus = ICON_ERROR;
 			return;
 		} else if (r != p) {
-			if (download == MAIL2ITEM_WIRE || download == MAIL2ITEM_IMPORT) {
+			if (download == MAIL2ITEM_WIRE || download == MAIL2ITEM_IMPORT || download == MAIL2ITEM_ATTACH) {
 				tpMailItem->HasHeader = 0;
 				tpMailItem->Body = r;
 				return;
@@ -756,7 +756,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, int download)
 			mem_free(&r);
 		}
 
-	} else if (download == MAIL2ITEM_WIRE || download == MAIL2ITEM_IMPORT) {
+	} else if (download == MAIL2ITEM_WIRE || download == MAIL2ITEM_IMPORT || download == MAIL2ITEM_ATTACH) {
 		// take the headers to be the body
 		mem_free(&tpMailItem->Body);
 		tpMailItem->Body = alloc_copy(buf);
@@ -785,6 +785,7 @@ static void item_set_body(MAILITEM *tpMailItem, char *buf, int download)
  */
 void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox)
 {
+	// HEAD_X_STATUS handled in file_read_mailbox and item_set_flags
 	item_get_content_t(buf, HEAD_BCC, &tpMailItem->Bcc);
 	item_get_content_t(buf, HEAD_REDIRECT, &tpMailItem->RedirectTo);
 	item_get_content_t(buf, HEAD_X_UIDL, &tpMailItem->UIDL);
@@ -820,7 +821,9 @@ void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox)
 	}
 	item_get_content_t(buf, HEAD_X_HEADCHARSET, &tpMailItem->HeadCharset);
 	tpMailItem->HeadEncoding = item_get_content_int(buf, HEAD_X_HEADENCODE, 0);
+	// BodyCharset may come from Content-Type: instead
 	item_get_content_t(buf, HEAD_X_BODYCHARSET, &tpMailItem->BodyCharset);
+	// BodyEncoding may come from Content-Transfer-Encoding: instead
 	tpMailItem->BodyEncoding = item_get_content_int(buf, HEAD_X_BODYENCODE, 0);
 
 	// No
@@ -828,7 +831,6 @@ void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox)
 	if (tpMailItem->No == -1) {
 		tpMailItem->No = item_get_content_int(buf, HEAD_X_NO_OLD, 0);
 	}
-
 }
 
 
@@ -882,7 +884,11 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 		} else {
 			tpMailItem->Download = FALSE;
 		}
-	} else if (download == MAIL2ITEM_IMPORT) { 
+	} else if (download == MAIL2ITEM_IMPORT) {
+		tpMailItem->MailStatus = tpMailItem->Mark = (ImportRead == TRUE) ? ICON_READ : ICON_MAIL;
+		tpMailItem->ReFwd = ICON_NON;
+		tpMailItem->Download = ImportDown;
+	} else if (download == MAIL2ITEM_ATTACH) {
 		// converting attached mail item
 		tpMailItem->Download = TRUE;
 	// } else {
@@ -908,6 +914,25 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 	item_get_mime_content(*buf, HEAD_REPLYTO, &tpMailItem->ReplyTo, FALSE);
 	// Content-Type
 	item_get_mime_content(*buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType, FALSE);
+	if (tpMailItem->ContentType != NULL) {
+		// should this processing be done on char or TCHAR?
+		// can charset contain non-ascii characters?
+		TCHAR *p;
+		len = lstrlen(TEXT("charset="));
+		for (p = tpMailItem->ContentType; *p != TEXT('\0'); p++) {
+			if (str_cmp_ni_t(p, TEXT("charset="), len) == 0) {
+				p += len;
+				if (*p == TEXT('\"')) p++;
+				tpMailItem->BodyCharset = alloc_copy_t(p);
+				for (p = tpMailItem->BodyCharset; *p != TEXT('\"') && *p != TEXT('\0'); p++) {
+					;
+				}
+				*p = TEXT('\0');
+				break;
+			}
+		}
+	}
+
 	len = lstrlen(TEXT("multipart/alternative"));
 	if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart/alternative"), len) == 0) {
@@ -956,16 +981,26 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 	} else if (tpMailItem->ContentType != NULL &&
 		str_cmp_ni_t(tpMailItem->ContentType, TEXT("multipart"), lstrlen(TEXT("multipart"))) == 0) {
 		tpMailItem->Multipart = MULTIPART_CONTENT;
-	} else {
-		// Content-Transfer-Encoding
-#ifdef UNICODE
-		item_get_content(*buf, HEAD_ENCODING, &Content);
-		if (Content != NULL) {
-			tpMailItem->Encoding = alloc_char_to_tchar(Content);
-			mem_free(&Content);
+	}
+
+	// Content-Transfer-Encoding
+	item_get_content(*buf, HEAD_ENCODING, &Content);
+	if (Content != NULL) {
+		if (str_cmp_i(Content, ENCODE_7BIT) == 0) {
+			tpMailItem->BodyEncoding = ENC_TYPE_7BIT;
+		} else if (str_cmp_i(Content, ENCODE_8BIT) == 0) {
+			tpMailItem->BodyEncoding = ENC_TYPE_8BIT;
+		} else if (str_cmp_i(Content, ENCODE_BASE64) == 0) {
+			tpMailItem->BodyEncoding = ENC_TYPE_BASE64;
+		} else if (str_cmp_i(Content, ENCODE_Q_PRINT) == 0) {
+			tpMailItem->BodyEncoding = ENC_TYPE_Q_PRINT;
 		}
+#ifdef UNICODE
+		tpMailItem->Encoding = alloc_char_to_tchar(Content);
+		mem_free(&Content);
 #else
-		item_get_content(*buf, HEAD_ENCODING, &tpMailItem->Encoding);
+		tpMailItem->Encoding = Content;
+		Content = NULL;
 #endif
 	}
 
@@ -1135,7 +1170,9 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 
 	// Body
 	// item_set_body(tpMailItem, *buf, download);
-	tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
+	if (download == MAIL2ITEM_TOP || download == MAIL2ITEM_RETR) {
+		tpMailItem->Mark = tpMailItem->MailStatus = ICON_MAIL;
+	}
 	if (download == MAIL2ITEM_RETR) {
 		mem_free(&tpMailItem->Body);
 	}
@@ -1551,25 +1588,28 @@ static char *item_save_header(TCHAR *header, TCHAR *buf, char *ret)
 static char *item_join_header(char **ret, char *p, char *header, TCHAR *content, 
 							  MAILITEM *tpMailItem, BOOL address, int *len, int *size)
 {
-	if (content != NULL) {
+	if (content != NULL && *ret != NULL) {
 		char *buf = NULL;
 		int hlen = tstrlen(header);
 
 		buf = MIME_encode_opt(content, address, tpMailItem->HeadCharset, tpMailItem->HeadEncoding, hlen);		
-		hlen += tstrlen(buf) + 4; // " \r\n \0"
-		if (*len + hlen >= *size) {
-			char *tmp;
-			*size += BLOCK_SIZE;
-			p = tmp = (char *)mem_alloc(sizeof(char) * (*size));
-			if (tmp == NULL) {
-				return NULL;
+		if (buf != NULL) {
+			hlen += tstrlen(buf) + 4; // " \r\n\0"
+			if (*len + hlen >= *size) {
+				char *tmp;
+				*size += (hlen > BLOCK_SIZE) ? hlen : BLOCK_SIZE;
+				p = tmp = (char *)mem_alloc(sizeof(char) * (*size));
+				if (tmp == NULL) {
+					return NULL;
+				}
+				p = str_cpy(p, *ret);
+				mem_free(&*ret);
+				*ret = tmp;
 			}
-			p = str_cpy(p, *ret);
-			*ret = tmp;
-			mem_free(&*ret);
+			p = str_join(p, header, " ", buf, "\r\n", (char *)-1);
+			mem_free(&buf);
+			*len += hlen;
 		}
-		p = str_join(p, header, " ", buf, "\r\n", (char *)-1);
-		*len += hlen;
 	}
 	return p;
 }
@@ -1577,27 +1617,46 @@ static char *item_join_header(char **ret, char *p, char *header, TCHAR *content,
 /*
  * item_create_wireform - create wire-form (for outgoing messages) (GJC)
  */
-char *item_create_wireform(MAILITEM *tpMailItem, int WriteMbox)
+char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 {
-	int len = 0, size = BLOCK_SIZE, prio;
-	TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
-	char *buf = (char *)mem_alloc(sizeof(char) * size);
-	char *p = buf, *tmp;
+	int len = 0, size, enc, prio;
+	TCHAR ErrStr[BUF_SIZE];
+	TCHAR *BodyCSet;
+	char *buf, *p, *tmp, *send_body;
+	char ctype[BUF_SIZE], enc_type[BUF_SIZE];
 
-	// ensure charsets are saved with the message, in case default charset is changed
-
-	// ... or is US-ASCII the default charset, and if-and-only-iff any non-ascii char is used,
-	// then we set the encoding ?
-	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
-	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
+	// specify header encoding here, but don't put it in the wireform
 	if (tpMailItem->HeadCharset == NULL) {
 		tpMailItem->HeadCharset = alloc_copy_t(op.HeadCharset);
-	}
-	if (tpMailItem->BodyCharset == NULL) {
-		tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
+		tpMailItem->HeadEncoding = op.HeadEncoding;
 	}
 
-// GJC: what about memory error, charset problem ...
+	// determine Content-Type, Content-Transfer-Encoding
+	if (tpMailItem->BodyCharset != NULL) {
+		BodyCSet = tpMailItem->BodyCharset;
+		enc = tpMailItem->BodyEncoding;
+	} else {
+		BodyCSet = op.BodyCharset;
+		enc = op.BodyEncoding;
+	}
+	send_body = MIME_body_encode(body, BodyCSet, enc, NULL, ctype, enc_type, ErrStr);
+	mem_free(&tpMailItem->ContentType);
+	tpMailItem->ContentType = alloc_char_to_tchar(ctype);
+	mem_free(&tpMailItem->Encoding);
+	tpMailItem->Encoding = alloc_char_to_tchar(enc_type);
+
+	// initial buffer size; buffer is grown as needed
+	size = BLOCK_SIZE;
+	if (send_body != NULL) {
+		size += tstrlen(send_body);
+	}
+	buf = p = (char *)mem_alloc(sizeof(char) * size);
+	if (buf == NULL) {
+		mem_free(&send_body);
+		return NULL;
+	}
+	*p = '\0';
+
 	p = item_join_header(&buf, p, HEAD_FROM, tpMailItem->From, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_TO, tpMailItem->To, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_CC, tpMailItem->Cc, tpMailItem, TRUE, &len, &size);
@@ -1633,74 +1692,25 @@ char *item_create_wireform(MAILITEM *tpMailItem, int WriteMbox)
 	}
 	//////////////////--- /////////////////////
 
-	p = item_join_header(&buf, p, HEAD_X_UIDL, tpMailItem->UIDL, tpMailItem, FALSE, &len, &size);
+	len += tstrlen(send_body) + 2 + 1;
 
-	p = item_join_header(&buf, p, HEAD_X_MAILBOX, tpMailItem->MailBox, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_ATTACH, tpMailItem->Attach, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_FWDATTACH, tpMailItem->FwdAttach, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_HEADCHARSET, tpMailItem->HeadCharset, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_HEADENCODE, X_HeadEncoding, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_BODYCHARSET, tpMailItem->BodyCharset, tpMailItem, FALSE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_X_BODYENCODE, X_BodyEncoding, tpMailItem, FALSE, &len, &size);
-
-	if (WriteMbox == 0 || tpMailItem->HasHeader == 0) {
-		len += 2;
-	}
-
-	if (WriteMbox == 1) {
-		char *r = tpMailItem->Body;
-		int l = tstrlen(MBOX_DELIMITER);
-		if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
-			len++;
+	if (len > size) {
+		tmp = (char *)mem_alloc(sizeof(char) * len);
+		if (tmp != NULL) {
+			p = str_cpy(tmp, buf);
+			mem_free(&buf);
+			buf = tmp;
+		} else {
+			mem_free(&buf);
+			buf = NULL;
 		}
-		for ( /**/ ; *r != '\0'; r++, len++) {
-			if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
-				len++;
-			}
-		}
-	} else {
-		len += tstrlen(tpMailItem->Body);
 	}
-
-	if (WriteMbox != 0) {
-		len += 3; // \r\n\0
-	} else {
-		len += 6; // \r\n.\r\n\0
-	}
-	tmp = (char *)mem_alloc(sizeof(char) * len);
-	if (tmp != NULL) {
-		p = str_cpy(tmp, buf);
-		mem_free(&buf);
-		buf = tmp;
-	} else if (len >= size) {
-		mem_free(&buf);
-		buf = NULL;
-	} // else buf is already big enough
 
 	if (buf != NULL) {
-		if (WriteMbox == 0 || tpMailItem->HasHeader == 0) {
-			p = str_cpy(p, "\r\n");
-		}
-
-		if (WriteMbox == 1) {
-			char *r = tpMailItem->Body;
-			int l = tstrlen(MBOX_DELIMITER);
-			if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
-				*(p++) = '>';
-			}
-			while (*r != '\0') {
-				if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
-					*(p++) = *(r++);
-					*(p++) = *(r++);
-					*(p++) = '>';
-				} else {
-					*(p++) = *(r++);
-				}
-			}
-		} else {
-			p = str_cpy(p, tpMailItem->Body);
-		}
+		p = str_cpy(p, "\r\n");
+		p = str_cpy(p, send_body);
 	}
+	mem_free(&send_body);
 
 	return buf;
 }
@@ -1710,11 +1720,14 @@ char *item_create_wireform(MAILITEM *tpMailItem, int WriteMbox)
  */
 int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag)
 {
+	TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
 	TCHAR X_No[10], X_Mstatus[10];
 	int do_body, len = 0;
 
 	do_body = (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') ? 1 : 0;
 
+	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
+	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 	if (tpMailItem->WireForm != NULL) {
 		wsprintf(X_Mstatus, TEXT("%d"), STATUS_REVISION_NUMBER);
 	} else {
@@ -1726,24 +1739,46 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		len = tstrlen(NPOPUK_MBOX_DELIMITER);
 	}
 	if (tpMailItem->WireForm != NULL) {
-		// Only these headers change in accounts/saveboxes
-		// Other headers change for outgoing mail, but the WireForm should be rebuilt on edit
-		// so we shouldn't have to rebuild it here.
+		char *bdy = GetBodyPointa(tpMailItem->WireForm);
+
+		// These headers are modified by nPOPuk and don't belong
+		// in the WireForm even for outgoing messages
 		len += item_save_header_size(TEXT(HEAD_X_UIDL), tpMailItem->UIDL);
-		len += item_save_header_size(TEXT(HEAD_SIZE), tpMailItem->Size);
 		len += item_save_header_size(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox);
+		len += item_save_header_size(TEXT(HEAD_SIZE), tpMailItem->Size);
+		len += item_save_header_size(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset);
+		len += item_save_header_size(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding);
+		// BodyCharset saved in Content-Type:
+		// BodyEncoding saved in Content-Transfer-Encoding:
+		len += item_save_header_size(TEXT(HEAD_X_ATTACH), tpMailItem->Attach);
+		len += item_save_header_size(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach);
 		len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
+		// X-Status should always be the last nPOPuk-specific header
 		len += item_save_header_size(TEXT(HEAD_X_STATUS), X_Mstatus);
 		if (do_body == 0) {
-			char *bdy = GetBodyPointa(tpMailItem->WireForm);
 			len += (bdy - tpMailItem->WireForm);
 		} else {
 			len += tstrlen(tpMailItem->WireForm);
+			if (WriteMbox == 1) {
+				char *r = bdy;
+				int l = tstrlen(MBOX_DELIMITER);
+				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+					len++;
+				}
+				for ( /**/ ; *r != '\0'; r++, len++) {
+					if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+						len++;
+					}
+				}
+			}
+		}
+		if (WriteMbox != 0) {
+			len += 3; // \r\n\0
+		} else {
+			len += 6; // \r\n.\r\n\0
 		}
 	} else {
-		TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
-		wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
-		wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
+		// No WireForm -- old message read from file
 
 		len += item_save_header_size(TEXT(HEAD_FROM), tpMailItem->From);
 		len += item_save_header_size(TEXT(HEAD_TO), tpMailItem->To);
@@ -1824,10 +1859,14 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag)
 {
 	char *p = buf;
+	TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
 	TCHAR X_No[10], X_Mstatus[10];
 	int do_body, prio, composite_status;
 
 	do_body = (BodyFlag == TRUE && tpMailItem->Body != NULL && *tpMailItem->Body != '\0') ? 1 : 0;
+
+	wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
+	wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
 
 	// GJC: order of codes must match item_set_flags!
 	composite_status = 
@@ -1844,18 +1883,23 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		p = str_cpy(p, NPOPUK_MBOX_DELIMITER);
 	}
 	if (tpMailItem->WireForm != NULL) {
-		// Only these headers change in accounts/saveboxes
-		// Other headers change for outgoing mail, but the WireForm should be rebuilt on edit
-		// so we shouldn't have to rebuild it here.
+		char *r, *bdy = GetBodyPointa(tpMailItem->WireForm);
+
+		// These headers are modified by nPOPuk and don't belong
+		// in the WireForm even for outgoing messages
 		p = item_save_header(TEXT(HEAD_X_UIDL), tpMailItem->UIDL, p);
-		p = item_save_header(TEXT(HEAD_SIZE), tpMailItem->Size, p);
 		p = item_save_header(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox, p);
+		p = item_save_header(TEXT(HEAD_SIZE), tpMailItem->Size, p);
+		p = item_save_header(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset, p);
+		p = item_save_header(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding, p);
+		p = item_save_header(TEXT(HEAD_X_ATTACH), tpMailItem->Attach, p);
+		p = item_save_header(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach, p);
 		p = item_save_header(TEXT(HEAD_X_NO), X_No, p);
+		// X-Status should always be the last nPOPuk-specific header
 		p = item_save_header(TEXT(HEAD_X_STATUS), X_Mstatus, p);
 		// append wire-form after HEAD_X_STATUS (includes original headers and body)
 		if (do_body == 0) {
 			// bdy includes an extra \r\n (or maybe just \r or \n, see GetBodyPointa)
-			char *q, *bdy = GetBodyPointa(tpMailItem->WireForm);
 			if ( (bdy - tpMailItem->WireForm > 4)
 					&& *(bdy-4) == '\r' && *(bdy-3) == '\n'
 					&& *(bdy-2) == '\r' && *(bdy-1) == '\n' ) {
@@ -1865,17 +1909,35 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 						|| (*(bdy-1) == '\n' && *(bdy-2) == '\n')) ) {
 				bdy--;
 			}
-			for (q = tpMailItem->WireForm; q < bdy; q++) {
-				*(p++) = *q;
+			for (r = tpMailItem->WireForm; r < bdy; r++) {
+				*(p++) = *r;
 			}
 		} else {
-			p = str_cpy(p, tpMailItem->WireForm);
+			if (WriteMbox == 1) {
+				char *r = tpMailItem->WireForm;
+				int l = tstrlen(MBOX_DELIMITER);
+				while (r < bdy) {
+					// just copy headers
+					*(p++) = *(r++);
+				}
+				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+					*(p++) = '>';
+				}
+				while (*r != '\0') {
+					if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+						*(p++) = *(r++);
+						*(p++) = *(r++);
+						*(p++) = '>';
+					} else {
+						*(p++) = *(r++);
+					}
+				}
+			} else {
+				p = str_cpy(p, tpMailItem->WireForm);
+			}
 		}
 	} else {
-		// No WireForm -- old message read from file?
-		TCHAR X_HeadEncoding[10], X_BodyEncoding[10];
-		wsprintf(X_HeadEncoding, TEXT("%d"), tpMailItem->HeadEncoding);
-		wsprintf(X_BodyEncoding, TEXT("%d"), tpMailItem->BodyEncoding);
+		// No WireForm -- old message read from file
 
 		p = item_save_header(TEXT(HEAD_FROM), tpMailItem->From, p);
 		p = item_save_header(TEXT(HEAD_TO), tpMailItem->To, p);

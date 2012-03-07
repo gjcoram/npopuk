@@ -24,11 +24,6 @@
 /* Define */
 #define ESC						0x1B
 
-#define ENC_TYPE_7BIT			0
-#define ENC_TYPE_8BIT			1
-#define ENC_TYPE_BASE64			2
-#define ENC_TYPE_Q_PRINT		3
-
 /* Global Variables */
 extern OPTION op;
 extern int font_charset;
@@ -59,7 +54,7 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType);
 BOOL is_8bit_char_t(TCHAR *str)
 {
 #ifdef UNICODE
-	return ((*str & 0xFFF0) ? TRUE : FALSE);
+	return ((*str & 0xFF80) ? TRUE : FALSE);
 #else
 	return (((unsigned char)*str & (unsigned char)0x80) ? TRUE : FALSE);
 #endif
