@@ -82,6 +82,7 @@ extern BOOL ShowMsgFlag;
 extern BOOL PPCFlag;
 extern int AttachProcess;
 extern TCHAR *tmp_attach;
+extern int font_charset;
 
 extern MAILBOX *MailBox;
 extern int MailBoxCnt;
@@ -1990,8 +1991,8 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				int num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
 				if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
 					if (num <= 0) {
+						// < 0 should not be possible with ES_NUMBER
 						MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
-						// would like to prevent the property box from closing ...
 						num = 20;
 					}
 					tpOptionMailBox->GetRecent = num;
@@ -3303,8 +3304,8 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
 				if (num <= 0) {
+					// < 0 should not be possible with ES_NUMBER
 					MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
-					// would like to prevent the property box from closing ...
 					num = 20;
 				}
 				op.GetRecent = num;
@@ -5119,7 +5120,7 @@ static BOOL CALLBACK CcListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			p = NULL;
 			hEdit = GetDlgItem(hDlg, IDC_EDIT_MAILADDRESS);
 			AllocGetText(hEdit, &p);
-			if (CheckDependence(hEdit, p) == FALSE) {
+			if (CheckDependence(hEdit, p, NULL) == FALSE) {
 				mem_free(&p);
 				break;
 			}
@@ -5976,8 +5977,9 @@ BOOL CALLBACK SaveAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  * CheckDependence - EDITに機種依存文字が含まれていないかチェックする
  *		Checks something about the Japanese characters,
  *		and also whether the non-Unicode version of the program is getting Unicode text
+ *		and also whether the text is convertable to the specified charset (if non-null)
  */
-BOOL CheckDependence(HWND hEdit, TCHAR *buf)
+BOOL CheckDependence(HWND hEdit, TCHAR *buf, TCHAR *charset)
 {
 	int i;
 	BOOL ret = TRUE;
@@ -5985,9 +5987,10 @@ BOOL CheckDependence(HWND hEdit, TCHAR *buf)
 	if (buf == NULL) {
 		return TRUE;
 	}
-	if ((i = IsDependenceString(buf)) != -1 &&
-		MessageBox(GetParent(hEdit), STR_Q_DEPENDENCE,
-		WINDOW_TITLE, MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
+	if (hEdit != NULL &&
+		(i = IsDependenceString(buf)) != -1 &&
+		MessageBox(GetParent(hEdit), STR_Q_DEPENDENCE, WINDOW_TITLE,
+			MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDNO) {
 		SetFocus(hEdit);
 #ifdef UNICODE
 		SendMessage(hEdit, EM_SETSEL, i, i + 1);
@@ -5998,7 +6001,7 @@ BOOL CheckDependence(HWND hEdit, TCHAR *buf)
 		ret = FALSE;
 	}
 #ifndef UNICODE
-	if (IsWindowUnicode(hEdit)) {
+	if (hEdit != NULL && IsWindowUnicode(hEdit)) {
 		WCHAR *wbuf, *tmp;
 		i = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0) + 1;
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * i);
@@ -6015,6 +6018,38 @@ BOOL CheckDependence(HWND hEdit, TCHAR *buf)
 		}
 	}
 #endif
+	if (ret == TRUE && charset != NULL) {
+		TCHAR *p;
+		BOOL needs_utf8 = FALSE, cs_is_ascii;
+		cs_is_ascii = (lstrcmpi(charset, TEXT(CHARSET_US_ASCII)) == 0) ? TRUE : FALSE;
+		if (cs_is_ascii) {
+			for (p = buf; *p != TEXT('\0'); p++) {
+				if (is_8bit_char_t(p) == TRUE) {
+					needs_utf8 = TRUE;
+					break;
+				}
+				// if IsDBCSLeadByte((BYTE)*p) then it must be 8bit
+			}
+		}
+		if (cs_is_ascii == FALSE || needs_utf8) {
+			char *tmp = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, charset);
+			if (tmp == NULL) {
+				if (hEdit != NULL) {
+					TCHAR msg[MSG_SIZE];
+					wsprintf(msg, STR_Q_SWITCH_TO_UTF8, charset);
+					if (MessageBox(GetParent(hEdit), msg, WINDOW_TITLE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
+						ret = FALSE;
+					} else {
+						ret = 8; // switched to UTF-8 (or a different charset)
+					}
+				} else {
+					ret = 8; // can't ask about UTF-8, make the caller do it
+				}
+			} else {
+				mem_free(&tmp);
+			}
+		}
+	}
 	return ret;
 }
 
@@ -6739,22 +6774,6 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDOK:
-			//Check
-			{
-				HWND hEdit;
-				p = NULL;
-				hEdit = GetDlgItem(hDlg, IDC_EDIT_TO);
-				AllocGetText(hEdit, &p);
-				ret = CheckDependence(hEdit, p);
-				mem_free(&p); p = NULL;
-				if (ret == FALSE) break;
-				hEdit = GetDlgItem(hDlg, IDC_EDIT_TITLE);
-				AllocGetText(hEdit, &p);
-				ret = CheckDependence(hEdit, p);
-				mem_free(&p); p = NULL;
-				if (ret == FALSE) break;
-			}
-
 			tpSendMailIList = (MAILITEM **)GetWindowLong(hDlg, GWL_USERDATA);
 			if (tpSendMailIList == NULL) {
 				EndDialog(hDlg, FALSE);
@@ -6769,6 +6788,40 @@ BOOL CALLBACK SetSendProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				mem_free((void **)&tpSendMailIList);
 				EndDialog(hDlg, TRUE);
 				break;
+			}
+
+			//Check
+			{
+				HWND hEdit;
+				TCHAR *hcharset = tpMailItem->HeadCharset;
+				if (hcharset == NULL) {
+					hcharset = op.HeadCharset;
+				}
+				p = NULL;
+				hEdit = GetDlgItem(hDlg, IDC_EDIT_TO);
+				AllocGetText(hEdit, &p);
+				ret = CheckDependence(hEdit, p, hcharset);
+				mem_free(&p); p = NULL;
+				if (ret == 8) {
+					mem_free(&tpMailItem->HeadCharset);
+					tpMailItem->HeadCharset = hcharset = alloc_char_to_tchar(CHARSET_UTF_8);
+					// use op.HeadEncoding if it's 2 (ENC_TYPE_BASE64) or 3 (ENC_TYPE_Q_PRINT)
+					// else force to QP
+					tpMailItem->HeadEncoding = (op.HeadEncoding >= ENC_TYPE_BASE64) ? op.HeadEncoding : ENC_TYPE_Q_PRINT;
+				}
+				if (ret == FALSE) break;
+				hEdit = GetDlgItem(hDlg, IDC_EDIT_TITLE);
+				AllocGetText(hEdit, &p);
+				ret = CheckDependence(hEdit, p, hcharset);
+				mem_free(&p); p = NULL;
+				if (ret == 8) {
+					mem_free(&tpMailItem->HeadCharset);
+					tpMailItem->HeadCharset = hcharset = alloc_char_to_tchar(CHARSET_UTF_8);
+					// use op.HeadEncoding if it's 2 (ENC_TYPE_BASE64) or 3 (ENC_TYPE_Q_PRINT)
+					// else force to QP
+					tpMailItem->HeadEncoding = (op.HeadEncoding >= ENC_TYPE_BASE64) ? op.HeadEncoding : ENC_TYPE_Q_PRINT;
+				}
+				if (ret == FALSE) break;
 			}
 
 			//Account mailbox to send from

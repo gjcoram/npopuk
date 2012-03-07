@@ -2796,7 +2796,7 @@ BOOL AttachDecode(HWND hWnd, int id, int DoWhat)
 		if (AttachMailItem == NULL) {
 			ret = FALSE;
 		} else {
-			ret = item_mail_to_item(AttachMailItem, &dstr, endpoint - dstr, MAIL2ITEM_IMPORT, 0, NULL);
+			ret = item_mail_to_item(AttachMailItem, &dstr, endpoint - dstr, MAIL2ITEM_ATTACH, 0, NULL);
 			if (ret == TRUE) {
 
 				if (AttachMailItem->Body == NULL) {
