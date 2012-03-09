@@ -1177,7 +1177,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 		mem_free(&tpMailItem->Body);
 	}
 	{
-		char *p = tpMailItem->Body = GetBodyPointa(*buf);
+		char *p = GetBodyPointa(*buf);
 		if (p != NULL && *p != '\0') {
 			char *q = MIME_body_decode_transfer(tpMailItem, p);
 			if (q == NULL) {
@@ -1185,6 +1185,8 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 			}
 			tpMailItem->Body = q;
 			tpMailItem->HasHeader = 0;
+		} else {
+			tpMailItem->Body = alloc_copy("\0");
 		}
 	}
 	// Remove headers if "Keep all header lines" is not checked

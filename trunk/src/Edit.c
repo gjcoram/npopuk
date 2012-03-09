@@ -1553,7 +1553,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			if (tmp != NULL) {
 				SetDot(buf, tmp);
 			}
-			// keep buf for wire-form
+			mem_free(&buf);
 			tpMailItem->BodyEncoding = op.BodyEncoding;
 			if (tpMailItem->BodyCharset == NULL || lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
 				// check to see if we need a charset (if there are any non-ascii characters)
@@ -1578,14 +1578,18 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				if (tpMailItem->Body == NULL) {
 					charset_problem = TRUE;
 				} else {
-					mem_free(&tmp);
+					buf = tmp; // keep for wire-form
+					tmp = NULL;
 				}
 			} else {
 #ifdef UNICODE
 				tpMailItem->Body = alloc_tchar_to_char(tmp);
-				mem_free(&tmp);
+				buf = tmp; // keep for wire-form
+				tmp = NULL;
 #else
-				tpMailItem->Body = tmp;
+				tpMailItem->Body = alloc_copy(tmp);
+				buf = tmp; // keep for wire-form
+				tmp = NULL;
 #endif
 			}
 			if (charset_problem) {
@@ -1603,7 +1607,8 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 					if (tpMailItem->BodyEncoding < ENC_TYPE_BASE64) {
 						tpMailItem->BodyEncoding = ENC_TYPE_Q_PRINT;
 					}
-					mem_free(&tmp);
+					buf = tmp; // keep for wire-form
+					tmp = NULL;
 				}
 			}
 

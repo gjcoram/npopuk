@@ -854,12 +854,18 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			}
 			return POP_UIDL_CHECK;
 		} else {
+			int len;
 			receiving_data = FALSE;
 			if (mail_buf_init(MAIL_BUF_SIZE) == FALSE) {
 				lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 				return POP_ERR;
 			}
-			ret = send_command_top(hWnd, soc, list_get_no, ErrStr, 0, POP_TOP);
+			if (tpMailBox->UseGlobalRecv) {
+				len = op.ListGetLine;
+			} else {
+				len = tpMailBox->ListGetLine;
+			}
+			ret = send_command_top(hWnd, soc, list_get_no, ErrStr, len, POP_TOP);
 		}
 	}
 	return ret;
@@ -997,18 +1003,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		tpMailBox->LastNo = tpLastMailItem->No;
 	}
 	list_get_no = tpMailBox->LastNo + 1;
-	if (tpMailBox->ListInitMsg == FALSE) {
-		int recent = (tpMailBox->UseGlobalRecv) ? op.GetRecent : tpMailBox->GetRecent;
-		if (recent > 0 && tpMailBox->MailCnt > recent) {
-			list_get_no = tpMailBox->MailCnt - recent + 1;
-			uidl_missing = FALSE;
-		}
-	}
-{
-	char buf[256];
-	sprintf_s(buf, 256, "list get no=%d  uidl_missing=%d\r\n", list_get_no, uidl_missing);
-	log_save_a(buf);
-}
+
 	if (uidl_missing) {
 		i = uidl_find_missing(hWnd, 0);
 		if (i == -1) {
@@ -1052,6 +1047,7 @@ static int list_proc_uidl_check(HWND hWnd, SOCKET soc, char *buf, int buflen, TC
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return POP_ERR;
 		}
+		// TOP <msg_no> 0 to get headers?
 		return send_command_top(hWnd, soc, list_get_no, ErrStr, 0, POP_TOP);
 	}
 	get_no = item_get_number_to_index(tpMailBox, list_get_no);
@@ -1453,7 +1449,7 @@ static int exec_send_check_command(HWND hWnd, SOCKET soc, int get_no, TCHAR *Err
 			}
 			return POP_TOP;
 		}
-		// TOP‚ğ‘—M
+		// TOP <msg_no> 0 to get headers?
 		return send_command_top(hWnd, soc, delete_get_no, ErrStr, 0, POP_TOP);
 	}
 	// UIDL‚ğ‘—M
