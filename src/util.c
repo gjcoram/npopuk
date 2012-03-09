@@ -2852,6 +2852,7 @@ int remove_superfluous_headers(char *buf, BOOL dups)
 					while (*p != '\0') {
 						*(r++) = *(p++);
 					}
+					*r = '\0';
 				} else {
 					while (*r != '\0') {
 						r++;

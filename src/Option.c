@@ -1861,7 +1861,6 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			newlsm = tpOptionMailBox->ListSaveMode;
 			enable = TRUE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->ListGetLine, FALSE);
-			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->GetRecent, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, tpOptionMailBox->ListDownload, 0);
 			if (tpOptionMailBox->GetRecent > 0) {
 				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
@@ -4832,12 +4831,15 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				break;
 			}
 			if (SendDlgItemMessage(hDlg, IDC_RADIO_FIRSTGET, BM_GETCHECK, 0, 0) == 1) {
+				// download new mail only
 				SelMailBox->LastNo = -1;
 				SelMailBox->ListInitMsg = FALSE;
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_FIX_UIDL, BM_GETCHECK, 0, 0) == 1) {
+				// fix message numbers
 				mem_free(&(SelMailBox->LastMessageId));
 				SelMailBox->LastMessageId = NULL;
 			} else {
+				// initialize or fill in from LastNo
 				SelMailBox->LastNo = GetDlgItemInt(hDlg, IDC_EDIT_GETNUM, NULL, FALSE);
 				SelMailBox->ListInitMsg = SendDlgItemMessage(hDlg, IDC_RADIO_SETGET, BM_GETCHECK, 0, 0);
 				if (SelMailBox->LastNo < 1) {

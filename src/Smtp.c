@@ -478,7 +478,7 @@ static BOOL send_header_t(SOCKET soc, TCHAR *header, TCHAR *content, TCHAR *ErrS
 }
 
 /*
- * send_header_t - ヘッダ項目の送信
+ * send_header - ヘッダ項目の送信
  */
 #ifdef UNICODE
 static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr)
