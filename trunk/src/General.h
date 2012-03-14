@@ -56,6 +56,7 @@ extern int sprintf_s();
 
 /* Define */
 #define APP_NAME				TEXT("nPOPuk Ver ") NPOPVERTXT
+#define APP_NAME_A				"nPOPuk Ver " NPOPVERSTR
 #define APP_VERSION_NUM			3000
 // switch to wire-form and UTF8 storage
 #define STATUS_REVISION_NPOPUK3 300000
@@ -675,6 +676,7 @@ typedef struct _MAILBOX {
 	TCHAR *Signature;
 	TCHAR *ReplyTo;
 	int UseReplyToForFrom;
+	int SendWireForm;
 	int MyAddr2Bcc;
 	TCHAR *BccAddr;
 	int PopBeforeSmtp;

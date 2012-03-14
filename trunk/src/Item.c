@@ -1621,7 +1621,7 @@ static char *item_join_header(char **ret, char *p, char *header, TCHAR *content,
  */
 char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 {
-	int len = 0, size, enc, prio;
+	int len = 0, size, enc, prio, box;
 	TCHAR ErrStr[BUF_SIZE];
 	TCHAR *BodyCSet;
 	char *buf, *p, *tmp, *send_body;
@@ -1659,11 +1659,64 @@ char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 	}
 	*p = '\0';
 
+	// Handle Redirect and UseReplyToForFrom
+	box = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+	if (box != -1) {
+		MAILBOX *send_mail_box = MailBox + box;
+		TCHAR *FromAddress, *q, *r, *s;
+
+		if (send_mail_box->UseReplyToForFrom == 1
+			&& tpMailItem->ReplyTo != NULL && *tpMailItem->ReplyTo != TEXT('\0')) {
+			FromAddress = tpMailItem->ReplyTo;
+		} else {
+			FromAddress = send_mail_box->MailAddress;
+		}
+		if (FromAddress != NULL && *FromAddress != TEXT('\0')) {
+			len = lstrlen(TEXT(" <>"));
+			s = NULL;
+
+			if (send_mail_box->UserName != NULL) {
+				s = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(send_mail_box->UserName) + 1));
+				if (s != NULL) {
+					SetUserName(send_mail_box->UserName, s);
+					len += lstrlen(s);
+				}
+			}
+			len += lstrlen(FromAddress);
+			
+			r = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+			if (r != NULL) {
+				q = r;
+				if (p != NULL && *p != TEXT('\0')) {
+					q = str_join_t(q, s, TEXT(" "), (TCHAR *)-1);
+				}
+				str_join_t(q, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
+			}
+			mem_free(&s);
+			if (tpMailItem->RedirectTo != NULL) {
+				len += lstrlen(tpMailItem->RedirectTo) + lstrlen(STR_MSG_BYWAYOF);
+				s = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
+				if (s != NULL) {
+					wsprintf(s, STR_MSG_BYWAYOF, tpMailItem->RedirectTo, r);
+					mem_free(&r);
+					r = s;
+				}
+			}
+		}
+	
+		if (tpMailItem->RedirectTo != NULL) {
+			mem_free(&tpMailItem->To);
+			tpMailItem->To = r;
+		} else {
+			mem_free(&tpMailItem->From);
+			tpMailItem->From = r;
+		}
+	}
+
 	p = item_join_header(&buf, p, HEAD_FROM, tpMailItem->From, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_TO, tpMailItem->To, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_CC, tpMailItem->Cc, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_BCC, tpMailItem->Bcc, tpMailItem, TRUE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_REDIRECT, tpMailItem->RedirectTo, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_DATE, tpMailItem->Date, tpMailItem, FALSE, &len, &size);
 	// don't save tpMailItem->FmtDate
 	p = item_join_header(&buf, p, HEAD_SUBJECT, tpMailItem->Subject, tpMailItem, FALSE, &len, &size);
@@ -1681,6 +1734,9 @@ char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 	if (prio == 4) prio = 5;
 	p = item_join_header(&buf, p, HEAD_X_PRIORITY, 
 			(prio==1) ? PRIORITY_NUMBER1 : ( (prio==5) ? PRIORITY_NUMBER5 : PRIORITY_NUMBER3),
+			tpMailItem, FALSE, &len, &size);
+	p = item_join_header(&buf, p, HEAD_IMPORTANCE,
+			(prio==1) ? HIGH_PRIORITY : ( (prio==5) ? LOW_PRIORITY : NORMAL_PRIORITY),
 			tpMailItem, FALSE, &len, &size);
 
 	//////////////////MRP /////////////////////
@@ -1748,10 +1804,13 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		len += item_save_header_size(TEXT(HEAD_X_UIDL), tpMailItem->UIDL);
 		len += item_save_header_size(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox);
 		len += item_save_header_size(TEXT(HEAD_SIZE), tpMailItem->Size);
-		len += item_save_header_size(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset);
-		len += item_save_header_size(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding);
+		if (tpMailItem->HeadCharset != NULL) {
+			len += item_save_header_size(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset);
+			len += item_save_header_size(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding);
+		}
 		// BodyCharset saved in Content-Type:
 		// BodyEncoding saved in Content-Transfer-Encoding:
+		len += item_save_header_size(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo);
 		len += item_save_header_size(TEXT(HEAD_X_ATTACH), tpMailItem->Attach);
 		len += item_save_header_size(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach);
 		len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
@@ -1892,8 +1951,13 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		p = item_save_header(TEXT(HEAD_X_UIDL), tpMailItem->UIDL, p);
 		p = item_save_header(TEXT(HEAD_X_MAILBOX), tpMailItem->MailBox, p);
 		p = item_save_header(TEXT(HEAD_SIZE), tpMailItem->Size, p);
-		p = item_save_header(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset, p);
-		p = item_save_header(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding, p);
+		if (tpMailItem->HeadCharset != NULL) {
+			p = item_save_header(TEXT(HEAD_X_HEADCHARSET), tpMailItem->HeadCharset, p);
+			p = item_save_header(TEXT(HEAD_X_HEADENCODE), X_HeadEncoding, p);
+		}
+		// BodyCharset saved in Content-Type:
+		// BodyEncoding saved in Content-Transfer-Encoding:
+		p =	item_save_header(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo, p);
 		p = item_save_header(TEXT(HEAD_X_ATTACH), tpMailItem->Attach, p);
 		p = item_save_header(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach, p);
 		p = item_save_header(TEXT(HEAD_X_NO), X_No, p);
