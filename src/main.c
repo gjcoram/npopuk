@@ -2931,12 +2931,22 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 	}
 
 	if (SaveAll == TRUE || (MailBox+MAILBOX_SEND)->NeedsSave != 0) {
+		BOOL sendbox_ok;
+
 		//Transmission box (SendBox) retention
 		if (op.WriteMbox != (MailBox+MAILBOX_SEND)->WasMbox) {
 			(MailBox+MAILBOX_SEND)->NeedsSave |= MBOX_FORMAT_CHANGED;
 		}
 		// BOOL IsBackup = SelDir;
-		err |= !file_save_mailbox(SENDBOX_FILE, SaveDir, MAILBOX_SEND, SelDir, FALSE, 2);
+		sendbox_ok = file_save_mailbox(SENDBOX_FILE, SaveDir, MAILBOX_SEND, SelDir, FALSE, 2);
+		if (sendbox_ok == FALSE) {
+			err = TRUE;
+			if (op.SocLog > 1) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, "Error saving %s\r\n", SENDBOX_FILE);
+				log_save(msg);
+			}
+		}
 		if (err != FALSE) {
 			SwitchCursor(TRUE);
 			if (MessageBox(hWnd, STR_ERR_SAVEEND,

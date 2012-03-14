@@ -1003,6 +1003,8 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->ReplyTo = profile_alloc_string(buf, TEXT("ReplyTo"), TEXT(""));
 		// UseReplyToForFrom
 		(MailBox + num)->UseReplyToForFrom = profile_get_int(buf, TEXT("UseReplyToForFrom"), 0);
+		// SendWireForm
+		(MailBox + num)->SendWireForm = profile_get_int(buf, TEXT("SendWireForm"), 0);
 		// MyAddr2Bcc
 		(MailBox + num)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0);
 		// BccAddr
@@ -1885,6 +1887,11 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		if (file_save_mailbox(buf, SaveDir, j, is_backup, FALSE,
 			(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode) == FALSE) {
 			rc = FALSE;
+			if (op.SocLog > 1) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, "Error saving %s\r\n", buf);
+				log_save(msg);
+			}
 		}
 	}
 	return rc;

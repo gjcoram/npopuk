@@ -88,6 +88,8 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 #define send_header send_header_t
 #endif
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, char *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
+static BOOL augment_wire_form(MAILITEM *tpMailItem);
+static BOOL send_wire_form(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
 static void reorder_sendbox();
@@ -528,6 +530,138 @@ static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, char *header, TCH
 	ret = send_header(soc, header, p, ErrStr);
 	mem_free(&p);
 	return ret;
+}
+
+/*
+ * augment_wire_form -- add date, message-id, etc.
+ */
+static BOOL augment_wire_form(MAILITEM *tpMailItem)
+{
+	TCHAR buf[BUF_SIZE];
+	char *tmp, *bdy, *r, *t, *date=NULL, *m_id=NULL;
+	int len;
+
+	len = tstrlen(tpMailItem->WireForm);
+
+	GetTimeString(buf);
+	mem_free(&tpMailItem->Date);
+	tpMailItem->Date = alloc_copy_t(buf);
+
+	if (op.SendDate) {
+		date = alloc_tchar_to_char(tpMailItem->Date);
+		len += tstrlen(HEAD_DATE) + tstrlen(date) + 3; // " \r\n"
+	}
+
+	if (op.SendMessageId == 1) {
+		// Message-Id
+		mem_free(&tpMailItem->MessageID);
+		tpMailItem->MessageID = CreateMessageId((long)tpMailItem, send_mail_box->MailAddress);
+		if (tpMailItem->MessageID == NULL) {
+			return FALSE;
+		}
+		m_id = alloc_tchar_to_char(tpMailItem->MessageID);
+		len += tstrlen(HEAD_MESSAGEID) + tstrlen(m_id) + 3; // " \r\n"
+	}
+
+	// MIME-Version
+	len += tstrlen(HEAD_MIMEVERSION) + tstrlen(MIME_VERSION) + 3; // " \r\n"
+
+	// X-Mailer
+	len += tstrlen(HEAD_X_MAILER) + tstrlen(APP_NAME_A) + 3; // " \r\n"
+
+	tmp = (char *)mem_alloc(sizeof(char) * len);
+	if (tmp == NULL) {
+		return FALSE;
+	}
+
+	bdy = GetBodyPointa(tpMailItem->WireForm);
+	if ( (bdy - tpMailItem->WireForm > 4)
+			&& *(bdy-4) == '\r' && *(bdy-3) == '\n'
+			&& *(bdy-2) == '\r' && *(bdy-1) == '\n' ) {
+		bdy -=2;
+	} else if ( (bdy - tpMailItem->WireForm > 2) 
+				&& ((*(bdy-1) == '\r' && *(bdy-2) == '\r')
+				|| (*(bdy-1) == '\n' && *(bdy-2) == '\n')) ) {
+		bdy--;
+	}
+	for (t = tmp, r = tpMailItem->WireForm; r < bdy; r++) {
+		*(t++) = *r;
+	}
+	
+	if (date != NULL) {
+		t = str_join(t, HEAD_DATE, " ", date, "\r\n", (char*)-1);
+	}
+	if (m_id != NULL) {
+		t = str_join(t, HEAD_MESSAGEID, " ", m_id, "\r\n", (char*)-1);
+	}
+	t = str_join(t, HEAD_MIMEVERSION, " ", MIME_VERSION, "\r\n",
+				HEAD_X_MAILER, " ", APP_NAME_A, "\r\n", 
+				bdy, (char*)-1);
+	mem_free(&tpMailItem->WireForm);
+	tpMailItem->WireForm = tmp;
+
+	return TRUE;
+}
+
+/*
+ * send_wire_form - send WireForm
+ */
+static BOOL send_wire_form(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr)
+{
+#ifdef UNICODE
+	char *din, *dout;
+#endif
+
+	// add date, x-mailer, message-id
+	if (augment_wire_form(tpMailItem) == FALSE) {
+		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
+		return FALSE;
+	}
+
+	send_body = tpMailItem->WireForm;
+#ifdef WSAASYNC
+	send_pt = send_body;
+	send_len = tstrlen(send_body);
+
+	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
+		send_body = NULL;
+		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
+		return FALSE;
+	}
+#else
+	// 本文送信
+	if (send_body != NULL && send_buf(soc, send_body) == -1) {
+		send_body = send_pt = NULL;
+		encatt_free(&enc_att, num_att);
+		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+		return FALSE;
+	}
+	send_body = NULL;
+	ResetTimeoutTimer();
+
+	if (send_buf(soc, CMD_DATA_END) == -1) {
+		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+		return FALSE;
+	}
+#endif
+
+	// format the date only if we get this far 
+	mem_free(&tpMailItem->FmtDate);
+#ifdef UNICODE
+	din = alloc_tchar_to_char(tpMailItem->Date);
+	dout = (char *)mem_alloc(BUF_SIZE);
+	if (din != NULL && dout != NULL) {
+		DateConv(din, dout, FALSE);
+		tpMailItem->FmtDate = alloc_char_to_tchar(dout);
+	}
+	mem_free(&din);
+	mem_free(&dout);
+#else
+	DateConv(tpMailItem->Date, buf, FALSE);
+	tpMailItem->FmtDate = alloc_copy(buf);
+#endif
+
+	return TRUE;
 }
 
 /*
@@ -1383,9 +1517,18 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		// メールデータの送信
 		SetSocStatusTextT(hWnd, STR_STATUS_SENDBODY);
 		SwitchCursor(FALSE);
-		if (send_mail_data(hWnd, soc, tpMailItem, ErrStr) == FALSE) {
-			SwitchCursor(TRUE);
-			return FALSE;
+		if (send_mail_box->SendWireForm == TRUE && tpMailItem->WireForm != NULL
+				&& (tpMailItem->Attach == NULL || *tpMailItem->Attach == TEXT('\0'))
+				&& (tpMailItem->FwdAttach == NULL || *tpMailItem->FwdAttach == TEXT('\0'))) {
+			if (send_wire_form(hWnd, soc, tpMailItem, ErrStr) == FALSE) {
+				SwitchCursor(TRUE);
+				return FALSE;
+			}
+		} else {
+			if (send_mail_data(hWnd, soc, tpMailItem, ErrStr) == FALSE) {
+				SwitchCursor(TRUE);
+				return FALSE;
+			}
 		}
 		SwitchCursor(TRUE);
 #ifdef WSAASYNC
