@@ -862,6 +862,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 		mem_free(&tpMailItem->ReplyTo);
 		mem_free(&tpMailItem->ContentType);
 		mem_free(&tpMailItem->Encoding);
+		mem_free(&tpMailItem->BodyCharset);
 		mem_free(&tpMailItem->Attach); // X-File: _ when attachments deleted
 		mem_free(&tpMailItem->Date);
 		tpMailItem->Date = NULL;
@@ -1687,7 +1688,7 @@ char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 			r = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 			if (r != NULL) {
 				q = r;
-				if (p != NULL && *p != TEXT('\0')) {
+				if (s != NULL && *s != TEXT('\0')) {
 					q = str_join_t(q, s, TEXT(" "), (TCHAR *)-1);
 				}
 				str_join_t(q, TEXT("<"), FromAddress, TEXT(">"), (TCHAR *)-1);
@@ -1840,6 +1841,10 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		}
 	} else {
 		// No WireForm -- old message read from file
+		if (lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
+			// nPOPuk 2.16 and earlier did all MultiByteToWideChar conversions using CP_ACP.
+			CP_int = CP_ACP;
+		}
 
 		len += item_save_header_size(TEXT(HEAD_FROM), tpMailItem->From);
 		len += item_save_header_size(TEXT(HEAD_TO), tpMailItem->To);
@@ -1905,6 +1910,7 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 				len += tstrlen(tpMailItem->Body);
 			}
 		}
+		CP_int = CP_UTF8;
 	}
 	if (WriteMbox != 0) {
 		len += 3; // \r\n\0
@@ -2004,6 +2010,10 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		}
 	} else {
 		// No WireForm -- old message read from file
+		if (lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
+			// nPOPuk 2.16 and earlier did all MultiByteToWideChar conversions using CP_ACP.
+			CP_int = CP_ACP;
+		}
 
 		p = item_save_header(TEXT(HEAD_FROM), tpMailItem->From, p);
 		p = item_save_header(TEXT(HEAD_TO), tpMailItem->To, p);
@@ -2080,6 +2090,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 				p = str_cpy(p, tpMailItem->Body);
 			}
 		}
+		CP_int = CP_UTF8;
 	}
 	if (WriteMbox != 0) {
 		p = str_cpy(p, "\r\n");

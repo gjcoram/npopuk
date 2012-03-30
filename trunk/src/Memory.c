@@ -112,9 +112,10 @@ void mem_free(void **mem)
  * mem_debug - ÉÅÉÇÉäèÓïÒÇÃï\é¶
  */
 #ifdef _DEBUG
+#define BUF_SIZE 256
 void mem_debug(void)
 {
-	TCHAR buf[256];
+	TCHAR buf[BUF_SIZE];
 
 	if (all_alloc_size == 0) {
 		return;
@@ -131,6 +132,10 @@ void mem_debug(void)
 				if (leaks == 0) {
 					wsprintf(buf, TEXT("first leak address: %u, %lu, %lx"), i, address[i], address[i]);
 					MessageBox(NULL, buf, TEXT("debug"), MB_OK);
+					if (LocalSize((void*)address[i]) < BUF_SIZE-10) {
+						wsprintf(buf, TEXT("as char: %S"), (char *)address[i]);
+						MessageBox(NULL, buf, TEXT("debug"), MB_OK);
+					}
 					MessageBox(NULL, (TCHAR *)address[i], TEXT("debug"), MB_OK);
 				}
 				leaks++;

@@ -919,6 +919,9 @@ char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		if (ret != NULL) {
 			str_join(ret, "\r\n filename=\"", tmp, "\"", (char *)-1);
 		}
+#ifdef UNICODE
+		mem_free(&tmp);
+#endif
 		return ret;
 	}
 
@@ -964,8 +967,8 @@ char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		if (cnt == 0) {
 			r = str_join(r, "\r\n filename*0*=", charset, "''", t, (char *)-1);
 		} else {
-			char cnt_str[10];
-			sprintf_s(cnt_str, 9, "%d", cnt);
+			char cnt_str[12];
+			sprintf_s(cnt_str, 9, "%d", cnt, "\0");
 			r = str_join(r, "\r\n filename*", cnt_str, "*=", t, (char *)-1);
 		}
 #ifdef UNICODE
@@ -1456,12 +1459,27 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	}
 
 	if (*cnt == 0 && multipart_add(tpPart, 0) != NULL) {
-		// マルチパートではない or ソース表示
+		// not actually a multipart message
+		char *p;
 		if (ViewSrc == FALSE) {
 			(**tpPart)->ContentType = alloc_tchar_to_char(tpMailItem->ContentType);
 			(**tpPart)->Encoding = alloc_tchar_to_char(tpMailItem->Encoding);
 		}
-		(**tpPart)->sPos = (**tpPart)->hPos = tpMailItem->Body;
+		if (tpMailItem->WireForm != NULL) {
+			(**tpPart)->sPos = (**tpPart)->hPos = tpMailItem->WireForm;
+			p = GetBodyPointa((**tpPart)->sPos);
+			if (p != NULL) {
+				(**tpPart)->sPos = p;
+			}
+		} else {
+			(**tpPart)->sPos = (**tpPart)->hPos = tpMailItem->Body;
+			if (tpMailItem->HasHeader && tpMailItem->Multipart <= MULTIPART_ATTACH && (**tpPart)->sPos != NULL) {
+				p = GetBodyPointa((**tpPart)->sPos);
+				if (p != NULL) {
+					(**tpPart)->sPos = p;
+				}
+			}
+		}
 		if (ViewSrc == TRUE || (**tpPart)->ContentType == NULL ||
 			str_cmp_ni((**tpPart)->ContentType, "text", tstrlen("text")) == 0) {
 			// テキスト
@@ -1475,12 +1493,6 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 #else
 			(**tpPart)->Filename = multipart_get_filename(tpMailItem->ContentType, "name");
 #endif
-		}
-		if (tpMailItem->HasHeader && tpMailItem->Multipart <= MULTIPART_ATTACH && (**tpPart)->sPos != NULL) {
-			char *p = GetBodyPointa((**tpPart)->sPos);
-			if (p != NULL) {
-				(**tpPart)->sPos = p;
-			}
 		}
 		*cnt = 1;
 	} else {

@@ -82,6 +82,7 @@ extern OPTION op;
 
 /* Local Function Prototypes */
 
+
 /*
  * get_host_by_name - ホスト名からIPアドレスを取得する
  */

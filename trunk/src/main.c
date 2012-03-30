@@ -2943,7 +2943,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 			err = TRUE;
 			if (op.SocLog > 1) {
 				TCHAR msg[MSG_SIZE];
-				wsprintf(msg, "Error saving %s\r\n", SENDBOX_FILE);
+				wsprintf(msg, TEXT("Error saving %s\r\n"), SENDBOX_FILE);
 				log_save(msg);
 			}
 		}

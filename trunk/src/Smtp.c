@@ -88,7 +88,7 @@ static BOOL send_header(SOCKET soc, char *header, char *content, TCHAR *ErrStr);
 #define send_header send_header_t
 #endif
 static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, char *header, TCHAR *content, BOOL address, TCHAR *ErrStr);
-static BOOL augment_wire_form(MAILITEM *tpMailItem);
+static char *augment_wire_form(MAILITEM *tpMailItem, BOOL new_date);
 static BOOL send_wire_form(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *ErrStr);
 static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAILITEM *tpMailItem, BOOL ShowFlag);
@@ -535,17 +535,22 @@ static BOOL send_mime_header(SOCKET soc, MAILITEM *tpMailItem, char *header, TCH
 /*
  * augment_wire_form -- add date, message-id, etc.
  */
-static BOOL augment_wire_form(MAILITEM *tpMailItem)
+static char *augment_wire_form(MAILITEM *tpMailItem, BOOL new_date)
 {
 	TCHAR buf[BUF_SIZE];
-	char *tmp, *bdy, *r, *t, *date=NULL, *m_id=NULL;
+	char *ret, *bdy, *p, *r, *date=NULL, *m_id=NULL;
 	int len;
 
-	len = tstrlen(tpMailItem->WireForm);
+	len = tstrlen(tpMailItem->WireForm) + 1;
 
-	GetTimeString(buf);
-	mem_free(&tpMailItem->Date);
-	tpMailItem->Date = alloc_copy_t(buf);
+	if (new_date == TRUE) {
+		mem_free(&tpMailItem->Date);
+		tpMailItem->Date = NULL;
+	}
+	if (tpMailItem->Date == NULL) {
+		GetTimeString(buf);
+		tpMailItem->Date = alloc_copy_t(buf);
+	}
 
 	if (op.SendDate) {
 		date = alloc_tchar_to_char(tpMailItem->Date);
@@ -569,8 +574,8 @@ static BOOL augment_wire_form(MAILITEM *tpMailItem)
 	// X-Mailer
 	len += tstrlen(HEAD_X_MAILER) + tstrlen(APP_NAME_A) + 3; // " \r\n"
 
-	tmp = (char *)mem_alloc(sizeof(char) * len);
-	if (tmp == NULL) {
+	ret = (char *)mem_alloc(sizeof(char) * len);
+	if (ret == NULL) {
 		return FALSE;
 	}
 
@@ -584,23 +589,23 @@ static BOOL augment_wire_form(MAILITEM *tpMailItem)
 				|| (*(bdy-1) == '\n' && *(bdy-2) == '\n')) ) {
 		bdy--;
 	}
-	for (t = tmp, r = tpMailItem->WireForm; r < bdy; r++) {
-		*(t++) = *r;
+	for (r = ret, p = tpMailItem->WireForm; p < bdy; p++) {
+		*(r++) = *p;
 	}
 	
 	if (date != NULL) {
-		t = str_join(t, HEAD_DATE, " ", date, "\r\n", (char*)-1);
+		r = str_join(r, HEAD_DATE, " ", date, "\r\n", (char*)-1);
+		mem_free(&date);
 	}
 	if (m_id != NULL) {
-		t = str_join(t, HEAD_MESSAGEID, " ", m_id, "\r\n", (char*)-1);
+		r = str_join(r, HEAD_MESSAGEID, " ", m_id, "\r\n", (char*)-1);
+		mem_free(&m_id);
 	}
-	t = str_join(t, HEAD_MIMEVERSION, " ", MIME_VERSION, "\r\n",
+	r = str_join(r, HEAD_MIMEVERSION, " ", MIME_VERSION, "\r\n",
 				HEAD_X_MAILER, " ", APP_NAME_A, "\r\n", 
 				bdy, (char*)-1);
-	mem_free(&tpMailItem->WireForm);
-	tpMailItem->WireForm = tmp;
 
-	return TRUE;
+	return ret;
 }
 
 /*
@@ -613,26 +618,29 @@ static BOOL send_wire_form(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 #endif
 
 	// add date, x-mailer, message-id
-	if (augment_wire_form(tpMailItem) == FALSE) {
+	send_body = augment_wire_form(tpMailItem, TRUE);
+	if (send_body == NULL) {
 		lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 		return FALSE;
 	}
 
-	send_body = tpMailItem->WireForm;
+	// would rather not copy the body, but "send_body" is freed too many places,
+	// it's hard to keep track of when to free it (if not sending wire-form) or not
+	mem_free(&tpMailItem->WireForm);
+	tpMailItem->WireForm = alloc_copy(send_body);
 #ifdef WSAASYNC
 	send_pt = send_body;
 	send_len = tstrlen(send_body);
 
 	if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
+		mem_free(&send_body);
 		send_body = NULL;
 		lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 		return FALSE;
 	}
 #else
-	// –{•¶‘—M
 	if (send_body != NULL && send_buf(soc, send_body) == -1) {
 		send_body = send_pt = NULL;
-		encatt_free(&enc_att, num_att);
 		lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
 		return FALSE;
 	}
@@ -1083,6 +1091,14 @@ static BOOL send_mail_data(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	DateConv(tpMailItem->Date, buf, FALSE);
 	tpMailItem->FmtDate = alloc_copy(buf);
 #endif
+
+	if (tpMailItem->WireForm != NULL) {
+		char *tmp = augment_wire_form(tpMailItem, FALSE);
+		if (tmp != NULL) {
+			mem_free(&tpMailItem->WireForm);
+			tpMailItem->WireForm = tmp;
+		}
+	}
 
 	return TRUE;
 }
@@ -1672,8 +1688,6 @@ BOOL smtp_send_proc(HWND hWnd, SOCKET soc, TCHAR *ErrStr)
 		send_body = send_pt = NULL;
 		command_status = send_end_cmd;
 		if (WSAAsyncSelect(soc, hWnd, WM_SOCK_SELECT, FD_CONNECT | FD_READ | FD_CLOSE) == SOCKET_ERROR) {
-			mem_free(&send_body);
-			send_body = NULL;
 			lstrcpy(ErrStr, STR_ERR_SOCK_EVENT);
 			return FALSE;
 		}

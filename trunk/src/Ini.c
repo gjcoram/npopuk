@@ -1004,7 +1004,7 @@ BOOL ini_read_setting(HWND hWnd)
 		// UseReplyToForFrom
 		(MailBox + num)->UseReplyToForFrom = profile_get_int(buf, TEXT("UseReplyToForFrom"), 0);
 		// SendWireForm
-		(MailBox + num)->SendWireForm = profile_get_int(buf, TEXT("SendWireForm"), 0);
+		(MailBox + num)->SendWireForm = profile_get_int(buf, TEXT("SendWireForm"), 1);
 		// MyAddr2Bcc
 		(MailBox + num)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0);
 		// BccAddr
@@ -1705,6 +1705,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		if ((MailBox + j)->UseReplyToForFrom != 0) {
 			profile_write_int(buf, TEXT("UseReplyToForFrom"), (MailBox + j)->UseReplyToForFrom);
 		}
+		// SendWireForm
+		profile_write_int(buf, TEXT("SendWireForm"), (MailBox + j)->SendWireForm);
 		// MyAddr2Bcc
 		profile_write_int(buf, TEXT("MyAddr2Bcc"), (MailBox + j)->MyAddr2Bcc);
 		// BccAddr
@@ -1889,7 +1891,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			rc = FALSE;
 			if (op.SocLog > 1) {
 				TCHAR msg[MSG_SIZE];
-				wsprintf(msg, "Error saving %s\r\n", buf);
+				wsprintf(msg, TEXT("Error saving %s\r\n"), buf);
 				log_save(msg);
 			}
 		}
