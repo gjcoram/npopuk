@@ -968,8 +968,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			// old style mailitem
 			int slashr = 0;
 			if (lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
-				// nPOPuk 2.16 and earlier did all MultiByteToWideChar conversions
-				// using CP_ACP.
+				// nPOPuk 2.16 and earlier did all MultiByteToWideChar conversions using CP_ACP.
 				CP_int = CP_ACP;
 			}
 			tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, q, Import);

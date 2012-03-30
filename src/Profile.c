@@ -358,7 +358,7 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 		}
 		while (*p != '\0') {
 			if (*p == '\r' && *(p+1) == '\n') {
-				p += 2;
+				p++;
 				break;
 			}
 			p++;

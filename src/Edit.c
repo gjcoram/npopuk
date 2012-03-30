@@ -1294,7 +1294,6 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 
 	SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 	SetBodyContents(hWnd, tpMailItem);
-	tpMailItem->BodyEncoding = op.BodyEncoding;
 
 	tpMailItem->hEditWnd = hWnd;
 	if (tpMailItem->MailStatus == ICON_SENTMAIL) {
@@ -1554,7 +1553,6 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				SetDot(buf, tmp);
 			}
 			mem_free(&buf);
-			tpMailItem->BodyEncoding = op.BodyEncoding;
 			if (tpMailItem->BodyCharset == NULL || lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) == 0) {
 				// check to see if we need a charset (if there are any non-ascii characters)
 				TCHAR *p;
@@ -2397,7 +2395,6 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					if (buf != NULL) {
 						*buf = TEXT('\0');
 						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
-						tpMailItem->BodyEncoding = op.BodyEncoding;
 #ifndef _WCE_OLD
 						if (tpMailItem->BodyCharset == NULL ||
 							(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, tpMailItem->BodyCharset)) == NULL) {
@@ -2916,6 +2913,8 @@ int Edit_MailToSet(HINSTANCE hInstance, HWND hWnd, TCHAR *mail_addr, int rebox)
 		ErrorMessage(hWnd, STR_ERR_MEMALLOC);
 		return FALSE;
 	}
+	tpMailItem->HeadEncoding = op.HeadEncoding;
+	tpMailItem->BodyEncoding = op.BodyEncoding;
 
 	//URL (mailto)
 	if (URLToMailItem(mail_addr, tpMailItem) == FALSE) {
@@ -3082,6 +3081,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
+		tpMailItem->HeadEncoding = op.HeadEncoding;
+		tpMailItem->BodyEncoding = op.BodyEncoding;
 
 		if (gAutoSend) {
 			int i = -1;
@@ -3164,6 +3165,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
+		tpMailItem->HeadEncoding = op.HeadEncoding;
+		tpMailItem->BodyEncoding = op.BodyEncoding;
 
 		if (seltext != NULL) {
 			tpMailItem->Mark = MARK_REPL_SELTEXT;
@@ -3247,6 +3250,8 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		tpMailItem->MailStatus = ICON_NON;
 		tpMailItem->Download = TRUE;
 		tpMailItem->DefReplyTo = TRUE;
+		tpMailItem->HeadEncoding = op.HeadEncoding;
+		tpMailItem->BodyEncoding = op.BodyEncoding;
 
 		if (OpenFlag == EDIT_FORWARD && seltext != NULL) {
 			tpMailItem->Mark = MARK_FWD_SELTEXT;
