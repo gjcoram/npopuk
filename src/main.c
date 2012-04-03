@@ -7165,7 +7165,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (ViewBmp) {
 			GetObject(ViewBmp, sizeof(BITMAP), &bitmap);
 			op.ViewBmpSize = bitmap.bmHeight;
-			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_VIEWBUTTONS) {
+			// TB_VIEWBUTTONS+1 -- icons were reordered between 2.16 and 2.17
+			// Need to reject old toolbar so the buttons don't do the wrong action
+			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_VIEWBUTTONS+1) {
 				DeleteObject(ViewBmp);
 				ViewBmp = NULL;
 			}
