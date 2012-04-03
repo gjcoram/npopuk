@@ -578,7 +578,9 @@ int multipart_parse(char *ContentType, char *buf, BOOL StopAtTextPart, MULTIPART
  * multipart_create - マルチパートを作成する (RFC 2046, RFC 2183)
  *                    FwdAttach added by GJC
  */
-int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, char *ContentType, char *Encoding, char **RetContentType, char *body, char **RetBody, int *num_att, char ***EncAtt)
+int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem, 
+					 char *ContentType, char *Encoding, char **RetContentType, 
+					 char *body, char **RetBody, int *num_att, char ***EncAtt)
 {
 #define BREAK_LEN			76
 #define CTYPE_RFC822		"Content-Type: message/rfc822\r\n"
@@ -1114,7 +1116,7 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 
 	// Content typeの生成
 	*RetContentType = (char *)mem_alloc(
-		sizeof(TCHAR) * (tstrlen(CTYPE_MULTIPART) + tstrlen(Boundary) + 2));
+		sizeof(char) * (tstrlen(CTYPE_MULTIPART) + tstrlen(Boundary) + 2));
 	if (*RetContentType == NULL) {
 #ifndef WSAASYNC
 		encatt_free(EncAtt, attnum);
