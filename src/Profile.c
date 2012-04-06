@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2011 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -287,14 +287,13 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 {
 	HANDLE hFile;
 	TCHAR *buf;
-	char *cbuf;
+	unsigned char *cbuf;
 	DWORD size_low, size_high;
 	DWORD ret;
 	long file_size;
 #ifdef UNICODE
-	int i, CP_ini;
+	int CP_ini, offset = 0;
 	long len;
-	char *p;
 #endif
 
 	// ファイルを開く
@@ -328,48 +327,63 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 
 
 #ifdef UNICODE
-	// check if old format: nPOP uses CP_ACP (and has no Version)
-	// nPOPuk used CP_ACP for Version < 3000
-	// (except for a beta of 2.17 that supported op.Codepage)
-	// Starting with Version = 3000, nPOPuk used CP_UTF8 (and ignored op.Codepage)
-	CP_ini = CP_ACP;
-	i = 0;
-	for (p = cbuf; *p != '\0'; p++) {
-		if (*p == '[') {
-			if (i == 0) i = 1;
-			else break; // left [GENERAL] for next section
-		}
-		if (str_cmp_n(p, "Version=", 8) == 0) {
-			p += 8;
-			if (atoi(p) >= 3000) {
-				CP_ini = CP_UTF8;
-				break;
+	if( *cbuf == 0xEF && *(cbuf+1) == 0xBB && *(cbuf+2) == 0xBF ) {
+		// Probably someone edited the INI with Notepad,
+		// which automatically adds the Byte Order Mark (BOM).
+		// The UTF-8 representation of the BOM U+FEFF is
+		// 0xEF 0xBB 0xFB
+		CP_ini = CP_UTF8;
+		offset = 3;
+	//} else if( *cbuf == 0xFF && *(cbuf+1) == 0xFE ) {
+		// The little-endian representation of U+FEFF is 0xFF 0xFE
+		// but my compiler doesn't know CP_UTF16.
+		//CP_ini = CP_UTF16;
+		//offset = 2;
+	} else {
+		// check if old format: nPOP uses CP_ACP (and has no Version)
+		// nPOPuk used CP_ACP for Version < 3000
+		// (except for a beta of 2.17 that supported op.Codepage)
+		// Starting with Version = 3000, nPOPuk used CP_UTF8 (and ignored op.Codepage)
+		int i = 0;
+		char *p;
+		CP_ini = CP_ACP;
+		for (p = cbuf; *p != '\0'; p++) {
+			if (*p == '[') {
+				if (i == 0) i = 1;
+				else break; // left [GENERAL] for next section
 			}
-		} else if (str_cmp_n(p, "Codepage=", 9) == 0) {
-			p += 9;
-			if (*p == '\"') p++;
-			if (str_cmp_n(p, "CP_ACP", 6) == 0) {
-				CP_ini = CP_ACP;
-			}if (str_cmp_n(p, "CP_UTF8", 7) == 0) {
-				CP_ini = CP_UTF8;
-			} else {
-				CP_ini = atoi(p);
+			if (str_cmp_n(p, "Version=", 8) == 0) {
+				p += 8;
+				if (atoi(p) >= 3000) {
+					CP_ini = CP_UTF8;
+					break;
+				}
+			} else if (str_cmp_n(p, "Codepage=", 9) == 0) {
+				p += 9;
+				if (*p == '\"') p++;
+				if (str_cmp_n(p, "CP_ACP", 6) == 0) {
+					CP_ini = CP_ACP;
+				}if (str_cmp_n(p, "CP_UTF8", 7) == 0) {
+					CP_ini = CP_UTF8;
+				} else {
+					CP_ini = atoi(p);
+				}
 			}
-		}
-		while (*p != '\0') {
-			if (*p == '\r' && *(p+1) == '\n') {
+			while (*p != '\0') {
+				if (*p == '\r' && *(p+1) == '\n') {
+					p++;
+					break;
+				}
 				p++;
-				break;
 			}
-			p++;
 		}
 	}
-	len = MultiByteToWideChar(CP_ini, 0, cbuf, -1, NULL, 0);
+	len = MultiByteToWideChar(CP_ini, 0, cbuf+offset, -1, NULL, 0);
 	if ((buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1))) == NULL) {
 		mem_free(&cbuf);
 		return FALSE;
 	}
-	MultiByteToWideChar(CP_ini, 0, cbuf, -1, buf, len);
+	MultiByteToWideChar(CP_ini, 0, cbuf+offset, -1, buf, len);
 	file_size = len;
 	mem_free(&cbuf);
 #else
