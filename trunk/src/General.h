@@ -28,6 +28,14 @@ extern int sprintf();
 extern int sprintf_s();
 #endif
 
+#if defined _WIN32_WCE && _WIN32_WCE >= 5
+#define ENABLE_WIFI
+#else
+// RAS functions not available in WinCE5
+#define ENABLE_RAS
+#endif
+
+
 /* Include Files */
 #define _INC_OLE
 #include <windows.h>
@@ -42,11 +50,6 @@ extern int sprintf_s();
 
 #ifdef UNICODE
 #include <stdlib.h>
-#endif
-
-#if defined _WIN32_WCE && _WIN32_WCE < 4
-// RAS functions not available in WinCE5
-#define ENABLE_RAS
 #endif
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -844,6 +847,10 @@ typedef struct _RASINFO {
 } RASINFO;
 
 /* Function Prototypes */
+#ifdef ENABLE_WIFI
+// Wifi
+BOOL SetNICPower(TCHAR *InterfaceName, BOOL Enable);
+#endif
 #ifdef ENABLE_RAS
 // Ras
 BOOL GetRasInfo(TCHAR *Entry);
