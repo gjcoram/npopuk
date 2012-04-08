@@ -3220,6 +3220,18 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				return EDIT_NONEDIT;
 			}
 		} else if (tpMailItem->Mark == MARK_REPLYING) {
+			MAILBOX *tpMailBox = (MailBox+rebox);
+			if (tpMailBox->Type == MAILBOX_TYPE_SAVE && tpMailItem->MailBox != NULL
+					&& *tpMailItem->MailBox != TEXT('\0')) {
+				int mbx = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+				if (mbx != -1) {
+					tpMailBox = (MailBox+mbx);
+				}
+				if (tpMailBox->MyAddr2Bcc && tpMailBox->BccAddr != NULL
+						&& *tpMailBox->BccAddr != TEXT('\0')) {
+					tpMailItem->Bcc = alloc_copy_t(tpMailBox->BccAddr);
+				}
+			}
 			tpMailItem->Mark = op.AutoQuotation;
 		}
 		SetReplyMessageBody(tpMailItem, tpReMailItem, EDIT_REPLY, seltext);
