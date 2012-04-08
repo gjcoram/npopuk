@@ -475,6 +475,8 @@
 #define STR_CMDBAR_NEWMAIL			TEXT("New message")
 #define STR_CMDBAR_RAS_CONNECT		TEXT("Dial-up connect")
 #define STR_CMDBAR_RAS_DISCONNECT	TEXT("Dial-up disconnect")
+#define STR_CMDBAR_WIFI_CONNECT		TEXT("WiFi connect")
+#define STR_CMDBAR_WIFI_DISCONNECT	TEXT("WiFi disconnect")
 
 #define STR_CMDBAR_PREVMAIL			TEXT("Prev mail")
 #define STR_CMDBAR_NEXTMAIL			TEXT("Next mail")
