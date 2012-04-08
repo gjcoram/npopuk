@@ -2529,7 +2529,7 @@ static BOOL InitWindow(HWND hWnd)
 		,STR_CMDBAR_WIFI_DISCONNECT
 #endif
 #ifndef _WIN32_WCE_PPC
-//		,NULL // extra for CE.net
+		,NULL // extra for CE.net
 #endif
 	};
 #ifdef _WIN32_WCE_PPC
@@ -5539,11 +5539,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
-			SetNicPower("RT28701",TRUE);
+			SetNICPower(TEXT("RT28701"),TRUE);
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
-			SetNicPower("RT28701",FALSE);
+			SetNICPower(TEXT("RT28701"),FALSE);
 			break;
 #endif
 
