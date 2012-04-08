@@ -127,7 +127,9 @@ static TCHAR *GetFilterActionString(int i);
 static void SetFilterList(HWND hListView);
 static void EnableRasOption(HWND hDlg, int Flag);
 static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#ifdef ENABLE_RAS
 static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
 static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSendOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1714,6 +1716,7 @@ static void EnableRasOption(HWND hDlg, int Flag)
 	EnableWindow(GetDlgItem(hDlg, IDC_CHECK_RASRECON), (*Entry == TEXT('\0')) ? FALSE : Flag);
 }
 
+#ifdef ENABLE_RAS
 /*
  * RasSetProc - RAS設定プロシージャ
  */
@@ -1826,6 +1829,7 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 	return TRUE;
 }
+#endif // ENABLE_RAS
 
 /*
  * RecvSetProc - Recv options for an account
@@ -3154,7 +3158,13 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
+#ifdef ENABLE_REAS
 	HPROPSHEETPAGE hpsp[6];
+#   define RECV_TAB 5
+#else
+	HPROPSHEETPAGE hpsp[5];
+#   define RECV_TAB 4
+#endif
 	TCHAR old_name[BUF_SIZE], new_name[BUF_SIZE];
 
 	tpOptionMailBox = (MailBox + SelBox);
@@ -3188,15 +3198,17 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 	psp.pfnDlgProc = FilterSetProc;
 	hpsp[3] = CreatePropertySheetPage(&psp);
 
+#ifdef ENABLE_RAS
 	// RAS
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_RAS);
 	psp.pfnDlgProc = RasSetProc;
 	hpsp[4] = CreatePropertySheetPage(&psp);
+#endif
 
 	// Recv
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_ACCOUNT_RECV);
 	psp.pfnDlgProc = RecvSetProc;
-	hpsp[5] = CreatePropertySheetPage(&psp);
+	hpsp[RECV_TAB] = CreatePropertySheetPage(&psp);
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof_PROPSHEETHEADER;

@@ -44,6 +44,11 @@ extern int sprintf_s();
 #include <stdlib.h>
 #endif
 
+#if defined _WIN32_WCE && _WIN32_WCE < 4
+// RAS functions not available in WinCE5
+#define ENABLE_RAS
+#endif
+
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 #include "stdafx.h"
 #elif defined(_WIN32_WCE)
@@ -839,6 +844,7 @@ typedef struct _RASINFO {
 } RASINFO;
 
 /* Function Prototypes */
+#ifdef ENABLE_RAS
 // Ras
 BOOL GetRasInfo(TCHAR *Entry);
 BOOL SetRasInfo(TCHAR *Entry, TCHAR *User, TCHAR *Pass);
@@ -850,6 +856,7 @@ BOOL GetRasStatus(void);
 void RasDisconnect(void);
 BOOL RasStatusProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL RasMailBoxStart(HWND hWnd, int BoxIndex);
+#endif
 
 // WinSock
 unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr);
@@ -1138,12 +1145,12 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
 int ListView_ComputeState(int Priority, int Multipart);
 
 // main
-BOOL ConfirmPass(HWND hWnd, TCHAR *ps, BOOL Show);
 void SwitchCursor(const BOOL Flag);
 #ifdef _WIN32_WCE
 #define _SetForegroundWindow		SetForegroundWindow
 #else
 BOOL _SetForegroundWindow(const HWND hWnd);
+BOOL ConfirmPass(HWND hWnd, TCHAR *ps, BOOL Show);
 #endif
 void SetStatusTextT(HWND hWnd, TCHAR *buf, int Part);
 void SetSocStatusTextT(HWND hWnd, TCHAR *buf);
