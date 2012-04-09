@@ -129,6 +129,11 @@ static void EnableRasOption(HWND hDlg, int Flag);
 static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #ifdef ENABLE_RAS
 static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
+#ifdef ENABLE_WIFI
+static BOOL CALLBACK WifiSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -138,7 +143,6 @@ static BOOL CALLBACK SetUpdateOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 static BOOL CALLBACK SetForwardOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetEtcOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -4030,6 +4034,7 @@ static BOOL CALLBACK SetViewOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 	return retval;
 }
 
+#ifdef ENABLE_RAS
 /*
  * SetRasOptionProc - RAS設定プロシージャ
  */
@@ -4074,6 +4079,54 @@ static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 	}
 	return TRUE;
 }
+#endif
+
+#ifdef ENABLE_WIFI
+/*
+ * SetWifiOptionProc - WiFi global options
+ */
+static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		/* コントロールの初期化 */
+		SetControlFont(hDlg);
+		SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_SETCHECK, op.WifiCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_SETCHECK, op.WifiCheckEndDisCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, op.WifiExitDisCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WifiNoCheck, 0);
+
+		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WifiWaitSec, FALSE);
+		break;
+
+	case WM_NOTIFY:
+		return OptionNotifyProc(hDlg, uMsg, wParam, lParam);
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_EDIT_WAIT:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
+		case IDOK:
+			op.WifiCon = SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_GETCHECK, 0, 0);
+			op.WifiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
+			op.WifiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			op.WifiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
+
+			op.WifiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
 
 /*
  * SetSortOptionProc - callback for GlobalOptions/Sort property sheet
@@ -4631,10 +4684,18 @@ BOOL SetOption(HWND hWnd)
 	psp.pfnDlgProc = SetCheckOptionProc;
 	hpsp[6] = CreatePropertySheetPage(&psp);
 
+#ifdef ENABLE_RAS
 	//Dial up
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_RAS);
 	psp.pfnDlgProc = SetRasOptionProc;
 	hpsp[7] = CreatePropertySheetPage(&psp);
+#endif
+#ifdef ENABLE_WIFI
+	// WiFi
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_WIFI);
+	psp.pfnDlgProc = SetWifiOptionProc;
+	hpsp[7] = CreatePropertySheetPage(&psp);
+#endif
 
 	//Sort
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_SORT);

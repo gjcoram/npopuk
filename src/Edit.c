@@ -305,15 +305,11 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 				q = tpReMailItem->Body;
 			}
 			tpMailItem->Body = alloc_copy(q);
-		} else if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
-			// forward as attachment
-			tpMailItem->FwdAttach = alloc_copy_t(TEXT("|"));
-			//if (tpMailItem->FwdAttach != NULL) {
-			//	*tpMailItem->FwdAttach = ATTACH_SEP;
-			//}
-			tpMailItem->AttachSize = item_to_string_size(tpReMailItem, 2, TRUE, FALSE);
 		} else if (tpReMailItem->Multipart != MULTIPART_NONE && tpReMailItem->Body != NULL) {
 			// GJC copy attachments
+			// Even if op.FwdQuotation == 2 (forward as attachment)
+			// Need to have the list of attachments available to the Properties dialog
+			// so that the user can switch between "quoted" and "as attachment"
 			MULTIPART **tpMultiPart = NULL;
 			char *fname;
 			int i, j, cnt, len;
@@ -366,6 +362,11 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 				*p = '\0';
 			}
 			multipart_free(&tpMultiPart, cnt);
+
+			if (op.FwdQuotation == 2 && tpMailItem->Mark != MARK_FWD_SELTEXT) {
+				// forward entire message as attachment
+				tpMailItem->AttachSize = item_to_string_size(tpReMailItem, 2, TRUE, FALSE);
+			}
 		}
 
 	} else {
@@ -433,22 +434,12 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 	TCHAR *quotchar = NULL;
 	int len, cnt, i, TextIndex;
 	int qlen = 0;
-	BOOL is_fwd, fwd_as_att, do_sig, do_sig_above;
+	BOOL is_fwd, do_sig, do_sig_above;
 	BOOL has_sel = (seltext != NULL && (tpMailItem->Mark == MARK_REPL_SELTEXT || tpMailItem->Mark == MARK_FWD_SELTEXT));
 	is_fwd = ReplyFlag == EDIT_FORWARD || ReplyFlag == EDIT_FILTERFORWARD;
 
-	if (has_sel) {
-		// overrides forward as attachment
-		fwd_as_att = FALSE;
-	} else if (op.FwdQuotation == 2 && is_fwd) {
-		fwd_as_att = TRUE;
-	} else {
-		fwd_as_att = FALSE;
-	}
-
 	//Setting
-	if ( fwd_as_att == FALSE && (has_sel || 
-		(tpMailItem->Mark == 1 && (tpReMailItem != NULL && tpReMailItem->Body != NULL))) ) {
+	if (has_sel || (tpMailItem->Mark == 1 && tpReMailItem != NULL && tpReMailItem->Body != NULL) ) {
 		if (has_sel) {
 			mBody = alloc_copy_t(seltext);
 		} else {

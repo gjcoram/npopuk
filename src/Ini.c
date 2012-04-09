@@ -778,6 +778,12 @@ BOOL ini_read_setting(HWND hWnd)
 	EncodePassword(TEXT("_pw_"), ret, buf, BUF_SIZE - 1, TRUE);
 	op.Password = alloc_copy_t(buf);
 
+	op.WifiCon = profile_get_int(GENERAL, TEXT("WifiCon"), 1);
+	op.WifiCheckEndDisCon = profile_get_int(GENERAL, TEXT("WifiCheckEndDisCon"), 1);
+	op.WifiExitDisCon = profile_get_int(GENERAL, TEXT("WifiExitDisCon"), 1);
+	op.WifiNoCheck = profile_get_int(GENERAL, TEXT("WifiNoCheck"), 1);
+	op.WifiWaitSec = profile_get_int(GENERAL, TEXT("WifiWaitSec"), 5);
+
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1);
 	op.RasCheckEndDisConTimeout = profile_get_int(GENERAL, TEXT("RasCheckEndDisConTimeout"), 0);
@@ -1485,6 +1491,12 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
 	profile_write_string(GENERAL, TEXT("pw"), tmp);
+
+	profile_write_int(GENERAL, TEXT("WifiCon"), op.WifiCon);
+	profile_write_int(GENERAL, TEXT("WifiCheckEndDisCon"), op.WifiCheckEndDisCon);
+	profile_write_int(GENERAL, TEXT("WifiExitDisCon"), op.WifiExitDisCon);
+	profile_write_int(GENERAL, TEXT("WifiNoCheck"), op.WifiNoCheck);
+	profile_write_int(GENERAL, TEXT("WifiWaitSec"), op.WifiWaitSec);
 
 	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon);
 	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon);
