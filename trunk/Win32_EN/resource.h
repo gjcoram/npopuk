@@ -411,6 +411,8 @@
 #define ID_MENUITEM_SIZESORT            40059
 #define ID_MENUITEM_RAS_CONNECT         40060
 #define ID_MENUITEM_RAS_DISCONNECT      40061
+#define ID_MENUITEM_WIFI_CONNECT        40062
+#define ID_MENUITEM_WIFI_DISCONNECT     40063
 #define ID_KEY_DELETE                   40065
 #define ID_KEY_DELWORD                  40066
 #define ID_KEY_SHOWMENU                 40067

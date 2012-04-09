@@ -608,6 +608,12 @@ typedef struct _OPTION {
 
 	int EnableLAN;
 
+	int WifiCon;
+	int WifiCheckEndDisCon;
+	int WifiExitDisCon;
+	int WifiNoCheck;
+	int WifiWaitSec;
+
 	int RasCon;
 	int RasCheckEndDisCon;
 	int RasCheckEndDisConTimeout;

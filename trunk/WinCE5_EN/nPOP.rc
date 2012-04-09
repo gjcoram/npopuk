@@ -748,6 +748,25 @@ BEGIN
     PUSHBUTTON      "&Cancel",IDCANCEL,70,75,50,14
 END
 
+IDD_DIALOG_OPTION_WIFI DIALOG DISCARDABLE  0, 0, 159, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wi-Fi"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "Auto-&connect to process mail",IDC_CHECK_CONWIFI,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,5,154,10
+    CONTROL         "&Disconnect,after mail processing is completed",
+                    IDC_CHECK_DISCWIFICHEND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,1,19,158,10
+    CONTROL         "Disconnect, on &exit of program",IDC_CHECK_DISCWIFI,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,33,155,10
+    CONTROL         "&Auto check only if connected",IDC_CHECK_NOWIFINOCHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,1,47,158,10
+    LTEXT           "&Wait for network to be active: ",IDC_STATIC,5,60,150,8
+    EDITTEXT        IDC_EDIT_WAIT,7,71,30,15,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "sec",IDC_STATIC,42,75,18,10
+END
+
 IDD_DIALOG_OPTION_SORT DIALOG DISCARDABLE  0, 0, 160, 103
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Sort"
@@ -1270,6 +1289,12 @@ BEGIN
     END
 
     IDD_DIALOG_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        TOPMARGIN, 7
+    END
+
+    IDD_DIALOG_OPTION_WIFI, DIALOG
     BEGIN
         LEFTMARGIN, 7
         TOPMARGIN, 7
