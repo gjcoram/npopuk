@@ -182,6 +182,7 @@
 #define STR_Q_ATTACH				TEXT("Open this file?")
 #define STR_Q_FORWARDMAIL			TEXT("The message you are forwarding may be incomplete.\r\nProceed to forward anyway?")
 #define STR_Q_RASDISCON				TEXT("Disconnect dial-up connection?")
+#define STR_Q_WIFIDISCON			TEXT("Disconnect wifi connection?")
 #define STR_Q_QUEUEDMAIL_EXIT		TEXT("Messages marked for sending haven't been sent.\r\nExit anyway?")
 #define STR_Q_EXITSAVE				TEXT("Save files?")
 #define STR_Q_SAVEINI				TEXT("Configuration file needs saving.\r\nSave now?")

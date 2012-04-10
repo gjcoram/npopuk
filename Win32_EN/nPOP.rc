@@ -267,7 +267,7 @@ BEGIN
         MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
         MENUITEM SEPARATOR
         MENUITEM "&Save as...\tCtrl+S",         ID_MENUITEM_SAVE
-        MENUITEM "External &viewer",            ID_MENUITEM_VIEW
+        MENUITEM "External &viewer\tShift+Enter", ID_MENUITEM_VIEW
         MENUITEM SEPARATOR
         MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
     END

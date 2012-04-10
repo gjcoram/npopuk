@@ -34,6 +34,9 @@
 #ifdef ENABLE_RAS
 #define WM_RAS_START			(WM_APP + 400)
 #endif
+#ifdef ENABLE_WIFI
+#define WM_WIFI_START			(WM_APP + 400)
+#endif
 #define IDC_CB					2000
 #define IDC_TB					2001
 #define IDC_EDIT_BODY			2003
@@ -1430,7 +1433,7 @@ void SetMailMenu(HWND hWnd)
 	LPARAM mklng;
 
 #ifdef _WIN32_WCE_PPC
-	LPARAM lpras;
+	LPARAM lpcon;
 	int xflag, xsize;
 #endif
 	
@@ -1494,9 +1497,8 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
 #endif
 #ifdef ENABLE_WIFI
-	EnableMenuItem(hMenu, ID_MENUITEM_RAS_CONNECT,
-		!(SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN));
-	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
+	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_CONNECT, !(SocFlag & !op.EnableLAN));
+	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_DISCONNECT, op.EnableLAN);
 #endif
 
 #ifdef _WIN32_WCE_PPC
@@ -1562,6 +1564,10 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_RAS_CONNECT,
 		(LPARAM)MAKELONG((SocFlag & ((MailBox + SelBox)->RasMode | !SendBoxFlag) & !op.EnableLAN), 0));
 #endif
+#ifdef ENABLE_WIFI
+	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_WIFI_CONNECT,
+		(LPARAM)MAKELONG((SocFlag & !op.EnableLAN), 0));
+#endif
 
 #ifdef _WIN32_WCE_PPC
 	xflag = (xsize < 300) ? 1 : 0;
@@ -1574,14 +1580,18 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELETE,
 		(LPARAM)MAKELONG((SendBoxFlag && SaveTypeFlag) || xflag, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, xflag);
-#ifdef ENABLE_RAS
 	if (xsize < 350) {
-		lpras = (LPARAM)MAKELONG(1,0);
+		lpcon = (LPARAM)MAKELONG(1,0);
 	} else {
-		lpras = (LPARAM)MAKELONG(op.EnableLAN,0);
+		lpcon = (LPARAM)MAKELONG(op.EnableLAN,0);
 	}
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lpras);
-	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lpras);
+#ifdef ENABLE_RAS
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lpcon);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lpcon);
+#endif
+#ifdef ENABLE_WIFI
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_CONNECT,    lpcon);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_DISCONNECT, lpcon);
 #endif
 #else	// _WIN32_WCE_PPC
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DOWNMARK, (LPARAM)MAKELONG(!SendBoxFlag, 0));
@@ -1591,10 +1601,14 @@ void SetMailMenu(HWND hWnd)
 #endif	// _WIN32_WCE_PPC
 
 #if !defined(_WIN32_WCE)
-#ifdef ENABLE_RAS
 	mklng = (LPARAM)MAKELONG(op.EnableLAN, 0);
+#ifdef ENABLE_RAS
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    mklng);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, mklng);
+#endif
+#ifdef ENABLE_WIFI
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_CONNECT,    mklng);
+	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_DISCONNECT, mklng);
 #endif
 #endif
 
@@ -2468,14 +2482,14 @@ static BOOL InitWindow(HWND hWnd)
 		{9,	ID_MENUITEM_DELETE,			TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{10,ID_MENUITEM_FLAGMARK,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #ifdef ENABLE_RAS
-		,{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
+		,{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
 		,{11,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
-		,{12,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		,{12,ID_MENUITEM_RAS_DISCONNECT, TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #endif
 #ifdef ENABLE_WIFI
-		,{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
+		,{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
 		,{11,ID_MENUITEM_WIFI_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
-		,{12,ID_MENUITEM_WIFI_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		,{12,ID_MENUITEM_WIFI_DISCONNECT, TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #endif
 #else
 		{6,	ID_MENUITEM_REMESSEGE,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
@@ -2495,9 +2509,9 @@ static BOOL InitWindow(HWND hWnd)
 		{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{18,ID_MENUITEM_ADDRESS,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #ifdef ENABLE_RAS
-		,{0,	0,							TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
+		,{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1}
 		,{19,ID_MENUITEM_RAS_CONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
-		,{20,ID_MENUITEM_RAS_DISCONNECT,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		,{20,ID_MENUITEM_RAS_DISCONNECT, TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
 #endif
 #endif
 	};
@@ -2932,11 +2946,22 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 			RasDisconnect();
 		}
 #endif
+#ifdef ENABLE_WIFI
+		if (op.WifiCheckEndDisCon == 1) {
+			RasDisconnect();
+		}
+#endif
 		if (op.SocLog > 0) log_flush();
 	}
 #ifdef ENABLE_RAS
 	//Cutting of dial-up connection
 	if (RasLoop == TRUE || op.RasEndDisCon == 1) {
+		RasDisconnect();
+	}
+#endif
+#ifdef ENABLE_WIFI
+	//Cutting of wifi connection
+	if (RasLoop == TRUE || op.WifiExitDisCon == 1) {
 		RasDisconnect();
 	}
 #endif
@@ -3137,6 +3162,15 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 #ifdef ENABLE_RAS
 	//of font Dial rise start
 	if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, BoxIndex, 0) == FALSE) {
+		ErrorSocketEnd(hWnd, MAILBOX_SEND);
+		if (op.SocLog > 0) log_flush();
+		SetMailMenu(hWnd);
+		return FALSE;
+	}
+#endif
+#ifdef ENABLE_WIFI
+	// Wifi connection
+	if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, BoxIndex, 0) == FALSE) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
 		if (op.SocLog > 0) log_flush();
 		SetMailMenu(hWnd);
@@ -4129,6 +4163,15 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		}
 	}
 #endif
+#ifdef ENABLE_WIFI
+	if (op.WifiCheckEndDisCon == 1) {
+		if (DoTimer == FALSE ||
+			op.WifiCheckEndDisConTimeout==0 ||
+			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WifiCheckEndDisConTimeout) != IDNO) {
+			RasDisconnect();
+		}
+	}
+#endif
 	SetMailMenu(hWnd);
 
 	if (NewMail_Flag == TRUE &&
@@ -5094,6 +5137,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 #endif
+#ifdef ENABLE_WIFI
+				if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+					ErrorSocketEnd(hWnd, CheckBox);
+					if (op.SocLog > 0) log_flush();
+					SetMailMenu(hWnd);
+					break;
+				}
+#endif
 				if (op.PopBeforeSmtpIsLoginOnly == 0 && NewMailCnt == -1) NewMailCnt = 0;
 				RecvMailList(hWnd, CheckBox, (op.PopBeforeSmtpIsLoginOnly == 1) ? TRUE : FALSE);
 				SmtpWait = op.PopBeforeSmtpWait / SMTPTIME;
@@ -5134,6 +5185,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_RAS
 			//of the setting which Dial rise start
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, CheckBox, 0) == FALSE) {
+				ErrorSocketEnd(hWnd, CheckBox);
+				if (op.SocLog > 0) log_flush();
+				SetMailMenu(hWnd);
+				break;
+			}
+#endif
+#ifdef ENABLE_WIFI
+			// Wifi connection
+			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
 				if (op.SocLog > 0) log_flush();
 				SetMailMenu(hWnd);
@@ -5212,6 +5272,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					break;
 				}
 #endif
+#ifdef ENABLE_WIFI
+				if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+					ErrorSocketEnd(hWnd, CheckBox);
+					if (op.SocLog > 0) log_flush();
+					SetMailMenu(hWnd);
+					break;
+				}
+#endif
 			}
 			//Mark execution
 			i = ExecItem(hWnd, CheckBox);
@@ -5242,6 +5310,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #ifdef ENABLE_RAS
 			if (op.EnableLAN == 0 && op.RasCon == 0 && op.RasNoCheck == 1 && !GetRasStatus()) {
+				break;
+			}
+#endif
+#ifdef ENABLE_WIFI
+			if (op.EnableLAN == 0 && op.WifiCon == 0 && op.WifiNoCheck == 1 && !GetWifiStatus()) {
 				break;
 			}
 #endif
@@ -5324,6 +5397,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_RAS
 		//ras Change
 		case ID_RASWAIT_TIMER:
+			KillTimer(hWnd, wParam);
+			if (hEvent != NULL) {
+				SetEvent(hEvent);
+			}
+			break;
+#endif
+#ifdef ENABLE_WIFI
+		//wifi Change
+		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
 			if (hEvent != NULL) {
 				SetEvent(hEvent);
@@ -5539,11 +5621,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
-			SetNICPower(TEXT("RT28701"),TRUE);
+			SendMessage(hWnd, WM_RAS_START, SelBox, 0);
+			//SetNICPower(TEXT("RT28701"),TRUE);
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
+			WifiDisconnect();
 			SetNICPower(TEXT("RT28701"),FALSE);
+			SetNICPower(op.WifiDeviceName,FALSE);
 			break;
 #endif
 
@@ -5995,6 +6080,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
+#ifdef ENABLE_WIFI
+			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
+				break;
+			}
+#endif
 #ifndef _WCE_OLD
 			if (op.SocLog > 1) {
 				char msg[50];
@@ -6123,6 +6213,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
+#ifdef ENABLE_WIFI
+			if (op.WifiCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
+				break;
+			}
+#endif
 			AllCheck = FALSE;
 			ExecFlag = TRUE;
 			NewMailCnt = -1;
@@ -6205,6 +6300,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			NewMailCnt = -1;
 #ifdef ENABLE_RAS
 			if (RasLoop == TRUE || (g_soc == -1 && op.RasCheckEndDisCon == 1)) {
+				RasDisconnect();
+			}
+#endif
+#ifdef ENABLE_WIFI
+			if (RasLoop == TRUE || (g_soc == -1 && op.WifiCheckEndDisCon == 1)) {
 				RasDisconnect();
 			}
 #endif
@@ -6502,8 +6602,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 								}
 							}
 							AutoCheckFlag = FALSE;
-#ifdef ENABLE_RAS			
+#ifdef ENABLE_RAS
 							if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {
+								break;
+							}
+#endif
+#ifdef ENABLE_WIFI
+							if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
 								break;
 							}
 #endif
@@ -6592,6 +6697,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	//Start
 	case WM_RAS_START:
 		return RasMailBoxStart(hWnd, wParam);
+#endif
+#ifdef ENABLE_WIFI
+	//Start
+	case WM_WIFI_START:
+		return WifiMailBoxStart(hWnd, wParam);
 #endif
 
 #ifndef _WIN32_WCE
@@ -6817,6 +6927,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
+#ifdef ENABLE_WIFI
+			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+				ErrorSocketEnd(hWnd, CheckBox);
+				if (op.SocLog > 0) log_flush();
+				SetMailMenu(hWnd);
+				break;
+			}
+#endif
 			AllCheck = TRUE;
 			gSockFlag = TRUE;
 			if (op.PopBeforeSmtpIsLoginOnly == 0) NewMailCnt = 0;
@@ -6930,6 +7048,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_RAS
 		if (msg == WM_RASEVENT) {
 			return RasStatusProc(hWnd, msg, wParam, lParam);
+		}
+#endif
+#ifdef ENABLE_WIFI
+		if (msg == WM_WIFIEVENT) {
+			return WifiStatusProc(hWnd, msg, wParam, lParam);
 		}
 #endif
 		return DefWindowProc(hWnd, msg, wParam, lParam);
