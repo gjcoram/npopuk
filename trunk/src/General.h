@@ -120,8 +120,14 @@ extern int sprintf_s();
 
 #define LOG_FILE				TEXT("nPOPuk.log")
 
+#ifdef ENABLE_RAS
 #define RAS_WAIT_EVENT			TEXT("RAS_WAIT_EVENT")
 #define ID_RASWAIT_TIMER		10
+#endif
+#ifdef ENABLE_WIFI
+#define WIFI_WAIT_EVENT			TEXT("WIFI_WAIT_EVENT")
+#define ID_WIFIWAIT_TIMER		10
+#endif
 
 #define BUF_SIZE				256					// Buffer size
 #define MSG_SIZE				300					// BUF_SIZE + some text
@@ -610,9 +616,11 @@ typedef struct _OPTION {
 
 	int WifiCon;
 	int WifiCheckEndDisCon;
+	int WifiCheckEndDisConTimeout;
 	int WifiExitDisCon;
 	int WifiNoCheck;
 	int WifiWaitSec;
+	TCHAR *WifiDeviceName;
 
 	int RasCon;
 	int RasCheckEndDisCon;

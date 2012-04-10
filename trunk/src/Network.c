@@ -37,6 +37,46 @@ MessageBox(NULL, TEXT("powered up!"), WINDOW_TITLE, MB_OK);
 
 	return bDevPowered;
 }
+
+/*
+http://curiousminds.wordpress.com/2007/01/23/how-to-detect-if-a-network-connection-is-present-in-net-cf/
+    bool ret = false;
+
+    try
+    {
+    string hostName= Dns.GetHostName();
+
+    IPHostEntry hostEntry= Dns.GetHostEntry(hostName);
+    string hostIPAdd = hostEntry.AddressList[0].ToString();
+
+    ret = hostIPAdd != IPAddress.Parse("127.0.0.1").ToString();
+    }
+    catch
+    {
+    return false;
+    }
+
+    return ret;
+
+
+http://msdn.microsoft.com/en-us/library/ms915097.aspx
+BOOL InternetGetConnectedState(
+LPDWORD lpdwFlags,
+DWORD dwReserved);
+
+INTERNET_CONNECTION_CONFIGURED  Local system has a valid connection to the Internet, but it may or may not be currently connected.  
+INTERNET_CONNECTION_LAN  Local system uses a local area network to connect to the Internet.  
+INTERNET_CONNECTION_MODEM  Local system uses a modem to connect to the Internet.  
+INTERNET_CONNECTION_MODEM_BUSY  No longer used.  
+INTERNET_CONNECTION_OFFLINE  Local system is in offline mode.  
+INTERNET_CONNECTION_PROXY  Local system uses a proxy server to connect to the Internet.  
+INTERNET_RAS_INSTALLED  Local system has RAS installed.  
+
+INTERNET_CONNECTION_WIFI -- not documented?
+
+*/
+
+
 #else
 /* 
  * DisableEnableConnections - from CodeGuru

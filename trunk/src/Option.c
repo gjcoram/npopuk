@@ -1833,7 +1833,7 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 	return TRUE;
 }
-#endif // ENABLE_RAS
+#endif
 
 /*
  * RecvSetProc - Recv options for an account
@@ -3162,7 +3162,7 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 {
 	PROPSHEETPAGE psp;
 	PROPSHEETHEADER psh;
-#ifdef ENABLE_REAS
+#ifdef ENABLE_RAS
 	HPROPSHEETPAGE hpsp[6];
 #   define RECV_TAB 5
 #else
@@ -3207,6 +3207,11 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_RAS);
 	psp.pfnDlgProc = RasSetProc;
 	hpsp[4] = CreatePropertySheetPage(&psp);
+#endif
+
+#ifdef ENABLE_WIFI
+	// Wifi
+	// could set up options so an account never uses wifi
 #endif
 
 	// Recv

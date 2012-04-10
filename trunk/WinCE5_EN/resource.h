@@ -244,10 +244,13 @@
 #define IDC_BUTTON_NUM                  1050
 #define IDC_BUTTON_UP10                 1051
 #define IDC_BUTTON_UP                   1052
-#define IDC_CHECK_CHENDDISCON           1052
-#define IDC_CHECK_NORASNOCHECK          1053
+//#define IDC_CHECK_CHENDDISCON         1052
+#define IDC_CHECK_DISCWIFICHEND         1052
+//#define IDC_CHECK_NORASNOCHECK        1053
+#define IDC_CHECK_NOWIFINOCHECK         1053
 #define IDC_LIST_FILTER                 1053
-#define IDC_CHECK_ENDDISCON             1054
+//#define IDC_CHECK_ENDDISCON           1054
+#define IDC_CHECK_DISCWIFI              1054
 #define IDC_BUTTON_DOWN                 1054
 #define IDC_BUTTON_DOWN10               1055
 #define IDC_CHECK_FILTER                1055
@@ -270,7 +273,8 @@
 #define IDC_RADIO_RASMODE_1             1071
 #define IDC_CHECK_RASRECON              1072
 #define IDC_EDIT_WAIT                   1073
-#define IDC_CHECK_RASCON                1074
+//#define IDC_CHECK_RASCON                1074
+#define IDC_CHECK_CONWIFI               1074
 #define IDC_LIST_FILE                   1075
 #define IDC_WILDCARD                    1076
 #define IDC_CHECK_ENCODETYPE            1077
