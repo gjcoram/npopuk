@@ -863,7 +863,9 @@ typedef struct _RASINFO {
 /* Function Prototypes */
 #ifdef ENABLE_WIFI
 // Wifi
-BOOL SetNICPower(TCHAR *InterfaceName, BOOL Enable);
+BOOL GetWifiStatus(void);
+BOOL WifiConnect(HWND hWnd, int Dummy);
+void WifiDisconnect(BOOL Force);
 #endif
 #ifdef ENABLE_RAS
 // Ras

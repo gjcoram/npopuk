@@ -784,7 +784,8 @@ BOOL ini_read_setting(HWND hWnd)
 	op.WifiExitDisCon = profile_get_int(GENERAL, TEXT("WifiExitDisCon"), 1);
 	op.WifiNoCheck = profile_get_int(GENERAL, TEXT("WifiNoCheck"), 1);
 	op.WifiWaitSec = profile_get_int(GENERAL, TEXT("WifiWaitSec"), 5);
-	op.WifiDeviceName = profile_alloc_string(GENERAL, TEXT("WifiDeviceName"), TEXT(""));
+//	op.WifiDeviceName = profile_alloc_string(GENERAL, TEXT("WifiDeviceName"), TEXT(""));
+	op.WifiDeviceName = profile_alloc_string(GENERAL, TEXT("WifiDeviceName"), TEXT("RT28701"));
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1);
