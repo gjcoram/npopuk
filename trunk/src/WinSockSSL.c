@@ -616,14 +616,14 @@ static int set_client_cert(SSL_CTX *ctx, char *ca_file, char *key_file, char *pa
 		PKCS12 *p12;
 		EVP_PKEY *key = NULL;
 		X509 *cert = NULL;
-#if defined( _MSC_VER) && (_MSC_VER > 1200)
+#if defined( _MSC_VER) && (_MSC_VER >= 1400)
 		errno_t err;
 #endif
 
 		PKCS12_PBE_add();
 
 		// ƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚Ý
-#if defined( _MSC_VER) && (_MSC_VER > 1200)
+#if defined( _MSC_VER) && (_MSC_VER >= 1400)
 		err = fopen_s(&fp, ca_file, "r");
 		if (err || !fp) {
 			return 0;
