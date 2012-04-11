@@ -5,11 +5,73 @@
 
 // OS Versions: Windows CE .NET 4.0 and later.
 #include <Pm.h>
+#include <wininet.h>
+
+static BOOL WifiConnByNpop = FALSE;
+static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
+
+BOOL WifiLoop = FALSE;
+
+extern OPTION op;
+
+/*
+ * GetWifiStatus
+ */
+BOOL GetWifiStatus(void) {
+	return SetNICPower(op.WifiDeviceName, TRUE, FALSE);
+}
+
+/*
+ * WifiConnect
+ */
+BOOL WifiConnect(HWND hWnd, int Dummy) {
+	BOOL ret;
+	DWORD dwFlags = 0;
+	TCHAR msg[BUF_SIZE];
+
+	ret = InternetGetConnectedState(&dwFlags, 0);
+	if(ret) {
+		wsprintf(msg, TEXT("GetConnState returns CONF=%d LAN=%d MODEM=%d OFFLINE=%d RAS=%d WIFI=%d\n"),
+			(dwFlags & INTERNET_CONNECTION_CONFIGURED) ? 1 :0,
+			(dwFlags & INTERNET_CONNECTION_LAN) ? 1 :0,
+			(dwFlags & INTERNET_CONNECTION_MODEM) ? 1 :0,
+			(dwFlags & INTERNET_CONNECTION_OFFLINE) ? 1 :0,
+			(dwFlags & INTERNET_RAS_INSTALLED) ? 1 :0,
+			(dwFlags & 0x12) ? 1 :0 );
+		MessageBox(hWnd, msg, WINDOW_TITLE, MB_OK);
+	}  else {
+		MessageBox(hWnd, TEXT("failed to get conn state"), WINDOW_TITLE, MB_OK);
+	}
+
+	if (dwFlags & INTERNET_CONNECTION_LAN) {
+		MessageBox(hWnd, TEXT("LAN connection deteccted"), WINDOW_TITLE, MB_OK);
+	} else {
+
+		ret = SetNICPower(op.WifiDeviceName, TRUE, TRUE);
+		if (ret == FALSE) {
+			ret = SetNICPower(op.WifiDeviceName, FALSE, TRUE);
+			WifiConnByNpop = TRUE;
+			MessageBox(hWnd, TEXT("activating wifi"), WINDOW_TITLE, MB_OK);
+		}
+	}
+	return ret;
+}
+
+/*
+ * WifiDisconnect - power off wifi, if nPOPuk turned it on or Force is true
+ */
+void WifiDisconnect(BOOL Force)
+{
+	if (Force || WifiConnByNpop) {
+		SetNICPower(op.WifiDeviceName, FALSE, FALSE);
+		WifiConnByNpop = FALSE;
+	}
+}
 
 /*
  * SetNICPower - Enables or Disables NIC power
  */
-BOOL SetNICPower(TCHAR *InterfaceName, BOOL Enable)
+static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable)
 {
 	TCHAR szName[MAX_PATH];
 	CEDEVICE_POWER_STATE Dx = PwrDeviceUnspecified;    
@@ -27,54 +89,20 @@ MessageBox(NULL, TEXT("failure or not powered"), WINDOW_TITLE, MB_OK);
 	} else {
 MessageBox(NULL, TEXT("powered up!"), WINDOW_TITLE, MB_OK);
 	}
-	if (Enable == TRUE && bDevPowered == FALSE) {
-		Dx = D0;
-		ret = SetDevicePower(szName, POWER_NAME, Dx);
-	} else if (Enable == FALSE && bDevPowered == TRUE) {
-		Dx = D4;
+
+	if (Check == TRUE) {
+		ret = bDevPowered; 
+	} else if (Enable != bDevPowered) {
+		if (Enable == TRUE && bDevPowered == FALSE) {
+			Dx = D0;
+		} else if (Enable == FALSE && bDevPowered == TRUE) {
+			Dx = D4;
+		}
 		ret = SetDevicePower(szName, POWER_NAME, Dx);
 	}
 
 	return bDevPowered;
 }
-
-/*
-http://curiousminds.wordpress.com/2007/01/23/how-to-detect-if-a-network-connection-is-present-in-net-cf/
-    bool ret = false;
-
-    try
-    {
-    string hostName= Dns.GetHostName();
-
-    IPHostEntry hostEntry= Dns.GetHostEntry(hostName);
-    string hostIPAdd = hostEntry.AddressList[0].ToString();
-
-    ret = hostIPAdd != IPAddress.Parse("127.0.0.1").ToString();
-    }
-    catch
-    {
-    return false;
-    }
-
-    return ret;
-
-
-http://msdn.microsoft.com/en-us/library/ms915097.aspx
-BOOL InternetGetConnectedState(
-LPDWORD lpdwFlags,
-DWORD dwReserved);
-
-INTERNET_CONNECTION_CONFIGURED  Local system has a valid connection to the Internet, but it may or may not be currently connected.  
-INTERNET_CONNECTION_LAN  Local system uses a local area network to connect to the Internet.  
-INTERNET_CONNECTION_MODEM  Local system uses a modem to connect to the Internet.  
-INTERNET_CONNECTION_MODEM_BUSY  No longer used.  
-INTERNET_CONNECTION_OFFLINE  Local system is in offline mode.  
-INTERNET_CONNECTION_PROXY  Local system uses a proxy server to connect to the Internet.  
-INTERNET_RAS_INSTALLED  Local system has RAS installed.  
-
-INTERNET_CONNECTION_WIFI -- not documented?
-
-*/
 
 
 #else
@@ -150,4 +178,3 @@ HRESULT DisableEnableConnections(BOOL bEnable)
 	return hr;
 }
 #endif
-

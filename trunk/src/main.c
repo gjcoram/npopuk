@@ -183,10 +183,18 @@ extern HWND hViewWnd;
 extern HWND hEditWnd;
 extern HWND MsgWnd;							//Mail arrival message
 
+#ifdef ENABLE_RAS
 // RAS
 extern UINT WM_RASEVENT;
 extern BOOL RasLoop;
 extern HANDLE hEvent;
+#endif
+
+#ifdef ENABLE_WIFI
+// Wifi
+extern BOOL WifiLoop;
+extern HANDLE hEvent;
+#endif
 
 /* Local Function Prototypes */
 static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
@@ -1311,7 +1319,12 @@ void ErrorSocketEnd(HWND hWnd, int BoxIndex)
 	KillTimer(hWnd, ID_SMTP_ONE_TIMER);
 	KillTimer(hWnd, ID_CHECK_TIMER);
 	KillTimer(hWnd, ID_EXEC_TIMER);
+#ifdef ENABLE_RAS
 	KillTimer(hWnd, ID_RASWAIT_TIMER);
+#endif
+#ifdef ENABLE_WIFI
+	KillTimer(hWnd, ID_WIFIWAIT_TIMER);
+#endif
 	gSockFlag = FALSE;
 	AllCheck = FALSE;
 	ExecFlag = FALSE;
@@ -2932,7 +2945,12 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		KillTimer(hWnd, ID_CHECK_TIMER);
 		KillTimer(hWnd, ID_EXEC_TIMER);
 		KillTimer(hWnd, ID_TIMEOUT_TIMER);
+#ifdef ENABLE_RAS
 		KillTimer(hWnd, ID_RASWAIT_TIMER);
+#endif
+#ifdef ENABLE_WIFI
+		KillTimer(hWnd, ID_WIFIWAIT_TIMER);
+#endif
 		gSockFlag = FALSE;
 		ExecFlag = FALSE;
 		NewMailCnt = -1;
@@ -2948,7 +2966,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 		if (op.WifiCheckEndDisCon == 1) {
-			RasDisconnect();
+			WifiDisconnect(FALSE);
 		}
 #endif
 		if (op.SocLog > 0) log_flush();
@@ -2961,8 +2979,8 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 	//Cutting of wifi connection
-	if (RasLoop == TRUE || op.WifiExitDisCon == 1) {
-		RasDisconnect();
+	if (WifiLoop == TRUE || op.WifiExitDisCon == 1) {
+		WifiDisconnect(FALSE);
 	}
 #endif
 
@@ -4168,7 +4186,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		if (DoTimer == FALSE ||
 			op.WifiCheckEndDisConTimeout==0 ||
 			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WifiCheckEndDisConTimeout) != IDNO) {
-			RasDisconnect();
+			WifiDisconnect((op.WifiCheckEndDisConTimeout>0) ? TRUE : FALSE);
 		}
 	}
 #endif
@@ -5407,9 +5425,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//wifi Change
 		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
-			if (hEvent != NULL) {
-				SetEvent(hEvent);
-			}
+//			if (hEvent != NULL) {
+//				SetEvent(hEvent);
+//			}
 			break;
 #endif
 		} // WM_TIMER switch
@@ -5621,14 +5639,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
-			SendMessage(hWnd, WM_RAS_START, SelBox, 0);
-			//SetNICPower(TEXT("RT28701"),TRUE);
+			SendMessage(hWnd, WM_WIFI_START, SelBox, 0);
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
-			WifiDisconnect();
-			SetNICPower(TEXT("RT28701"),FALSE);
-			SetNICPower(op.WifiDeviceName,FALSE);
+			WifiDisconnect(TRUE);
 			break;
 #endif
 
@@ -6291,7 +6306,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			KillTimer(hWnd, ID_CHECK_TIMER);
 			KillTimer(hWnd, ID_EXEC_TIMER);
 			KillTimer(hWnd, ID_TIMEOUT_TIMER);
+#ifdef ENABLE_RAS
 			KillTimer(hWnd, ID_RASWAIT_TIMER);
+#endif
+#ifdef ENABLE_WIFI
+			KillTimer(hWnd, ID_WIFIWAIT_TIMER);
+#endif
 			gSockFlag = FALSE;
 			AllCheck = FALSE;
 			AutoCheckFlag = FALSE;
@@ -6304,8 +6324,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (RasLoop == TRUE || (g_soc == -1 && op.WifiCheckEndDisCon == 1)) {
-				RasDisconnect();
+			if (WifiLoop == TRUE || (g_soc == -1 && op.WifiCheckEndDisCon == 1)) {
+				WifiDisconnect(FALSE);
 			}
 #endif
 			if (g_soc == -1 || GetHostFlag == TRUE) {
@@ -6701,7 +6721,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_WIFI
 	//Start
 	case WM_WIFI_START:
-		return WifiMailBoxStart(hWnd, wParam);
+		return WifiConnect(hWnd, wParam);
 #endif
 
 #ifndef _WIN32_WCE
@@ -7048,11 +7068,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_RAS
 		if (msg == WM_RASEVENT) {
 			return RasStatusProc(hWnd, msg, wParam, lParam);
-		}
-#endif
-#ifdef ENABLE_WIFI
-		if (msg == WM_WIFIEVENT) {
-			return WifiStatusProc(hWnd, msg, wParam, lParam);
 		}
 #endif
 		return DefWindowProc(hWnd, msg, wParam, lParam);
