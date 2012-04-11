@@ -5425,9 +5425,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//wifi Change
 		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
-//			if (hEvent != NULL) {
-//				SetEvent(hEvent);
-//			}
+			if (hEvent != NULL) {
+				SetEvent(hEvent);
+			}
 			break;
 #endif
 		} // WM_TIMER switch

@@ -1,18 +1,22 @@
 #include "General.h"
-#include "Memory.h"
 
 #ifdef _WIN32_WCE
 
 // OS Versions: Windows CE .NET 4.0 and later.
 #include <Pm.h>
-#include <wininet.h>
 
+// Global variables
+BOOL WifiLoop = FALSE;
+HANDLE hEvent;
+
+extern OPTION op;
+
+// Local declarations
 static BOOL WifiConnByNpop = FALSE;
 static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 
-BOOL WifiLoop = FALSE;
+#define WIFI_EVENT					TEXT("WIFI_EVENT")
 
-extern OPTION op;
 
 /*
  * GetWifiStatus
@@ -26,34 +30,47 @@ BOOL GetWifiStatus(void) {
  */
 BOOL WifiConnect(HWND hWnd, int Dummy) {
 	BOOL ret;
-	DWORD dwFlags = 0;
-	TCHAR msg[BUF_SIZE];
 
-	ret = InternetGetConnectedState(&dwFlags, 0);
-	if(ret) {
-		wsprintf(msg, TEXT("GetConnState returns CONF=%d LAN=%d MODEM=%d OFFLINE=%d RAS=%d WIFI=%d\n"),
-			(dwFlags & INTERNET_CONNECTION_CONFIGURED) ? 1 :0,
-			(dwFlags & INTERNET_CONNECTION_LAN) ? 1 :0,
-			(dwFlags & INTERNET_CONNECTION_MODEM) ? 1 :0,
-			(dwFlags & INTERNET_CONNECTION_OFFLINE) ? 1 :0,
-			(dwFlags & INTERNET_RAS_INSTALLED) ? 1 :0,
-			(dwFlags & 0x12) ? 1 :0 );
-		MessageBox(hWnd, msg, WINDOW_TITLE, MB_OK);
-	}  else {
-		MessageBox(hWnd, TEXT("failed to get conn state"), WINDOW_TITLE, MB_OK);
+	ret = SetNICPower(op.WifiDeviceName, TRUE, TRUE);
+	if (ret == TRUE) {
+		return ret;
 	}
 
-	if (dwFlags & INTERNET_CONNECTION_LAN) {
-		MessageBox(hWnd, TEXT("LAN connection deteccted"), WINDOW_TITLE, MB_OK);
-	} else {
+	if (op.SocLog > 1) {
+		log_save_a("Activating wifi\r\n");
+	}
+	SetTimer(hWnd, ID_WIFIWAIT_TIMER, op.WifiWaitSec * 1000, NULL);
 
-		ret = SetNICPower(op.WifiDeviceName, TRUE, TRUE);
-		if (ret == FALSE) {
-			ret = SetNICPower(op.WifiDeviceName, FALSE, TRUE);
-			WifiConnByNpop = TRUE;
-			MessageBox(hWnd, TEXT("activating wifi"), WINDOW_TITLE, MB_OK);
+	ret = SetNICPower(op.WifiDeviceName, FALSE, TRUE);
+	WifiConnByNpop = TRUE;
+
+	// wait for connection to be established
+	hEvent = CreateEvent(NULL, TRUE, FALSE, WIFI_EVENT);
+	if (hEvent == NULL) {
+		if (op.SocIgnoreError != 1) {
+			ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
+		}
+		return FALSE;
+	}
+	WifiLoop = TRUE;
+	ResetEvent(hEvent);
+	while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
+		MSG msg;
+		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
+			break;
+		}
+		MessageFunc(hWnd, &msg);
+		if (WifiLoop == FALSE) {
+			break;
 		}
 	}
+	CloseHandle(hEvent);
+	hEvent = NULL;
+	if (WifiLoop == FALSE) {
+		return FALSE;
+	}
+	WifiLoop = FALSE;
+
 	return ret;
 }
 
@@ -63,6 +80,9 @@ BOOL WifiConnect(HWND hWnd, int Dummy) {
 void WifiDisconnect(BOOL Force)
 {
 	if (Force || WifiConnByNpop) {
+		if (op.SocLog > 1) {
+			log_save_a("De-activating wifi\r\n");
+		}
 		SetNICPower(op.WifiDeviceName, FALSE, FALSE);
 		WifiConnByNpop = FALSE;
 	}
@@ -85,9 +105,14 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable)
 
 	if (ret != ERROR_SUCCESS || D4 == Dx) {
 		bDevPowered = FALSE;
-MessageBox(NULL, TEXT("failure or not powered"), WINDOW_TITLE, MB_OK);
-	} else {
-MessageBox(NULL, TEXT("powered up!"), WINDOW_TITLE, MB_OK);
+	}
+	if (op.SocLog > 1) {
+		TCHAR msg[MSG_SIZE];
+		wsprintf(msg, TEXT("Queried wifi device %s, query %s, powered %s\r\n"),
+			InterfaceName,
+			(ret == ERROR_SUCCESS) ? TEXT("SUCCESS") : TEXT("FAILED"),
+			(bDevPowered == TRUE) ? TEXT("ON") : TEXT("OFF") );
+		log_save(msg);
 	}
 
 	if (Check == TRUE) {
