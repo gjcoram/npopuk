@@ -268,8 +268,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -301,8 +301,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) oleaut32.lib commctrl.lib winsock.lib ole32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) oleaut32.lib commctrl.lib coredll.lib winsock.lib ole32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
 
