@@ -22,6 +22,9 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
  * GetWifiStatus
  */
 BOOL GetWifiStatus(void) {
+
+// GetAdaptersInfo
+
 	return SetNICPower(op.WifiDeviceName, TRUE, FALSE);
 }
 
