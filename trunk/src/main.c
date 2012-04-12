@@ -4728,6 +4728,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
+#ifdef ENABLE_WIFI
+		// Check Wifi Status at start-up
+		GetWifiStatus();
+#endif
+
 		if (first_start == TRUE) {
 			break;
 		}
