@@ -1,9 +1,11 @@
 #include "General.h"
+#include "Memory.h"
 
 #ifdef _WIN32_WCE
 
 // OS Versions: Windows CE .NET 4.0 and later.
 #include <Pm.h>
+#include <Iphlpapi.h>
 
 // Global variables
 BOOL WifiLoop = FALSE;
@@ -13,6 +15,7 @@ extern OPTION op;
 
 // Local declarations
 static BOOL WifiConnByNpop = FALSE;
+static BOOL PrintAdapterInfo(void);
 static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 
 #define WIFI_EVENT					TEXT("WIFI_EVENT")
@@ -23,10 +26,127 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
  */
 BOOL GetWifiStatus(void) {
 
-// GetAdaptersInfo
+	if (op.SocLog > 1) {
+		PrintAdapterInfo();
+	}
 
 	return SetNICPower(op.WifiDeviceName, TRUE, FALSE);
 }
+
+
+BOOL PrintAdapterInfo(void)
+{
+    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapter = NULL;
+    DWORD dwRetVal = 0;
+	char buf[BUF_SIZE];
+
+    ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
+    pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(sizeof (IP_ADAPTER_INFO));
+    if (pAdapterInfo == NULL) {
+        log_save_a("Error allocating memory needed to call GetAdaptersinfo\r\n");
+        return FALSE;
+    }
+// Make an initial call to GetAdaptersInfo to get
+// the necessary size into the ulOutBufLen variable
+    if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
+        mem_free(&pAdapterInfo);
+        pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(ulOutBufLen);
+        if (pAdapterInfo == NULL) {
+            log_save_a("Error allocating memory needed to call GetAdaptersinfo\r\n");
+            return FALSE;
+        }
+    }
+
+    if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {
+        pAdapter = pAdapterInfo;
+        while (pAdapter) {
+            sprintf(buf, "\tComboIndex: \t%d\r\n", pAdapter->ComboIndex);
+			log_save_a(buf);
+            sprintf(buf, "\tAdapter Name: \t%s\r\n", pAdapter->AdapterName);
+            log_save_a(buf);
+            sprintf(buf, "\tAdapter Desc: \t%s\r\n", pAdapter->Description);
+            log_save_a(buf);
+            sprintf(buf, "\tAdapter Addr: \t%.2X-%.2X-%.2X-%.2X\r\n",
+                    (int) pAdapter->Address[0], (int) pAdapter->Address[1],
+					(int) pAdapter->Address[2], (int) pAdapter->Address[3]);
+            log_save_a(buf);
+            sprintf(buf, "\tIndex: \t%d\r\n", pAdapter->Index);
+            log_save_a(buf);
+            log_save_a("\tType: \t");
+            switch (pAdapter->Type) {
+            case MIB_IF_TYPE_OTHER:
+                log_save_a("Other\r\n");
+                break;
+            case MIB_IF_TYPE_ETHERNET:
+                log_save_a("Ethernet\r\n");
+                break;
+            case MIB_IF_TYPE_TOKENRING:
+                log_save_a("Token Ring\r\n");
+                break;
+            case MIB_IF_TYPE_FDDI:
+                log_save_a("FDDI\r\n");
+                break;
+            case MIB_IF_TYPE_PPP:
+                log_save_a("PPP\r\n");
+                break;
+            case MIB_IF_TYPE_LOOPBACK:
+                log_save_a("Lookback\r\n");
+                break;
+            case MIB_IF_TYPE_SLIP:
+                log_save_a("Slip\r\n");
+                break;
+            default:
+				sprintf(buf, "Unknown type %ld\r\n", pAdapter->Type);
+				log_save_a(buf);
+                break;
+            }
+
+            sprintf(buf, "\tIP Address: \t%s\r\n",
+                   pAdapter->IpAddressList.IpAddress.String);
+			log_save_a(buf);
+            sprintf(buf, "\tIP Mask: \t%s\r\n", pAdapter->IpAddressList.IpMask.String);
+			log_save_a(buf);
+
+            sprintf(buf, "\tGateway: \t%s\r\n", pAdapter->GatewayList.IpAddress.String);
+			log_save_a(buf);
+            log_save_a("\t***\r\n");
+
+            if (pAdapter->DhcpEnabled) {
+                log_save_a("\tDHCP Enabled: Yes\r\n");
+                sprintf(buf, "\t  DHCP Server: \t%s\r\n",
+                       pAdapter->DhcpServer.IpAddress.String);
+				log_save_a(buf);
+
+            } else
+                log_save_a("\tDHCP Enabled: No\r\n");
+
+            if (pAdapter->HaveWins) {
+                log_save_a("\tHave Wins: Yes\r\n");
+                sprintf(buf, "\t  Primary Wins Server:    %s\r\n",
+                       pAdapter->PrimaryWinsServer.IpAddress.String);
+				log_save_a(buf);
+                sprintf(buf, "\t  Secondary Wins Server:  %s\r\n",
+                       pAdapter->SecondaryWinsServer.IpAddress.String);
+				log_save_a(buf);
+            } else
+                log_save_a("\tHave Wins: No\r\n");
+            pAdapter = pAdapter->Next;
+            log_save_a("\r\n");
+        }
+    } else {
+        sprintf(buf, "GetAdaptersInfo failed with error: %d\r\n", dwRetVal);
+		log_save_a(buf);
+
+    }
+    if (pAdapterInfo)
+        mem_free(&pAdapterInfo);
+
+    return TRUE;
+}
+
+
+
 
 /*
  * WifiConnect

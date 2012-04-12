@@ -12,12 +12,12 @@ CFG=nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "nPOPuk_WCE_EN.vcn".
+!MESSAGE NMAKE /f "nPOPuk_ssl_WCE_EN.vcn".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "nPOPuk_WCE_EN.vcn" CFG="nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
+!MESSAGE NMAKE /f "nPOPuk_ssl_WCE_EN.vcn" CFG="nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -69,7 +69,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSRel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
 
@@ -102,7 +102,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_MIPS\libeay32.lib ..\openssl\out32_MIPS\ssleay32.lib ..\zlib_wce\lib_mips\zlib_wce.lib ..\wcecompat\lib_mips\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"MIPSDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
 
@@ -135,7 +135,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
 
@@ -168,7 +168,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_SH4\libeay32.lib ..\openssl\out32_SH4\ssleay32.lib ..\zlib_wce\lib_sh4\zlib_wce.lib ..\wcecompat\lib_sh4\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"SH4Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
 
@@ -201,7 +201,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:THUMB
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMRel/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:THUMB
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -235,7 +235,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:THUMB
+# ADD LINK32 commctrl.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_ARM\libeay32.lib ..\openssl\out32_ARM\ssleay32.lib ..\zlib_wce\lib_arm\zlib_wce.lib ..\wcecompat\lib_arm\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /out:"ARMDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:THUMB
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -269,7 +269,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Rel/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
 
@@ -301,34 +301,32 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) oleaut32.lib commctrl.lib coredll.lib winsock.lib ole32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"X86Dbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "emulator"
-# PROP BASE Intermediate_Dir "emulator"
-# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Output_Dir "emulatorDbg"
+# PROP BASE Intermediate_Dir "emulatorDbg"
+# PROP BASE CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
 # PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
-# PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "emulator"
-# PROP Intermediate_Dir "emulator"
-# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Output_Dir "emulatorDbg"
+# PROP Intermediate_Dir "emulatorDbg"
+# PROP CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
 # PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
-# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 RSC=rc.exe
-# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
-# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD BASE RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
 CPP=cl.exe
-# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gz /c
-# ADD CPP /nologo /Zp16 /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "_i386_" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_NOFILEMAP" /Gz /c
-# SUBTRACT CPP /Gy /YX
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /Yu"stdafx.h" /Gs8192 /GF /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\EN" /I "..\openssl\inc32" /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /Gs8192 /GF /c
+# SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -336,8 +334,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 commctrl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /windowsce:emulation /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib winsock.lib ole32.lib oleaut32.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"emulator/nPOPuk.exe" /windowsce:emulation /MACHINE:IX86
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) winsock.lib ole32.lib oleaut32.lib iphlpapi.lib ..\openssl\out32_X86\libeay32.lib ..\openssl\out32_X86\ssleay32.lib ..\zlib_wce\lib_x86\zlib_wce.lib ..\wcecompat\lib_x86\wcecompat.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /out:"emulatorDbg/nPOPuk.exe" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ENDIF 
 
@@ -472,7 +470,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
@@ -487,7 +487,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
@@ -502,7 +504,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
@@ -517,7 +521,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
@@ -532,7 +538,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -547,7 +555,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -562,7 +572,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -577,7 +589,9 @@ DEP_CPP_EDIT_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_EDIT_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
@@ -1352,10 +1366,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
@@ -1372,10 +1386,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
@@ -1392,10 +1406,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
@@ -1412,10 +1426,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
@@ -1432,10 +1446,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -1452,10 +1466,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -1472,10 +1486,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1492,10 +1506,10 @@ DEP_CPP_MAIN_=\
 	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
 	
 NODEP_CPP_MAIN_=\
 	"..\src\Projects.h"\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
@@ -1804,7 +1818,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
@@ -1815,7 +1831,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
@@ -1826,7 +1844,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
@@ -1837,7 +1857,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
@@ -1848,7 +1870,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -1859,7 +1883,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -1870,7 +1896,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -1881,7 +1909,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"Pm.h"\
+	
+NODEP_CPP_NETWO=\
+	".\m.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
@@ -1892,6 +1922,9 @@ DEP_CPP_NETWO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
+	{$(INCLUDE)}"ipexport.h"\
+	{$(INCLUDE)}"Iphlpapi.h"\
+	{$(INCLUDE)}"iptypes.h"\
 	{$(INCLUDE)}"Pm.h"\
 	
 
@@ -2656,7 +2689,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
@@ -2673,7 +2708,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
@@ -2690,7 +2727,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
@@ -2707,7 +2746,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
@@ -2724,7 +2765,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -2741,7 +2784,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -2758,7 +2803,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2775,7 +2822,9 @@ DEP_CPP_VIEW_=\
 	"..\src\nEdit.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"uxtheme.h"\
+	
+NODEP_CPP_VIEW_=\
+	".\xtheme.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
@@ -2810,7 +2859,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPSII) Debug"
@@ -2821,7 +2872,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
@@ -2832,7 +2885,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
@@ -2843,7 +2898,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Release"
@@ -2854,7 +2911,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARMV4I) Debug"
@@ -2865,7 +2924,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
@@ -2876,7 +2937,9 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
@@ -2887,17 +2950,58 @@ DEP_CPP_WINSO=\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	{$(INCLUDE)}"sslsock.h"\
+	
+NODEP_CPP_WINSO=\
+	".\slsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE emulator) Debug"
 
 DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
+	"..\openssl\inc32\openssl\asn1.h"\
+	"..\openssl\inc32\openssl\bio.h"\
+	"..\openssl\inc32\openssl\bn.h"\
+	"..\openssl\inc32\openssl\buffer.h"\
+	"..\openssl\inc32\openssl\comp.h"\
+	"..\openssl\inc32\openssl\crypto.h"\
+	"..\openssl\inc32\openssl\dh.h"\
+	"..\openssl\inc32\openssl\dsa.h"\
+	"..\openssl\inc32\openssl\dtls1.h"\
+	"..\openssl\inc32\openssl\e_os2.h"\
+	"..\openssl\inc32\openssl\ebcdic.h"\
+	"..\openssl\inc32\openssl\evp.h"\
+	"..\openssl\inc32\openssl\hmac.h"\
+	"..\openssl\inc32\openssl\kssl.h"\
+	"..\openssl\inc32\openssl\lhash.h"\
+	"..\openssl\inc32\openssl\obj_mac.h"\
+	"..\openssl\inc32\openssl\objects.h"\
+	"..\openssl\inc32\openssl\opensslconf.h"\
+	"..\openssl\inc32\openssl\opensslv.h"\
+	"..\openssl\inc32\openssl\ossl_typ.h"\
+	"..\openssl\inc32\openssl\pem.h"\
+	"..\openssl\inc32\openssl\pem2.h"\
+	"..\openssl\inc32\openssl\pkcs7.h"\
+	"..\openssl\inc32\openssl\pq_compat.h"\
+	"..\openssl\inc32\openssl\pqueue.h"\
+	"..\openssl\inc32\openssl\rsa.h"\
+	"..\openssl\inc32\openssl\safestack.h"\
+	"..\openssl\inc32\openssl\sha.h"\
+	"..\openssl\inc32\openssl\ssl.h"\
+	"..\openssl\inc32\openssl\ssl2.h"\
+	"..\openssl\inc32\openssl\ssl23.h"\
+	"..\openssl\inc32\openssl\ssl3.h"\
+	"..\openssl\inc32\openssl\stack.h"\
+	"..\openssl\inc32\openssl\symhacks.h"\
+	"..\openssl\inc32\openssl\tls1.h"\
+	"..\openssl\inc32\openssl\x509.h"\
+	"..\openssl\inc32\openssl\x509_vfy.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
 	"..\src\npop_ver.h"\
+	"..\src\openssl.h"\
 	".\stdafx.h"\
+	".\wincrypt_stub.h"\
 	{$(INCLUDE)}"sslsock.h"\
 	
 
