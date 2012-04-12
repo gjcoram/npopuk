@@ -559,13 +559,17 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Recv"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "&Download entire body when checking",
-                    IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,5,5,150,10
-    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,20,85,10
-    EDITTEXT        IDC_EDIT_READLINE,100,18,29,15,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "&Get only",IDC_CHECK_GETRECENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,7,40,10
+    EDITTEXT        IDC_EDIT_NUMRECENT,50,5,30,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "newest messages",IDC_TEXT_GETRECENT,85,7,90,10
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,5,22,80,10
+    EDITTEXT        IDC_EDIT_READLINE,90,20,30,15,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "&All",IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,125,22,150,10
     CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,36,120,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,35,120,10
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
                     BS_AUTORADIOBUTTON,10,61,135,10
     CONTROL         "&Only header is saved",IDC_RADIO_HEADSAVE,"Button",
