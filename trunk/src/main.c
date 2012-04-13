@@ -4729,6 +4729,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
+#ifdef ENABLE_WIFI
+		// check network connections
+		GetWifiStatus();
+#endif
+
 		if (first_start == TRUE) {
 			break;
 		}
@@ -5425,10 +5430,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_WIFI
 		//wifi Change
 		case ID_WIFIWAIT_TIMER:
+log_save_a("wifi timer expired\r\n");
 			KillTimer(hWnd, wParam);
-//			if (hEvent != NULL) {
-//				SetEvent(hEvent);
-//			}
+			if (hEvent != NULL) {
+				SetEvent(hEvent);
+			}
 			break;
 #endif
 		} // WM_TIMER switch

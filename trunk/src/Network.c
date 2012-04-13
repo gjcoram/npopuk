@@ -1,5 +1,6 @@
 #include "General.h"
 #include "Memory.h"
+#include "String.h"
 
 #ifdef _WIN32_WCE
 
@@ -11,6 +12,7 @@
 BOOL WifiLoop = FALSE;
 HANDLE hEvent;
 
+extern HWND MainWnd;
 extern OPTION op;
 
 // Local declarations
@@ -44,11 +46,12 @@ BOOL PrintAdapterInfo(void)
     ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
     pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(sizeof (IP_ADAPTER_INFO));
     if (pAdapterInfo == NULL) {
-        log_save_a("Error allocating memory needed to call GetAdaptersinfo\r\n");
+        log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
         return FALSE;
     }
-// Make an initial call to GetAdaptersInfo to get
-// the necessary size into the ulOutBufLen variable
+
+	// Make an initial call to GetAdaptersInfo to get
+	// the necessary size into the ulOutBufLen variable
     if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
         mem_free(&pAdapterInfo);
         pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(ulOutBufLen);
@@ -61,9 +64,17 @@ BOOL PrintAdapterInfo(void)
     if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {
         pAdapter = pAdapterInfo;
         while (pAdapter) {
+			TCHAR *name;
+			BOOL pwr = FALSE;
+			if (name = alloc_char_to_tchar(pAdapter->AdapterName)) {
+				pwr = SetNICPower(name, TRUE, FALSE);
+				mem_free(&name);
+			}
             sprintf(buf, "\tComboIndex: \t%d\r\n", pAdapter->ComboIndex);
 			log_save_a(buf);
             sprintf(buf, "\tAdapter Name: \t%s\r\n", pAdapter->AdapterName);
+            log_save_a(buf);
+            sprintf(buf, "\tAdapter Power: \t%s\r\n", ((pwr)? "Yes" : "No"));
             log_save_a(buf);
             sprintf(buf, "\tAdapter Desc: \t%s\r\n", pAdapter->Description);
             log_save_a(buf);
@@ -147,7 +158,6 @@ BOOL PrintAdapterInfo(void)
 
 
 
-
 /*
  * WifiConnect
  */
@@ -156,11 +166,13 @@ BOOL WifiConnect(HWND hWnd, int Dummy) {
 
 	ret = SetNICPower(op.WifiDeviceName, TRUE, TRUE);
 	if (ret == TRUE) {
+		SetStatusTextT(MainWnd, STR_STATUS_WIFI_CONNECT, 1);
 		return ret;
 	}
 
+	SetStatusTextT(MainWnd, STR_STATUS_WIFI_START, 1);
 	if (op.SocLog > 1) {
-		log_save_a("Activating wifi\r\n");
+		log_save_a("Activating wi-fi\r\n");
 	}
 	SetTimer(hWnd, ID_WIFIWAIT_TIMER, op.WifiWaitSec * 1000, NULL);
 
@@ -177,6 +189,7 @@ BOOL WifiConnect(HWND hWnd, int Dummy) {
 	}
 	WifiLoop = TRUE;
 	ResetEvent(hEvent);
+log_save_a("entering while loop\r\n");
 	while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
 		MSG msg;
 		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
@@ -184,16 +197,22 @@ BOOL WifiConnect(HWND hWnd, int Dummy) {
 		}
 		MessageFunc(hWnd, &msg);
 		if (WifiLoop == FALSE) {
+log_save_a("breaking while loop\r\n");
 			break;
 		}
 	}
+log_save_a("done while loop\r\n");
 	CloseHandle(hEvent);
 	hEvent = NULL;
 	if (WifiLoop == FALSE) {
+log_save_a("wifi loop false\r\n");
 		return FALSE;
 	}
 	WifiLoop = FALSE;
 
+	if (ret) {
+		SetStatusTextT(MainWnd, STR_STATUS_WIFI_CONNECT, 1);
+	}
 	return ret;
 }
 
@@ -208,6 +227,7 @@ void WifiDisconnect(BOOL Force)
 		}
 		SetNICPower(op.WifiDeviceName, FALSE, FALSE);
 		WifiConnByNpop = FALSE;
+		SetStatusTextT(MainWnd, STR_STATUS_WIFI_DISCONNECT, 1);
 	}
 }
 
