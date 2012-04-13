@@ -56,7 +56,7 @@
 #define RAS_CONN_CNT				30
 
 /* Global Variables */
-BOOL RasLoop = FALSE;
+BOOL RasLoop = FALSE; // in the process of dialing up
 
 UINT WM_RASEVENT = 0;
 HANDLE hEvent;

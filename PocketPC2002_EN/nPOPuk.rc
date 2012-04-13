@@ -251,9 +251,10 @@ BEGIN
         BEGIN
             MENUITEM "&Connect",                    ID_MENUITEM_RAS_CONNECT
             MENUITEM "&Disconnect",                 ID_MENUITEM_RAS_DISCONNECT
-
             MENUITEM SEPARATOR
             MENUITEM "&LAN",                        ID_MENUITEM_LAN
+            MENUITEM SEPARATOR
+            MENUITEM "&View log",                   ID_MENUITEM_SOCLOG
         END
         MENUITEM SEPARATOR
         MENUITEM "&Save all",                   ID_MENUITEM_SAVEALL

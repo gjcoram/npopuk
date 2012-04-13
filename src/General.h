@@ -921,6 +921,7 @@ void smtp_set_error(HWND hWnd);
 void smtp_free(void);
 
 // File
+TCHAR *log_read(void);
 void log_flush(void);
 BOOL log_save_a(char *buf);
 #ifdef UNICODE
@@ -1132,6 +1133,7 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 BOOL CALLBACK SetEncodeProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK SelSaveBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK SocLogViewProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL SetOption(HWND hWnd);
 BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -448,6 +448,8 @@
 #define ID_MENUITEM_FIND                40088
 #define ID_MENUITEM_REPLACE             40089
 #define ID_MENUITEM_NEXTFIND            40090
+#define ID_MENUITEM_LAN                 40092
+#define ID_MENUITEM_SOCLOG              40096
 #define ID_MENUITEM_FILE                40121
 #define ID_MENUITEM_MAILBOX             40122
 #define ID_MENUITEM_MAIL                40123
@@ -456,8 +458,6 @@
 #define ID_MENUITEM_VIEW                40129
 #define ID_MENUITEM_ICONSORT            40135
 #define ID_MENUITEM_TRAY                40137
-#define IDS_MENUITEM40138               40139
-#define ID_MENUITEM_LAN                 40143
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
 #define ID_MENUITEM_ENCODE              40148  

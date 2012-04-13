@@ -4102,8 +4102,6 @@ static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WifiNoCheck, 0);
 
 		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WifiWaitSec, FALSE);
-
-		SetDlgItemText(hDlg, IDC_EDIT_NAME, op.WifiDeviceName);
 		break;
 
 	case WM_NOTIFY:
@@ -4122,8 +4120,8 @@ static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.WifiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
 			op.WifiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
 			op.WifiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
+
 			op.WifiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
-			AllocGetText(GetDlgItem(hDlg, IDC_DATE_FORMAT), &op.WifiDeviceName);
 			break;
 		}
 		break;
@@ -4623,6 +4621,89 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDOK:
 			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_INI), tmp);
+			FindPos = 0;
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			FindPos = 0;
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/*
+ * SocLogViewProc - callback log file viewer
+ */
+BOOL CALLBACK SocLogViewProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static BOOL first = TRUE;
+	TCHAR buf[BUF_SIZE];
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+#ifdef _WIN32_WCE_PPC
+		InitDlg(hDlg, STR_TITLE_SOCLOG, TRUE);
+#elif defined(_WIN32_WCE)
+		InitDlg(hDlg);
+#endif
+		SetControlFont(hDlg);
+		SetWindowText(hDlg, STR_TITLE_SOCLOG);
+
+		SendDlgItemMessage(hDlg, IDC_EDIT_INI, WM_SETTEXT, 0, lParam);
+		SendDlgItemMessage(hDlg, IDC_EDIT_FIND, EM_LIMITTEXT, 30, 0);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_INI),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
+		first = TRUE;
+		FindPos = 0;
+		break;
+
+	case WM_CLOSE:
+		FindPos = 0;
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDC_EDIT_INI:
+			if (first && HIWORD( wParam ) == EN_SETFOCUS) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, 0, 0);
+				SetFocus(GetDlgItem(hDlg, IDC_EDIT_FIND));
+				first = FALSE;
+			}
+
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetSip(hDlg, HIWORD(wParam));
+#endif
+			break;
+
+		case IDC_EDIT_FIND:
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+			SetSip(hDlg, HIWORD(wParam));
+#endif
+			if (HIWORD(wParam) != EN_CHANGE) {
+				break;
+			} else {
+				FindPos--;
+			}
+			// fall through
+
+		case IDC_FIND:
+			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, 0, 0) == FALSE) {
+				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
+			}
+			break;
+
+		case IDOK:
 			FindPos = 0;
 			EndDialog(hDlg, TRUE);
 			break;

@@ -2019,5 +2019,6 @@ void ini_free(BOOL free_all)
 	mem_free(&op.URLApp);
 	mem_free(&op.URLAppCmdLine);
 	mem_free(&op.AttachPath);
+	mem_free(&op.WifiDeviceName);
 }
 /* End of source */

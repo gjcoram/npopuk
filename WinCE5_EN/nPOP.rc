@@ -1383,6 +1383,7 @@ BEGIN
         MENUITEM "Wifi &Connect",               ID_MENUITEM_WIFI_CONNECT
         MENUITEM "Wifi &Disconnect",            ID_MENUITEM_WIFI_DISCONNECT
         MENUITEM "&LAN",                        ID_MENUITEM_LAN
+        MENUITEM "&View log",                   ID_MENUITEM_SOCLOG
         MENUITEM SEPARATOR
         MENUITEM "Abou&t...",                   ID_MENUITEM_ABOUT
         MENUITEM "E&xit",                       ID_MENUITEM_QUIT
