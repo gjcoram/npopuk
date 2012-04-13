@@ -246,6 +246,7 @@ static void PlayMarkSound(int mark, int box);
 static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem);
 static BOOL GetDroppedStateMBMenu(void);
 static void DropMBMenu(BOOL drop);
+static void ViewLogFile(HWND hWnd);
 
 #ifdef _WIN32_WCE_LAGENDA
 int GetUserDiskName(HINSTANCE hInstance, LPTSTR lpDiskName, int nMaxCount);
@@ -4728,11 +4729,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
 		}
 
-#ifdef ENABLE_WIFI
-		// Check Wifi Status at start-up
-		GetWifiStatus();
-#endif
-
 		if (first_start == TRUE) {
 			break;
 		}
@@ -5430,9 +5426,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		//wifi Change
 		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
-			if (hEvent != NULL) {
-				SetEvent(hEvent);
-			}
+//			if (hEvent != NULL) {
+//				SetEvent(hEvent);
+//			}
 			break;
 #endif
 		} // WM_TIMER switch
@@ -5667,6 +5663,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			CheckMenuItem(GetMenu(hWnd), ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
 #endif
 			SetMailMenu(hWnd);
+			break;
+
+		case ID_MENUITEM_SOCLOG:
+			ViewLogFile(hWnd);
 			break;
 
 		case ID_MENUITEM_AUTOCHECK:
@@ -7894,6 +7894,20 @@ static void PopulatePreviewPane(HWND hWnd, MAILITEM *tpMailItem)
 		mem_free(&buf);
 	}
 	mem_free(&body);
+}
+
+/*
+ * ViewLogFile
+ */
+static void ViewLogFile(HWND hWnd)
+{
+	TCHAR *buf = log_read();
+	if (buf == NULL) {
+		buf = alloc_copy_t(STR_MSG_LOG_FILE_EMPTY);
+	}
+	DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_OPTION_EDITOR), hWnd,
+		SocLogViewProc, (LPARAM)buf);
+	mem_free(&buf);
 }
 
 /***

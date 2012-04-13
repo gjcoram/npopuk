@@ -451,6 +451,8 @@
 #define ID_MENUITEM_FIND                40088
 #define ID_MENUITEM_REPLACE             40089
 #define ID_MENUITEM_NEXTFIND            40090
+#define ID_MENUITEM_LAN                 40092
+#define ID_MENUITEM_SOCLOG              40096
 #define ID_MENUITEM_FILE                40121
 #define ID_MENUITEM_MAILBOX             40122
 #define ID_MENUITEM_MAIL                40123

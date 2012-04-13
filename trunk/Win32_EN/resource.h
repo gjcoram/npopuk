@@ -436,6 +436,7 @@
 #define ID_MENUITEM_ATTACH              40093
 #define ID_MENUITEM_FONT                40094
 #define ID_MENUITEM_ENCODE              40095
+#define ID_MENUITEM_SOCLOG              40096
 #define ID_MENUITEM_SAVEALL             40149
 #define ID_MENUITEM_FORWARD             40150
 #define ID_MENUITEM_COPY2MBOX           42000 // leave MAX_MAILBOX_CNT IDs free for copy

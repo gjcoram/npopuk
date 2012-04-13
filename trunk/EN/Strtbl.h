@@ -223,6 +223,7 @@
 #define STR_MSG_SELECT_PREVIEW		TEXT("Select a message to preview.")
 #define STR_MSG_SINGLE_PREVIEW		TEXT("Select a single message to preview.")
 #define STR_MSG_POSITIVE			TEXT("Number must be greater than 0.")
+#define STR_MSG_LOG_FILE_EMPTY		TEXT("Network log file is empty.")
 
 // Window title
 #define STR_TITLE_NEWMAILBOX		TEXT("%s - [Mailboxes with new mail: %d]")
@@ -230,6 +231,7 @@
 #define STR_TITLE_MAILSENT			TEXT("Sent Mail")
 #define STR_TITLE_MAILVIEW			TEXT("Mail View")
 #define STR_TITLE_MAILVIEW_COUNT	TEXT(" - [No.%d]")
+#define STR_TITLE_SOCLOG			TEXT("Network Log")
 
 // Message title
 #define STR_TITLE_EXEC				TEXT("Update account")

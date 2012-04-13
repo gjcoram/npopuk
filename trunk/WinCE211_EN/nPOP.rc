@@ -1411,6 +1411,7 @@ BEGIN
         MENUITEM "Dial-up &Connect",            ID_MENUITEM_RAS_CONNECT
         MENUITEM "Dial-up &Disconnect",         ID_MENUITEM_RAS_DISCONNECT
         MENUITEM "&LAN",                        ID_MENUITEM_LAN
+        MENUITEM "&View log",                   ID_MENUITEM_SOCLOG
         MENUITEM SEPARATOR
         MENUITEM "Abou&t...",                   ID_MENUITEM_ABOUT
         MENUITEM "E&xit",                       ID_MENUITEM_QUIT

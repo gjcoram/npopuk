@@ -99,6 +99,34 @@ void log_flush(void)
 		log_close();
 }
 
+TCHAR *log_read(void)
+{
+	TCHAR *buf = NULL;
+	TCHAR path[BUF_SIZE];
+	long file_size;
+
+	// create the name
+	if (DataDir != NULL) {
+		wsprintf(path, TEXT("%s%s"), DataDir, LOG_FILE);
+	} else {
+		wsprintf(path, TEXT("%s%s"), AppDir, LOG_FILE);
+	}
+
+	// close file -- will be re-opened for append, if needed
+	log_close();
+
+	file_size = file_get_size(path);
+	if (file_size > 0) {
+		char *cbuf;
+		cbuf = file_read(path, file_size);
+		if (cbuf != NULL) {
+			buf = alloc_char_to_tchar(cbuf);
+			mem_free(&cbuf);
+		}
+	}
+	return buf;
+}
+
 #ifdef UNICODE
 /*
  * log_save - write string to log file.  buf assumed to end with \r\n
@@ -152,7 +180,6 @@ BOOL log_save_a(char *ascii)
 
 	return ret;
 }
-
 
 /*
  * log_header - Write a header to the log.
