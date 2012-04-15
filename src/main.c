@@ -2810,6 +2810,7 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	RECT rcClient, subwinRect;
 	int newTop, newHeight, Left, Right;
+	static BOOL maximized = FALSE;
 
 #ifdef _WIN32_WCE
 	if (hWnd == NULL || mListView == NULL) {
@@ -2877,16 +2878,23 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			CheckMenuItem(hMenu, ID_MENUITEM_PREVPANE, MF_UNCHECKED);
 			op.PreviewPaneHeight = -op.PreviewPaneHeight;
 		} else {
-			int oldHeight, dh;
-			GetWindowRect(mListView, &subwinRect);
-			oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
-			dh = oldHeight - newHeight;
-			op.PreviewPaneHeight -= dh/2;
-			if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
-				op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+			if (wParam != SIZE_MAXIMIZED && (wParam != SIZE_RESTORED || maximized == FALSE) ) {
+				int oldHeight, dh;
+				GetWindowRect(mListView, &subwinRect);
+				oldHeight = subwinRect.bottom - subwinRect.top + op.PreviewPaneHeight;
+				dh = oldHeight - newHeight;
+				op.PreviewPaneHeight -= dh/2;
+				if (op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+					op.PreviewPaneHeight = op.PreviewPaneMinHeight;
+				}
 			}
 			newHeight -= op.PreviewPaneHeight;
 		}
+	}
+	if (wParam == SIZE_MAXIMIZED) {
+		maximized = TRUE;
+	} else {
+		maximized = FALSE;
 	}
 	MoveWindow(mListView, Left, newTop, Right, newHeight, TRUE);
 	if (op.PreviewPaneHeight > 0) {
