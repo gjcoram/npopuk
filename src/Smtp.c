@@ -636,11 +636,9 @@ static char *augment_wire_form(char *body, char *ctype, MAILITEM *tpMailItem, BO
 
 		if (date != NULL) {
 			r = str_join(r, HEAD_DATE, " ", date, "\r\n", (char*)-1);
-			mem_free(&date);
 		}
 		if (m_id != NULL) {
 			r = str_join(r, HEAD_MESSAGEID, " ", m_id, "\r\n", (char*)-1);
-			mem_free(&m_id);
 		}
 		r = str_join(r, HEAD_MIMEVERSION, " ", MIME_VERSION, "\r\n",
 					HEAD_X_MAILER, " ", APP_NAME_A, "\r\n\r\n", 
@@ -650,6 +648,8 @@ static char *augment_wire_form(char *body, char *ctype, MAILITEM *tpMailItem, BO
 	lenw += add;
 	new_wire = (char *)mem_alloc(sizeof(char) * lenw);
 	if (new_wire == NULL) {
+		mem_free(&date);
+		mem_free(&m_id);
 		mem_free(&ret);
 		return FALSE;
 	}

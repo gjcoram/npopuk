@@ -25,7 +25,7 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 /*
  * GetNetworkStatus - check if some adapter is powered and IP address is set
  */
-BOOL GetNetworkStatus(void) {
+BOOL GetNetworkStatus(BOOL Print) {
 	BOOL ret = FALSE;
 
 	PIP_ADAPTER_INFO pAdapterInfo;
@@ -36,7 +36,7 @@ BOOL GetNetworkStatus(void) {
 	ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
 	pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(sizeof (IP_ADAPTER_INFO));
 	if (pAdapterInfo == NULL) {
-		if (op.SocLog > 1) {
+		if (Print && op.SocLog > 0) {
 			log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
 		}
 		return FALSE;
@@ -48,7 +48,7 @@ BOOL GetNetworkStatus(void) {
 		mem_free(&pAdapterInfo);
 		pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(ulOutBufLen);
 		if (pAdapterInfo == NULL) {
-			if (op.SocLog > 1) {
+			if (Print && op.SocLog > 0) {
 				log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
 			}
 			return FALSE;
@@ -66,11 +66,16 @@ BOOL GetNetworkStatus(void) {
 					ret = TRUE;
 				}
 				mem_free(&name);
+				if (Print && op.SocLog > 0 && op.SocLog <= 3) {
+					sprintf(buf, "Adapter '%s' is powered and has IP address %s\r\n",
+						pAdapter->AdapterName, pAdapter->IpAddressList.IpAddress.String);
+					log_save_a(buf);
+				}
 				if (ret == TRUE && op.SocLog <= 3) {
 					break;
 				}
 			}
-			if (op.SocLog > 3) {
+			if (Print && op.SocLog > 3) {
 				sprintf(buf, "\tComboIndex: \t%d\r\n", pAdapter->ComboIndex);
 				log_save_a(buf);
 				sprintf(buf, "\tAdapter Name: \t%s\r\n", pAdapter->AdapterName);
@@ -147,7 +152,7 @@ BOOL GetNetworkStatus(void) {
 				pAdapter = pAdapter->Next;
 			}
 		}
-	} else if (op.SocLog > 1) {
+	} else if (Print && op.SocLog > 0) {
 		sprintf(buf, "GetAdaptersInfo failed with error: %d\r\n", dwRetVal);
 		log_save_a(buf);
 	}
@@ -198,7 +203,13 @@ log_save_a("entering while loop\r\n");
 			break;
 		}
 		MessageFunc(hWnd, &msg);
+		if (GetNetworkStatus(FALSE) == TRUE) {
+			// Device is powered and has IP address
+log_save_a("got IP address, breaking while loop\r\n");
+			break;
+		}
 		if (WifiLoop == FALSE) {
+			// WifiDisconnect called while waiting for connection?
 log_save_a("breaking while loop\r\n");
 			break;
 		}
