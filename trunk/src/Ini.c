@@ -358,10 +358,9 @@ void ini_read_general(HWND hWnd)
 	} else if (op.PreviewPaneHeight <= 0 && op.PreviewPaneHeight > -op.PreviewPaneMinHeight){
 		op.PreviewPaneHeight = -op.PreviewPaneMinHeight;
 	}
-	if (op.PreviewPaneHeight > height) {
+	if (height - op.PreviewPaneHeight < op.PreviewPaneMinHeight) {
+		// listview would be too small
 		op.PreviewPaneHeight = height / 2;
-	} else if (op.PreviewPaneHeight > (3*height)/4) {
-		op.PreviewPaneHeight = -op.PreviewPaneHeight; // hide it (too big)
 	}
 	len = profile_get_string(GENERAL, TEXT("PreviewHeader"), TEXT("From: %F\\nTo: %T\\n{CC: %C\\n}Subject: %S\\nDate: %D\\n\\n"), conv_buf, INI_BUF_SIZE - 1);
 	op.PreviewHeader = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
