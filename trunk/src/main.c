@@ -4739,7 +4739,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef ENABLE_WIFI
 		// check network connections
-		GetWifiStatus();
+		GetNetworkStatus();
 #endif
 
 		if (first_start == TRUE) {
@@ -5346,7 +5346,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.EnableLAN == 0 && op.WifiCon == 0 && op.WifiNoCheck == 1 && !GetWifiStatus()) {
+			if (op.EnableLAN == 0 && op.WifiCon == 0 && op.WifiNoCheck == 1 && !GetNetworkStatus()) {
 				break;
 			}
 #endif
