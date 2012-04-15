@@ -6,6 +6,9 @@
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
+ *
+ * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * Info at http://www.npopuk.org.uk
  */
 
 /* Include Files */
@@ -42,12 +45,22 @@ void *mem_alloc(const DWORD size)
 	all_alloc_size += LocalSize(mem);
 #ifdef MEM_CHECK
 	if (address_index < ADDRESS_CNT) {
-		if (address_index == DEBUG_ADDRESS) {
-			address[address_index] = (long)mem;
-		} else {
-			address[address_index] = (long)mem;
+		int i;
+		for(i = 0; i < address_index; i++) {
+			if (address[i] == 0) {
+				// reuse slot that was freed
+				address[i] = (long)mem;
+				break;
+			}
 		}
-		address_index++;
+		if (i >= address_index) {
+			if (address_index == DEBUG_ADDRESS) {
+				address[address_index] = (long)mem;
+			} else {
+				address[address_index] = (long)mem;
+			}
+			address_index++;
+		}
 	}
 #endif	// MEM_CHECK
 	return mem;
@@ -68,12 +81,22 @@ void *mem_calloc(const DWORD size)
 	all_alloc_size += LocalSize(mem);
 #ifdef MEM_CHECK
 	if (address_index < ADDRESS_CNT) {
-		if (address_index == DEBUG_ADDRESS) {
-			address[address_index] = (long)mem;
-		} else {
-			address[address_index] = (long)mem;
+		int i;
+		for(i = 0; i < address_index; i++) {
+			if (address[i] == 0) {
+				// reuse slot that was freed
+				address[i] = (long)mem;
+				break;
+			}
 		}
-		address_index++;
+		if (i >= address_index) {
+			if (address_index == DEBUG_ADDRESS) {
+				address[address_index] = (long)mem;
+			} else {
+				address[address_index] = (long)mem;
+			}
+			address_index++;
+		}
 	}
 #endif	// MEM_CHECK
 	return mem;
