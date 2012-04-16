@@ -21,11 +21,51 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 
 #define WIFI_EVENT					TEXT("WIFI_EVENT")
 
+/*
+ * GetAdapterName
+ */
+see also Program Files\Windows CE Tools\wce500\Windows Mobile 5.0 Smartphone SDK\Samples\CPP\Win32\Powermanager
+char *GetAdapterName()
+{
+	UCHAR QueryBuffer[ 1024 ] = { 0 };
+	bool IsOk = false;
+
+	NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
+
+	for (DWORD i = 0; ; i++) {
+		pQueryBinding->BindingIndex = i;
+		DWORD dwBytesReturned = 0;
+
+		if ( DeviceIoControl(g_hDev, IOCTL_NDISUIO_QUERY_BINDING,
+			(VOID*) QueryBuffer, sizeof(QueryBuffer),
+			(VOID*) QueryBuffer, sizeof(QueryBuffer),
+			&dwBytesReturned, NULL) ) {
+
+			// Get the device name in the list of bindings
+			WCHAR* devName = (WCHAR*) LocalAlloc(LPTR, pQueryBinding->DeviceNameLength * sizeof(WCHAR) );
+
+			memcpy( devName, (UCHAR*) pQueryBinding + pQueryBinding->DeviceNameOffset,
+					pQueryBinding->DeviceNameLength );
+			
+			memset(QueryBuffer, 0, sizeof(QueryBuffer));
+		} else {
+			if (GetLastError() == ERROR_NO_MORE_ITEMS)
+				IsOk = true;
+			break;
+		}
+	}
+
+	return IsOk;
+}
+
+
+}
 
 /*
  * GetNetworkStatus - check if some adapter is powered and IP address is set
  */
-BOOL GetNetworkStatus(BOOL Print) {
+BOOL GetNetworkStatus(BOOL Print)
+{
 	BOOL ret = FALSE;
 
 	PIP_ADAPTER_INFO pAdapterInfo;
@@ -167,7 +207,8 @@ BOOL GetNetworkStatus(BOOL Print) {
 /*
  * WifiConnect
  */
-BOOL WifiConnect(HWND hWnd, int Dummy) {
+BOOL WifiConnect(HWND hWnd, int Dummy)
+{
 	BOOL ret;
 
 	// check if active already
