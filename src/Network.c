@@ -7,10 +7,15 @@
 // OS Versions: Windows CE .NET 4.0 and later.
 #include <Pm.h>
 #include <Iphlpapi.h>
+#include <winioctl.h>
+//typedef ULONG NDIS_OID;
+#include <Ntddndis.h>
+#include <Nuiouser.h>
 
 // Global variables
 BOOL WifiLoop = FALSE;
 HANDLE hEvent;
+HANDLE g_hDev = NULL;
 
 extern HWND MainWnd;
 extern OPTION op;
@@ -24,42 +29,68 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 /*
  * GetAdapterName
  */
-see also Program Files\Windows CE Tools\wce500\Windows Mobile 5.0 Smartphone SDK\Samples\CPP\Win32\Powermanager
-char *GetAdapterName()
+BOOL GetAdapterName()
 {
 	UCHAR QueryBuffer[ 1024 ] = { 0 };
-	bool IsOk = false;
+	NDISUIO_QUERY_OID nqo;
+	BOOL IsOk = FALSE;
+	DWORD i;
 
 	NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
 
-	for (DWORD i = 0; ; i++) {
+	HANDLE hNDUIO = CreateFile(NDISUIO_DEVICE_NAME, GENERIC_READ | GENERIC_WRITE,
+								FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+								FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+								INVALID_HANDLE_VALUE);
+	if (hNDUIO == INVALID_HANDLE_VALUE) {
+		log_save_a("Unable to open NDIS handle\r\n");
+		return FALSE;
+	}
+	
+log_save_a("starting GetAdapterName\r\n");
+	for (i = 0; ; i++) {
+		DWORD dwBytesRet = 0;
 		pQueryBinding->BindingIndex = i;
-		DWORD dwBytesReturned = 0;
 
-		if ( DeviceIoControl(g_hDev, IOCTL_NDISUIO_QUERY_BINDING,
+		if ( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_BINDING,
 			(VOID*) QueryBuffer, sizeof(QueryBuffer),
 			(VOID*) QueryBuffer, sizeof(QueryBuffer),
-			&dwBytesReturned, NULL) ) {
+			&dwBytesRet, NULL) ) {
 
 			// Get the device name in the list of bindings
 			WCHAR* devName = (WCHAR*) LocalAlloc(LPTR, pQueryBinding->DeviceNameLength * sizeof(WCHAR) );
 
 			memcpy( devName, (UCHAR*) pQueryBinding + pQueryBinding->DeviceNameOffset,
 					pQueryBinding->DeviceNameLength );
+log_save_a("got a device name: ");
+log_save(devName);
+log_save_a("\r\n");
 			
 			memset(QueryBuffer, 0, sizeof(QueryBuffer));
+
+			nqo.ptcDeviceName = devName;
+			nqo.Oid = OID_802_11_WEP_STATUS;
+			dwBytesRet = 0;
+			if( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_OID_VALUE, &nqo,
+				sizeof(NDISUIO_QUERY_OID), &nqo, sizeof(NDISUIO_QUERY_OID), &dwBytesRet, NULL)) {
+log_save_a("WEP status success\r\n");
+			} else {
+log_save_a("WEP status fail\r\n");
+			}
+
 		} else {
-			if (GetLastError() == ERROR_NO_MORE_ITEMS)
-				IsOk = true;
+			if (GetLastError() == ERROR_NO_MORE_ITEMS) {
+				IsOk = TRUE;
+log_save_a("no more items\r\n");
+			}
 			break;
 		}
 	}
 
+	CloseHandle(hNDUIO);
 	return IsOk;
 }
 
-
-}
 
 /*
  * GetNetworkStatus - check if some adapter is powered and IP address is set
@@ -198,6 +229,8 @@ BOOL GetNetworkStatus(BOOL Print)
 	}
 	if (pAdapterInfo)
 		mem_free(&pAdapterInfo);
+
+	GetAdapterName();
 
 	return ret;
 }
