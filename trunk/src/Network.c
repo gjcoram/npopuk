@@ -27,61 +27,94 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable);
 #define WIFI_EVENT					TEXT("WIFI_EVENT")
 
 /*
- * GetAdapterName
+ * GetNetworkStatus - check if some adapter is powered and IP address is set
  */
-BOOL GetAdapterName()
+BOOL GetNetworkStatus(BOOL Print)
 {
 	UCHAR QueryBuffer[ 1024 ] = { 0 };
-	NDISUIO_QUERY_OID nqo;
+	HANDLE hNDUIO;
 	BOOL IsOk = FALSE;
 	DWORD i;
 
-	NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
+	if (op.SocLog > 1) {
+		log_save_a("starting GetNetworkStatus\r\n");
+	}
 
-	HANDLE hNDUIO = CreateFile(NDISUIO_DEVICE_NAME, GENERIC_READ | GENERIC_WRITE,
-								FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-								FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
-								INVALID_HANDLE_VALUE);
+	hNDUIO = CreateFile(NDISUIO_DEVICE_NAME, GENERIC_READ | GENERIC_WRITE,
+						FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+						FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+						INVALID_HANDLE_VALUE);
+
 	if (hNDUIO == INVALID_HANDLE_VALUE) {
-		log_save_a("Unable to open NDIS handle\r\n");
+		if (op.SocLog > 1) {
+			log_save_a("Unable to open NDIS handle\r\n");
+		}
 		return FALSE;
 	}
 	
-log_save_a("starting GetAdapterName\r\n");
 	for (i = 0; ; i++) {
 		DWORD dwBytesRet = 0;
+		BOOL has_pwr, has_wep, has_conn;
+		NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
 		pQueryBinding->BindingIndex = i;
 
 		if ( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_BINDING,
-			(VOID*) QueryBuffer, sizeof(QueryBuffer),
-			(VOID*) QueryBuffer, sizeof(QueryBuffer),
-			&dwBytesRet, NULL) ) {
+							(VOID*) QueryBuffer, sizeof(QueryBuffer),
+							(VOID*) QueryBuffer, sizeof(QueryBuffer),
+							&dwBytesRet, NULL) ) {
 
 			// Get the device name in the list of bindings
-			WCHAR* devName = (WCHAR*) LocalAlloc(LPTR, pQueryBinding->DeviceNameLength * sizeof(WCHAR) );
-
+			WCHAR* devName = (WCHAR*) mem_alloc(LPTR, pQueryBinding->DeviceNameLength * sizeof(WCHAR) );
 			memcpy( devName, (UCHAR*) pQueryBinding + pQueryBinding->DeviceNameOffset,
 					pQueryBinding->DeviceNameLength );
-log_save_a("got a device name: ");
-log_save(devName);
-log_save_a("\r\n");
-			
 			memset(QueryBuffer, 0, sizeof(QueryBuffer));
 
-			nqo.ptcDeviceName = devName;
-			nqo.Oid = OID_802_11_WEP_STATUS;
-			dwBytesRet = 0;
-			if( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_OID_VALUE, &nqo,
-				sizeof(NDISUIO_QUERY_OID), &nqo, sizeof(NDISUIO_QUERY_OID), &dwBytesRet, NULL)) {
-log_save_a("WEP status success\r\n");
-			} else {
-log_save_a("WEP status fail\r\n");
+			has_pwr = SetNICPower(devName, TRUE, FALSE);
+
+			{
+				NDISUIO_QUERY_OID nqo;
+
+				nqo.ptcDeviceName = devName;
+				nqo.Oid = OID_802_11_WEP_STATUS;
+				dwBytesRet = 0;
+				if( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_OID_VALUE, &nqo,
+									sizeof(NDISUIO_QUERY_OID), &nqo,
+									sizeof(NDISUIO_QUERY_OID), &dwBytesRet, NULL)) {
+					// whether wep is active or not, getting a valid response
+					// from this query indicates this is probably a wifi adapter
+					has_wep = TRUE;
+				} else {
+					has_wep = FALSE;
+				}
 			}
+
+			{
+				NIC_STATISTICS nicStat;
+
+				nicStat.ptcDeviceName = devName;
+				dwBytesRet = 0;
+				if( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_NIC_STATISTICS, NULL, 0,
+									&nicStat, sizeof(NIC_STATISTICS), &dwBytesRet, NULL)) {
+					has_conn = (nicStat.DeviceState == DEVICE_STATE_CONNECTED) ? TRUE : FALSE;
+				} else {
+					has_conn = FALSE;
+				}
+			}
+
+			if (op.SocLog > 1) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, TEXT("Adapter '%s'\t power:%s type:%s conn:%s\r\n"),
+									devName, (has_pwr) ? "ON" : "OFF",
+									(has_wep) ? "WIFI" : "LAN", (has_conn) ? "YES" : "NO");
+				log_save(msg);
+			}
+// http://msdn.microsoft.com/en-us/library/aa909894.aspx
+
+			mem_free(&devName);
 
 		} else {
 			if (GetLastError() == ERROR_NO_MORE_ITEMS) {
 				IsOk = TRUE;
-log_save_a("no more items\r\n");
 			}
 			break;
 		}
@@ -91,11 +124,11 @@ log_save_a("no more items\r\n");
 	return IsOk;
 }
 
-
+#ifdef DEBUG
 /*
- * GetNetworkStatus - check if some adapter is powered and IP address is set
+ * PrintAdapterInfo - print information retrieved by GetAdaptersInfo
  */
-BOOL GetNetworkStatus(BOOL Print)
+BOOL PrintAdapterInfo()
 {
 	BOOL ret = FALSE;
 
@@ -107,9 +140,7 @@ BOOL GetNetworkStatus(BOOL Print)
 	ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
 	pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(sizeof (IP_ADAPTER_INFO));
 	if (pAdapterInfo == NULL) {
-		if (Print && op.SocLog > 0) {
-			log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
-		}
+		log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
 		return FALSE;
 	}
 
@@ -119,13 +150,13 @@ BOOL GetNetworkStatus(BOOL Print)
 		mem_free(&pAdapterInfo);
 		pAdapterInfo = (IP_ADAPTER_INFO *) mem_alloc(ulOutBufLen);
 		if (pAdapterInfo == NULL) {
-			if (Print && op.SocLog > 0) {
-				log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
-			}
+			log_save_a("Error allocating memory needed to call GetAdaptersInfo\r\n");
 			return FALSE;
 		}
 	}
 
+	// Unfortunately, if an adapter is powered off, it probably won't appear
+	// in this list.
 	if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {
 		pAdapter = pAdapterInfo;
 		while (pAdapter) {
@@ -137,104 +168,92 @@ BOOL GetNetworkStatus(BOOL Print)
 					ret = TRUE;
 				}
 				mem_free(&name);
-				if (Print && op.SocLog > 0 && op.SocLog <= 3) {
-					sprintf(buf, "Adapter '%s' is powered and has IP address %s\r\n",
-						pAdapter->AdapterName, pAdapter->IpAddressList.IpAddress.String);
-					log_save_a(buf);
-				}
-				if (ret == TRUE && op.SocLog <= 3) {
-					break;
-				}
 			}
-			if (Print && op.SocLog > 3) {
-				sprintf(buf, "\tComboIndex: \t%d\r\n", pAdapter->ComboIndex);
+			sprintf(buf, "\tComboIndex: \t%d\r\n", pAdapter->ComboIndex);
+			log_save_a(buf);
+			sprintf(buf, "\tAdapter Name: \t%s\r\n", pAdapter->AdapterName);
+			log_save_a(buf);
+			sprintf(buf, "\tAdapter Power: \t%s\r\n", ((pwr)? "Yes" : "No"));
+			log_save_a(buf);
+			sprintf(buf, "\tAdapter Desc: \t%s\r\n", pAdapter->Description);
+			log_save_a(buf);
+			sprintf(buf, "\tAdapter Addr: \t%.2X-%.2X-%.2X-%.2X\r\n",
+					(int) pAdapter->Address[0], (int) pAdapter->Address[1],
+					(int) pAdapter->Address[2], (int) pAdapter->Address[3]);
+			log_save_a(buf);
+			sprintf(buf, "\tIndex: \t%d\r\n", pAdapter->Index);
+			log_save_a(buf);
+			log_save_a("\tType: \t");
+			switch (pAdapter->Type) {
+			case MIB_IF_TYPE_OTHER:
+				log_save_a("Other\r\n");
+				break;
+			case MIB_IF_TYPE_ETHERNET:
+				log_save_a("Ethernet\r\n");
+				break;
+			case MIB_IF_TYPE_TOKENRING:
+				log_save_a("Token Ring\r\n");
+				break;
+			case MIB_IF_TYPE_FDDI:
+				log_save_a("FDDI\r\n");
+				break;
+			case MIB_IF_TYPE_PPP:
+				log_save_a("PPP\r\n");
+				break;
+			case MIB_IF_TYPE_LOOPBACK:
+				log_save_a("Lookback\r\n");
+				break;
+			case MIB_IF_TYPE_SLIP:
+				log_save_a("Slip\r\n");
+				break;
+			default:
+				sprintf(buf, "Unknown type %ld\r\n", pAdapter->Type);
 				log_save_a(buf);
-				sprintf(buf, "\tAdapter Name: \t%s\r\n", pAdapter->AdapterName);
-				log_save_a(buf);
-				sprintf(buf, "\tAdapter Power: \t%s\r\n", ((pwr)? "Yes" : "No"));
-				log_save_a(buf);
-				sprintf(buf, "\tAdapter Desc: \t%s\r\n", pAdapter->Description);
-				log_save_a(buf);
-				sprintf(buf, "\tAdapter Addr: \t%.2X-%.2X-%.2X-%.2X\r\n",
-						(int) pAdapter->Address[0], (int) pAdapter->Address[1],
-						(int) pAdapter->Address[2], (int) pAdapter->Address[3]);
-				log_save_a(buf);
-				sprintf(buf, "\tIndex: \t%d\r\n", pAdapter->Index);
-				log_save_a(buf);
-				log_save_a("\tType: \t");
-				switch (pAdapter->Type) {
-				case MIB_IF_TYPE_OTHER:
-					log_save_a("Other\r\n");
-					break;
-				case MIB_IF_TYPE_ETHERNET:
-					log_save_a("Ethernet\r\n");
-					break;
-				case MIB_IF_TYPE_TOKENRING:
-					log_save_a("Token Ring\r\n");
-					break;
-				case MIB_IF_TYPE_FDDI:
-					log_save_a("FDDI\r\n");
-					break;
-				case MIB_IF_TYPE_PPP:
-					log_save_a("PPP\r\n");
-					break;
-				case MIB_IF_TYPE_LOOPBACK:
-					log_save_a("Lookback\r\n");
-					break;
-				case MIB_IF_TYPE_SLIP:
-					log_save_a("Slip\r\n");
-					break;
-				default:
-					sprintf(buf, "Unknown type %ld\r\n", pAdapter->Type);
-					log_save_a(buf);
-					break;
-				}
-
-				sprintf(buf, "\tIP Address: \t%s\r\n", pAdapter->IpAddressList.IpAddress.String);
-				log_save_a(buf);
-				sprintf(buf, "\tIP Mask: \t%s\r\n", pAdapter->IpAddressList.IpMask.String);
-				log_save_a(buf);
-
-				sprintf(buf, "\tGateway: \t%s\r\n", pAdapter->GatewayList.IpAddress.String);
-				log_save_a(buf);
-				log_save_a("\t***\r\n");
-
-				if (pAdapter->DhcpEnabled) {
-					log_save_a("\tDHCP Enabled: Yes\r\n");
-					sprintf(buf, "\t  DHCP Server: \t%s\r\n",
-						   pAdapter->DhcpServer.IpAddress.String);
-					log_save_a(buf);
-
-				} else {
-					log_save_a("\tDHCP Enabled: No\r\n");
-				}
-				if (pAdapter->HaveWins) {
-					log_save_a("\tHave Wins: Yes\r\n");
-					sprintf(buf, "\t  Primary Wins Server:	%s\r\n",
-						   pAdapter->PrimaryWinsServer.IpAddress.String);
-					log_save_a(buf);
-					sprintf(buf, "\t  Secondary Wins Server:  %s\r\n",
-						   pAdapter->SecondaryWinsServer.IpAddress.String);
-					log_save_a(buf);
-				} else {
-					log_save_a("\tHave Wins: No\r\n");
-				}
-				log_save_a("\r\n");
-				pAdapter = pAdapter->Next;
+				break;
 			}
+
+			sprintf(buf, "\tIP Address: \t%s\r\n", pAdapter->IpAddressList.IpAddress.String);
+			log_save_a(buf);
+			sprintf(buf, "\tIP Mask: \t%s\r\n", pAdapter->IpAddressList.IpMask.String);
+			log_save_a(buf);
+
+			sprintf(buf, "\tGateway: \t%s\r\n", pAdapter->GatewayList.IpAddress.String);
+			log_save_a(buf);
+			log_save_a("\t***\r\n");
+
+			if (pAdapter->DhcpEnabled) {
+				log_save_a("\tDHCP Enabled: Yes\r\n");
+				sprintf(buf, "\t  DHCP Server: \t%s\r\n",
+					   pAdapter->DhcpServer.IpAddress.String);
+				log_save_a(buf);
+
+			} else {
+				log_save_a("\tDHCP Enabled: No\r\n");
+			}
+			if (pAdapter->HaveWins) {
+				log_save_a("\tHave Wins: Yes\r\n");
+				sprintf(buf, "\t  Primary Wins Server:	%s\r\n",
+					   pAdapter->PrimaryWinsServer.IpAddress.String);
+				log_save_a(buf);
+				sprintf(buf, "\t  Secondary Wins Server:  %s\r\n",
+					   pAdapter->SecondaryWinsServer.IpAddress.String);
+				log_save_a(buf);
+			} else {
+				log_save_a("\tHave Wins: No\r\n");
+			}
+			log_save_a("\r\n");
+			pAdapter = pAdapter->Next;
 		}
-	} else if (Print && op.SocLog > 0) {
+	} else {
 		sprintf(buf, "GetAdaptersInfo failed with error: %d\r\n", dwRetVal);
 		log_save_a(buf);
 	}
 	if (pAdapterInfo)
 		mem_free(&pAdapterInfo);
 
-	GetAdapterName();
-
 	return ret;
 }
-
+#endif
 
 
 /*
@@ -349,9 +368,9 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable)
 		ret = bDevPowered; 
 	} else if (Enable != bDevPowered) {
 		if (Enable == TRUE && bDevPowered == FALSE) {
-			Dx = D0;
+			Dx = D0; // turn on
 		} else if (Enable == FALSE && bDevPowered == TRUE) {
-			Dx = D4;
+			Dx = D4; // turn off
 		}
 		ret = SetDevicePower(szName, POWER_NAME, Dx);
 	}
