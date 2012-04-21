@@ -1817,22 +1817,26 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		len += item_save_header_size(TEXT(HEAD_X_NO), X_No);
 		// X-Status should always be the last nPOPuk-specific header
 		len += item_save_header_size(TEXT(HEAD_X_STATUS), X_Mstatus);
-		if (do_body == 0) {
-			len += (bdy - tpMailItem->WireForm);
-		} else {
-			len += tstrlen(tpMailItem->WireForm);
-			if (WriteMbox == 1) {
-				char *r = bdy;
-				int l = tstrlen(MBOX_DELIMITER);
-				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
-					len++;
-				}
-				for ( /**/ ; *r != '\0'; r++, len++) {
-					if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+		if (bdy != NULL) {
+			if (do_body == 0) {
+				len += (bdy - tpMailItem->WireForm);
+			} else {
+				len += tstrlen(tpMailItem->WireForm);
+				if (WriteMbox == 1) {
+					char *r = bdy;
+					int l = tstrlen(MBOX_DELIMITER);
+					if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
 						len++;
+					}
+					for ( /**/ ; *r != '\0'; r++, len++) {
+						if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+							len++;
+						}
 					}
 				}
 			}
+		} else {
+			len += tstrlen(tpMailItem->WireForm);
 		}
 		if (WriteMbox != 0) {
 			len += 3; // \r\n\0
@@ -1970,43 +1974,47 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		// X-Status should always be the last nPOPuk-specific header
 		p = item_save_header(TEXT(HEAD_X_STATUS), X_Mstatus, p);
 		// append wire-form after HEAD_X_STATUS (includes original headers and body)
-		if (do_body == 0) {
-			// bdy includes an extra \r\n (or maybe just \r or \n, see GetBodyPointa)
-			if ( (bdy - tpMailItem->WireForm > 4)
-					&& *(bdy-4) == '\r' && *(bdy-3) == '\n'
-					&& *(bdy-2) == '\r' && *(bdy-1) == '\n' ) {
-				bdy -=2;
-			} else if ( (bdy - tpMailItem->WireForm > 2) 
-						&& ((*(bdy-1) == '\r' && *(bdy-2) == '\r')
-						|| (*(bdy-1) == '\n' && *(bdy-2) == '\n')) ) {
-				bdy--;
-			}
-			for (r = tpMailItem->WireForm; r < bdy; r++) {
-				*(p++) = *r;
-			}
-		} else {
-			if (WriteMbox == 1) {
-				char *r = tpMailItem->WireForm;
-				int l = tstrlen(MBOX_DELIMITER);
-				while (r < bdy) {
-					// just copy headers
-					*(p++) = *(r++);
+		if (bdy != NULL) {
+			if (do_body == 0) {
+				// bdy includes an extra \r\n (or maybe just \r or \n, see GetBodyPointa)
+				if ( (bdy - tpMailItem->WireForm > 4)
+						&& *(bdy-4) == '\r' && *(bdy-3) == '\n'
+						&& *(bdy-2) == '\r' && *(bdy-1) == '\n' ) {
+					bdy -=2;
+				} else if ( (bdy - tpMailItem->WireForm > 2) 
+							&& ((*(bdy-1) == '\r' && *(bdy-2) == '\r')
+							|| (*(bdy-1) == '\n' && *(bdy-2) == '\n')) ) {
+					bdy--;
 				}
-				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
-					*(p++) = '>';
-				}
-				while (*r != '\0') {
-					if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
-						*(p++) = *(r++);
-						*(p++) = *(r++);
-						*(p++) = '>';
-					} else {
-						*(p++) = *(r++);
-					}
+				for (r = tpMailItem->WireForm; r < bdy; r++) {
+					*(p++) = *r;
 				}
 			} else {
-				p = str_cpy(p, tpMailItem->WireForm);
+				if (WriteMbox == 1) {
+					char *r = tpMailItem->WireForm;
+					int l = tstrlen(MBOX_DELIMITER);
+					while (r < bdy) {
+						// just copy headers
+						*(p++) = *(r++);
+					}
+					if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
+						*(p++) = '>';
+					}
+					while (*r != '\0') {
+						if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
+							*(p++) = *(r++);
+							*(p++) = *(r++);
+							*(p++) = '>';
+						} else {
+							*(p++) = *(r++);
+						}
+					}
+				} else {
+					p = str_cpy(p, tpMailItem->WireForm);
+				}
 			}
+		} else {
+			p = str_cpy(p, tpMailItem->WireForm);
 		}
 	} else {
 		// No WireForm -- old message read from file
