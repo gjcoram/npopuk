@@ -1583,6 +1583,66 @@ void DelDot(TCHAR *buf, TCHAR *ret)
 }
 
 /*
+ * FixCRLF - deal with bare \n or \r
+ */
+void FixCRLF(char **buf)
+{
+	int incr = 0, len = 0;
+	char *p;
+	for (p = *buf; *p != '\0'; p++, len++) {
+		if (*p == '\r' && *(p+1) != '\n') {
+			incr++;
+		}
+		if (*p == '\n' && (p == *buf || (p > *buf && *(p-1) != '\r'))) {
+			incr++;
+		}
+	}
+	if (incr > 0) {
+		char *ret, *q;
+		ret = q = (char *)mem_alloc(len + incr + 1);
+		// it's OK if buf is NULL in the code below, though it's very unlikely
+		for (p = *buf; *p != '\0'; p++) {
+			if (ret != NULL) {
+				*q = *p;
+			}
+			if (*p == '\r' && *(p+1) != '\n') {
+				if (ret == NULL) {
+					if (*(p+1) == '\r') {
+						*(++p) = '\n'; // \r\r -> \r\n
+					} else {
+						*p = ' '; // \r -> ' ', working in-place
+					}
+				} else {
+					q++;
+					*q = '\n';
+				}
+			}
+			// YPOPs! fix (some messages come in with bare \n
+			if (*p == '\n' && (p == *buf || (p > *buf && *(p-1) != '\r'))) {
+				if (ret == NULL) {
+					if (*(p+1) == '\n') {
+						*(p++) = '\r'; // \n\n -> \r\n
+					} else {
+						*p = ' '; // \n -> ' ', working in-place
+					}
+				} else {
+					*(q++) = '\r';
+					*q = '\n';
+				}
+			}
+			if (ret != NULL) {
+				q++;
+			}
+		}
+		if (ret != NULL) {
+			*q = '\0';
+			mem_free(&*buf);
+			*buf = ret;
+		}
+	}
+}
+
+/*
  * ReturnCheck - 全角文字の禁則チェック
  */
 static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag)

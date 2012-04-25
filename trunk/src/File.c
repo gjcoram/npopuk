@@ -617,7 +617,7 @@ char *file_read(TCHAR *path, long FileSize)
 }
 
 /*
- * file_read_select - The file is opened
+ * file_read_select - The file is opened (for insertion in Edit window)
  */
 BOOL file_read_select(HWND hWnd, TCHAR **buf)
 {
@@ -658,6 +658,8 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 		SwitchCursor(TRUE);
 		return FALSE;
 	}
+	// Fix bare \r or \n in file
+	FixCRLF(&cBuf);
 
 #ifdef UNICODE
 	//UNICODE which reads the file
