@@ -547,15 +547,19 @@ static char *augment_wire_form(char *body, char *ctype, MAILITEM *tpMailItem, BO
 	lenw = tstrlen(tpMailItem->WireForm) + 1;
 
 	w = GetBodyPointa(tpMailItem->WireForm);
-	// back up to before blank line separating headers from body
-	if ( (w - tpMailItem->WireForm > 4)
-			&& *(w-4) == '\r' && *(w-3) == '\n'
-			&& *(w-2) == '\r' && *(w-1) == '\n' ) {
-		w -=2;
-	} else if ( (w - tpMailItem->WireForm > 2) 
-				&& ((*(w-1) == '\r' && *(w-2) == '\r')
-				|| (*(w-1) == '\n' && *(w-2) == '\n')) ) {
-		w--;
+	if (w == NULL) {
+		w = tpMailItem->WireForm + tstrlen(tpMailItem->WireForm);
+	} else {
+		// back up to before blank line separating headers from body
+		if ( (w - tpMailItem->WireForm > 4)
+				&& *(w-4) == '\r' && *(w-3) == '\n'
+				&& *(w-2) == '\r' && *(w-1) == '\n' ) {
+			w -=2;
+		} else if ( (w - tpMailItem->WireForm > 2) 
+					&& ((*(w-1) == '\r' && *(w-2) == '\r')
+					|| (*(w-1) == '\n' && *(w-2) == '\n')) ) {
+			w--;
+		}
 	}
 
 	if (new_date == TRUE) {

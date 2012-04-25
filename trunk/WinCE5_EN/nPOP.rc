@@ -754,7 +754,7 @@ END
 
 IDD_DIALOG_OPTION_WIFI DIALOG DISCARDABLE  0, 0, 159, 103
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Wi-Fi"
+CAPTION "WiFi"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "Auto-&connect to process mail",IDC_CHECK_CONWIFI,
@@ -1380,8 +1380,8 @@ BEGIN
         MENUITEM "&Save all",                   ID_MENUITEM_SAVEALL
         MENUITEM "&Backup files...",            ID_MENUITEM_BACKUP
         MENUITEM SEPARATOR
-        MENUITEM "Wifi &Connect",               ID_MENUITEM_WIFI_CONNECT
-        MENUITEM "Wifi &Disconnect",            ID_MENUITEM_WIFI_DISCONNECT
+        MENUITEM "WiFi &Connect",               ID_MENUITEM_WIFI_CONNECT
+        MENUITEM "WiFi &Disconnect",            ID_MENUITEM_WIFI_DISCONNECT
         MENUITEM "&LAN",                        ID_MENUITEM_LAN
         MENUITEM "&View log",                   ID_MENUITEM_SOCLOG
         MENUITEM SEPARATOR
