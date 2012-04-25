@@ -304,10 +304,10 @@
 #define STR_STATUS_RAS_CONNECT		TEXT("Dial-up connected")
 #define STR_STATUS_RAS_DISCONNECT	TEXT("Dial-up disconnected")
 
-// Wifi status
-#define STR_STATUS_WIFI_START		TEXT("Starting Wi-Fi")
-#define STR_STATUS_WIFI_CONNECT		TEXT("Wi-Fi connected")
-#define STR_STATUS_WIFI_DISCONNECT	TEXT("Wi-Fi disconnected")
+// WiFi status
+#define STR_STATUS_WIFI_START		TEXT("Starting WiFi")
+#define STR_STATUS_WIFI_CONNECT		TEXT("WiFi connected")
+#define STR_STATUS_WIFI_DISCONNECT	TEXT("WiFi disconnected")
 
 //Initialise status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")

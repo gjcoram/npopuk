@@ -132,8 +132,8 @@ static BOOL CALLBACK RasSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 #ifdef ENABLE_WIFI
-static BOOL CALLBACK WifiSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK WiFiSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -3210,8 +3210,8 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
 #endif
 
 #ifdef ENABLE_WIFI
-	// Wifi
-	// could set up options so an account never uses wifi
+	// WiFi
+	// could set up options so an account never uses WiFi
 #endif
 
 	// Recv
@@ -4088,20 +4088,20 @@ static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 #ifdef ENABLE_WIFI
 /*
- * SetWifiOptionProc - WiFi global options
+ * SetWiFiOptionProc - WiFi global options
  */
-static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* ÉRÉìÉgÉçÅ[ÉãÇÃèâä˙âª */
 		SetControlFont(hDlg);
-		SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_SETCHECK, op.WifiCon, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_SETCHECK, op.WifiCheckEndDisCon, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, op.WifiExitDisCon, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WifiNoCheck, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_SETCHECK, op.WiFiCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_SETCHECK, op.WiFiCheckEndDisCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, op.WiFiExitDisCon, 0);
+		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WiFiNoCheck, 0);
 
-		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WifiWaitSec, FALSE);
+		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WiFiWaitSec, FALSE);
 		break;
 
 	case WM_NOTIFY:
@@ -4116,12 +4116,12 @@ static BOOL CALLBACK SetWifiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 #endif
 
 		case IDOK:
-			op.WifiCon = SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_GETCHECK, 0, 0);
-			op.WifiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
-			op.WifiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
-			op.WifiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
+			op.WiFiCon = SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_GETCHECK, 0, 0);
+			op.WiFiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
+			op.WiFiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			op.WiFiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
 
-			op.WifiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
+			op.WiFiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
 			break;
 		}
 		break;
@@ -4781,7 +4781,7 @@ BOOL SetOption(HWND hWnd)
 #ifdef ENABLE_WIFI
 	// WiFi
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_DIALOG_OPTION_WIFI);
-	psp.pfnDlgProc = SetWifiOptionProc;
+	psp.pfnDlgProc = SetWiFiOptionProc;
 	hpsp[7] = CreatePropertySheetPage(&psp);
 #endif
 

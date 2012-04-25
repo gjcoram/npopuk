@@ -191,8 +191,8 @@ extern HANDLE hEvent;
 #endif
 
 #ifdef ENABLE_WIFI
-// Wifi
-extern BOOL WifiLoop;
+// WiFi
+extern BOOL WiFiLoop;
 extern HANDLE hEvent;
 #endif
 
@@ -2974,8 +2974,8 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		}
 #endif
 #ifdef ENABLE_WIFI
-		if (op.WifiCheckEndDisCon == 1) {
-			WifiDisconnect(FALSE);
+		if (op.WiFiCheckEndDisCon == 1) {
+			WiFiDisconnect(FALSE);
 		}
 #endif
 		if (op.SocLog > 0) log_flush();
@@ -2988,8 +2988,8 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 	//Cutting of wifi connection
-	if (WifiLoop == TRUE || op.WifiExitDisCon == 1) {
-		WifiDisconnect(FALSE);
+	if (WiFiLoop == TRUE || op.WiFiExitDisCon == 1) {
+		WiFiDisconnect(FALSE);
 	}
 #endif
 
@@ -3115,6 +3115,9 @@ static BOOL EndWindow(HWND hWnd)
 #ifdef ENABLE_RAS
 	FreeRasInfo();
 #endif
+#ifdef ENABLE_WIFI
+	FreeWiFiInfo();
+#endif
 
 	// タスクトレイのアイコンの除去
 	op.ShowTrayIcon = 0;
@@ -3196,8 +3199,8 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	}
 #endif
 #ifdef ENABLE_WIFI
-	// Wifi connection
-	if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, BoxIndex, 0) == FALSE) {
+	// WiFi connection
+	if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, BoxIndex, 0) == FALSE) {
 		ErrorSocketEnd(hWnd, MAILBOX_SEND);
 		if (op.SocLog > 0) log_flush();
 		SetMailMenu(hWnd);
@@ -4191,11 +4194,11 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 	}
 #endif
 #ifdef ENABLE_WIFI
-	if (op.WifiCheckEndDisCon == 1) {
+	if (op.WiFiCheckEndDisCon == 1) {
 		if (DoTimer == FALSE ||
-			op.WifiCheckEndDisConTimeout==0 ||
-			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WifiCheckEndDisConTimeout) != IDNO) {
-			WifiDisconnect((op.WifiCheckEndDisConTimeout>0) ? TRUE : FALSE);
+			op.WiFiCheckEndDisConTimeout==0 ||
+			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WiFiCheckEndDisConTimeout) != IDNO) {
+			WiFiDisconnect((op.WiFiCheckEndDisConTimeout>0) ? TRUE : FALSE);
 		}
 	}
 #endif
@@ -4739,7 +4742,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef ENABLE_WIFI
 		// check network connections
-		GetNetworkStatus(TRUE);
+		GetNetworkStatus();
 #endif
 
 		if (first_start == TRUE) {
@@ -5170,7 +5173,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 #endif
 #ifdef ENABLE_WIFI
-				if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+				if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
 					ErrorSocketEnd(hWnd, CheckBox);
 					if (op.SocLog > 0) log_flush();
 					SetMailMenu(hWnd);
@@ -5224,8 +5227,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
-			// Wifi connection
-			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+			// WiFi connection
+			if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
 				if (op.SocLog > 0) log_flush();
 				SetMailMenu(hWnd);
@@ -5305,7 +5308,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				}
 #endif
 #ifdef ENABLE_WIFI
-				if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+				if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
 					ErrorSocketEnd(hWnd, CheckBox);
 					if (op.SocLog > 0) log_flush();
 					SetMailMenu(hWnd);
@@ -5346,7 +5349,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.EnableLAN == 0 && op.WifiCon == 0 && op.WifiNoCheck == 1 && !GetNetworkStatus(TRUE)) {
+			if (op.EnableLAN == 0 && op.WiFiCon == 0 && op.WiFiNoCheck == 1 && !GetNetworkStatus()) {
 				break;
 			}
 #endif
@@ -5438,11 +5441,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_WIFI
 		//wifi Change
 		case ID_WIFIWAIT_TIMER:
-log_save_a("wifi timer expired\r\n");
 			KillTimer(hWnd, wParam);
 			if (hEvent != NULL) {
+log_save_a("wifi timer expired, set event\r\n");
 				SetEvent(hEvent);
 			}
+else log_save_a("wifi timer expired, no event\r\n");
 			break;
 #endif
 		} // WM_TIMER switch
@@ -5658,7 +5662,7 @@ log_save_a("wifi timer expired\r\n");
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
-			WifiDisconnect(TRUE);
+			WiFiDisconnect(TRUE);
 			break;
 #endif
 
@@ -6115,7 +6119,7 @@ log_save_a("wifi timer expired\r\n");
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
+			if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
 				break;
 			}
 #endif
@@ -6248,7 +6252,7 @@ log_save_a("wifi timer expired\r\n");
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.WifiCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
+			if (op.WiFiCon == 1 && i >= MAILBOX_USER && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
 				break;
 			}
 #endif
@@ -6343,8 +6347,8 @@ log_save_a("wifi timer expired\r\n");
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (WifiLoop == TRUE || (g_soc == -1 && op.WifiCheckEndDisCon == 1)) {
-				WifiDisconnect(FALSE);
+			if (WiFiLoop == TRUE || (g_soc == -1 && op.WiFiCheckEndDisCon == 1)) {
+				WiFiDisconnect(FALSE);
 			}
 #endif
 			if (g_soc == -1 || GetHostFlag == TRUE) {
@@ -6647,7 +6651,7 @@ log_save_a("wifi timer expired\r\n");
 							}
 #endif
 #ifdef ENABLE_WIFI
-							if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
+							if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, i, 0) == FALSE) {
 								break;
 							}
 #endif
@@ -6740,7 +6744,7 @@ log_save_a("wifi timer expired\r\n");
 #ifdef ENABLE_WIFI
 	//Start
 	case WM_WIFI_START:
-		return WifiConnect(hWnd, wParam);
+		return WiFiConnect(hWnd, wParam);
 #endif
 
 #ifndef _WIN32_WCE
@@ -6967,7 +6971,7 @@ log_save_a("wifi timer expired\r\n");
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.WifiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
+			if (op.WiFiCon == 1 && SendMessage(hWnd, WM_WIFI_START, CheckBox, 0) == FALSE) {
 				ErrorSocketEnd(hWnd, CheckBox);
 				if (op.SocLog > 0) log_flush();
 				SetMailMenu(hWnd);

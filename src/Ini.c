@@ -777,14 +777,13 @@ BOOL ini_read_setting(HWND hWnd)
 	EncodePassword(TEXT("_pw_"), ret, buf, BUF_SIZE - 1, TRUE);
 	op.Password = alloc_copy_t(buf);
 
-	op.WifiCon = profile_get_int(GENERAL, TEXT("WifiCon"), 1);
-	op.WifiCheckEndDisCon = profile_get_int(GENERAL, TEXT("WifiCheckEndDisCon"), 1);
-	op.WifiCheckEndDisConTimeout = profile_get_int(GENERAL, TEXT("WifiCheckEndDisConTimeout"), 0);
-	op.WifiExitDisCon = profile_get_int(GENERAL, TEXT("WifiExitDisCon"), 1);
-	op.WifiNoCheck = profile_get_int(GENERAL, TEXT("WifiNoCheck"), 1);
-	op.WifiWaitSec = profile_get_int(GENERAL, TEXT("WifiWaitSec"), 5);
-//	op.WifiDeviceName = profile_alloc_string(GENERAL, TEXT("WifiDeviceName"), TEXT(""));
-	op.WifiDeviceName = profile_alloc_string(GENERAL, TEXT("WifiDeviceName"), TEXT("RT28701"));
+	op.WiFiCon = profile_get_int(GENERAL, TEXT("WiFiCon"), 1);
+	op.WiFiCheckEndDisCon = profile_get_int(GENERAL, TEXT("WiFiCheckEndDisCon"), 1);
+	op.WiFiCheckEndDisConTimeout = profile_get_int(GENERAL, TEXT("WiFiCheckEndDisConTimeout"), 0);
+	op.WiFiExitDisCon = profile_get_int(GENERAL, TEXT("WiFiExitDisCon"), 1);
+	op.WiFiNoCheck = profile_get_int(GENERAL, TEXT("WiFiNoCheck"), 1);
+	op.WiFiWaitSec = profile_get_int(GENERAL, TEXT("WiFiWaitSec"), 5);
+	op.WiFiDeviceName = profile_alloc_string(GENERAL, TEXT("WiFiDeviceName"), TEXT(""));
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1);
 	op.RasCheckEndDisCon = profile_get_int(GENERAL, TEXT("RasCheckEndDisCon"), 1);
@@ -1494,13 +1493,13 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	EncodePassword(TEXT("_pw_"), op.Password, tmp, BUF_SIZE - 1, FALSE);
 	profile_write_string(GENERAL, TEXT("pw"), tmp);
 
-	profile_write_int(GENERAL, TEXT("WifiCon"), op.WifiCon);
-	profile_write_int(GENERAL, TEXT("WifiCheckEndDisCon"), op.WifiCheckEndDisCon);
-	profile_write_int(GENERAL, TEXT("WifiCheckEndDisConTimeout"), op.WifiCheckEndDisConTimeout);
-	profile_write_int(GENERAL, TEXT("WifiExitDisCon"), op.WifiExitDisCon);
-	profile_write_int(GENERAL, TEXT("WifiNoCheck"), op.WifiNoCheck);
-	profile_write_int(GENERAL, TEXT("WifiWaitSec"), op.WifiWaitSec);
-	profile_write_string(GENERAL, TEXT("WifiDeviceName"), op.WifiDeviceName);
+	profile_write_int(GENERAL, TEXT("WiFiCon"), op.WiFiCon);
+	profile_write_int(GENERAL, TEXT("WiFiCheckEndDisCon"), op.WiFiCheckEndDisCon);
+	profile_write_int(GENERAL, TEXT("WiFiCheckEndDisConTimeout"), op.WiFiCheckEndDisConTimeout);
+	profile_write_int(GENERAL, TEXT("WiFiExitDisCon"), op.WiFiExitDisCon);
+	profile_write_int(GENERAL, TEXT("WiFiNoCheck"), op.WiFiNoCheck);
+	profile_write_int(GENERAL, TEXT("WiFiWaitSec"), op.WiFiWaitSec);
+	profile_write_string(GENERAL, TEXT("WiFiDeviceName"), op.WiFiDeviceName);
 
 	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon);
 	profile_write_int(GENERAL, TEXT("RasCheckEndDisCon"), op.RasCheckEndDisCon);
@@ -2018,6 +2017,6 @@ void ini_free(BOOL free_all)
 	mem_free(&op.URLApp);
 	mem_free(&op.URLAppCmdLine);
 	mem_free(&op.AttachPath);
-	mem_free(&op.WifiDeviceName);
+	mem_free(&op.WiFiDeviceName);
 }
 /* End of source */

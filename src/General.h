@@ -614,13 +614,13 @@ typedef struct _OPTION {
 
 	int EnableLAN;
 
-	int WifiCon;
-	int WifiCheckEndDisCon;
-	int WifiCheckEndDisConTimeout;
-	int WifiExitDisCon;
-	int WifiNoCheck;
-	int WifiWaitSec;
-	TCHAR *WifiDeviceName;
+	int WiFiCon;
+	int WiFiCheckEndDisCon;
+	int WiFiCheckEndDisConTimeout;
+	int WiFiExitDisCon;
+	int WiFiNoCheck;
+	int WiFiWaitSec;
+	TCHAR *WiFiDeviceName;
 
 	int RasCon;
 	int RasCheckEndDisCon;
@@ -862,10 +862,11 @@ typedef struct _RASINFO {
 
 /* Function Prototypes */
 #ifdef ENABLE_WIFI
-// Wifi
-BOOL GetNetworkStatus(BOOL Print);
-BOOL WifiConnect(HWND hWnd, int Dummy);
-void WifiDisconnect(BOOL Force);
+// WiFi
+BOOL GetNetworkStatus(void);
+BOOL WiFiConnect(HWND hWnd, int Dummy);
+void WiFiDisconnect(BOOL Force);
+void FreeWiFiInfo(void);
 #endif
 #ifdef ENABLE_RAS
 // Ras
