@@ -548,6 +548,7 @@ static char *augment_wire_form(char *body, char *ctype, MAILITEM *tpMailItem, BO
 
 	w = GetBodyPointa(tpMailItem->WireForm);
 	if (w == NULL) {
+		// it's all headers
 		w = tpMailItem->WireForm + tstrlen(tpMailItem->WireForm);
 	} else {
 		// back up to before blank line separating headers from body

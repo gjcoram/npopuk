@@ -1064,6 +1064,7 @@ TCHAR *SetReplyBody(TCHAR *body, TCHAR *ret, TCHAR *ReStr);
 int SetDotSize(TCHAR *buf);
 void SetDot(TCHAR *buf, TCHAR *ret);
 void DelDot(TCHAR *buf, TCHAR *ret);
+void FixCRLF(char **buf);
 int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL BreakFlag);
 BOOL GetQuoteString(TCHAR *str, TCHAR *prefix, int maxlen);

@@ -1316,61 +1316,7 @@ char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body)
 		// else encoding is assumed 7bit or 8bit
 	}
 	if (check_slash_n == TRUE) {
-		char *p, *q;
-		int incr = 0, len = 0;
-		for (p = ret; *p != '\0'; p++, len++) {
-#ifdef HANDLE_BARE_SLASH_R
-			if (*p == '\r' && *(p+1) != '\n') {
-				incr++;
-			}
-#endif
-			if (*p == '\n' && (p == ret || (p > ret && *(p-1) != '\r'))) {
-				incr++;
-			}
-		}
-		if (incr > 0) {
-			q = (char *)mem_alloc(len + incr + 1);
-			for (p = ret; *p != '\0'; p++) {
-				if (q != NULL) {
-					*q = *p;
-				}
-#ifdef HANDLE_BARE_SLASH_R
-				if (*p == '\r' && *(p+1) != '\n') {
-					if (q == NULL) {
-						if (*(p+1) == '\r') {
-							*(++p) = '\n'; // \r\r -> \r\n
-						} else {
-							*p = ' '; // \r -> ' ', working in-place
-						}
-					} else {
-						q++;
-						*q = '\n';
-					}
-				}
-#endif
-				// YPOPs! fix (some messages come in with bare \n
-				if (*p == '\n' && (p == body || (p > body && *(p-1) != '\r'))) {
-					if (q == NULL) {
-						if (*(p+1) == '\n') {
-							*(p++) = '\r'; // \n\n -> \r\n
-						} else {
-							*p = ' '; // \n -> ' ', working in-place
-						}
-					} else {
-						*(q++) = '\r';
-						*q = '\n';
-					}
-				}
-				if (q != NULL) {
-					q++;
-				}
-			}
-			if (q != NULL) {
-				*q = '\0';
-				mem_free(&ret);
-				ret = q;
-			}
-		}
+		FixCRLF(&ret);
 	}
 	// now saving wire-form; still need the Encoding
 	// mem_free(&tpMailItem->Encoding);
