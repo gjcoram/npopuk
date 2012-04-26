@@ -783,6 +783,7 @@ BOOL ini_read_setting(HWND hWnd)
 	op.WiFiExitDisCon = profile_get_int(GENERAL, TEXT("WiFiExitDisCon"), 1);
 	op.WiFiNoCheck = profile_get_int(GENERAL, TEXT("WiFiNoCheck"), 1);
 	op.WiFiWaitSec = profile_get_int(GENERAL, TEXT("WiFiWaitSec"), 5);
+	op.WiFiDeviceOffState = profile_get_int(GENERAL, TEXT("WiFiDeviceOffState"), 4);
 	op.WiFiDeviceName = profile_alloc_string(GENERAL, TEXT("WiFiDeviceName"), TEXT(""));
 
 	op.RasCon = profile_get_int(GENERAL, TEXT("RasCon"), 1);
@@ -1499,6 +1500,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 	profile_write_int(GENERAL, TEXT("WiFiExitDisCon"), op.WiFiExitDisCon);
 	profile_write_int(GENERAL, TEXT("WiFiNoCheck"), op.WiFiNoCheck);
 	profile_write_int(GENERAL, TEXT("WiFiWaitSec"), op.WiFiWaitSec);
+	profile_write_int(GENERAL, TEXT("WiFiDeviceOffState"), op.WiFiDeviceOffState);
 	profile_write_string(GENERAL, TEXT("WiFiDeviceName"), op.WiFiDeviceName);
 
 	profile_write_int(GENERAL, TEXT("RasCon"), op.RasCon);

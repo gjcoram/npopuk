@@ -189,10 +189,12 @@ log_save_a("calling ReadMsgQueue\r\n");
 						if (hEvent) {
 							SetEvent(hEvent);
 						}
+						SetStatusTextT(MainWnd, STR_STATUS_WIFI_CONNECT, 1);
 dwBytesRead = 0;
 log_save_a("  notification: connect\r\n");
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_MEDIA_DISCONNECT) {
+						SetStatusTextT(MainWnd, STR_STATUS_WIFI_DISCONNECT, 1);
 dwBytesRead = 0;
 log_save_a("  notification: disconnect\r\n");
 					}
@@ -259,6 +261,7 @@ log_save_a("entering while loop\r\n");
 		MSG msg;
 		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
 			// WiFiTimer expired?
+			SetStatusTextT(MainWnd, TEXT("Timeout"), 1);
 log_save_a("wifi loop got no message - timer expired?\r\n");
 			break;
 		}
@@ -266,6 +269,7 @@ log_save_a("wifi loop got no message - timer expired?\r\n");
 		if (GetNetworkStatus() == TRUE) {
 			// Device is powered and connected
 			ret = TRUE;
+			SetStatusTextT(MainWnd, STR_STATUS_WIFI_CONNECT, 1);
 log_save_a("connection established, breaking while loop\r\n");
 			break;
 		}
@@ -299,10 +303,12 @@ void WiFiDisconnect(BOOL Force)
 		if (op.SocLog > 1) {
 			log_save_a("De-activating WiFi\r\n");
 		}
+log_save_a("De-activating WiFi\r\n");
 		SetNICPower(op.WiFiDeviceName, FALSE, FALSE);
 		WiFiConnByNpop = FALSE;
 		SetStatusTextT(MainWnd, STR_STATUS_WIFI_DISCONNECT, 1);
 	}
+else log_save_a("Not deactivating wifi\r\n");
 }
 
 /*
@@ -320,7 +326,7 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable)
 
 	ret = GetDevicePower(szName, POWER_NAME, &Dx);
 
-	if (ret != ERROR_SUCCESS || D4 == Dx) {
+	if (ret != ERROR_SUCCESS || Dx == D4 || Dx == PwrDeviceUnspecified) {
 		bDevPowered = FALSE;
 	}
 	if (WiFiLoop == FALSE && op.SocLog > 1) {
@@ -338,7 +344,14 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable)
 		if (Enable == TRUE && bDevPowered == FALSE) {
 			Dx = D0; // turn on
 		} else if (Enable == FALSE && bDevPowered == TRUE) {
-			Dx = D4; // turn off
+			if (op.WiFiDeviceOffState == 4) {
+				Dx = D4; // turn off
+			} else {
+				// Some adapters want -1 (PwrDeviceUnspecified) for "off"
+				// (Sylvania netbook's custom wifi status applet expects this)
+				// Some people may want to leave device in low power state
+				Dx = op.WiFiDeviceOffState;
+			}
 		}
 		ret = SetDevicePower(szName, POWER_NAME, Dx);
 	}
