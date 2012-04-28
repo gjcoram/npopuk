@@ -2577,7 +2577,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				TCHAR *buf, *repl, *tmp, *end, *p, *r, *t;
 				TCHAR qchar[MAX_QUOTE_LEN+1];
 				int ss, se, ls, len;
-				BOOL skip = FALSE, quoting = FALSE;
+				BOOL fix_crlf = FALSE, skip = FALSE, quoting = FALSE;
 				SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&ss, (LPARAM)&se);
 				if (se < ss) break;
 				buf = NULL;
@@ -2593,6 +2593,41 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				while (p >= buf && *p != TEXT('\n')) {
 					p--;
 					ls++;
+				}
+				// look for bare \r or \n
+				len = lstrlen(buf) + 1;
+				for (r = p; r < buf+se && *r != TEXT('\0'); r++) {
+					if (*r == TEXT('\n') && r > buf && *(r-1) != TEXT('\r')) {
+						fix_crlf = TRUE;
+						len++;
+					}
+					if (*r == TEXT('\r') && *(r+1) != TEXT('\n')) {
+						fix_crlf = TRUE;
+						len++;
+					}
+				}
+				if (fix_crlf) {
+					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					if (tmp != NULL) {
+						for (r = buf, t = tmp; r < buf+se && *r != TEXT('\0'); r++) {
+							if (*r == TEXT('\n') && r > buf && *(r-1) != TEXT('\r')) {
+								*(t++) = TEXT('\r');
+								se++;
+							}
+							*(t++) = *r;
+							if (*r == TEXT('\r') && *(r+1) != TEXT('\n')) {
+								*(t++) = TEXT('\n');
+								se++;
+							}
+						}
+						*t = TEXT('\0');
+					}
+					// adjust pointers
+					p += (tmp - buf);
+					end = tmp + se;
+					mem_free(&buf);
+					buf = tmp;
+					tmp = NULL;
 				}
 				len = (se-ss+ls+1);
 				if (op.WordBreakSize > 0) {
