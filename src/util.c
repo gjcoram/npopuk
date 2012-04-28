@@ -1542,6 +1542,12 @@ int SetDotSize(TCHAR *buf)
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			len++;
 		}
+		if (*p == TEXT('\n') && (p == buf || *(p - 1) != TEXT('\r'))) {
+			len++;
+		}
+		if (*p == TEXT('\r') && *(p + 1) != TEXT('\n')) {
+			len++;
+		}
 		len++;
 	}
 	return len;
@@ -1561,7 +1567,13 @@ void SetDot(TCHAR *buf, TCHAR *ret)
 		if (*p == TEXT('.') && (p == buf || *(p - 1) == TEXT('\n'))) {
 			*(r++) = TEXT('.');
 		}
+		if (*p == TEXT('\n') && (p == buf || *(p - 1) != TEXT('\r'))) {
+			*(r++) = TEXT('\r');
+		}
 		*(r++) = *p;
+		if (*p == TEXT('\r') && *(p + 1) != TEXT('\n')) {
+			*(r++) = TEXT('\n');
+		}
 	}
 	*r = TEXT('\0');
 }
