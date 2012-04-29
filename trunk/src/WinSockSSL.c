@@ -1,13 +1,13 @@
 /*
  * nPOP
  *
- * WinSockSSL.c
+ * WinSock.c
  *
  * Copyright (C) 1996-2006 by Nakashima Tomoaki. All rights reserved.
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2009-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2009 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -616,14 +616,14 @@ static int set_client_cert(SSL_CTX *ctx, char *ca_file, char *key_file, char *pa
 		PKCS12 *p12;
 		EVP_PKEY *key = NULL;
 		X509 *cert = NULL;
-#if defined( _MSC_VER) && (_MSC_VER >= 1400)
+#if !defined(_WIN32_WCE) && defined( _MSC_VER) && (_MSC_VER > 1200)
 		errno_t err;
 #endif
 
 		PKCS12_PBE_add();
 
 		// ƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚Ý
-#if defined( _MSC_VER) && (_MSC_VER >= 1400)
+#if !defined(_WIN32_WCE) && defined( _MSC_VER) && (_MSC_VER > 1200)
 		err = fopen_s(&fp, ca_file, "r");
 		if (err || !fp) {
 			return 0;
