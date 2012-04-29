@@ -261,13 +261,13 @@ int AddPOOMContact(unsigned short *email, unsigned short *fname, unsigned short 
 					retval = -3;
 				} else {
 					if (fname != NULL)
-						pContact->put_FirstName(fname);
+						pContact->put_FirstName((BSTR)fname);
 					if (lname != NULL)
-						pContact->put_LastName(lname);
+						pContact->put_LastName((BSTR)lname);
 					if (email != NULL)
-						pContact->put_Email1Address(email);
+						pContact->put_Email1Address((BSTR)email);
 					if (categ != NULL)
-						pContact->put_Categories(categ);
+						pContact->put_Categories((BSTR)categ);
 
 					// Save the new contact
 					pContact->Save();
