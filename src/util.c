@@ -1611,8 +1611,8 @@ void FixCRLF(char **buf)
 	}
 	if (incr > 0) {
 		char *ret, *q;
-		ret = q = (char *)mem_alloc(len + incr + 1);
-		// it's OK if buf is NULL in the code below, though it's very unlikely
+		ret = q = (char *)mem_alloc(sizeof(char)*(len + incr + 1));
+		// it's OK if ret is NULL in the code below, though it's very unlikely
 		for (p = *buf; *p != '\0'; p++) {
 			if (ret != NULL) {
 				*q = *p;
@@ -1629,7 +1629,7 @@ void FixCRLF(char **buf)
 					*q = '\n';
 				}
 			}
-			// YPOPs! fix (some messages come in with bare \n
+			// YPOPs! fix (some messages come in with bare \n)
 			if (*p == '\n' && (p == *buf || (p > *buf && *(p-1) != '\r'))) {
 				if (ret == NULL) {
 					if (*(p+1) == '\n') {
@@ -1653,6 +1653,65 @@ void FixCRLF(char **buf)
 		}
 	}
 }
+
+#ifdef UNICODE
+void FixCRLF_t(TCHAR **buf)
+{
+	int incr = 0, len = 0;
+	TCHAR *p;
+	for (p = *buf; *p != TEXT('\0'); p++, len++) {
+		if (*p == TEXT('\r') && *(p+1) != TEXT('\n')) {
+			incr++;
+		}
+		if (*p == TEXT('\n') && (p == *buf || (p > *buf && *(p-1) != TEXT('\r')))) {
+			incr++;
+		}
+	}
+	if (incr > 0) {
+		TCHAR *ret, *q;
+		ret = q = (TCHAR *)mem_alloc(sizeof(TCHAR)*(len + incr + 1));
+		// it's OK if ret is NULL in the code below, though it's very unlikely
+		for (p = *buf; *p != TEXT('\0'); p++) {
+			if (ret != NULL) {
+				*q = *p;
+			}
+			if (*p == TEXT('\r') && *(p+1) != TEXT('\n')) {
+				if (ret == NULL) {
+					if (*(p+1) == TEXT('\r')) {
+						*(++p) = TEXT('\n'); // \r\r -> \r\n
+					} else {
+						*p = TEXT(' '); // \r -> ' ', working in-place
+					}
+				} else {
+					q++;
+					*q = TEXT('\n');
+				}
+			}
+			// YPOPs! fix (some messages come in with bare \n)
+			if (*p == TEXT('\n') && (p == *buf || (p > *buf && *(p-1) != TEXT('\r')))) {
+				if (ret == NULL) {
+					if (*(p+1) == TEXT('\n')) {
+						*(p++) = TEXT('\r'); // \n\n -> \r\n
+					} else {
+						*p = TEXT(' '); // \n -> ' ', working in-place
+					}
+				} else {
+					*(q++) = TEXT('\r');
+					*q = TEXT('\n');
+				}
+			}
+			if (ret != NULL) {
+				q++;
+			}
+		}
+		if (ret != NULL) {
+			*q = TEXT('\0');
+			mem_free(&*buf);
+			*buf = ret;
+		}
+	}
+}
+#endif
 
 /*
  * ReturnCheck - 全角文字の禁則チェック
