@@ -338,7 +338,7 @@ all: banner $(TMP_D) $(BIN_D) $(TEST_D) $(LIB_D) $(INCO_D) headers lib
 
 banner:
 	@echo Building OpenSSL
-	$(RM) "$(INCO_D)\opensslconf.h"
+#	$(RM) "$(INCO_D)\opensslconf.h"
 
 $(TMP_D):
 	$(MKDIR) "$(TMP_D)"
@@ -473,7 +473,7 @@ $(INCL_D)\ui_locl.h: $(SRC_D)\crypto\ui\ui_locl.h
 $(INCL_D)\str_locl.h: $(SRC_D)\crypto\store\str_locl.h
 	$(CP) "$(SRC_D)\crypto\store\str_locl.h" "$(INCL_D)\str_locl.h"
 
-$(INCL_D)\kssl.h: $(SRC_D)\ssl\kssl.h
+$(INCO_D)\kssl.h: $(SRC_D)\ssl\kssl.h
 	$(CP) "$(SRC_D)\ssl\kssl.h" "$(INCL_D)\kssl.h"
 
 $(INCL_D)\ssl_locl.h: $(SRC_D)\ssl\ssl_locl.h
