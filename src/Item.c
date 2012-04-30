@@ -1717,7 +1717,7 @@ char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 	p = item_join_header(&buf, p, HEAD_FROM, tpMailItem->From, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_TO, tpMailItem->To, tpMailItem, TRUE, &len, &size);
 	p = item_join_header(&buf, p, HEAD_CC, tpMailItem->Cc, tpMailItem, TRUE, &len, &size);
-	p = item_join_header(&buf, p, HEAD_BCC, tpMailItem->Bcc, tpMailItem, TRUE, &len, &size);
+	// don't put tpMailItem->Bcc in the wireform
 	p = item_join_header(&buf, p, HEAD_DATE, tpMailItem->Date, tpMailItem, FALSE, &len, &size);
 	// don't save tpMailItem->FmtDate
 	p = item_join_header(&buf, p, HEAD_SUBJECT, tpMailItem->Subject, tpMailItem, FALSE, &len, &size);
@@ -1811,6 +1811,8 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		}
 		// BodyCharset saved in Content-Type:
 		// BodyEncoding saved in Content-Transfer-Encoding:
+
+		len += item_save_header_size(TEXT(HEAD_BCC), tpMailItem->Bcc);
 		len += item_save_header_size(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo);
 		len += item_save_header_size(TEXT(HEAD_X_ATTACH), tpMailItem->Attach);
 		len += item_save_header_size(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach);
@@ -1967,6 +1969,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		}
 		// BodyCharset saved in Content-Type:
 		// BodyEncoding saved in Content-Transfer-Encoding:
+		p = item_save_header(TEXT(HEAD_BCC), tpMailItem->Bcc, p);
 		p =	item_save_header(TEXT(HEAD_REDIRECT), tpMailItem->RedirectTo, p);
 		p = item_save_header(TEXT(HEAD_X_ATTACH), tpMailItem->Attach, p);
 		p = item_save_header(TEXT(HEAD_X_FWDATTACH), tpMailItem->FwdAttach, p);

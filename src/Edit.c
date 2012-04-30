@@ -995,8 +995,9 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
 				mem_free(&buf);
 			}
+			return 0;
 		}
-		return 0;
+		// else fall through and see if the default WindowProc can do anything
 	}
 	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
 #endif
