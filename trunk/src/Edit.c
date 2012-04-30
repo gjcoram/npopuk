@@ -931,9 +931,9 @@ static void DelSentSubClass(HWND hWnd)
 /*
  * SubClassEditProc - To subclass is converted the window procedure
  */
-#ifdef _WIN32_WCE_PPC
 static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#ifdef _WIN32_WCE_PPC
 	switch (msg) {
 	case WM_LBUTTONDOWN:
 		{
@@ -954,29 +954,85 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 	}
 
 	return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
-}
+#else
+	if (msg == WM_PASTE) {
+		// handle it explicitly, to deal with bare \r or \n
+		int format = 0;
+		if (IsClipboardFormatAvailable(CF_TEXT)) {
+			format = CF_TEXT;
+		}
+#ifdef UNICODE
+		// if it's available in unicode, use that instead of ansi
+		if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
+			format = CF_UNICODETEXT;
+		}
 #endif
+		if (format != 0 && OpenClipboard(NULL)) {
+			HGLOBAL hglb;
+			LPTSTR lptstr;
+			TCHAR *buf = NULL;
+
+			hglb = GetClipboardData(format);
+			if (hglb != NULL) {
+				lptstr = GlobalLock(hglb);
+				if (lptstr != NULL) {
+#ifdef UNICODE
+					if (format == CF_UNICODETEXT) {
+						buf = alloc_copy_t(lptstr);
+					} else{
+						buf = alloc_char_to_tchar((char*)lptstr);
+					}
+					FixCRLF_t(&buf);
+#else
+					buf = alloc_copy(lptstr);
+					FixCRLF(&buf);
+#endif
+					GlobalUnlock(hglb);
+				}
+			}
+			CloseClipboard();
+			if (buf != NULL) {
+				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
+				mem_free(&buf);
+			}
+		}
+		return 0;
+	}
+	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
+#endif
+}
 
 /*
  * SetEditSubClass - which Subclass conversion
  */
-#ifdef _WIN32_WCE_PPC
 static void SetEditSubClass(HWND hWnd)
 {
+#ifdef _WIN32_WCE_PPC
 	EditWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)SubClassEditProc);
-}
+#else
+	WNDPROC OldWndProc = NULL;
+
+	OldWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)SubClassEditProc);
+	SetProp(hWnd, WNDPROC_KEY, OldWndProc);
 #endif
+}
 
 /*
  * DelEditSubClass - of window Window class is reset to those of standard
  */
-#ifdef _WIN32_WCE_PPC
 static void DelEditSubClass(HWND hWnd)
 {
+#ifdef _WIN32_WCE_PPC
 	SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)EditWindowProcedure);
 	EditWindowProcedure = NULL;
-}
+#else
+	WNDPROC OldWndProc = (WNDPROC)GetProp(hWnd, WNDPROC_KEY);
+	if (OldWndProc) {
+		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)OldWndProc);
+	}
+	RemoveProp(hWnd, WNDPROC_KEY);
 #endif
+}
 
 /*
  * TbNotifyProc - Notification message of tool bar (Win32)
@@ -1293,10 +1349,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		if (op.ViewWindowCursor == 0) {
 			SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
 		}
-#ifdef _WIN32_WCE_PPC
 	} else {
 		SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
-#endif
 	}
 	return TRUE;
 }
@@ -1554,6 +1608,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 							charset_problem = TRUE;
 						} else {
 							// use the global option BodyCharset (and do the conversion below)
+							mem_free(&tpMailItem->BodyCharset);
 							tpMailItem->BodyCharset = alloc_copy_t(op.BodyCharset);
 						}
 						break;
@@ -2857,10 +2912,8 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					if (op.ViewWindowCursor == 0) {
 						HideCaret(GetDlgItem(hWnd, IDC_EDIT_BODY));
 					}
-#ifdef _WIN32_WCE_PPC
 				} else {
 					SetEditSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
-#endif
 				}
 			}
 			break;
