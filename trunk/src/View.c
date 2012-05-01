@@ -841,7 +841,11 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		{10,ID_MENUITEM_FLAGMARK,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
 		{0,	0,						TBSTATE_ENABLED,	TBSTYLE_SEP,	0, 0, 0, -1},
 		{11,ID_MENUITEM_FIND,		TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
-		{12,ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1}
+		{12,ID_MENUITEM_NEXTFIND,	TBSTATE_ENABLED,	TBSTYLE_BUTTON,	0, 0, 0, -1},
+		// last icon added so view toolbar in 2.17 has a different number of icons than 2.16
+		// because the order of the buttons changed; if LOAD_USER_IMAGES, we don't want to
+		// load an old bitmap
+		{13,ID_MENUITEM_NOTUSED,	TBSTATE_HIDDEN,		TBSTYLE_BUTTON,	0, 0, 0, -1}
 	};
 #endif	// _WIN32_WCE_SP
 #ifdef _WIN32_WCE
@@ -862,7 +866,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		STR_CMDBAR_UNREADMARK,
 		STR_CMDBAR_FLAGMARK,
 		STR_CMDBAR_FIND,
-		STR_CMDBAR_NEXTFIND
+		STR_CMDBAR_NEXTFIND,
+		STR_CMDBAR_NOTUSED
 #ifndef _WIN32_WCE_PPC
 		,NULL // extra for CE.net
 #endif
@@ -892,7 +897,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SHCreateMenuBar(&mbi);
 	hViewToolBar = mbi.hwndMB;
 
-	CommandBar_AddToolTips(hViewToolBar, 15, szTips);
+	CommandBar_AddToolTips(hViewToolBar, 16, szTips);
 #ifdef LOAD_USER_IMAGES
 	if (ViewBmp)
 		CommandBar_AddBitmap(hViewToolBar, NULL, (int)ViewBmp, TB_VIEWBUTTONS, op.ViewBmpSize, op.ViewBmpSize);
@@ -939,7 +944,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	hViewToolBar = CommandBar_Create(hInst, hWnd, IDC_VCB);
 	// op.osMajorVer >= 4 is CE.net 4.2 and higher (MobilePro 900c)
 	// else HPC2000 (Jornada 690, 720)
-	CommandBar_AddToolTips(hViewToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
+	CommandBar_AddToolTips(hViewToolBar, 16, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	idMenu = (GetSystemMetrics(SM_CXSCREEN) >= 450) ? (WORD)IDR_MENU_VIEW_HPC : (WORD)IDR_MENU_VIEW;
 	CommandBar_InsertMenubar(hViewToolBar, hInst, idMenu, 0);
 	CommandBar_AddBitmap(hViewToolBar, hInst, IDB_TOOLBAR_VIEW, TB_VIEWBUTTONS, TB_ICONSIZE, TB_ICONSIZE);

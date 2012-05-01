@@ -51,8 +51,10 @@
 #define ID_NEWMAIL_TIMER		8
 #define ID_RESTORESEL_TIMER		9
 //#define ID_RASWAIT_TIMER		10 // in General.h
+//#define ID_WIFIWAIT_TIMER		10 // in General.h
 #define ID_ITEMCHANGE_TIMER		11
 #define ID_PREVIEW_TIMER		12
+//#define ID_WIFICHECK_TIMER	13 // in General.h
 
 #define STATUS_DONE				0
 #define STATUS_CHECK			1
@@ -98,6 +100,9 @@ HBITMAP MainBmp = NULL, EditBmp = NULL, ViewBmp = NULL;
 #endif
 #ifndef _WIN32_WCE
 static int confirm_flag;					// 認証フラグ
+#endif
+#ifdef ENABLE_WIFI
+BOOL WiFiStatus = FALSE;
 #endif
 
 HWND MainWnd;								// メインウィンドウのハンドル
@@ -4742,7 +4747,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef ENABLE_WIFI
 		// check network connections
-		GetNetworkStatus();
+		WiFiStatus = GetNetworkStatus(TRUE);
 #endif
 
 		if (first_start == TRUE) {
@@ -5349,7 +5354,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
-			if (op.EnableLAN == 0 && op.WiFiCon == 0 && op.WiFiNoCheck == 1 && !GetNetworkStatus()) {
+			if (op.EnableLAN == 0 && op.WiFiCon == 0 && op.WiFiNoCheck == 1 && !GetNetworkStatus(TRUE)) {
 				break;
 			}
 #endif
@@ -5447,6 +5452,17 @@ log_save_a("wifi timer expired, set event\r\n");
 				SetEvent(hEvent);
 			}
 else log_save_a("wifi timer expired, no event\r\n");
+			break;
+		case ID_WIFICHECK_TIMER:
+			i = GetNetworkStatus(TRUE);
+			if (i != WiFiStatus) {
+				WiFiStatus = i;
+				if (WiFiStatus == TRUE) {
+					SetStatusTextT(MainWnd, STR_STATUS_NET_CONNECT, 1);
+				} else {
+					SetStatusTextT(MainWnd, STR_STATUS_NET_DROPPED, 1);
+				}
+			}
 			break;
 #endif
 		} // WM_TIMER switch
@@ -7403,9 +7419,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (ViewBmp) {
 			GetObject(ViewBmp, sizeof(BITMAP), &bitmap);
 			op.ViewBmpSize = bitmap.bmHeight;
-			// TB_VIEWBUTTONS+1 -- icons were reordered between 2.16 and 2.17
-			// Need to reject old toolbar so the buttons don't do the wrong action
-			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_VIEWBUTTONS+1) {
+			if (bitmap.bmHeight < 8 || bitmap.bmWidth/bitmap.bmHeight != TB_VIEWBUTTONS) {
 				DeleteObject(ViewBmp);
 				ViewBmp = NULL;
 			}
