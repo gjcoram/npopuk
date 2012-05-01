@@ -127,6 +127,7 @@ extern int sprintf_s();
 #ifdef ENABLE_WIFI
 #define WIFI_WAIT_EVENT			TEXT("WIFI_WAIT_EVENT")
 #define ID_WIFIWAIT_TIMER		10
+#define ID_WIFICHECK_TIMER		13
 #endif
 
 #define BUF_SIZE				256					// Buffer size
@@ -146,7 +147,7 @@ extern int sprintf_s();
 #define TB_MAINBUTTONS			21					// number of buttons on main toolbar
 #endif
 #define TB_EDITBUTTONS			9					// number of buttons on edit toolbar
-#define TB_VIEWBUTTONS			13					// number of buttons on view toolbar
+#define TB_VIEWBUTTONS			14					// number of buttons on view toolbar
 
 #define TABSTOPLEN				8					// TAB Stop
 
@@ -864,7 +865,7 @@ typedef struct _RASINFO {
 /* Function Prototypes */
 #ifdef ENABLE_WIFI
 // WiFi
-BOOL GetNetworkStatus(void);
+BOOL GetNetworkStatus(BOOL Print);
 BOOL WiFiConnect(HWND hWnd, int Dummy);
 void WiFiDisconnect(BOOL Force);
 void FreeWiFiInfo(void);

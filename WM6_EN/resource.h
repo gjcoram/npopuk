@@ -382,6 +382,7 @@
 #define IDC_EDIT_NUMRECENT              1256
 #define IDC_TEXT_GETRECENT              1257
 #define ID_MENUITEM_VIEWIMAGE           1258
+#define ID_MENUITEM_NOTUSED             1259
 #define ID_MENUITEM_RECV                40001
 #define ID_MENUITEM_QUIT                40002
 #define ID_MENUITEM_UNREADMARK          40003

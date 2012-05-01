@@ -306,8 +306,10 @@
 
 // WiFi status
 #define STR_STATUS_WIFI_START		TEXT("Starting WiFi")
-#define STR_STATUS_WIFI_CONNECT		TEXT("WiFi connected")
-#define STR_STATUS_WIFI_DISCONNECT	TEXT("WiFi disconnected")
+#define STR_STATUS_WIFI_TIMEOUT		TEXT("WiFi connection timed out")
+#define STR_STATUS_NET_CONNECT		TEXT("Network connected")
+#define STR_STATUS_NET_DISCONNECT	TEXT("Network disconnected")
+#define STR_STATUS_NET_DROPPED		TEXT("Network connection lost")
 
 //Initialise status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")
@@ -500,6 +502,7 @@
 #define STR_CMDBAR_FORWARD			TEXT("Forward")
 #define STR_CMDBAR_FIND				TEXT("Find")
 #define STR_CMDBAR_NEXTFIND			TEXT("Find next")
+#define STR_CMDBAR_NOTUSED			TEXT("Not used")
 
 #define STR_CMDBAR_SEND				TEXT("Send now")
 #define STR_CMDBAR_SBOXMARK			TEXT("Save and Mark")
