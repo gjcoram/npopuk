@@ -5448,13 +5448,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
 			if (hEvent != NULL) {
-log_save_a("wifi timer expired, set event\r\n");
+//GJCDEBUG
+if(op.SocLog > 1) log_save_a("wifi timer expired, set event\r\n");
 				SetEvent(hEvent);
 			}
-else log_save_a("wifi timer expired, no event\r\n");
+//GJCDEBUG
+else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 			break;
 		case ID_WIFICHECK_TIMER:
-			i = GetNetworkStatus(TRUE);
+			i = GetNetworkStatus(FALSE);
 			if (i != WiFiStatus) {
 				WiFiStatus = i;
 				if (WiFiStatus == TRUE) {
