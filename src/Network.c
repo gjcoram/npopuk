@@ -194,12 +194,13 @@ log_save(msg);
 			}
 		}
 		IsActive = has_pwr && has_conn;
-{
-	TCHAR msg[MSG_SIZE];
-	wsprintf(msg, TEXT("NDIS did not report wifi device '%s'  pwr=%d conn=%d\r\n"),
-		op.WiFiDeviceName, has_pwr, has_conn);
-	log_save(msg);
-}
+
+		if (op.SocLog > 1) {
+			TCHAR msg[MSG_SIZE];
+			wsprintf(msg, TEXT("NDIS did not report wifi device '%s'  pwr=%d conn=%d\r\n"),
+					op.WiFiDeviceName, has_pwr, has_conn);
+			log_save(msg);
+		}
 	}
 
 	return IsActive;
@@ -209,12 +210,14 @@ DWORD WINAPI WiFiStatusProc(LPVOID pParam)
 {
 	HANDLE wait_objects[] = {hQueue, hStopEvent};
 	size_t object_count = sizeof(wait_objects)/sizeof(HANDLE);
+//GJCDEBUG
 log_save_a("Started WiFiStatusProc\r\n");
 	if (hQueue != NULL) {
 		while (WaitForMultipleObjects(object_count, wait_objects, FALSE, INFINITE) == WAIT_OBJECT_0) {
 			NDISUIO_DEVICE_NOTIFICATION notification = { 0 };
 			DWORD dwBytesRead = 0;
 			DWORD notification_flags = 0;
+//GJCDEBUG
 log_save_a("calling ReadMsgQueue\r\n");
 			if (ReadMsgQueue(hQueue, &notification, sizeof(NDISUIO_DEVICE_NOTIFICATION),
 								&dwBytesRead, 0, &notification_flags)) {
@@ -224,35 +227,43 @@ log_save_a("calling ReadMsgQueue\r\n");
 							SetEvent(hEvent);
 						}
 						SetStatusTextT(MainWnd, STR_STATUS_NET_CONNECT, 1);
+//GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: connect\r\n");
 MessageBox(MainWnd, TEXT("wifi connect notice"), WINDOW_TITLE, MB_OK);
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_MEDIA_DISCONNECT) {
 						SetStatusTextT(MainWnd, STR_STATUS_NET_DROPPED, 1);
+//GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: disconnect\r\n");
 MessageBox(MainWnd, TEXT("wifi DISconnect notice"), WINDOW_TITLE, MB_OK);
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_DEVICE_POWER_UP) {
+//GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: power up\r\n");
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_DEVICE_POWER_DOWN) {
+//GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: power down\r\n");
 					}
 					if (dwBytesRead != 0) {
+//GJCDEBUG
 log_save_a("  notification type unknown\r\n");
 					}
 				} else {
+//GJCDEBUG
 log_save_a("ReadMsgQueue got 0 bytes?\r\n");
 				}
 			} else {
+//GJCDEBUG
 log_save_a("ReadMsgQueue failed\r\n");
 			}
 		}
 	}
+//GJCDEBUG
 log_save_a("Exiting WiFiStatusProc\r\n");
 	ExitThread(WM_QUIT);
 	return 0;
@@ -277,58 +288,68 @@ BOOL WiFiConnect(HWND hWnd, int Dummy)
 	if (op.SocLog > 1) {
 		log_save_a("Activating WiFi\r\n");
 	}
-	SetTimer(hWnd, ID_WIFIWAIT_TIMER, op.WiFiWaitSec * 1000, NULL);
 
 	ret = SetNICPower(op.WiFiDeviceName, FALSE, TRUE, TRUE);
 	WiFiConnByNpop = TRUE;
 
-	// wait for connection to be established
-	hEvent = CreateEvent(NULL, TRUE, FALSE, WIFI_EVENT);
-	if (hEvent == NULL) {
-		if (op.SocIgnoreError != 1) {
-			ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
-		}
-		return FALSE;
-	}
-	WiFiLoop = TRUE;
+	if (op.WiFiWaitSec > 0) {
+		// wait for connection to be established
+		SetTimer(hWnd, ID_WIFIWAIT_TIMER, op.WiFiWaitSec * 1000, NULL);
 
+		hEvent = CreateEvent(NULL, TRUE, FALSE, WIFI_EVENT);
+		if (hEvent == NULL) {
+			if (op.SocIgnoreError != 1) {
+				ErrorMessage(hWnd, STR_ERR_SOCK_EVENT);
+			}
+			return FALSE;
+		}
+
+//GJCDEBUG
 log_save_a("entering while loop\r\n");
-	while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
-		MSG msg;
-		if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
-			// WiFiTimer expired?
-			SetStatusTextT(MainWnd, TEXT("Timeout"), 1);
+		WiFiLoop = TRUE;
+		while (WaitForSingleObject(hEvent, 0) == WAIT_TIMEOUT) {
+			MSG msg;
+			if (GetMessage(&msg, NULL, 0, 0) == FALSE) {
+				// WiFiTimer expired?
+				SetStatusTextT(MainWnd, TEXT("Timeout"), 1);
+//GJCDEBUG
 log_save_a("wifi loop got no message - timer expired?\r\n");
-			break;
-		}
-		MessageFunc(hWnd, &msg);
-		if (GetNetworkStatus(FALSE) == TRUE) {
-			// Device is powered and connected
-			ret = TRUE;
-			SetStatusTextT(MainWnd, STR_STATUS_NET_CONNECT, 1);
+				break;
+			}
+			MessageFunc(hWnd, &msg);
+			if (GetNetworkStatus(FALSE) == TRUE) {
+				// Device is powered and connected
+				ret = TRUE;
+				SetStatusTextT(MainWnd, STR_STATUS_NET_CONNECT, 1);
+//GJCDEBUG
 log_save_a("connection established, breaking while loop\r\n");
-			break;
-		}
-		if (WiFiLoop == FALSE) {
-			// WiFiDisconnect called while waiting for connection?
+				break;
+			}
+			if (WiFiLoop == FALSE) {
+				// WiFiDisconnect called while waiting for connection?
+//GJCDEBUG
 log_save_a("breaking while loop\r\n");
-			break;
+				break;
+			}
 		}
+//GJCDEBUG
+log_save_a("done while loop\r\n");
+		CloseHandle(hEvent);
+		hEvent = NULL;
+
+		if (WiFiLoop == FALSE) {
+//GJCDEBUG
+log_save_a("wifi loop false\r\n");
+			return FALSE;
+		}
+		WiFiLoop = FALSE;
 	}
 	if (ret == FALSE) {
 		ret = GetNetworkStatus(TRUE);
-		if (ret == FALSE) {
+		if (ret == FALSE && op.WiFiWaitSec > 0) {
 			SetStatusTextT(MainWnd, STR_STATUS_WIFI_TIMEOUT, 1);
 		}
 	}
-log_save_a("done while loop\r\n");
-	CloseHandle(hEvent);
-	hEvent = NULL;
-	if (WiFiLoop == FALSE) {
-log_save_a("wifi loop false\r\n");
-		return FALSE;
-	}
-	WiFiLoop = FALSE;
 
 	if (ret) {
 		SetStatusTextT(MainWnd, STR_STATUS_NET_CONNECT, 1);
@@ -345,12 +366,12 @@ void WiFiDisconnect(BOOL Force)
 		if (op.SocLog > 1) {
 			log_save_a("De-activating WiFi\r\n");
 		}
-log_save_a("De-activating WiFi\r\n");
 		SetNICPower(op.WiFiDeviceName, FALSE, FALSE, TRUE);
 		WiFiConnByNpop = FALSE;
 		WiFiStatus = FALSE;
 		SetStatusTextT(MainWnd, STR_STATUS_NET_DISCONNECT, 1);
 	}
+//GJCDEBUG
 else log_save_a("Not deactivating wifi\r\n");
 }
 
@@ -411,6 +432,7 @@ void FreeWiFiInfo(void)
 if(		DeviceIoControl(hNDUIO, IOCTL_NDISUIO_CANCEL_NOTIFICATION,
 						NULL, 0, NULL, 0, NULL, NULL)
 						) {
+//GJCDEBUG
 	log_save_a("cancelled notification\r\n");
 } else {
 	TCHAR msg[MSG_SIZE];
@@ -420,6 +442,7 @@ if(		DeviceIoControl(hNDUIO, IOCTL_NDISUIO_CANCEL_NOTIFICATION,
 		CloseHandle(hNDUIO);
 		hNDUIO = NULL;
 	}
+//GJCDEBUG
 else log_save_a("hNDUIO was not open to cancel notification\r\n");
 
 	if (hStopEvent) {
