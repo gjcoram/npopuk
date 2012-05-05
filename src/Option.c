@@ -4102,6 +4102,8 @@ static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WiFiNoCheck, 0);
 
 		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WiFiWaitSec, FALSE);
+
+		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)op.WiFiDeviceName);
 		break;
 
 	case WM_NOTIFY:
@@ -4120,8 +4122,9 @@ static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.WiFiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
 			op.WiFiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
 			op.WiFiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
-
 			op.WiFiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
+
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_NAME), &op.WiFiDeviceName);
 			break;
 		}
 		break;
