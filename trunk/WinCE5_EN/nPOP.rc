@@ -769,7 +769,7 @@ BEGIN
     LTEXT           "&Wait",IDC_STATIC,5,64,15,8
     EDITTEXT        IDC_EDIT_WAIT,25,62,30,15,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "sec for network to be active",IDC_STATIC,60,64,150,8
-    LTEXT           "Wi-fi device name",IDC_STATIC,5,84,60,10
+    LTEXT           "WiFi device name",IDC_STATIC,5,84,60,10
     EDITTEXT        IDC_EDIT_NAME,70,82,70,15,ES_AUTOHSCROLL
 END
 

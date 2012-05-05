@@ -5702,7 +5702,13 @@ else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 			break;
 
 		case ID_MENUITEM_SOCLOG:
-			ViewLogFile(hWnd);
+			if (op.SocLog > 0) {
+				ViewLogFile(hWnd);
+			} else {
+				if (MessageBox(hWnd, STR_Q_ENABLE_SOCLOG, WINDOW_TITLE, MB_YESNO) == IDYES) {
+					op.SocLog = 3;
+				}
+			}
 			break;
 
 		case ID_MENUITEM_AUTOCHECK:

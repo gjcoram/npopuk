@@ -197,6 +197,7 @@
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\r\nSkip this one?")
 #define STR_Q_PARTIAL_ATTACH		TEXT("Incomplete attachment; continue?\r\n(Else cancel, download message, and try again)")
 #define STR_Q_CREATE_INIFILE		TEXT("Create a new configuration file at '%s'?")
+#define STR_Q_ENABLE_SOCLOG			TEXT("Enable logging?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")

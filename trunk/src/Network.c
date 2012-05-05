@@ -92,10 +92,9 @@ BOOL GetNetworkStatus(BOOL Print)
 
 			} else {
 				if (Print == TRUE && op.SocLog > 1) {
-TCHAR msg[BUF_SIZE];
-wsprintf(msg, TEXT("Unable to monitor WiFi events errno=%d\r\n"), GetLastError());
-log_save(msg);
-//					log_save_a("Unable to monitor WiFi events\r\n");
+					TCHAR msg[BUF_SIZE];
+					wsprintf(msg, TEXT("Unable to monitor WiFi events, errno=%d\r\n"), GetLastError());
+					log_save(msg);
 				}
 			}
 		}
