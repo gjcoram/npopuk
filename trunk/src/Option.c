@@ -2586,6 +2586,7 @@ BOOL ImportSavebox(HWND hWnd)
 	if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_IMPORTSBOX), hWnd, ImportSboxProc, (LPARAM)buf) == FALSE) {
 		return FALSE;
 	}
+
 	return file_read_mailbox(tpMailBox->Filename, tpMailBox, TRUE, FALSE);
 }
 
@@ -5029,7 +5030,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 }
 
 /*
- * SetCcList - リストビューにCc , Bccのリストを表示する
+ * SetCcList - split strList (To, Cc, Bcc) into single addresses, add to ListView
  */
 static int SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type)
 {
@@ -5052,10 +5053,10 @@ static int SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type)
 		//Mail address extraction
 		r = GetMailString(p, buf);
 
-		//Excessive blank removal
+		//Excessive blank removal from front of string
 		for (; *p == TEXT(' ') || *p == TEXT('\t') || *p == TEXT('\r') || *p == TEXT('\n'); p++);
 
-		//Is added to the list the extraction
+		//Copy out the address
 		for (s = buf; p < r; p++) {
 			if (*p == TEXT('\t')) {
 				*(s++) = TEXT(' ');
@@ -5065,12 +5066,12 @@ static int SetCcList(HWND hDlg, TCHAR *strList, TCHAR *type)
 		}
 		*s = TEXT('\0');
 		if (*buf != TEXT('\0')) {
-			//in the character string which Excessive blank removal
+			//Excessive blank removal fom end of string
 			if (*(s - 1) == TEXT(' ')) {
 				for (s--; s > buf && *s == TEXT(' '); s--);
 				*(s + 1) = TEXT('\0');
 			}
-			//It adds to the list the
+			//Add string to the ListView widget
 			ItemIndex = ListView_AddOptionItem(GetDlgItem(hDlg, IDC_LIST_CC), type, 0);
 			ListView_SetItemText(GetDlgItem(hDlg, IDC_LIST_CC), ItemIndex, 1, buf);
 		}

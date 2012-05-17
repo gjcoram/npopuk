@@ -711,6 +711,7 @@ BOOL ini_read_setting(HWND hWnd)
 	TCHAR *p, *r;
 	int i, j, t, cnt, num, len;
 	int fDef;
+	BOOL retval = FALSE;
 
 	if (IniFile != NULL) {
 		long fsize;
@@ -860,14 +861,11 @@ BOOL ini_read_setting(HWND hWnd)
 		tpFilter->Content2 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""));
 	}
 
-	if (op.Version < APP_VERSION_NUM) {
-		op.Version = APP_VERSION_NUM;
-	}
-
 	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0);
 	if (cnt == 0) {
 		mailbox_create(hWnd, 1, -1, FALSE, FALSE);
 		first_start = TRUE;
+		op.Version = APP_VERSION_NUM;
 		profile_free();
 		return TRUE;
 	}
@@ -880,6 +878,11 @@ BOOL ini_read_setting(HWND hWnd)
 	if (mailbox_read() == FALSE) {
 		profile_free();
 		return FALSE;
+	}
+
+	// update version here (after reading Address book)
+	if (op.Version < APP_VERSION_NUM) {
+		op.Version = APP_VERSION_NUM;
 	}
 
 	for (i = 0; i < cnt; i++) {

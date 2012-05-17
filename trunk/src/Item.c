@@ -819,6 +819,10 @@ void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox)
 			tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 		}
 	}
+	if (tpMailItem->Attach != NULL || tpMailItem->FwdAttach != NULL) {
+		tpMailItem->Multipart = MULTIPART_ATTACH;
+		tpMailItem->AttachSize = _ttoi(tpMailItem->Size); // - strlen(body) done later
+	}
 	item_get_content_t(buf, HEAD_X_HEADCHARSET, &tpMailItem->HeadCharset);
 	tpMailItem->HeadEncoding = item_get_content_int(buf, HEAD_X_HEADENCODE, 0);
 	// BodyCharset may come from Content-Type: instead
@@ -900,7 +904,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 	item_get_mime_content(*buf, HEAD_SUBJECT, &tpMailItem->Subject, FALSE);
 	// From
 	item_get_mime_content(*buf, HEAD_FROM, &tpMailItem->From, FALSE);
-	if (t = tpMailItem->From) {
+	if ((t = tpMailItem->From) != NULL) {
 		TCHAR *p = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(t) + 1));
 		if (p != NULL) {
 			GetMailAddress(t, p, NULL, FALSE);
@@ -1403,7 +1407,7 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 		}
 #endif
 	}
-	// moved to get_npop_headers
+	// moved to item_get_npop_headers
 	//item_get_content_t(buf, HEAD_SIZE, &tpMailItem->Size);
 	item_get_content_t(buf, HEAD_REPLYTO, &tpMailItem->ReplyTo);
 	item_get_content_t(buf, HEAD_CONTENTTYPE, &tpMailItem->ContentType);
@@ -1497,12 +1501,8 @@ MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import)
 	mem_free(&Temp);
 
 	// Multipart
-	if (tpMailItem->Attach != NULL || tpMailItem->FwdAttach != NULL) {
-		tpMailItem->Multipart = MULTIPART_ATTACH;
-		tpMailItem->AttachSize = _ttoi(tpMailItem->Size); // - strlen(body) done later
-	} else if (tpMailBox == MailBox + MAILBOX_SEND) {
-		// presently, can't forward as attachment
-		tpMailItem->Multipart = MULTIPART_NONE;
+	if (tpMailBox == MailBox + MAILBOX_SEND) {
+		// tpMailItem->Multipart already set in item_get_npop_headers
 		if (tpMailItem->RedirectTo == NULL && tpMailItem->ContentType != NULL) {
 			// fix bug in previous versions: forwarded messages copied Content-Type of original
 			mem_free(&tpMailItem->ContentType);
@@ -1916,7 +1916,7 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 				len += tstrlen(tpMailItem->Body);
 			}
 		}
-		CP_int = CP_UTF8;
+		CP_int = CP_UTF8; // restore to UTF8
 	}
 	if (WriteMbox != 0) {
 		len += 3; // \r\n\0
@@ -2101,7 +2101,7 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 				p = str_cpy(p, tpMailItem->Body);
 			}
 		}
-		CP_int = CP_UTF8;
+		CP_int = CP_UTF8; // restore to UTF8
 	}
 	if (WriteMbox != 0) {
 		p = str_cpy(p, "\r\n");
