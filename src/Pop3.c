@@ -2086,9 +2086,12 @@ static void pop_log_download_rate() {
 	}
 	if (diffms > 0) {
 		rate = (recvlen * 1000) / diffms;
+		wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
+			recvlen, units, diff, rate, units);
+	} else {
+		wsprintf(msg, TEXT("%d %s received in less than a second\r\n"),
+			recvlen, units);
 	}
-	wsprintf(msg, TEXT("%d %s received in %d seconds (%d %s/s)\r\n"),
-		recvlen, units, diff, rate, units);
 	log_save(msg);
 }
 

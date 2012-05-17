@@ -973,6 +973,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 				}
 			}
 			if ((t - p) > 0) {
+				if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > (t - p)) {
+					tpMailItem->AttachSize -= (t - p); // - strlen(body)
+				}
 				buf = (char *)mem_alloc(sizeof(char) * (t - p + 1));
 				if (buf != NULL) {
 					for (s = buf; p < t; p++, s++) {
@@ -986,11 +989,6 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			}
 			CP_int = CP_UTF8;
 			item_mail_to_item(tpMailItem, &buf, -1, m2i, 0, tpMailBox);
-// GJClater -- this doesn't belong here
-// where do I convert from old format to new? or maybe I don't ever do that ...
-//			if (code > 0 && code < STATUS_REVISION_NPOPUK3) {
-//				remove_npopuk_headers(tpMailItem->WireForm);
-//			}
 			p = r;
 
 		} else {
@@ -1001,7 +999,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 				CP_int = CP_ACP;
 			}
 			tpMailItem = *(tpMailBox->tpMailItem + i) = item_string_to_item(tpMailBox, q, Import);
-			CP_int = CP_UTF8;
+			CP_int = CP_UTF8; // restore to UTF8
 
 			if (encrypted) {
 				mem_free(&q);
@@ -1081,8 +1079,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			if (tpMailItem != NULL) {
 				//Body copy
 				if ((t - p) > 0) {
-					if (tpMailItem->Multipart == MULTIPART_ATTACH) {
-						tpMailItem->AttachSize -= (t - p);
+					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > (t - p)) {
+						tpMailItem->AttachSize -= (t - p); // - strlen(body)
 					}
 					tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
 					if (tpMailItem->Body != NULL) {
@@ -1359,9 +1357,7 @@ MAILITEM *file_scan_mailbox(TCHAR *FileName, char *m_id)
 		} else {
 			CP_int = CP_ACP;
 			tpMailItem = item_string_to_item(NULL, tmp, FALSE);
-			CP_int = CP_UTF8;
-			// what about tpMailItem->Body?  item_string_to_item doesn't set it
-			// file_read_mailbox sets it after the call to item_string_to_item
+			CP_int = CP_UTF8; // restore to UTF8
 			mem_free(&tmp);
 		}
 	}
@@ -1999,6 +1995,10 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetCon
 
 #ifdef UNICODE
 	//UNICODE
+	if (op.Version < 3000) {
+		// nPOPuk used CP_ACP for Version < 3000
+		CP_int = CP_ACP;
+	}
 	Len = char_to_tchar_size(FileBuf);
 	MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
 	if (MemFile == NULL) {
@@ -2007,6 +2007,7 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetCon
 	}
 	char_to_tchar(FileBuf, MemFile, Len);
 	FileSize = Len;
+	CP_int = CP_UTF8; // restore to UTF8
 #else	// UNICODE
 	MemFile = (TCHAR *)FileBuf;
 #endif	// UNICODE
