@@ -3930,7 +3930,10 @@ static void ListDeleteAttach(HWND hWnd)
 				MessageBox(hWnd, STR_MSG_ATT_HELD, STR_TITLE_DELETE, MB_OK);
 				continue;
 			}
-			DeleteAttachFile(hWnd, tpMailItem);
+			if (DeleteAttachFile(hWnd, tpMailItem) == FALSE) {
+				MessageBox(hWnd, STR_ERR_NO_DEL_ATTACH, STR_TITLE_DELETE, MB_OK);
+				break;
+			}
 			ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
 			did_one = TRUE;
 		}

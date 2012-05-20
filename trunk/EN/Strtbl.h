@@ -58,6 +58,7 @@
 #define STR_ERR_SAVEEND				TEXT("Save File error\r\nContinue?")
 #define STR_ERR_SAVE				TEXT("Save File error")
 #define STR_ERR_NODIR				TEXT("Directory does not exist: %s")
+#define STR_ERR_NO_DEL_ATTACH		TEXT("Error deleting attachments")
 #define STR_ERR_PARTIAL_ATTACH		TEXT("Attachments were not fully downloaded")
 #define STR_ERR_FILENAME_TOO_LONG	TEXT("Filename or path too long")
 #define STR_ERR_ADD					TEXT("Address not added")
@@ -164,7 +165,7 @@
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")
 #define STR_Q_DELSBOXFILE			TEXT("Delete existing file '%s%s' from DataFileDir?")
 #define STR_Q_REPLACEFILE			TEXT("'%s'\r\nalready exists.  Do you want to replace it?")
-#define STR_Q_OVERWRITE				TEXT("'%s'\r\nMessage already in Savebox\r\nOverwrite?")
+#define STR_Q_OVERWRITE				TEXT("'%.200s'\r\nMessage already in Savebox\r\nOverwrite?")
 #define STR_Q_COPY					TEXT("Copy %d mail to %s?")
 #define STR_Q_MOVE					TEXT("Move %d mail to %s?")
 #define STR_Q_DEPENDENCE			TEXT("There is a character depending on the model.  Proceed?")
@@ -197,7 +198,7 @@
 #define STR_Q_ATT_SAME_NAME			TEXT("A later attachment has the same name, but is larger.\r\nSkip this one?")
 #define STR_Q_PARTIAL_ATTACH		TEXT("Incomplete attachment; continue?\r\n(Else cancel, download message, and try again)")
 #define STR_Q_CREATE_INIFILE		TEXT("Create a new configuration file at '%s'?")
-#define STR_Q_ENABLE_SOCLOG			TEXT("Enable logging?")
+#define STR_Q_ENABLE_SOCLOG			TEXT("Enable network logging?")
 
 // Message
 #define STR_MSG_NOMARK				TEXT("There is no marked mail")

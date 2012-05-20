@@ -40,12 +40,6 @@ extern OPTION op;
 
 /* Local Function Prototypes */
 static TCHAR *AllocURLDecode(TCHAR *buf);
-static TCHAR *StrNextContentT(TCHAR *p);
-#ifdef UNICODE
-static char *StrNextContent(char *p);
-#else
-#define StrNextContent StrNextContentT
-#endif
 static void ReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
 static void sReturnCheck(TCHAR *p, BOOL *TopFlag, BOOL *EndFlag);
 static BOOL URLHeadToItem(TCHAR *str, TCHAR *head, TCHAR **buf, TCHAR sep);
@@ -91,7 +85,7 @@ static TCHAR *AllocURLDecode(TCHAR *buf)
 /*
  * StrNextContentT - ヘッダ内の次のコンテンツの先頭に移動する (TCHAR)
  */
-static TCHAR *StrNextContentT(TCHAR *p)
+TCHAR *StrNextContentT(TCHAR *p)
 {
 	while (1) {
 		for (; *p != TEXT('\r') && *p != TEXT('\n') && *p != TEXT('\0'); p++);
@@ -114,7 +108,7 @@ static TCHAR *StrNextContentT(TCHAR *p)
  * StrNextContent - ヘッダ内の次のコンテンツの先頭に移動する (TCHAR)
  */
 #ifdef UNICODE
-static char *StrNextContent(char *p)
+char *StrNextContent(char *p)
 {
 	while (1) {
 		for (; *p != '\r' && *p != '\n' && *p != '\0'; p++);

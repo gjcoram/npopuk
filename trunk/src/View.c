@@ -2895,6 +2895,7 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 			*mBody = '\0';
 		}
 	} else if ((*tpPart + TextIndex)->ePos == NULL) {
+		// Text part is incomplete, copy from sPos to the end
 		mBody = alloc_copy((*tpPart + TextIndex)->sPos);
 		if (mBody == NULL) {
 			multipart_free(&tpPart, cnt);
@@ -2914,25 +2915,110 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 			str_cpy_n(mBody, (*tpPart + TextIndex)->sPos, len - 1);
 		}
 	}
-	if (tpMailItem->HasHeader) {
-		char *p, *newbody;
-		p = GetBodyPointa(tpMailItem->Body);
-		if (p != NULL) {
-			int hlen = p - tpMailItem->Body;
-			len = hlen + strlen(mBody) + 2;
-			newbody = (char *)mem_alloc(sizeof(char) * len);
-			if (newbody != NULL) {
-				str_cpy_n(newbody, tpMailItem->Body, hlen + 1);
-				str_cpy_n(newbody + hlen, mBody, strlen(mBody)+1);
-				mem_free(&mBody);
-				mBody = newbody;
+	if (tpMailItem->WireForm != NULL) {
+		char *p, *q, *r, *newbody;
+		char *ctype = NULL, *enc = NULL;
+		int hlen;
+		p = GetBodyPointa(tpMailItem->WireForm);
+		if (p == NULL) {
+			multipart_free(&tpPart, cnt);
+			mem_free(&mBody);
+			return FALSE;
+		}
+		hlen = p - tpMailItem->WireForm;
+		len = hlen + strlen(mBody) + 2; // \r\n
+
+		if (TextIndex != -1) {
+			// original content-type should be long enough
+			// to just replace with the new (includes boundary)
+			// but just to be safe, we'll allocate space for it
+			ctype = (*tpPart + TextIndex)->ContentType;
+			if (ctype != NULL)
+				len += strlen(ctype) + 2; // "\r\n"
+			// original encoding might be NULL, allocate space for full header
+			enc = (*tpPart + TextIndex)->Encoding;
+			if (enc != NULL)
+				len += strlen(HEAD_ENCODING) + strlen(enc) + 3; // " \r\n"
+		}
+		if (ctype == NULL) {
+			ctype = "text/plain";
+			len += strlen(ctype);
+		}
+
+		newbody = (char *)mem_alloc(sizeof(char) * len);
+		if (newbody == NULL) {
+			// could modify WireForm directly ...
+			multipart_free(&tpPart, cnt);
+			mem_free(&mBody);
+			return FALSE;
+		}
+		str_cpy_n(newbody, tpMailItem->WireForm, hlen + 1);
+		p = GetHeaderStringPoint(newbody, HEAD_CONTENTTYPE);
+		if (p == NULL) {
+			// did not find Content-Type? (but message must be multipart to be here at all)
+			multipart_free(&tpPart, cnt);
+			mem_free(&mBody);
+			return FALSE;
+		}
+		q = StrNextContent(p);
+		if (*q == '\r' || *q == '\n') {
+			r = NULL;
+		} else {
+			r = "\r\n";
+		}
+		if (q > p + strlen(ctype) + 2) {
+			// Content-Type (with boundary) is long enough
+			p = str_join(p, ctype, r, q, (char*)-1);
+		} else {
+			char *s = alloc_copy(q);
+			p = str_join(p, ctype, r, s, (char*)-1);
+			mem_free(&s);
+		}
+
+		if (enc != NULL) {
+			q = GetHeaderStringPoint(newbody, HEAD_ENCODING);
+			if (q == NULL) {
+				// did not find Content-Transfer-Encoding,
+				// add it after other headers
+				p = str_join(p, HEAD_ENCODING, " ", enc, "\r\n\r\n", (char*)-1);
+			} else {
+				p = StrNextContent(q);
+				if (p > q + strlen(enc) + 2) {
+					q = str_join(q, enc, "\r\n", p, (char*)-1);
+				} else {
+					char *s = alloc_copy(p);
+					q = str_join(q, enc, "\r\n", s, (char*)-1);
+					mem_free(&s);
+				}
+				p = q;
 			}
 		}
-	}
 
-	// “à—e‚Ì’u‚«Š·‚¦
-	mem_free(&tpMailItem->Body);
-	tpMailItem->Body = mBody;
+		str_cpy_n(p, mBody, strlen(mBody)+1);
+		mem_free(&mBody);
+		mem_free(&tpMailItem->WireForm);
+		tpMailItem->WireForm = newbody;
+
+	} else {
+		if (tpMailItem->HasHeader) {
+			char *p, *newbody;
+			p = GetBodyPointa(tpMailItem->Body);
+			if (p != NULL) {
+				int hlen = p - tpMailItem->Body;
+				len = hlen + strlen(mBody) + 2;
+				newbody = (char *)mem_alloc(sizeof(char) * len);
+				if (newbody != NULL) {
+					str_cpy_n(newbody, tpMailItem->Body, hlen + 1);
+					str_cpy_n(newbody + hlen, mBody, strlen(mBody)+1);
+					mem_free(&mBody);
+					mBody = newbody;
+				}
+			}
+		}
+
+		mem_free(&tpMailItem->Body);
+		tpMailItem->Body = mBody;
+	}
 	mem_free(&tpMailItem->Encoding);
 	mem_free(&tpMailItem->ContentType);
 	if (TextIndex != -1) {
@@ -3952,8 +4038,11 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			if (MessageBox(hWnd, STR_Q_DELATTACH, STR_TITLE_DELETE, MB_ICONEXCLAMATION | MB_YESNO) == IDNO) {
 				break;
 			}
-			DeleteAttachFile(hWnd, tpMailItem);
-			ModifyWindow(hWnd, tpMailItem, FALSE, TRUE);
+			if (DeleteAttachFile(hWnd, tpMailItem) == TRUE) {
+				ModifyWindow(hWnd, tpMailItem, FALSE, TRUE);
+			} else {
+				MessageBox(hWnd, STR_ERR_NO_DEL_ATTACH, STR_TITLE_DELETE, MB_OK);
+			}
 			break;
 
 		case ID_RETURN_TO_MASTER:
