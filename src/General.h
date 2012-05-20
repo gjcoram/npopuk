@@ -1019,6 +1019,12 @@ void addressbook_free(ADDRESSBOOK *tpAddrBook);
 void mailbox_free(MAILBOX *tpMailBox);
 
 // util
+TCHAR *StrNextContentT(TCHAR *p);
+#ifdef UNICODE
+char *StrNextContent(char *p);
+#else
+#define StrNextContent StrNextContentT
+#endif
 TCHAR *GetHeaderStringPointT(TCHAR *buf, TCHAR *str);
 #ifdef UNICODE
 char *GetHeaderStringPoint(char *buf, char *str);
