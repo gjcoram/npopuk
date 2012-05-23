@@ -1018,8 +1018,10 @@ int multipart_create(TCHAR *Filename, TCHAR *FwdAttach, MAILITEM *tpFwdMailItem,
 									ptlen = ptlen2;
 									i = j;
 								}
-
 							}
+#ifdef UNICODE
+							mem_free(&fn2);
+#endif
 						}
 						buf = (char *)mem_alloc(sizeof(char) * (ptlen + 1));
 						if (buf == NULL) {

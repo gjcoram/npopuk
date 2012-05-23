@@ -1154,14 +1154,19 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 	}
 	////////////////// --- /////////////////////
 
-	if (tpMailItem->InReplyTo == NULL || *tpMailItem->InReplyTo == TEXT('\0')) {
-		mem_free(&tpMailItem->InReplyTo);
-		tpMailItem->InReplyTo = alloc_copy_t(msgid1);
-		t = msgid2;
+	if (download == MAIL2ITEM_WIRE) {
+		tpMailItem->References = alloc_copy_t(msgid1);
 	} else {
-		t = (msgid1 != NULL && lstrcmp(tpMailItem->InReplyTo, msgid1) != 0) ? msgid1 : msgid2;
+		if (tpMailItem->InReplyTo == NULL || *tpMailItem->InReplyTo == TEXT('\0')) {
+			// convert first References to InReplyTo
+			mem_free(&tpMailItem->InReplyTo);
+			tpMailItem->InReplyTo = alloc_copy_t(msgid1);
+			t = msgid2;
+		} else {
+			t = (msgid1 != NULL && lstrcmp(tpMailItem->InReplyTo, msgid1) != 0) ? msgid1 : msgid2;
+		}
+		tpMailItem->References = alloc_copy_t(t);
 	}
-	tpMailItem->References = alloc_copy_t(t);
 	mem_free(&msgid1);
 	mem_free(&msgid2);
 
