@@ -1146,7 +1146,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,145,177,50,14
 END
 
-IDD_DIALOG_INITMAILBOX DIALOG  0, 0, 177, 138
+IDD_DIALOG_INITMAILBOX DIALOG  0, 0, 177, 168
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Initialise"
 FONT 8, "Microsoft Sans Serif"
@@ -1160,16 +1160,19 @@ BEGIN
                     BS_AUTORADIOBUTTON,15,47,40,10
     CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
                     BS_AUTORADIOBUTTON,15,64,100,10
+    CONTROL         "&Empty mailbox on server",IDC_RADIO_EMPTY,"Button",
+                    BS_AUTORADIOBUTTON,15,93,100,10
     LTEXT           "from item &number:",IDC_STATIC,60,42,105,10
     EDITTEXT        IDC_EDIT_GETNUM,125,40,30,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,80,167,1
-    LTEXT           "Account details:",IDC_STATIC,10,83,61,8
-    LTEXT           "Messages:",IDC_STATIC,15,95,48,9
-    LTEXT           "",IDC_STATIC_MAILCNT,69,95,126,9
-    LTEXT           "Total size:",IDC_STATIC,15,106,48,9
-    LTEXT           "",IDC_STATIC_MAILSIZE,69,106,126,9
-    DEFPUSHBUTTON   "&OK",IDOK,55,120,50,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,111,120,50,14
+    LTEXT           "Immediately:",IDC_STATIC,10,80,185,10
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,110,167,1
+    LTEXT           "Account details:",IDC_STATIC,10,113,61,8
+    LTEXT           "Messages:",IDC_STATIC,15,125,48,9
+    LTEXT           "",IDC_STATIC_MAILCNT,69,125,126,9
+    LTEXT           "Total size:",IDC_STATIC,15,136,48,9
+    LTEXT           "",IDC_STATIC_MAILSIZE,69,136,126,9
+    DEFPUSHBUTTON   "&OK",IDOK,55,150,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,111,150,50,14
 END
 
 IDD_DIALOG_RAS DIALOG  0, 0, 212, 148

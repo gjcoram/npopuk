@@ -127,6 +127,7 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_send_check_command(HWND hWnd, SOCKET soc, int get_no, TCHAR *ErrStr, MAILBOX *tpMailBox);
 static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+static int exec_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_uidl(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
 static int exec_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
@@ -1470,7 +1471,7 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
-		if (ServerDelete == TRUE) {
+		if (ServerDelete != FALSE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
 		}
 		if (get_no == -1) {
@@ -1500,6 +1501,62 @@ static int exec_proc_init(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		return POP_ERR;
 	}
 	return POP_RETR;
+}
+
+/*
+ * exec_proc_stat - STAT‚ to get message count for ID_MENUITEM_DELETE_ALL_SERVER
+ */
+static int exec_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
+{
+	char *p, *r, *t;
+	int get_no;
+
+	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
+	// ‘OƒRƒ}ƒ“ƒhŒ‹‰Ê‚É'.'‚ª•t‚¢‚Ä‚¢‚éê‡‚ÍƒXƒLƒbƒv‚·‚é
+	if (*buf == '.' && *(buf + 1) == '\0') {
+		return POP_STAT;
+	}
+	// ƒŒƒXƒ|ƒ“ƒX‚Ì‰ðÍ
+	if (check_response(buf) == FALSE) {
+		lstrcpy(ErrStr, STR_ERR_SOCK_STAT);
+		str_cat_n(ErrStr, buf, BUF_SIZE - 1);
+		return POP_ERR;
+	}
+
+	// ƒ[ƒ‹”‚ÌŽæ“¾
+	p = buf;
+	t = NULL;
+	for (; *p != ' ' && *p != '\0'; p++);
+	for (; *p == ' '; p++);
+	for (r = p; *r != '\0'; r++) {
+		if (*r == ' ') {
+			t = r + 1;
+			*r = '\0';
+			break;
+		}
+	}
+	tpMailBox->MailCnt = a2i(p);
+	if (t != NULL) {
+		tpMailBox->MailSize = a2i(t);
+	}
+	get_no = -1;
+	if (tpMailBox->MailCnt > 0) {
+		if (mailbox_mark_all_delete(tpMailBox) == FALSE) {
+			lstrcpy(ErrStr, STR_ERR_INIT);
+			return POP_ERR;
+		}
+		get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
+	}
+
+	if (get_no == -1) {
+		return POP_QUIT;
+	}
+
+	deletes_remaining--;
+	if (send_command(hWnd, soc, TEXT(CMD_DELE), delete_get_no, ErrStr) == FALSE) {
+		return POP_ERR;
+	}
+	return POP_DELE;
 }
 
 /*
@@ -1638,7 +1695,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 
 	get_no = item_get_next_download_mark(tpMailBox, -1, &download_get_no);
 	if (get_no == -1) {
-		if (ServerDelete == TRUE) {
+		if (ServerDelete != FALSE) {
 			get_no = item_get_next_delete_mark(tpMailBox, TRUE, -1, &delete_get_no);
 		}
 		if (get_no == -1) {
@@ -1828,6 +1885,15 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	get_no = item_get_next_delete_mark(tpMailBox, TRUE, get_no, &delete_get_no);
 	if (get_no != -1) {
 		if (deletes_remaining > 0) {
+#ifndef _WIN32_WCE
+			if (ServerDelete == ID_MENUITEM_DELETE_ALL_SERVER) {
+				deletes_remaining--;
+				if (send_command(hWnd, soc, TEXT(CMD_DELE), delete_get_no, ErrStr) == FALSE) {
+					return POP_ERR;
+				}
+				return POP_DELE;
+			}
+#endif
 			return exec_send_check_command(hWnd, soc, get_no, ErrStr, tpMailBox);
 		} else if (op.SocLog > 1) {
 			log_save_a("DELE stopped by DeletePerUpdateLimit\r\n");
@@ -1992,8 +2058,22 @@ BOOL pop3_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MA
 		command_status = login_proc(hWnd, soc, buf, len, ErrStr, tpMailBox);
 		if (command_status == POP_LOGIN) {
 			deletes_remaining = (op.DeletePerUpdateLimit > 0) ? op.DeletePerUpdateLimit : 65535;
+#ifndef _WIN32_WCE
+			if (ServerDelete == ID_MENUITEM_DELETE_ALL_SERVER) {
+				SetSocStatusTextT(hWnd, TEXT(CMD_STAT));
+				if (send_buf(soc, CMD_STAT"\r\n") == -1) {
+					lstrcpy(ErrStr, STR_ERR_SOCK_SEND);
+					return FALSE;
+				}
+				command_status = POP_STAT;
+			} else
+#endif
 			command_status = exec_proc_init(hWnd, soc, buf, len, ErrStr, tpMailBox, ShowFlag);
 		}
+		break;
+
+	case POP_STAT:
+		command_status = exec_proc_stat(hWnd, soc, buf, len, ErrStr, tpMailBox, ShowFlag);
 		break;
 
 	case POP_RETR:

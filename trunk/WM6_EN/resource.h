@@ -320,9 +320,10 @@
 #define IDC_CHECK_INIPASS               1106
 #define IDC_RADIO_FILLIN                1107
 #define IDC_RADIO_FIX_UIDL              1108
-#define IDC_VISIT_WM_HELP               1109
+#define IDC_RADIO_EMPTY                 1109
 #define IDC_VISIT_OPENSSL               1110
-#define IDC_BUTTON_GETPOOM              1111
+#define IDC_VISIT_WM_HELP               1111
+#define IDC_BUTTON_GETPOOM              1112
 #define IDC_QUOTSTYLE_0                 1200
 #define IDC_QUOTSTYLE_1                 1201
 #define IDC_QUOTSTYLE_2                 1202
@@ -439,6 +440,7 @@
 #define ID_MENUITEM_RAS_DISCONNECT      40061
 #define ID_MENUITEM_WIFI_CONNECT        40062
 #define ID_MENUITEM_WIFI_DISCONNECT     40063
+#define ID_MENUITEM_DELETE_ALL_SERVER   40064
 #define ID_KEY_DELETE                   40065
 #define ID_KEY_DELWORD                  40066
 #define ID_KEY_SHOWMENU                 40067
