@@ -1005,6 +1005,7 @@ BOOL mailbox_move_down(HWND hWnd, BOOL select);
 BOOL mailbox_unread_check(int index, BOOL NewFlag);
 int mailbox_next_unread(HWND hWnd, int index, int endindex);
 void mailbox_select(HWND hWnd, int Sel);
+BOOL mailbox_mark_all_delete(MAILBOX *tpMailBox);
 BOOL mailbox_menu_rebuild(HWND hWnd, BOOL IsAttach);
 int mailbox_name_to_index(TCHAR *Name, int Type);
 void filter_sbox_check(HWND hWnd, TCHAR *ConvertName);

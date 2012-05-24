@@ -160,6 +160,7 @@
 #define STR_Q_DEL_FWDHOLD			TEXT("Message is held to forward attachment. Delete anyway?")
 #define STR_Q_DEL_FWDHOLD_ACCT		TEXT("Message(s) in account '%s' are held to forward attachment.\r\nDelete anyway?")
 #define STR_Q_DELSERVERNOHOLD		TEXT("Delete messages not being held for forwarding?")
+#define STR_Q_DELETE_ALL			TEXT("Delete ALL messages in account '%s' from server?")
 #define STR_Q_DELMAILBOX			TEXT("Delete mailbox '%s'?")
 #define STR_Q_DELMAILBOXES			TEXT("Delete %d mailboxes?")
 #define STR_Q_DELATTACH				TEXT("Delete attached files?")

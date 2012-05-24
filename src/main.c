@@ -3496,9 +3496,14 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 		return TRUE;
 	}
 
-	if (item_get_next_download_mark(tpMailBox, -1, NULL) == -1 &&
-		item_get_next_delete_mark(tpMailBox, TRUE, -1, NULL) == -1) {
-		return FALSE;
+#ifndef _WIN32_WCE
+	if (ServerDelete != ID_MENUITEM_DELETE_ALL_SERVER)
+#endif
+	{
+		if (item_get_next_download_mark(tpMailBox, -1, NULL) == -1 &&
+			item_get_next_delete_mark(tpMailBox, TRUE, -1, NULL) == -1) {
+			return FALSE;
+		}
 	}
 	g_soc = 0;
 
@@ -6206,6 +6211,9 @@ else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 		//Those which it marks the execution
 		case ID_MENUITEM_EXEC:
 		case ID_MESSAGE_DOWNLOAD:
+#ifndef _WIN32_WCE
+		case ID_MENUITEM_DELETE_ALL_SERVER:
+#endif
 			if (g_soc != -1) {
 				break;
 			}
@@ -6223,6 +6231,12 @@ else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 					MessageBox(hWnd, STR_MSG_NOMARK, STR_TITLE_EXEC, MB_ICONEXCLAMATION | MB_OK);
 					break;
 				}
+#ifndef _WIN32_WCE
+			} else if (command_id == ID_MENUITEM_DELETE_ALL_SERVER) {
+				CheckAfterThisUpdate = FALSE;
+				ServerDelete = ID_MENUITEM_DELETE_ALL_SERVER;
+				i = SelBox;
+#endif
 			} else {
 				CheckAfterThisUpdate = (op.CheckAfterUpdate == 1) ? TRUE : FALSE;
 				j  = item_get_next_delete_mark((MailBox + SelBox), FALSE, -1, NULL);

@@ -4924,7 +4924,7 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	MAILBOX *SelMailBox;
-	TCHAR buf[BUF_SIZE];
+	TCHAR buf[MSG_SIZE];
 	TCHAR tmp[BUF_SIZE];
 	TCHAR decpt[4];
 	TCHAR *p;
@@ -4981,6 +4981,9 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 #endif
 
+#ifndef _WIN32_WCE
+		case IDC_RADIO_EMPTY:
+#endif
 		case IDC_RADIO_FIRSTGET:
 		case IDC_RADIO_FIX_UIDL:
 			St = 0;
@@ -5006,6 +5009,19 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				// fix message numbers
 				mem_free(&(SelMailBox->LastMessageId));
 				SelMailBox->LastMessageId = NULL;
+#ifndef _WIN32_WCE
+			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_EMPTY, BM_GETCHECK, 0, 0) == 1) {
+				// empty mailbox on server
+				wsprintf(buf, STR_Q_DELETE_ALL, 
+					(SelMailBox->Name != NULL && *SelMailBox->Name != TEXT('\0')) ?
+					SelMailBox->Name : STR_MAILBOX_NONAME);
+				if (MessageBox(hDlg, buf, STR_TITLE_DELETE, MB_ICONQUESTION | MB_YESNO) == IDNO) {
+					SendDlgItemMessage(hDlg, IDC_RADIO_EMPTY, BM_SETCHECK, 0, 0);
+					SendDlgItemMessage(hDlg, IDC_RADIO_FIRSTGET, BM_SETCHECK, 1, 0);
+					break;
+				}
+				SendMessage(GetParent(hDlg), WM_COMMAND, ID_MENUITEM_DELETE_ALL_SERVER, 0);
+#endif
 			} else {
 				// initialize or fill in from LastNo
 				SelMailBox->LastNo = GetDlgItemInt(hDlg, IDC_EDIT_GETNUM, NULL, FALSE);

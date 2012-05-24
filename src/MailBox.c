@@ -891,6 +891,55 @@ void mailbox_select(HWND hWnd, int Sel)
 }
 
 /*
+ * mailbox_mark_all_delete - to delete all messages from server
+ */
+BOOL mailbox_mark_all_delete(MAILBOX *tpMailBox) {
+	MAILITEM **tpMailList;
+	MAILITEM *tpMailItem;
+	int i, cnt;
+	
+	cnt = tpMailBox->MailCnt;
+	if (cnt != tpMailBox->MailItemCnt) {
+		// make sure we have a MAILITEM for every number from 1 to MailItemCnt
+		tpMailList = (MAILITEM **)mem_calloc(sizeof(MAILITEM *) * cnt);
+	
+		if (tpMailBox->tpMailItem != NULL) {
+			// move existing messages into new list
+			for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+				int no;
+				tpMailItem = *(tpMailBox->tpMailItem + i);
+				no = tpMailItem->No - 1;
+				if (*(tpMailList + no) == NULL) {
+					*(tpMailList + no) = tpMailItem;
+					*(tpMailBox->tpMailItem + i) = NULL;
+				} else {
+					item_free(&tpMailItem,1);
+					*(tpMailBox->tpMailItem + i) = NULL;
+				}
+			}
+		}
+		for (i = 0; i < cnt; i++) {
+			// create messages where missing
+			if (*(tpMailList + i) == NULL) {
+				tpMailItem = (MAILITEM*)mem_calloc(sizeof(MAILITEM));
+				*(tpMailList + i) = tpMailItem;
+				tpMailItem->Subject = alloc_char_to_tchar("Dummy message");
+				tpMailItem->No = i + 1;
+			}
+		}
+		mem_free((void **)&tpMailBox->tpMailItem);
+		tpMailBox->tpMailItem = tpMailList;
+		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = cnt;
+	}
+
+	for (i = 0; i < cnt; i++) {
+		tpMailItem = *(tpMailBox->tpMailItem + i);
+		tpMailItem->Mark = ICON_DEL;
+	}
+	return TRUE;
+}
+
+/*
  * mailbox_name_to_index - メールボックスの名前からメールボックスのインデックスを取得する
  */
 int mailbox_name_to_index(TCHAR *Name, int Type)
