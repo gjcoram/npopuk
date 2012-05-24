@@ -93,7 +93,7 @@ BOOL ini_start_auth_check(void)
 		}
 	}
 
-	profile_initialize(app_path, TRUE);
+	profile_initialize(app_path, TRUE, NULL);
 
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), 0);
 	if (op.StartPass == 1) {
@@ -729,7 +729,7 @@ BOOL ini_read_setting(HWND hWnd)
 	} else {
 		str_join_t(app_path, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	}
-	if (profile_initialize(app_path, FALSE) == FALSE) {
+	if (profile_initialize(app_path, FALSE, NULL) == FALSE) {
 		return FALSE;
 	}
 
@@ -1498,7 +1498,7 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 	// if IniFile != NULL or SaveDir != NULL, this initializes from
 	// the previous backup, not from the ini file in use!
-	profile_initialize(app_path, FALSE);
+	profile_initialize(app_path, FALSE, NULL);
 
 	if (is_backup == TRUE) {
 		profile_write_string(GENERAL, TEXT("DataFileDir"), TEXT(""));

@@ -40,6 +40,7 @@
 #define IDD_DIALOG_CC                   140
 #define IDD_DIALOG_ETCHEAD              141
 #define IDD_DIALOG_OPTION_CHECK         142
+#define IDD_DIALOG_TEMPLATE             143
 #define IDD_DIALOG_ADDRESS              144
 #define IDD_DIALOG_ADDRESS_EDIT         145
 #define IDD_DIALOG_MSG                  146

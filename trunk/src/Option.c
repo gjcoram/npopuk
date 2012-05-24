@@ -2056,7 +2056,7 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 	*fname = TEXT('\0');
 	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
 		static TCHAR *iMail = TEXT("Internet_Mail");
-		profile_initialize(fname, FALSE);
+		profile_initialize(fname, FALSE, hDlg);
 		if (profile_find_section(iMail) == FALSE) {
 			ErrorMessage(hDlg, STR_ERR_BAD_CONFIG);
 			ret = FALSE;
@@ -4916,6 +4916,58 @@ BOOL CALLBACK InputPassProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/*
+ * TemplateValueProc - get value for .ins file
+ */
+BOOL CALLBACK TemplateValueProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	TCHAR **tmp;
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		SetControlFont(hDlg);
+		tmp = (TCHAR **)lParam;
+		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)*tmp);
+		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		break;
+
+	case WM_CLOSE:
+		EndDialog(hDlg, FALSE);
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+#if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
+		case IDC_EDIT_NAME:
+			SetSip(hDlg, HIWORD(wParam));
+			break;
+#endif
+
+		case IDOK:
+			tmp = (TCHAR **)GetWindowLong(hDlg, GWL_USERDATA);
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_NAME), tmp);
+			EndDialog(hDlg, TRUE);
+			break;
+
+		case IDCANCEL:
+			EndDialog(hDlg, FALSE);
+			break;
+		}
+		break;
+
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+void get_template_value(HWND hWnd, TCHAR **str)
+{
+	DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_TEMPLATE), 
+		hWnd, TemplateValueProc, (LPARAM)str);
 }
 
 /*

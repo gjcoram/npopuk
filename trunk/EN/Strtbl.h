@@ -247,6 +247,7 @@
 #define STR_TITLE_DELETE			TEXT("Delete")
 #define STR_TITLE_ERROR				TEXT("Error")
 #define STR_TITLE_SETMAILBOX		TEXT("Account Settings")
+#define STR_TITLE_TEMPLATE_VALUE	TEXT("Template Completion")
 #define STR_TITLE_OPTION			TEXT("Global Options")
 #define STR_TITLE_STARTPASSWORD		TEXT("Startup")
 #define STR_TITLE_SHOWPASSWORD		TEXT("Show")

@@ -22,6 +22,8 @@
 #include "Strtbl.h"
 #include "String.h"
 
+void get_template_value(HWND hWnd, TCHAR **str);
+
 /* Define */
 #define BUF_SIZE				256
 #define ALLOC_SIZE				10
@@ -283,7 +285,7 @@ BOOL profile_create(void) {
 /*
  * profile_initialize - èâä˙âª
  */
-BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
+BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only, HWND hWnd)
 {
 	HANDLE hFile;
 	TCHAR *buf;
@@ -339,6 +341,9 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 		// but my compiler doesn't know CP_UTF16.
 		//CP_ini = CP_UTF16;
 		//offset = 2;
+	} else if (hWnd != NULL) {
+		// reading setup file (.ins)
+		CP_ini = CP_UTF8;
 	} else {
 		// check if old format: nPOP uses CP_ACP (and has no Version)
 		// nPOPuk used CP_ACP for Version < 3000
@@ -395,14 +400,14 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only)
 		return FALSE;
 	}
 
-	profile_parse(buf, file_size, pw_only);
+	profile_parse(buf, file_size, pw_only, hWnd);
 	mem_free(&buf);
 	return TRUE;
 }
 /*
  * profile_parse - parse string (from file or editor window)
  */
-void profile_parse(TCHAR *buf, long len, BOOL general_only)
+void profile_parse(TCHAR *buf, long len, BOOL general_only, HWND hWnd)
 {
 	TCHAR *p, *r, *s;
 	TCHAR tmp[BUF_SIZE];
@@ -456,7 +461,44 @@ void profile_parse(TCHAR *buf, long len, BOOL general_only)
 					p++;
 				}
 				*r = TEXT('\0');
-				key_add((section_info + section_count - 1), tmp, p, FALSE);
+				if (hWnd != NULL && *p == TEXT('?') && *(p+1) == TEXT('{')) {
+					// prompt for entries in .ins file
+					TCHAR *key_name, *value = NULL, *q;
+					int key_index;
+					
+					key_name = alloc_copy_t(p+2);
+					if (key_name != NULL) {
+						for (q = key_name; *q != TEXT('\0') && *q != TEXT('}'); q++)
+							;
+						if (*q == TEXT('}')) {
+							*q = TEXT('\0');
+							q++;
+						}
+						// check if value has already been obtained
+						key_index = key_find((section_info + section_count - 1), key_name);
+						if (key_index != -1) {
+							value = alloc_copy_t(((section_info + section_count - 1)->key_info + key_index)->string);
+						}
+						if (value == NULL) {
+							value = alloc_copy_t(key_name);
+							get_template_value(hWnd, &value);
+							// save value in case it's needed again
+							key_add((section_info + section_count - 1), key_name, value, FALSE);
+						}
+						i = lstrlen(value) + lstrlen(q) + 1;
+						p = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+						str_join_t(p, value, q, (TCHAR*)-1);
+
+						key_add((section_info + section_count - 1), tmp, p, FALSE);
+						mem_free(&key_name);
+						mem_free(&value);
+						mem_free(&p);
+					} else {
+						key_add((section_info + section_count - 1), tmp, p, FALSE);
+					}
+				} else {
+					key_add((section_info + section_count - 1), tmp, p, FALSE);
+				}
 			}
 			if (len > (r - buf)) {
 				r++;

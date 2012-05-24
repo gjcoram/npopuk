@@ -20,8 +20,8 @@
 
 /* Function Prototypes */
 BOOL profile_create(void);
-BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only);
-void profile_parse(TCHAR *buf, long len, BOOL general_only);
+BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only, HWND hWnd);
+void profile_parse(TCHAR *buf, long len, BOOL general_only, HWND hWnd);
 BOOL profile_flush(const TCHAR *file_path, TCHAR **general_only);
 void profile_free(void);
 long profile_get_string(const TCHAR *section_name, const TCHAR *key_name, const TCHAR *default_str, TCHAR *ret, const long size);

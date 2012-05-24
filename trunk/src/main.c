@@ -4589,7 +4589,7 @@ static BOOL AdvOptionEditor(HWND hWnd)
 		HDC hdc;
 		int oldmbw = op.MBMenuWidth, oldpph = op.PreviewPaneHeight;
 		ini_free(FALSE);
-		profile_parse(buf, lstrlen(buf), TRUE);
+		profile_parse(buf, lstrlen(buf), TRUE, NULL);
 		ini_read_general(hWnd);
 		if (hViewFont != NULL) {
 			DeleteObject(hViewFont);
