@@ -2980,6 +2980,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 		if (op.WiFiCheckEndDisCon == 1) {
+log_save_a("wifi disconnect from SaveWindow\r\n");
 			WiFiDisconnect(FALSE);
 		}
 #endif
@@ -2994,6 +2995,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #ifdef ENABLE_WIFI
 	//Cutting of wifi connection
 	if (WiFiLoop == TRUE || op.WiFiExitDisCon == 1) {
+log_save_a("wifi disconnect from SaveWindow 2\r\n");
 		WiFiDisconnect(FALSE);
 	}
 #endif
@@ -3122,6 +3124,7 @@ static BOOL EndWindow(HWND hWnd)
 #endif
 #ifdef ENABLE_WIFI
 	FreeWiFiInfo();
+	KillTimer(MainWnd, ID_WIFICHECK_TIMER);
 #endif
 
 	// タスクトレイのアイコンの除去
@@ -4211,6 +4214,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 		if (DoTimer == FALSE ||
 			op.WiFiCheckEndDisConTimeout==0 ||
 			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WiFiCheckEndDisConTimeout) != IDNO) {
+log_save_a("wifi disconnect from EndSocketFunc\r\n");
 			WiFiDisconnect((op.WiFiCheckEndDisConTimeout>0) ? TRUE : FALSE);
 		}
 	}
@@ -4754,8 +4758,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		}
 
 #ifdef ENABLE_WIFI
-		// check network connections
-		WiFiStatus = GetNetworkStatus(TRUE);
+		if (op.WiFiCon) {
+			// check network connections
+			WiFiStatus = GetNetworkStatus(TRUE);
+		}
 #endif
 
 		if (first_start == TRUE) {
@@ -5456,12 +5462,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_WIFIWAIT_TIMER:
 			KillTimer(hWnd, wParam);
 			if (hEvent != NULL) {
-//GJCDEBUG
-if(op.SocLog > 1) log_save_a("wifi timer expired, set event\r\n");
 				SetEvent(hEvent);
 			}
-//GJCDEBUG
-else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 			break;
 		case ID_WIFICHECK_TIMER:
 			i = GetNetworkStatus(FALSE);
@@ -5688,6 +5690,7 @@ else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
+log_save_a("wifi disconnect from menuitem\r\n");
 			WiFiDisconnect(TRUE);
 			break;
 #endif
@@ -6389,6 +6392,7 @@ else if(op.SocLog > 1) log_save_a("wifi timer expired, no event\r\n");
 #endif
 #ifdef ENABLE_WIFI
 			if (WiFiLoop == TRUE || (g_soc == -1 && op.WiFiCheckEndDisCon == 1)) {
+log_save_a("wifi disconnect from Stop\r\n");
 				WiFiDisconnect(FALSE);
 			}
 #endif

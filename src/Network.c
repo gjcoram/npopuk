@@ -58,13 +58,13 @@ BOOL GetNetworkStatus(BOOL Print)
 	}
 
 	if (hQueue == NULL) {
-		MSGQUEUEOPTIONS mqOpt;
+		MSGQUEUEOPTIONS mqOpt = {0};
 		mqOpt.dwSize = sizeof(MSGQUEUEOPTIONS);
 		mqOpt.dwFlags = MSGQUEUE_NOPRECOMMIT;
 		mqOpt.bReadAccess = TRUE;
 		// Queue holds 8 messages of max BUFSIZE bytes
 		mqOpt.dwMaxMessages = 8;
-		mqOpt.cbMaxMessage = BUF_SIZE;
+		mqOpt.cbMaxMessage = sizeof(NDISUIO_DEVICE_NOTIFICATION);
 		hQueue = CreateMsgQueue(WIFI_QUEUE, &mqOpt);
 
 		if (hQueue == NULL) {
@@ -78,6 +78,8 @@ BOOL GetNetworkStatus(BOOL Print)
 			ndRN.hMsgQueue = hQueue;
 			ndRN.dwNotificationTypes = NDISUIO_NOTIFICATION_MEDIA_CONNECT
 										| NDISUIO_NOTIFICATION_MEDIA_DISCONNECT
+										| NDISUIO_NOTIFICATION_BIND
+										| NDISUIO_NOTIFICATION_UNBIND
 										| NDISUIO_NOTIFICATION_DEVICE_POWER_UP
 										| NDISUIO_NOTIFICATION_DEVICE_POWER_DOWN
 										;
@@ -99,8 +101,8 @@ BOOL GetNetworkStatus(BOOL Print)
 			}
 		}
 		if (hThread == NULL) {
-			// fixed 1000ms timer
-			SetTimer(MainWnd, ID_WIFICHECK_TIMER, 1000, NULL);
+			// fixed 5000ms timer
+			SetTimer(MainWnd, ID_WIFICHECK_TIMER, 5000, NULL);
 		}
 	}
 
@@ -212,6 +214,8 @@ DWORD WINAPI WiFiStatusProc(LPVOID pParam)
 //GJCDEBUG
 log_save_a("Started WiFiStatusProc\r\n");
 	if (hQueue != NULL) {
+//GJCDEBUG
+log_save_a(" hQueue exists\r\n");
 		while (WaitForMultipleObjects(object_count, wait_objects, FALSE, INFINITE) == WAIT_OBJECT_0) {
 			NDISUIO_DEVICE_NOTIFICATION notification = { 0 };
 			DWORD dwBytesRead = 0;
@@ -229,14 +233,12 @@ log_save_a("calling ReadMsgQueue\r\n");
 //GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: connect\r\n");
-MessageBox(MainWnd, TEXT("wifi connect notice"), WINDOW_TITLE, MB_OK);
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_MEDIA_DISCONNECT) {
 						SetStatusTextT(MainWnd, STR_STATUS_NET_DROPPED, 1);
 //GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: disconnect\r\n");
-MessageBox(MainWnd, TEXT("wifi DISconnect notice"), WINDOW_TITLE, MB_OK);
 					}
 					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_DEVICE_POWER_UP) {
 //GJCDEBUG
@@ -247,6 +249,16 @@ log_save_a("  notification: power up\r\n");
 //GJCDEBUG
 dwBytesRead = 0;
 log_save_a("  notification: power down\r\n");
+					}
+					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_BIND) {
+//GJCDEBUG
+dwBytesRead = 0;
+log_save_a("  notification: bind\r\n");
+					}
+					if (notification.dwNotificationType == NDISUIO_NOTIFICATION_UNBIND) {
+//GJCDEBUG
+dwBytesRead = 0;
+log_save_a("  notification: unbind\r\n");
 					}
 					if (dwBytesRead != 0) {
 //GJCDEBUG
@@ -262,6 +274,8 @@ log_save_a("ReadMsgQueue failed\r\n");
 			}
 		}
 	}
+//GJCDEBUG
+else log_save_a(" hQueue is NULL\r\n");
 //GJCDEBUG
 log_save_a("Exiting WiFiStatusProc\r\n");
 	ExitThread(WM_QUIT);
@@ -365,7 +379,7 @@ void WiFiDisconnect(BOOL Force)
 		if (op.SocLog > 1) {
 			log_save_a("De-activating WiFi\r\n");
 		}
-		SetNICPower(op.WiFiDeviceName, FALSE, FALSE, TRUE);
+		SetNICPower(op.WiFiDeviceName, FALSE, FALSE, FALSE);
 		WiFiConnByNpop = FALSE;
 		WiFiStatus = FALSE;
 		SetStatusTextT(MainWnd, STR_STATUS_NET_DISCONNECT, 1);
@@ -427,12 +441,15 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable, BOOL Prin
  */
 void FreeWiFiInfo(void)
 {
+//GJCDEBUG
+log_save_a("FreeWiFiInfo\r\n");
+
 	if (hNDUIO) {
 if(		DeviceIoControl(hNDUIO, IOCTL_NDISUIO_CANCEL_NOTIFICATION,
 						NULL, 0, NULL, 0, NULL, NULL)
 						) {
 //GJCDEBUG
-	log_save_a("cancelled notification\r\n");
+log_save_a("cancelled notification\r\n");
 } else {
 	TCHAR msg[MSG_SIZE];
 	wsprintf(msg, TEXT("FAILED to cancel notification errono %d\r\n"), GetLastError());
@@ -449,6 +466,7 @@ else log_save_a("hNDUIO was not open to cancel notification\r\n");
 		hStopEvent = NULL;
 	}
 	if (hQueue) {
+log_save_a("closing message queue\r\n");
 		CloseMsgQueue(hQueue);
 		hQueue = NULL;
 	}
