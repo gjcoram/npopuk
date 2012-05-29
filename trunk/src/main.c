@@ -1599,7 +1599,7 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELETE,
 		(LPARAM)MAKELONG((SendBoxFlag && SaveTypeFlag) || xflag, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, xflag);
-	if (xsize < 350) {
+	if (xsize < 350 || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {
 		lpcon = (LPARAM)MAKELONG(1,0);
 	} else {
 		lpcon = (LPARAM)MAKELONG(op.EnableLAN,0);
@@ -1620,12 +1620,13 @@ void SetMailMenu(HWND hWnd)
 #endif	// _WIN32_WCE_PPC
 
 #if !defined(_WIN32_WCE)
-	mklng = (LPARAM)MAKELONG(op.EnableLAN, 0);
 #ifdef ENABLE_RAS
+	mklng = (LPARAM)MAKELONG(op.EnableLAN, 0);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    mklng);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, mklng);
 #endif
 #ifdef ENABLE_WIFI
+	mklng = (LPARAM)MAKELONG(op.EnableLAN || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {, 0);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_CONNECT,    mklng);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_DISCONNECT, mklng);
 #endif
