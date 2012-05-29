@@ -3307,10 +3307,10 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 				if (mbx != -1) {
 					tpMailBox = (MailBox+mbx);
 				}
-				if (tpMailBox->MyAddr2Bcc && tpMailBox->BccAddr != NULL
-						&& *tpMailBox->BccAddr != TEXT('\0')) {
-					tpMailItem->Bcc = alloc_copy_t(tpMailBox->BccAddr);
-				}
+			}
+			if (tpMailBox->MyAddr2Bcc && tpMailBox->BccAddr != NULL
+					&& *tpMailBox->BccAddr != TEXT('\0')) {
+				tpMailItem->Bcc = alloc_copy_t(tpMailBox->BccAddr);
 			}
 			tpMailItem->Mark = op.AutoQuotation;
 		}
