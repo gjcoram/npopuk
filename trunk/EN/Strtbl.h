@@ -310,10 +310,10 @@
 
 // WiFi status
 #define STR_STATUS_WIFI_START		TEXT("Starting WiFi")
-#define STR_STATUS_WIFI_TIMEOUT		TEXT("WiFi connection timed out")
-#define STR_STATUS_NET_CONNECT		TEXT("Network connected")
-#define STR_STATUS_NET_DISCONNECT	TEXT("Network disconnected")
-#define STR_STATUS_NET_DROPPED		TEXT("Network connection lost")
+#define STR_STATUS_WIFI_TIMEOUT		TEXT("WiFi timed out")
+#define STR_STATUS_NET_CONNECT		TEXT("WiFi connected")
+#define STR_STATUS_NET_DISCONNECT	TEXT("WiFi disconnected")
+#define STR_STATUS_NET_DROPPED		TEXT("WiFi connection lost")
 
 //Initialise status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")
