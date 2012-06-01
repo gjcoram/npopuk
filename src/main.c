@@ -2981,7 +2981,6 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 		if (op.WiFiCheckEndDisCon == 1) {
-log_save_a("wifi disconnect from SaveWindow\r\n");
 			WiFiDisconnect(FALSE);
 		}
 #endif
@@ -2996,7 +2995,6 @@ log_save_a("wifi disconnect from SaveWindow\r\n");
 #ifdef ENABLE_WIFI
 	//Cutting of wifi connection
 	if (WiFiLoop == TRUE || op.WiFiExitDisCon == 1) {
-log_save_a("wifi disconnect from SaveWindow 2\r\n");
 		WiFiDisconnect(FALSE);
 	}
 #endif
@@ -4212,10 +4210,8 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 #endif
 #ifdef ENABLE_WIFI
 	if (op.WiFiCheckEndDisCon == 1) {
-		if (DoTimer == FALSE ||
-			op.WiFiCheckEndDisConTimeout==0 ||
-			TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WiFiCheckEndDisConTimeout) != IDNO) {
-log_save_a("wifi disconnect from EndSocketFunc\r\n");
+		if (DoTimer == FALSE || op.WiFiCheckEndDisConTimeout==0
+			|| TimedMessageBox(hWnd, STR_Q_WIFIDISCON, WINDOW_TITLE, MB_YESNO, op.WiFiCheckEndDisConTimeout) != IDNO) {
 			WiFiDisconnect((op.WiFiCheckEndDisConTimeout>0) ? TRUE : FALSE);
 		}
 	}
@@ -5691,7 +5687,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 
 		case ID_MENUITEM_WIFI_DISCONNECT:
-log_save_a("wifi disconnect from menuitem\r\n");
 			WiFiDisconnect(TRUE);
 			break;
 #endif
@@ -6393,7 +6388,6 @@ log_save_a("wifi disconnect from menuitem\r\n");
 #endif
 #ifdef ENABLE_WIFI
 			if (WiFiLoop == TRUE || (g_soc == -1 && op.WiFiCheckEndDisCon == 1)) {
-log_save_a("wifi disconnect from Stop\r\n");
 				WiFiDisconnect(FALSE);
 			}
 #endif
