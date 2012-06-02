@@ -108,8 +108,8 @@ BOOL GetNetworkStatus(BOOL Print)
 
 	for (i = 0; ; i++) {
 		DWORD dwBytesRet = 0;
-		BOOL has_pwr = FALSE, has_wep = FALSE, has_ssid = FALSE, has_conn = FALSE;
 		NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
+		memset(QueryBuffer, 0, sizeof(QueryBuffer));
 		pQueryBinding->BindingIndex = i;
 
 		if ( DeviceIoControl(hNDUIO, IOCTL_NDISUIO_QUERY_BINDING,
@@ -117,8 +117,12 @@ BOOL GetNetworkStatus(BOOL Print)
 							(VOID*) QueryBuffer, sizeof(QueryBuffer),
 							&dwBytesRet, NULL) ) {
 
+			BOOL has_pwr = FALSE, has_wep = FALSE, has_ssid = FALSE, has_conn = FALSE;
+			WCHAR *devName;
+			UCHAR ssidName[40];
+
 			// Get the device name in the list of bindings
-			WCHAR* devName = (WCHAR*) mem_calloc(pQueryBinding->DeviceNameLength * sizeof(WCHAR) );
+			devName = (WCHAR*) mem_calloc((pQueryBinding->DeviceNameLength+1) * sizeof(WCHAR) );
 			memcpy( devName, (UCHAR*) pQueryBinding + pQueryBinding->DeviceNameOffset,
 					pQueryBinding->DeviceNameLength );
 			memset(QueryBuffer, 0, sizeof(QueryBuffer));
@@ -127,6 +131,8 @@ BOOL GetNetworkStatus(BOOL Print)
 				FoundWiFiName = TRUE;
 			}
 			has_pwr = SetNICPower(devName, TRUE, FALSE, Print);
+
+			str_cpy(ssidName, "None");
 
 			if (has_pwr) {
 				NDISUIO_QUERY_OID *nqo = (NDISUIO_QUERY_OID*)QueryBuffer;
@@ -150,6 +156,7 @@ BOOL GetNetworkStatus(BOOL Print)
 					has_wep = FALSE;
 				}
 
+if (op.SocLog > 5) {
 				memset(QueryBuffer, 0, sizeof(QueryBuffer));
 				nqo->ptcDeviceName = devName;
 				nqo->Oid = OID_802_11_SSID;
@@ -160,14 +167,13 @@ BOOL GetNetworkStatus(BOOL Print)
 									&dwBytesRet, NULL)) {
 					has_ssid = TRUE;
 					if (Print == TRUE && op.SocLog > 1) {
-						TCHAR msg[MSG_SIZE];
 						NDIS_802_11_SSID* ssid_int = (NDIS_802_11_SSID*)nqo->Data;
-						wsprintf(msg, TEXT("Got SSID: %d bytes, %S\r\n"), dwBytesRet, ssid_int->Ssid);
-						log_save(msg);
+						memcpy( ssidName, ssid_int->Ssid, ssid_int->SsidLength);
 					}
 				} else {
 					has_ssid = FALSE;
 				}
+}
 			}
 
 			if (has_pwr) {
@@ -187,10 +193,9 @@ BOOL GetNetworkStatus(BOOL Print)
 
 			if (Print == TRUE && op.SocLog > 1) {
 				TCHAR msg[MSG_SIZE];
-				wsprintf(msg, TEXT("Adapter '%s'  power:%s  wep:%s  ssid:%s  conn:%s\r\n"),
+				wsprintf(msg, TEXT("Adapter '%s'  power:%s  ssid:%S  wep:%s  conn:%s\r\n"),
 									devName, (has_pwr) ? TEXT("ON") : TEXT("OFF"),
-									(has_wep) ? TEXT("YES") : TEXT("NO"),
-									(has_ssid) ? TEXT("YES") : TEXT("NO"),
+									ssidName, (has_wep) ? TEXT("YES") : TEXT("NO"),
 									(has_conn) ? TEXT("YES") : TEXT("NO"));
 				log_save(msg);
 			}
@@ -200,7 +205,7 @@ BOOL GetNetworkStatus(BOOL Print)
 			break;
 		}
 	}
-	if (IsActive == FALSE && FoundWiFiName == FALSE && op.WiFiDeviceName != NULL) {
+	if (IsActive == FALSE && FoundWiFiName == FALSE && op.WiFiDeviceName != NULL && *op.WiFiDeviceName != TEXT('\0')) {
 		BOOL has_pwr = FALSE, has_conn = FALSE;
 		has_pwr = SetNICPower(op.WiFiDeviceName, TRUE, FALSE, Print);
 		if (has_pwr) {
@@ -215,7 +220,7 @@ BOOL GetNetworkStatus(BOOL Print)
 				has_conn = -1;
 			}
 		}
-		IsActive = has_pwr && has_conn;
+		IsActive = has_pwr && (has_conn == TRUE);
 
 		if (Print == TRUE && op.SocLog > 1) {
 			TCHAR msg[MSG_SIZE];
