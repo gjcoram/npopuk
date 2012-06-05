@@ -1855,14 +1855,10 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			enable = FALSE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, op.ListGetLine, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
-			if (op.GetRecent > 0) {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
-				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, op.GetRecent, FALSE);
+			if (op.GetReverse > 0) {
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, 1, 0);
 			} else {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
-				if (op.GetRecent == 0)
-					op.GetRecent = -20;
-				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -op.GetRecent, FALSE);
+				SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, 0, 0);
 			}
 			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
 		} else {
@@ -1870,13 +1866,7 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			enable = TRUE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, tpOptionMailBox->ListGetLine, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, tpOptionMailBox->ListDownload, 0);
-			if (tpOptionMailBox->GetRecent > 0) {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
-				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, tpOptionMailBox->GetRecent, FALSE);
-			} else {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
-				SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -tpOptionMailBox->GetRecent, FALSE);
-			}
+			SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, tpOptionMailBox->GetReverse, 0);
 			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, tpOptionMailBox->ShowHeader, 0);
 		}
 
@@ -1902,9 +1892,7 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		EnableWindow(GetDlgItem(hDlg, IDC_TEXT_READLINE), enable && !tpOptionMailBox->ListDownload);
 		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable && !tpOptionMailBox->ListDownload);
 		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), enable);
-		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETRECENT), enable);
-		EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable && (tpOptionMailBox->GetRecent > 0));
-		EnableWindow(GetDlgItem(hDlg, IDC_TEXT_GETRECENT), enable);
+		EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETREVERSE), enable);
 		//EnableWindow(GetDlgItem(hDlg, IDC_CHECK_SHOWHEAD), enable);
 #ifdef _WIN32_WCE
 		EnableWindow(GetDlgItem(hDlg, IDC_COMBO_MESSAGES), enable);
@@ -1952,13 +1940,6 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 			break;
 
-		case IDC_CHECK_GETRECENT:
-			if (SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) == 0) {
-				enable = SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0);
-				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
-			}
-			break;
-
 		case IDC_CHECK_GLOBAL_RECV:
 			enable = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0) ? FALSE : TRUE;
 			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_LISTDOWNLOAD), enable);
@@ -1970,13 +1951,7 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_HEADSAVE), enable);
 			EnableWindow(GetDlgItem(hDlg, IDC_RADIO_ALLSAVE), enable);
 #endif
-			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETRECENT), enable);
-			if (enable && SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0)==0) {
-				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), FALSE);
-			}  else {
-				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
-			}
-			EnableWindow(GetDlgItem(hDlg, IDC_TEXT_GETRECENT), enable);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_GETREVERSE), enable);
 			if (enable && SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0)) {
 				enable = FALSE;
 			}
@@ -1995,20 +1970,7 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			oldglob = tpOptionMailBox->UseGlobalRecv;
 			tpOptionMailBox->UseGlobalRecv = SendDlgItemMessage(hDlg, IDC_CHECK_GLOBAL_RECV, BM_GETCHECK, 0, 0);
 			if (tpOptionMailBox->UseGlobalRecv == 0) {
-				int num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
-				if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
-					if (num <= 0) {
-						// < 0 should not be possible with ES_NUMBER
-						MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
-						num = 20;
-					}
-					tpOptionMailBox->GetRecent = num;
-				} else {
-					if (num <= 0) {
-						num = 20;
-					}
-					tpOptionMailBox->GetRecent = -num;
-				}
+				tpOptionMailBox->GetReverse = SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_GETCHECK, 0, 0);
 				tpOptionMailBox->ListGetLine = GetDlgItemInt(hDlg, IDC_EDIT_READLINE, NULL, FALSE);
 				tpOptionMailBox->ListDownload = SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
 				//tpOptionMailBox->ShowHeader = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_GETCHECK, 0, 0);
@@ -3262,7 +3224,7 @@ BOOL SetMailBoxOption(HWND hWnd, BOOL SelFlag)
  */
 static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	int newlsm = 0, num;
+	int newlsm = 0;
 	BOOL enable;
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -3272,16 +3234,7 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
-		if (op.GetRecent > 0) {
-			SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 1, 0);
-			SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, op.GetRecent, FALSE);
-		} else {
-			SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_SETCHECK, 0, 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), FALSE);
-			if (op.GetRecent == 0)
-				op.GetRecent = -20;
-			SetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, -op.GetRecent, FALSE);
-		}
+		SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, op.GetReverse, 0);
 
 		switch (op.ListSaveMode) {
 		case 0:
@@ -3316,29 +3269,9 @@ static BOOL CALLBACK SetRecvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_READLINE), enable);
 			break;
 
-		case IDC_CHECK_GETRECENT:
-			enable = SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0);
-			EnableWindow(GetDlgItem(hDlg, IDC_EDIT_NUMRECENT), enable);
-			break;
-
 		case IDOK:
-			num = GetDlgItemInt(hDlg, IDC_EDIT_NUMRECENT, NULL, FALSE);
-			if (SendDlgItemMessage(hDlg, IDC_CHECK_GETRECENT, BM_GETCHECK, 0, 0) == 1) {
-				if (num <= 0) {
-					// < 0 should not be possible with ES_NUMBER
-					MessageBox(hDlg, STR_MSG_POSITIVE, WINDOW_TITLE, MB_OK);
-					num = 20;
-				}
-				op.GetRecent = num;
-			} else {
-				if (num <= 0) {
-					num = 20;
-				}
-				op.GetRecent = -num;
-			}
-
+			op.GetReverse = SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_GETCHECK, 0, 0);
 			op.ListGetLine = GetDlgItemInt(hDlg, IDC_EDIT_READLINE, NULL, FALSE);
-
 			op.ListDownload = SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_GETCHECK, 0, 0);
 			op.ShowHeader = SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_GETCHECK, 0, 0);
 
@@ -8677,6 +8610,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	TCHAR buf[BUF_SIZE];
 	int SelectItem, i, move = 1;
 	BOOL enable;
+	static BOOL modified = FALSE;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
@@ -8736,6 +8670,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #ifdef _WIN32_WCE
 		AddrListProcedure = (WNDPROC)SetWindowLong(hListView, GWL_WNDPROC, (DWORD)SubClassAddrListProc);
 #endif
+		modified = FALSE;
 		break;
 
 	case WM_TIMER:
@@ -8797,6 +8732,11 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_CLOSE:
+		if (modified) {
+			if (MessageBox(hDlg, STR_Q_DISCARD_CHANGES, WINDOW_TITLE, MB_YESNO) == IDNO) {
+				break;
+			}
+		}
 		EndDialog(hDlg, FALSE);
 		break;
 
@@ -8885,6 +8825,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 			//SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			//SetAddressList(hDlg, tpTmpAddressBook, buf);
+			modified = TRUE;
 			break;
 
 		case IDC_BUTTON_DOWN10:
@@ -8909,6 +8850,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 			//SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			//SetAddressList(hDlg, tpTmpAddressBook, buf);
+			modified = TRUE;
 			break;
 
 		case IDC_BUTTON_ADD:
@@ -8919,6 +8861,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			tpTmpAddressBook->EditNum = tpTmpAddressBook->ItemCnt - 1;
 			SetAddressList(hDlg, tpTmpAddressBook, buf);
+			modified = TRUE;
 			break;
 
 		case ID_LV_EDIT:
@@ -8954,8 +8897,10 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				ErrorMessage(hDlg, STR_ERR_SELECTMAILADDR);
 				break;
 			}
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
-				hDlg, EditAddressProc, (LPARAM)tpTmpAddressBook);
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
+					hDlg, EditAddressProc, (LPARAM)tpTmpAddressBook) == TRUE) {
+				modified = TRUE;
+			}
 			//SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			//SetAddressList(hDlg, tpTmpAddressBook, buf);
 			break;
@@ -9008,7 +8953,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						SetAddressList(hDlg, tpGetAddressBook, 
 							(op.AddressShowGroup == NULL || *op.AddressShowGroup == TEXT('\0'))
 							? STR_ADDRESSLIST_ALLGROUP : op.AddressShowGroup);
-
+						modified = TRUE;
 					}
 				}
 			}
@@ -9102,6 +9047,11 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 
 		case IDCANCEL:
+			if (modified) {
+				if (MessageBox(hDlg, STR_Q_DISCARD_CHANGES, WINDOW_TITLE, MB_YESNO) == IDNO) {
+					break;
+				}
+			}
 			EndDialog(hDlg, FALSE);
 			break;
 		}

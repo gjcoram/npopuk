@@ -1209,7 +1209,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			}
 		}
 		if (do_resize) {
-			item_resize_mailbox(tpMailBox);
+			item_resize_mailbox(tpMailBox, FALSE);
 		}
 	}
 	if (op.SocLog > 1) {

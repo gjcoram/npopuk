@@ -2961,25 +2961,26 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 			return FALSE;
 		}
 		q = StrNextContent(p);
-		if (*q == '\r' || *q == '\n') {
-			r = NULL;
-		} else {
-			r = "\r\n";
-		}
 		if (q > p + strlen(ctype) + 2) {
 			// Content-Type (with boundary) is long enough
-			p = str_join(p, ctype, r, q, (char*)-1);
+			p = str_join(p, ctype, "\r\n", q, (char*)-1);
 		} else {
 			char *s = alloc_copy(q);
-			p = str_join(p, ctype, r, s, (char*)-1);
+			p = str_join(p, ctype, "\r\n", s, (char*)-1);
 			mem_free(&s);
 		}
 
 		if (enc != NULL) {
 			q = GetHeaderStringPoint(newbody, HEAD_ENCODING);
 			if (q == NULL) {
-				// did not find Content-Transfer-Encoding,
-				// add it after other headers
+				// did not find Content-Transfer-Encoding, add it after other headers
+				if (p > newbody+4 && *(p-4) == '\r' && *(p-3) == '\n' && *(p-2) == '\r' && *(p-1) == '\n') {
+					// p should end with "\r\n\r\n"
+					p -= 2;
+				} else if (p > newbody+2 && ((*(p-2) == '\r' && *(p-1) == '\r') || (*(p-2) == '\n' && *(p-1) == '\n'))) {
+					// ends with "\r\r" or "\r\n" ??
+					p -= 1;
+				}
 				p = str_join(p, HEAD_ENCODING, " ", enc, "\r\n\r\n", (char*)-1);
 			} else {
 				p = StrNextContent(q);
@@ -3457,7 +3458,7 @@ static MAILITEM *ViewDeleteItem(HWND hWnd, MAILITEM *delItem) {
 			break;
 		}
 	}
-	item_resize_mailbox(MailBox + vSelBox);
+	item_resize_mailbox(MailBox + vSelBox, FALSE);
 	return tpNextMail;
 }
 

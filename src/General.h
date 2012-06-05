@@ -490,7 +490,7 @@ typedef struct _OPTION {
 	int ListGetLine;
 	int ListDownload;
 	int ShowHeader;
-	int GetRecent;
+	int GetReverse;
 	int ListSaveMode;
 	int WordBreakFlag;
 	int EditWordBreakFlag;
@@ -736,7 +736,7 @@ typedef struct _MAILBOX {
 	int ListGetLine;
 	int ListDownload;
 	int ShowHeader;
-	int GetRecent;
+	int GetReverse;
 	int ListSaveMode;
 
 	// MailItem
@@ -972,7 +972,7 @@ BOOL item_set_count(MAILBOX *tpMailBox, int i);
 BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem);
 void item_copy(MAILITEM *tpFromMailItem, MAILITEM *tpToMailItem, BOOL Override);
 MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *MailBoxName, BOOL SendClear);
-BOOL item_resize_mailbox(MAILBOX *tpMailBox);
+BOOL item_resize_mailbox(MAILBOX *tpMailBox, BOOL SetLastNo);
 void item_free(MAILITEM **tpMailItem, int cnt);
 void item_get_content_t(char *buf, char *header, TCHAR **ret);
 char *item_get_message_id(char *buf);
@@ -985,7 +985,7 @@ int item_get_next_send_mark_mailbox(MAILBOX *tpMailBox, int Index, int MailBoxIn
 void item_set_flags(MAILITEM *tpMailItem, MAILBOX *tpMailBox, int code);
 void item_get_npop_headers(char *buf, MAILITEM *tpMailItem, MAILBOX *tpMailBox);
 BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, BOOL download, int status, MAILBOX *tpMailBox);
-MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int status);
+MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int No, int status);
 MAILITEM *item_string_to_item(MAILBOX *tpMailBox, char *buf, BOOL Import);
 char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body);
 int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL SepFlag);

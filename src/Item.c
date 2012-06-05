@@ -127,7 +127,21 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 		tpMailBox->tpMailItem = tpMailList;
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt + 1;
 	}
-	*(tpMailList + tpMailBox->MailItemCnt) = tpNewMailItem;
+	if (tpNewMailItem->No > 0) {
+		// put the new item in correct order
+		// (in case of filling in or getting in reverse order)
+		int i;
+		for (i = tpMailBox->MailItemCnt-1; i >= 0; i--) {
+			if ((*(tpMailList + i))->No <= tpNewMailItem->No) {
+				*(tpMailList + i + 1) = tpNewMailItem;
+				break;
+			} else {
+				*(tpMailList + i + 1) = *(tpMailList + i);
+			}
+		}
+	} else {
+		*(tpMailList + tpMailBox->MailItemCnt) = tpNewMailItem;
+	}
 	tpMailBox->MailItemCnt++;
 	if (*tpMailBox->tpMailItem != NULL) {
 		(*tpMailBox->tpMailItem)->NextNo = 0;
@@ -253,7 +267,7 @@ MAILITEM *item_to_mailbox(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem, TCHAR *Ma
 /*
  * item_resize_mailbox - アイテム情報の整理
  */
-BOOL item_resize_mailbox(MAILBOX *tpMailBox)
+BOOL item_resize_mailbox(MAILBOX *tpMailBox, int SetLastNo)
 {
 	MAILITEM **tpMailList;
 	int i, cnt = 0;
@@ -269,6 +283,9 @@ BOOL item_resize_mailbox(MAILBOX *tpMailBox)
 			do_it = TRUE;
 		} else {
 			cnt++;
+			if (SetLastNo && tpMailBox->LastNo < (*(tpMailBox->tpMailItem + i))->No) {
+				tpMailBox->LastNo = (*(tpMailBox->tpMailItem + i))->No;
+			}
 		}
 	}
 	if (do_it == FALSE) {
@@ -1240,7 +1257,7 @@ BOOL item_mail_to_item(MAILITEM *tpMailItem, char **buf, int Size, int download,
 /*
  * item_header_to_item - メールヘッダからアイテムを作成する
  */
-MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int status)
+MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int No, int status)
 {
 	MAILITEM *tpMailItem;
 	int fret;
@@ -1263,6 +1280,7 @@ MAILITEM *item_header_to_item(MAILBOX *tpMailBox, char **buf, int Size, int stat
 	// ヘッダと本文を設定
 	item_mail_to_item(tpMailItem, buf, Size, MAIL2ITEM_TOP, status, tpMailBox);
 	tpMailItem->New = TRUE;
+	tpMailItem->No = No;
 
 	// Adding to list of mail information
 	if (!(fret & FILTER_UNRECV) && item_add(tpMailBox, tpMailItem) == -1) {

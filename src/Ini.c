@@ -468,7 +468,7 @@ void ini_read_general(HWND hWnd)
 #endif
 
 	op.ShowHeader = profile_get_int(GENERAL, TEXT("ShowHeader"), 0);
-	op.GetRecent = profile_get_int(GENERAL, TEXT("GetRecent"), -20);
+	op.GetReverse = profile_get_int(GENERAL, TEXT("GetReverse"), 0);
 #ifdef _WIN32_WCE_PPC
 ////////////////////// MRP ////////////////////
 	op.ListGetLine = profile_get_int(GENERAL, TEXT("ListGetLine"), 50);
@@ -1103,7 +1103,7 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->UseGlobalRecv = profile_get_int(buf, TEXT("UseGlobalRecv"), 1);
 		if ((MailBox + num)->UseGlobalRecv == 0) {
 			(MailBox + num)->ShowHeader = profile_get_int(buf, TEXT("ShowHeader"), 0);
-			(MailBox + num)->GetRecent = profile_get_int(buf, TEXT("GetRecent"), -20);
+			(MailBox + num)->GetReverse = profile_get_int(buf, TEXT("GetReverse"), 0);
 			(MailBox + num)->ListGetLine = profile_get_int(buf, TEXT("ListGetLine"), 50);
 			(MailBox + num)->ListDownload = profile_get_int(buf, TEXT("ListDownload"), 0);
 			(MailBox + num)->ListSaveMode = profile_get_int(buf, TEXT("ListSaveMode"), 2);
@@ -1303,7 +1303,8 @@ void ini_write_general(void)
 #endif
 
 	profile_write_int(GENERAL, TEXT("ShowHeader"), op.ShowHeader);
-	profile_write_int(GENERAL, TEXT("GetRecent"), op.GetRecent);
+	profile_write_int(GENERAL, TEXT("GetReverse"), op.GetReverse);
+	profile_delete_key(GENERAL, TEXT("GetRecent"));	// from beta versions of 2.17
 	profile_write_int(GENERAL, TEXT("ListGetLine"), op.ListGetLine);
 	profile_write_int(GENERAL, TEXT("ListDownload"), op.ListDownload);
 	profile_write_int(GENERAL, TEXT("ListSaveMode"), op.ListSaveMode);
@@ -1838,19 +1839,22 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_int(buf, TEXT("UseGlobalRecv"), (MailBox + j)->UseGlobalRecv);
 		if ((MailBox + j)->UseGlobalRecv) {
 			profile_delete_key(buf, TEXT("ShowHeader"));
-			profile_delete_key(buf, TEXT("GetRecent"));
+			profile_delete_key(buf, TEXT("GetReverse"));
 			profile_delete_key(buf, TEXT("ListGetLine"));
 			profile_delete_key(buf, TEXT("ListDownload"));
 			profile_delete_key(buf, TEXT("ListSaveMode"));
 		} else {
 			profile_write_int(buf, TEXT("ShowHeader"), (MailBox + j)->ShowHeader);
-			profile_write_int(buf, TEXT("GetRecent"), (MailBox + j)->GetRecent);
+			profile_write_int(buf, TEXT("GetReverse"), (MailBox + j)->GetReverse);
 			profile_write_int(buf, TEXT("ListGetLine"), (MailBox + j)->ListGetLine);
 			profile_write_int(buf, TEXT("ListDownload"), (MailBox + j)->ListDownload);
 			profile_write_int(buf, TEXT("ListSaveMode"), (MailBox + j)->ListSaveMode);
 		}
+		// from beta versions of 2.17
+		profile_delete_key(buf, TEXT("GetRecent"));
 
 	}
+
 	// GJC clear keys from deleted mailboxes
 	found = TRUE;
 	j = MailBoxCnt;

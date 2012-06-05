@@ -3833,7 +3833,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 		}
 	}
 	if (tpMailBox->Loaded) {
-		item_resize_mailbox(tpMailBox);
+		item_resize_mailbox(tpMailBox, FALSE);
 	}
 	SetItemCntStatusText(NULL, FALSE);
 	if (SelPoint != -1) {
@@ -3906,7 +3906,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 		}
 		item_free(((MailBox + SelBox)->tpMailItem + i), 1);
 	}
-	item_resize_mailbox(MailBox + SelBox);
+	item_resize_mailbox(MailBox + SelBox, FALSE);
 
 	ListView_SetRedraw(mListView, TRUE);
 	SetItemCntStatusText(NULL, FALSE);
