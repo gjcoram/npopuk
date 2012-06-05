@@ -173,6 +173,7 @@
 #define STR_Q_SWITCH_TO_UTF8		TEXT("The text cannot be represented in the selected charset (%s).\r\nSwitch to UTF-8?")
 #define STR_Q_UNICODE				TEXT("Message text contains Unicode; it cannot be sent correctly.  Proceed anyway?")
 #define STR_Q_UNLINKATTACH			TEXT("Release the link to the attached file?")
+#define STR_Q_DISCARD_CHANGES		TEXT("Discard changes?")
 #define STR_Q_ADDADDRESS			TEXT("Edit addresses (%d) when adding to the address book?")
 #ifdef _WIN32_WCE
 #define STR_Q_EDITADDPOOM			TEXT("Edit addresses (%d) when adding to PocketContacts?")

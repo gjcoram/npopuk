@@ -724,19 +724,16 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Recv"
 FONT 8, "Microsoft Sans Serif"
 BEGIN
-    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,5,12,95,10
-    EDITTEXT        IDC_EDIT_READLINE,101,10,40,12,ES_AUTOHSCROLL | 
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,5,12,85,10
+    EDITTEXT        IDC_EDIT_READLINE,95,10,40,12,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,5,25,165,10
     CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,39,120,10
-    CONTROL         "&Get only the",IDC_CHECK_GETRECENT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,5,55,50,10
-    EDITTEXT        IDC_EDIT_NUMRECENT,60,53,40,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    LTEXT           "most recent messages",IDC_TEXT_GETRECENT,105,55,95,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,40,120,10
+    CONTROL         "&Get messages in reverse order",IDC_CHECK_GETREVERSE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,55,160,10
     GROUPBOX        "Account messages",IDC_STATIC,5,72,205,58
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
                     BS_AUTORADIOBUTTON,10,85,120,10
@@ -753,19 +750,16 @@ FONT 8, "Microsoft Sans Serif"
 BEGIN
     CONTROL         "&Use global option",IDC_CHECK_GLOBAL_RECV,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,5,10,120,10
-    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,27,85,10
-    EDITTEXT        IDC_EDIT_READLINE,105,25,40,12,ES_AUTOHSCROLL | 
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,27,80,10
+    EDITTEXT        IDC_EDIT_READLINE,100,25,40,12,ES_AUTOHSCROLL | 
                     ES_NUMBER
     CONTROL         "&Download entire body when checking",
                     IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,15,40,165,10
 //    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,15,54,120,10
-    CONTROL         "&Get only the",IDC_CHECK_GETRECENT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,15,55,50,10
-    EDITTEXT        IDC_EDIT_NUMRECENT,70,53,40,12,ES_AUTOHSCROLL | 
-                    ES_NUMBER
-    LTEXT           "most recent messages",IDC_TEXT_GETRECENT,115,55,95,10
+    CONTROL         "&Get messages in reverse order",IDC_CHECK_GETREVERSE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,55,160,10
     GROUPBOX        "Account messages",IDC_STATIC,15,70,185,60
     CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
                     BS_AUTORADIOBUTTON,20,85,120,10
