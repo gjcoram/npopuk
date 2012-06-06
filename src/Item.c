@@ -139,6 +139,9 @@ BOOL item_add(MAILBOX *tpMailBox, MAILITEM *tpNewMailItem)
 				*(tpMailList + i + 1) = *(tpMailList + i);
 			}
 		}
+		if (i < 0) {
+			*(tpMailList + 0) = tpNewMailItem;
+		}
 	} else {
 		*(tpMailList + tpMailBox->MailItemCnt) = tpNewMailItem;
 	}

@@ -1368,8 +1368,9 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 				? LVIS_CUT : 0);
 			lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 			lvi.iItem = ListView_GetItemCount(mListView);
-			if (lvi.iItem > 0) {
+			if (lvi.iItem > 0 && op.LvAutoSort != 2 && op.LvThreadView == 0) {
 				// insert in the middle (for fill-in or get reverse)
+				// unless we're sorted by column or by thread
 				for (i = lvi.iItem - 1; i >= 0; i--) {
 					listItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 					if (listItem != NULL && listItem->No < tpMailItem->No) {
@@ -1377,7 +1378,11 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 						break;
 					}
 				}
-				lvi.iItem = i;
+				if (i < 0) {
+					lvi.iItem = 0;
+				} else {
+					lvi.iItem = i;
+				}
 			}
 			lvi.iSubItem = 0;
 			lvi.state = st;
