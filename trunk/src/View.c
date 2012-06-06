@@ -2978,7 +2978,7 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 					// p should end with "\r\n\r\n"
 					p -= 2;
 				} else if (p > newbody+2 && ((*(p-2) == '\r' && *(p-1) == '\r') || (*(p-2) == '\n' && *(p-1) == '\n'))) {
-					// ends with "\r\r" or "\r\n" ??
+					// ends with "\r\r" or "\n\n" ??
 					p -= 1;
 				}
 				p = str_join(p, HEAD_ENCODING, " ", enc, "\r\n\r\n", (char*)-1);
