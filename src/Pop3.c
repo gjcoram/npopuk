@@ -1007,14 +1007,29 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 
 	mem_free(&tpMailBox->LastMessageId);
 	tpMailBox->LastMessageId = NULL;
-	if (reverse > 0) {
-		list_get_no = tpMailBox->MailCnt;
-	} else {
-		tpMailBox->LastNo = 0;
-		if (tpLastMailItem != NULL) {
-			tpMailBox->LastMessageId = alloc_tchar_to_char(tpLastMailItem->MessageID);
+	if (tpLastMailItem != NULL) {
+		tpMailBox->LastMessageId = alloc_tchar_to_char(tpLastMailItem->MessageID);
+		if (reverse > 0) {
+			if (uidl_missing == FALSE) {
+				tpMailBox->LastNo = tpLastMailItem->No + 1;
+			// } else {
+			// don't set tpMailBox->LastNo, that's how we know where to stop
+			}
+		} else {
 			tpMailBox->LastNo = tpLastMailItem->No;
 		}
+	}
+	if (reverse > 0) {
+		if (uidl_missing == TRUE) {
+			// uidl_find_missing will set list_get_no to the one we need to get
+			list_get_no = tpMailBox->MailCnt + 1;
+		} else {
+			// new mail has arrived on the server
+			// get messages tpMailBox->MailCnt down to tpLastMailItem->No + 1
+			list_get_no = tpMailBox->MailCnt;
+		}
+	} else {
+		tpMailBox->LastNo = 0;
 		list_get_no = tpMailBox->LastNo + 1;
 	}
 
