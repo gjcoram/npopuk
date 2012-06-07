@@ -2916,7 +2916,7 @@ BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem)
 		}
 	}
 	if (tpMailItem->WireForm != NULL) {
-		char *p, *q, *r, *newbody;
+		char *p, *q, *newbody;
 		char *ctype = NULL, *enc = NULL;
 		int hlen;
 		p = GetBodyPointa(tpMailItem->WireForm);

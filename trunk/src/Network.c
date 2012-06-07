@@ -43,7 +43,9 @@ BOOL GetNetworkStatus(BOOL Print)
 	BOOL IsActive = FALSE, FoundWiFiName = FALSE;
 	DWORD i;
 
+log_save_a("Start of GetNetworkStatus\r\n");
 	if (hNDUIO == NULL) {
+log_save_a("Opening hNDUIO\r\n");
 		hNDUIO = CreateFile(NDISUIO_DEVICE_NAME, GENERIC_READ | GENERIC_WRITE,
 							FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 							FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
@@ -59,6 +61,7 @@ BOOL GetNetworkStatus(BOOL Print)
 
 	if (hQueue == NULL) {
 		MSGQUEUEOPTIONS mqOpt = {0};
+log_save_a("Creating hQueue\r\n");
 		mqOpt.dwSize = sizeof(MSGQUEUEOPTIONS);
 		mqOpt.dwFlags = MSGQUEUE_NOPRECOMMIT;
 		mqOpt.bReadAccess = TRUE;
@@ -109,6 +112,7 @@ BOOL GetNetworkStatus(BOOL Print)
 	for (i = 0; ; i++) {
 		DWORD dwBytesRet = 0;
 		NDISUIO_QUERY_BINDING* pQueryBinding = (NDISUIO_QUERY_BINDING*) QueryBuffer;
+log_save_a("IOCTL_NDISUIO_QUERY_BINDING\r\n");
 		memset(QueryBuffer, 0, sizeof(QueryBuffer));
 		pQueryBinding->BindingIndex = i;
 
@@ -317,6 +321,7 @@ log_save_a("Exiting WiFiStatusProc\r\n");
 BOOL WiFiConnect(HWND hWnd, int Dummy)
 {
 	BOOL ret;
+log_save_a("Start of WiFiConnect\r\n");
 
 	// check if active already
 	ret = SetNICPower(op.WiFiDeviceName, TRUE, TRUE, TRUE);
@@ -371,6 +376,7 @@ log_save_a("connection established, breaking while loop\r\n");
 				break;
 			}
 		}
+log_save_a("done while loop\r\n");
 		CloseHandle(hEvent);
 		hEvent = NULL;
 
@@ -418,6 +424,7 @@ static BOOL SetNICPower(TCHAR *InterfaceName, BOOL Check, BOOL Enable, BOOL Prin
 	BOOL bDevPowered = TRUE;
 	DWORD ret;
 
+log_save_a("Start of SetNICPower\r\n");
 	if (InterfaceName == NULL || *InterfaceName == TEXT('\0')) {
 		return FALSE;
 	}
