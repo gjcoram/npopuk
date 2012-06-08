@@ -331,6 +331,7 @@
 #define STR_LIST_LVHEAD_TO			TEXT("To")
 #define STR_LIST_LVHEAD_DATE		TEXT("Date")
 #define STR_LIST_LVHEAD_SIZE		TEXT("Size")
+#define STR_LIST_LVHEAD_NO			TEXT("No")
 #define STR_LIST_NOSUBJECT			TEXT("(no subject)")
 #define STR_LIST_THREADSTR			TEXT("  + ")
 

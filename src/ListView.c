@@ -124,7 +124,7 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left, int Right)
 #endif
 
 	// ƒwƒbƒ_‚ÌÝ’è
-	if (lstrcmpi(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+	if (str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4) == 0) {
 		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 0), STR_LIST_LVHEAD_FROM, 0);
 		ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 1), STR_LIST_LVHEAD_SUBJECT, 1);
 	} else {
@@ -133,6 +133,10 @@ HWND CreateListView(HWND hWnd, int Top, int Bottom, int Left, int Right)
 	}
 	ListView_AddColumn(hListView, LVCFMT_LEFT, *(op.LvColSize + 2), STR_LIST_LVHEAD_DATE, 2);
 	ListView_AddColumn(hListView, LVCFMT_RIGHT, *(op.LvColSize + 3), STR_LIST_LVHEAD_SIZE, 3);
+	if (lstrlen(op.LvColumnOrder) > 4 && *(op.LvColumnOrder+4) == TEXT('N')) {
+		// add No as last column
+		ListView_AddColumn(hListView, LVCFMT_RIGHT, 30, STR_LIST_LVHEAD_NO, 4);
+	}
 
 	//of header Setting
 #ifdef _WIN32_WCE
@@ -604,7 +608,7 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 	//Text
 	if (hLVItem->mask & LVIF_TEXT) {
 		int col = hLVItem->iSubItem;
-		if ((col == 0 || col == 1) && lstrcmp(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+		if ((col == 0 || col == 1) && str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4) == 0) {
 			col = (col == 0) ? 1 : 0;
 		}
 		switch (col) {
@@ -662,10 +666,18 @@ static void ListView_GetDispItem(LV_ITEM *hLVItem)
 			p = tpMailItem->Size;
 			break;
 
+		//No
+		case 4:
+			p = hLVItem->pszText;
+			wsprintf(p, TEXT("%d"), tpMailItem->No);
+			break;
+
 		default:
 			return;
 		}
-		str_cpy_n_t(hLVItem->pszText, (p != NULL) ? p : TEXT("\0"), BUF_SIZE - 1);
+		if (p != hLVItem->pszText) {
+			str_cpy_n_t(hLVItem->pszText, (p != NULL) ? p : TEXT("\0"), BUF_SIZE - 1);
+		}
 	}
 }
 

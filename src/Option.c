@@ -4123,7 +4123,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		} else {
 			SendDlgItemMessage(hDlg, IDC_SORT_SELECT_LAST, BM_SETCHECK, 1, 0);
 		}
-		if (lstrcmp(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+		if (str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4)) {
 			SendDlgItemMessage(hDlg, IDC_COL_FSDZ, BM_SETCHECK, 1, 0);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_COL_SFDZ, BM_SETCHECK, 1, 0);
@@ -4171,11 +4171,17 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 				op.LvDefSelectPos = 1;
 			}
 
-			mem_free(&op.LvColumnOrder);
-			if (SendDlgItemMessage(hDlg, IDC_COL_SFDZ, BM_GETCHECK, 0, 0) == 1) {
-				op.LvColumnOrder = alloc_copy_t(TEXT("SFDZ"));
-			} else {
+			if (lstrlen(op.LvColumnOrder) < 4) {
+				mem_free(&op.LvColumnOrder);
 				op.LvColumnOrder = alloc_copy_t(TEXT("FSDZ"));
+			}
+			if (SendDlgItemMessage(hDlg, IDC_COL_SFDZ, BM_GETCHECK, 0, 0) == 1) {
+				// SFDZ
+				*(op.LvColumnOrder) = TEXT('S');
+				*(op.LvColumnOrder+1) = TEXT('F');
+			} else {
+				*(op.LvColumnOrder) = TEXT('F');
+				*(op.LvColumnOrder+1) = TEXT('S');
 			}
 
 			//GJC redraw window if sort order changed

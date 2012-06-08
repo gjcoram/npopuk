@@ -1922,7 +1922,7 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam)
 #endif
 		// ƒ\[ƒg‚ÌÝ’è
 		col = phd->iItem;
-		if ((col == 0 || col == 1) && lstrcmp(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+		if ((col == 0 || col == 1) && str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4) == 0) {
 			col = (col == 0) ? 1 : 0;
 		}
 		LvSortFlag = (ABS(LvSortFlag) == (col + 1)) ? (LvSortFlag * -1) : (col + 1);

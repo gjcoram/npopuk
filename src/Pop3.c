@@ -444,12 +444,20 @@ static int check_last_mail(HWND hWnd, SOCKET soc, BOOL check_flag, TCHAR *ErrStr
 			list_get_no = 1;
 		}
 	} else {
+		// UIDL of last message matches
 		if (reverse > 0) {
-			list_get_no--;
+			if (tpMailBox->LastNo < tpMailBox->MailCnt) {
+				// start getting from the most recent
+				list_get_no = tpMailBox->MailCnt;
+			} else {
+				// already have the last
+				list_get_no = tpMailBox->MailCnt + 1;
+			}
 		} else {
+			// get the next message
 			list_get_no++;
 		}
-		if (list_get_no > tpMailBox->MailCnt || (reverse > 0 && list_get_no < tpMailBox->LastNo)) {
+		if (list_get_no > tpMailBox->MailCnt) {
 			uidl_missing = FALSE;
 			return POP_QUIT;
 		}
@@ -844,11 +852,9 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			ret = POP_LIST;
 		}
 	} else {
-		if (reverse > 0) {
-			list_get_no = tpMailBox->MailCnt;
-		} else {
-			list_get_no = tpMailBox->LastNo;
-		}
+		// tpMailBox->LastNo <= tpMailBox->MailCnt
+		// check UIDL of message with No=LastNo
+		list_get_no = tpMailBox->LastNo;
 		get_no = item_get_number_to_index(tpMailBox, list_get_no);
 		if (get_no != -1) {
 			tpMailItem = *(tpMailBox->tpMailItem + get_no);
@@ -859,11 +865,15 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 			}
 			return POP_UIDL_CHECK;
 		} else {
+			// UIDL disabled, or no message with No=LastNo, so start downloading
 			int len;
 			receiving_data = FALSE;
 			if (mail_buf_init(MAIL_BUF_SIZE) == FALSE) {
 				lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 				return POP_ERR;
+			}
+			if (reverse) {
+				list_get_no = tpMailBox->MailCnt;
 			}
 			if (tpMailBox->UseGlobalRecv) {
 				len = op.ListGetLine;
@@ -1157,7 +1167,7 @@ static int list_proc_uidl_set(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
  */
 static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag)
 {
-	char *p, *r;
+	char *p;
 	int len = 0;
 
 	if (op.SocLog > 0) SetSocStatusText(hWnd, buf);
@@ -1169,7 +1179,6 @@ static int list_proc_list(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 	mail_size = -1;
 	if (check_response(buf) == TRUE) {
 		p = skip_response(buf);
-		for (r = p; *r != ' ' && *r != '\0'; r++); // GJC: what's this for?
 		mail_size = len = a2i(p);
 		if (disable_top == FALSE) {
 			int numchars;
@@ -1281,8 +1290,10 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 	reverse = (tpMailBox->UseGlobalRecv) ? op.GetReverse : tpMailBox->GetReverse;
 
-	if ((reverse > 0 && list_get_no == tpMailBox->MailCnt) 
-		|| (reverse <= 0 && list_get_no == tpMailBox->LastNo)) {
+	if (reverse > 0 && list_get_no == tpMailBox->MailCnt && init_recv == TRUE) {
+		init_mailbox(hWnd, tpMailBox, ShowFlag, reverse);
+	} else if (list_get_no == tpMailBox->LastNo) {
+		// re-received message to check MessageID
 		if (init_recv == TRUE) {
 			// 新着取得位置が初期化されたためメールボックスを初期化
 			init_mailbox(hWnd, tpMailBox, ShowFlag, reverse);
