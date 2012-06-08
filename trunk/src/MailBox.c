@@ -868,7 +868,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	//Setting
 	lvc.mask = LVCF_TEXT;
 	lvc.cchTextMax = BUF_SIZE;
-	if (lstrcmpi(op.LvColumnOrder, TEXT("FSDZ")) == 0) {
+	if (str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4) == 0) {
 		colno = 0;
 	} else {
 		colno = 1;
