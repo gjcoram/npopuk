@@ -851,6 +851,7 @@ int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
 	//Number
 	case SORT_NO:
+	case 4: // column 4, when LvColumnOrder is FSDZN
 		len1 = ((MAILITEM *)lParam1)->No;
 		len2 = ((MAILITEM *)lParam2)->No;
 		NumFlag = TRUE;
