@@ -1855,11 +1855,7 @@ static BOOL CALLBACK RecvSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			enable = FALSE;
 			SetDlgItemInt(hDlg, IDC_EDIT_READLINE, op.ListGetLine, FALSE);
 			SendDlgItemMessage(hDlg, IDC_CHECK_LISTDOWNLOAD, BM_SETCHECK, op.ListDownload, 0);
-			if (op.GetReverse > 0) {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, 1, 0);
-			} else {
-				SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, 0, 0);
-			}
+			SendDlgItemMessage(hDlg, IDC_CHECK_GETREVERSE, BM_SETCHECK, op.GetReverse, 0);
 			//SendDlgItemMessage(hDlg, IDC_CHECK_SHOWHEAD, BM_SETCHECK, op.ShowHeader, 0);
 		} else {
 			newlsm = tpOptionMailBox->ListSaveMode;
@@ -4123,7 +4119,7 @@ static BOOL CALLBACK SetSortOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		} else {
 			SendDlgItemMessage(hDlg, IDC_SORT_SELECT_LAST, BM_SETCHECK, 1, 0);
 		}
-		if (str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4)) {
+		if (str_cmp_ni_t(op.LvColumnOrder, TEXT("FSDZ"), 4) == 0) {
 			SendDlgItemMessage(hDlg, IDC_COL_FSDZ, BM_SETCHECK, 1, 0);
 		} else {
 			SendDlgItemMessage(hDlg, IDC_COL_SFDZ, BM_SETCHECK, 1, 0);
@@ -4998,8 +4994,7 @@ BOOL CALLBACK InitMailBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				SelMailBox->ListInitMsg = FALSE;
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_FIX_UIDL, BM_GETCHECK, 0, 0) == 1) {
 				// fix message numbers
-				mem_free(&(SelMailBox->LastMessageId));
-				SelMailBox->LastMessageId = NULL;
+				// leave LastNo alone, LastMessageId freed on return from this function
 #ifndef _WIN32_WCE
 			} else if (SendDlgItemMessage(hDlg, IDC_RADIO_EMPTY, BM_GETCHECK, 0, 0) == 1) {
 				// empty mailbox on server
