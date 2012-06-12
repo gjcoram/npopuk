@@ -62,7 +62,7 @@ static int list_get_no;						// 受信メール位置
 static int download_get_no;					// ダウンロードメール位置
 static int delete_get_no;					// 削除メール位置
 static int deletes_remaining = 65535;
-static int reverse_stop_point;
+static int reverse_stop_point = 0;
 static BOOL init_recv;						// 新着取得位置初期化フラグ
 static int mail_received;					// １件目受信フラグ
 static BOOL receiving_uidl;					// UIDLレスポンス受信中
@@ -343,6 +343,7 @@ static void init_mailbox(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag)
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
 		tpMailBox->NeedsSave |= MAILITEMS_CHANGED;
 	}
+	tpMailBox->LastNo = 0;
 	init_recv = FALSE;
 }
 
@@ -1025,6 +1026,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 
 	mem_free(&tpMailBox->LastMessageId);
 	tpMailBox->LastMessageId = NULL;
+	tpMailBox->LastNo = 0;
 	if (tpLastMailItem != NULL) {
 		tpMailBox->LastMessageId = alloc_tchar_to_char(tpLastMailItem->MessageID);
 		tpMailBox->LastNo = tpLastMailItem->No;
@@ -1039,7 +1041,6 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 			list_get_no = tpMailBox->MailCnt;
 		}
 	} else {
-		tpMailBox->LastNo = 0;
 		list_get_no = tpMailBox->LastNo + 1;
 	}
 
