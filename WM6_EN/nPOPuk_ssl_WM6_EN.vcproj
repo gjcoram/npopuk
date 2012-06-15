@@ -541,7 +541,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="$(PlatformName)\$(ConfigurationName)/nPOPuk_ssl_WM6_EN.tlb"
+				TypeLibraryName="ARMDbg/nPOPuk_ssl_WM6_EN.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
