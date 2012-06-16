@@ -685,6 +685,7 @@ void ini_read_general(HWND hWnd)
 	op.WiFiExitDisCon = profile_get_int(GENERAL, TEXT("WiFiExitDisCon"), 1);
 	op.WiFiNoCheck = profile_get_int(GENERAL, TEXT("WiFiNoCheck"), 1);
 	op.WiFiWaitSec = profile_get_int(GENERAL, TEXT("WiFiWaitSec"), 5);
+	op.WiFiMonitor = profile_get_int(GENERAL, TEXT("WiFiMonitor"), 1);
 	op.WiFiDeviceOffState = profile_get_int(GENERAL, TEXT("WiFiDeviceOffState"), 4);
 	op.WiFiDeviceName = profile_alloc_string(GENERAL, TEXT("WiFiDeviceName"), TEXT(""));
 
@@ -1428,6 +1429,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("WiFiExitDisCon"), op.WiFiExitDisCon);
 	profile_write_int(GENERAL, TEXT("WiFiNoCheck"), op.WiFiNoCheck);
 	profile_write_int(GENERAL, TEXT("WiFiWaitSec"), op.WiFiWaitSec);
+	profile_write_int(GENERAL, TEXT("WiFiMonitor"), op.WiFiMonitor);
 	profile_write_int(GENERAL, TEXT("WiFiDeviceOffState"), op.WiFiDeviceOffState);
 	profile_write_string(GENERAL, TEXT("WiFiDeviceName"), op.WiFiDeviceName);
 
