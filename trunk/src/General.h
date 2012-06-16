@@ -621,6 +621,7 @@ typedef struct _OPTION {
 	int WiFiExitDisCon;
 	int WiFiNoCheck;
 	int WiFiWaitSec;
+	int WiFiMonitor;
 	int WiFiDeviceOffState;
 	TCHAR *WiFiDeviceName;
 

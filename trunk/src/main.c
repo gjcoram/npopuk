@@ -4756,7 +4756,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef ENABLE_WIFI
 		if (op.WiFiCon) {
-			// check network connections
+			// check network connections at start-up
 			WiFiStatus = GetNetworkStatus(TRUE);
 		}
 #endif
@@ -5464,6 +5464,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			break;
 		case ID_WIFICHECK_TIMER:
 			i = GetNetworkStatus(FALSE);
+			if (op.SocLog > 1) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, TEXT("WiFiCheck timer, status=%d, was %d\r\n"), i, WiFiStatus);
+				log_save(msg);
+			}
 			if (i != WiFiStatus) {
 				WiFiStatus = i;
 				if (WiFiStatus == TRUE) {

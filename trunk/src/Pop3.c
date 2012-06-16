@@ -1010,10 +1010,21 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		uidl_missing = TRUE;
 		last_match = tpMailBox->LastNo;
 	}
+{
+TCHAR msg[MSG_SIZE];
+wsprintf(msg, TEXT("list_proc_uidl_all, missing=%d, last_match=%d, LastNo=%d\r\n"), uidl_missing, last_match, tpMailBox->LastNo);
+log_save(msg);
+if(tpLastMailItem != NULL) {
+	wsprintf(msg, TEXT("   last message: no: %d, id: %s\r\n"), tpLastMailItem->No, tpLastMailItem->MessageID);
+	log_save(msg);
+}
+}
 	// handles messages deleted from list
-	for (i = 0; i < ui_size; i++) {
-		if (ui[i].no < last_match) {
-			ui[i].in_mailbox = TRUE;
+	if (last_match > 0) {
+		for (i = 0; i < ui_size; i++) {
+			if (ui[i].no < last_match) {
+				ui[i].in_mailbox = TRUE;
+			}
 		}
 	}
 	// íœ‚³‚ê‚½ƒ[ƒ‹‚ðˆê——‚©‚çÁ‚·
@@ -1039,6 +1050,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 			// new mail has arrived on the server
 			// get messages tpMailBox->MailCnt down to tpLastMailItem->No + 1
 			list_get_no = tpMailBox->MailCnt;
+			reverse_stop_point = tpMailBox->LastNo + 1;
 		}
 	} else {
 		list_get_no = tpMailBox->LastNo + 1;
@@ -1126,7 +1138,7 @@ static int list_proc_uidl_set(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		list_get_no--;
 		if (uidl_missing) {
 			// filling in, keep looking for one we don't have
-			while (list_get_no > 0) {
+			while (list_get_no >= reverse_stop_point) {
 				int get_no = item_get_number_to_index(tpMailBox, list_get_no);
 				if (get_no == -1) {
 					break;
@@ -1137,7 +1149,7 @@ static int list_proc_uidl_set(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 			// found one we already have
 			list_get_no = 0;
 		}
-		if (list_get_no <= tpMailBox->LastNo) {
+		if (list_get_no < reverse_stop_point) {
 			uidl_missing = FALSE;
 			return POP_QUIT;
 		}

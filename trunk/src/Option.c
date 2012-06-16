@@ -8984,7 +8984,6 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				mem_free(&StrAddr);
 			}
-			SendMessage(hDlg, WM_COMMAND, IDOK, 0);
 			break;
 
 		case IDC_ADDR_GRP_COMBOL:
