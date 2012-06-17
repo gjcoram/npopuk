@@ -149,10 +149,6 @@ BOOL GetNetworkStatus(BOOL Print)
 					// whether wep is active or not, getting a valid response
 					// from this query indicates this is probably a wifi adapter
 					has_wep = TRUE;
-					if (op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {
-						mem_free(&op.WiFiDeviceName);
-						op.WiFiDeviceName = alloc_copy_t(devName);
-					}
 				} else {
 					has_wep = FALSE;
 				}
@@ -172,6 +168,12 @@ BOOL GetNetworkStatus(BOOL Print)
 					}
 				} else {
 					has_ssid = FALSE;
+				}
+			}
+			if (has_wep || has_ssid) {
+				if (op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {
+					mem_free(&op.WiFiDeviceName);
+					op.WiFiDeviceName = alloc_copy_t(devName);
 				}
 			}
 
