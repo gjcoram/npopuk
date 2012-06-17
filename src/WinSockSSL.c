@@ -92,6 +92,7 @@ unsigned long get_host_by_name(HWND hWnd, TCHAR *server, TCHAR *ErrStr)
 	LPHOSTENT lpHostEnt;
 	char *HostName;
 
+log_save_a("gethostbyname\r\n");
 	SetSocStatusTextT(hWnd, STR_STATUS_GETHOSTBYNAME);
 	if (server == NULL || *server == TEXT('\0')) {
 		lstrcpy(ErrStr, STR_ERR_SOCK_NOSERVER);

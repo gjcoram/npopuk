@@ -8605,7 +8605,7 @@ static LRESULT CALLBACK SubClassAddrListProc(HWND hDlg, UINT msg, WPARAM wParam,
 BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	ADDRESSBOOK *tpTmpAddressBook;
-	HWND hListView;
+	HWND hListView = NULL;
 	DWORD hiw;
 	TCHAR *StrAddr;
 	TCHAR buf[BUF_SIZE];
@@ -8961,31 +8961,6 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 #endif
 
-		case IDC_BUTTON_MAIL:
-			// Compose new message, or add addresses to Property dialog
-			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
-			if ((SelectItem = ListView_GetSelectedCount(hListView)) <= 0) {
-				ErrorMessage(hDlg, STR_ERR_SELECTMAILADDR);
-				break;
-			}
-
-			tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
-			if (tpTmpAddressBook->GetAddrList == FALSE) {
-				StrAddr = ListView_GetSelStringList(hListView);
-				if (StrAddr == NULL) {
-					ErrorMessage(hDlg, STR_ERR_MEMALLOC);
-					break;
-				}
-
-				if (Edit_MailToSet(hInst, MainWnd, StrAddr, -1) == EDIT_INSIDEEDIT) {
-#ifdef _WIN32_WCE
-					ShowWindow(MainWnd, SW_HIDE);
-#endif
-				}
-				mem_free(&StrAddr);
-			}
-			break;
-
 		case IDC_ADDR_GRP_COMBOL:
 			hiw = HIWORD(wParam);
 			if (hiw == CBN_CLOSEUP || (hiw == CBN_SELCHANGE &&
@@ -9004,9 +8979,39 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 			break;
 
-		case IDOK:
+		case IDC_BUTTON_MAIL:
+			// Compose new message, or add addresses to Property dialog
 			hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
+			if ((SelectItem = ListView_GetSelectedCount(hListView)) <= 0) {
+				ErrorMessage(hDlg, STR_ERR_SELECTMAILADDR);
+				break;
+			}
+
 			tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
+			if (tpTmpAddressBook->GetAddrList == FALSE) {
+				// "Mail" button -> compose new message
+				StrAddr = ListView_GetSelStringList(hListView);
+				if (StrAddr == NULL) {
+					ErrorMessage(hDlg, STR_ERR_MEMALLOC);
+					break;
+				}
+
+				if (Edit_MailToSet(hInst, MainWnd, StrAddr, -1) == EDIT_INSIDEEDIT) {
+#ifdef _WIN32_WCE
+					ShowWindow(MainWnd, SW_HIDE);
+#endif
+				}
+				mem_free(&StrAddr);
+				break;
+			}
+			// else "Select" button when address book was opened from To: button
+			// fall through to close the address book dialog
+
+		case IDOK:
+			if (hListView == NULL) {
+				hListView = GetDlgItem(hDlg, IDC_LIST_ADDRESS);
+				tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
+			} // else we fell through from IDC_BUTTON_MAIL
 			if (tpTmpAddressBook->GetAddrList == TRUE) {
 				if (ListView_GetSelectedCount(hListView) > 0) {
 					tpTmpAddressBook->AddrList = ListView_GetSelStringList(hListView);
