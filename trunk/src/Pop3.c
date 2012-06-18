@@ -1010,15 +1010,6 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		uidl_missing = TRUE;
 		last_match = tpMailBox->LastNo;
 	}
-{
-TCHAR msg[MSG_SIZE];
-wsprintf(msg, TEXT("list_proc_uidl_all, missing=%d, last_match=%d, LastNo=%d\r\n"), uidl_missing, last_match, tpMailBox->LastNo);
-log_save(msg);
-if(tpLastMailItem != NULL) {
-	wsprintf(msg, TEXT("   last message: no: %d, id: %s\r\n"), tpLastMailItem->No, tpLastMailItem->MessageID);
-	log_save(msg);
-}
-}
 	// handles messages deleted from list
 	if (last_match > 0) {
 		for (i = 0; i < ui_size; i++) {
