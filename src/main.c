@@ -5128,6 +5128,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (SmtpWait > 0) {
 				SmtpWait--;
 				break;
@@ -5154,6 +5159,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (SmtpWait > 0) {
 				SmtpWait--;
 				break;
@@ -5207,6 +5217,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (op.AutoSave == 2) {
 				AutoSave_Mailboxes(hWnd);
 			}
@@ -5267,6 +5282,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (SmtpWait > 0) {
 				SmtpWait--;
 				break;
@@ -5365,6 +5385,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 #endif
 #ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
 			if (op.EnableLAN == 0 && op.WiFiCon == 0 && op.WiFiNoCheck == 1 && !GetNetworkStatus(TRUE)) {
 				break;
 			}
@@ -5686,6 +5709,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #ifdef ENABLE_WIFI
 		case ID_MENUITEM_WIFI_CONNECT:
 			if (g_soc != -1) {
+				break;
+			}
+			if (WiFiLoop == TRUE) {
 				break;
 			}
 			SendMessage(hWnd, WM_WIFI_START, SelBox, 0);
@@ -6142,6 +6168,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
 				if (mailbox_load_now(hWnd, SelBox, FALSE, TRUE) != 1) {
 					break;
@@ -6181,6 +6212,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1 || ShowError == TRUE) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			if (SaveBoxesLoaded == FALSE) {
 				BOOL do_saveboxes = (op.BlindAppend == 0) ? TRUE : FALSE;
 				BOOL err = FALSE;
@@ -6221,6 +6257,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			KeyShowHeader = (GetKeyState(VK_SHIFT) < 0) ? TRUE : FALSE;
 			ServerDelete = FALSE;
 			ans = 0;
@@ -6322,6 +6363,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (g_soc != -1) {
 				break;
 			}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 			KeyShowHeader = (GetKeyState(VK_SHIFT) < 0) ? TRUE : FALSE;
 
 			if (SaveBoxesLoaded == FALSE) {
@@ -6680,6 +6726,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (g_soc != -1) {
 					break;
 				}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 				for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 					if ((MailBox + i)->Type != MAILBOX_TYPE_SAVE) {
 						cnt--;
@@ -7000,6 +7051,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		if (g_soc != -1 || lParam == 0) {
 			break;
 		}
+#ifdef ENABLE_WIFI
+			if (WiFiLoop == TRUE) {
+				break;
+			}
+#endif
 		wkSendMailItem = (MAILITEM *)lParam;
 		NewMailCnt = -1;
 		SmtpWait = 0;
