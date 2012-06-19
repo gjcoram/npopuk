@@ -1,3 +1,16 @@
+/*
+ * nPOPuk
+ *
+ * Network.c
+ *
+ * Copyright (C) 2012 by Geoffrey Coram. All rights reserved.
+ *		http://www.npopuk.org.uk
+ *
+ * With acknowledgement to Paul Heil from CodeProject.com and
+ * his Radio Power project
+ *      http://www.codeproject.com/Articles/103104/Radio-Power
+ */
+
 #include "General.h"
 #include "Memory.h"
 #include "String.h"
