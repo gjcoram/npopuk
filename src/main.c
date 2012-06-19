@@ -1455,6 +1455,9 @@ void SetMailMenu(HWND hWnd)
 	LPARAM lpcon;
 	int xflag, xsize;
 #endif
+#ifdef ENABLE_WIFI
+	int WiFiFlag;
+#endif
 	
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
@@ -1501,6 +1504,8 @@ void SetMailMenu(HWND hWnd)
 		}
 	}
 
+	// EnableMenuItem enables an item if the last argument is 0
+
 	EnableMenuItem(hMenu, ID_MENUITEM_BACKUP, !SocFlag);
 
 	EnableMenuItem(hMenu, ID_MENUITEM_SETMAILBOX, !(RecvBoxFlag & SendBoxFlag));
@@ -1516,8 +1521,9 @@ void SetMailMenu(HWND hWnd)
 	EnableMenuItem(hMenu, ID_MENUITEM_RAS_DISCONNECT, op.EnableLAN);
 #endif
 #ifdef ENABLE_WIFI
-	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_CONNECT, !(SocFlag & !op.EnableLAN));
-	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_DISCONNECT, op.EnableLAN);
+	WiFiFlag = op.EnableLAN || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0');
+	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_CONNECT, !(SocFlag && !WiFiFlag));
+	EnableMenuItem(hMenu, ID_MENUITEM_WIFI_DISCONNECT, WiFiFlag);
 #endif
 
 #ifdef _WIN32_WCE_PPC
@@ -1585,7 +1591,7 @@ void SetMailMenu(HWND hWnd)
 #endif
 #ifdef ENABLE_WIFI
 	SendMessage(hToolBar, TB_ENABLEBUTTON, ID_MENUITEM_WIFI_CONNECT,
-		(LPARAM)MAKELONG((SocFlag & !op.EnableLAN), 0));
+		(LPARAM)MAKELONG((SocFlag & !WiFiFlag), 0));
 #endif
 
 #ifdef _WIN32_WCE_PPC
@@ -1599,16 +1605,21 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_DELETE,
 		(LPARAM)MAKELONG((SendBoxFlag && SaveTypeFlag) || xflag, 0));
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_FLAGMARK, xflag);
+#ifdef ENABLE_RAS
 	if (xsize < 350 || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {
 		lpcon = (LPARAM)MAKELONG(1,0);
 	} else {
 		lpcon = (LPARAM)MAKELONG(op.EnableLAN,0);
 	}
-#ifdef ENABLE_RAS
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_CONNECT,    lpcon);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, lpcon);
 #endif
 #ifdef ENABLE_WIFI
+	if (xsize < 350 || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {
+		lpcon = (LPARAM)MAKELONG(1,0);
+	} else {
+		lpcon = (LPARAM)MAKELONG(WiFiFlag,0);
+	}
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_CONNECT,    lpcon);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_DISCONNECT, lpcon);
 #endif
@@ -1626,7 +1637,7 @@ void SetMailMenu(HWND hWnd)
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_RAS_DISCONNECT, mklng);
 #endif
 #ifdef ENABLE_WIFI
-	mklng = (LPARAM)MAKELONG(op.EnableLAN || op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0')) {, 0);
+	mklng = (LPARAM)MAKELONG(WiFiFlag, 0);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_CONNECT,    mklng);
 	SendMessage(hToolBar, TB_HIDEBUTTON, ID_MENUITEM_WIFI_DISCONNECT, mklng);
 #endif

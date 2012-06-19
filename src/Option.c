@@ -4022,6 +4022,7 @@ static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
  */
 static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	BOOL no_devname;
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* ÉRÉìÉgÉçÅ[ÉãÇÃèâä˙âª */
@@ -4034,6 +4035,10 @@ static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WiFiWaitSec, FALSE);
 
 		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)op.WiFiDeviceName);
+#ifdef _WIN32_WCE_PPC
+		DefEditTextWndProc = (WNDPROC)SetWindowLongW(GetDlgItem(hDlg, IDC_EDIT_NAME),
+			GWL_WNDPROC, (DWORD)EditTextCallback);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -4054,7 +4059,12 @@ static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			op.WiFiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
 			op.WiFiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
 
+			no_devname = (op.WiFiDeviceName == NULL || *op.WiFiDeviceName == TEXT('\0'));
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_NAME), &op.WiFiDeviceName);
+			if (no_devname == TRUE && op.WiFiDeviceName != NULL && *op.WiFiDeviceName != TEXT('\0')) {
+				// could also check that SetNICPower works for this WiFiDeviceName
+				SetMailMenu(MainWnd);
+			}
 			break;
 		}
 		break;
