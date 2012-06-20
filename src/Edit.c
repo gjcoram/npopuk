@@ -99,6 +99,7 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 static void SetWindowString(HWND hWnd, TCHAR *Subject, BOOL editable);
 static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem);
 static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem);
+static TCHAR *CopyClipboardData(HWND hWnd);
 #ifndef _WIN32_WCE
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 static LRESULT NotifyProc(HWND hWnd, LPARAM lParam);
@@ -690,6 +691,63 @@ static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem)
 }
 
 /*
+ * CopyClipboardData - copy a string from the clipboard
+ */
+static TCHAR *CopyClipboardData(HWND hWnd)
+{
+	int format = 0;
+	TCHAR *ret = NULL;
+
+	if (IsClipboardFormatAvailable(CF_TEXT)) {
+		format = CF_TEXT;
+	}
+#ifdef UNICODE
+	// if it's available in unicode, use that instead of ansi
+	if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
+		format = CF_UNICODETEXT;
+	}
+#endif
+	if (format != 0 && OpenClipboard(hWnd)) {
+		HANDLE hclip;
+
+		hclip = GetClipboardData(format);
+		if (hclip != NULL) {
+
+#if (!defined(_WIN32_WCE) || defined(_WCE_NEW))
+			LPTSTR lptstr = GlobalLock(hclip);
+			if (lptstr != NULL) {
+#ifdef UNICODE
+				if (format == CF_UNICODETEXT) {
+					ret = alloc_copy_t(lptstr);
+				} else {
+					ret = alloc_char_to_tchar((char*)lptstr);
+				}
+#else
+				ret = alloc_copy(lptstr);
+#endif
+				GlobalUnlock(hclip);
+			}
+#else
+			// WCE 2.0 and 2.11 don't have GlobalLock?
+			// (at least not with VisualStudio 6)
+#ifdef UNICODE
+			if (format == CF_UNICODETEXT) {
+				ret = alloc_copy_t((TCHAR *)hclip);
+			} else {
+				ret = alloc_char_to_tchar((char*)hclip);
+			}
+#else
+			ret = alloc_copy((char*)hclip);
+#endif
+
+#endif
+		}
+		CloseClipboard();
+	}
+	return ret;
+}
+
+/*
  * SubClassSentProc - event handler for sent mail and preview windows
  */
 LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -957,49 +1015,24 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 #else
 	if (msg == WM_PASTE) {
 		// handle it explicitly, to deal with bare \r or \n
-		int format = 0;
-		if (IsClipboardFormatAvailable(CF_TEXT)) {
-			format = CF_TEXT;
-		}
+		TCHAR *buf = CopyClipboardData(hWnd);
+		if (buf != NULL) {
 #ifdef UNICODE
-		// if it's available in unicode, use that instead of ansi
-		if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
-			format = CF_UNICODETEXT;
-		}
-#endif
-		if (format != 0 && OpenClipboard(NULL)) {
-			HGLOBAL hglb;
-			LPTSTR lptstr;
-			TCHAR *buf = NULL;
-
-			hglb = GetClipboardData(format);
-			if (hglb != NULL) {
-				lptstr = GlobalLock(hglb);
-				if (lptstr != NULL) {
-#ifdef UNICODE
-					if (format == CF_UNICODETEXT) {
-						buf = alloc_copy_t(lptstr);
-					} else{
-						buf = alloc_char_to_tchar((char*)lptstr);
-					}
-					FixCRLF_t(&buf);
+			FixCRLF_t(&buf);
 #else
-					buf = alloc_copy(lptstr);
-					FixCRLF(&buf);
+			FixCRLF(&buf);
 #endif
-					GlobalUnlock(hglb);
-				}
-			}
-			CloseClipboard();
-			if (buf != NULL) {
-				SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
-				mem_free(&buf);
-			}
+			SendMessage(hWnd, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
+			mem_free(&buf);
 			return 0;
 		}
 		// else fall through and see if the default WindowProc can do anything
 	}
+#ifdef _WIN32_WCE
+	return CallWindowProc(EditWindowProcedure, hWnd, msg, wParam, lParam);
+#else
 	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
+#endif
 #endif
 }
 
@@ -1008,7 +1041,7 @@ static LRESULT CALLBACK SubClassEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
  */
 static void SetEditSubClass(HWND hWnd)
 {
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	EditWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)SubClassEditProc);
 #else
 	WNDPROC OldWndProc = NULL;
@@ -1023,7 +1056,7 @@ static void SetEditSubClass(HWND hWnd)
  */
 static void DelEditSubClass(HWND hWnd)
 {
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 	SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)EditWindowProcedure);
 	EditWindowProcedure = NULL;
 #else
@@ -2580,49 +2613,24 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			break;
 
 		case ID_MENUITEM_PASTEQUOT:
-		#ifdef UNICODE
-			if (IsClipboardFormatAvailable(CF_UNICODETEXT) != 0) {
-#else
-			if (IsClipboardFormatAvailable(CF_TEXT) != 0) {
-#endif
-				if (OpenClipboard(hWnd) != 0) {
-					HANDLE hclip;
-#if (!defined(_WIN32_WCE) || defined(_WCE_NEW))
-					TCHAR *p;
-#endif
-					TCHAR *clp, *buf, *qchar, dqch[3] = TEXT("> ");
+			{
+				TCHAR *clp = CopyClipboardData(hWnd);
+				if (clp != NULL) {
+					TCHAR *buf, *qchar, dqch[3] = TEXT("> ");
 					int len;
-#ifdef UNICODE
-					hclip = GetClipboardData(CF_UNICODETEXT); 
-#else
-					hclip = GetClipboardData(CF_TEXT); 
-#endif
-					clp = NULL;
-#if (!defined(_WIN32_WCE) || defined(_WCE_NEW))
-					if ((p = GlobalLock(hclip)) != NULL) {
-						clp = alloc_copy_t(p);
-						GlobalUnlock(hclip);
+
+					qchar = op.QuotationChar;
+					if (qchar == NULL || *qchar == TEXT('\0')) {
+						qchar = dqch;
 					}
-#else
-					// WCE 2.0 and 2.11 don't have GlobalLock?
-					// (at least not with VisualStudio 6)
-					clp = alloc_copy_t((TCHAR *)hclip);
-#endif
-					CloseClipboard();
-					if (clp != NULL) {
-						qchar = op.QuotationChar;
-						if (qchar == NULL || *qchar == TEXT('\0')) {
-							qchar = dqch;
-						}
-						len = GetReplyBodySize(clp, qchar) + 1;
-						buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
-						if (buf != NULL) {
-							SetReplyBody(clp, buf, qchar);
-							SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
-							mem_free(&buf);
-						}
-						mem_free(&clp);
+					len = GetReplyBodySize(clp, qchar) + 1;
+					buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+					if (buf != NULL) {
+						SetReplyBody(clp, buf, qchar);
+						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)buf);
+						mem_free(&buf);
 					}
+					mem_free(&clp);
 				}
 			}
 			break;
