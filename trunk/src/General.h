@@ -28,7 +28,8 @@ extern int sprintf();
 extern int sprintf_s();
 #endif
 
-#if defined _WIN32_WCE && _WIN32_WCE >= 5
+#if defined _WIN32_WCE && _WIN32_WCE >= 500
+// WiFi functions need CE.NET 4 or greater
 #define ENABLE_WIFI
 #else
 // RAS functions not available in WinCE5
