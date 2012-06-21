@@ -199,7 +199,6 @@
 // and its nested includes ...
 #define HEADER_SYMHACKS_H
 #define HEADER_DTLS1_H 
-#define HEADER_LHASH_H
 #define	KSSL_H
 
 // There are a lot of prototypes that I suppose could change,
