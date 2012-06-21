@@ -1,4 +1,4 @@
-readme.txt for openssl (version 0.9.8w)
+readme.txt for openssl (version 1.0.1c)
 
 Please review LICENSE.txt
 
@@ -28,6 +28,12 @@ For Windows CE, you will need to obtain wcecompat.lib; you should
 be able to download it from http://www.essemer.com.au/windowsce
 If you have already built the Win32 version of the OpenSSL libs,
 please delete inc32\openssl\opensslconf.h
+
+On my compiler (MS Visual Studio 6.0), I had to change:
+- comment out "#include <strings.h>" from crypto\o_str.c
+- comment out an unused declaration of "len" in crypto\dso\dso_win32.c
+- change _timeb to timeb in crypto\bio\bss_dgram.c and ssl\d1_lib.c
+
 
 You may need to run another batch file to set up for the specific
 processor.  Then "nmake -f cearmlib.mak" and the .lib files should be
