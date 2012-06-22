@@ -16,10 +16,10 @@
 #define NPOPBETA_REAL_RELEASE 100
 #define NPOPBETA_RELEASE_CAND (NPOPBETA_REAL_RELEASE-1)
 
-#define NPOPMAJOR  2
-#define NPOPMINOR 17
-#define NPOPBETA  11
-#define NPOPPATCH  0
+#define NPOPMAJOR  3
+#define NPOPMINOR  0
+#define NPOPBETA  99
+#define NPOPPATCH  1
 
 
 // convert text, blanks, or zeroes to zeroes
@@ -63,7 +63,9 @@
 #      define BUILDSTR TEXT("ppc2000")
 #    endif
 #  else
-#    if _WIN32_WCE >= 300
+#    if _WIN32_WCE >= 500
+#      define BUILDSTR TEXT("wce50") BUILDARCH
+#    elif _WIN32_WCE >= 300
 #      define BUILDSTR TEXT("wce30") BUILDARCH
 #    elif _WIN32_WCE >= 211
 #      define BUILDSTR TEXT("wce211") BUILDARCH
