@@ -3005,8 +3005,8 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 #endif
 #ifdef ENABLE_WIFI
 	//Cutting of wifi connection
-	if (WiFiLoop == TRUE || op.WiFiExitDisCon == 1) {
-		WiFiDisconnect(FALSE);
+	if (WiFiLoop == TRUE || op.WiFiExitDisCon > 0) {
+		WiFiDisconnect(PromptSave && (op.WiFiExitDisCon==2));
 	}
 #endif
 
