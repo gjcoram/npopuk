@@ -623,7 +623,7 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 {
 	TCHAR path[BUF_SIZE];
 	TCHAR msg[MSG_SIZE];
-	char *cBuf;
+	unsigned char *cBuf;
 	long FileSize;
 
 	*buf = NULL;
@@ -663,7 +663,15 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 
 #ifdef UNICODE
 	//UNICODE which reads the file
-	*buf = alloc_char_to_tchar(cBuf);
+	if( *cBuf == 0xEF && *(cBuf+1) == 0xBB && *(cBuf+2) == 0xBF ) {
+		// The file starts with the UTF-8 representation
+		// of the BOM U+FEFF: 0xEF 0xBB 0xFB
+		*buf = alloc_char_to_tchar(cBuf+3);
+	} else {
+		CP_int = CP_ACP; // assume default codepage
+		*buf = alloc_char_to_tchar(cBuf);
+		CP_int = CP_UTF8; // restore to UTF8
+	}
 	if (*buf == NULL) {
 		mem_free(&cBuf);
 		SwitchCursor(TRUE);
@@ -794,7 +802,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	tpMailBox->DiskSize = FileSize = file_get_size(path);
 	if (FileSize == -2) {
 		tpMailBox->Loaded = FALSE;
-		if (op.SocLog > 1) {
+		if (op.SocLog > 9) {
 			int pos = lstrlen(path);
 			if (pos > 236) pos = 236; // 242 = BUF_SIZE - strlen(" too large!\r\n") - 1
 			wsprintf(path+pos, TEXT(" too large!\r\n"));
@@ -803,7 +811,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		return FALSE;
 	} else if (FileSize <= 0) {
 		tpMailBox->Loaded = TRUE;
-		if (op.SocLog > 1) {
+		if (op.SocLog > 9) {
 			int pos = lstrlen(path);
 			if (pos > 236) pos = 236; // 236 = BUF_SIZE - strlen(" loaded but empty\r\n") - 1
 			wsprintf(path+pos, TEXT(" loaded but empty\r\n"));
@@ -1212,7 +1220,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			item_resize_mailbox(tpMailBox, FALSE);
 		}
 	}
-	if (op.SocLog > 1) {
+	if (op.SocLog > 9) {
 		int pos = lstrlen(path);
 		if (pos > 242) pos = 242; // 242 = BUF_SIZE - strlen(" was loaded\r\n") - 1
 		wsprintf(path+pos, TEXT(" was loaded\r\n"));
@@ -1617,7 +1625,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 	// DeleteFile(pathBackup);
 	// how to ensure the drive is ready?
 	if (file_get_size(pathBackup) != -1) {
-		if (DeleteFile(pathBackup) == 0 && op.SocLog > 1) {
+		if (DeleteFile(pathBackup) == 0 && op.SocLog > 9) {
 			TCHAR msg[MSG_SIZE];
 			DWORD err = GetLastError();
 			wsprintf(msg, TEXT("Failed to delete old backup file %s (err=%X)\r\n"), pathBackup, err);
@@ -1628,7 +1636,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		}
 	}
 	// Create the backup file.
-	if (MoveFile(path, pathBackup) == 0 && op.SocLog > 1 && file_get_size(path) != -1) {
+	if (MoveFile(path, pathBackup) == 0 && op.SocLog > 9 && file_get_size(path) != -1) {
 		TCHAR msg[MSG_SIZE];
 		DWORD err = GetLastError();
 		wsprintf(msg, TEXT("Failed to create backup file %s (err=%X)\r\n"), pathBackup, err);
@@ -1711,7 +1719,7 @@ BOOL file_save_mailbox(TCHAR *FileName, TCHAR *SaveDir, int Index, BOOL IsBackup
 		}
 		tpMailBox->tpMailItem = NULL;
 		tpMailBox->AllocCnt = tpMailBox->MailItemCnt = 0;
-		if (op.SocLog > 1) {
+		if (op.SocLog > 9) {
 			int pos = lstrlen(path);
 			if (pos > 242) pos = 240; // 240 = BUF_SIZE - strlen(" was unloaded\r\n") - 1
 			wsprintf(path+pos, TEXT(" was unloaded\r\n"));
