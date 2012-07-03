@@ -667,6 +667,11 @@ BOOL file_read_select(HWND hWnd, TCHAR **buf)
 		// The file starts with the UTF-8 representation
 		// of the BOM U+FEFF: 0xEF 0xBB 0xFB
 		*buf = alloc_char_to_tchar(cBuf+3);
+
+	} else if ( is_utf8(cBuf) ) {
+		// it's valid UTF-8 encoding (could be plain ASCII)
+		*buf = alloc_char_to_tchar(cBuf);
+
 	} else {
 		CP_int = CP_ACP; // assume default codepage
 		*buf = alloc_char_to_tchar(cBuf);
@@ -1417,7 +1422,7 @@ BOOL file_write_ascii(HANDLE hFile, TCHAR *buf, int len)
 }
 
 /*
- * file_save - ファイルの保存
+ * file_save_attach - ファイルの保存
  */
 BOOL file_save_attach(HWND hWnd, TCHAR *FileName, TCHAR *Ext, char *buf, int len, int do_what)
 {
