@@ -1105,6 +1105,7 @@ void rot13(char *start, char *end);
 #ifndef _WIN32_WCE
 TCHAR *replace_env_var(TCHAR *buf);
 #endif
+BOOL is_utf8(unsigned const char *bytes);
 
 // View
 BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end);
