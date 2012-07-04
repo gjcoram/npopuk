@@ -3251,10 +3251,10 @@ BOOL is_utf8(unsigned const char *bytes) {
 				continue;
 		}
 
-		return 0;
+		return FALSE;
 	}
 
-	return 1;
+	return TRUE;
 }
 
 /* End of source */
