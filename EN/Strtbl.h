@@ -301,6 +301,7 @@
 #define STR_STATUS_SEND_USER		TEXT("Send username")
 #define STR_STATUS_SEND_PASS		TEXT("Send password")
 
+#ifdef ENABLE_RAS
 // Ras status
 #define STR_STATUS_RAS_START		TEXT("Starting Dial-up")
 #define STR_STATUS_RAS_PORTOPEN		TEXT("Opening port...")
@@ -308,13 +309,19 @@
 #define STR_STATUS_RAS_AUTH			TEXT("Verifying user...")
 #define STR_STATUS_RAS_CONNECT		TEXT("Dial-up connected")
 #define STR_STATUS_RAS_DISCONNECT	TEXT("Dial-up disconnected")
+#endif
 
+#ifdef ENABLE_WIFI
 // WiFi status
 #define STR_STATUS_WIFI_START		TEXT("Starting WiFi")
 #define STR_STATUS_WIFI_TIMEOUT		TEXT("WiFi timed out")
 #define STR_STATUS_NET_CONNECT		TEXT("WiFi connected")
 #define STR_STATUS_NET_DISCONNECT	TEXT("WiFi disconnected")
 #define STR_STATUS_NET_DROPPED		TEXT("WiFi connection lost")
+// WiFi options
+#define STR_DLG_WIFI_EXIT1			TEXT("(if conn. by nPOPuk)")
+#define STR_DLG_WIFI_EXIT2			TEXT("(always)")
+#endif
 
 //Initialise status
 #define STR_STATUS_INIT_MAILCNT		TEXT("%d")

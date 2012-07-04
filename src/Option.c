@@ -4023,13 +4023,20 @@ static BOOL CALLBACK SetRasOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	BOOL no_devname;
+	int exitopt;
+
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		/* ÉRÉìÉgÉçÅ[ÉãÇÃèâä˙âª */
 		SetControlFont(hDlg);
 		SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_SETCHECK, op.WiFiCon, 0);
 		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_SETCHECK, op.WiFiCheckEndDisCon, 0);
-		SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, op.WiFiExitDisCon, 0);
+		if (op.WiFiExitDisCon == 1) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, BST_INDETERMINATE, 0);
+		} else if (op.WiFiExitDisCon == 2) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_SETCHECK, BST_CHECKED, 0);
+			SendDlgItemMessage(hDlg, IDC_TEXT_DISCWIFI, WM_SETTEXT, 0, (LPARAM)STR_DLG_WIFI_EXIT2);
+		}
 		SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_SETCHECK, op.WiFiNoCheck, 0);
 
 		SetDlgItemInt(hDlg, IDC_EDIT_WAIT, op.WiFiWaitSec, FALSE);
@@ -4052,10 +4059,25 @@ static BOOL CALLBACK SetWiFiOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			break;
 #endif
 
+		case IDC_CHECK_DISCWIFI:
+			exitopt = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			if (exitopt == BST_INDETERMINATE) {
+				SendDlgItemMessage(hDlg, IDC_TEXT_DISCWIFI, WM_SETTEXT, 0, (LPARAM)STR_DLG_WIFI_EXIT1);
+			} else if (exitopt == BST_CHECKED) {
+				SendDlgItemMessage(hDlg, IDC_TEXT_DISCWIFI, WM_SETTEXT, 0, (LPARAM)STR_DLG_WIFI_EXIT2);
+			}
+			break;
+
 		case IDOK:
 			op.WiFiCon = SendDlgItemMessage(hDlg, IDC_CHECK_CONWIFI, BM_GETCHECK, 0, 0);
 			op.WiFiCheckEndDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFICHEND, BM_GETCHECK, 0, 0);
-			op.WiFiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			//op.WiFiExitDisCon = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			exitopt = SendDlgItemMessage(hDlg, IDC_CHECK_DISCWIFI, BM_GETCHECK, 0, 0);
+			if (exitopt == BST_INDETERMINATE) {
+				op.WiFiExitDisCon = 1; // only if connected by nPOPuk
+			} else if (exitopt == BST_CHECKED) {
+				op.WiFiExitDisCon = 2; // always on exit
+			}
 			op.WiFiNoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_NOWIFINOCHECK, BM_GETCHECK, 0, 0);
 			op.WiFiWaitSec = GetDlgItemInt(hDlg, IDC_EDIT_WAIT, NULL, FALSE);
 

@@ -253,6 +253,7 @@
 #define IDC_LIST_FILTER                 1053
 //#define IDC_CHECK_ENDDISCON           1054
 #define IDC_CHECK_DISCWIFI              1054
+#define IDC_TEXT_DISCWIFI               1055
 #define IDC_BUTTON_DOWN                 1054
 #define IDC_BUTTON_DOWN10               1055
 #define IDC_CHECK_FILTER                1055
