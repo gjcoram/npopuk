@@ -1729,6 +1729,8 @@ char *item_create_wireform(MAILITEM *tpMailItem, TCHAR *body)
 					r = s;
 				}
 			}
+		} else {
+			r = NULL;
 		}
 	
 		if (tpMailItem->RedirectTo != NULL) {
