@@ -182,11 +182,11 @@ BOOL GetNetworkStatus(BOOL Print)
 				}
 			}
 
+			if (has_conn || has_ssid) {
+				IsActive = TRUE;
+			}
 			if (has_ssid == TRUE && WiFiLoop == TRUE) {
 				break;
-			}
-			if (has_pwr && has_conn) {
-				IsActive = TRUE;
 			}
 
 			if (Print == TRUE && op.SocLog > 1) {

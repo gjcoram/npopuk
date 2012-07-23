@@ -1578,6 +1578,8 @@ static void SetEditMenu(HWND hWnd)
  */
 static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int EndFlag, BOOL MarkFlag)
 {
+	TCHAR *buf = NULL;
+
 	if (tpMailItem == NULL && hWnd != NULL) {
 		tpMailItem = (MAILITEM *)GetWindowLong(hWnd, GWL_USERDATA);
 		if (tpMailItem == NULL) {
@@ -1594,7 +1596,6 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 
 	} else {
 		HWND hEdit;
-		TCHAR *buf = NULL;
 #ifdef _WIN32_WCE
 		unsigned int len;
 #else
@@ -1702,11 +1703,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			tpMailItem->Body = alloc_copy(buf);
 #endif
 		}
-		mem_free(&tpMailItem->WireForm);
-		tpMailItem->WireForm = item_create_wireform(tpMailItem, buf);
-		mem_free(&buf);
 
-		SwitchCursor(TRUE);
 
 		// When subject is not set, bring up Property dialog
 		if (EndFlag == 0 && gAutoSend == FALSE
@@ -1720,8 +1717,10 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				res = IDD_DIALOG_SETSEND_SHORT;
 #endif
 			}
+			SwitchCursor(TRUE);
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(res), hWnd, SetSendProc, (LPARAM)tpMailItem);
 #else
+			SwitchCursor(TRUE);
 			mkdlg = DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_SETSEND), hWnd, SetSendProc,
 				(LPARAM)tpMailItem);
 #endif
@@ -1729,6 +1728,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				mem_free(&buf);
 				return FALSE;
 			}
+			SwitchCursor(FALSE);
 		}
 	}
 
@@ -1745,6 +1745,10 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		tpMailItem->Size = alloc_copy_t(numbuf);
 	}
 
+	mem_free(&tpMailItem->WireForm);
+	tpMailItem->WireForm = item_create_wireform(tpMailItem, buf);
+	mem_free(&buf);
+
 	if (MarkFlag == TRUE) {
 		tpMailItem->Mark = ICON_SEND;
 		SetStarMBMenu(TRUE);
@@ -1755,8 +1759,10 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 		if (GetStarMBMenu() && item_get_next_send_mark((MailBox + MAILBOX_SEND), TRUE, FALSE) == -1) {
 			SetStarMBMenu(FALSE);
 		}
-
 	}
+
+	SwitchCursor(TRUE);
+
 	if (item_is_mailbox(MailBox + MAILBOX_SEND, tpMailItem) == -1) {
 
 		if (item_add(MailBox + MAILBOX_SEND, tpMailItem) == FALSE) {
