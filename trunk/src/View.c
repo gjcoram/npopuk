@@ -1269,6 +1269,12 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			part_is_text = 1;
 		} else if (str_cmp_ni((*(vMultiPart + i))->ContentType, "image", tstrlen("image")) == 0) {
 			images++;
+		} else if (str_cmp_ni((*(vMultiPart + i))->ContentType, "application/octet-stream", tstrlen("application/octet-stream")) == 0) {
+			char *alt_type = GetMIME2Extension(NULL, (*(vMultiPart + i))->Filename);
+			if (alt_type != NULL && str_cmp_ni(alt_type, "image", tstrlen("image")) == 0) {
+				images++;
+			}
+			mem_free(&alt_type);
 		}
 		if (ret == -1 && part_is_text != 0) {
 			// this is the text part
@@ -3070,7 +3076,7 @@ BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailIte
 	int len = 0, cnt = 0, idx;
 	BOOL retval = TRUE;
 	
-	if (item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {
+	if (MailBoxIndex != MAILBOX_SEND && item_is_mailbox(MailBox + MailBoxIndex, tpMailItem) == -1) {
 		return FALSE;
 	}
 
