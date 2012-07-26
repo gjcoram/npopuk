@@ -3086,6 +3086,7 @@ BOOL CALLBACK StartConfigProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		SetControlFont(hDlg);
+		SendDlgItemMessage(hDlg, IDC_CHECK_TEMPL, BM_SETCHECK, 1, 0); // default checked
 		break;
 
 	case WM_CLOSE:
@@ -4896,7 +4897,16 @@ BOOL CALLBACK TemplateValueProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_INITDIALOG:
 		SetControlFont(hDlg);
 		tmp = (TCHAR **)lParam;
-		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)*tmp);
+		if( lstrcmpi(*tmp, TEXT("password")) == 0) {
+#ifdef _WIN32_WCE
+			SendDlgItemMessage(hDlg, IDC_STATIC_TYPE, WM_SETTEXT, 0, (LPARAM)TEXT("Password:"));
+#else
+			SendDlgItemMessage(hDlg, IDC_STATIC_TYPE, WM_SETTEXT, 0, (LPARAM)TEXT("Enter password:"));
+#endif
+			SendDlgItemMessage(hDlg, IDC_EDIT_NAME, EM_SETPASSWORDCHAR, (WPARAM)TEXT('*'), 0);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_EDIT_NAME, WM_SETTEXT, 0, (LPARAM)*tmp);
+		}
 		SendDlgItemMessage(hDlg, IDC_EDIT_NAME, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SetWindowLong(hDlg, GWL_USERDATA, lParam);
 		break;
