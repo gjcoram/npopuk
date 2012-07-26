@@ -1665,7 +1665,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		// メールデータの送信
 		SetSocStatusTextT(hWnd, STR_STATUS_SENDBODY);
 		SwitchCursor(FALSE);
-		if (send_mail_box->SendWireForm == TRUE && tpMailItem->WireForm != NULL) {
+		if (tpMailItem->WireForm != NULL) { // && send_mail_box->SendWireForm == TRUE
 			if (send_wire_form(hWnd, soc, tpMailItem, ErrStr) == FALSE) {
 				SwitchCursor(TRUE);
 				return FALSE;

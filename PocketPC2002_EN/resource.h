@@ -460,6 +460,7 @@
 #define ID_MENUITEM_VIEW                40129
 #define ID_MENUITEM_ICONSORT            40135
 #define ID_MENUITEM_TRAY                40137
+#define IDS_MENUITEM40138               40138
 #define ID_MENUITEM_SELMODE             40146
 #define ID_MENUITEM_ATTACH              40147
 #define ID_MENUITEM_ENCODE              40148  

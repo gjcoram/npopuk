@@ -1015,8 +1015,6 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->ReplyTo = profile_alloc_string(buf, TEXT("ReplyTo"), TEXT(""));
 		// UseReplyToForFrom
 		(MailBox + num)->UseReplyToForFrom = profile_get_int(buf, TEXT("UseReplyToForFrom"), 0);
-		// SendWireForm
-		(MailBox + num)->SendWireForm = profile_get_int(buf, TEXT("SendWireForm"), 1);
 		// MyAddr2Bcc
 		(MailBox + num)->MyAddr2Bcc = profile_get_int(buf, TEXT("MyAddr2Bcc"), 0);
 		// BccAddr
@@ -1728,8 +1726,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		if ((MailBox + j)->UseReplyToForFrom != 0) {
 			profile_write_int(buf, TEXT("UseReplyToForFrom"), (MailBox + j)->UseReplyToForFrom);
 		}
-		// SendWireForm
-		profile_write_int(buf, TEXT("SendWireForm"), (MailBox + j)->SendWireForm);
 		// MyAddr2Bcc
 		profile_write_int(buf, TEXT("MyAddr2Bcc"), (MailBox + j)->MyAddr2Bcc);
 		// BccAddr

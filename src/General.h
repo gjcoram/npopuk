@@ -702,7 +702,6 @@ typedef struct _MAILBOX {
 	TCHAR *Signature;
 	TCHAR *ReplyTo;
 	int UseReplyToForFrom;
-	int SendWireForm;
 	int MyAddr2Bcc;
 	TCHAR *BccAddr;
 	int PopBeforeSmtp;
