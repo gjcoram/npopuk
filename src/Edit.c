@@ -636,6 +636,12 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 		len += lstrlen(tpMailItem->Subject);
 	}
 	len += SetAttachListSize(tpMailItem->Attach);
+	if (tpMailItem->MailStatus == ICON_SENTMAIL) {
+		len += lstrlen(STR_VIEW_HEAD_DATE);
+		if (tpMailItem->FmtDate != NULL) {
+			len += lstrlen(tpMailItem->FmtDate);
+		}
+	}
 	buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 	if (buf == NULL) {
 		return;
@@ -646,7 +652,10 @@ static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem)
 	p = SetCcAddress(TEXT("Cc"), tpMailItem->Cc, p);
 	p = SetCcAddress(TEXT("Bcc"), tpMailItem->Bcc, p);
 	p = str_join_t(p, STR_EDIT_HEAD_SUBJECT, tpMailItem->Subject, (TCHAR *)-1);
-	SetAttachList(tpMailItem->Attach, p);
+	p = SetAttachList(tpMailItem->Attach, p);
+	if (tpMailItem->MailStatus == ICON_SENTMAIL) {
+		p = str_join_t(p, STR_VIEW_HEAD_DATE, tpMailItem->FmtDate, (TCHAR *)-1);
+	}
 
 	SetWindowText(hHeader, buf);
 	mem_free(&buf);
@@ -1107,7 +1116,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	HFONT hFont;
 	TEXTMETRIC lptm;
 	RECT rcClient, StRect;
-	int Height, FontHeight;
+	int Height, HLine, FontHeight;
 
 #ifdef _WIN32_WCE_LAGENDA
 	CSOBAR_BASEINFO BaseInfo = {
@@ -1312,7 +1321,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		SelectObject(hdc, hFont);
 	}
 	ReleaseDC(GetDlgItem(hWnd, IDC_HEADER), hdc);
-	FontHeight = (lptm.tmHeight + lptm.tmExternalLeading) * 3;
+	HLine = (tpMailItem->MailStatus == ICON_SENTMAIL) ? 4 : 3;
+	FontHeight = (lptm.tmHeight + lptm.tmExternalLeading) * HLine;
 
 	//Setting temporarily, it re-calculates size
 	MoveWindow(GetDlgItem(hWnd, IDC_HEADER), 0, Height, rcClient.right, FontHeight, TRUE);
@@ -2284,14 +2294,23 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			}
 			ProcessFlag = TRUE;
 #endif
-			//External editor starting
-			if (AppEditMail(hWnd, (long)hWnd, tpMailItem->Body, tpMailItem) == FALSE) {
+			{
+				BOOL ret = TRUE;
+				if (tpMailItem->MailStatus == ICON_SENTMAIL && tpMailItem->WireForm != NULL) {
+					// start External Viewer
+					ret = AppEditMail(hWnd, (long)hWnd, tpMailItem->WireForm, tpMailItem);
+				} else {
+					//External editor starting
+					ret = AppEditMail(hWnd, (long)hWnd, tpMailItem->Body, tpMailItem);
+				}
+				if (ret == FALSE) {
 #ifdef _WIN32_WCE
-				ProcessFlag = FALSE;
+					ProcessFlag = FALSE;
 #endif
-				ShowWindow(hWnd, SW_SHOW);
-				UpdateWindow(hWnd);
-				break;
+					ShowWindow(hWnd, SW_SHOW);
+					UpdateWindow(hWnd);
+					break;
+				}
 			}
 			SetTimer(hWnd, ID_WAIT_TIMER, 1, NULL);
 			break;
