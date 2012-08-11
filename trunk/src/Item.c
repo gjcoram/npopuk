@@ -1363,6 +1363,9 @@ void item_set_flags(MAILITEM *tpMailItem, MAILBOX *tpMailBox, int code)
 	// Mark
 	mrk = code / 10;
 	tpMailItem->Mark = (mrk <= ICON_FLAG) ? mrk : ICON_NON;
+	if (tpMailItem->Mark == ICON_FLAG && tpMailBox) {
+		tpMailBox->FlagCount++;
+	}
 
 	// Status
 	stat = code % 10;
