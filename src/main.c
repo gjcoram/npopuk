@@ -239,7 +239,6 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer);
 static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag);
 static void Init_NewMailFlag(HWND hWnd);
 static void NewMail_Message(HWND hWnd, int cnt);
-static void SetMailboxMark(int Box, int Status);
 static void AutoSave_Mailboxes(HWND hWnd);
 static BOOL AdvOptionEditor(HWND hWnd);
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -1051,7 +1050,7 @@ void SetSocStatusText(HWND hWnd, char *buf)
 #endif
 
 /*
- * SetItemCntStatusText - アイテム数の表示
+ * SetItemCntStatusText - Sets View/Server, New/Unread counts in status bar
  */
 void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 {
@@ -1060,7 +1059,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	TCHAR wbuf[BUF_SIZE], dtmp[20];
 	long dsize;
 	int ItemCnt;
-	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0;
+	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0, FlagCnt = 0;
 	int i;
 	BOOL err = FALSE;
 
@@ -1161,6 +1160,9 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 		if (tpMailItem->MailStatus == ICON_MAIL) {
 			UnreadCnt++;
 		}
+		if (tpMailItem->Mark == ICON_FLAG) {
+			FlagCnt++;
+		}
 	}
 	if (UnsentCnt > 0) {
 		wsprintf(wbuf, STR_STATUS_MAILINFO_U, NewCnt, UnreadCnt, UnsentCnt);
@@ -1169,21 +1171,9 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	}
 	SetStatusTextT(MainWnd, wbuf, 1);
 
-	if (tpMailBox->NewMail > 0 && NewCnt == 0) {
-		// GJC - remove * from drop-down list
-		TCHAR *p;
-
-		p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
-			? STR_MAILBOX_NONAME : tpMailBox->Name;
-
-		DeleteMBMenu(SelBox);
-		InsertMBMenu(SelBox, p);
-		SelectMBMenu(SelBox);
-		tpMailBox->NewMail = NewCnt;
-		SetUnreadCntTitle(FALSE);
-	}
 	tpMailBox->NewMail = NewCnt;
 	tpMailBox->UnreadCnt = UnreadCnt;
+	tpMailBox->FlagCount = FlagCnt;
 
 	// Notify programs of new count
 	if (bNotify)
@@ -1240,7 +1230,7 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 	TCHAR *p;
 
 	tpMailBox = MailBox + BoxIndex;
-	SetMailboxMark(RecvBox, STATUS_ERROR);
+	SetMailboxMark(RecvBox, STATUS_ERROR, FALSE);
 	RecvBox = -1;
 	SetMailMenu(hWnd);
 	SwitchCursor(TRUE);
@@ -2379,19 +2369,7 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)FALSE, 0);
 	AddMBMenu(STR_SENDBOX_NAME); // updated later
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
-		TCHAR *p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
-			? STR_MAILBOX_NONAME : (MailBox + i)->Name;
-		if ((MailBox + i)->NewMail) {
-			TCHAR buf[BUF_SIZE];
-#ifdef _WIN32_WCE_PPC
-			wsprintf(buf, TEXT("* %s"), p);
-#else
-			wsprintf(buf, TEXT("%s *"), p);
-#endif
-			AddMBMenu(buf);
-		} else {
-			AddMBMenu(p);
-		}
+		SetMailboxMark(i, STATUS_DONE, TRUE);
 	}
 	SendMessage(hCombo, WM_SETREDRAW, (WPARAM)TRUE, 0);
 	UpdateWindow(hCombo);
@@ -3346,7 +3324,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	if (op.SocLog > 0) log_header("recv");
 
 	RecvBox = BoxIndex;
-	SetMailboxMark(RecvBox, STATUS_CHECK);
+	SetMailboxMark(RecvBox, STATUS_CHECK, FALSE);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -3544,7 +3522,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	if (op.SocLog > 0) log_header("exec");
 
 	RecvBox = BoxIndex;
-	SetMailboxMark(RecvBox, STATUS_CHECK);
+	SetMailboxMark(RecvBox, STATUS_CHECK, FALSE);
 
 	//of the password Acquisition (is acquired the IP which retains IP address from host name) the
 	SwitchCursor(FALSE);
@@ -3704,6 +3682,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	MAILITEM *tpTmpMailItem;
 	TCHAR *title;
 	int i, j, SelPoint = -1;
+	int new_count = 0, flag_count = 0;
 	BOOL retval = TRUE;
 
 	if (tpSingleItem == NULL) {
@@ -3754,6 +3733,12 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 			}
 		} else {
 			tpMailItem = tpSingleItem;
+		}
+		if (tpMailItem->New) {
+			new_count++;
+		}
+		if (tpMailItem->Mark == ICON_FLAG) {
+			flag_count++;
 		}
 
 		if (TargetBox == MAILBOX_SEND) {
@@ -3846,6 +3831,11 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	if (tpMailBox->Loaded) {
 		item_resize_mailbox(tpMailBox, FALSE);
 	}
+	tpMailBox->NewMail += new_count;
+	tpMailBox->FlagCount += flag_count;
+	if (g_soc == -1 || TargetBox != SelBox) {
+		SetMailboxMark(TargetBox, STATUS_DONE, FALSE);
+	}
 	SetItemCntStatusText(NULL, FALSE);
 	if (SelPoint != -1) {
 		int st = LVIS_FOCUSED;
@@ -3868,6 +3858,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 static void ListDeleteItem(HWND hWnd, BOOL Ask)
 {
 	MAILITEM *tpMailItem;
+	BOOL had_mark = FALSE; // update mailbox flag (*~) if necessary
 	int cnt, i;
 
 	if ((cnt = ListView_GetSelectedCount(mListView)) <= 0) {
@@ -3902,6 +3893,9 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	while ((i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL) {
+			if (tpMailItem->New || tpMailItem->Mark == ICON_FLAG) {
+				had_mark = TRUE;
+			}
 			tpMailItem->Mark = -1;
 		}
 		ListView_DeleteItem(mListView, i);
@@ -3921,6 +3915,9 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 
 	ListView_SetRedraw(mListView, TRUE);
 	SetItemCntStatusText(NULL, FALSE);
+	if (had_mark && (g_soc == -1 || RecvBox != SelBox)) {
+		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
+	}
 	SwitchCursor(TRUE);
 }
 /*
@@ -4067,6 +4064,12 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 		ListView_RedrawItems(mListView, i, i);
 	}
 	UpdateWindow(mListView);
+	if (Mark == ICON_FLAG) {
+		SetItemCntStatusText(NULL, FALSE);
+		if (g_soc == -1 || RecvBox != SelBox) {
+			SetMailboxMark(SelBox, STATUS_DONE, FALSE);
+		}
+	}
 
 	if (hViewWnd != NULL) {
 		SendMessage(hViewWnd, WM_CHANGE_MARK, 0, 0);
@@ -4387,7 +4390,7 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 			} else {
 				UnreadMailBox++;
 			}
-			SetMailboxMark(i, STATUS_DONE);
+			SetMailboxMark(i, STATUS_DONE, FALSE);
 		}
 	}
 	SelectMBMenu(j);
@@ -4449,7 +4452,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		if (SelBox != i) {
 			(MailBox + i)->NewMail++;
 		}
-		SetMailboxMark(i, STATUS_DONE);
+		SetMailboxMark(i, STATUS_DONE, FALSE);
 		if ((MailBox + i)->NewMailSoundFile && *(MailBox + i)->NewMailSoundFile != TEXT('\0')) {
 			sndPlaySound((MailBox + i)->NewMailSoundFile, SND_ASYNC | SND_NODEFAULT);
 		}
@@ -4502,38 +4505,56 @@ static void NewMail_Message(HWND hWnd, int cnt)
 /*
  * SetMailboxMark - set mailbox indicator (GJC)
  */
-static void SetMailboxMark(int Box, int Status)
+void SetMailboxMark(int Box, int Status, BOOL Add)
 {
 	MAILBOX *tpMailBox = MailBox + Box;
 	TCHAR *p, *r;
 	if (Box < 0) {
 		return;
 	}
-	DeleteMBMenu(Box);
+	if (Add == FALSE) {
+		DeleteMBMenu(Box);
+	}
 	p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : tpMailBox->Name;
 	r = TEXT("");
-	if (Status == STATUS_DONE && tpMailBox->NewMail == 0) {
-		InsertMBMenu(Box, p);
+	if (Status == STATUS_DONE && tpMailBox->NewMail == 0 && tpMailBox->FlagCount == 0) {
+		if (Add == TRUE) {
+			AddMBMenu(p);
+		} else {
+			InsertMBMenu(Box, p);
+		}
 	} else {
 		TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
 		if (q != NULL) {
 #ifdef _WIN32_WCE_PPC
 			if (Status == STATUS_DONE) {
-				r = TEXT("* ");
+				if (tpMailBox->NewMail > 0) {
+					r = TEXT("* ");
+				} else if (tpMailBox->FlagCount > 0) {
+					r = TEXT("~ ");
+				}
 			} else {
 				r = (Status == STATUS_ERROR) ? TEXT("# ") : TEXT("> ");
 			}
 			str_join_t(q, r, p, (TCHAR *)-1);
 #else
 			if (Status == STATUS_DONE) {
-				r = TEXT(" *");
+				if (tpMailBox->NewMail > 0) {
+					r = TEXT(" *");
+				} else if (tpMailBox->FlagCount > 0) {
+					r = TEXT(" ~");
+				}
 			} else {
 				r = (Status == STATUS_ERROR) ? TEXT(" #") : TEXT(" <");
 			}
 			str_join_t(q, p, r, (TCHAR *)-1);
 #endif
-			InsertMBMenu(Box, q);
+			if (Add == TRUE) {
+				AddMBMenu(q);
+			} else {
+				InsertMBMenu(Box, q);
+			}
 			mem_free(&q);
 		}
 	}
@@ -5083,13 +5104,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					AutoSave_Mailboxes(hWnd);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE;
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -5121,7 +5142,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					g_soc = -1;
 					if (op.SocLog > 0) log_flush();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					SetItemCntStatusText(NULL, FALSE);
 					SetUnreadCntTitle(TRUE);
 				}
@@ -6455,7 +6476,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 			if (g_soc == -1 || GetHostFlag == TRUE) {
 				g_soc = -1;
-				SetMailboxMark(RecvBox, STATUS_DONE);
+				SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 				RecvBox = -1;
 				EndSocketFunc(hWnd, FALSE);
 				if (op.SocLog > 0) log_flush();
@@ -6467,7 +6488,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			if (command_status == POP_QUIT || command_status == POP_START) {
 				socket_close(hWnd, g_soc);
 				g_soc = -1;
-				SetMailboxMark(RecvBox, STATUS_DONE);
+				SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 				RecvBox = -1;
 				SetItemCntStatusText(NULL, FALSE);
 				SetUnreadCntTitle(TRUE);
@@ -7020,12 +7041,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 						RecvMailList(hWnd, RecvBox, FALSE);
 						break;
 					}
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					RecvBox = -1;
 					EndSocketFunc(hWnd, TRUE);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -7047,7 +7068,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				if (*ErrStr != TEXT('\0')) {
 					SocketErrorMessage(hWnd, ErrStr, RecvBox);
 				} else {
-					SetMailboxMark(RecvBox, STATUS_DONE);
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					RecvBox = -1;
 					if (op.SocLog > 0) log_flush();
 					SetMailMenu(hWnd);

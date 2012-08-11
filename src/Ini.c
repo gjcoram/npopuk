@@ -1044,6 +1044,9 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->SmtpSSLInfo.Pkey = profile_alloc_string(buf, TEXT("SmtpSSLPkey"), TEXT(""));
 		(MailBox + num)->SmtpSSLInfo.Pass = profile_alloc_string(buf, TEXT("SmtpSSLPass"), TEXT(""));
 
+		// Flag
+		(MailBox + num)->FlagCount = profile_get_int(buf, TEXT("FlagCount"), 0);
+
 		// Filter
 		(MailBox + num)->FilterEnable = profile_get_int(buf, TEXT("FilterEnable"), 0);
 		(MailBox + num)->FilterCnt = profile_get_int(buf, TEXT("FilterCnt"), 0);
@@ -1753,6 +1756,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(buf, TEXT("SmtpSSLCert"), (MailBox + j)->SmtpSSLInfo.Cert);
 		profile_write_string(buf, TEXT("SmtpSSLPkey"), (MailBox + j)->SmtpSSLInfo.Pkey);
 		profile_write_string(buf, TEXT("SmtpSSLPass"), (MailBox + j)->SmtpSSLInfo.Pass);
+
+		// Flag
+		profile_write_int(buf, TEXT("FlagCount"), (MailBox + j)->FlagCount);
 
 		// Filter
 		profile_write_int(buf, TEXT("FilterEnable"), (MailBox + j)->FilterEnable);

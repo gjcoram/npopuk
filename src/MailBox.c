@@ -393,7 +393,7 @@ static BOOL mailbox_name_clash(TCHAR *name)
 /*
  * mailbox_swap_files - exchange mailbox files (if Filename==NULL)
  */
-void mailbox_swap_files(HWND hWnd, int i, int j)
+static void mailbox_swap_files(HWND hWnd, int i, int j)
 {
 	TCHAR name1[BUF_SIZE], name2[BUF_SIZE], path[2*BUF_SIZE];
 	int len;

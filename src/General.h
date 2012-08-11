@@ -718,6 +718,7 @@ typedef struct _MAILBOX {
 	// Check
 	int NewMail;
 	int UnreadCnt;
+	int FlagCount;
 	BOOL HeldMail;
 	BOOL ListInitMsg;
 	int CyclicFlag;
@@ -1213,6 +1214,7 @@ BOOL MessageFunc(HWND hWnd, MSG *msg);
 void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel);
 BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL del);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
+void SetMailboxMark(int Box, int Status, BOOL Add);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
 #ifndef _WIN32_WCE

@@ -911,6 +911,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 #endif	// _NOFILEMAP
 		return FALSE;
 	}
+	tpMailBox->FlagCount = 0;
 
 	i = 0;
 	len = 7; // = tstrlen(MBOX_DELIMITER);
@@ -1224,6 +1225,9 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		if (do_resize) {
 			item_resize_mailbox(tpMailBox, FALSE);
 		}
+	}
+	if (tpMailBox->FlagCount > 0) {
+		SetMailboxMark(SelBox, 0, FALSE);
 	}
 	if (op.SocLog > 9) {
 		int pos = lstrlen(path);
