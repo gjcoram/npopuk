@@ -1400,6 +1400,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 	if (BodyOnly == FALSE) {
 		if (IsAttach == FALSE) {
+			BOOL remove_star = FALSE;
 			LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 
 			// 開封済みにする
@@ -1408,7 +1409,13 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 					(MailBox + vSelBox)->NeedsSave |= MARKS_CHANGED;
 					tpMailItem->MailStatus = ICON_READ;
 				}
-				tpMailItem->New = FALSE;
+				if (tpMailItem->New) {
+					tpMailItem->New = FALSE;
+					(MailBox + vSelBox)->NewMail--;
+					if ((MailBox + vSelBox)->NewMail <= 0) {
+						remove_star = TRUE;
+					}
+				}
 				redraw = TRUE;
 			}
 
@@ -1427,6 +1434,12 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 			// ウィンドウタイトルの設定
 			SetWindowString(hWnd, (MailBox + vSelBox)->Name, tpMailItem->MailBox, tpMailItem->No);
+
+			SetItemCntStatusText(NULL, FALSE);
+			if (remove_star) {
+				SetMailboxMark(vSelBox, 0, FALSE);
+			}
+
 		} else {
 			SetWindowString(hWnd, TEXT("Attached message"), (MailBox + vSelBox)->Name, 0);
 		}
@@ -1434,10 +1447,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		SetHeaderString(GetDlgItem(hWnd, IDC_HEADER), tpMailItem);
 		UpdateWindow(GetDlgItem(hWnd, IDC_HEADER));
 		mailbox_menu_rebuild(hWnd, IsAttach);
-
-		if (IsAttach == FALSE) {
-			SetItemCntStatusText(NULL, FALSE);
-		}
 
 		// マーク状態取得
 		GetMarkStatus(hWnd, tpMailItem);
