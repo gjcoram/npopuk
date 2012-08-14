@@ -3833,10 +3833,10 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	}
 	tpMailBox->NewMail += new_count;
 	tpMailBox->FlagCount += flag_count;
+	SetItemCntStatusText(NULL, FALSE);
 	if (g_soc == -1 || TargetBox != SelBox) {
 		SetMailboxMark(TargetBox, STATUS_DONE, FALSE);
 	}
-	SetItemCntStatusText(NULL, FALSE);
 	if (SelPoint != -1) {
 		int st = LVIS_FOCUSED;
 		//of mail item The item which is added is selected the
@@ -3966,7 +3966,7 @@ static void ListDeleteAttach(HWND hWnd)
 static void SetDownloadMark(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
-	BOOL MarkedOne = FALSE, set = FALSE;
+	BOOL marked_one = FALSE, set = FALSE, changed_flag = FALSE;
 	int SendOrDownIcon = ((SelBox == MAILBOX_SEND) ? ICON_SEND : ICON_DOWN);
 	int i;
 
@@ -3994,7 +3994,11 @@ static void SetDownloadMark(HWND hWnd)
 			continue;
 		}
 		if (SelBox != MAILBOX_SEND || tpMailItem->MailStatus != ICON_SENTMAIL) {
-			MarkedOne = TRUE;
+			marked_one = TRUE;
+			if (tpMailItem->Mark == ICON_FLAG) {
+				changed_flag = TRUE;
+				(MailBox+SelBox)->FlagCount--;
+			}
 			if (set == TRUE) {
 				tpMailItem->Mark = SendOrDownIcon;
 				ListView_SetItemState(mListView, i, 0, LVIS_CUT);
@@ -4008,8 +4012,11 @@ static void SetDownloadMark(HWND hWnd)
 		}
 	}
 	UpdateWindow(mListView);
-	if (SelBox == MAILBOX_SEND && MarkedOne == TRUE) {
+	if (SelBox == MAILBOX_SEND && marked_one == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
+	}
+	if (changed_flag) {
+		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
 
 	if (hViewWnd != NULL) {
@@ -4083,7 +4090,7 @@ static void UnMark(HWND hWnd)
 {
 	MAILITEM *tpMailItem;
 	int i;
-	BOOL unmarked_one = FALSE;
+	BOOL unmarked_one = FALSE, unflagged_one = FALSE;
 
 	if (ListView_GetSelectedCount(mListView) <= 0) {
 		return;
@@ -4106,6 +4113,10 @@ static void UnMark(HWND hWnd)
 		}
 		if (tpMailItem->Mark != tpMailItem->MailStatus) {
 			unmarked_one = TRUE;
+			if (tpMailItem->Mark == ICON_FLAG) {
+				unflagged_one = TRUE;
+				(MailBox+SelBox)->FlagCount--;
+			}
 			tpMailItem->Mark = tpMailItem->MailStatus;
 		}
 		if (SelBox != MAILBOX_SEND && tpMailItem->Download == FALSE) {
@@ -4117,6 +4128,9 @@ static void UnMark(HWND hWnd)
 
 	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
+	}
+	if (unflagged_one == TRUE) {
+		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
 
 	if (hViewWnd != NULL) {
