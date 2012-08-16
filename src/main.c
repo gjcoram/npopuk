@@ -1230,7 +1230,9 @@ void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex)
 	TCHAR *p;
 
 	tpMailBox = MailBox + BoxIndex;
-	SetMailboxMark(RecvBox, STATUS_ERROR, FALSE);
+	if (BoxIndex == RecvBox) {
+		SetMailboxMark(RecvBox, STATUS_ERROR, FALSE);
+	}
 	RecvBox = -1;
 	SetMailMenu(hWnd);
 	SwitchCursor(TRUE);
@@ -4014,8 +4016,7 @@ static void SetDownloadMark(HWND hWnd)
 	UpdateWindow(mListView);
 	if (SelBox == MAILBOX_SEND && marked_one == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
-	}
-	if (changed_flag) {
+	} else if (changed_flag) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
 
@@ -4128,8 +4129,7 @@ static void UnMark(HWND hWnd)
 
 	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
 		SetItemCntStatusText(NULL, FALSE);
-	}
-	if (unflagged_one == TRUE) {
+	} else if (unflagged_one == TRUE) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
 
