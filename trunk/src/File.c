@@ -1227,7 +1227,8 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 		}
 	}
 	if (tpMailBox->FlagCount > 0) {
-		SetMailboxMark(SelBox, 0, FALSE);
+		int box = tpMailBox - MailBox;
+		SetMailboxMark(box, 0, FALSE);
 	}
 	if (op.SocLog > 9) {
 		int pos = lstrlen(path);
