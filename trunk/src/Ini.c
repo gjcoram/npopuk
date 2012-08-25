@@ -907,6 +907,9 @@ BOOL ini_read_setting(HWND hWnd)
 		// Type
 		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0);
 
+		// Flag
+		(MailBox + num)->FlagCount = profile_get_int(buf, TEXT("FlagCount"), 0);
+
 		(MailBox + num)->WasMbox = -1; // unknown, updated when loaded
 		if ((MailBox + num)->Type == MAILBOX_TYPE_SAVE) {
 			// GJC - SaveBox type (not an account)
@@ -1043,9 +1046,6 @@ BOOL ini_read_setting(HWND hWnd)
 		(MailBox + num)->SmtpSSLInfo.Cert = profile_alloc_string(buf, TEXT("SmtpSSLCert"), TEXT(""));
 		(MailBox + num)->SmtpSSLInfo.Pkey = profile_alloc_string(buf, TEXT("SmtpSSLPkey"), TEXT(""));
 		(MailBox + num)->SmtpSSLInfo.Pass = profile_alloc_string(buf, TEXT("SmtpSSLPass"), TEXT(""));
-
-		// Flag
-		(MailBox + num)->FlagCount = profile_get_int(buf, TEXT("FlagCount"), 0);
 
 		// Filter
 		(MailBox + num)->FilterEnable = profile_get_int(buf, TEXT("FilterEnable"), 0);
@@ -1645,6 +1645,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(buf, TEXT("NewMailSoundFile"), (MailBox + j)->NewMailSoundFile);
 		// Type
 		profile_write_int(buf, TEXT("Type"), (MailBox + j)->Type);
+		// Flag
+		profile_write_int(buf, TEXT("FlagCount"), (MailBox + j)->FlagCount);
+
 		if ((MailBox + j)->Type == MAILBOX_TYPE_SAVE) {
 			// Default account
 			profile_write_string(buf, TEXT("DefAccount"), (MailBox + j)->DefAccount);
@@ -1756,9 +1759,6 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		profile_write_string(buf, TEXT("SmtpSSLCert"), (MailBox + j)->SmtpSSLInfo.Cert);
 		profile_write_string(buf, TEXT("SmtpSSLPkey"), (MailBox + j)->SmtpSSLInfo.Pkey);
 		profile_write_string(buf, TEXT("SmtpSSLPass"), (MailBox + j)->SmtpSSLInfo.Pass);
-
-		// Flag
-		profile_write_int(buf, TEXT("FlagCount"), (MailBox + j)->FlagCount);
 
 		// Filter
 		profile_write_int(buf, TEXT("FilterEnable"), (MailBox + j)->FilterEnable);
