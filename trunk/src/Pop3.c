@@ -784,12 +784,12 @@ static int list_proc_stat(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		tpMailBox->ListInitMsg = TRUE;
 		if (op.SocLog > 1) log_save_a("Clearing mailbox: server says 0 messages\r\n");
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
-		SetItemCntStatusText(tpMailBox, FALSE);
+		SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 		return POP_QUIT;
 	} else if (tpMailBox->LastNo == -1 && tpMailBox->ListInitMsg == TRUE) {
 		init_mailbox(hWnd, tpMailBox, ShowFlag);
 	}
-	SetItemCntStatusText(tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 
 	init_recv = FALSE;
 	mail_received = 0;
@@ -1024,7 +1024,7 @@ static int list_proc_uidl_all(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHA
 		ListView_SetRedraw(mListView, TRUE);
 	}
 	SwitchCursor(TRUE);
-	SetItemCntStatusText(tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 
 	mem_free(&tpMailBox->LastMessageId);
 	tpMailBox->LastMessageId = NULL;
@@ -1436,7 +1436,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 			if (op.RecvScroll == 1) {
 				SendMessage(mListView, WM_VSCROLL, SB_LINEDOWN, 0);
 			}
-			SetItemCntStatusText(tpMailBox, FALSE);
+			SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 			EndThreadSortFlag = TRUE;
 		}
 		if (first_new_msg) {
@@ -1761,7 +1761,7 @@ static int exec_proc_retr(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 				LVIS_CUT | LVIS_STATEIMAGEMASK);
 			ListView_RedrawItems(mListView, i, i);
 			UpdateWindow(mListView);
-			SetItemCntStatusText(tpMailBox, FALSE);
+			SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 		}
 	}
 	if (hViewWnd != NULL) {
@@ -2048,7 +2048,7 @@ static int exec_proc_dele(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *E
 		}
 	}
 	item_resize_mailbox(tpMailBox, FALSE);
-	SetItemCntStatusText(tpMailBox, FALSE);
+	SetItemCntStatusText(tpMailBox, FALSE, FALSE);
 	return POP_QUIT;
 }
 

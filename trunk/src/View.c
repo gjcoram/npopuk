@@ -1400,7 +1400,6 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 
 	if (BodyOnly == FALSE) {
 		if (IsAttach == FALSE) {
-			BOOL remove_star = FALSE;
 			LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 
 			// 開封済みにする
@@ -1409,13 +1408,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 					(MailBox + vSelBox)->NeedsSave |= MARKS_CHANGED;
 					tpMailItem->MailStatus = ICON_READ;
 				}
-				if (tpMailItem->New) {
-					tpMailItem->New = FALSE;
-					(MailBox + vSelBox)->NewMail--;
-					if ((MailBox + vSelBox)->NewMail <= 0) {
-						remove_star = TRUE;
-					}
-				}
+				tpMailItem->New = FALSE;
 				redraw = TRUE;
 			}
 
@@ -1435,10 +1428,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 			// ウィンドウタイトルの設定
 			SetWindowString(hWnd, (MailBox + vSelBox)->Name, tpMailItem->MailBox, tpMailItem->No);
 
-			SetItemCntStatusText(NULL, FALSE);
-			if (remove_star) {
-				SetMailboxMark(vSelBox, 0, FALSE);
-			}
+			SetItemCntStatusText(NULL, FALSE, FALSE);
 
 		} else {
 			SetWindowString(hWnd, TEXT("Attached message"), (MailBox + vSelBox)->Name, 0);
@@ -4204,7 +4194,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						SwitchCursor(FALSE);
 						ListView_ShowItem(mListView, (MailBox + SelBox), FALSE);
 						SwitchCursor(TRUE);
-						SetItemCntStatusText(NULL, FALSE);
+						SetItemCntStatusText(NULL, FALSE, FALSE);
 					}
 					if (mark_del == TRUE && tpNextMail == NULL && op.ViewCloseNoNext == 1) {
 						SendMessage(hWnd, WM_CLOSE, 0, 0);
@@ -4261,6 +4251,7 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 
 	key = GetKeyState(VK_SHIFT);
 	if (NoAppFlag == FALSE && ((op.DefViewApp == 1 && key >= 0) || (op.DefViewApp == 0 && key < 0))) {
+		BOOL was_new = FALSE;
 		// ビューアで表示
 		if (AppViewMail((MAILITEM *)lpParam, SelBox) == FALSE) {
 			ErrorMessage(MainWnd, STR_ERR_VIEW);
@@ -4273,16 +4264,28 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		// 開封済みにする
 		if (((MAILITEM *)lpParam)->MailStatus != ICON_NON && ((MAILITEM *)lpParam)->MailStatus < ICON_SENTMAIL) {
 			((MAILITEM *)lpParam)->MailStatus = ICON_READ;
-			((MAILITEM *)lpParam)->New = FALSE;
+			if (((MAILITEM *)lpParam)->New == TRUE) {
+				((MAILITEM *)lpParam)->New = FALSE;
+				was_new = TRUE;
+				if( (--(MailBox + SelBox)->NewMail) <= 0) {
+					SetUnreadCntTitle(FALSE);
+				}
+			}
 		}
 
 		// 一覧のアイコンの設定
 		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL && ((MAILITEM *)lpParam)->Mark != ICON_FLAG) {
 			int LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 			((MAILITEM *)lpParam)->Mark = ((MAILITEM *)lpParam)->MailStatus;
+			if (was_new) {
+				ListView_SetItemState(mListView, LvFocus, INDEXTOOVERLAYMASK(((MAILITEM *)lpParam)->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
+			}
 			ListView_RedrawItems(mListView, LvFocus, LvFocus);
 			UpdateWindow(mListView);
+		//} else if (was_new) {
+			// need to remove * overlay
 		}
+		//SetItemCntStatusText(NULL, FALSE, FALSE);
 		return FALSE;
 	}
 

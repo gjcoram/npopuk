@@ -358,10 +358,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Global &Options...",          ID_MENUITEM_OPTION
         MENUITEM "&Enable auto-check",          ID_MENUITEM_AUTOCHECK
-        POPUP "&Dial-up"
+        POPUP "&Connection"
         BEGIN
-            MENUITEM "&Connect",                ID_MENUITEM_RAS_CONNECT
-            MENUITEM "&Disconnect",             ID_MENUITEM_RAS_DISCONNECT
+            MENUITEM "&Dial-up",                ID_MENUITEM_RAS_CONNECT
+            MENUITEM "&Hang up",                ID_MENUITEM_RAS_DISCONNECT
             MENUITEM SEPARATOR
             MENUITEM "&LAN",                    ID_MENUITEM_LAN
             MENUITEM SEPARATOR
@@ -1399,8 +1399,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Setup File"
 FONT 8, "Microsoft Sans Serif"
 BEGIN
-    LTEXT           "Enter value for:",IDC_STATIC_TYPE,10,10,50,10
-    EDITTEXT        IDC_EDIT_NAME,64,8,136,12,ES_AUTOHSCROLL
+    LTEXT           "Enter value for:",IDC_STATIC_TYPE,10,10,55,10
+    EDITTEXT        IDC_EDIT_NAME,69,8,131,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "&OK",IDOK,64,30,50,14
 END
 

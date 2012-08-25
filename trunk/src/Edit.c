@@ -1783,7 +1783,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 				I_IMAGECALLBACK, (long)tpMailItem, ListView_GetItemCount(mListView));
 		}
 	}
-	SetItemCntStatusText(NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE, TRUE);
 	if (EndFlag == 0) {
 		if (op.SelectSendBox == 1 && SelBox != MAILBOX_SEND) {
 			mailbox_select(MainWnd, MAILBOX_SEND);

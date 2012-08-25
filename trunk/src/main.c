@@ -1052,7 +1052,7 @@ void SetSocStatusText(HWND hWnd, char *buf)
 /*
  * SetItemCntStatusText - Sets View/Server, New/Unread counts in status bar
  */
-void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
+void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent)
 {
 	MAILBOX *tpMailBox;
 	MAILITEM *tpMailItem;
@@ -1061,7 +1061,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	int ItemCnt;
 	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0, FlagCnt = 0;
 	int i;
-	BOOL err = FALSE;
+	BOOL err = FALSE, changed = FALSE;
 
 	tpMailBox = (MailBox + SelBox);
 	if (tpMailBox == NULL || (tpViewMailBox != NULL && tpViewMailBox != tpMailBox)) {
@@ -1124,24 +1124,29 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 		return;
 	}
 	tpMailBox = MailBox + MAILBOX_SEND;
-	for (i = 0; i < tpMailBox->MailItemCnt; i++) {
-		tpMailItem = *(tpMailBox->tpMailItem + i);
-		if (tpMailItem == NULL) {
-			continue;
+	if (CountUnsent) {
+		for (i = 0; i < tpMailBox->MailItemCnt; i++) {
+			tpMailItem = *(tpMailBox->tpMailItem + i);
+			if (tpMailItem == NULL) {
+				continue;
+			}
+			if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
+				UnsentCnt++;
+			}
+			if (tpMailItem->Mark == ICON_ERROR) {
+				err = TRUE;
+			}
 		}
-		if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
-			UnsentCnt++;
+		tpMailBox->NewMail = UnsentCnt;
+		if (UnsentCnt > 0) {
+			SetStarMBMenu((err == TRUE) ? ICON_ERROR : TRUE);
+		} else {
+			if (GetStarMBMenu()) {
+				SetStarMBMenu(FALSE);
+			}
 		}
-		if (tpMailItem->Mark == ICON_ERROR) {
-			err = TRUE;
-		}
-	}
-	if (UnsentCnt > 0) {
-		SetStarMBMenu((err == TRUE) ? ICON_ERROR : TRUE);
 	} else {
-		if (GetStarMBMenu()) {
-			SetStarMBMenu(FALSE);
-		}
+		UnsentCnt = tpMailBox->NewMail;
 	}
 	if (SelBox == MAILBOX_SEND) {
 		wsprintf(wbuf, STR_STATUS_UNSENT, UnsentCnt);
@@ -1171,9 +1176,17 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify)
 	}
 	SetStatusTextT(MainWnd, wbuf, 1);
 
+	if ((tpMailBox->NewMail > 0 && NewCnt == 0) ||
+		(tpMailBox->NewMail == 0 && tpMailBox->FlagCount > 0 && FlagCnt == 0)) {
+		changed = TRUE;
+	}
 	tpMailBox->NewMail = NewCnt;
 	tpMailBox->UnreadCnt = UnreadCnt;
 	tpMailBox->FlagCount = FlagCnt;
+	if (changed) {
+		SetUnreadCntTitle(FALSE);
+		// calls SetMailboxMark as needed
+	}
 
 	// Notify programs of new count
 	if (bNotify)
@@ -3055,7 +3068,7 @@ static BOOL SaveWindow(HWND hWnd, BOOL SelDir, BOOL PromptSave, BOOL UpdateStatu
 		}
 	}
 	if (UpdateStatus == TRUE) {
-		SetItemCntStatusText(NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE, TRUE);
 	}
 	SwitchCursor(TRUE);
 	return TRUE;
@@ -3835,7 +3848,7 @@ BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fnam
 	}
 	tpMailBox->NewMail += new_count;
 	tpMailBox->FlagCount += flag_count;
-	SetItemCntStatusText(NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE, TRUE);
 	if (g_soc == -1 || TargetBox != SelBox) {
 		SetMailboxMark(TargetBox, STATUS_DONE, FALSE);
 	}
@@ -3895,7 +3908,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	while ((i = ListView_GetNextItem(mListView, -1, LVNI_SELECTED)) != -1) {
 		tpMailItem = (MAILITEM *)ListView_GetlParam(mListView, i);
 		if (tpMailItem != NULL) {
-			if (tpMailItem->New || tpMailItem->Mark == ICON_FLAG) {
+			if (tpMailItem->New || tpMailItem->Mark == ICON_FLAG || tpMailItem->Mark == ICON_SEND) {
 				had_mark = TRUE;
 			}
 			tpMailItem->Mark = -1;
@@ -3916,7 +3929,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	item_resize_mailbox(MailBox + SelBox, FALSE);
 
 	ListView_SetRedraw(mListView, TRUE);
-	SetItemCntStatusText(NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE, TRUE);
 	if (had_mark && (g_soc == -1 || RecvBox != SelBox)) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
@@ -4015,7 +4028,8 @@ static void SetDownloadMark(HWND hWnd)
 	}
 	UpdateWindow(mListView);
 	if (SelBox == MAILBOX_SEND && marked_one == TRUE) {
-		SetItemCntStatusText(NULL, FALSE);
+		// actually marking to send
+		SetItemCntStatusText(NULL, FALSE, TRUE);
 	} else if (changed_flag) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
@@ -4073,7 +4087,7 @@ static void SetFlagOrDeleteMark(HWND hWnd, int Mark, BOOL Clear)
 	}
 	UpdateWindow(mListView);
 	if (Mark == ICON_FLAG) {
-		SetItemCntStatusText(NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE, FALSE);
 		if (g_soc == -1 || RecvBox != SelBox) {
 			SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 		}
@@ -4128,7 +4142,7 @@ static void UnMark(HWND hWnd)
 	UpdateWindow(mListView);
 
 	if (SelBox == MAILBOX_SEND && unmarked_one == TRUE) {
-		SetItemCntStatusText(NULL, FALSE);
+		SetItemCntStatusText(NULL, FALSE, TRUE);
 	} else if (unflagged_one == TRUE) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
@@ -4150,6 +4164,8 @@ void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox)
 	if (!(tpReMailItem->ReFwd & Mark)) {
 		tpReMailItem->ReFwd |= Mark;
 		tpReMailItem->New = FALSE;
+		// if you do this, you also have to SetItemCntStatusText
+		//(MailBox+rebox)->NewMail--;
 		(MailBox+rebox)->NeedsSave |= MARKS_CHANGED;
 	}
 	
@@ -4217,7 +4233,7 @@ static void SetMailStats(HWND hWnd, int St)
 		ListView_RedrawItems(mListView, i, i);
 	}
 	UpdateWindow(mListView);
-	SetItemCntStatusText(NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE, TRUE);
 }
 
 /*
@@ -5157,7 +5173,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					if (op.SocLog > 0) log_flush();
 					KillTimer(hWnd, ID_TIMEOUT_TIMER);
 					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
-					SetItemCntStatusText(NULL, FALSE);
+					SetItemCntStatusText(NULL, FALSE, TRUE);
 					SetUnreadCntTitle(TRUE);
 				}
 				break;
@@ -6504,7 +6520,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				g_soc = -1;
 				SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 				RecvBox = -1;
-				SetItemCntStatusText(NULL, FALSE);
+				SetItemCntStatusText(NULL, FALSE, TRUE);
 				SetUnreadCntTitle(TRUE);
 				EndSocketFunc(hWnd, FALSE);
 				if (op.SocLog > 0) log_flush();
@@ -7041,7 +7057,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				KillTimer(hWnd, ID_TIMEOUT_TIMER);
 				if (op.SocLog > 0) log_flush();
 				AutoSave_Mailboxes(hWnd);
-				SetItemCntStatusText(NULL, FALSE);
+				SetItemCntStatusText(NULL, FALSE, TRUE);
 				SetUnreadCntTitle(TRUE);
 				if (AllCheck == FALSE) {
 					if (op.CheckEndExec == 1 &&

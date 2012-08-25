@@ -1363,8 +1363,14 @@ void item_set_flags(MAILITEM *tpMailItem, MAILBOX *tpMailBox, int code)
 	// Mark
 	mrk = code / 10;
 	tpMailItem->Mark = (mrk <= ICON_FLAG) ? mrk : ICON_NON;
-	if (tpMailItem->Mark == ICON_FLAG && tpMailBox) {
-		tpMailBox->FlagCount++;
+	if (tpMailBox) {
+		if (tpMailItem->Mark == ICON_FLAG) {
+			tpMailBox->FlagCount++;
+		}
+		if (tpMailItem->Mark == ICON_SEND) {
+			// assume this can only happen in SendBox
+			tpMailBox->NewMail++;
+		}
 	}
 
 	// Status
