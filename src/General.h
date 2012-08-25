@@ -716,7 +716,7 @@ typedef struct _MAILBOX {
 	unsigned long SmtpIP;
 
 	// Check
-	int NewMail;
+	int NewMail; // or Unsent (both put * in mailbox list)
 	int UnreadCnt;
 	int FlagCount;
 	BOOL HeldMail;
@@ -1202,7 +1202,7 @@ void SetSocStatusText(HWND hWnd, char *buf);
 #else
 #define SetSocStatusText(hWnd, buf)	SetSocStatusTextT(hWnd, buf)
 #endif
-void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify);
+void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent);
 void SetStatusRecvLen(HWND hWnd, int len, int size, TCHAR *msg);
 void ErrorMessage(HWND hWnd, TCHAR *buf);
 void SocketErrorMessage(HWND hWnd, TCHAR *buf, int BoxIndex);

@@ -886,7 +886,7 @@ void mailbox_select(HWND hWnd, int Sel)
 	SwitchCursor(TRUE);
 
 	SetMailMenu(MainWnd);
-	SetItemCntStatusText(NULL, FALSE);
+	SetItemCntStatusText(NULL, FALSE, TRUE);
 	SetUnreadCntTitle(FALSE);
 }
 
