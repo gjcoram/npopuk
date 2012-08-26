@@ -1184,8 +1184,8 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent
 	tpMailBox->UnreadCnt = UnreadCnt;
 	tpMailBox->FlagCount = FlagCnt;
 	if (changed) {
+		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 		SetUnreadCntTitle(FALSE);
-		// calls SetMailboxMark as needed
 	}
 
 	// Notify programs of new count
@@ -4538,7 +4538,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 void SetMailboxMark(int Box, int Status, BOOL Add)
 {
 	MAILBOX *tpMailBox = MailBox + Box;
-	TCHAR *p, *r;
+	TCHAR *p;
 	if (Box < 0) {
 		return;
 	}
@@ -4547,7 +4547,6 @@ void SetMailboxMark(int Box, int Status, BOOL Add)
 	}
 	p = (tpMailBox->Name == NULL || *tpMailBox->Name == TEXT('\0'))
 		? STR_MAILBOX_NONAME : tpMailBox->Name;
-	r = TEXT("");
 	if (Status == STATUS_DONE && tpMailBox->NewMail == 0 && tpMailBox->FlagCount == 0) {
 		if (Add == TRUE) {
 			AddMBMenu(p);
@@ -4557,6 +4556,7 @@ void SetMailboxMark(int Box, int Status, BOOL Add)
 	} else {
 		TCHAR *q = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(p) + 3));
 		if (q != NULL) {
+			TCHAR *r = TEXT("");
 #ifdef _WIN32_WCE_PPC
 			if (Status == STATUS_DONE) {
 				if (tpMailBox->NewMail > 0) {
