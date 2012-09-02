@@ -2881,6 +2881,12 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				ErrorMessage(hDlg, STR_ERR_TOOMANYMAILBOXES);
 				break;
 			}
+#ifndef _WIN32_WCE
+			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
+				break;
+			}
+#endif
 			hListView = GetDlgItem(hDlg, IDC_LIST_MAILBOXES);
 			sel = -1;
 			while( (i = ListView_GetNextItem(hListView, sel, LVIS_SELECTED)) >= 0) {
@@ -2895,12 +2901,6 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			i = SetMailBoxType(hDlg, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 			ret = TRUE;
-#ifndef _WIN32_WCE
-			if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
-				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
-				i = -1;
-			}
-#endif
 			if (i == -1 || (i == 0 && SetMailBoxOption(hDlg, FALSE) == FALSE)) {
 				mailbox_delete(hDlg, SelBox, FALSE, FALSE);
 				ret = FALSE;
@@ -2966,7 +2966,9 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				break;
 			}
 #ifndef _WIN32_WCE
-			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+			if ((op.ConfigPass == 1 ||
+				 (op.ConfigPass == 2 && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE))
+				&& op.Password != NULL && *op.Password != TEXT('\0') &&
 				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
 				break;
 			}
@@ -3001,7 +3003,9 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case ID_LV_DELETE:
 			oldsel = SelBox;
 #ifndef _WIN32_WCE
-			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+			if ((op.ConfigPass == 1 ||
+				 (op.ConfigPass == 2 && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE))
+				&& op.Password != NULL && *op.Password != TEXT('\0') &&
 				ConfirmPass(hDlg, op.Password, FALSE) == FALSE) {
 				break;
 			}
@@ -3737,8 +3741,8 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		SendDlgItemMessage(hDlg, IDC_CHECK_EXECSOUND, BM_SETCHECK, op.ExecEndSound, 0);
 
 #ifndef _WIN32_WCE
-		if (op.NewMailSoundFile != NULL) {
-			SendDlgItemMessage(hDlg, IDC_EDIT_SOUND, WM_SETTEXT, 0, (LPARAM)op.NewMailSoundFile);
+		if (op.NewMailSoundFile_ini != NULL) {
+			SendDlgItemMessage(hDlg, IDC_EDIT_SOUND, WM_SETTEXT, 0, (LPARAM)op.NewMailSoundFile_ini);
 		}
 		SendDlgItemMessage(hDlg, IDC_EDIT_SOUND, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 		SendMessage(hDlg, WM_COMMAND, IDC_CHECK_SOUND, 0);
@@ -3821,6 +3825,7 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 			op.ExecEndSound = SendDlgItemMessage(hDlg, IDC_CHECK_EXECSOUND, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
 			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_SOUND), &op.NewMailSoundFile);
+			op.NewMailSoundFile = make_absolute(op.NewMailSoundFile_ini);
 #endif
 
 			op.AutoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOCHECK, BM_GETCHECK, 0, 0);

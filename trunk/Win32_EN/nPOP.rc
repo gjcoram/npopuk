@@ -1039,7 +1039,7 @@ BEGIN
     CONTROL         "open &window",IDC_CHECK_SHOWPASS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,87,81,80,10
     CONTROL         "&configure program",IDC_CHECK_CONFIGPASS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,95,80,10
+                    "Button",BS_AUTO3STATE | WS_TABSTOP,87,95,80,10
     LTEXT           "&Password:",IDC_STATIC,15,110,35,10
     EDITTEXT        IDC_EDIT_PASS,52,108,130,12,ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL         "Disable warning popup &boxes",IDC_CHECK_PARANOID,"Button",
