@@ -4251,8 +4251,8 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 
 	key = GetKeyState(VK_SHIFT);
 	if (NoAppFlag == FALSE && ((op.DefViewApp == 1 && key >= 0) || (op.DefViewApp == 0 && key < 0))) {
-		BOOL was_new = FALSE;
-		// ビューアで表示
+		int do_status_bar = 0;
+		// External Viewer
 		if (AppViewMail((MAILITEM *)lpParam, SelBox) == FALSE) {
 			ErrorMessage(MainWnd, STR_ERR_VIEW);
 			return FALSE;
@@ -4260,32 +4260,41 @@ BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag)
 		if (((MAILITEM *)lpParam)->MailStatus != ICON_READ) {
 			(MailBox + SelBox)->NeedsSave |= MARKS_CHANGED;
 		}
+		if (((MAILITEM *)lpParam)->MailStatus == ICON_MAIL) {
+			do_status_bar = ICON_MAIL;
+		}
+		if (((MAILITEM *)lpParam)->New == TRUE) {
+			((MAILITEM *)lpParam)->New = FALSE;
+			do_status_bar = 2; // ICON_NEW;
+		}
 
 		// 開封済みにする
 		if (((MAILITEM *)lpParam)->MailStatus != ICON_NON && ((MAILITEM *)lpParam)->MailStatus < ICON_SENTMAIL) {
 			((MAILITEM *)lpParam)->MailStatus = ICON_READ;
-			if (((MAILITEM *)lpParam)->New == TRUE) {
-				((MAILITEM *)lpParam)->New = FALSE;
-				was_new = TRUE;
-				if( (--(MailBox + SelBox)->NewMail) <= 0) {
-					SetUnreadCntTitle(FALSE);
-				}
-			}
 		}
 
 		// 一覧のアイコンの設定
 		if (((MAILITEM *)lpParam)->Mark != ICON_DOWN && ((MAILITEM *)lpParam)->Mark != ICON_DEL && ((MAILITEM *)lpParam)->Mark != ICON_FLAG) {
 			int LvFocus = ListView_GetNextItem(mListView, -1, LVNI_FOCUSED);
 			((MAILITEM *)lpParam)->Mark = ((MAILITEM *)lpParam)->MailStatus;
-			if (was_new) {
+			if (do_status_bar == 2) {
 				ListView_SetItemState(mListView, LvFocus, INDEXTOOVERLAYMASK(((MAILITEM *)lpParam)->ReFwd & ICON_REFWD_MASK), LVIS_OVERLAYMASK);
 			}
 			ListView_RedrawItems(mListView, LvFocus, LvFocus);
 			UpdateWindow(mListView);
-		//} else if (was_new) {
-			// need to remove * overlay
 		}
-		//SetItemCntStatusText(NULL, FALSE, FALSE);
+		if (do_status_bar > 0) {
+			if (do_status_bar == 2) {
+				if( (MailBox + SelBox)->NewMail == 1) {
+					// leave the count at 1, so we'll know to remove
+					// the * from the mailbox name in the drop-down menu
+					SetItemCntStatusText(NULL, FALSE, FALSE);
+				} else {
+					(MailBox + SelBox)->NewMail--;
+				}
+			}
+			SetItemCntStatusText(NULL, FALSE, FALSE);
+		}
 		return FALSE;
 	}
 
