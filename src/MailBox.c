@@ -1304,6 +1304,7 @@ void mailbox_free(MAILBOX *tpMailBox)
 	//アカウント情報の解放
 	mem_free(&tpMailBox->Name);
 	mem_free(&tpMailBox->Filename);
+	mem_free(&tpMailBox->NewMailSoundFile_ini);
 	mem_free(&tpMailBox->NewMailSoundFile);
 	mem_free(&tpMailBox->DefAccount);
 	mem_free(&tpMailBox->Server);

@@ -2200,7 +2200,12 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					ErrorMessage(hWnd, STR_ERR_TOOMANYMAILBOXES);
 					return 0;
 				}
-
+#ifndef _WIN32_WCE
+				if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+					return 0;
+				}
+#endif
 				pending = TRUE;
 				below = SendMessage(hWnd, LB_GETCURSEL, 0, 0);
 				if (tmpselbox == -1) {
@@ -2209,7 +2214,7 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 				SelBox = mailbox_create(hWnd, 1, below + 1, TRUE, -1);
 				i = SetMailBoxType(hWnd, 0);
 #ifndef _WIN32_WCE
-				if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				if (i == 0 && op.ConfigPass == 2 && op.Password != NULL && *op.Password != TEXT('\0') &&
 					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 					i = -1;
 				}
@@ -2244,8 +2249,9 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 					return 0;
 				}
 #ifndef _WIN32_WCE
-				if ((MailBox+DelBox)->Type != MAILBOX_TYPE_SAVE && op.ConfigPass == 1 &&
-					op.Password != NULL && *op.Password != TEXT('\0') &&
+				if ((op.ConfigPass == 1 ||
+					 (op.ConfigPass == 2 && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE))
+					&& op.Password != NULL && *op.Password != TEXT('\0') &&
 					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 					break;
 				}
@@ -5706,7 +5712,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			{
 				int key = GetKeyState(VK_SHIFT);
 #ifndef _WIN32_WCE
-				if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				if (op.ConfigPass != 0 && op.Password != NULL && *op.Password != TEXT('\0') &&
 					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 					break;
 				}
@@ -5891,12 +5897,18 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				ErrorMessage(hWnd, STR_ERR_TOOMANYMAILBOXES);
 				break;
 			}
+#ifndef _WIN32_WCE
+			if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+				break;
+			}
+#endif
 			old_selbox = SelBox;
 			mailbox_select(hWnd, mailbox_create(hWnd, 1, old_selbox + 1, TRUE, TRUE));
 			i = SetMailBoxType(hWnd, 0);
 			(MailBox+SelBox)->NewMail = 1; // hack to force correct name into IDC_MBMENU
 #ifndef _WIN32_WCE
-			if (i == 0 && op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+			if (i == 0 && op.ConfigPass == 2 && op.Password != NULL && *op.Password != TEXT('\0') &&
 				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 				i = -1;
 			}
@@ -5926,17 +5938,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		// アカウントの設定
 		case ID_MENUITEM_SETMAILBOX:
+#ifndef _WIN32_WCE
+			if ((op.ConfigPass == 1 ||
+				 (op.ConfigPass == 2 && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE))
+				&& op.Password != NULL && *op.Password != TEXT('\0') &&
+				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
+				break;
+			}
+#endif
 			if ((MailBox+SelBox)->Type == MAILBOX_TYPE_SAVE) {
 				if (SetSaveBoxOption(hWnd) == FALSE) {
 					break;
 				}
 			} else {
-#ifndef _WIN32_WCE
-				if (op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
-					ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
-					break;
-				}
-#endif
 				if (SetMailBoxOption(hWnd, FALSE) == FALSE) {
 					break;
 				}
@@ -6080,8 +6094,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #ifndef _WIN32_WCE
-			if ((MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE &&
-				op.ConfigPass == 1 && op.Password != NULL && *op.Password != TEXT('\0') &&
+			if ((op.ConfigPass == 1 ||
+				 (op.ConfigPass == 2 && (MailBox+SelBox)->Type != MAILBOX_TYPE_SAVE))
+				&& op.Password != NULL && *op.Password != TEXT('\0') &&
 				ConfirmPass(hWnd, op.Password, FALSE) == FALSE) {
 				break;
 			}

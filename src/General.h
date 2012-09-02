@@ -555,8 +555,8 @@ typedef struct _OPTION {
 	int NewMailSound;
 	int ExecEndSound;
 	int ItemPlaySound;
-	TCHAR *NewMailSoundFile;
-	TCHAR *ExecEndSoundFile;
+	TCHAR *NewMailSoundFile_ini, *NewMailSoundFile;
+	TCHAR *ExecEndSoundFile_ini, *ExecEndSoundFile;
 	TCHAR *ItemNewSoundFile;
 	TCHAR *ItemPartialSoundFile;
 	TCHAR *ItemFullSoundFile;
@@ -670,7 +670,7 @@ typedef struct _MAILBOX {
 	BOOL Loaded;
 	BOOL WasMbox; // when file was read
 	TCHAR *DefAccount; // for saveboxes, account for outgoing mail
-	TCHAR *NewMailSoundFile;
+	TCHAR *NewMailSoundFile_ini, *NewMailSoundFile;
 
 	// POP
 	TCHAR *Server;
@@ -1103,6 +1103,7 @@ BOOL item_in_list(TCHAR *item, TCHAR *list);
 void rot13_cpy(char *dest, char *start, char *end);
 void rot13(char *start, char *end);
 #ifndef _WIN32_WCE
+TCHAR *make_absolute(TCHAR *path_in);
 TCHAR *replace_env_var(TCHAR *buf);
 #endif
 BOOL is_utf8(unsigned const char *bytes);

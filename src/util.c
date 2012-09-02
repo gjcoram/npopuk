@@ -37,6 +37,7 @@
 
 /* Global Variables */
 extern OPTION op;
+extern TCHAR *AppDir;
 
 /* Local Function Prototypes */
 static TCHAR *AllocURLDecode(TCHAR *buf);
@@ -3132,6 +3133,41 @@ void getenv_s(size_t *rsz, char *ret, int len, char *name)
 	}
 }
 #endif
+#endif
+
+/*
+ * make_absolute - make path absolute (or copy)
+ */
+#ifndef _WIN32_WCE
+TCHAR *make_absolute(TCHAR *path_in)
+{
+	TCHAR *p, *ret;
+	BOOL is_abs = FALSE;
+	if (path_in == NULL) {
+		return NULL;
+	}
+	// if path_in starts with . (or ..), it's a relative path
+	if (*path_in != '.') {
+		// if path_in contains \ or :, it's an absolute path
+		// else, it's just a filename, assumed in the Resource directory
+		for (p = path_in; *p != TEXT('\0'); p++) {
+			if (*p == TEXT('\\') || *p == TEXT(':')) {
+				is_abs = TRUE;
+				break;
+			}
+		}
+	}
+	if (is_abs) {
+		ret = alloc_copy_t(path_in);
+	} else {
+		int len = lstrlen(AppDir) + lstrlen(TEXT("Resource\\")) + lstrlen(path_in) + 1;
+		ret = (TCHAR*)mem_alloc(sizeof(TCHAR) * len);
+		if (ret != NULL) {
+			wsprintf(ret, TEXT("%sResource\\%s"), AppDir, path_in);
+		}
+	}
+	return ret;
+}
 #endif
 
 /*

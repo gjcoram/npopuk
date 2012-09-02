@@ -174,9 +174,12 @@ static void ini_get_encode_info(void)
 static void get_sound_file(TCHAR *name, TCHAR **ret)
 {
 	TCHAR buf[BUF_SIZE];
-	wsprintf(buf, TEXT("%sResource\\%s"), AppDir, name);
-	if (file_get_size(buf) > 0) {
-		*ret = alloc_copy_t(buf);
+	int len = lstrlen(AppDir) + lstrlen(TEXT("Resource\\")) + lstrlen(name);
+	if (len < BUF_SIZE) {
+		wsprintf(buf, TEXT("%sResource\\%s"), AppDir, name);
+		if (file_get_size(buf) > 0) {
+			*ret = alloc_copy_t(buf);
+		}
 	}
 }
 
@@ -397,6 +400,8 @@ void ini_read_general(HWND hWnd)
 	op.StartPass = profile_get_int(GENERAL, TEXT("StertPass"), 0);
 	op.StartPass = profile_get_int(GENERAL, TEXT("StartPass"), op.StartPass);
 	op.ShowPass = profile_get_int(GENERAL, TEXT("ShowPass"), 0);
+	// ConfigPass = 1: password required for any config changes
+	// ConfigPass = 2: password not required for savebox changes
 	op.ConfigPass = profile_get_int(GENERAL, TEXT("ConfigPass"), 0);
 	op.ScrambleMailboxes = profile_get_int(GENERAL, TEXT("ScrambleMailboxes"), 0);
 
@@ -580,11 +585,13 @@ void ini_read_general(HWND hWnd)
 		op.HasResourceDir = 0;
 	}
 	op.NewMailSound = profile_get_int(GENERAL, TEXT("NewMailSound"), 1);
-	op.NewMailSoundFile = profile_alloc_string(GENERAL, TEXT("NewMailSoundFile"), TEXT(""));
+	op.NewMailSoundFile_ini = profile_alloc_string(GENERAL, TEXT("NewMailSoundFile"), TEXT(""));
+	op.NewMailSoundFile = make_absolute(op.NewMailSoundFile_ini);
 	op.ExecEndSound = profile_get_int(GENERAL, TEXT("ExecEndSound"), 0);
-	op.ExecEndSoundFile = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""));
-	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0);
+	op.ExecEndSoundFile_ini = profile_alloc_string(GENERAL, TEXT("ExecEndSoundFile"), TEXT(""));
+	op.ExecEndSoundFile = make_absolute(op.ExecEndSoundFile_ini);
 
+	op.ItemPlaySound = profile_get_int(GENERAL, TEXT("ItemPlaySound"), 0);
 	if (op.ItemPlaySound > 0 && op.HasResourceDir) {
 		get_sound_file(TEXT("NEW.WAV"), &op.ItemNewSoundFile);
 		get_sound_file(TEXT("PARTIAL.WAV"), &op.ItemPartialSoundFile);
@@ -899,11 +906,12 @@ BOOL ini_read_setting(HWND hWnd)
 			(MailBox + num)->Filename = NULL;
 		}
 		// NewMailSoundFile
-		(MailBox + num)->NewMailSoundFile = profile_alloc_string(buf, TEXT("NewMailSoundFile"), TEXT(""));
-		if (*(MailBox + num)->NewMailSoundFile == TEXT('\0')) {
-			mem_free(&(MailBox + num)->NewMailSoundFile);
-			(MailBox + num)->NewMailSoundFile = NULL;
+		(MailBox + num)->NewMailSoundFile_ini = profile_alloc_string(buf, TEXT("NewMailSoundFile"), TEXT(""));
+		if (*(MailBox + num)->NewMailSoundFile_ini == TEXT('\0')) {
+			mem_free(&(MailBox + num)->NewMailSoundFile_ini);
+			(MailBox + num)->NewMailSoundFile_ini = NULL;
 		}
+		(MailBox + num)->NewMailSoundFile = make_absolute((MailBox + num)->NewMailSoundFile_ini);
 		// Type
 		(MailBox + num)->Type = profile_get_int(buf, TEXT("Type"), 0);
 
@@ -1375,9 +1383,9 @@ void ini_write_general(void)
 #endif
 
 	profile_write_int(GENERAL, TEXT("NewMailSound"), op.NewMailSound);
-	profile_write_string(GENERAL, TEXT("NewMailSoundFile"), op.NewMailSoundFile);
+	profile_write_string(GENERAL, TEXT("NewMailSoundFile"), op.NewMailSoundFile_ini);
 	profile_write_int(GENERAL, TEXT("ExecEndSound"), op.ExecEndSound);
-	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile);
+	profile_write_string(GENERAL, TEXT("ExecEndSoundFile"), op.ExecEndSoundFile_ini);
 	profile_write_int(GENERAL, TEXT("ItemPlaySound"), op.ItemPlaySound);
 
 	profile_write_int(GENERAL, TEXT("AutoCheck"), op.AutoCheck);
@@ -1642,7 +1650,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		// Filename
 		profile_write_string(buf, TEXT("Filename"), (MailBox + j)->Filename);
 		// NewMailSoundFile
-		profile_write_string(buf, TEXT("NewMailSoundFile"), (MailBox + j)->NewMailSoundFile);
+		profile_write_string(buf, TEXT("NewMailSoundFile"), (MailBox + j)->NewMailSoundFile_ini);
+		(MailBox + j)->NewMailSoundFile = make_absolute((MailBox + j)->NewMailSoundFile_ini);
 		// Type
 		profile_write_int(buf, TEXT("Type"), (MailBox + j)->Type);
 		// Flag
@@ -2002,7 +2011,9 @@ void ini_free(BOOL free_all)
 	mem_free(&op.TimeZone);
 	mem_free(&op.DateFormat);
 	mem_free(&op.TimeFormat);
+	mem_free(&op.NewMailSoundFile_ini);
 	mem_free(&op.NewMailSoundFile);
+	mem_free(&op.ExecEndSoundFile_ini);
 	mem_free(&op.ExecEndSoundFile);
 	mem_free(&op.ItemNewSoundFile);
 	mem_free(&op.ItemPartialSoundFile);
