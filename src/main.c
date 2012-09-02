@@ -1177,7 +1177,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent
 	SetStatusTextT(MainWnd, wbuf, 1);
 
 	if ((tpMailBox->NewMail > 0 && NewCnt == 0) ||
-		(tpMailBox->NewMail == 0 && tpMailBox->FlagCount > 0 && FlagCnt == 0)) {
+		(NewCnt == 0 && tpMailBox->FlagCount > 0 && FlagCnt == 0)) {
 		changed = TRUE;
 	}
 	tpMailBox->NewMail = NewCnt;
@@ -3929,7 +3929,7 @@ static void ListDeleteItem(HWND hWnd, BOOL Ask)
 	item_resize_mailbox(MailBox + SelBox, FALSE);
 
 	ListView_SetRedraw(mListView, TRUE);
-	SetItemCntStatusText(NULL, FALSE, TRUE);
+	SetItemCntStatusText(NULL, FALSE, (SelBox==MAILBOX_SEND) ? TRUE : FALSE);
 	if (had_mark && (g_soc == -1 || RecvBox != SelBox)) {
 		SetMailboxMark(SelBox, STATUS_DONE, FALSE);
 	}
@@ -4164,8 +4164,13 @@ void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox)
 	if (!(tpReMailItem->ReFwd & Mark)) {
 		tpReMailItem->ReFwd |= Mark;
 		tpReMailItem->New = FALSE;
-		// if you do this, you also have to SetItemCntStatusText
-		//(MailBox+rebox)->NewMail--;
+		if (((MailBox+rebox)->NewMail) > 1) {
+			// leave the count at 1, so we'll know to remove
+			// the * from the mailbox name in the drop-down menu
+			SetItemCntStatusText(NULL, FALSE, FALSE);
+		} else {
+			(MailBox+rebox)->NewMail--;
+		}
 		(MailBox+rebox)->NeedsSave |= MARKS_CHANGED;
 	}
 	
@@ -4389,15 +4394,12 @@ static void Init_NewMailFlag(HWND hWnd)
 
 	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
 		if ((MailBox + i)->NewMail > 0) {
-			// GJC - remove * from drop-down list
-			TCHAR *p;
-			p = ((MailBox + i)->Name == NULL || *(MailBox + i)->Name == TEXT('\0'))
-				? STR_MAILBOX_NONAME : (MailBox + i)->Name;
-			DeleteMBMenu(i);
-			InsertMBMenu(i, p);
 			(MailBox + i)->NewMail = 0;
+			// GJC - remove * from drop-down list (replace with ~ perhaps)
+			SetMailboxMark(i, STATUS_DONE, FALSE);
 		}
 	}
+	SetWindowText(MainWnd, WINDOW_TITLE);
 
 	SelectMBMenu(SelBox);
 }
@@ -4412,8 +4414,8 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	int UnreadMailBox = 0;
 
 	j = GetSelectedMBMenu();
-	for(i = MAILBOX_USER; i < MailBoxCnt; i++){
-		if((MailBox + i)->NewMail > 0) {
+	for (i = MAILBOX_USER; i < MailBoxCnt; i++) {
+		if ((MailBox + i)->NewMail > 0) {
 			// GJC - check if there still is new mail; if not, update drop-down list
 			if (CheckMsgs == TRUE && (MailBox + i)->Loaded && item_get_next_new((MailBox + i), -1, NULL) == -1) {
 				(MailBox + i)->NewMail = 0;
@@ -4426,9 +4428,9 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	SelectMBMenu(j);
 
 	//未読アカウント数をタイトルバーに設定
-	if(UnreadMailBox == 0){
+	if (UnreadMailBox == 0) {
 		SetWindowText(MainWnd, WINDOW_TITLE);
-	}else{
+	} else {
 		wsprintf(wbuf, STR_TITLE_NEWMAILBOX, WINDOW_TITLE, UnreadMailBox);
 		SetWindowText(MainWnd, wbuf);
 	}
@@ -4478,9 +4480,6 @@ static void NewMail_Message(HWND hWnd, int cnt)
 			((op.ListGetLine > 0 || op.ShowHeader == 1 || op.ListDownload == 1) &&
 			mailbox_unread_check(i, FALSE) == FALSE)) {
 			continue;
-		}
-		if (SelBox != i) {
-			(MailBox + i)->NewMail++;
 		}
 		SetMailboxMark(i, STATUS_DONE, FALSE);
 		if ((MailBox + i)->NewMailSoundFile && *(MailBox + i)->NewMailSoundFile != TEXT('\0')) {

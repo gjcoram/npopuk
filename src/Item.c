@@ -2411,11 +2411,17 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 		}
 		file_append_savebox(fname, TargetBox, tpMailItem, 2);
 		TargetBox->NewMail++;
+		if (tpMailItem->Mark == ICON_FLAG) {
+			TargetBox->FlagCount++;
+		}
 	} else {
 		int j = item_find_thread(TargetBox, tpMailItem->MessageID, TargetBox->MailItemCnt);
 		if (j == -1) {
 			item_to_mailbox(TargetBox, tpMailItem, tpMailBox->Name, FALSE);
 			TargetBox->NewMail++;
+			if (tpMailItem->Mark == ICON_FLAG) {
+				TargetBox->FlagCount++;
+			}
 			if (sbox == SelBox) {
 				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE);
 			}
