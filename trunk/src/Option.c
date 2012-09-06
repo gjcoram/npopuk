@@ -8904,12 +8904,13 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_BUTTON_ADD:
 			tpTmpAddressBook = (ADDRESSBOOK *)GetWindowLong(hDlg, GWL_USERDATA);
 			tpTmpAddressBook->EditNum = -1;
-			DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
-				hDlg, EditAddressProc, (LPARAM)tpTmpAddressBook);
-			SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
-			tpTmpAddressBook->EditNum = tpTmpAddressBook->ItemCnt - 1;
-			SetAddressList(hDlg, tpTmpAddressBook, buf);
-			modified = TRUE;
+			if (DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_DIALOG_ADDRESS_EDIT),
+					hDlg, EditAddressProc, (LPARAM)tpTmpAddressBook)) {
+				SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
+				tpTmpAddressBook->EditNum = tpTmpAddressBook->ItemCnt - 1;
+				SetAddressList(hDlg, tpTmpAddressBook, buf);
+				modified = TRUE;
+			}
 			break;
 
 		case ID_LV_EDIT:
@@ -8977,6 +8978,7 @@ BOOL CALLBACK AddressListProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			//SendDlgItemMessage(hDlg, IDC_ADDR_GRP_COMBOL, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			//SetAddressList(hDlg, tpTmpAddressBook, buf);
 			SendMessage(hDlg, WM_LV_EVENT, NM_CLICK, 0);
+			modified = TRUE;
 			break;
 
 #ifdef _WIN32_WCE
