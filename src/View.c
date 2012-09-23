@@ -1453,7 +1453,7 @@ static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL Bod
 		BOOL has_digest = FALSE;
 
 		if (ViewSrc && tpMailItem->WireForm != NULL) {
-			buf = alloc_char_to_tchar(tpMailItem->WireForm);
+			buf = alloc_char_to_tchar_check(tpMailItem->WireForm);
 		} else {
 			buf = MIME_body_decode(tpMailItem, ViewSrc, FALSE, &vMultiPart, &MultiPartCnt, &TextIndex);
 		}
@@ -3272,6 +3272,21 @@ static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark)
 	}
 	if (vSelBox > 0) {
 		(MailBox+vSelBox)->NeedsSave |= MARKS_CHANGED;
+		if (mark == ICON_FLAG) {
+			BOOL set_flag = FALSE;
+			if (tpMailItem->Mark == ICON_FLAG) {
+				if ( (++(MailBox+vSelBox)->FlagCount) == 1) {
+					set_flag = TRUE;
+				}
+			} else {
+				if ( (--(MailBox+vSelBox)->FlagCount) == 0) {
+					set_flag = TRUE;
+				}
+			}
+			if (set_flag && (MailBox+vSelBox)->NewMail == 0) {
+				SetMailboxMark(vSelBox, 0, FALSE);
+			}
+		}
 	}
 
 	if (i != -1) {

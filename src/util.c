@@ -3138,7 +3138,6 @@ void getenv_s(size_t *rsz, char *ret, int len, char *name)
 /*
  * make_absolute - make path absolute (or copy)
  */
-#ifndef _WIN32_WCE
 TCHAR *make_absolute(TCHAR *path_in)
 {
 	TCHAR *p, *ret;
@@ -3168,7 +3167,6 @@ TCHAR *make_absolute(TCHAR *path_in)
 	}
 	return ret;
 }
-#endif
 
 /*
  * replace_env_var - replace %ENVVAR% with value of environment variable ENVVAR

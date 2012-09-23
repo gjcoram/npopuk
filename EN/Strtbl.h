@@ -26,6 +26,7 @@
 #define STR_DEFAULT_OIDA			TEXT("")
 
 #define STR_DEFAULT_CODEPAGE		TEXT("CP_ACP")
+#define STR_DEFAULT_VIEW_CHARSET	TEXT("windows-1252")
 #define STR_DEFAULT_HEAD_CHARSET	TEXT("")
 #define STR_DEFAULT_HEAD_ENCODE		0		// 0-7bit 1-8bit 2-base64 3-quoted-printable
 #define STR_DEFAULT_BODY_CHARSET	TEXT("")

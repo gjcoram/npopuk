@@ -519,6 +519,7 @@ typedef struct _OPTION {
 	TCHAR *CAFile;
 
 	TCHAR *Codepage;
+	TCHAR *ViewCharset;
 	TCHAR *HeadCharset;
 	int HeadEncoding;
 	TCHAR *BodyCharset;
@@ -1102,8 +1103,8 @@ int remove_npopuk_headers(char *buf);
 BOOL item_in_list(TCHAR *item, TCHAR *list);
 void rot13_cpy(char *dest, char *start, char *end);
 void rot13(char *start, char *end);
-#ifndef _WIN32_WCE
 TCHAR *make_absolute(TCHAR *path_in);
+#ifndef _WIN32_WCE
 TCHAR *replace_env_var(TCHAR *buf);
 #endif
 BOOL is_utf8(unsigned const char *bytes);

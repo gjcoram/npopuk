@@ -267,6 +267,7 @@ void ini_read_general(HWND hWnd)
 		CP_int = atoi(op.Codepage);
 #endif
 	}
+	op.ViewCharset = profile_alloc_string(GENERAL, TEXT("ViewCharset"), STR_DEFAULT_VIEW_CHARSET);
 	op.HeadCharset = profile_alloc_string(GENERAL, TEXT("HeadCharset"), STR_DEFAULT_HEAD_CHARSET);
 	op.HeadEncoding = profile_get_int(GENERAL, TEXT("HeadEncoding"), STR_DEFAULT_HEAD_ENCODE);
 	op.BodyCharset = profile_alloc_string(GENERAL, TEXT("BodyCharset"), STR_DEFAULT_BODY_CHARSET);
@@ -1213,6 +1214,7 @@ void ini_write_general(void)
 
 	// only used in beta versions of nPOPuk 2.17
 	// profile_write_string(GENERAL, TEXT("Codepage"), op.Codepage);
+	profile_write_string(GENERAL, TEXT("ViewCharset"), op.ViewCharset);
 	profile_write_string(GENERAL, TEXT("HeadCharset"), op.HeadCharset);
 	profile_write_int(GENERAL, TEXT("HeadEncoding"), op.HeadEncoding);
 	profile_write_string(GENERAL, TEXT("BodyCharset"), op.BodyCharset);
@@ -2006,6 +2008,7 @@ void ini_free(BOOL free_all)
 	mem_free(&op.Bura);
 	mem_free(&op.Oida);
 	mem_free(&op.Codepage);
+	mem_free(&op.ViewCharset);
 	mem_free(&op.HeadCharset);
 	mem_free(&op.BodyCharset);
 	mem_free(&op.TimeZone);

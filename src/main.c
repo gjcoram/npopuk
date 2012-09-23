@@ -1061,7 +1061,7 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent
 	int ItemCnt;
 	int NewCnt = 0, UnreadCnt = 0, UnsentCnt = 0, FlagCnt = 0;
 	int i;
-	BOOL err = FALSE, changed = FALSE;
+	BOOL changed = FALSE;
 
 	tpMailBox = (MailBox + SelBox);
 	if (tpMailBox == NULL || (tpViewMailBox != NULL && tpViewMailBox != tpMailBox)) {
@@ -1124,7 +1124,9 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent
 		return;
 	}
 	tpMailBox = MailBox + MAILBOX_SEND;
-	if (CountUnsent) {
+	if (CountUnsent || SelBox == MAILBOX_SEND) {
+		int FlagOut = 0;
+		BOOL err = FALSE;
 		for (i = 0; i < tpMailBox->MailItemCnt; i++) {
 			tpMailItem = *(tpMailBox->tpMailItem + i);
 			if (tpMailItem == NULL) {
@@ -1133,17 +1135,28 @@ void SetItemCntStatusText(MAILBOX *tpViewMailBox, BOOL bNotify, BOOL CountUnsent
 			if (tpMailItem->Mark == ICON_SEND || tpMailItem->Mark == ICON_ERROR) {
 				UnsentCnt++;
 			}
+			if (tpMailItem->Mark == ICON_FLAG) {
+				FlagOut++;
+			}
 			if (tpMailItem->Mark == ICON_ERROR) {
 				err = TRUE;
 			}
 		}
 		tpMailBox->NewMail = UnsentCnt;
-		if (UnsentCnt > 0) {
-			SetStarMBMenu((err == TRUE) ? ICON_ERROR : TRUE);
+		tpMailBox->FlagCount = FlagOut;
+		if (err) {
+			FlagOut = ICON_ERROR;
+		} else if (UnsentCnt > 0) {
+			FlagOut = TRUE;
+		} else if (FlagOut > 0) {
+			FlagOut = ICON_FLAG;
 		} else {
-			if (GetStarMBMenu()) {
-				SetStarMBMenu(FALSE);
-			}
+			FlagOut = FALSE;
+		}
+		if (FlagOut != FALSE) {
+			SetStarMBMenu(FlagOut);
+		} else if (GetStarMBMenu()) {
+			SetStarMBMenu(FALSE);
 		}
 	} else {
 		UnsentCnt = tpMailBox->NewMail;
@@ -5145,7 +5158,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 					AutoSave_Mailboxes(hWnd);
 					NewMail_Message(hWnd, NewMailCnt);
 				} else {
-					SetMailboxMark(RecvBox, STATUS_DONE, FALSE;
+					SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
 					RecvBox = -1;
 					SetMailMenu(hWnd);
 				}
@@ -7831,7 +7844,7 @@ void DeleteMBMenu(int index)
 }
 
 /*
- * GetStarMBMenu - check if mailbox is prefaced with *
+ * GetStarMBMenu - check if mailbox is prefaced with * # or ~
  */
 BOOL GetStarMBMenu()
 {
@@ -7855,11 +7868,15 @@ void SetStarMBMenu(int Flag)
 #ifdef _WIN32_WCE_PPC
 	} else if (Flag == TRUE) {
 		InsertMBMenu(MAILBOX_SEND, TEXT("* ") STR_SENDBOX_NAME);
+	} else if (Flag == ICON_FLAG) {
+		InsertMBMenu(MAILBOX_SEND, TEXT("~ ") STR_SENDBOX_NAME);
 	} else {
 		InsertMBMenu(MAILBOX_SEND, TEXT("# ") STR_SENDBOX_NAME);
 #else
 	} else if (Flag == TRUE) {
 		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME TEXT(" *"));
+	} else if (Flag == ICON_FLAG) {
+		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME TEXT(" ~"));
 	} else {
 		InsertMBMenu(MAILBOX_SEND, STR_SENDBOX_NAME TEXT(" #"));
 #endif
