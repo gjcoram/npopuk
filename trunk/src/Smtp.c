@@ -689,6 +689,8 @@ static BOOL send_wire_form(HWND hWnd, SOCKET soc, MAILITEM *tpMailItem, TCHAR *E
 	MAILITEM *tpFwdMailItem = NULL;
 #ifdef UNICODE
 	char *din, *dout;
+#else
+	char buf[BUF_SIZE];
 #endif
 	char *orig_body, *orig_ctype, *orig_enc, *mctypr = NULL, *mbody;
 	char **enc_att = NULL;

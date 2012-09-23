@@ -672,6 +672,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 	BOOL jis_flag = FALSE;
 	BOOL enc_flag = FALSE;
 	BOOL enc_err = FALSE;
+	BOOL non_ascii = FALSE;
 	int ret_len = 0;
 
 	p = buf;
@@ -689,14 +690,31 @@ int MIME_decode(char *buf, TCHAR *ret)
 				*p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') {
 				enc_flag = FALSE;
 			}
+			if (*p < 0) {
+				non_ascii = TRUE;
+			}
 			p++;
 			continue;
 		}
+		// if we got here, we must have hit =?
 		if (enc_flag == FALSE && p != non_enc_pt) {
 			if (ret != NULL) {
-				// コピー
+				// convert any non-encoded portion that preceeds the =?
 #ifdef UNICODE
-				MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+				if (non_ascii == TRUE && op.ViewCharset != NULL && *op.ViewCharset != TEXT('\0')) {
+					// found a character not in the 0-127 range, convert it according to ViewCharset
+					char hold = *p;
+					*p = '\0'; // stop decoding here
+					retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
+					*p = hold;
+					if (retbuf != NULL) {
+						str_cpy_n_t(r, retbuf, (p - non_enc_pt) + 1);
+						mem_free(&retbuf);
+					}
+					non_ascii = FALSE;
+				} else {
+					MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+				}
 #else
 				str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);
 #endif
@@ -825,7 +843,19 @@ int MIME_decode(char *buf, TCHAR *ret)
 		if (ret != NULL) {
 			// コピー
 #ifdef UNICODE
-			MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+			if (non_ascii == TRUE && op.ViewCharset != NULL && *op.ViewCharset != TEXT('\0')) {
+				// found a character not in the 0-127 range, convert it according to ViewCharset
+				char hold = *p;
+				*p = '\0'; // stop decoding here
+				retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
+				*p = hold;
+				if (retbuf != NULL) {
+					str_cpy_n_t(r, retbuf, (p - non_enc_pt) + 1);
+					mem_free(&retbuf);
+				}
+			} else {
+				MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+			}
 #else
 			str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);
 #endif
@@ -1281,7 +1311,7 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		}
 #endif
 	} else {
-		ret = alloc_char_to_tchar(buf);
+		ret = alloc_char_to_tchar_check(buf);
 	}
 	return ret;
 }
@@ -1534,4 +1564,30 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	}
 	return r;
 }
+
+/*
+ * alloc_char_to_tchar_check - check for non-ASCII characters before conversion
+ */
+#ifdef UNICODE
+TCHAR *alloc_char_to_tchar_check(char *str)
+{
+	TCHAR *tchar = NULL;
+#ifndef _WCE_OLD
+	if (op.ViewCharset != NULL && *op.ViewCharset != TEXT('\0')) {
+		// check for characters not in the ASCII range (0-127 or 0x00-0x7F)
+		unsigned char *p;
+		for (p = str; *p != '\0'; p++) {
+			if (*p > 0x7F) {
+				tchar = MIME_charset_decode(charset_to_cp((BYTE)font_charset), str, op.ViewCharset);
+				break;
+			}
+		}
+	}
+#endif
+	if (tchar == NULL) {
+		tchar = alloc_char_to_tchar(str);
+	}
+	return tchar;
+}
+#endif
 /* End of source */

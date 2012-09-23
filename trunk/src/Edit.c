@@ -1767,7 +1767,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			tpMailItem->Mark = ICON_NON;
 		}
 		if (GetStarMBMenu() && item_get_next_send_mark((MailBox + MAILBOX_SEND), TRUE, FALSE) == -1) {
-			SetStarMBMenu(FALSE);
+			SetStarMBMenu(((MailBox + MAILBOX_SEND)->FlagCount > 0) ? ICON_FLAG : FALSE);
 		}
 	}
 
