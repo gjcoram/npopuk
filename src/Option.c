@@ -6017,8 +6017,8 @@ BOOL CALLBACK SetAttachProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			memInfo.dwLength = sizeof(memInfo);
 			GlobalMemoryStatus(&memInfo); 
-			if (tpMailItem->AttachSize*2 > (long)memInfo.dwAvailPhys
-				|| tpMailItem->AttachSize*2 > (long)memInfo.dwAvailVirtual) {
+			if (tpMailItem->AttachSize*2 > (unsigned long)memInfo.dwAvailPhys
+				|| tpMailItem->AttachSize*2 > (unsigned long)memInfo.dwAvailVirtual) {
 				MessageBox(hDlg, STR_WARN_ATTACH_MEM, WINDOW_TITLE, MB_OK);
 			}
 			if (tpMultiPart != NULL) {

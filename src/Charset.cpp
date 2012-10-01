@@ -195,25 +195,71 @@ WCHAR *charset_decode(WCHAR *charset, char *buf, UINT len)
 	DWORD encoding;
 	WCHAR *wret = NULL;
 	UINT ret_len;
+	BOOL is_8859_15 = FALSE;
 
 	CoCreateInstance(__uuidof(CMultiLanguage), NULL, CLSCTX_ALL, __uuidof(IMultiLanguage), (void**)&pMultiLanguage);
 	if (pMultiLanguage != NULL) {
+		HRESULT gci;
 		mimeInfo.uiCodePage = 0;
 		mimeInfo.uiInternetEncoding = 0;
-		pMultiLanguage->GetCharsetInfo(charset, &mimeInfo);
-		encoding = (mimeInfo.uiInternetEncoding == 0) ? mimeInfo.uiCodePage : mimeInfo.uiInternetEncoding;
+		gci = pMultiLanguage->GetCharsetInfo(charset, &mimeInfo);
+		if (gci != S_OK && lstrcmpiW(charset, L"ISO-8859-15") == 0) {
+			// for some reason, iso-8859-15 is often not available
+			gci = pMultiLanguage->GetCharsetInfo(L"ISO-8859-1", &mimeInfo);
+			if (gci == S_OK) {
+				is_8859_15 = TRUE;
+			}
+		}
+		if (gci == S_OK) {
+			encoding = (mimeInfo.uiInternetEncoding == 0) ? mimeInfo.uiCodePage : mimeInfo.uiInternetEncoding;
 
-		ret_len = 0;
-		if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, NULL, &ret_len) == S_OK) {
-			wret = (WCHAR *)mem_alloc(sizeof(WCHAR) * (ret_len + 1));
+			ret_len = 0;
+			if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, NULL, &ret_len) == S_OK) {
+				wret = (WCHAR *)mem_alloc(sizeof(WCHAR) * (ret_len + 1));
+			}
 		}
 	}
 	if (wret != NULL) {
-		if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, wret, &ret_len) != S_OK) {
+		if (pMultiLanguage->ConvertStringToUnicode(&mode, encoding, buf, &len, wret, &ret_len) == S_OK) {
+			*(wret + ret_len) = L'\0';
+			if (is_8859_15 == TRUE) {
+				// handle the 8 differences between iso-8859-1 and iso-8859-15
+				WCHAR *p;
+				for (p = wret; *p != L'\0'; p++) {
+					switch (*p) {
+						case 0x00A4: // ¤ becomes €
+							*p = 0x20AC;
+							break;
+						case 0x00A6: // ¦ becomes Š
+							*p = 0x0160;
+							break;
+						case 0x00A8: // ¨ becomes š
+							*p = 0x0161;
+							break;
+						case 0x00B4: // ´ becomes Ž
+							*p = 0x017D;
+							break;
+						case 0x00B8: // ¸ becomes ž
+							*p = 0x017E;
+							break;
+						case 0x00BC: // ¼ becomes Œ
+							*p = 0x0152;
+							break;
+						case 0x00BD: // ½ becomes œ
+							*p = 0x0153;
+							break;
+						case 0x00BE: // ¾ becomes Ÿ
+							*p = 0x0178;
+							break;
+					}
+				}
+			}
+		} else {
 			mem_free((void **)&wret);
 			wret = NULL;
 		}
 	}
+	pMultiLanguage->Release();
 	if (wret == NULL) {
 		CHARSET *lcs = LoadedCharsets;
 		while (lcs) {
@@ -236,12 +282,9 @@ WCHAR *charset_decode(WCHAR *charset, char *buf, UINT len)
 			for (i = 0; i < ret_len; i++) {
 				wret[i] = lcs->chars[ (unsigned char) buf[i] ];
 			}
+			*(wret + ret_len) = L'\0';
 		}
 	}
-	if (wret != NULL) {
-		*(wret + ret_len) = L'\0';
-	}
-	pMultiLanguage->Release();
 	return wret;
 }
 

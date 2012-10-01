@@ -1745,7 +1745,7 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 	//Setting size
 	{
 		TCHAR numbuf[10];
-		long size;
+		unsigned long size;
 
 		mem_free(&tpMailItem->Size);
 		size = (tpMailItem->Body != NULL) ? (tstrlen(tpMailItem->Body)) : 0;
