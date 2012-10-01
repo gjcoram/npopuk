@@ -787,7 +787,7 @@ typedef struct _MAILITEM {
 	TCHAR *MailBox;
 	TCHAR *Attach;
 	TCHAR *FwdAttach;
-	long AttachSize;
+	unsigned long AttachSize;
 	TCHAR *HeadCharset;
 	TCHAR *BodyCharset;
 	int HeadEncoding;

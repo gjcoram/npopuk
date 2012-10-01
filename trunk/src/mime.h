@@ -39,7 +39,10 @@ BOOL MIME_create_encode_header(TCHAR *charset, int encoding, TCHAR *ctype_in, ch
 char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype_in, char *ret_content_type, char *ret_encoding, TCHAR *ErrStr);
 char *MIME_body_decode_transfer(MAILITEM *tpMailItem, char *body);
 TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart, MULTIPART ***tpPart, int *cnt, int *TextIndex);
+#ifdef UNICODE
 TCHAR *alloc_char_to_tchar_check(char *str);
-
+#else
+#define alloc_char_to_tchar_check alloc_char_to_tchar
+#endif
 #endif
 /* End of source */

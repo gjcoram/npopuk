@@ -986,9 +986,10 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					}
 				}
 			}
-			if ((t - p) > 0) {
-				if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > (t - p)) {
-					tpMailItem->AttachSize -= (t - p); // - strlen(body)
+			if (t > p) {
+				unsigned long tpdiff = t - p;
+				if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > tpdiff) {
+					tpMailItem->AttachSize -= tpdiff; // - strlen(body)
 				}
 				buf = (char *)mem_alloc(sizeof(char) * (t - p + 1));
 				if (buf != NULL) {
@@ -1092,9 +1093,10 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			}
 			if (tpMailItem != NULL) {
 				//Body copy
-				if ((t - p) > 0) {
-					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > (t - p)) {
-						tpMailItem->AttachSize -= (t - p); // - strlen(body)
+				if (t > p) {
+					unsigned long tpdiff = t - p;
+					if (tpMailItem->Multipart == MULTIPART_ATTACH && tpMailItem->AttachSize > tpdiff) {
+						tpMailItem->AttachSize -= tpdiff; // - strlen(body)
 					}
 					tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
 					if (tpMailItem->Body != NULL) {
