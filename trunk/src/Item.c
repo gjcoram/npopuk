@@ -2414,6 +2414,10 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 		if (tpMailItem->Mark == ICON_FLAG) {
 			TargetBox->FlagCount++;
 		}
+		if (TargetBox->NewMail == 1 || (TargetBox->NewMail == 0 && TargetBox->FlagCount == 1)) {
+			// first new mail or flag in this savebox
+			SetMailboxMark(sbox, 0, FALSE);
+		}
 	} else {
 		int j = item_find_thread(TargetBox, tpMailItem->MessageID, TargetBox->MailItemCnt);
 		if (j == -1) {
@@ -2421,6 +2425,10 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 			TargetBox->NewMail++;
 			if (tpMailItem->Mark == ICON_FLAG) {
 				TargetBox->FlagCount++;
+			}
+			if (TargetBox->NewMail == 1 || (TargetBox->NewMail == 0 && TargetBox->FlagCount == 1)) {
+				// first new mail or flag in this savebox
+				SetMailboxMark(sbox, 0, FALSE);
 			}
 			if (sbox == SelBox) {
 				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE);

@@ -926,6 +926,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 			q = (char *)mem_alloc(sizeof(char) * (r - p + 1));
 			if (q == NULL) break;
 			rot13_cpy(q, p, r);
+			*(q+(r-p)) = '\0';
 		} else {
 			q = p;
 		}
@@ -948,7 +949,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					item_set_flags(tpMailItem, tpMailBox, code);
 				}
 				item_get_npop_headers(q, tpMailItem, tpMailBox);
-				p = s;
+				p += (s-q);
 				while (*p != '\0' && *p != '\r' && *p != '\n') {
 					p++;
 				}
