@@ -427,9 +427,20 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 			}
 		}
 		if (parmix >= NUMPARMDEF ) {
-			// anything not recognized is implicit /to:
-			parmix = OP_TO;
-			parmlen = 0;
+			// no match to valid options
+			// see if it's a filename
+#ifdef _WIN32_WCE
+			if (*p == TEXT('\\') && file_get_size(p) > 0) {
+#else
+			if (*(p+1) == TEXT(':') && *(p+2) == TEXT('\\') && file_get_size(p) > 0) {
+#endif
+				parmix = OP_ATTACH;
+				parmlen = 0;
+			} else {
+				// implicit /to:
+				parmix = OP_TO;
+				parmlen = 0;
+			}
 		}
 		// found parameter
 		if (parmix < OP_MAX_NO_VALUE) {
