@@ -56,7 +56,11 @@
 #define SAVE_HEADER					TEXT("From: %f\r\nTo: %t\r\n{Cc: %c\r\n}Subject: %s\r\nDate: %D\r\nMessage-ID: %i\r\n\r\n")
 
 /* Global Variables */
+#ifdef _WIN32_WCE
 static WNDPROC ViewWindowProcedure;
+#else
+#define WNDPROC_KEY			TEXT("OldWndProc")
+#endif
 HWND hViewWnd = NULL;
 BOOL ViewReopen;
 #ifdef _WIN32_WCE_PPC
@@ -145,7 +149,6 @@ static void SetViewMenu(HWND hWnd);
 static void ModifyWindow(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL BodyOnly);
 static MAILITEM *View_NextUnreadMail(HWND hWnd);
 static int FindLargerImage(HWND hWnd, int id, BOOL ask);
-static void OpenURL(HWND hWnd);
 static void SetReMessage(HWND hWnd, int ReplyFlag);
 static BOOL AppViewMail(MAILITEM *tpMailItem, int MailBoxIndex);
 static void SetMark(HWND hWnd, MAILITEM *tpMailItem, const int mark);
@@ -380,6 +383,13 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 	if (CForm->code == TTN_NEEDTEXT) {
 		return TbNotifyProc(hWnd, lParam);
 	}
+	if (CForm->code == EN_LINK) {
+		ENLINK *openLink = (ENLINK *) lParam;
+		if (openLink->msg == WM_LBUTTONUP) {
+			OpenURL(hWnd, &openLink->chrg);
+			return TRUE;
+		}
+	}
 	return FALSE;
 }
 #endif
@@ -396,9 +406,20 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	int len;
 
 #ifdef UNICODE
-	// 検索位置の取得
+	AllocGetText(hEdit, &buf);
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-	// 現在位置が前回検索位置と違う場合は現在位置を検索位置にする
+#ifndef _WIN32_WCE
+	if (op.WindowClass != TEXT("EDIT")) {
+		// adjust for RichEdit's internal representation of \r\n as just \r
+		for (p = buf; (unsigned)(p - buf) < dwEnd && *p != TEXT('\0'); p++) {
+			if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+				dwEnd++;
+				if ((unsigned)(p - buf) < dwStart)
+					dwStart++;
+			}
+		}
+	}
+#endif
 	if ((dwStart + 1U) != FindPos) {
 		FindPos = dwStart;
 	}
@@ -406,11 +427,11 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	if (start > 0 && FindPos < start) {
 		FindPos = start;
 	} else if (end > 0 && FindPos > end) {
+		mem_free(&buf);
 		return FALSE;
 	}
 
 	// エディットから文字列を取得する
-	AllocGetText(hEdit, &buf);
 	p = str_find(strFind, buf + FindPos, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
 	if (Loop == TRUE && *p == TEXT('\0')) {
 		p = str_find(strFind, buf, CaseFlag, ((Wildcards) ? FindParts : NULL), &len);
@@ -422,9 +443,29 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		return FALSE;
 	}
 
-	// 文字列が見つかった場合はその位置を選択状態にする
+	// select found text
 	FindPos = p - buf;
+#ifdef _WIN32_WCE
 	SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
+#else
+	if (op.WindowClass == TEXT("EDIT")) {
+		SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
+	} else {
+		TCHAR *q;
+		CHARRANGE cr;
+		cr.cpMin = FindPos;
+		cr.cpMax = FindPos + len;
+		for (q = buf; q < p + len && *q != TEXT('\0'); q++) {
+			// adjust for RichEdit's internal representation of \r\n as just \r
+			if (*q == '\r' && *(q+1) == '\n') {
+				cr.cpMax--;
+				if (q < p)
+					cr.cpMin--;
+			}
+		}
+		SendMessage(hEdit, EM_EXSETSEL, 0, (LPARAM)&cr);
+	}
+#endif
 	SendMessage(hEdit, EM_SCROLLCARET, 0, 0);
 	mem_free(&buf);
 	FindPos++;
@@ -437,16 +478,16 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 		WCHAR *wbuf;
 
 		// UNICODE is not defined; can't use char_to_tchar macros
-		len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
+		len = MBtoWC(CP_int, 0, buf, -1, NULL, 0);
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 		if (wbuf == NULL) {
 			mem_free(&buf);
 			return FALSE;
 		}
-		MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
+		MBtoWC(CP_int, 0, buf, -1, wbuf, len);
 		// 検索位置の取得
 		SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-		st = WideCharToMultiByte(CP_int, 0, wbuf, dwStart, NULL, 0, NULL, NULL);
+		st = WCtoMB(CP_int, 0, wbuf, dwStart, NULL, 0, NULL, NULL);
 		mem_free(&wbuf);
 		// 現在位置が前回検索位置と違う場合は現在位置を検索位置にする
 		if ((st + 1U) != FindPos) {
@@ -467,8 +508,8 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 			mem_free(&buf);
 			return FALSE;
 		}
-		st = MultiByteToWideChar(CP_int, 0, buf, p - buf, NULL, 0);
-		// len = MultiByteToWideChar(CP_int, 0, strFind, -1, NULL, 0) - 1;
+		st = MBtoWC(CP_int, 0, buf, p - buf, NULL, 0);
+		// len = MBtoWC(CP_int, 0, strFind, -1, NULL, 0) - 1;
 		// 文字列が見つかった場合はその位置を選択状態にする
 		SendMessage(hEdit, EM_SETSEL, st, st + len);
 		FindPos = p - buf;
@@ -550,6 +591,7 @@ int SetWordBreak(HWND hWnd, int cmd)
 	RECT HeaderRect;
 #ifndef _WIN32_WCE
 	RECT ToolbarRect;
+	BOOL auto_url = FALSE;
 #endif
 #ifdef _WIN32_WCE_SP
 	DWORD first=0;
@@ -636,13 +678,14 @@ int SetWordBreak(HWND hWnd, int cmd)
 	SendMessage(hEdit, WM_GETTEXT, len, (LPARAM)buf);
 
 	DestroyWindow(hEdit);
+
 	hEdit = CreateWindowEx(
 #ifdef _WIN32_WCE_PPC
 		0,
 #else
 		WS_EX_CLIENTEDGE,
 #endif
-		TEXT("EDIT"), TEXT(""), i,
+		op.WindowClass, TEXT(""), i,
 		0, tHeight + hHeight + 1, rcClient.right,
 #ifdef _WIN32_WCE_PPC
 		rcClient.bottom - tHeight - hHeight,
@@ -654,6 +697,14 @@ int SetWordBreak(HWND hWnd, int cmd)
 		SendMessage(hEdit, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 	}
 	SetFocus(hEdit);
+#ifndef _WIN32_WCE
+	if (op.RichEdit) {
+		// readonly for RichEdit; regular Edit gets a gray background
+		SendMessage(hEdit, EM_SETREADONLY, TRUE, 0);
+		SendMessage(hEdit, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(hEdit, EM_SETEVENTMASK, 0, ENM_LINK);
+	}
+#endif
 
 	SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)buf);
 #ifdef _WIN32_WCE_SP
@@ -765,7 +816,11 @@ static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		return 0;
 #endif
 	}
+#ifdef _WIN32_WCE
 	return CallWindowProc(ViewWindowProcedure, hWnd, msg, wParam, lParam);
+#else
+	return CallWindowProc((WNDPROC)GetProp(hWnd, WNDPROC_KEY), hWnd, msg, wParam, lParam);
+#endif
 }
 
 /*
@@ -773,8 +828,15 @@ static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
  */
 static void SetViewSubClass(HWND hWnd)
 {
-	SendMessage(hWnd, EM_LIMITTEXT, 1, 0);
+#ifdef _WIN32_WCE
 	ViewWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (long)SubClassViewProc);
+#else
+	WNDPROC OldWndProc = NULL;
+
+	OldWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)SubClassViewProc);
+	SetProp(hWnd, WNDPROC_KEY, OldWndProc);
+#endif
+	SendMessage(hWnd, EM_LIMITTEXT, 1, 0);
 }
 
 /*
@@ -782,8 +844,16 @@ static void SetViewSubClass(HWND hWnd)
  */
 static void DelViewSubClass(HWND hWnd)
 {
+#ifdef _WIN32_WCE
 	SetWindowLong(hWnd, GWL_WNDPROC, (long)ViewWindowProcedure);
 	ViewWindowProcedure = NULL;
+#else
+	WNDPROC OldWndProc = (WNDPROC)GetProp(hWnd, WNDPROC_KEY);
+	if (OldWndProc) {
+		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD)OldWndProc);
+	}
+	RemoveProp(hWnd, WNDPROC_KEY);
+#endif
 }
 
 /*
@@ -877,8 +947,12 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else	// _WIN32_WCE_PPC
 	WORD idMenu;
 #endif	// _WIN32_WCE_PPC
+#else
+	BOOL auto_url = FALSE;
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
+
+	HWND EditBody = NULL;
 
 	if (tpMailItem == NULL) { // || tpMailItem->Body == NULL) {
 		return FALSE;
@@ -996,7 +1070,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 		WS_EX_CLIENTEDGE,
 #endif
-		TEXT("EDIT"), TEXT(""),
+		op.WindowClass, TEXT(""),
 #ifdef _WIN32_WCE_PPC
 		WS_BORDER |
 #endif
@@ -1023,7 +1097,8 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	}
 #endif
 
-	SetFocus(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	EditBody = GetDlgItem(hWnd, IDC_EDIT_BODY);
+	SetFocus(EditBody);
 #ifdef _WIN32_WCE_PPC
 	SetWordBreakMenu(hWnd, SHGetSubMenu(hViewToolBar, ID_MENUITEM_VIEW), (op.WordBreakFlag == 1) ? MF_CHECKED : MF_UNCHECKED);
 #elif defined(_WIN32_WCE_LAGENDA)
@@ -1035,14 +1110,20 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #ifdef _WIN32_WCE
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
+#else
+	if (op.RichEdit) {
+		SendMessage(EditBody, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(EditBody, EM_SETEVENTMASK, 0, ENM_LINK);
+	}
 #endif
+	SendMessage(EditBody, EM_SETREADONLY, TRUE, 0);
 
 #ifndef _WCE_OLD
 	// disable IME?
-	ImmAssociateContext(GetDlgItem(hWnd, IDC_EDIT_BODY), (HIMC)NULL);
+	ImmAssociateContext(EditBody, (HIMC)NULL);
 #endif
 
-	SetViewSubClass(GetDlgItem(hWnd, IDC_EDIT_BODY));
+	SetViewSubClass(EditBody);
 	if (op.ViewWindowCursor == 0) {
 		SetTimer(hWnd, ID_HIDECARET_TIMER, 10, NULL);
 	}
@@ -1782,7 +1863,6 @@ static MAILITEM *View_NextUnreadMail(HWND hWnd)
 
 	SetWindowLong(hWnd, GWL_USERDATA, (long)tpMailItem);
 	ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
-	SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
 	return tpMailItem;
 }
 
@@ -1869,11 +1949,25 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 		hEdit = GetDlgItem(hWnd, IDC_EDIT_BODY); // used here & far below
 		if (FindSet == TRUE || FindStr == NULL) {
 #ifdef UNICODE
-			// 選択文字列を取得
+			// if text is selected in window, use that as find string
 			SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
 			if (dwStart != dwEnd) {
 				AllocGetText(hEdit, &buf);
 				if (buf != NULL) {
+#ifndef _WIN32_WCE
+					if (op.WindowClass != TEXT("EDIT")) {
+						// adjust for RichEdit's internal representation of \r\n as just \r
+						TCHAR *p;
+						for (p = buf; (unsigned)(p - buf) < dwEnd && *p != TEXT('\0'); p++) {
+							if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+								dwEnd++;
+								if ((unsigned)(p - buf) < dwStart)
+									dwStart++;
+							}
+						}
+					}
+#endif
 					mem_free(&FindStr);
 					findparts_free();
 					FindStr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (dwEnd - dwStart + 1));
@@ -1893,20 +1987,20 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 				if (dwStart != dwEnd) {
 					AllocGetText(hEdit, &buf);
 					if (buf != NULL) {
-						len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
+						len = MBtoWC(CP_int, 0, buf, -1, NULL, 0);
 						wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 						if (wbuf == NULL) {
 							mem_free(&buf);
 							return;
 						}
-						MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
+						MBtoWC(CP_int, 0, buf, -1, wbuf, len);
 					
-						len = WideCharToMultiByte(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, NULL, 0, NULL, NULL);
+						len = WCtoMB(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, NULL, 0, NULL, NULL);
 						mem_free(&FindStr);
 						findparts_free();
 						FindStr = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1));
 						if (FindStr != NULL) {
-							WideCharToMultiByte(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, FindStr, len + 1, NULL, NULL);
+							WCtoMB(CP_int, 0, wbuf + dwStart, dwEnd - dwStart, FindStr, len + 1, NULL, NULL);
 							*(FindStr + len) = TEXT('\0');
 							Init = TRUE;
 						}
@@ -2282,7 +2376,7 @@ static int FindLargerImage(HWND hWnd, int id, BOOL ask)
 /*
  * OpenURL - エディットボックスから選択されたURLを抽出して開く
  */
-static void OpenURL(HWND hWnd)
+void OpenURL(HWND hWnd, CHARRANGE *cr)
 {
 	TCHAR *buf;
 	TCHAR *str;
@@ -2291,9 +2385,18 @@ static void OpenURL(HWND hWnd)
 	int k, len;
 	int MailToFlag = 0;
 	BOOL key_ctl = GetKeyState(VK_CONTROL);
+	if (GetDlgItem(hWnd, IDC_EDIT_BODY) == NULL) {
+		hWnd = MainWnd;
+	}
 
-	// エディットボックスの選択位置の取得
-	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+#ifndef _WIN32_WCE
+	if (cr != NULL) {
+		i = cr->cpMin;
+		j = cr->cpMax;
+	} else
+#endif
+		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
+
 	if (i >= j) {
 		return;
 	}
@@ -2306,6 +2409,19 @@ static void OpenURL(HWND hWnd)
 	}
 	*buf = TEXT('\0');
 	SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
+
+#ifndef _WIN32_WCE
+	if (op.WindowClass != TEXT("EDIT")) {
+		// adjust for RichEdit's internal representation of \r\n as just \r
+		for (p = buf; (unsigned)(p - buf) < j && *p != TEXT('\0'); p++) {
+			if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+				j++;
+				if ((unsigned)(p - buf) < i)
+					i++;
+			}
+		}
+	}
+#endif
 
 	// look for "[ i  j ]" for download or open-attachment string
 	// require r = [, s = ] and (buf+j) > r and (buf+i) < s
@@ -2380,13 +2496,13 @@ static void OpenURL(HWND hWnd)
 		WCHAR *wbuf, *wstr;
 		WCHAR *wst, *wen, *wr;
 
-		len = MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0);
+		len = MBtoWC(CP_int, 0, buf, -1, NULL, 0);
 		wbuf = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 		if (wbuf == NULL) {
 			mem_free(&buf);
 			return;
 		}
-		MultiByteToWideChar(CP_int, 0, buf, -1, wbuf, len);
+		MBtoWC(CP_int, 0, buf, -1, wbuf, len);
 
 		for (wst = wbuf + i; wst > wbuf && *wst != L'\r' && *wst != L'\n' && *wst != L'\t' && *wst != L' '; wst--);
 		if (wst != wbuf) wst++;
@@ -2406,13 +2522,13 @@ static void OpenURL(HWND hWnd)
 		mem_free(&wbuf);
 		mem_free(&buf);
 
-		len = WideCharToMultiByte(CP_int, 0, wstr, -1, NULL, 0, NULL, NULL);
+		len = WCtoMB(CP_int, 0, wstr, -1, NULL, 0, NULL, NULL);
 		str = (char *)mem_alloc(len + 1);
 		if (str == NULL) {
 			mem_free(&wstr);
 			return;
 		}
-		WideCharToMultiByte(CP_int, 0, wstr, -1, str, len, NULL, NULL);
+		WCtoMB(CP_int, 0, wstr, -1, str, len, NULL, NULL);
 		mem_free(&wstr);
 	} else {
 		str = (TCHAR *)mem_alloc(sizeof(TCHAR) * (j - i + 2));
@@ -2563,6 +2679,19 @@ static void SetReMessage(HWND hWnd, int ReplyFlag)
 		if (selStart != selEnd) {
 			AllocGetText(hEdit, &buf);
 			if (buf != NULL) {
+#ifndef _WIN32_WCE
+				if (op.WindowClass != TEXT("EDIT")) {
+					// adjust for RichEdit's internal representation of \r\n as just \r
+					TCHAR *p;
+					for (p = buf; (unsigned)(p - buf) < selEnd && *p != TEXT('\0'); p++) {
+						if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+							selEnd++;
+							if ((unsigned)(p - buf) < selStart)
+								selStart++;
+						}
+					}
+				}
+#endif
 				seltext = (TCHAR *)mem_alloc(sizeof(TCHAR) * (selEnd - selStart + 1));
 				if (seltext != NULL) {
 					str_cpy_n_t(seltext, buf + selStart, selEnd - selStart + 1);
@@ -3646,7 +3775,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		switch (wParam) {
 		case ID_CLICK_TIMER:
 			KillTimer(hWnd, wParam);
-			OpenURL(hWnd);
+			OpenURL(hWnd, NULL);
 			break;
 
 		case ID_HIDECARET_TIMER:

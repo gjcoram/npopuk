@@ -115,7 +115,7 @@ static HICON TrayIcon_Main = NULL;			// タスクトレイアイコン (待機)
 static HICON TrayIcon_Check = NULL;			// タスクトレイアイコン (チェック中)
 static HICON TrayIcon_Mail = NULL;			// タスクトレイアイコン (新着あり)
 BOOL ResizingPreview = FALSE;
-BOOL NewMail_Flag;							// タスクトレイアイコン用新着フラグ
+BOOL NewMail_Flag = FALSE;					// タスクトレイアイコン用新着フラグ
 static HMENU hMainPop, hPOPUP, hMBPOPUP;	// pop-up menus for main window, systray, mbpane
 HMENU hADPOPUP, hViewPop=NULL;				// pop-up menus for Address list, View window
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
@@ -402,15 +402,15 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	CreateDirectory(AppDir, NULL);
 #else
 	TCHAR *p, *r, *vp;
-	TCHAR fname[BUF_SIZE];
+	TCHAR fname[MAX_PATH];
 	int len, parmix, parmlen, vallen, oldlen;
 
-	AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * BUF_SIZE);
+	AppDir = (TCHAR *)mem_calloc(sizeof(TCHAR) * MAX_PATH);
 	if (AppDir == NULL) {
 		return FALSE;
 	}
 	//Pass of application acquisition
-	GetModuleFileName(hinst, AppDir, BUF_SIZE - 1);
+	GetModuleFileName(hinst, AppDir, MAX_PATH - 1);
 	trunc_to_dirname(AppDir);
 
 	for(p = lpCmdLine; p && *p == TEXT(' '); p++); // remove spaces
@@ -429,11 +429,32 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		if (parmix >= NUMPARMDEF ) {
 			// no match to valid options
 			// see if it's a filename
+			*fname = TEXT('\0');
 #ifdef _WIN32_WCE
-			if (*p == TEXT('\\') && file_get_size(p) > 0) {
+			if (*p == TEXT('\\') || (*p == TEXT('"') && *(p+1) == TEXT('\\')) ) {
 #else
-			if (*(p+1) == TEXT(':') && *(p+2) == TEXT('\\') && file_get_size(p) > 0) {
+			if ((*p != TEXT('\0') && *(p+1) == TEXT(':') && *(p+2) == TEXT('\\')) 
+				|| (*p == TEXT('"') && *(p+1) != TEXT('\0') && *(p+2) == TEXT(':') && *(p+3) == TEXT('\\'))) {
 #endif
+				BOOL quoted = FALSE;
+				r = p;
+				if (*r == TEXT('"')) {
+					r++;
+					quoted = TRUE;
+				}
+				for (len = 0; len < MAX_PATH && *r != TEXT('\0'); len++, r++) {
+					if ((quoted && *r == TEXT('"')) || (!quoted && *r == TEXT(' '))) {
+						break;
+					} else {
+						fname[len] = *r;
+					}
+				}
+				if (len >= MAX_PATH) {
+					len = MAX_PATH-1;
+				}
+				fname[len] = TEXT('\0');
+			}
+			if (*fname != TEXT('\0') && file_get_size(fname) > 0) {
 				parmix = OP_ATTACH;
 				parmlen = 0;
 			} else {
@@ -460,7 +481,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 			parmix = parms[parmix].op;
 			if (parms[parmix].value && !parms[parmix].concat) {
 				// Error, parameter specified twice
-				TCHAR msg[BUF_SIZE];	
+				TCHAR msg[MSG_SIZE];	
 				wsprintf(msg,STR_ERR_DUPPARAM,parms[parmix].param);
 				ErrorMessage(NULL, msg);
 				mem_free(&AppDir);
@@ -620,11 +641,11 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 	}
 
 	if (parms[OP_Y].value) {
-		TCHAR fullname[BUF_SIZE];
+		TCHAR fullname[MAX_PATH];
 		BOOL Found = TRUE;
 
 		p = parms[OP_Y].value;
-		str_cpy_n_t(fullname, AppDir, BUF_SIZE);
+		str_cpy_n_t(fullname, AppDir, MAX_PATH);
 		Found = MergePath(fullname, p);
 		if (!Found) {
 			// Error: can't make INI file name
@@ -655,7 +676,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 		str_join_t(fname, DefaultDataDir, KEY_NAME TEXT(".ini"), (TCHAR *)-1);
 	} else {
 		trunc_to_dirname(DefaultDataDir);
-		str_cpy_n_t(fname, p, BUF_SIZE);
+		str_cpy_n_t(fname, p, MAX_PATH);
 	}
 
 	// check for IniFile specification in ini file
@@ -689,7 +710,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 			}
 			*t = '\0';
 			if (strlen(s) > 0) {
-				TCHAR fullname[BUF_SIZE];
+				TCHAR fullname[MAX_PATH];
 				BOOL Found = FALSE;
 #ifdef UNICODE
 				p = alloc_char_to_tchar(s);
@@ -725,7 +746,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 						FindClose(hFlashCard);
 					}
 					if (Found == FALSE) {
-						str_cpy_n_t(fullname, p, BUF_SIZE);
+						str_cpy_n_t(fullname, p, MAX_PATH);
 						Found = TRUE;
 					}
 				}
@@ -734,7 +755,7 @@ static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine)
 				p = replace_env_var(p);
 #endif
 				if (Found == FALSE) {
-					str_cpy_n_t(fullname, DefaultDataDir, BUF_SIZE);
+					str_cpy_n_t(fullname, DefaultDataDir, MAX_PATH);
 					Found = MergePath(fullname, p);
 				}
 				if (!Found) {
@@ -2023,6 +2044,13 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (CForm->code == TTN_NEEDTEXT) {
 		return TbNotifyProc(hWnd, lParam);
 	}
+	if (CForm->code == EN_LINK) {
+		ENLINK *openLink = (ENLINK *) lParam;
+		if (openLink->msg == WM_LBUTTONUP) {
+			OpenURL(hWnd, &openLink->chrg);
+			return TRUE;
+		}
+	}
 #endif
 	return FALSE;
 }
@@ -2426,10 +2454,11 @@ static int CreateMBMenu(HWND hWnd, int Top, int Bottom)
  * CreatePreviewPane
  */
 static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int height) {
+	HWND previewWnd = NULL;
 #ifndef _WIN32_WCE
 	WNDPROC OldWndProc = NULL;
+
 #endif
-	HWND previewWnd = NULL;
 
 	CreateWindowEx(
 #ifdef _WIN32_WCE_PPC
@@ -2437,7 +2466,7 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 #else
 		WS_EX_CLIENTEDGE,
 #endif
-		TEXT("EDIT"), TEXT(""),
+		op.WindowClass, TEXT(""),
 #ifdef _WIN32_WCE_PPC
 		WS_BORDER |
 #endif
@@ -2448,13 +2477,17 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 	}
 	previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
+	SendMessage(previewWnd, EM_SETREADONLY, TRUE, 0);
 #ifdef _WIN32_WCE
 	PreviewWindowProcedure = (WNDPROC)SetWindowLong(previewWnd, GWL_WNDPROC, (DWORD)SubClassSentProc);
 #else
 	OldWndProc = (WNDPROC)SetWindowLong(previewWnd, GWL_WNDPROC, (DWORD)SubClassSentProc);
 	SetProp(previewWnd, WNDPROC_KEY, OldWndProc);
+	if (op.RichEdit) {
+		SendMessage(previewWnd, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(previewWnd, EM_SETEVENTMASK, 0, ENM_LINK);
+	}
 #endif
-
 }
 
 /*
@@ -4296,18 +4329,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 	}
 #endif
 	SetMailMenu(hWnd);
-
-	if (NewMail_Flag == TRUE &&
-		(IsWindowVisible(hWnd) == 0 ||
-#ifndef _WIN32_WCE
-		IsIconic(hWnd) != 0 ||
-#endif
-		GetForegroundWindow() != hWnd)) {
-		SetTrayIcon(hWnd, TrayIcon_Mail);
-	} else {
-		NewMail_Flag = FALSE;
-		SetTrayIcon(hWnd, TrayIcon_Main);
-	}
+	SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
 
 	if (EndThreadSortFlag == TRUE) {
 		//Sort
@@ -4460,6 +4482,8 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	//未読アカウント数をタイトルバーに設定
 	if (UnreadMailBox == 0) {
 		SetWindowText(MainWnd, WINDOW_TITLE);
+		NewMail_Flag = FALSE; // no more new messages
+		SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
 	} else {
 		wsprintf(wbuf, STR_TITLE_NEWMAILBOX, WINDOW_TITLE, UnreadMailBox);
 		SetWindowText(MainWnd, wbuf);
@@ -4494,14 +4518,8 @@ static void NewMail_Message(HWND hWnd, int cnt)
 		SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_QUIT, 0);
 	}
 
-	if (IsWindowVisible(hWnd) == 0 ||
-#ifndef _WIN32_WCE
-		IsIconic(hWnd) != 0 ||
-#endif
-		GetForegroundWindow() != hWnd) {
-		SetTrayIcon(hWnd, TrayIcon_Mail);
-		NewMail_Flag = TRUE;
-	}
+	NewMail_Flag = TRUE;
+	SetTrayIcon(hWnd, TrayIcon_Mail);
 
 	// There is a new arrival in the message box; add the "* " in the drop-down combo
 	j = GetSelectedMBMenu();
@@ -5139,9 +5157,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SetFocus(mListView);
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
-			SetTrayIcon(hWnd, TrayIcon_Main);
+			SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
 		}
-		NewMail_Flag = FALSE;
 		break;
 
 	case WM_TIMER:
@@ -5773,7 +5790,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 			// タスクトレイのアイコンの設定
 			if (op.ShowTrayIcon == 1) {
-				SetTrayIcon(hWnd, TrayIcon_Main);
+				SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
 			} else {
 				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 			}

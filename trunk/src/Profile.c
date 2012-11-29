@@ -109,11 +109,11 @@ static BOOL write_ascii_file(const HANDLE hFile, const TCHAR *buf, const int len
 	DWORD ret;
 	int clen;
 
-	clen = WideCharToMultiByte(CP_UTF8, 0, buf, -1, NULL, 0, NULL, NULL);
+	clen = WCtoMB(CP_UTF8, 0, buf, -1, NULL, 0, NULL, NULL);
 	if ((str = (char *)mem_alloc(clen + 1)) == NULL) {
 		return FALSE;
 	}
-	WideCharToMultiByte(CP_UTF8, 0, buf, -1, str, clen, NULL, NULL);
+	WCtoMB(CP_UTF8, 0, buf, -1, str, clen, NULL, NULL);
 	if (WriteFile(hFile, str, clen - 1, &ret, NULL) == FALSE) {
 		mem_free(&str);
 		return FALSE;
@@ -383,12 +383,12 @@ BOOL profile_initialize(const TCHAR *file_path, const BOOL pw_only, HWND hWnd)
 			}
 		}
 	}
-	len = MultiByteToWideChar(CP_ini, 0, cbuf+offset, -1, NULL, 0);
+	len = MBtoWC(CP_ini, 0, cbuf+offset, -1, NULL, 0);
 	if ((buf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (len + 1))) == NULL) {
 		mem_free(&cbuf);
 		return FALSE;
 	}
-	MultiByteToWideChar(CP_ini, 0, cbuf+offset, -1, buf, len);
+	MBtoWC(CP_ini, 0, cbuf+offset, -1, buf, len);
 	file_size = len;
 	mem_free(&cbuf);
 #else

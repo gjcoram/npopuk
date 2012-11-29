@@ -1363,7 +1363,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 
 	if ((int)tpMailItem != -1) {
 		BOOL first_new_msg = (tpMailItem->New == TRUE) && (mail_received != 1)
-			&& (NewMail_Flag == FALSE) && (ShowMsgFlag == FALSE);
+			&& (ShowMsgFlag == FALSE);
 
 		// V’…ƒtƒ‰ƒO‚Ìœ‹
 		if (first_new_msg && op.ClearNewOverlay == 1) {

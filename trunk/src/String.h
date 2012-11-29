@@ -19,28 +19,40 @@
 
 /* Define */
 #ifdef UNICODE
-#define tchar_to_char_size(wbuf) (WideCharToMultiByte(CP_int, 0, wbuf, -1, NULL, 0, NULL, NULL))
+#define tchar_to_char_size(wbuf) (WCtoMB(CP_int, 0, wbuf, -1, NULL, 0, NULL, NULL))
 #else
 #define tchar_to_char_size(wbuf) (lstrlen(wbuf) + 1)
 #endif
 
 #ifdef UNICODE
-#define tchar_to_char(wbuf, ret, len) (WideCharToMultiByte(CP_int, 0, wbuf, -1, ret, len, NULL, NULL))
+#define tchar_to_char(wbuf, ret, len) (WCtoMB(CP_int, 0, wbuf, -1, ret, len, NULL, NULL))
 #else
 #define tchar_to_char(wbuf, ret, len) (str_cpy_n_t(ret, wbuf, len))
 #endif
 
 #ifdef UNICODE
-#define char_to_tchar_size(buf) (MultiByteToWideChar(CP_int, 0, buf, -1, NULL, 0))
+#define char_to_tchar_size(buf) (MBtoWC(CP_int, 0, buf, -1, NULL, 0))
 #else
 #define char_to_tchar_size(buf) (lstrlen(buf) + 1)
 #endif
 
 #ifdef UNICODE
-#define char_to_tchar(buf, wret, len) (MultiByteToWideChar(CP_int, 0, buf, -1, wret, len))
+#define char_to_tchar(buf, wret, len) (MBtoWC(CP_int, 0, buf, -1, wret, len))
 #else
 #define char_to_tchar(buf, wret, len) (str_cpy_n_t(wret, buf, len))
 #endif
+
+#ifdef ADD_UTF8_CONVERTERS
+int WCtoMB(UINT CodePage, DWORD dwFlags, LPCWSTR lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte,
+		LPCSTR lpDefaultChar, LPBOOL lpUsedDefaultChar);
+int MBtoWC(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
+#endif
+// I get link errors if I put these next two #defines inside #ifdefs
+// Obviously, they need to be commented out on platforms where the converters are needed
+//#ifndef ADD_UTF8_CONVERTERS
+#define WCtoMB WideCharToMultiByte
+#define MBtoWC MultiByteToWideChar
+//#endif
 
 #ifdef UNICODE
 #define tstrcpy		strcpy
@@ -171,4 +183,12 @@ BOOL word_find_ni_t(const TCHAR *ptn, const TCHAR *str, const int len);
 #define IS_ALNUM_UM_T(c)	(IS_NUM_T(c) || IS_ALPHA_T(c) || c == TEXT('_') || c == TEXT('-'))
 #define IS_PAREN_QUOTE_T(c)	(c == TEXT('(') || c == TEXT(')') || c == TEXT('<') || c == TEXT('>') || c == TEXT('\"') || c == TEXT('\''))
 #endif
+
+#ifdef ADD_UTF8_CONVERTERS
+// CP_UTF8 is not available on WinCE3 and below
+// These functions provide replacement functionality
+int ConvertUTF16toUTF8(const TCHAR *wstr, char *dest, int len, BOOL strict);
+int ConvertUTF8toUTF16(const unsigned char *str, TCHAR *dest, int len, BOOL strict);
+#endif
+
 /* End of source */
