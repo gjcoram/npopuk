@@ -125,6 +125,30 @@ char *alloc_copy(const char *buf)
 }
 #endif
 
+#ifdef ADD_UTF8_CONVERTERS
+int WCtoMB(UINT CodePage, DWORD dwFlags, LPCWSTR lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte,
+		LPCSTR lpDefaultChar, LPBOOL lpUsedDefaultChar)
+{
+	int retlen;
+	if (CodePage == CP_UTF8) {
+		retlen = ConvertUTF16toUTF8(lpWideCharStr, lpMultiByteStr, cbMultiByte, FALSE);
+	} else {
+		retlen = WideCharToMultiByte(CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte,
+			lpDefaultChar, lpUsedDefaultChar);
+	}
+	return retlen;
+}
+int MBtoWC(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar)
+{
+	int retlen;
+	if (CodePage == CP_UTF8) {
+		retlen = ConvertUTF8toUTF16(lpMultiByteStr, lpWideCharStr, cchWideChar, FALSE);
+	} else {
+		retlen = MultiByteToWideChar(CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
+	}
+}
+#endif
+
 /*
  * alloc_tchar_to_char - ÉÅÉÇÉäÇämï€ÇµÇƒ TCHAR Ç char Ç…ïœä∑Ç∑ÇÈ
  */
@@ -181,12 +205,12 @@ char *alloc_wchar_to_char(const UINT cp, WCHAR *str)
 	if (str == NULL) {
 		return NULL;
 	}
-	len = WideCharToMultiByte(cp, 0, str, -1, NULL, 0, NULL, NULL);
+	len = WCtoMB(cp, 0, str, -1, NULL, 0, NULL, NULL);
 	cchar = (char *)mem_alloc(len + 1);
 	if (cchar == NULL) {
 		return NULL;
 	}
-	WideCharToMultiByte(cp, 0, str, -1, cchar, len, NULL, NULL);
+	WCtoMB(cp, 0, str, -1, cchar, len, NULL, NULL);
 	return cchar;
 }
 #endif
@@ -203,12 +227,12 @@ WCHAR *alloc_char_to_wchar(const UINT cp, char *str)
 	if (str == NULL) {
 		return NULL;
 	}
-	len = MultiByteToWideChar(cp, 0, str, -1, NULL, 0);
+	len = MBtoWC(cp, 0, str, -1, NULL, 0);
 	tchar = (WCHAR *)mem_alloc(sizeof(WCHAR) * (len + 1));
 	if (tchar == NULL) {
 		return NULL;
 	}
-	MultiByteToWideChar(cp, 0, str, -1, tchar, len);
+	MBtoWC(cp, 0, str, -1, tchar, len);
 	return tchar;
 }
 #endif

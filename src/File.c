@@ -917,7 +917,7 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 	len = 7; // = tstrlen(MBOX_DELIMITER);
 	p = MsgStart;
 	while (FileSize > p - MsgStart && *p != '\0') {
-		char *q, *r, *s, *t, *max;
+		unsigned char *q, *r, *s, *t, *max;
 		int code;
 		if (encrypted) {
 			// decrypt the headers
@@ -1101,18 +1101,40 @@ BOOL file_read_mailbox(TCHAR *FileName, MAILBOX *tpMailBox, BOOL Import, BOOL Ch
 					}
 					tpMailItem->Body = (char *)mem_alloc(sizeof(char) * (t - p + 1 + slashr));
 					if (tpMailItem->Body != NULL) {
+						BOOL all_ascii = TRUE;
 						for (s = tpMailItem->Body; p < t && slashr >= 0; p++, s++) {
 							if (*p == '\n' && (s == tpMailItem->Body || *(s - 1) != '\r')) {
 								*(s++) = '\r';
 								--slashr;
 							}
 							*s = *p;
+							if (*s > 127) {
+								all_ascii = FALSE;
+							}
 							if (*p == '\r' && *(p + 1) != '\n') {
 								*(s++) = '\n';
 								--slashr;
 							}
 						}
 						*s = '\0';
+
+						if (all_ascii == FALSE && lstrcmpi(op.Codepage, TEXT("CP_ACP")) == 0) {
+							// convert and unconvert to fix codepage
+							TCHAR *wtmp;
+							char *tmp;
+							CP_int = CP_ACP;
+							wtmp = alloc_char_to_tchar(tpMailItem->Body);
+							CP_int = CP_UTF8;
+							if (wtmp != NULL) {
+								tmp = alloc_tchar_to_char(wtmp);
+								if (tmp != NULL) {
+									mem_free(&tpMailItem->Body);
+									tpMailItem->Body = tmp;
+								}
+								mem_free(&wtmp);
+							}
+						}
+
 						if (encrypted) {
 							rot13(tpMailItem->Body, s);
 						}

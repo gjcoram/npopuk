@@ -220,7 +220,7 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 	case TEXT('\"'):
 		for (p++; *p != TEXT('\0'); p++) {
 #ifdef UNICODE
-			if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
+			if (WCtoMB(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -255,7 +255,7 @@ static TCHAR *get_token_address(TCHAR *p, BOOL *encode, int *enc_len)
 	default:
 		for (; *p != TEXT('\0'); p++) {
 #ifdef UNICODE
-			if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
+			if (WCtoMB(CP_int, 0, p, 1, NULL, 0, NULL, NULL) > 1) {
 #else
 			if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -305,7 +305,7 @@ static int get_encode_wrap_len(TCHAR *buf, int len, int *enc_len)
 			return i;
 		}
 #ifdef UNICODE
-		if ( (nb = WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL)) > 1) {
+		if ( (nb = WCtoMB(CP_int, 0, p, 1, NULL, 0, NULL, NULL)) > 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -713,7 +713,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 					}
 					non_ascii = FALSE;
 				} else {
-					MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+					MBtoWC(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
 				}
 #else
 				str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);
@@ -796,7 +796,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 			continue;
 		}
 #ifdef UNICODE
-		MultiByteToWideChar(CP_int, 0, charset_st, (charset_en - charset_st), charset, (charset_en - charset_st));
+		MBtoWC(CP_int, 0, charset_st, (charset_en - charset_st), charset, (charset_en - charset_st));
 		*(charset + (charset_en - charset_st)) = TEXT('\0');
 #else
 		str_cpy_n_t(charset, charset_st, (charset_en - charset_st) + 1);
@@ -854,7 +854,7 @@ int MIME_decode(char *buf, TCHAR *ret)
 					mem_free(&retbuf);
 				}
 			} else {
-				MultiByteToWideChar(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
+				MBtoWC(CP_int, 0, non_enc_pt, (p - non_enc_pt), r, (p - non_enc_pt));
 			}
 #else
 			str_cpy_n_t(r, non_enc_pt, (p - non_enc_pt) + 1);

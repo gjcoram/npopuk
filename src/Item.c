@@ -1938,19 +1938,38 @@ int item_to_string_size(MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFlag, BOOL
 		}
 
 		if (do_body) {
+			// OK, this is goofy: the message was in CP_ACP, but we had to convert the body to UTF-8
+			// when we read it in, so that everywhere in the program that we use the body, we don't have
+			// to think about what format it's in.  So, now we have to take the body, convert from UTF-8
+			// to wchar and then back to char using CP_ACP!
+#ifdef UNICODE
+			TCHAR *wbody;
+			CP_int = CP_UTF8;
+			wbody = alloc_char_to_tchar(tpMailItem->Body);
+			CP_int = CP_ACP;
+			if (wbody != NULL) {
+				len += tchar_to_char_size(wbody);
+				mem_free(&wbody);
+			} else {
+				// hope for the best?
+				len += tstrlen(tpMailItem->Body);
+			}
+#else
+			len += tstrlen(tpMailItem->Body);
+#endif
 			if (WriteMbox == 1) {
+				// Need to add ">" if MBOX_DELIMITER ever occurs in the message;
+				// MBOX_DELIMITER is ascii, so we don't care about the codepage.
 				char *r = tpMailItem->Body;
 				int l = tstrlen(MBOX_DELIMITER);
 				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
 					len++;
 				}
-				for ( /**/ ; *r != '\0'; r++, len++) {
+				for ( /**/ ; *r != '\0'; r++) {
 					if (*r == '\r' && *(r+1) == '\n' && str_cmp_n(r+2, MBOX_DELIMITER, l) == 0) {
 						len++;
 					}
 				}
-			} else {
-				len += tstrlen(tpMailItem->Body);
 			}
 		}
 		CP_int = CP_UTF8; // restore to UTF8
@@ -2119,8 +2138,26 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 		}
 
 		if (do_body) {
+			char *acp_body = tpMailItem->Body;
+			// OK, this is goofy: the message was in CP_ACP, but we had to convert the body to UTF-8
+			// when we read it in, so that everywhere in the program that we use the body, we don't have
+			// to think about what format it's in.  So, now we have to take the body, convert from UTF-8
+			// to wchar and then back to char using CP_ACP!
+#ifdef UNICODE
+			TCHAR *wbody;
+			CP_int = CP_UTF8;
+			wbody = alloc_char_to_tchar(tpMailItem->Body);
+			CP_int = CP_ACP;
+			if (wbody != NULL) {
+				acp_body = alloc_tchar_to_char(wbody);
+				mem_free(&wbody);
+			// } else {
+				// hope there aren't any non-ascii characters ...
+				// acp_body = tpMailItem->Body;
+			}
+#endif
 			if (WriteMbox == 1) {
-				char *r = tpMailItem->Body;
+				char *r = acp_body;
 				int l = tstrlen(MBOX_DELIMITER);
 				if (str_cmp_n(r, MBOX_DELIMITER, l) == 0) {
 					*(p++) = '>';
@@ -2135,8 +2172,13 @@ char *item_to_string(char *buf, MAILITEM *tpMailItem, int WriteMbox, BOOL BodyFl
 					}
 				}
 			} else {
-				p = str_cpy(p, tpMailItem->Body);
+				p = str_cpy(p, acp_body);
 			}
+#ifdef UNICODE
+			if (acp_body != tpMailItem->Body) {
+				mem_free(&acp_body);
+			}
+#endif
 		}
 		CP_int = CP_UTF8; // restore to UTF8
 	}

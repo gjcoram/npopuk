@@ -33,7 +33,6 @@
 #define ID_HIDECARET_TIMER	3
 
 #define REPLY_SUBJECT		TEXT("Re:")
-#define WNDPROC_KEY			TEXT("OldWndProc")
 
 /* Global Variables */
 HWND hEditWnd = NULL;
@@ -52,6 +51,8 @@ BOOL EditScrollbars = 1;
 #ifdef _WIN32_WCE
 static WNDPROC EditWindowProcedure = NULL;
 extern WNDPROC PreviewWindowProcedure;
+#else
+#define WNDPROC_KEY			TEXT("OldWndProc")
 #endif
 
 #ifdef _WIN32_WCE_LAGENDA
@@ -96,6 +97,7 @@ static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, T
 static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem);
 static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int rebox, int ReplyFlag);
 static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag, TCHAR *seltext);
+static void SetNewMessageSignature(MAILITEM *tpMailItem, int BoxIndex);
 static void SetWindowString(HWND hWnd, TCHAR *Subject, BOOL editable);
 static void SetHeaderString(HWND hHeader, MAILITEM *tpMailItem);
 static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem);
@@ -566,6 +568,29 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		}
 #endif
 		mem_free(&body);
+	}
+}
+
+/*
+ * SetNewMessageSignature - add signature to new message created from command line or URL
+ */
+static void SetNewMessageSignature(MAILITEM *tpMailItem, int BoxIndex)
+{
+	if ((MailBox+BoxIndex)->Signature != NULL && *(MailBox + BoxIndex)->Signature != TEXT('\0')) {
+		TCHAR *wbody, *oldbody = NULL;
+		int len = lstrlen((MailBox + BoxIndex)->Signature) + 3; // \r\n\0
+		if (tpMailItem->Body != NULL) {
+			oldbody = alloc_char_to_tchar(tpMailItem->Body);
+			len += lstrlen(oldbody);
+		}
+		wbody = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+		if (wbody != NULL) {
+			str_join_t(wbody, oldbody, TEXT("\r\n"), (MailBox + BoxIndex)->Signature, (TCHAR *)-1);
+			mem_free(&tpMailItem->Body);
+			tpMailItem->Body = alloc_tchar_to_char(wbody);
+			mem_free(&wbody);
+		}
+		mem_free(&oldbody);
 	}
 }
 
@@ -3228,17 +3253,20 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 					}
 				}
 			}
-			if (i != -1 && (MailBox+i)->MyAddr2Bcc) {
-				if (tpMailItem->Bcc == NULL) {
-					tpMailItem->Bcc = alloc_copy_t( (MailBox+i)->BccAddr );
-				} else {
-					TCHAR *tmp;
-					int len = lstrlen(tpMailItem->Bcc) + lstrlen( (MailBox+i)->BccAddr ) + 3;
-					tmp = (TCHAR *)mem_alloc(sizeof(TCHAR)*len);
-					if (tmp != NULL) {
-						str_join_t(tmp, tpMailItem->Bcc, TEXT(", "), (MailBox+i)->BccAddr, (TCHAR*)-1);
-						mem_free(&tpMailItem->Bcc);
-						tpMailItem->Bcc = tmp;
+			if (i != -1) {
+				SetNewMessageSignature(tpMailItem, i);
+				if ((MailBox+i)->MyAddr2Bcc) {
+					if (tpMailItem->Bcc == NULL) {
+						tpMailItem->Bcc = alloc_copy_t( (MailBox+i)->BccAddr );
+					} else {
+						TCHAR *tmp;
+						int len = lstrlen(tpMailItem->Bcc) + lstrlen( (MailBox+i)->BccAddr ) + 3;
+						tmp = (TCHAR *)mem_alloc(sizeof(TCHAR)*len);
+						if (tmp != NULL) {
+							str_join_t(tmp, tpMailItem->Bcc, TEXT(", "), (MailBox+i)->BccAddr, (TCHAR*)-1);
+							mem_free(&tpMailItem->Bcc);
+							tpMailItem->Bcc = tmp;
+						}
 					}
 				}
 			}
@@ -3264,6 +3292,12 @@ int Edit_InitInstance(HINSTANCE hInstance, HWND hWnd, int rebox, MAILITEM *tpReM
 		}
 		if (tpMailItem->Body == NULL) {
 			SetReplyMessageBody(tpMailItem, NULL, EDIT_NEW, NULL);
+		} else if (tpMailItem->MailBox != NULL) {
+			int i;
+			i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+			if (i != -1) {
+				SetNewMessageSignature(tpMailItem, i);
+			}
 		}
 		break;
 

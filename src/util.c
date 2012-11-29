@@ -1761,7 +1761,7 @@ int WordBreakStringSize(TCHAR *buf, TCHAR *str, int BreakCnt, BOOL BreakFlag)
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
+		if (WCtoMB(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif
@@ -1876,7 +1876,7 @@ void WordBreakString(TCHAR *buf, TCHAR *ret, TCHAR *str, int BreakCnt, BOOL Brea
 	}
 	while (*p != TEXT('\0')) {
 #ifdef UNICODE
-		if (WideCharToMultiByte(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
+		if (WCtoMB(CP_int, 0, p, 1, NULL, 0, NULL, NULL) != 1) {
 #else
 		if (IsDBCSLeadByte((BYTE)*p) == TRUE && *(p + 1) != TEXT('\0')) {
 #endif

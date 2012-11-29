@@ -657,6 +657,17 @@ void ini_read_general(HWND hWnd)
 	op.AutoOpenAttachMsg = profile_get_int(GENERAL, TEXT("AutoOpenAttachMsg"), 0);
 	op.ViewWindowCursor = profile_get_int(GENERAL, TEXT("ViewWindowCursor"), 0);
 	op.ViewShowAttach = profile_get_int(GENERAL, TEXT("ViewShowAttach"), 0);
+	op.RichEdit = profile_get_int(GENERAL, TEXT("RichEdit"), 0);
+	op.WindowClass = TEXT("EDIT");
+#ifndef _WIN32_WCE
+	if (op.RichEdit >= 4 && LoadLibrary(TEXT("Msftedit.dll"))) {
+		op.WindowClass = MSFTEDIT_CLASS;
+	} else if (op.RichEdit >= 2 && LoadLibrary(TEXT("Riched20.dll"))) {
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit >=1 && LoadLibrary(TEXT("Riched32.dll"))) {
+		op.WindowClass = RICHEDIT_CLASS;
+	}
+#endif
 	op.EditApp = profile_alloc_string(GENERAL, TEXT("EditApp"), TEXT(""));
 	op.EditAppCmdLine = profile_alloc_string(GENERAL, TEXT("EditAppCmdLine"), TEXT(""));
 	op.EditFileSuffix = profile_alloc_string(GENERAL, TEXT("EditFileSuffix"), TEXT("txt"));
@@ -1419,6 +1430,8 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("AutoOpenAttachMsg"), op.AutoOpenAttachMsg);
 	profile_write_int(GENERAL, TEXT("ViewWindowCursor"), op.ViewWindowCursor);
 	profile_write_int(GENERAL, TEXT("ViewShowAttach"), op.ViewShowAttach);
+	profile_write_int(GENERAL, TEXT("RichEdit"), op.RichEdit);
+	//profile_write_string(GENERAL, TEXT("WindowClass"), op.WindowClass); // dynamically derived from RichEdit
 	profile_write_string(GENERAL, TEXT("EditApp"), op.EditApp);
 	profile_write_string(GENERAL, TEXT("EditAppCmdLine"), op.EditAppCmdLine);
 	profile_write_string(GENERAL, TEXT("EditFileSuffix"), op.EditFileSuffix);
@@ -2036,6 +2049,7 @@ void ini_free(BOOL free_all)
 	mem_free(&op.ViewAppCmdLine);
 	mem_free(&op.ViewFileSuffix);
 	mem_free(&op.ViewFileHeader);
+	//mem_free(&op.WindowClass); // not allocated, do not free
 	mem_free(&op.EditApp);
 	mem_free(&op.EditAppCmdLine);
 	mem_free(&op.EditFileSuffix);

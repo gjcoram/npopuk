@@ -36,6 +36,10 @@ extern int sprintf_s();
 #define ENABLE_RAS
 #endif
 
+#ifndef CP_UTF8
+#define ADD_UTF8_CONVERTERS
+#define CP_UTF8 65001
+#endif
 
 /* Include Files */
 #define _INC_OLE
@@ -51,6 +55,10 @@ extern int sprintf_s();
 
 #ifdef UNICODE
 #include <stdlib.h>
+#endif
+
+#ifndef _WIN32_WCE
+#include <Richedit.h>
 #endif
 
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
@@ -601,6 +609,8 @@ typedef struct _OPTION {
 	int AutoOpenAttachMsg;
 	int ViewWindowCursor;
 	int ViewShowAttach;
+	int RichEdit;
+	TCHAR *WindowClass;
 	TCHAR *EditApp;
 	TCHAR *EditAppCmdLine;
 	TCHAR *EditFileSuffix;
@@ -1122,6 +1132,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet);
 void View_Scroll(HWND hWnd, int dir, BOOL ViewWnd);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
+void OpenURL(HWND hWnd, CHARRANGE *cr);
 BOOL AttachDecode(HWND hWnd, int id, int DoWhat);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
 BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc);
