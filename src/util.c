@@ -75,7 +75,9 @@ static TCHAR *AllocURLDecode(TCHAR *buf)
 	URL_decode(cbuf, tmp);
 #ifdef UNICODE
 	mem_free(&cbuf);
+//	CP_int = CP_ACP;
 	ret = alloc_char_to_tchar(tmp);
+//	CP_int = CP_UTF8;
 	mem_free(&tmp);
 	return ret;
 #else

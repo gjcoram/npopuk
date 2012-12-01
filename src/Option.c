@@ -3727,6 +3727,7 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 {
 #ifndef _WIN32_WCE
 	TCHAR buf[BUF_SIZE];
+	TCHAR *tmp = NULL;
 #endif
 
 	switch (uMsg) {
@@ -3824,8 +3825,15 @@ static BOOL CALLBACK SetCheckOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 			op.NewMailSound = SendDlgItemMessage(hDlg, IDC_CHECK_SOUND, BM_GETCHECK, 0, 0);
 			op.ExecEndSound = SendDlgItemMessage(hDlg, IDC_CHECK_EXECSOUND, BM_GETCHECK, 0, 0);
 #ifndef _WIN32_WCE
-			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_SOUND), &op.NewMailSoundFile);
-			op.NewMailSoundFile = make_absolute(op.NewMailSoundFile_ini);
+			AllocGetText(GetDlgItem(hDlg, IDC_EDIT_SOUND), &tmp);
+			if (lstrcmp(tmp, op.NewMailSoundFile_ini) != 0) {
+				mem_free(&op.NewMailSoundFile_ini);
+				op.NewMailSoundFile_ini = tmp;
+				mem_free(&op.NewMailSoundFile);
+				op.NewMailSoundFile = make_absolute(op.NewMailSoundFile_ini);
+			} else {
+				mem_free(&tmp);
+			}
 #endif
 
 			op.AutoCheck = SendDlgItemMessage(hDlg, IDC_CHECK_AUTOCHECK, BM_GETCHECK, 0, 0);
@@ -4590,7 +4598,7 @@ BOOL CALLBACK AdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_FIND:
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
-			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, 0, 0) == FALSE) {
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, FALSE, 0, 0) == FALSE) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
 			}
 			break;
@@ -4675,7 +4683,7 @@ BOOL CALLBACK SocLogViewProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_FIND:
 			SendDlgItemMessage(hDlg, IDC_EDIT_FIND, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
-			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, 0, 0) == FALSE) {
+			if (FindEditString(GetDlgItem(hDlg, IDC_EDIT_INI), buf, FALSE, FALSE, TRUE, FALSE, 0, 0) == FALSE) {
 				SendDlgItemMessage(hDlg, IDC_EDIT_INI, EM_SETSEL, FindPos-1, FindPos-1);
 			}
 			break;
@@ -9329,7 +9337,9 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				while (done == FALSE) {
 					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards,
-							(FindOrReplace == 3) ? FALSE : TRUE, orig_sel_start, orig_sel_end);
+							(FindOrReplace == 3) ? FALSE : TRUE, 
+							(op.WindowClass == TEXT("EDIT")) ? FALSE : TRUE, 
+							orig_sel_start, orig_sel_end);
 					if (found && FindOrReplace == 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
 						ReplaceCnt++;
