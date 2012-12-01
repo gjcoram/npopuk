@@ -1120,7 +1120,7 @@ TCHAR *replace_env_var(TCHAR *buf);
 BOOL is_utf8(unsigned const char *bytes);
 
 // View
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end);
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, BOOL RichEdit, DWORD start, DWORD end);
 void SetWordBreakMenu(HWND hWnd, HMENU hEditMenu, int Flag);
 #if defined(_WIN32_WCE_PPC) || defined(_WIN32_WCE_LAGENDA)
 int SetWordBreak(HWND hWnd, HMENU hMenu, int cmd);
@@ -1132,7 +1132,7 @@ void View_FindMail(HWND hWnd, BOOL FindSet);
 void View_Scroll(HWND hWnd, int dir, BOOL ViewWnd);
 BOOL View_InitApplication(HINSTANCE hInstance);
 BOOL View_InitInstance(HINSTANCE hInstance, LPVOID lpParam, BOOL NoAppFlag);
-void OpenURL(HWND hWnd, CHARRANGE *cr);
+void OpenURL(HWND hWnd, void *cr);
 BOOL AttachDecode(HWND hWnd, int id, int DoWhat);
 BOOL DeleteAttachFile(HWND hWnd, MAILITEM *tpMailItem);
 BOOL SaveViewMail(TCHAR *fname, HWND hWnd, int MailBoxIndex, MAILITEM *tpMailItem, TCHAR *head, BOOL ViewSrc);

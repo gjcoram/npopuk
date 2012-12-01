@@ -94,7 +94,7 @@ extern HMENU hEditPop;
 /* Local Function Prototypes */
 static int GetCcListSize(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress);
 static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, TCHAR *ret);
-static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem);
+static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, TCHAR *MyMailAddress);
 static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int rebox, int ReplyFlag);
 static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int ReplyFlag, TCHAR *seltext);
 static void SetNewMessageSignature(MAILITEM *tpMailItem, int BoxIndex);
@@ -209,22 +209,15 @@ static TCHAR *SetCcList(TCHAR *To, TCHAR *MyMailAddress, TCHAR *ToMailAddress, T
 /*
  * SetAllReMessage - of window It sets reply in everyone
  */
-static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
+static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, TCHAR *MyMailAddress)
 {
-	TCHAR *MyMailAddress = NULL;
 	TCHAR *ToMailAddress = NULL;
 	TCHAR *r;
 	int ToSize;
 	int CcSize;
 	int FromSize = 0;
-	int i;
 
-	//of pause Acquisition
-	i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
-	if (i != -1) {
-		MyMailAddress = (MailBox + i)->MailAddress;
-	}
-	//of your own mail address Acquisition
+	// Get To: address (remove "comments")
 	if (tpMailItem->To != NULL) {
 		ToMailAddress = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->To) + 1));
 		if (ToMailAddress != NULL) {
@@ -232,6 +225,7 @@ static void SetAllReMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem)
 		}
 	}
 
+	// Compute size of Cc, removing MyMailAddress and ToMailAddress from list
 	//of mail address ahead transmitting When size acquisition
 	ToSize = GetCcListSize(tpReMailItem->To, MyMailAddress, ToMailAddress);
 	CcSize = GetCcListSize(tpReMailItem->Cc, MyMailAddress, ToMailAddress);
@@ -382,7 +376,25 @@ static void SetReplyMessage(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, int re
 
 		//For ReplyAll, do Cc settings
 		if(ReplyFlag == EDIT_REPLYALL) {
-			SetAllReMessage(tpMailItem, tpReMailItem);
+			TCHAR *MyMailAddress = NULL;
+			int i = mailbox_name_to_index(tpMailItem->MailBox, MAILBOX_TYPE_ACCOUNT);
+			if (i != -1) {
+				MyMailAddress = (MailBox + i)->MailAddress;
+			}
+			if (MyMailAddress != NULL) {
+				TCHAR *tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(tpMailItem->To) + 1));
+				if (tmp != NULL) {
+					GetMailAddress(tpMailItem->To, tmp, NULL, FALSE);
+					if (MyMailAddress != NULL && lstrcmpi(MyMailAddress, tmp) == 0) {
+						// tpReMailItem was From: MyMailAddress (perhaps an auto-bcc?)
+						// use the To: address of tpReMailItem instead of From:
+						mem_free(&tpMailItem->To);
+						tpMailItem->To = alloc_copy_t(tpReMailItem->To);
+					}
+					mem_free(&tmp);
+				}
+			}
+			SetAllReMessage(tpMailItem, tpReMailItem, MyMailAddress);
 		}
 		strPrefix = op.ReSubject;
 	}
@@ -817,7 +829,7 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 #endif
 		break;
-//#else
+#else
 //	case WM_CONTEXTMENU:
 //		ShowMenu(GetParent(hWnd), hViewPop, 1, 0, FALSE);
 //		return 0;

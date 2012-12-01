@@ -2477,15 +2477,17 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 	}
 	previewWnd = GetDlgItem(hWnd, IDC_EDIT_BODY);
-	SendMessage(previewWnd, EM_SETREADONLY, TRUE, 0);
 #ifdef _WIN32_WCE
 	PreviewWindowProcedure = (WNDPROC)SetWindowLong(previewWnd, GWL_WNDPROC, (DWORD)SubClassSentProc);
 #else
 	OldWndProc = (WNDPROC)SetWindowLong(previewWnd, GWL_WNDPROC, (DWORD)SubClassSentProc);
 	SetProp(previewWnd, WNDPROC_KEY, OldWndProc);
 	if (op.RichEdit) {
+		// enable URL detection (color/underline) and messages
 		SendMessage(previewWnd, EM_AUTOURLDETECT, 1, 0);
 		SendMessage(previewWnd, EM_SETEVENTMASK, 0, ENM_LINK);
+		// readonly for RichEdit; regular Edit gets a gray background
+		SendMessage(previewWnd, EM_SETREADONLY, TRUE, 0);
 	}
 #endif
 }
@@ -4482,8 +4484,10 @@ void SetUnreadCntTitle(BOOL CheckMsgs)
 	//未読アカウント数をタイトルバーに設定
 	if (UnreadMailBox == 0) {
 		SetWindowText(MainWnd, WINDOW_TITLE);
-		NewMail_Flag = FALSE; // no more new messages
-		SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
+		if (NewMail_Flag == TRUE) {
+			NewMail_Flag = FALSE; // no more new messages
+			SendMessage(MainWnd, WM_INITTRAYICON, 0, 0);
+		}
 	} else {
 		wsprintf(wbuf, STR_TITLE_NEWMAILBOX, WINDOW_TITLE, UnreadMailBox);
 		SetWindowText(MainWnd, wbuf);
@@ -5155,6 +5159,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		SipShowIM((SipFlag) ? SIPF_ON : SIPF_OFF);
 #endif
 		SetFocus(mListView);
+		break;
+
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
 			SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);

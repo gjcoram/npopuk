@@ -397,7 +397,7 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 /*
  * FindEditString - EDIT内の文字列を検索する
  */
-BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, DWORD start, DWORD end)
+BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOOL Loop, BOOL RichEdit, DWORD start, DWORD end)
 {
 	DWORD dwStart;
 	DWORD dwEnd;
@@ -409,7 +409,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	AllocGetText(hEdit, &buf);
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 #ifndef _WIN32_WCE
-	if (op.WindowClass != TEXT("EDIT")) {
+	if (RichEdit) {
 		// adjust for RichEdit's internal representation of \r\n as just \r
 		for (p = buf; (unsigned)(p - buf) < dwEnd && *p != TEXT('\0'); p++) {
 			if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
@@ -448,7 +448,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 #ifdef _WIN32_WCE
 	SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 #else
-	if (op.WindowClass == TEXT("EDIT")) {
+	if (RichEdit == FALSE) {
 		SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 	} else {
 		TCHAR *q;
@@ -699,10 +699,11 @@ int SetWordBreak(HWND hWnd, int cmd)
 	SetFocus(hEdit);
 #ifndef _WIN32_WCE
 	if (op.RichEdit) {
-		// readonly for RichEdit; regular Edit gets a gray background
-		SendMessage(hEdit, EM_SETREADONLY, TRUE, 0);
+		// enable URL detection (color/underline) and messages
 		SendMessage(hEdit, EM_AUTOURLDETECT, 1, 0);
 		SendMessage(hEdit, EM_SETEVENTMASK, 0, ENM_LINK);
+		// readonly for RichEdit; regular Edit gets a gray background
+		SendMessage(hEdit, EM_SETREADONLY, TRUE, 0);
 	}
 #endif
 
@@ -1112,11 +1113,13 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
 #else
 	if (op.RichEdit) {
+		// enable URL detection (color/underline) and messages
 		SendMessage(EditBody, EM_AUTOURLDETECT, 1, 0);
 		SendMessage(EditBody, EM_SETEVENTMASK, 0, ENM_LINK);
+		// readonly for RichEdit; regular Edit gets a gray background
+		SendMessage(EditBody, EM_SETREADONLY, TRUE, 0);
 	}
 #endif
-	SendMessage(EditBody, EM_SETREADONLY, TRUE, 0);
 
 #ifndef _WCE_OLD
 	// disable IME?
@@ -2097,7 +2100,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 	while (Done == FALSE) {
 		if (FirstLoop == TRUE && Same == TRUE) {
 			// 本文から検索して見つかった位置を選択状態にする
-			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0) == TRUE) {
+			if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 
+				(FindBox == MAILBOX_SEND || op.WindowClass == TEXT("EDIT")) ? FALSE : TRUE, 0, 0) == TRUE) {
 				break;
 			}
 
@@ -2105,7 +2109,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 			if (op.AllMsgFind == 0) {
 				// clear selection and search again
 				SendMessage(hEdit, EM_SETSEL, 0, 0);
-				if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0) == TRUE) {
+				if (FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 
+					(FindBox == MAILBOX_SEND || op.WindowClass == TEXT("EDIT")) ? FALSE : TRUE, 0, 0) == TRUE) {
 					break;
 				}
 			}
@@ -2197,7 +2202,8 @@ void View_FindMail(HWND hWnd, BOOL FindSet)
 					hEdit = GetDlgItem(hViewWnd, IDC_EDIT_BODY);
 				}
 				if (hEdit != NULL) {
-					FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 0, 0);
+					FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards, FALSE, 
+						(FindBox == MAILBOX_SEND || op.WindowClass == TEXT("EDIT")) ? FALSE : TRUE, 0, 0);
 				}
 				break;
 			}
@@ -2376,7 +2382,7 @@ static int FindLargerImage(HWND hWnd, int id, BOOL ask)
 /*
  * OpenURL - エディットボックスから選択されたURLを抽出して開く
  */
-void OpenURL(HWND hWnd, CHARRANGE *cr)
+void OpenURL(HWND hWnd, void *cr)
 {
 	TCHAR *buf;
 	TCHAR *str;
@@ -2391,8 +2397,8 @@ void OpenURL(HWND hWnd, CHARRANGE *cr)
 
 #ifndef _WIN32_WCE
 	if (cr != NULL) {
-		i = cr->cpMin;
-		j = cr->cpMax;
+		i = ((CHARRANGE*)cr)->cpMin;
+		j = ((CHARRANGE*)cr)->cpMax;
 	} else
 #endif
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
