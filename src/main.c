@@ -2209,6 +2209,16 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 		case WM_RBUTTONUP:
 			SendMessage(hWnd, WM_COMMAND, ID_MENU, 0);
 			return 0;
+
+		case WM_LBUTTONDBLCLK:
+			sel = SendMessage(hWnd, LB_ITEMFROMPOINT, 0, lParam);
+			if (HIWORD(sel) == 0) {
+				tmpselbox = SelBox;
+				SendMessage(hWnd, LB_SETCURSEL, (WPARAM)sel, 0);
+				SelBox = sel;
+				SendMessage(hWnd, WM_COMMAND, ID_MENUITEM_RECV, 0);
+			}
+			return 0;
 #endif
 		case WM_TIMER:
 			if (wParam == ID_RESTORESEL_TIMER && pending == FALSE) {
@@ -2233,6 +2243,8 @@ static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_SETMAILBOX, !(RecvBoxFlag & SendBoxFlag));
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_DELETEMAILBOX, !(RecvBoxFlag & SendBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_RECV, !(SaveTypeFlag & RecvBoxFlag & SendBoxFlag));
+				EnableMenuItem(hMBPOPUP, ID_MENUITEM_EXEC, !(SaveTypeFlag & RecvBoxFlag & SendBoxFlag));
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_LISTINIT, !(SaveTypeFlag & SendBoxFlag));
 
 				EnableMenuItem(hMBPOPUP, ID_MENUITEM_MOVEUPMAILBOX, !(SocFlag & SendBoxFlag & MoveBoxFlag && (SelBox > MAILBOX_USER)));
@@ -6296,12 +6308,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				break;
 			}
 #endif
+			i = SelBox;
+			if (i < MAILBOX_USER || i >= MailBoxCnt || (MailBox+i)->Type != MAILBOX_TYPE_ACCOUNT) {
+				break;
+			}
 			if (SaveBoxesLoaded == FALSE && op.BlindAppend == 0) {
-				if (mailbox_load_now(hWnd, SelBox, FALSE, TRUE) != 1) {
+				if (mailbox_load_now(hWnd, i, FALSE, TRUE) != 1) {
 					break;
 				}
 			}
-			i = SelBox;
 			AutoCheckFlag = FALSE;
 #ifdef ENABLE_RAS
 			if (op.RasCon == 1 && SendMessage(hWnd, WM_RAS_START, i, 0) == FALSE) {

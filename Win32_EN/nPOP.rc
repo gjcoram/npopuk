@@ -503,15 +503,17 @@ BEGIN
     BEGIN
         MENUITEM "&Hide this pane",     ID_MENUITEM_MBOXPANE
         MENUITEM SEPARATOR
+        MENUITEM "&Check",              ID_MENUITEM_RECV
+        MENUITEM "&Update",             ID_MENUITEM_EXEC
+        MENUITEM "&Initialise...",      ID_MENUITEM_LISTINIT
+        MENUITEM SEPARATOR
         MENUITEM "&Add...",             ID_MENUITEM_ADDMAILBOX
         MENUITEM "&Edit...",            ID_MENUITEM_SETMAILBOX
         MENUITEM "&Save",               ID_MENUITEM_SAVEMAILBOX
         MENUITEM "&Delete...",          ID_MENUITEM_DELETEMAILBOX
         MENUITEM SEPARATOR
-        MENUITEM "Move &up",            ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "Move u&p",            ID_MENUITEM_MOVEUPMAILBOX
         MENUITEM "Move d&own",          ID_MENUITEM_MOVEDOWNMAILBOX
-        MENUITEM SEPARATOR
-        MENUITEM "&Initialise...",      ID_MENUITEM_LISTINIT
     END
 END
 

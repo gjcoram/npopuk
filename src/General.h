@@ -207,7 +207,7 @@ extern int sprintf_s();
 #define WM_CHANGE_MARK			(WM_APP + 11)
 #define WM_MODFYMESSAGE			(WM_APP + 12)
 
-#define ID_MENU					(WM_APP + 102)
+#define ID_MENU					(WM_APP + 102)		//Context menu
 
 #define EDIT_OPEN				0					//Type
 #define EDIT_NEW				1
