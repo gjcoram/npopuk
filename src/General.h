@@ -36,11 +36,6 @@ extern int sprintf_s();
 #define ENABLE_RAS
 #endif
 
-#ifndef CP_UTF8
-#define ADD_UTF8_CONVERTERS
-#define CP_UTF8 65001
-#endif
-
 /* Include Files */
 #define _INC_OLE
 #include <windows.h>
@@ -556,6 +551,7 @@ typedef struct _OPTION {
 	TCHAR *TimeFormat;
 
 	int ShowNewMailMessage;
+	int ShowNewMailBalloon;
 	int ShowNoMailMessage;
 	int ActiveNewMailMessage;
 	int ClearNewOverlay;

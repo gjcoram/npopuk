@@ -146,6 +146,7 @@ int MBtoWC(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte,
 	} else {
 		retlen = MultiByteToWideChar(CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
 	}
+	return retlen;
 }
 #endif
 
