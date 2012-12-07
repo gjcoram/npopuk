@@ -51,38 +51,14 @@ static TCHAR *GetNextQuote(TCHAR *buf, TCHAR qStr);
  */
 static TCHAR *AllocURLDecode(TCHAR *buf)
 {
-#ifdef UNICODE
 	TCHAR *ret;
-#endif
-	char *cbuf;
-	char *tmp;
 
-#ifdef UNICODE
-	cbuf = alloc_tchar_to_char(buf);
-#else
-	cbuf = buf;
-#endif
-	if (cbuf == NULL) {
+	ret = (TCHAR *)mem_alloc(sizeof(TCHAR) * (lstrlen(buf) + 1));
+	if (ret == NULL) {
 		return NULL;
 	}
-	tmp = (char *)mem_alloc(tstrlen(cbuf) + 1);
-	if (tmp == NULL) {
-#ifdef UNICODE
-		mem_free(&cbuf);
-#endif
-		return NULL;
-	}
-	URL_decode(cbuf, tmp);
-#ifdef UNICODE
-	mem_free(&cbuf);
-//	CP_int = CP_ACP;
-	ret = alloc_char_to_tchar(tmp);
-//	CP_int = CP_UTF8;
-	mem_free(&tmp);
+	URL_decode_t(buf, ret);
 	return ret;
-#else
-	return tmp;
-#endif
 }
 
 /*

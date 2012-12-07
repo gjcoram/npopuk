@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2009 by Glenn Linderman and Geoffrey Coram.
+ * nPOPuk code additions copyright (C) 2006-2012 by Glenn Linderman and Geoffrey Coram.
  * All rights reserved.  Info at http://www.npopuk.org.uk
  */
 
@@ -491,13 +491,18 @@ void URL_encode(unsigned char *buf, char *ret, BOOL sp_conv)
 #ifdef UNICODE
 /*
  * These next two functions are non-standard.  They are used to create fake
- * URL encode/decode operations for TCHAR data, but they really only encode
+ * URL encode/decode operations for TCHAR data, but the encoder only encodes
  * the non-alphanumeric characters < 128 ... this avoids URL parsing problems
  * when URL-reserved punctuation is used in filenames, email addresses, and
  * other parameter values that want to get embedded into the URL, but the
  * result is suitable only for passing around inside nPOPuk,
  * not for use on an actual web page as an actual URL.
  */
+
+// the codepoints from 0x80 to 0x9F differ in Windows-1252 and UTF-16
+static TCHAR W1252_to_UTF16[32] = {
+	0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0xFFFD, 0x017D, 0xFFFD,
+	0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0xFFFD, 0x017D, 0x0178};
 
 /*
  * URL_decode_t - URL encoding (RFC 2396)
@@ -511,23 +516,25 @@ TCHAR *URL_decode_t(TCHAR *buf, TCHAR *ret)
 	r = ret;
 
 	while (*p) {
-		if (*p == '%') {
+		if (*p == TEXT('%')) {
 			hextmp = hex_val(*(p + 1)) * 16 + hex_val(*(p + 2));
-			if (hextmp > 255) { // preserve bad "digits"
+			if (hextmp >= 0x80 && hextmp <= 0x9F) { // difference between Windows-1252 and UTF-16
+				hextmp = W1252_to_UTF16[hextmp - 0x80];
+			} else if (hextmp > 0xFF) { // preserve bad "digits"
 				*(r++) = *p;
 				*(r++) = *(p + 1);
 				hextmp = *(p + 2);
 			}
 			*(r++) = hextmp;
 			p += 2;
-		} else if (*p == '+') {
-			*(r++) = ' ';
+		} else if (*p == TEXT('+')) {
+			*(r++) = TEXT(' ');
 		} else {
 			*(r++) = *p;
 		}
 		p++;
 	}
-	*r = '\0';
+	*r = TEXT('\0');
 	return r;
 }
 
@@ -539,14 +546,14 @@ void URL_encode_t(TCHAR *buf, TCHAR *ret)
 	TCHAR *p;
 	TCHAR *r;
 
-	for (p = buf, r = ret; *p != '\0'; p++) {
+	for (p = buf, r = ret; *p != TEXT('\0'); p++) {
 		if (*p < 128 ) {
-			if ((*p >= 'A' && *p <= 'Z') ||
-			    (*p >= 'a' && *p <= 'z') ||
-			    (*p>= '0' && *p <= '9')) {
+			if ((*p >= TEXT('A') && *p <= TEXT('Z')) ||
+			    (*p >= TEXT('a') && *p <= TEXT('z')) ||
+			    (*p >= TEXT('0') && *p <= TEXT('9'))) {
 				*(r++) = *p;
 			} else {
-				*(r++) = '%';
+				*(r++) = TEXT('%');
 				*(r++) = cHex[*p >> 4];
 				*(r++) = cHex[*p & 0xF];
 			}
@@ -554,7 +561,7 @@ void URL_encode_t(TCHAR *buf, TCHAR *ret)
 			*(r++) = *p;
 		}
 	}
-	*r = '\0';
+	*r = TEXT('\0');
 }
 #endif
 /* End of source */

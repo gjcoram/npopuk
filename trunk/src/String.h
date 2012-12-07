@@ -42,17 +42,18 @@
 #define char_to_tchar(buf, wret, len) (str_cpy_n_t(wret, buf, len))
 #endif
 
+#ifndef CP_UTF8 // also found in General.h
+#define ADD_UTF8_CONVERTERS
+#define CP_UTF8 65001
+#endif
 #ifdef ADD_UTF8_CONVERTERS
 int WCtoMB(UINT CodePage, DWORD dwFlags, LPCWSTR lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte,
 		LPCSTR lpDefaultChar, LPBOOL lpUsedDefaultChar);
 int MBtoWC(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
-#endif
-// I get link errors if I put these next two #defines inside #ifdefs
-// Obviously, they need to be commented out on platforms where the converters are needed
-//#ifndef ADD_UTF8_CONVERTERS
+#else
 #define WCtoMB WideCharToMultiByte
 #define MBtoWC MultiByteToWideChar
-//#endif
+#endif
 
 #ifdef UNICODE
 #define tstrcpy		strcpy

@@ -552,6 +552,7 @@ void ini_read_general(HWND hWnd)
 
 	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessgae"), 1);
 	op.ShowNewMailMessage = profile_get_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage);
+	op.ShowNewMailBalloon = profile_get_int(GENERAL, TEXT("ShowNewMailBalloon"), (op.ShowNewMailMessage == 1) ? 0 : 1);
 	op.ShowNoMailMessage = profile_get_int(GENERAL, TEXT("ShowNoMailMessage"), 0);
 #ifdef _WIN32_WCE
 	op.ActiveNewMailMessage = profile_get_int(GENERAL, TEXT("ActiveNewMailMessgae"), 1);
@@ -1378,6 +1379,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("EncodeType"), op.EncodeType);
 
 	profile_write_int(GENERAL, TEXT("ShowNewMailMessage"), op.ShowNewMailMessage);
+//	profile_write_int(GENERAL, TEXT("ShowNewMailBalloon"), op.ShowNewMailBalloon);
 	profile_write_int(GENERAL, TEXT("ShowNoMailMessage"), op.ShowNoMailMessage);
 	profile_write_int(GENERAL, TEXT("ActiveNewMailMessage"), op.ActiveNewMailMessage);
 	profile_write_int(GENERAL, TEXT("ClearNewOverlay"), op.ClearNewOverlay);
@@ -1430,7 +1432,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("AutoOpenAttachMsg"), op.AutoOpenAttachMsg);
 	profile_write_int(GENERAL, TEXT("ViewWindowCursor"), op.ViewWindowCursor);
 	profile_write_int(GENERAL, TEXT("ViewShowAttach"), op.ViewShowAttach);
-	profile_write_int(GENERAL, TEXT("RichEdit"), op.RichEdit);
+//	profile_write_int(GENERAL, TEXT("RichEdit"), op.RichEdit); // hold off on writing this
 	//profile_write_string(GENERAL, TEXT("WindowClass"), op.WindowClass); // dynamically derived from RichEdit
 	profile_write_string(GENERAL, TEXT("EditApp"), op.EditApp);
 	profile_write_string(GENERAL, TEXT("EditAppCmdLine"), op.EditAppCmdLine);

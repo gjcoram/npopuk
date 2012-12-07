@@ -911,7 +911,7 @@ static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
 	tnd.uID	= uID;
 	tnd.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 #if (_WIN32_IE >= 0x0500)
-	if (hIcon == TrayIcon_Mail && op.ShowNewMailMessage == 0) {
+	if (hIcon == TrayIcon_Mail && op.ShowNewMailBalloon == 1) {
 		tnd.uFlags |= NIF_INFO;
 		tnd.uTimeout = 5000;
 		lstrcpy(tnd.szInfoTitle, WINDOW_TITLE);
@@ -929,7 +929,8 @@ static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
  */
 static void SetTrayIcon(HWND hWnd, HICON hIcon)
 {
-	if (op.ShowTrayIcon != 1 || hIcon == NULL) {
+	static HICON last_icon = NULL;
+	if (op.ShowTrayIcon != 1 || hIcon == NULL || hIcon == last_icon) {
 		return;
 	}
 	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon) == FALSE) {
@@ -7484,15 +7485,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	TCHAR *lptCmdLine;
 	BOOL ret;
 
-	hInst = hInstance;
-
 #if defined(UNICODE) && !defined(_WIN32_WCE)
+	TCHAR *p, *tmp;
+	BOOL quote = FALSE;
 	// Win32 Unicode has char* lpCmdLine!
-	lptCmdLine = alloc_char_to_tchar(lpCmdLine);
-//	lptCmdLine = alloc_copy_t(GetCommandLineW()); // gets program name also
+	//lptCmdLine = alloc_char_to_tchar(lpCmdLine);
+
+	tmp = p = alloc_copy_t(GetCommandLineW()); // gets program name also
+	if( *p == TEXT('\"') ) {
+		quote = TRUE;
+		*p++;
+	}
+	for ( /**/; *p != TEXT('\0'); p++) {
+		if (quote == FALSE && *p == TEXT(' ') || quote == TRUE && *p == TEXT('\"')) {
+			p++;
+			break;
+		}
+	}
+	while (*p == TEXT(' ')) p++; // drop spaces
+	lptCmdLine = alloc_copy_t(p);
+	mem_free(&tmp);
 #else
 	lptCmdLine = lpCmdLine;
 #endif
+
+	hInst = hInstance;
+
 	// Sets AppDir and parses lpCmdLine to set IniFile and static CmdLine
 	ret = GetAppPath(hInstance, lptCmdLine);
 	if (ret != TRUE) {

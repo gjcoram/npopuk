@@ -1,14 +1,15 @@
-nPOPuk v3.00                                     readme.txt
-                                                 1 Nov 2012
+nPOPuk v3.01                                     readme.txt
+                                                 7 Nov 2012
 -----------------------------------------------------------
 
 
 Contents
 --------
 1. Introduction
-2. Installing nPOPuk
-3. Upgrading from an earlier version of nPOP
-4. What's New
+2. Installing the Fix
+3. What's New
+4. What's Planned
+5. Upgrading from an earlier version of nPOP
 
 
 -----------------------------------------------------------
@@ -20,21 +21,21 @@ from the source code of nPOP originally written by Tomoaki
 Nakashima, have been created by English speaking users of
 the program.
 
-The latest public release of the nPOPuk, both source and 
-executable code, are available at
-http://npopuk.org.uk/3.00/downloads.html
-Pre-release versions of future versions are available via 
-the forum at:
-http://npopuk.org.uk/3.00/forum.html
+The latest public release of the "UK versions" of nPOP,
+both source and executable code, are available at
+http://www.npopuk.org.uk/downloads.htm.
+Pre-release versions are available to subscribers of the
+npopsupport mail list at:
+http://groups.yahoo.com/groups/npopsupport/files
 
 
-Thanks must go to Geoffrey Coram, Werner Furlan, Paul 
-Holmes-Higgin, Bruce Jackson, Glenn Linderman, Amy 
-Millenson, Matthew R. Pattman, Gerard Samija and all other 
-members of the development/test team.
+Thanks must go to programmers Geoffrey Coram, Bruce
+Jackson, and Amy Millenson, as well as the other members
+of the development/test team.
 
 Greg Chapman
-http://npopuk.org.uk
+Webmaster
+http://www.npopuk.org.uk
 
 
 -----------------------------------------------------------
@@ -47,20 +48,247 @@ program.
 NOTES:
 ------
 
-*  If you need help configuring nPOPuk see:
-   http://npopuk.org.uk/3.00/quickstart.html
-
-*  A full installation guide is at:
-   http://npopuk.org.uk/3.00/install.html
+*  If you need help configuring nPOP see:
+   http://www.npopuk.org.uk/install.htm 
 
 *  If upgrading from an earlier version of nPOP, either
-   from Tomoaki's site or one of the a "UK Fixes", then pay
-   attention to the important notes in Section 3 of this
-   file.
+   a "UK" version or one from Tomoaki's site, then see
+   the notes in Section 5 of this file.
 
 
 -----------------------------------------------------------
-3. Upgrading from an earlier version of nPOP
+3. What's New
+
+This version extends the original nPOP v1.0.9 version to
+include the following features:
+
+* A message-preview pane.
+
+* Ability to supply your own icons.
+
+* Better support for Unicode.
+
+* The code necessary for SSL connections is built in;
+  you no longer need to find the OpenSSL DLLs.
+  This product includes software developed by the OpenSSL
+  Project for use in the OpenSSL Toolkit.
+  (http://www.openssl.org/)
+  This product includes cryptographic software written by
+  Eric Young (eay@cryptsoft.com).
+  Please read LICENSE_openssl.txt
+  The Windows CE versions of this program also include
+  software from http://www.essemer.com.au/
+  Please read LICENSE_wcecompat.txt
+
+* Option to set receive options (eg, number of lines to
+  download on check) on a per-account basis, instead of
+  globally.
+
+* Option to receive messages in reverse order (newest first).
+
+* Ability to delete all messages from the server
+  (without downloading anything first).
+
+* For Windows Mobile and WindowsCE devices, the ability
+  to automatically activate the Wi-Fi connection to
+  check mail.
+
+* Ability to ignore "Re:" or "Fwd:" when sorting the
+  main window's list of messages by subject.
+
+* Ability to sort by the bare e-mail address when sorting
+  the main window's list of messages by the 'From' column.
+
+* Navigation buttons to move forward/backward between
+  sent messages in the Outbox.
+
+* An advanced options editor, to modify the global options
+  by editing in a text window.
+
+* Ability to import Internet Setup files (*.ins) to
+  configure accounts.  Templates for popular mail services
+  (GMail, Yahoo! Mail, etc.) are available.
+
+* Clickable text in message body indicating partially
+  downloaded messages (click to initiate full download)
+  and listing attachments (click to open).
+
+* Ability to redirect messages (conditional on your ISP
+  supporting this function)
+
+* An optional second pane in the main window to list the
+  accounts (for easier access than the drop-down list).
+
+* A progress bar to graphically show the percentage of a
+  message being downloaded or sent.
+
+* Search and Replace, with wildcards.
+
+* Reflow selection - to correct bad linebreaks, especially
+  in quoted text.
+
+* Ability to Flag messages for follow-up.
+
+* Changes to the toolbars to add additional icons and
+  replace grayed icons with ones that are applicable for
+  the current mailbox.
+
+* Global filters - applied to all accounts.
+
+* Scrambling (ROT-13) to obscure mail data from prying eyes
+
+* Ability to handle embedded images when opening text/html
+  messages in a web browser.
+
+* Auto-complete of addresses.
+
+* Indication of unsent mail (in the status bar).
+
+* Filter improvements: new filter actions to forward to
+  a specified address or change the priority of a message;
+  filter conditions for any address in the address book
+  or one in a particular group, or for checking relative
+  dates (N days ago).
+
+* Ability to salvage mail data already received if the
+  connection is lost (wifi, dialup, or otherwise).
+
+* Ability to open attached messages in nPOPuk itself,
+  including an ability to parse MIME-digests into
+  separate messages.
+
+* Option to re-filter messages on full download.
+
+* Improvements to the address book, including resizing
+  the dialog and sort by column.
+
+* Support for PocketContacts on additional handheld
+  platforms (WinCE), and the ability to add entries
+  to PocketContacts.
+
+* Command-line options to send a message and quit, or to
+  check mail and quit, or to close a running session.
+
+* Ability to suppress text in the forwarding and reply
+  headers, if the corresponding header in the orignal
+  message is blank.
+
+* Menu item to paste as quotation.
+
+* Ability to Find in the OutBox.
+
+* New options for navigating between messages.
+
+* Multiple saveboxes.
+
+* Support for MBOX-format mail files, including importing
+  of mailboxes from other clients.
+
+* Menu item for backing up files.
+
+* Icon in the main mail list window to indicate messages
+  that are multipart/alternative, generally meaning the
+  only attachment is an HTML version of the message.
+
+* Rudimentary parsing of html-only messages to make them
+  readable.
+
+* Ability to group addresses in the address book, and 
+  show addresses based on their group membership; further
+  improved in 2.08 so one can set a group that is shown
+  by default.
+
+* Overlays in the main mail list window to indicate whether
+  messages have been forwarded and/or replied to.
+
+* Improvements to word-wrapping for English text as well as
+  text in most European character sets (the original nPOP
+  is for Japanese Unicode).  Linebreaks no longer happen
+  at punctuation or non-English characters, extra spaces at
+  the beginning of lines are removed, and quoted lines are
+  broken before having the quotation mark ("> ") added.
+
+* Correct indication of whether a message has been fully
+  downloaded, even if nPOP is set to download only the
+  first N lines.  (Previously, nPOP would indicate partial
+  download when set to download only N lines, even if
+  the message was in fact shorter than N lines.)
+
+* The size column in the OutBox includes the attachments,
+  so one can better estimate the upload time.
+
+* The message composition (Edit) window now has separate
+  icons and menu items for "Send now", "Save to Outbox",
+  and "Save and Mark" to send later (on the next update
+  account); this replaces the AutoMarkSend global option
+  found in previous UK versions of nPOP.
+
+* One may quote only portions of a message when replying
+  or forwarding by selecting the desired text in the Mail
+  View window before initiating the reply/forward.
+
+* Dates now display correctly, regardless of the time zone
+  of the sender and recipient.  The date and time format
+  can be set in the Global Options dialog "Other" tab.
+
+* When the Global Option "Include header lines" is checked,
+  the View source option is used to view the header lines.
+  (Previously, in text-only messages, the headers intruded
+  into the message body.)
+
+* Sent mail can no longer be edited.
+
+* The Reply-To address can be selected from a drop-down
+  list.
+
+* Filters are now correctly moved with accounts when
+  reordering (Move up/down).
+
+* Messages that include lines starting with "from"
+  (regardless of case) are handled correctly.
+
+* The Help/About dialogue now includes a reference to the
+  nPOP UK Support web site.
+
+* New icons and toolbar button images.
+
+* A Mail Forwarding facility
+  (Further improved over nPOPw v1.0.1.4 Beta 2, with
+  the ability to forward the message as an attachment
+  or in-line, with or without attachments, as well as
+  additional Global Option settings, such as different
+  headers for Reply and Forward, and whether to add the
+  signature to forwarded mail.)
+
+* Global Options to allow:
+    Disabling of Warning Popup Boxes
+    Control of Mail List Sorting
+
+* An option to Save all working files without exiting. 
+
+* Support for mail priorities (High, Normal and Low). 
+
+* Support for read and delivery receipts.
+
+* In new installations, the quotation string for replies
+  and forwarded mail is "> " rather than ">".
+
+* Many revised translations and corrected spellings in
+  menus and dialogues throughout the program.  (See also
+  Section 5.)
+
+
+-----------------------------------------------------------
+4. What's Planned
+
+A small group of programmers are working to improve nPOP.
+If you have programming skills and wish to help you may
+contact them through the npopsupport mail list.
+(See: http://groups.yahoo.com/groups/npopsupport/)
+
+
+-----------------------------------------------------------
+5. Upgrading from an earlier version of nPOP
 
 When first starting nPOPuk, the program looks for its
 settings in a file nPOPuk.ini in the same directory as the
@@ -136,55 +364,6 @@ operating system (and tracks changes if you travel with
 your laptop and change the time zone).  If you import
 nPOP.ini, you may want to check nPOPuk.ini for this
 setting.
-
------------------------------------------------------------
-4. What's New
-
-Program Code:
-
-*  Added: For Windows Mobile and WindowsCE devices, the 
-   ability to automatically activate the Wi-Fi connection
-   to check mail.
-
-*  Changed: Improved ability to handle pasted text with 
-   "LF" line ends (often found in files posted by iPhone
-   users).
-
-*  Changed: Improved efficiency and accuracy of character
-   conversion for non-ASCII characters.
-
-Program Interface Improvements:
-
-*  Changed: Additional and re-ordered buttons on the Main
-   and Mail View windows.
- 
-*  Changed: For sent mail, the external editor now shows
-   header information (Useful when printing sent mail)
-
-*  Added: The Mailbox Pane now indicates which Mailboxes
-   have flagged mail.
-
-*  Added: Header area in Sent Mail window now shows the
-   date.
-
-*  Added: On the Global Options Recv tab, an option to
-   fetch messages in reverse order.
-
-*  Added: On the Global Options Other tab, an option for
-   password to configure program.
-
-*  added: On the Mailbox Initialise dialogue, an option to
-   delete all messages on the server.
-
-*  Added: On the File > Connection menu, an option to view
-   the Server Log file.
-
-*  Added: Setup Files now provide for user input via
-   dialogues.
-
-For a complete history of the development of nPOPuk refer 
-to:
-http://npopuk.org.uk/3.00/changes.html
 
 -----------------------------------------------------------
 EOF

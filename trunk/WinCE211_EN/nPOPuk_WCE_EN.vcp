@@ -625,6 +625,37 @@ DEP_CPP_CODE_=\
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\ConvertUTF.c
+
+!IF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\Edit.c
 
 !IF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE MIPS) Release"
@@ -691,6 +722,7 @@ DEP_CPP_EDIT_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -815,6 +847,7 @@ DEP_CPP_FILE_=\
 	"..\src\General.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	"..\src\ppcpoom.h"\
 	"..\src\SelectFile.h"\
 	".\stdafx.h"\
@@ -1036,6 +1069,7 @@ DEP_CPP_INI_C=\
 	"..\src\Charset.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	"..\src\Profile.h"\
 	".\stdafx.h"\
 	
@@ -1175,6 +1209,7 @@ DEP_CPP_ITEM_=\
 	"..\src\md5.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -1299,6 +1334,7 @@ DEP_CPP_JP_Ce=\
 	"..\EN\Strtbl.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -1407,6 +1443,7 @@ DEP_CPP_LISTV=\
 	"..\EN\Strtbl.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -1515,6 +1552,8 @@ DEP_CPP_MAILB=\
 	"..\EN\Strtbl.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
 	".\stdafx.h"\
 	
 
@@ -1624,9 +1663,13 @@ DEP_CPP_MAIN_=\
 DEP_CPP_MAIN_=\
 	"..\EN\Strtbl.h"\
 	"..\src\Charset.h"\
+	"..\src\code.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\mime.h"\
+	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -1900,6 +1943,7 @@ DEP_CPP_MIME_=\
 	"..\src\jp.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -2045,6 +2089,7 @@ DEP_CPP_MULTI=\
 	"..\src\General.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -2198,6 +2243,9 @@ DEP_CPP_OPTIO=\
 	"..\src\jp.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
+	"..\src\ppcpoom.h"\
+	"..\src\Profile.h"\
 	".\stdafx.h"\
 	
 
@@ -2328,6 +2376,7 @@ DEP_CPP_POP3_=\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -2616,6 +2665,7 @@ DEP_CPP_RAS_C=\
 	"..\EN\Strtbl.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -2747,6 +2797,7 @@ DEP_CPP_SMTP_=\
 	"..\src\md5.h"\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -2975,6 +3026,7 @@ DEP_CPP_UTIL_=\
 	"..\src\General.h"\
 	"..\src\global.h"\
 	"..\src\md5.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -3119,6 +3171,7 @@ DEP_CPP_VIEW_=\
 	"..\src\mime.h"\
 	"..\src\multipart.h"\
 	"..\src\nEdit.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
 	
 
@@ -3245,10 +3298,9 @@ DEP_CPP_WINSO=\
 	"..\EN\Strtbl.h"\
 	"..\src\Font.h"\
 	"..\src\General.h"\
+	"..\src\npop_ver.h"\
 	".\stdafx.h"\
-	
-NODEP_CPP_WINSO=\
-	".\slsock.h"\
+	{$(INCLUDE)}"sslsock.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nPOPuk_WCE_EN - Win32 (WCE ARM) Debug"
@@ -3396,7 +3448,19 @@ SOURCE=..\res\ico_flag.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\res\ico_h_hi.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_h_lo.ico
+# End Source File
+# Begin Source File
+
 SOURCE=..\res\ico_high.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_html.ico
 # End Source File
 # Begin Source File
 
@@ -3413,6 +3477,10 @@ SOURCE=..\res\ico_none.ico
 # Begin Source File
 
 SOURCE=..\res\ico_read.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\ico_refw.ico
 # End Source File
 # Begin Source File
 
@@ -3437,6 +3505,10 @@ SOURCE=..\res\icon_cli.ico
 # Begin Source File
 
 SOURCE=..\res\icon_del.ico
+# End Source File
+# Begin Source File
+
+SOURCE=..\res\icon_err.ico
 # End Source File
 # Begin Source File
 
