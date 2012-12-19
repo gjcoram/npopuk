@@ -606,6 +606,7 @@ typedef struct _OPTION {
 	int ViewWindowCursor;
 	int ViewShowAttach;
 	int RichEdit;
+	int RichEditWparam;
 	TCHAR *WindowClass;
 	TCHAR *EditApp;
 	TCHAR *EditAppCmdLine;

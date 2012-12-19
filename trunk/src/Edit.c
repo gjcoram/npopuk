@@ -539,16 +539,15 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 		mem_free(&mBody);
 
 		tpMailItem->BodyEncoding = op.BodyEncoding;
-#ifndef _WCE_OLD
+#ifdef UNICODE
+		if (tpMailItem->BodyCharset == NULL ||
+			(tpMailItem->Body = MIME_charset_encode(CP_int, body, tpMailItem->BodyCharset)) == NULL) {
+			tpMailItem->Body = alloc_tchar_to_char(body);
+		}
+#else
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
-#endif
-#ifdef UNICODE
-			tpMailItem->Body = alloc_tchar_to_char(body);
-#else
 			tpMailItem->Body = alloc_copy(body);
-#endif
-#ifndef _WCE_OLD
 		}
 #endif
 		mem_free(&body);
@@ -567,16 +566,15 @@ static void SetReplyMessageBody(MAILITEM *tpMailItem, MAILITEM *tpReMailItem, in
 			str_join_t(body, TEXT("\r\n"), (MailBox + i)->Signature, (TCHAR *)-1);
 		}
 		tpMailItem->BodyEncoding = op.BodyEncoding;
-#ifndef _WCE_OLD
+#ifdef UNICODE
+		if (tpMailItem->BodyCharset == NULL ||
+			(tpMailItem->Body = MIME_charset_encode(CP_int, body, tpMailItem->BodyCharset)) == NULL) {
+			tpMailItem->Body = alloc_tchar_to_char(body);
+		}
+#else
 		if (tpMailItem->BodyCharset == NULL ||
 			(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), body, tpMailItem->BodyCharset)) == NULL) {
-#endif
-#ifdef UNICODE
-			tpMailItem->Body = alloc_tchar_to_char(body);
-#else
 			tpMailItem->Body = alloc_copy(body);
-#endif
-#ifndef _WCE_OLD
 		}
 #endif
 		mem_free(&body);
@@ -707,16 +705,15 @@ static void SetBodyContents(HWND hWnd, MAILITEM *tpMailItem)
 
 	if (tpMailItem->Body != NULL) {
 		SwitchCursor(FALSE);
-#ifndef _WCE_OLD
+#ifdef UNICODE
+		if (tpMailItem->BodyCharset == NULL ||
+			(tmp = MIME_charset_decode(CP_int, tpMailItem->Body, tpMailItem->BodyCharset)) == NULL) {
+			tmp = alloc_char_to_tchar(tpMailItem->Body);
+		}
+#else
 		if (tpMailItem->BodyCharset == NULL ||
 			(tmp = MIME_charset_decode(charset_to_cp((BYTE)font_charset), tpMailItem->Body, tpMailItem->BodyCharset)) == NULL) {
-#endif
-#ifdef UNICODE
-			tmp = alloc_char_to_tchar(tpMailItem->Body);
-#else
 			tmp = alloc_copy(tpMailItem->Body);
-#endif
-#ifndef _WCE_OLD
 		}
 #endif
 		if (tmp != NULL) {
@@ -1700,7 +1697,11 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 			}
 			if (tpMailItem->BodyCharset != NULL && charset_problem == FALSE
 					&& lstrcmpi(tpMailItem->BodyCharset, TEXT(CHARSET_US_ASCII)) != 0) {
+#ifdef UNICODE
+				tpMailItem->Body = MIME_charset_encode(CP_int, tmp, tpMailItem->BodyCharset);
+#else
 				tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset);
+#endif
 				if (tpMailItem->Body == NULL) {
 					charset_problem = TRUE;
 				} else {
@@ -1729,7 +1730,11 @@ static BOOL SetItemToSendBox(HWND hWnd, MAILITEM *tpMailItem, BOOL BodyFlag, int
 					SwitchCursor(FALSE);
 					mem_free(&tpMailItem->BodyCharset);
 					tpMailItem->BodyCharset = alloc_char_to_tchar(CHARSET_UTF_8);
+#ifdef UNICODE
+					tpMailItem->Body = MIME_charset_encode(CP_int, tmp, tpMailItem->BodyCharset);
+#else
 					tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), tmp, tpMailItem->BodyCharset);
+#endif
 					if (tpMailItem->BodyEncoding < ENC_TYPE_BASE64) {
 						tpMailItem->BodyEncoding = ENC_TYPE_Q_PRINT;
 					}
@@ -2537,16 +2542,15 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					if (buf != NULL) {
 						*buf = TEXT('\0');
 						SendDlgItemMessage(hWnd, IDC_EDIT_BODY, WM_GETTEXT, len, (LPARAM)buf);
-#ifndef _WCE_OLD
+#ifdef UNICODE
+						if (tpMailItem->BodyCharset == NULL ||
+							(tpMailItem->Body = MIME_charset_encode(CP_int, buf, tpMailItem->BodyCharset)) == NULL) {
+							tpMailItem->Body = alloc_tchar_to_char(buf);
+						}
+#else
 						if (tpMailItem->BodyCharset == NULL ||
 							(tpMailItem->Body = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, tpMailItem->BodyCharset)) == NULL) {
-#endif
-#ifdef UNICODE
-							tpMailItem->Body = alloc_tchar_to_char(buf);
-#else
 							tpMailItem->Body = alloc_copy(buf);
-#endif
-#ifndef _WCE_OLD
 						}
 #endif
 						mem_free(&buf);

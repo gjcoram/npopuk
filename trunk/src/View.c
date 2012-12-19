@@ -591,7 +591,6 @@ int SetWordBreak(HWND hWnd, int cmd)
 	RECT HeaderRect;
 #ifndef _WIN32_WCE
 	RECT ToolbarRect;
-	BOOL auto_url = FALSE;
 #endif
 #ifdef _WIN32_WCE_SP
 	DWORD first=0;
@@ -700,7 +699,7 @@ int SetWordBreak(HWND hWnd, int cmd)
 #ifndef _WIN32_WCE
 	if (op.RichEdit) {
 		// enable URL detection (color/underline) and messages
-		SendMessage(hEdit, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(hEdit, EM_AUTOURLDETECT, op.RichEditWparam, 0); 
 		SendMessage(hEdit, EM_SETEVENTMASK, 0, ENM_LINK);
 		// readonly for RichEdit; regular Edit gets a gray background
 		SendMessage(hEdit, EM_SETREADONLY, TRUE, 0);
@@ -948,8 +947,6 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else	// _WIN32_WCE_PPC
 	WORD idMenu;
 #endif	// _WIN32_WCE_PPC
-#else
-	BOOL auto_url = FALSE;
 #endif	// _WIN32_WCE
 #endif	// _WIN32_WCE_LAGENDA
 
@@ -1114,7 +1111,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 #else
 	if (op.RichEdit) {
 		// enable URL detection (color/underline) and messages
-		SendMessage(EditBody, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(EditBody, EM_AUTOURLDETECT, op.RichEditWparam, 0);
 		SendMessage(EditBody, EM_SETEVENTMASK, 0, ENM_LINK);
 		// readonly for RichEdit; regular Edit gets a gray background
 		SendMessage(EditBody, EM_SETREADONLY, TRUE, 0);

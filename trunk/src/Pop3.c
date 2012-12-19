@@ -1252,11 +1252,13 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 				if (strcmp(p, "octets") == 0) {
 					int new_size = a2i(r);
 					if (new_size > mail_size - 10) {
+#ifndef _WCE_OLD
 						if (op.SocLog > 1) {
 							char msg[100];
 							sprintf_s(msg, 99, " message size updated from %d to %d", mail_size, new_size);
 							log_save_a(msg);
 						}
+#endif
 						mail_size = new_size;
 					}
 				}
