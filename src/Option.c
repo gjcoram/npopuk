@@ -6259,7 +6259,11 @@ BOOL CheckDependence(HWND hEdit, TCHAR *buf, TCHAR *charset)
 			}
 		}
 		if (cs_is_ascii == FALSE || needs_utf8) {
+#ifdef UNICODE
+			char *tmp = MIME_charset_encode(CP_int, buf, charset);
+#else
 			char *tmp = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, charset);
+#endif
 			if (tmp == NULL) {
 				if (hEdit != NULL) {
 					TCHAR msg[MSG_SIZE];

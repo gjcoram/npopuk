@@ -193,7 +193,7 @@ void ini_read_general(HWND hWnd)
 	UINT char_set;
 	TCHAR conv_buf[INI_BUF_SIZE];
 	TCHAR tmp[BUF_SIZE];
-	int len, width, height, t, i;
+	int len, width, height, t, i, re_wparam=0;
 
 	hdc = GetDC(hWnd);
 #ifndef _WIN32_WCE
@@ -661,13 +661,28 @@ void ini_read_general(HWND hWnd)
 	op.RichEdit = profile_get_int(GENERAL, TEXT("RichEdit"), 0);
 	op.WindowClass = TEXT("EDIT");
 #ifndef _WIN32_WCE
-	if (op.RichEdit >= 4 && LoadLibrary(TEXT("Msftedit.dll"))) {
+	re_wparam = 1; // default value
+	if (op.RichEdit >= 7 && (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll")))) {
+		// Office14 = 2010, has RichEdit 7
+		op.WindowClass = RICHEDIT_CLASS;
+		re_wparam = 31;
+	} else if (op.RichEdit >= 6 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll")))) {
+		// Office12 = 2007, has RichEdit 6
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit >= 5 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll")))) {
+		// Office11 = 2003, has RichEdit 5
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit >= 4 && LoadLibrary(TEXT("Msftedit.dll"))) {
 		op.WindowClass = MSFTEDIT_CLASS;
 	} else if (op.RichEdit >= 2 && LoadLibrary(TEXT("Riched20.dll"))) {
 		op.WindowClass = RICHEDIT_CLASS;
-	} else if (op.RichEdit >=1 && LoadLibrary(TEXT("Riched32.dll"))) {
+	} else if (op.RichEdit > 0 && LoadLibrary(TEXT("Riched32.dll"))) {
 		op.WindowClass = RICHEDIT_CLASS;
 	}
+	op.RichEditWparam = profile_get_int(GENERAL, TEXT("RichEditWparam"), re_wparam);
 #endif
 	op.EditApp = profile_alloc_string(GENERAL, TEXT("EditApp"), TEXT(""));
 	op.EditAppCmdLine = profile_alloc_string(GENERAL, TEXT("EditAppCmdLine"), TEXT(""));

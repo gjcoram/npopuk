@@ -2497,7 +2497,7 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 	SetProp(previewWnd, WNDPROC_KEY, OldWndProc);
 	if (op.RichEdit) {
 		// enable URL detection (color/underline) and messages
-		SendMessage(previewWnd, EM_AUTOURLDETECT, 1, 0);
+		SendMessage(previewWnd, EM_AUTOURLDETECT, op.RichEditWparam, 0);
 		SendMessage(previewWnd, EM_SETEVENTMASK, 0, ENM_LINK);
 		// readonly for RichEdit; regular Edit gets a gray background
 		SendMessage(previewWnd, EM_SETREADONLY, TRUE, 0);
@@ -4714,22 +4714,50 @@ static BOOL AdvOptionEditor(HWND hWnd)
 	}
 	if (ret && profile_create() != FALSE) {
 		HDC hdc;
+		FONT_INFO old_view, old_lv;
+		BOOL new_view = FALSE, new_lv = FALSE;
 		int oldmbw = op.MBMenuWidth, oldpph = op.PreviewPaneHeight;
+		{
+			old_view.name = alloc_copy_t(op.view_font.name);
+			old_view.size = op.view_font.size;
+			old_view.weight = op.view_font.weight;
+			old_view.italic = op.view_font.italic;
+		}
+		{
+			old_lv.name = alloc_copy_t(op.lv_font.name);
+			old_lv.size = op.lv_font.size;
+			old_lv.weight = op.lv_font.weight;
+			old_lv.italic = op.lv_font.italic;
+		}
 		ini_free(FALSE);
 		profile_parse(buf, lstrlen(buf), TRUE, NULL);
 		ini_read_general(hWnd);
-		if (hViewFont != NULL) {
-			DeleteObject(hViewFont);
+		if (lstrcmp(old_view.name, op.view_font.name) != 0 || old_view.size != op.view_font.size ||
+			old_view.weight != op.view_font.weight || old_view.italic != op.view_font.italic) {
+			new_view = TRUE;
 		}
-		hdc = GetDC(hWnd);
-		if ((op.lv_font.name != NULL && *op.lv_font.name != TEXT('\0')) || op.lv_font.size != 9) {
-			if (hListFont != NULL) {
-				DeleteObject(hListFont);
+		if (lstrcmp(old_lv.name, op.lv_font.name) != 0 || old_lv.size != op.lv_font.size ||
+			old_lv.weight != op.lv_font.weight || old_lv.italic != op.lv_font.italic) {
+			new_lv = TRUE;
+		}
+		if (new_view || new_lv) {
+			hdc = GetDC(hWnd);
+			if (new_view) {
+				if (hViewFont != NULL) {
+					DeleteObject(hViewFont);
+				}
+				hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
 			}
-			hListFont = font_create_or_copy(hWnd, hdc, &op.lv_font);
+			if (new_lv) {
+				if (hListFont != NULL) {
+					DeleteObject(hListFont);
+				}
+				hListFont = font_create_or_copy(hWnd, hdc, &op.lv_font);
+			}
+			ReleaseDC(hWnd, hdc);
 		}
-		hViewFont = font_create_or_copy(hWnd, hdc, &op.view_font);
-		ReleaseDC(hWnd, hdc);
+		mem_free(&old_view.name);
+		mem_free(&old_lv.name);
 		if (hViewWnd != NULL) {
 			SendDlgItemMessage(hViewWnd, IDC_EDIT_BODY, WM_SETFONT, (WPARAM)hViewFont, MAKELPARAM(TRUE,0));
 		}

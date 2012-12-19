@@ -74,7 +74,9 @@ char *MIME_charset_encode(const UINT cp, TCHAR *buf, TCHAR *charset)
 #ifdef UNICODE
 		char *cbuf;
 
+		CP_int = 932; // Japanese codepage
 		cbuf = alloc_tchar_to_char(buf);
+		CP_int = CP_UTF8;
 		if (cbuf == NULL) {
 			return NULL;
 		}
@@ -132,7 +134,9 @@ TCHAR *MIME_charset_decode(const UINT cp, char *buf, TCHAR *charset)
 			return NULL;
 		}
 		iso2022jp_sjis(buf, cret);
+		CP_int = 932; // Japanese codepage
 		ret = alloc_char_to_tchar(cret);
+		CP_int = CP_UTF8;
 		mem_free(&cret);
 #else
 		ret = (char *)mem_alloc(tstrlen(buf) + 1);
@@ -705,7 +709,9 @@ int MIME_decode(char *buf, TCHAR *ret)
 					// found a character not in the 0-127 range, convert it according to ViewCharset
 					char hold = *p;
 					*p = '\0'; // stop decoding here
-					retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
+					retbuf = MIME_charset_decode(CP_int, non_enc_pt, op.ViewCharset);
+					// #ifdef UNICODE, charset_to_cp always returns CP_int
+					// retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
 					*p = hold;
 					if (retbuf != NULL) {
 						str_cpy_n_t(r, retbuf, (p - non_enc_pt) + 1);
@@ -847,7 +853,9 @@ int MIME_decode(char *buf, TCHAR *ret)
 				// found a character not in the 0-127 range, convert it according to ViewCharset
 				char hold = *p;
 				*p = '\0'; // stop decoding here
-				retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
+				retbuf = MIME_charset_decode(CP_int, non_enc_pt, op.ViewCharset);
+				// #ifdef UNICODE, charset_to_cp always returns CP_int
+				// retbuf = MIME_charset_decode(charset_to_cp((BYTE)font_charset), non_enc_pt, op.ViewCharset);
 				*p = hold;
 				if (retbuf != NULL) {
 					str_cpy_n_t(r, retbuf, (p - non_enc_pt) + 1);
@@ -880,7 +888,9 @@ int MIME_decode(char *buf, TCHAR *ret)
 			cret = mem_alloc(len + 1);
 			if (cret != NULL) {
 				iso2022jp_sjis(cbuf, cret);
+				CP_int = 932; // Japanese codepage
 				char_to_tchar(cret, ret, tstrlen(cret));
+				CP_int = CP_UTF8;
 				mem_free(&cret);
 			}
 			mem_free(&cbuf);
@@ -997,9 +1007,18 @@ char *MIME_rfc2231_encode(TCHAR *wbuf, TCHAR *charset_t)
 		if (cnt == 0) {
 			r = str_join(r, "\r\n filename*0*=", charset, "''", t, (char *)-1);
 		} else {
+#ifdef _WCE_OLD
+			TCHAR cnt_str_t[12];
+			char *cnt_str;
+			wsprintf(cnt_str_t, TEXT("%d"), cnt);
+			cnt_str = alloc_tchar_to_char(cnt_str_t);
+			r = str_join(r, "\r\n filename*", cnt_str, "*=", t, (char *)-1);
+			mem_free(&cnt_str);
+#else
 			char cnt_str[12];
 			sprintf_s(cnt_str, 9, "%d", cnt, "\0");
 			r = str_join(r, "\r\n filename*", cnt_str, "*=", t, (char *)-1);
+#endif
 		}
 #ifdef UNICODE
 		mem_free(&t);
@@ -1178,16 +1197,15 @@ char *MIME_body_encode(TCHAR *body, TCHAR *charset_t, int encoding, TCHAR *ctype
 		MIME_create_encode_header(charset_t, encoding, ctype_in, ret_content_type, ret_encoding);
 
 		// charset‚Ì•ÏŠ·
-#ifndef _WCE_OLD
+#ifdef UNICODE
+		cret = MIME_charset_encode(CP_int, buf, charset_t);
+		if (cret == NULL) {
+			cret = alloc_tchar_to_char(buf);
+		}
+#else
 		cret = MIME_charset_encode(charset_to_cp((BYTE)font_charset), buf, charset_t);
 		if (cret == NULL) {
-#endif
-#ifdef UNICODE
-			cret = alloc_tchar_to_char(buf);
-#else
 			cret = alloc_copy_t(buf);
-#endif
-#ifndef _WCE_OLD
 		}
 #endif
 		switch (encoding) {
@@ -1284,13 +1302,15 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		for (p = charset; *p != TEXT('\0') && *p != TEXT('\"') && *p != TEXT(';'); p++);
 		*p = TEXT('\0');
 
-#ifndef _WCE_OLD
+#ifdef UNICODE
+		ret = MIME_charset_decode(CP_int, buf, charset);
+#else
 		ret = MIME_charset_decode(charset_to_cp((BYTE)font_charset), buf, charset);
+#endif
 		if (ret != NULL) {
 			mem_free(&charset);
 			return ret;
 		}
-#endif
 		mem_free(&charset);
 		break;
 	}
@@ -1302,7 +1322,9 @@ static TCHAR *MIME_body_decode_charset(char *buf, char *ContentType)
 		if (cret != NULL) {
 			iso2022jp_sjis(buf, cret);
 		}
+		CP_int = 932; // Japanese codepage
 		ret = alloc_char_to_tchar(cret);
+		CP_int = CP_UTF8;
 		mem_free(&cret);
 #else
 		ret = mem_alloc(tstrlen(buf) + 1);
@@ -1572,18 +1594,18 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 TCHAR *alloc_char_to_tchar_check(char *str)
 {
 	TCHAR *tchar = NULL;
-#ifndef _WCE_OLD
 	if (op.ViewCharset != NULL && *op.ViewCharset != TEXT('\0')) {
 		// check for characters not in the ASCII range (0-127 or 0x00-0x7F)
 		unsigned char *p;
 		for (p = str; *p != '\0'; p++) {
 			if (*p > 0x7F) {
-				tchar = MIME_charset_decode(charset_to_cp((BYTE)font_charset), str, op.ViewCharset);
+				tchar = MIME_charset_decode(CP_int, str, op.ViewCharset);
+				// #ifdef UNICODE, charset_to_cp always returns CP_int
+				//tchar = MIME_charset_decode(charset_to_cp((BYTE)font_charset), str, op.ViewCharset);
 				break;
 			}
 		}
 	}
-#endif
 	if (tchar == NULL) {
 		tchar = alloc_char_to_tchar(str);
 	}
