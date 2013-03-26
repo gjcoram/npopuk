@@ -153,7 +153,7 @@ EXHEADER=$(INCO_D)\e_os2.h \
 SSLOBJ=$(OBJ_D)\s2_meth.obj \
 	$(OBJ_D)\s2_srvr.obj $(OBJ_D)\s2_clnt.obj $(OBJ_D)\s2_lib.obj \
 	$(OBJ_D)\s2_enc.obj $(OBJ_D)\s2_pkt.obj $(OBJ_D)\s3_meth.obj \
-	$(OBJ_D)\s3_srvr.obj $(OBJ_D)\s3_clnt.obj $(OBJ_D)\s3_lib.obj \
+	$(OBJ_D)\s3_srvr.obj $(OBJ_D)\s3_cbc.obj $(OBJ_D)\s3_clnt.obj $(OBJ_D)\s3_lib.obj \
 	$(OBJ_D)\s3_enc.obj $(OBJ_D)\s3_pkt.obj $(OBJ_D)\s3_both.obj \
 	$(OBJ_D)\s23_meth.obj $(OBJ_D)\s23_srvr.obj $(OBJ_D)\s23_clnt.obj \
 	$(OBJ_D)\s23_lib.obj $(OBJ_D)\s23_pkt.obj $(OBJ_D)\t1_meth.obj \
@@ -747,6 +747,9 @@ $(OBJ_D)\s3_meth.obj: $(SRC_D)\ssl\s3_meth.c
 
 $(OBJ_D)\s3_srvr.obj: $(SRC_D)\ssl\s3_srvr.c
 	$(CC) /Fo$(OBJ_D)\s3_srvr.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\s3_srvr.c
+
+$(OBJ_D)\s3_cbc.obj: $(SRC_D)\ssl\s3_cbc.c
+	$(CC) /Fo$(OBJ_D)\s3_cbc.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\s3_cbc.c
 
 $(OBJ_D)\s3_clnt.obj: $(SRC_D)\ssl\s3_clnt.c
 	$(CC) /Fo$(OBJ_D)\s3_clnt.obj  $(LIB_CFLAGS) -c $(SRC_D)\ssl\s3_clnt.c
