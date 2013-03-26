@@ -1314,6 +1314,10 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
 			ret += NULLCHECK_STRLEN(tpMailItem->Bcc);
 			break;
 
+		case TEXT('A'): case TEXT('a'):
+			ret += NULLCHECK_STRLEN(tpMailItem->Attach) + NULLCHECK_STRLEN(tpMailItem->FwdAttach) + 1;
+			break;
+
 		case TEXT('%'): case TEXT('{'): case TEXT('}'):
 			ret++;
 			break;
@@ -1330,7 +1334,7 @@ int CreateHeaderStringSize(TCHAR *buf, MAILITEM *tpMailItem, TCHAR *quotstr)
  */
 TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *quotstr)
 {
-	TCHAR *p, *r, *s, *t;
+	TCHAR *p, *r, *s, *t, *t2 = NULL;
 	int i, Optional = 0;
 	int quotlen = (quotstr == NULL) ? 0 : lstrlen(quotstr);
 	BOOL Found = FALSE;
@@ -1424,6 +1428,16 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			t = tpMailItem->Bcc;
 			break;
 
+		// Attach:
+		case TEXT('A'): case TEXT('a'):
+			t = tpMailItem->Attach;
+			t2 = tpMailItem->FwdAttach;
+			if (t2 != NULL && (t == NULL || *t == TEXT('\0'))) {
+				t = t2;
+				t2 = NULL;
+			}
+			break;
+
 		// %% becomes %, %{ becomes {, %{ becomes {
 		case TEXT('%'):
 		case TEXT('{'):
@@ -1432,7 +1446,12 @@ TCHAR *CreateHeaderString(TCHAR *buf, TCHAR *ret, MAILITEM *tpMailItem, TCHAR *q
 			continue;
 		}
 		if (t != NULL  &&  *t != TEXT('\0')) {
-			r = str_cpy_t(r, t);
+			if (t2 != NULL && *t2 != TEXT('\0')) {
+				// "|" should be ATTACH_SEP, but str_join_t needs a string, not a single char
+				r = str_join_t(r, t, TEXT("|"), t2, (TCHAR*)-1);
+			} else {
+				r = str_cpy_t(r, t);
+			}
 			Found = TRUE;
 		}
 	}
