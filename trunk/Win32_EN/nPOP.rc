@@ -497,6 +497,15 @@ BEGIN
     END
 END
 
+IDR_MENU_LINKPOP MENU
+BEGIN
+    POPUP "Link"
+    BEGIN
+        MENUITEM "Open link",           ID_MENUITEM_OPENLINK
+        MENUITEM "Copy to clipboard",   ID_MENUITEM_COPYLINK
+    END
+END
+
 IDR_MENU_MBPOPUP MENU 
 BEGIN
     POPUP "Mailbox"
@@ -1070,6 +1079,10 @@ BEGIN
     CONTROL         "&Append to saveboxes without loading",
                     IDC_CHECK_BLINDAPPEND,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP | WS_GROUP,15,97,170,10
+    CONTROL         "&Underline links (RichEdit=",IDC_CHECK_RICHEDIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,5,125,95,10
+    EDITTEXT        IDC_EDIT_RICHEDIT,103,123,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           ")",IDC_STATIC,125,125,46,10
 END
 
 IDD_DIALOG_OPTION_EDITOR DIALOG  0, 0, 212, 148

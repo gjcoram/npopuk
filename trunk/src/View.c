@@ -80,8 +80,12 @@ static int g_menu_height;
 BOOL ViewWndViewSrc = FALSE;
 int vSelBox = -1;
 extern HMENU hViewPop, vMenuDone;
-#ifdef _WIN32_WCE_PPC
+#ifdef _WIN32_WCE
 extern HMENU hEditPop;
+#else
+CHARRANGE LastLinkRange = {0,0};
+POINT RDownPos = {0,0};
+extern HMENU hLinkPop;
 #endif
 
 MULTIPART **vMultiPart = NULL;
@@ -385,9 +389,16 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 	}
 	if (CForm->code == EN_LINK) {
 		ENLINK *openLink = (ENLINK *) lParam;
+		LastLinkRange.cpMin = openLink->chrg.cpMin;
+		LastLinkRange.cpMax = openLink->chrg.cpMax;
 		if (openLink->msg == WM_LBUTTONUP) {
 			OpenURL(hWnd, &openLink->chrg);
 			return TRUE;
+		} else if (openLink->msg == WM_RBUTTONDOWN) {
+			POINT apos;
+			GetCursorPos((LPPOINT)&apos);
+			RDownPos.x = apos.x;
+			RDownPos.y = apos.y;
 		}
 	}
 	return FALSE;
@@ -409,7 +420,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 	AllocGetText(hEdit, &buf);
 	SendMessage(hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
 #ifndef _WIN32_WCE
-	if (RichEdit) {
+	if (RichEdit > 0) {
 		// adjust for RichEdit's internal representation of \r\n as just \r
 		for (p = buf; (unsigned)(p - buf) < dwEnd && *p != TEXT('\0'); p++) {
 			if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
@@ -448,7 +459,7 @@ BOOL FindEditString(HWND hEdit, TCHAR *strFind, int CaseFlag, int Wildcards, BOO
 #ifdef _WIN32_WCE
 	SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 #else
-	if (RichEdit == FALSE) {
+	if (RichEdit <= 0) {
 		SendMessage(hEdit, EM_SETSEL, FindPos, FindPos + len);
 	} else {
 		TCHAR *q;
@@ -697,7 +708,7 @@ int SetWordBreak(HWND hWnd, int cmd)
 	}
 	SetFocus(hEdit);
 #ifndef _WIN32_WCE
-	if (op.RichEdit) {
+	if (op.RichEdit > 0) {
 		// enable URL detection (color/underline) and messages
 		SendMessage(hEdit, EM_AUTOURLDETECT, op.RichEditWparam, 0); 
 		SendMessage(hEdit, EM_SETEVENTMASK, 0, ENM_LINK);
@@ -811,8 +822,13 @@ static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		break;
 #else
 	case WM_CONTEXTMENU:
-		SetViewMenu(GetParent(hWnd));
-		ShowMenu(GetParent(hWnd), hViewPop, 0, 0, FALSE);
+		{
+			POINT apos;
+			GetCursorPos((LPPOINT)&apos);
+			SetViewMenu(GetParent(hWnd));
+			ShowMenu(GetParent(hWnd), ((apos.x == RDownPos.x) && (apos.y == RDownPos.y)) ? hLinkPop : hViewPop, 0, 0, FALSE);
+			//ShowMenu(GetParent(hWnd), hViewPop, 0, 0, FALSE);
+		}
 		return 0;
 #endif
 	}
@@ -1109,7 +1125,7 @@ static BOOL InitWindow(HWND hWnd, MAILITEM *tpMailItem)
 	SendMessage(hWnd, WM_SETICON, (WPARAM)FALSE,
 		(LPARAM)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_READ), IMAGE_ICON, 16, 16, 0));
 #else
-	if (op.RichEdit) {
+	if (op.RichEdit > 0) {
 		// enable URL detection (color/underline) and messages
 		SendMessage(EditBody, EM_AUTOURLDETECT, op.RichEditWparam, 0);
 		SendMessage(EditBody, EM_SETEVENTMASK, 0, ENM_LINK);
@@ -4111,6 +4127,52 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				if (item_is_mailbox(MailBox + vSelBox, tpMailItem) == -1) {
 					ModifyWindow(hWnd, tpMailItem, FALSE, FALSE);
 				}
+			}
+			break;
+
+		case ID_MENUITEM_OPENLINK:
+			OpenURL(hWnd, &LastLinkRange);
+			break;
+
+		case ID_MENUITEM_COPYLINK:
+			if (OpenClipboard(hWnd)) {
+				TCHAR *buf = NULL, *str, *p, *s;
+				DWORD dwStart = LastLinkRange.cpMin, dwEnd = LastLinkRange.cpMax;
+				AllocGetText(GetDlgItem(hWnd, IDC_EDIT_BODY), &buf);
+
+				// adjust for RichEdit's internal representation of \r\n as just \r
+				for (p = buf; (unsigned)(p - buf) < dwEnd && *p != TEXT('\0'); p++) {
+					if (*p == TEXT('\r') && *(p+1) == TEXT('\n')) {
+						dwEnd++;
+						if ((unsigned)(p - buf) < dwStart)
+							dwStart++;
+					}
+				}
+				str = (TCHAR *)mem_alloc(sizeof(TCHAR) * (dwEnd - dwStart + 2));
+				if (str != NULL) {
+					LPTSTR  lptstrCopy; 
+					HGLOBAL hglbCopy;
+					hglbCopy = GlobalAlloc(GMEM_MOVEABLE, sizeof(TCHAR) * (dwEnd - dwStart + 2));
+					if (hglbCopy != NULL) {
+						for (p = buf+dwStart, s = str; p < buf+dwEnd; p++, s++) {
+							*s = *p;
+							if( *p == TEXT('\r') && *(p+1) != TEXT('\n') ) {
+								*(s++) = TEXT('\n');
+							}
+						}
+						*s = TEXT('\0');
+
+						lptstrCopy = GlobalLock(hglbCopy); 
+						memcpy(lptstrCopy, str, (dwEnd-dwStart) * sizeof(TCHAR)); 
+						lptstrCopy[dwEnd-dwStart] = TEXT('\0');
+						GlobalUnlock(hglbCopy);
+						EmptyClipboard();
+						SetClipboardData(CF_UNICODETEXT, hglbCopy);
+						CloseClipboard();
+					}
+					mem_free(&str);
+				}
+				mem_free(&buf);
 			}
 			break;
 #endif

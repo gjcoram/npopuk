@@ -49,7 +49,7 @@ static int ImageListIconAdd(HIMAGELIST IconList, int Index)
 		TCHAR fpath[BUF_SIZE];
 		wsprintf(fpath, TEXT("%sResource\\%s"), AppDir, Filename);
 		hIcon = LoadImage(NULL, fpath, IMAGE_ICON, SICONSIZE, SICONSIZE, LR_LOADFROMFILE);
-		if (hIcon == NULL && op.SocLog > 1) {
+		if (hIcon == NULL && op.SocLog > 9) {
 			TCHAR msg[MSG_SIZE];
 			DWORD err = GetLastError();
 			wsprintf(msg, TEXT("Failed to load image %s (err=%X)\r\n"), fpath, err);

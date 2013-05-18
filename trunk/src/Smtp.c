@@ -1866,6 +1866,10 @@ BOOL smtp_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX
 			SetStatusTextT(hWnd, STR_ERR_SOCK_SEND, 1);
 		}
 		if (op.SocLog > 0) log_save(STR_ERR_SOCK_SEND TEXT("\r\n"));
+		if (send_mail_item != NULL && buf != NULL && *buf == '5') {
+			log_save_a("buffer had a 5 -- some kind of error");
+			send_mail_item->Mark = ICON_ERROR;
+		}
 		smtp_set_error(hWnd);
 	}
 	return ret;

@@ -121,6 +121,8 @@ HMENU hADPOPUP, hViewPop=NULL;				// pop-up menus for Address list, View window
 static HANDLE hAccel, hViewAccel, hEditAccel;	// アクセラレータのハンドル
 #ifdef _WIN32_WCE
 HMENU hEditPop=NULL;						// pop-up menu for Edit window
+#else
+HMENU hLinkPop=NULL;						// pop-up menu for links in View window
 #endif
 #ifdef _WIN32_WCE_PPC
 HWND hMainToolBar;							// ツールバー (PocketPC)
@@ -164,7 +166,8 @@ BOOL AutoCheckFlag = FALSE;					//Automatic check
 BOOL PopBeforeSmtpFlag = FALSE;				//POP before SMTP
 BOOL KeyShowHeader;							//Is by the key the transitory header indicatory flag
 static BOOL AllCheck = FALSE;				//which While going around
-BOOL ExecFlag = FALSE;				//While executing
+BOOL ExecFlag = FALSE;						//While executing
+int TriedSend = FALSE;						//Try sending only once per "update all"
 BOOL ServerDelete = TRUE;
 BOOL CheckAfterThisUpdate = FALSE;
 static BOOL ExecCheckFlag = FALSE;			//Check decision
@@ -2495,7 +2498,7 @@ static void CreatePreviewPane(HWND hWnd, int Left, int Top, int width, int heigh
 #else
 	OldWndProc = (WNDPROC)SetWindowLong(previewWnd, GWL_WNDPROC, (DWORD)SubClassSentProc);
 	SetProp(previewWnd, WNDPROC_KEY, OldWndProc);
-	if (op.RichEdit) {
+	if (op.RichEdit > 0) {
 		// enable URL detection (color/underline) and messages
 		SendMessage(previewWnd, EM_AUTOURLDETECT, op.RichEditWparam, 0);
 		SendMessage(previewWnd, EM_SETEVENTMASK, 0, ENM_LINK);
@@ -4411,6 +4414,7 @@ static BOOL CheckEndAutoExec(HWND hWnd, int SocBox, int cnt, BOOL AllFlag)
 		AutoCheckFlag = FALSE;
 		AllCheck = TRUE;
 		ExecFlag = FALSE;		// FALSE にすることでチェックと実行のループを避ける
+		TriedSend = -1;
 		KeyShowHeader = FALSE;
 		CheckBox = MAILBOX_USER - 1;
 
@@ -4684,7 +4688,16 @@ static void AutoSave_Mailboxes(HWND hWnd)
 			}
 			file_save_mailbox(buf, DataDir, i, FALSE, TRUE,
 				(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
+			if (op.SocLog > 3) {
+				TCHAR msg[MSG_SIZE];
+				wsprintf(msg, TEXT("auto-saved mailbox %s\n"), buf);
+				log_save(msg);
+			}
 			DidOne = TRUE;
+		} else if (op.SocLog > 3) {
+			TCHAR msg[MSG_SIZE];
+			wsprintf(msg, TEXT("not auto-saving mailbox number %d, NeedsSave=%d\n"), i, tpMailBox->NeedsSave);
+			log_save(msg);
 		}
 	}
 	if (DidOne) {
@@ -5446,9 +5459,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				SmtpWait--;
 				break;
 			}
-			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0) {
+			if (CheckBox >= MAILBOX_USER && (MailBox + CheckBox)->CyclicFlag == 0 && TriedSend < CheckBox) {
+				// this checks if there are any messages to send for the mailbox we just updated
 				int next = item_get_next_send_mark_mailbox((MailBox + MAILBOX_SEND), -1, CheckBox);
 				if (next != -1) {
+					TriedSend = CheckBox; // avoid infinite loop when SMTP connection fails
 					//Execution of transmission mail (POP before SMTP)
 					ret = SendMail(hWnd, *((MailBox + MAILBOX_SEND)->tpMailItem +	next), SMTP_NEXTSEND);
 					if (ret == TRUE) {
@@ -5471,10 +5486,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			CheckBox++;
 			if (CheckBox >= MailBoxCnt) {
 				KillTimer(hWnd, wParam);
-				if (item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE, TRUE) != -1) {
-					// 送信
-					ExecItem(hWnd, MAILBOX_SEND);
-					break;
+				if (TriedSend < CheckBox) {
+					// this checks if there are any more messages to send
+					// (from mailboxes that were skipped during the UpdateAll process, perhaps due to CyclicFlag)
+					if (item_get_next_send_mark((MailBox + MAILBOX_SEND), FALSE, TRUE) != -1) {
+						TriedSend = CheckBox;
+						ExecItem(hWnd, MAILBOX_SEND);
+						break;
+					}
 				}
 				//Round execution end
 				gSockFlag = FALSE;
@@ -6567,6 +6586,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			AutoCheckFlag = FALSE;
 			AllCheck = TRUE;
 			ExecFlag = TRUE;
+			TriedSend = -1;
 			CheckBox = MAILBOX_USER - 1;
 			NewMailCnt = -1;
 			CheckAfterThisUpdate = (op.CheckAfterUpdate == 1) ? TRUE : FALSE;
@@ -7779,6 +7799,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #ifdef _WIN32_WCE
 	// edit window context menu (Win32 edit window class has its own context menu)
 	hEditPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_EDITPOP));
+#else
+	// context menu for links in View window
+	hLinkPop = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_LINKPOP));
 #endif
 #ifdef _WIN32_WCE_PPC
 	// for single-line edittext widgets
@@ -7821,6 +7844,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DestroyMenu(hADPOPUP);
 #ifdef _WIN32_WCE
 	DestroyMenu(hEditPop);
+#else
+	DestroyMenu(hLinkPop);
 #endif
 #ifdef _WIN32_WCE_PPC
 	DestroyMenu(hEDITPOPUP);

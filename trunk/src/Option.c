@@ -4455,6 +4455,10 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 #ifdef _WIN32_WCE_PPC
 		SendDlgItemMessage(hDlg, IDC_ADV_INI_EDITOR, BM_SETCHECK, op.PromptIniEdit, 0);
 #endif
+#ifndef _WIN32_WCE
+		SendDlgItemMessage(hDlg, IDC_CHECK_RICHEDIT, BM_SETCHECK, (op.RichEdit>0), 0);
+		SetDlgItemInt(hDlg, IDC_EDIT_RICHEDIT, (op.RichEdit>=0) ? op.RichEdit : -op.RichEdit, FALSE);
+#endif
 		break;
 
 	case WM_NOTIFY:
@@ -4525,7 +4529,12 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 #ifdef _WIN32_WCE_PPC
 			op.PromptIniEdit = SendDlgItemMessage(hDlg, IDC_ADV_INI_EDITOR, BM_GETCHECK, 0, 0);
 #endif
-
+#ifndef _WIN32_WCE
+			op.RichEdit = GetDlgItemInt(hDlg, IDC_EDIT_RICHEDIT, NULL, FALSE);
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_RICHEDIT, BM_GETCHECK, 0, 0) == 0) {
+				op.RichEdit = -op.RichEdit;
+			}
+#endif
 			break;
 		}
 		break;
