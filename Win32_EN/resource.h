@@ -323,6 +323,8 @@
 #define IDD_DIALOG_REDIRECT             1218
 #define IDC_CHECK_MARKSEND              1219
 #define IDC_VIEWSHOWATTACH              1220
+#define ID_MENUITEM_OPENLINK            1221
+#define ID_MENUITEM_COPYLINK            1222
 #define ID_MENUITEM_VIEWSOURCE          1225
 #define ID_MENUITEM_AUTOCHECK           1226
 #define IDR_MENU_COPY_FLYOUT            1227
@@ -343,6 +345,9 @@
 #define IDR_MENU_VIEWPOP                1243
 #define IDR_MENU_MBPOPUP                1244
 #define IDR_ADDRESS_POPUP               1245
+#define IDR_MENU_LINKPOP                1246
+#define IDC_CHECK_RICHEDIT              1247
+#define IDC_EDIT_RICHEDIT               1248
 #define IDD_DIALOG_SAVEATTACH           1250
 #define IDC_BUTTON_ALLSEL               1251
 #define IDC_BUTTON_NOSEL                1252
