@@ -183,6 +183,36 @@ static void get_sound_file(TCHAR *name, TCHAR **ret)
 	}
 }
 
+#ifndef _WIN32_WCE
+/*
+ * set_richedit_params - set WindowClass and wparam for RichEdit
+ */
+int set_richedit_params(void) {
+	int re_wparam = 1; // default value
+	if (op.RichEdit >= 7 && (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll")))) {
+		// Office14 = 2010, has RichEdit 7
+		op.WindowClass = RICHEDIT_CLASS;
+		re_wparam = 31;
+	} else if (op.RichEdit >= 6 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll")))) {
+		// Office12 = 2007, has RichEdit 6
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit >= 5 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll"))
+							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll")))) {
+		// Office11 = 2003, has RichEdit 5
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit >= 4 && LoadLibrary(TEXT("Msftedit.dll"))) {
+		op.WindowClass = MSFTEDIT_CLASS;
+	} else if (op.RichEdit >= 2 && LoadLibrary(TEXT("Riched20.dll"))) {
+		op.WindowClass = RICHEDIT_CLASS;
+	} else if (op.RichEdit > 0 && LoadLibrary(TEXT("Riched32.dll"))) {
+		op.WindowClass = RICHEDIT_CLASS;
+	}
+	return re_wparam;
+}
+#endif
+
 /*
  * ini_read_general
  */
@@ -661,27 +691,7 @@ void ini_read_general(HWND hWnd)
 	op.RichEdit = profile_get_int(GENERAL, TEXT("RichEdit"), 4);
 	op.WindowClass = TEXT("EDIT");
 #ifndef _WIN32_WCE
-	re_wparam = 1; // default value
-	if (op.RichEdit >= 7 && (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll"))
-							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE14\\Riched20.dll")))) {
-		// Office14 = 2010, has RichEdit 7
-		op.WindowClass = RICHEDIT_CLASS;
-		re_wparam = 31;
-	} else if (op.RichEdit >= 6 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll"))
-							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE12\\Riched20.dll")))) {
-		// Office12 = 2007, has RichEdit 6
-		op.WindowClass = RICHEDIT_CLASS;
-	} else if (op.RichEdit >= 5 &&  (LoadLibrary(TEXT("C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll"))
-							|| LoadLibrary(TEXT("C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\OFFICE11\\Riched20.dll")))) {
-		// Office11 = 2003, has RichEdit 5
-		op.WindowClass = RICHEDIT_CLASS;
-	} else if (op.RichEdit >= 4 && LoadLibrary(TEXT("Msftedit.dll"))) {
-		op.WindowClass = MSFTEDIT_CLASS;
-	} else if (op.RichEdit >= 2 && LoadLibrary(TEXT("Riched20.dll"))) {
-		op.WindowClass = RICHEDIT_CLASS;
-	} else if (op.RichEdit > 0 && LoadLibrary(TEXT("Riched32.dll"))) {
-		op.WindowClass = RICHEDIT_CLASS;
-	}
+	re_wparam = set_richedit_params();
 	op.RichEditWparam = profile_get_int(GENERAL, TEXT("RichEditWparam"), re_wparam);
 #endif
 	op.EditApp = profile_alloc_string(GENERAL, TEXT("EditApp"), TEXT(""));
