@@ -71,6 +71,7 @@ static BOOL AutoCompleted = FALSE;
 
 extern HINSTANCE hInst;  // Local copy of hInstance
 extern HWND MainWnd;
+extern HWND hViewWnd;
 #ifdef _WIN32_WCE_PPC
 extern HWND hMainToolBar;
 #endif
@@ -4534,6 +4535,7 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_RICHEDIT, BM_GETCHECK, 0, 0) == 0) {
 				op.RichEdit = -op.RichEdit;
 			}
+			op.RichEditWparam = set_richedit_params();
 #endif
 			break;
 		}
@@ -9341,7 +9343,8 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 			if (FindOrReplace >= 2) {
-				HWND hEdit = GetDlgItem(GetParent(hDlg), IDC_EDIT_BODY);
+				HWND hParent = GetParent(hDlg);
+				HWND hEdit = GetDlgItem(hParent, IDC_EDIT_BODY);
 				BOOL show_msg = TRUE, done = FALSE;
 				if (FindOrReplace == 4) {
 					SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);
@@ -9351,7 +9354,7 @@ BOOL CALLBACK SetFindProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				while (done == FALSE) {
 					BOOL found = FindEditString(hEdit, FindStr, op.MatchCase, op.Wildcards,
 							(FindOrReplace == 3) ? FALSE : TRUE, 
-							(op.WindowClass == TEXT("EDIT")) ? FALSE : TRUE, 
+							(hParent == hViewWnd && op.WindowClass != TEXT("EDIT")) ? TRUE : FALSE, 
 							orig_sel_start, orig_sel_end);
 					if (found && FindOrReplace == 3) {
 						SendMessage(hEdit, EM_REPLACESEL, (WPARAM)TRUE, (LPARAM)ReplaceStr);

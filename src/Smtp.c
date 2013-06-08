@@ -1446,7 +1446,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 		if (wbuf == NULL) {
 			return FALSE;
 		}
-		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(wbuf) * 2 + 4));
+		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(wbuf) * 3 + 4));
 		if (p == NULL) {
 			mem_free(&wbuf);
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
@@ -1484,7 +1484,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			return FALSE;
 		}
 		user = (send_mail_box->AuthUserPass == 1) ? send_mail_box->SmtpUser : send_mail_box->User;
-		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(user) * 2 + 4));
+		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(user) * 3 + 4));
 		if (p == NULL) {
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;
@@ -1523,7 +1523,7 @@ static BOOL send_mail_proc(HWND hWnd, SOCKET soc, char *buf, TCHAR *ErrStr, MAIL
 			lstrcpy(ErrStr, STR_ERR_SOCK_NOPASSWORD);
 			return FALSE;
 		}
-		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(pass) * 2 + 4));
+		p = (TCHAR *)mem_calloc(sizeof(TCHAR) * (lstrlen(pass) * 3 + 4));
 		if (p == NULL) {
 			lstrcpy(ErrStr, STR_ERR_MEMALLOC);
 			return FALSE;

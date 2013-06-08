@@ -970,6 +970,9 @@ BOOL file_delete(HWND hWnd, TCHAR *name);
 
 // Ini
 BOOL ini_start_auth_check(void);
+#ifndef _WIN32_WCE
+int set_richedit_params(void);
+#endif
 void ini_read_general(HWND hWnd);
 BOOL ini_read_setting(HWND hWnd);
 void ini_write_general(void);
