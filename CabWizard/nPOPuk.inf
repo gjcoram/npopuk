@@ -11,6 +11,10 @@
 ;       - H/PC Pro with the SH3 cpu
 ;       - H/PC Pro with the SH4 cpu
 ;
+;       - H/PC 2000 with the ARM cpu
+;       - H/PC 2000 with the MIPS cpu
+;       - H/PC 2000 with the X86 cpu
+;
 
 
 ;
@@ -53,6 +57,10 @@ UnsupportedPlatforms    = "Palm PC","Jupiter"
 ProcessorType           = 2577                  ; StrongARM cpu numeric value
 UnsupportedPlatforms    = "Palm PC","HPC"
 
+[CEDevice.HPCPro_MIPS]                          ; H/PC Pro on MIPS
+ProcessorType           = 4000
+UnsupportedPlatforms    = "Palm PC","HPC"
+
 [CEDevice.HPCPro_SH3]                           ; H/PC Pro on SH3
 ProcessorType           = 10003
 UnsupportedPlatforms    = "Palm PC","HPC"
@@ -61,10 +69,17 @@ UnsupportedPlatforms    = "Palm PC","HPC"
 ProcessorType           = 10005
 UnsupportedPlatforms    = "Palm PC","HPC"
 
-[CEDevice.HPCPro_MIPS]                          ; H/PC Pro on MIPS
+[CEDevice.HPC2000_ARM]                          ; H/PC 2000 on ARM
+ProcessorType           = 2577                  ; StrongARM cpu numeric value
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPC2000_MIPS]                         ; H/PC 2000 on MIPS
 ProcessorType           = 4000
 UnsupportedPlatforms    = "Palm PC","HPC"
 
+[CEDevice.HPC2000_X86]                          ; H/PC 2000 on X86
+ProcessorType           = 686
+UnsupportedPlatforms    = "Palm PC","HPC"
 
 ;
 ; Required "SourceDisksNames[.label]" section
@@ -87,14 +102,23 @@ UnsupportedPlatforms    = "Palm PC","HPC"
 [SourceDisksNames.HPCPro_ARM]       ; H/PC Pro on ARM
 2 = ,"ARM files",,Cpu\CE_2.1\ARM
 
+[SourceDisksNames.HPCPro_MIPS]      ; H/PC Pro on MIPS
+2 = ,"MIPS files",,Cpu\CE_2.1\MIPS
+
 [SourceDisksNames.HPCPro_SH3]       ; H/PC Pro on SH3
 2 = ,"SH3 files",,Cpu\CE_2.1\SH3
 
 [SourceDisksNames.HPCPro_SH4]       ; H/PC Pro on SH4
 2 = ,"SH4 files",,Cpu\CE_2.1\SH4
 
-[SourceDisksNames.HPCPro_MIPS]      ; H/PC Pro on MIPS
-2 = ,"MIPS files",,Cpu\CE_2.1\MIPS
+[SourceDisksNames.HPC2000_ARM]      ; H/PC 2000 on ARM
+2 = ,"ARM files",,Cpu\CE_3.0\ARM
+
+[SourceDisksNames.HPC2000_MIPS]     ; H/PC 2000 on MIPS
+2 = ,"MIPS files",,Cpu\CE_3.0\MIPS
+
+[SourceDisksNames.HPC2000_X86]      ; H/PC 2000 on X86
+2 = ,"X86 files",,Cpu\CE_3.0\X86
 
 ;
 ; Required "SourceDisksFiles[.label]" section
