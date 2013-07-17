@@ -2015,7 +2015,7 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 
 	*fname = TEXT('\0');
 #ifdef _WIN32_WCE
-	// installation from .cab puts some .ins in this directory by default
+	// installation from .cab puts some .ins files in this directory by default
 	initdir = alloc_copy_t(TEXT("\\Program Files\\nPOPuk"));
 #endif
 	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, &initdir) == TRUE) {
