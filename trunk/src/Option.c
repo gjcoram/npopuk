@@ -2011,9 +2011,14 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 {
 	BOOL ret = TRUE;
 	TCHAR fname[BUF_SIZE], tmp[BUF_SIZE];
+	TCHAR *initdir = NULL;
 
 	*fname = TEXT('\0');
-	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, NULL) == TRUE) {
+#ifdef _WIN32_WCE
+	// installation from .cab puts some .ins in this directory by default
+	initdir = alloc_copy_t(TEXT("\\Program Files\\nPOPuk"));
+#endif
+	if (filename_select(hDlg, fname, TEXT("ins"), STR_TEMPL_FILTER, FILE_OPEN_SINGLE, &initdir) == TRUE) {
 		static TCHAR *iMail = TEXT("Internet_Mail");
 		profile_initialize(fname, FALSE, hDlg);
 		if (profile_find_section(iMail) == FALSE) {
@@ -2079,6 +2084,9 @@ static BOOL GetConfigFile(HWND hDlg, MAILBOX *mbox)
 		mbox->Type = -1;
 		ret = FALSE;
 	}
+#ifdef _WIN32_WCE
+	mem_free(&initdir);
+#endif
 	return ret;
 }
 
@@ -2643,7 +2651,8 @@ static void MailboxSummaryAdd(int Num, HWND hListView, BOOL newSbox, int Pos)
 	}
 	ListView_SetItemText(hListView, ItemIndex, 2, buf);
 
-	ListView_SetItemText(hListView, ItemIndex, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
+	ListView_SetItemText(hListView, ItemIndex, 3,
+		(tpMailBox->NeedsSave) ? ((tpMailBox->NeedsSave & MAILITEMS_CHANGED) ? TEXT("YES") : TEXT("yes")) : TEXT("no"));
 	if (op.LazyLoadMailboxes > 0) {
 		ListView_SetItemText(hListView, ItemIndex, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
 	}
@@ -2954,7 +2963,8 @@ BOOL CALLBACK MailBoxSummaryProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					wsprintf(buf, STR_STATUS_MAILSIZE_KB_d, dsize);
 				}
 				ListView_SetItemText(hListView, sel, 2, buf);
-				ListView_SetItemText(hListView, sel, 3, (tpMailBox->NeedsSave) ? TEXT("YES") : TEXT("no"));
+				ListView_SetItemText(hListView, sel, 3, 
+					(tpMailBox->NeedsSave) ? ((tpMailBox->NeedsSave & MAILITEMS_CHANGED) ? TEXT("YES") : TEXT("yes")) : TEXT("no"));
 				if (op.LazyLoadMailboxes > 0) {
 					ListView_SetItemText(hListView, sel, 4, (tpMailBox->Loaded) ? TEXT("YES") : TEXT("no"));
 				}
