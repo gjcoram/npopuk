@@ -84,9 +84,9 @@ extern HMENU hViewPop, vMenuDone;
 extern HMENU hEditPop;
 #else
 CHARRANGE LastLinkRange = {0,0};
-POINT RDownPos = {0,0};
 extern HMENU hLinkPop;
 #endif
+POINT RDownPos = {0,0};
 
 MULTIPART **vMultiPart = NULL;
 int MultiPartCnt=0, MultiPartTextIndex=0;
