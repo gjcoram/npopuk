@@ -17,9 +17,9 @@
 #define NPOPBETA_RELEASE_CAND (NPOPBETA_REAL_RELEASE-1)
 
 #define NPOPMAJOR  3
-#define NPOPMINOR  02
-#define NPOPBETA   100
-#define NPOPPATCH  1
+#define NPOPMINOR  03
+#define NPOPBETA   3
+#define NPOPPATCH  0
 
 
 // convert text, blanks, or zeroes to zeroes

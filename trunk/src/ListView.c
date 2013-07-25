@@ -26,6 +26,7 @@ extern TCHAR *AppDir;
 extern HINSTANCE hInst;
 extern int SelBox;
 extern MAILBOX *MailBox;
+extern TCHAR *FilterString;
 
 /* Local Function Prototypes */
 static void ListView_GetDispItem(LV_ITEM *hLVItem);
@@ -486,7 +487,7 @@ int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox)
 /*
  * ListView_ShowItem - リストビューにアイテムを表示する
  */
-BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
+BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast, BOOL ReDraw)
 {
 	MAILITEM *tpMailItem;
 	LV_ITEM lvi;
@@ -580,7 +581,9 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast)
 			ListView_EnsureVisible(hListView, index, TRUE);
 		}
 	}
-	ListView_SetRedraw(hListView, TRUE);
+	if (ReDraw) {
+		ListView_SetRedraw(hListView, TRUE);
+	}
 	if (index != -1) {
 		ListView_EnsureVisible(hListView, index, TRUE);
 	}
@@ -979,6 +982,61 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 		return SendMessage(hWnd, WM_LV_EVENT, CForm->code, lParam);
 	}
 	return FALSE;
+}
+
+void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
+	TCHAR *str = NULL;
+	int i, ItemCnt, len = lstrlen(buf);
+	BOOL redo = FALSE;
+
+	if (FilterString == NULL) {
+		redo = TRUE;
+	} else {
+		int oldlen = lstrlen(FilterString);
+		if (oldlen > len) {
+			// character deleted -> start over
+			redo = TRUE;
+		} else if (str_cmp_n_t(FilterString, buf, oldlen) != 0) {
+			// different strings
+			redo = TRUE;
+		} else if (len == oldlen) {
+			// strings match -> nothing do to
+			return;
+		}
+		// else new string is longer, so what's already hidden won't match,
+		// and we don't need to start over
+	}
+	mem_free(&FilterString);
+	FilterString = alloc_copy_t(buf);
+	str = (TCHAR*)mem_alloc(sizeof(TCHAR) * (len+3));
+	if (str == NULL) {
+		return;
+	}
+	wsprintf(str, TEXT("*%s*"), buf);
+
+	if (redo) {
+		ListView_ShowItem(hListView, MailBox + SelBox, FALSE, FALSE);
+	}
+	ListView_SetRedraw(hListView, FALSE);
+	ItemCnt = ListView_GetItemCount(hListView);
+	for (i = 0; i < ItemCnt; i++) {
+		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
+		BOOL match = FALSE;
+		if (tpMailItem != NULL) {
+			if (str_match_t(str, tpMailItem->Subject)) {
+				match = TRUE;
+			} else if (SelBox == MAILBOX_SEND && str_match_t(str, tpMailItem->To)) {
+				match = TRUE;
+			} else if (SelBox != MAILBOX_SEND && str_match_t(str, tpMailItem->From)) {
+				match = TRUE;
+			}
+		}
+		if (match == FALSE) {
+			ListView_DeleteItem(hListView, i);
+		}
+	}
+	ListView_SetRedraw(hListView, TRUE);
+	mem_free(&str);
 }
 
 int ListView_ComputeState(int Priority, int Multipart)

@@ -40,7 +40,7 @@ extern HMENU hViewMenu;
 #endif
 
 extern int MailMenuPos;
-extern HWND MainWnd, hViewWnd;
+extern HWND MainWnd, hViewWnd, FilterBox;
 #ifdef _WIN32_WCE_PPC
 extern HWND hMainToolBar, hViewToolBar;
 #endif
@@ -784,6 +784,9 @@ void mailbox_select(HWND hWnd, int Sel)
 
 	SelBox = Sel;
 	SelectMBMenu(SelBox);
+	if (FilterBox) {
+		SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)TEXT(""));
+	}
 
 	//Acquisition
 #ifdef _WIN32_WCE
@@ -882,7 +885,7 @@ void mailbox_select(HWND hWnd, int Sel)
 
 	//of list view header The release
 	SwitchCursor(FALSE);
-	ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE);
+	ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), (MailBox + SelBox), FALSE, TRUE);
 	SwitchCursor(TRUE);
 
 	SetMailMenu(MainWnd);

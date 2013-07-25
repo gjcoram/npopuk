@@ -1957,7 +1957,7 @@ static void reorder_sendbox()
 		}
 		if (did) {
 			if (SelBox == MAILBOX_SEND) {
-				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), MailBox + MAILBOX_SEND, FALSE);
+				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), MailBox + MAILBOX_SEND, FALSE, TRUE);
 			}
 			(MailBox + MAILBOX_SEND)->NeedsSave |= MAILITEMS_CHANGED;
 		}

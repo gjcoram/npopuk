@@ -391,7 +391,7 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 		ENLINK *openLink = (ENLINK *) lParam;
 		LastLinkRange.cpMin = openLink->chrg.cpMin;
 		LastLinkRange.cpMax = openLink->chrg.cpMax;
-		if (openLink->msg == WM_LBUTTONUP) {
+		if (openLink->msg == WM_LBUTTONDBLCLK) {
 			OpenURL(hWnd, &openLink->chrg);
 			return TRUE;
 		} else if (openLink->msg == WM_RBUTTONDOWN) {
@@ -400,6 +400,12 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 			RDownPos.x = apos.x;
 			RDownPos.y = apos.y;
 		}
+	}
+	if (CForm->code == NM_DBLCLK) {
+		POINT apos;
+		GetCursorPos((LPPOINT)&apos);
+		RDownPos.x = apos.x;
+		RDownPos.y = apos.y;
 	}
 	return FALSE;
 }
@@ -792,6 +798,12 @@ static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		break;
 
 	case WM_LBUTTONDBLCLK:
+		{
+			POINT apos;
+			GetCursorPos((LPPOINT)&apos);
+			RDownPos.x = apos.x;
+			RDownPos.y = apos.y;
+		}
 		SetTimer(GetParent(hWnd), ID_CLICK_TIMER, 100, NULL);
 		break;
 
@@ -2401,9 +2413,9 @@ void OpenURL(HWND hWnd, void *cr)
 	TCHAR *str;
 	TCHAR *p, *r, *s;
 	DWORD i, j;
-	int k, len;
+	int k, cnt, len;
 	int MailToFlag = 0;
-	BOOL key_ctl = GetKeyState(VK_CONTROL);
+	int key_ctl = GetKeyState(VK_CONTROL);
 	if (GetDlgItem(hWnd, IDC_EDIT_BODY) == NULL) {
 		hWnd = MainWnd;
 	}
@@ -2412,6 +2424,13 @@ void OpenURL(HWND hWnd, void *cr)
 	if (cr != NULL) {
 		i = ((CHARRANGE*)cr)->cpMin;
 		j = ((CHARRANGE*)cr)->cpMax;
+	} else if (key_ctl < 0 && op.RichEdit > 0) {
+		// some RichEdit versions don't select text when the CTRL key is depressed
+		LRESULT charpos;
+		ScreenToClient(GetDlgItem(hWnd, IDC_EDIT_BODY), &RDownPos); 
+		charpos = SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_CHARFROMPOS, 0, (LPARAM) (POINTL *)&RDownPos);
+		i = LOWORD(charpos);
+		j = i+1;
 	} else
 #endif
 		SendDlgItemMessage(hWnd, IDC_EDIT_BODY, EM_GETSEL, (WPARAM)&i, (LPARAM)&j);
@@ -2443,15 +2462,36 @@ void OpenURL(HWND hWnd, void *cr)
 #endif
 
 	// look for "[ i  j ]" for download or open-attachment string
-	// require r = [, s = ] and (buf+j) > r and (buf+i) < s
+	// require r = [, s = ], (buf+j) > r, and (buf+i) < s
+	cnt = 0;
 	for (k = i; k >=0; k--) {
 		r = buf + k;
-		if (*r == TEXT('[') || *r == TEXT('\n')) {
+		if (*r == TEXT('\n') || *r == TEXT('\r')) {
 			break;
+		} else if (*r == TEXT(']')) {
+			// [] embedded in filename?
+			cnt++;
+		} else if (*r == TEXT('[')) {
+			if (cnt <= 0) {
+				break;
+			} else {
+				cnt--;
+			}
 		}
 	}
 	if (*r == TEXT('[')) {
-		for (s = r; *s != TEXT('\0') && *s != TEXT(']'); s++);
+		cnt = 0;
+		for (s = r+1; *s != TEXT('\0'); s++) {
+			if (*s == TEXT(']')) {
+				if (cnt <= 0) {
+					break;
+				} else {
+					cnt--;
+				}
+			} else if (*s == TEXT('[')) {
+				cnt++;
+			}
+		}
 		if (*s == TEXT(']') && (buf + j) > r && (buf + i) < s) {
 			if (str_cmp_n_t(r, STR_HTML_CONV, lstrlen(STR_HTML_CONV)) == 0) {
 				mem_free(&buf);
@@ -4401,7 +4441,7 @@ static LRESULT CALLBACK ViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					}
 					if (SelBox == mbox) {
 						SwitchCursor(FALSE);
-						ListView_ShowItem(mListView, (MailBox + SelBox), FALSE);
+						ListView_ShowItem(mListView, (MailBox + SelBox), FALSE, TRUE);
 						SwitchCursor(TRUE);
 						SetItemCntStatusText(NULL, FALSE, FALSE);
 					}
