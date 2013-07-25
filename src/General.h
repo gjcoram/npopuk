@@ -182,6 +182,7 @@ extern int sprintf_s();
 #define IDC_MBMENU				400					//Control ID
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
+#define IDC_FILTER				403
 
 #ifndef LVS_EX_INFOTIP
 #define LVS_EX_INFOTIP			0x400
@@ -469,6 +470,7 @@ typedef struct _OPTION {
 	int MBMenuWidth;
 	int MBMenuMinWidth;
 	int MBMenuHeight; // not saved in INI, for resizing
+	int FilterBoxWidth;
 	int ContextMenuOption;
 	int SaveboxListCount;
 	int ScanAllForUnread;
@@ -1194,10 +1196,11 @@ int ListView_GetNextMailItem(HWND hListView, int Index);
 int ListView_GetPrevMailItem(HWND hListView, int Index);
 int ListView_GetNextUnreadItem(HWND hListView, int Index, int endindex);
 int ListView_GetNewItem(HWND hListView, MAILBOX *tpMailBox);
-BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast);
+BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast, BOOL ReDraw);
 int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK AddrCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
+void ListView_FilterMessages(HWND hListView, TCHAR *buf);
 int ListView_ComputeState(int Priority, int Multipart);
 
 // main

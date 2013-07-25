@@ -1317,9 +1317,10 @@ void item_set_flags(MAILITEM *tpMailItem, MAILBOX *tpMailBox, int code)
 
 	// STATUS_REVISION_NUMBER
 	rev = code / 100000;
-	if (tpMailBox && rev != STATUS_REVISION_NUMBER/100000) {
-		tpMailBox->NeedsSave |= MARKS_CHANGED;
-	}
+	// GJC: this doesn't seem like such a good idea, after all
+	//if (tpMailBox && rev != STATUS_REVISION_NUMBER/100000) {
+	//	tpMailBox->NeedsSave |= MARKS_CHANGED;
+	//}
 	code = code % 100000;
 
 	// Replied/Forwarded
@@ -2473,7 +2474,7 @@ static int item_filter_domovecopy(MAILBOX *tpMailBox, MAILITEM *tpMailItem, BOOL
 				SetMailboxMark(sbox, 0, FALSE);
 			}
 			if (sbox == SelBox) {
-				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE);
+				ListView_ShowItem(GetDlgItem(MainWnd, IDC_LISTVIEW), TargetBox, TRUE, TRUE);
 			}
 		} else if (refilter == TRUE) {
 			MAILITEM *tpSboxItem = *(TargetBox->tpMailItem + j);

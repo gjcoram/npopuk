@@ -55,6 +55,7 @@
 #define ID_ITEMCHANGE_TIMER		11
 #define ID_PREVIEW_TIMER		12
 //#define ID_WIFICHECK_TIMER	13 // in General.h
+#define ID_FILTERBOX_TIMER		14
 
 #define STATUS_DONE				0
 #define STATUS_CHECK			1
@@ -108,6 +109,8 @@ BOOL WiFiStatus = FALSE;
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HWND mListView;								// mail list
+HWND FilterBox = NULL;						// filter messages to display
+TCHAR *FilterString = NULL;
 HFONT hListFont = NULL;						// ListViewのフォント
 HFONT hViewFont = NULL;						// 表示のフォント
 int font_charset;
@@ -139,6 +142,7 @@ HMENU hMainMenu;							// ウィンドウメニューのハンドル (l'agenda)
 int MailMenuPos;							// メニュー位置
 
 static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
+static WNDPROC FilterBoxWndProc = NULL;
 static WNDPROC MBPaneWndProc = NULL;
 WNDPROC PreviewWindowProcedure = NULL;
 int LvSortFlag = 0;							// ListViewのソートフラグ
@@ -211,13 +215,12 @@ static void SetTrayIcon(HWND hWnd, HICON hIcon);
 static void FreeAllMailBox(void);
 static BOOL CloseEditViewWindows(int Flag);
 static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
-static void SetListViewSubClass(HWND hWnd);
-static void DelListViewSubClass(HWND hWnd);
 static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 #ifndef _WIN32_WCE
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK SubClassFilterBoxProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK MBWidthProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
@@ -1904,20 +1907,22 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 }
 
 /*
- * SetListViewSubClass - ウィンドウのサブクラス化
+ * SubClassFilterBoxProc - custom event handler for FilterBox
  */
-static void SetListViewSubClass(HWND hWnd)
+static LRESULT CALLBACK SubClassFilterBoxProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	ListViewWindowProcedure = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (long)SubClassListViewProc);
-}
-
-/*
- * DelListViewSubClass - ウィンドウクラスを標準のものに戻す
- */
-static void DelListViewSubClass(HWND hWnd)
-{
-	SetWindowLong(hWnd, GWL_WNDPROC, (long)ListViewWindowProcedure);
-	ListViewWindowProcedure = NULL;
+	switch (msg) {
+	case WM_CHAR:
+	case WM_CUT:
+	case WM_CLEAR:
+	case WM_PASTE:
+		// kill any existing timer
+		KillTimer(MainWnd, ID_FILTERBOX_TIMER);
+		// wait a bit to see if there are more characters
+		SetTimer(MainWnd, ID_FILTERBOX_TIMER, 10, NULL);
+		break;
+	}
+	return CallWindowProc(FilterBoxWndProc, hWnd, msg, wParam, lParam);
 }
 
 /*
@@ -2050,7 +2055,7 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	}
 	if (CForm->code == EN_LINK) {
 		ENLINK *openLink = (ENLINK *) lParam;
-		if (openLink->msg == WM_LBUTTONUP) {
+		if (openLink->msg == WM_LBUTTONDBLCLK) {
 			OpenURL(hWnd, &openLink->chrg);
 			return TRUE;
 		}
@@ -2757,17 +2762,34 @@ static BOOL InitWindow(HWND hWnd)
 	if (MainBmp) {
 		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, NULL, (UINT)MainBmp,
 			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, op.MainBmpSize, op.MainBmpSize, sizeof(TBBUTTON));
+		Width[1] = (3*op.MainBmpSize/2) * TB_MAINBUTTONS;
 	} else {
 		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, hInst, IDB_TOOLBAR,
 			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
+		Width[1] = (3*TB_ICONSIZE/2) * TB_MAINBUTTONS;
 	}
 	SetWindowLong(hToolBar, GWL_STYLE,
 		GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
 	SendMessage(hToolBar, TB_SETINDENT, 5, 0);
 	ShowWindow(hToolBar,SW_SHOW);
-
 	GetWindowRect(hToolBar, &ToolbarRect);
 	op.ToolBarHeight = ToolbarRect.bottom - ToolbarRect.top;
+
+	// Width[0] = total toolbar width
+	// Width[1] = width used by buttons
+	// (note: buttons appear to take 1.5x the bitmap size, and the separators take a few pixels,
+	// and when op.EnableLAN is true, the two dial-up icons are hidden)
+	Width[0] = ToolbarRect.right - ToolbarRect.left;
+	Left = Width[0] - op.FilterBoxWidth;
+	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
+		WS_VISIBLE | WS_CHILD, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2,
+		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
+	SendMessage(FilterBox, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+	FilterBoxWndProc = (WNDPROC)SetWindowLong(FilterBox, GWL_WNDPROC, (long)SubClassFilterBoxProc);
+	if (Width[0] - Width[1] < op.FilterBoxWidth) {
+		ShowWindow(hToolBar,SW_HIDE);
+	}
+
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 	hMenu = GetMenu(hWnd);
 #endif
@@ -2842,8 +2864,8 @@ static BOOL InitWindow(HWND hWnd)
 		//Font of list view setting
 		SendMessage(mListView, WM_SETFONT, (WPARAM)hListFont, MAKELPARAM(TRUE, 0));
 	}
-	//List view to subclass is converted the
-	SetListViewSubClass(mListView);
+	// Add custom event handler to ListView
+	ListViewWindowProcedure = (WNDPROC)SetWindowLong(mListView, GWL_WNDPROC, (long)SubClassListViewProc);
 
 #ifdef _WIN32_WCE
 	//Idea contest of window setting
@@ -2925,6 +2947,27 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	// Toolbar
 	newTop = op.ToolBarHeight;
 	newHeight -= newTop;
+
+#ifndef _WIN32_WCE
+	// FilterBox
+	if (FilterBox != NULL) {
+		int Width;
+		GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
+		Width = subwinRect.right - subwinRect.left;
+		if (MainBmp) {
+			Width -= (3*op.MainBmpSize/2) * TB_MAINBUTTONS;
+		} else {
+			Width -= (3*TB_ICONSIZE/2) * TB_MAINBUTTONS;
+		}
+		if (Width >= op.FilterBoxWidth) {
+			Left = subwinRect.right - subwinRect.left - op.FilterBoxWidth;
+			MoveWindow(FilterBox, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2, TRUE);
+			ShowWindow(FilterBox,SW_SHOW);
+		} else {
+			ShowWindow(FilterBox,SW_HIDE);
+		}
+	}
+#endif
 
 	// Status bar
 	GetWindowRect(GetDlgItem(hWnd, IDC_STATUS), &subwinRect);
@@ -3211,25 +3254,33 @@ static BOOL EndWindow(HWND hWnd)
 	KillTimer(MainWnd, ID_WIFICHECK_TIMER);
 #endif
 
-	// タスクトレイのアイコンの除去
+	//of idea contest of task tray Cancellation
 	op.ShowTrayIcon = 0;
 	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
 
-	//of idea contest of task tray Cancellation
+	//of idea contest Cancellation
 	DestroyIcon(TrayIcon_Main);
 	DestroyIcon(TrayIcon_Check);
 	DestroyIcon(TrayIcon_Mail);
 
-	//of idea contest Cancellation
-	DelListViewSubClass(mListView);
+	//cancel custom window handler for ListView
+	SetWindowLong(mListView, GWL_WNDPROC, (long)ListViewWindowProcedure);
+	ListViewWindowProcedure = NULL;
 
-	//of subclass conversion of list view Cancellation
+	if (FilterBox) {
+		//cancel custom window handler for FilterBox
+		SetWindowLong(FilterBox, GWL_WNDPROC, (long)FilterBoxWndProc);
+		FilterBoxWndProc = NULL;
+		DestroyWindow(FilterBox);
+	}
+	mem_free(&FilterString);
+
+	//of image list Cancellation
 	hImgList = ListView_SetImageList(mListView, NULL, LVSIL_SMALL);
 	ImageList_Destroy((void *)hImgList);
 	hImgList = ListView_SetImageList(mListView, NULL, LVSIL_STATE);
 	ImageList_Destroy((void *)hImgList);
 
-	//of image list Cancellation
 #ifdef _WIN32_WCE
 #ifdef _WIN32_WCE_PPC
     DestroyWindow(hMainToolBar);
@@ -3706,7 +3757,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel)
 				return;
 			}
 		} else {
-			(MailBox + SelBox)->NeedsSave = MARKS_CHANGED;
+			(MailBox + SelBox)->NeedsSave |= MARKS_CHANGED;
 			if (tpMailItem->Mark == ICON_DOWN) {
 				tpMailItem->Mark = ICON_NON;
 				ListView_SetItemState(mListView, i, LVIS_CUT, LVIS_CUT);
@@ -4690,13 +4741,13 @@ static void AutoSave_Mailboxes(HWND hWnd)
 				(tpMailBox->Type == MAILBOX_TYPE_SAVE) ? 2 : tpMailBox->ListSaveMode);
 			if (op.SocLog > 3) {
 				TCHAR msg[MSG_SIZE];
-				wsprintf(msg, TEXT("auto-saved mailbox %s\n"), buf);
+				wsprintf(msg, TEXT("AUTO-SAVED mailbox %s\r\n"), buf);
 				log_save(msg);
 			}
 			DidOne = TRUE;
 		} else if (op.SocLog > 3) {
 			TCHAR msg[MSG_SIZE];
-			wsprintf(msg, TEXT("not auto-saving mailbox number %d, NeedsSave=%d\n"), i, tpMailBox->NeedsSave);
+			wsprintf(msg, TEXT("not auto-saving mailbox number %d, NeedsSave=%d\r\n"), i, tpMailBox->NeedsSave);
 			log_save(msg);
 		}
 	}
@@ -5603,6 +5654,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			KillTimer(hWnd, wParam);
 			if (SelBox != MAILBOX_SEND) {
 				SetMailStats(hWnd, ICON_READ);
+			}
+			break;
+
+		case ID_FILTERBOX_TIMER:
+			KillTimer(hWnd, wParam);
+			if (FilterBox != NULL) {
+				TCHAR buf[BUF_SIZE];
+				SendMessage(FilterBox, WM_GETTEXT, BUF_SIZE-1, (LPARAM)buf);
+				ListView_FilterMessages(mListView, buf);
 			}
 			break;
 
@@ -6898,12 +6958,21 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//of window Searching
 		case ID_MENUITEM_FIND:
-			View_FindMail(hWnd, TRUE);
+			if (FilterBox) {
+				SetFocus(FilterBox);
+				SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)TEXT(""));
+			} else {
+				View_FindMail(hWnd, TRUE);
+			}
 			break;
 
 		//The next searching
 		case ID_MENUITEM_NEXTFIND:
-			View_FindMail(hWnd, FALSE);
+			if (FilterBox) {
+				SetFocus(FilterBox);
+			} else {
+				View_FindMail(hWnd, FALSE);
+			}
 			break;
 
 		default:

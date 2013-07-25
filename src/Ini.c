@@ -374,6 +374,7 @@ void ini_read_general(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
+	op.FilterBoxWidth = profile_get_int(GENERAL, TEXT("FilterBoxWidth"), 150);
 #ifdef _WIN32_WCE
 	height = GetSystemMetrics(SM_CYSCREEN);
 	height -= MENU_HEIGHT;
@@ -1295,6 +1296,7 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("ContextMenuOption"), op.ContextMenuOption);
 	profile_write_int(GENERAL, TEXT("MBMenuWidth"), op.MBMenuWidth);
 	profile_write_int(GENERAL, TEXT("MBMenuMinWidth"), op.MBMenuMinWidth);
+	profile_write_int(GENERAL, TEXT("FilterBoxWidth"), op.FilterBoxWidth);
 	profile_write_int(GENERAL, TEXT("PreviewPaneHeight"), op.PreviewPaneHeight);
 	profile_write_int(GENERAL, TEXT("PreviewPaneMinHeight"), op.PreviewPaneMinHeight);
 	EncodeCtrlChar(op.PreviewHeader, conv_buf);
