@@ -1019,7 +1019,7 @@ void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 	}
 	ListView_SetRedraw(hListView, FALSE);
 	ItemCnt = ListView_GetItemCount(hListView);
-	for (i = 0; i < ItemCnt; i++) {
+	for (i = ItemCnt-1; i >= 0; i--) {
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		BOOL match = FALSE;
 		if (tpMailItem != NULL) {
