@@ -2762,6 +2762,7 @@ static BOOL InitWindow(HWND hWnd)
 	}
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	op.ToolBarHeight = CommandBar_Height(hToolBar);
+	Right = 2 * TB_ICONSIZE; // X is on the right edge of HPC toolbar
 	i = 0;
 	hMenu = CommandBar_GetMenu(hToolBar, 0);
 #endif
@@ -2784,6 +2785,7 @@ static BOOL InitWindow(HWND hWnd)
 	GetWindowRect(hToolBar, &ToolbarRect);
 	op.ToolBarHeight = ToolbarRect.bottom - ToolbarRect.top;
 	Width[0] = ToolbarRect.right - ToolbarRect.left;
+	Right = 0;
 
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 	hMenu = GetMenu(hWnd);
@@ -2799,7 +2801,7 @@ static BOOL InitWindow(HWND hWnd)
 #endif
 
 #ifndef _WIN32_WCE_PPC
-	Left = Width[0] - op.FilterBoxWidth;
+	Left = Width[0] - op.FilterBoxWidth - Right;
 	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
 		WS_VISIBLE | WS_CHILD, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2,
 		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
