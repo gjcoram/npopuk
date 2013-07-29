@@ -434,7 +434,7 @@ BEGIN
         MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
         MENUITEM SEPARATOR
         MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
-        MENUITEM "&Filter...\tCtrl+F",          ID_MENUITEM_FIND
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
     END
     POPUP "&Help"
     BEGIN
