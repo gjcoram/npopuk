@@ -142,7 +142,9 @@ HMENU hMainMenu;							// ウィンドウメニューのハンドル (l'agenda)
 int MailMenuPos;							// メニュー位置
 
 static WNDPROC ListViewWindowProcedure;		// サブクラス用プロシージャ(ListView)
+#ifndef _WIN32_WCE_PPC
 static WNDPROC FilterBoxWndProc = NULL;
+#endif
 static WNDPROC MBPaneWndProc = NULL;
 WNDPROC PreviewWindowProcedure = NULL;
 int LvSortFlag = 0;							// ListViewのソートフラグ
@@ -220,7 +222,9 @@ static LRESULT ListViewHeaderNotifyProc(HWND hWnd, LPARAM lParam);
 static LRESULT TbNotifyProc(HWND hWnd,LPARAM lParam);
 #endif
 static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam);
+#ifndef _WIN32_WCE_PPC
 static LRESULT CALLBACK SubClassFilterBoxProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
+#endif
 static LRESULT CALLBACK MBPaneProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK MBWidthProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static int CreateMBMenu(HWND hWnd, int Top, int Bottom);
@@ -1909,21 +1913,23 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 /*
  * SubClassFilterBoxProc - custom event handler for FilterBox
  */
+#ifndef _WIN32_WCE_PPC
 static LRESULT CALLBACK SubClassFilterBoxProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
-	case WM_CHAR:
-	case WM_CUT:
-	case WM_CLEAR:
-	case WM_PASTE:
-		// kill any existing timer
-		KillTimer(MainWnd, ID_FILTERBOX_TIMER);
-		// wait a bit to see if there are more characters
-		SetTimer(MainWnd, ID_FILTERBOX_TIMER, 10, NULL);
-		break;
+		case WM_CHAR:
+		case WM_CUT:
+		case WM_CLEAR:
+		case WM_PASTE:
+			// kill any existing timer
+			KillTimer(MainWnd, ID_FILTERBOX_TIMER);
+			// wait a bit to see if there are more characters
+			SetTimer(MainWnd, ID_FILTERBOX_TIMER, 10, NULL);
+			break;
 	}
 	return CallWindowProc(FilterBoxWndProc, hWnd, msg, wParam, lParam);
 }
+#endif
 
 /*
  * ListViewSortCheck - set checkmark on main window menu item
@@ -2740,16 +2746,19 @@ static BOOL InitWindow(HWND hWnd)
 	CommandBar_AddToolTips(hToolBar, 14, ((op.osMajorVer >= 4) ? (szTips+1) : szTips));
 	CommandBar_AddBitmap(hToolBar, hInst, IDB_TOOLBAR, TB_MAINBUTTONS, TB_ICONSIZE, TB_ICONSIZE);
 
-	if (GetSystemMetrics(SM_CXSCREEN) >= 450) {
+	Width[0] = GetSystemMetrics(SM_CXSCREEN);
+	if (Width[0] >= 450) {
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW_HPC, 0);
 		MailMenuPos = 3;
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) -
-			((GetSystemMetrics(SM_CXSCREEN) >= 640) ? 0 : 9), tbButton);
+			((Width[0] >= 640) ? 0 : 9), tbButton);
+		Width[1] = (TB_ICONSIZE + 8) * TB_MAINBUTTONS;
 	} else {
 		PPCFlag = TRUE;
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW, 0);
 		MailMenuPos = 1;
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 14, tbButton);
+		Width[1] = (TB_ICONSIZE + 8) * TB_MAINBUTTONS;
 	}
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	op.ToolBarHeight = CommandBar_Height(hToolBar);
@@ -2762,11 +2771,11 @@ static BOOL InitWindow(HWND hWnd)
 	if (MainBmp) {
 		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, NULL, (UINT)MainBmp,
 			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, op.MainBmpSize, op.MainBmpSize, sizeof(TBBUTTON));
-		Width[1] = (3*op.MainBmpSize/2) * TB_MAINBUTTONS;
+		Width[1] = (op.MainBmpSize + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 	} else {
 		hToolBar = CreateToolbarEx(hWnd, WS_CHILD | TBSTYLE_TOOLTIPS, IDC_TB, TB_MAINBUTTONS, hInst, IDB_TOOLBAR,
 			tbButton, sizeof(tbButton) / sizeof(TBBUTTON), 0, 0, TB_ICONSIZE, TB_ICONSIZE, sizeof(TBBUTTON));
-		Width[1] = (3*TB_ICONSIZE/2) * TB_MAINBUTTONS;
+		Width[1] = (TB_ICONSIZE + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 	}
 	SetWindowLong(hToolBar, GWL_STYLE,
 		GetWindowLong(hToolBar, GWL_STYLE) | TBSTYLE_FLAT);
@@ -2774,21 +2783,7 @@ static BOOL InitWindow(HWND hWnd)
 	ShowWindow(hToolBar,SW_SHOW);
 	GetWindowRect(hToolBar, &ToolbarRect);
 	op.ToolBarHeight = ToolbarRect.bottom - ToolbarRect.top;
-
-	// Width[0] = total toolbar width
-	// Width[1] = width used by buttons
-	// (note: buttons appear to take 1.5x the bitmap size, and the separators take a few pixels,
-	// and when op.EnableLAN is true, the two dial-up icons are hidden)
 	Width[0] = ToolbarRect.right - ToolbarRect.left;
-	Left = Width[0] - op.FilterBoxWidth;
-	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
-		WS_VISIBLE | WS_CHILD, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2,
-		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
-	SendMessage(FilterBox, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
-	FilterBoxWndProc = (WNDPROC)SetWindowLong(FilterBox, GWL_WNDPROC, (long)SubClassFilterBoxProc);
-	if (Width[0] - Width[1] < op.FilterBoxWidth) {
-		ShowWindow(hToolBar,SW_HIDE);
-	}
 
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 	hMenu = GetMenu(hWnd);
@@ -2801,6 +2796,20 @@ static BOOL InitWindow(HWND hWnd)
 	CheckMenuItem(hMenu, ID_MENUITEM_MBOXPANE, (op.MBMenuWidth>0) ? MF_CHECKED : MF_UNCHECKED);
 #ifndef _WIN32_WCE_LAGENDA
 	CheckMenuItem(hMenu, ID_MENUITEM_THREADVIEW, (op.LvThreadView == 1) ? MF_CHECKED : MF_UNCHECKED);
+#endif
+
+#ifndef _WIN32_WCE_PPC
+	Left = Width[0] - op.FilterBoxWidth;
+	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
+		WS_VISIBLE | WS_CHILD, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2,
+		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
+	SendMessage(FilterBox, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
+	FilterBoxWndProc = (WNDPROC)SetWindowLong(FilterBox, GWL_WNDPROC, (long)SubClassFilterBoxProc);
+	// Width[0] = total toolbar width
+	// Width[1] = width used by buttons
+	if (Width[0] - Width[1] < op.FilterBoxWidth) {
+		ShowWindow(FilterBox,SW_HIDE);
+	}
 #endif
 
 	// ListViewフォント
@@ -2955,9 +2964,9 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
 		Width = subwinRect.right - subwinRect.left;
 		if (MainBmp) {
-			Width -= (3*op.MainBmpSize/2) * TB_MAINBUTTONS;
+			Width -= (op.MainBmpSize + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 		} else {
-			Width -= (3*TB_ICONSIZE/2) * TB_MAINBUTTONS;
+			Width -= (TB_ICONSIZE + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 		}
 		if (Width >= op.FilterBoxWidth) {
 			Left = subwinRect.right - subwinRect.left - op.FilterBoxWidth;
@@ -5657,6 +5666,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 
+#ifndef _WIN32_WCE_PPC
 		case ID_FILTERBOX_TIMER:
 			KillTimer(hWnd, wParam);
 			if (FilterBox != NULL) {
@@ -5665,6 +5675,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 				ListView_FilterMessages(mListView, buf);
 			}
 			break;
+#endif
 
 		//When starting waiting
 		case ID_NEWMAIL_TIMER:
@@ -6958,21 +6969,12 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 		//of window Searching
 		case ID_MENUITEM_FIND:
-			if (FilterBox) {
-				SetFocus(FilterBox);
-				SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)TEXT(""));
-			} else {
-				View_FindMail(hWnd, TRUE);
-			}
+			View_FindMail(hWnd, TRUE);
 			break;
 
 		//The next searching
 		case ID_MENUITEM_NEXTFIND:
-			if (FilterBox) {
-				SetFocus(FilterBox);
-			} else {
-				View_FindMail(hWnd, FALSE);
-			}
+			View_FindMail(hWnd, FALSE);
 			break;
 
 		default:
