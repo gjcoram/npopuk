@@ -374,7 +374,7 @@ void ini_read_general(HWND hWnd)
 	} else if (op.MBMenuWidth > width / 2) {
 		op.MBMenuWidth = -op.MBMenuWidth; // hide it (too big)
 	}
-	op.FilterBoxWidth = profile_get_int(GENERAL, TEXT("FilterBoxWidth"), 150);
+	op.FilterBoxWidth = profile_get_int(GENERAL, TEXT("FilterBoxWidth"), 100);
 #ifdef _WIN32_WCE
 	height = GetSystemMetrics(SM_CYSCREEN);
 	height -= MENU_HEIGHT;

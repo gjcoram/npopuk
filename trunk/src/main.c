@@ -2752,13 +2752,13 @@ static BOOL InitWindow(HWND hWnd)
 		MailMenuPos = 3;
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) -
 			((Width[0] >= 640) ? 0 : 9), tbButton);
-		Width[1] = (TB_ICONSIZE + 8) * TB_MAINBUTTONS;
+		Width[1] = (TB_ICONSIZE + 8) * (TB_MAINBUTTONS + 9); // 9 = approx width of menu
 	} else {
 		PPCFlag = TRUE;
 		CommandBar_InsertMenubar(hToolBar, hInst, IDR_MENU_WINDOW, 0);
 		MailMenuPos = 1;
 		CommandBar_AddButtons(hToolBar, sizeof(tbButton) / sizeof(TBBUTTON) - 14, tbButton);
-		Width[1] = (TB_ICONSIZE + 8) * TB_MAINBUTTONS;
+		Width[1] = Width[0]; // no FilterBox
 	}
 	CommandBar_AddAdornments(hToolBar, 0, 0);
 	op.ToolBarHeight = CommandBar_Height(hToolBar);
