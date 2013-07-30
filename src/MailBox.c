@@ -50,7 +50,7 @@ extern int MailBoxCnt;
 extern ADDRESSBOOK *AddressBook;
 
 extern int SelBox, vSelBox, RecvBox;
-extern int LvSortFlag;
+extern int LvSortFlag, FilterBoxInstruction;
 extern BOOL EndThreadSortFlag;
 extern BOOL PPCFlag;
 
@@ -785,7 +785,8 @@ void mailbox_select(HWND hWnd, int Sel)
 	SelBox = Sel;
 	SelectMBMenu(SelBox);
 	if (FilterBox) {
-		SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)TEXT(""));
+		SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)STR_FILTER_MESSAGES);
+		FilterBoxInstruction = TRUE;
 	}
 
 	//Acquisition

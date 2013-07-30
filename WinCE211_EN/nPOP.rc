@@ -105,6 +105,8 @@ BEGIN
     "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
+    "K",            ID_MENUITEM_FILTER,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
     "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
     "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT

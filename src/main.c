@@ -111,6 +111,7 @@ HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HWND mListView;								// mail list
 HWND FilterBox = NULL;						// filter messages to display
 TCHAR *FilterString = NULL;
+int FilterBoxInstruction = 0;
 HFONT hListFont = NULL;						// ListViewのフォント
 HFONT hViewFont = NULL;						// 表示のフォント
 int font_charset;
@@ -1917,6 +1918,13 @@ static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,
 static LRESULT CALLBACK SubClassFilterBoxProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
+		case WM_SETFOCUS:
+			if (FilterBoxInstruction) {
+				SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)TEXT(""));
+				FilterBoxInstruction = 0;
+			}
+			break;
+
 		case WM_CHAR:
 		case WM_CUT:
 		case WM_CLEAR:
@@ -6978,6 +6986,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case ID_MENUITEM_NEXTFIND:
 			View_FindMail(hWnd, FALSE);
 			break;
+
+#ifndef _WIN32_WCE_PPC
+		case ID_MENUITEM_FILTER:
+			if (FilterBox) {
+				SetFocus(FilterBox);
+			}
+			break;
+#endif
 
 		default:
 #ifndef _WIN32_WCE

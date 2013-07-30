@@ -91,6 +91,7 @@
 #define IDC_SORT_FROM_EMAIL             206
 #define IDC_SORT_FROM_TEXT              207
 #define ID_MENUITEM_BACKUP              208
+#define ID_MENUITEM_FILTER              209
 #define IDI_ICON_FWD                    210
 #define IDI_ICON_REPL                   211
 #define IDI_ICON_REPLFWD                212

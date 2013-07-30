@@ -334,6 +334,7 @@
 #define STR_SAVEBOX_NONAME			TEXT("Savebox-%d")
 #define STR_SENDBOX_NAME			TEXT("[Outbox]")
 #define STR_MAILBOX_NONAME			TEXT("Untitled")
+#define STR_FILTER_MESSAGES			TEXT("Filter")
 #define STR_LIST_LVHEAD_SUBJECT		TEXT("Subject")
 #define STR_LIST_LVHEAD_FROM		TEXT("From")
 #define STR_LIST_LVHEAD_TO			TEXT("To")
