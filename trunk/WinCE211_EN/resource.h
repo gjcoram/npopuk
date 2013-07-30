@@ -94,6 +94,8 @@
 #define IDC_TEXT_SORTCOL                202
 #define IDC_COMBO_SORTCOL               203
 #define IDC_CHECK_SORTORDER             204
+#define ID_MENUITEM_BACKUP              208
+#define ID_MENUITEM_FILTER              209
 #define IDI_ICON_FWD                    210
 #define IDI_ICON_REPL                   211
 #define IDI_ICON_REPLFWD                212
@@ -113,7 +115,6 @@
 #define IDC_ADDR_GRP_COMBO              227
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
-#define ID_MENUITEM_BACKUP              230
 #define IDC_TEXT_VIEWSKIP               231
 #define IDC_TEXT_NEXTDEL                232
 #define IDC_VIEWNEXTDEL_NEXT            233
