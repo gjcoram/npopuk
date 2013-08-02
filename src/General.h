@@ -183,6 +183,7 @@ extern int sprintf_s();
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
 #define IDC_FILTER				403
+#define IDC_FILTER_LABEL		404
 
 #ifndef LVS_EX_INFOTIP
 #define LVS_EX_INFOTIP			0x400

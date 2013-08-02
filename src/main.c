@@ -109,7 +109,7 @@ BOOL WiFiStatus = FALSE;
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HWND mListView;								// mail list
-HWND FilterBox = NULL;						// filter messages to display
+HWND FilterBox = NULL, FilterLabel = NULL;	// filter messages to display
 TCHAR *FilterString = NULL;
 int FilterBoxInstruction = 0;
 HFONT hListFont = NULL;						// ListViewのフォント
@@ -2810,8 +2810,17 @@ static BOOL InitWindow(HWND hWnd)
 
 #ifndef _WIN32_WCE_PPC
 	Left = Width[0] - op.FilterBoxWidth - Right;
+	Height = op.ToolBarHeight-2;
+	Top = 0;
+	if (Height >= 12) {
+		Height /= 2;
+		Top = Height;
+		FilterLabel = CreateWindowEx(WS_EX_STATICEDGE, TEXT("STATIC"), STR_FILTER_MESSAGES,
+			WS_VISIBLE | WS_CHILD | SS_LEFTNOWORDWRAP | SS_NOPREFIX,
+			Left, 0, op.FilterBoxWidth, Height, hToolBar, (HMENU)IDC_FILTER_LABEL, hInst, NULL);
+	}
 	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
-		WS_VISIBLE | WS_CHILD, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2,
+		WS_VISIBLE | WS_CHILD, Left, Top, op.FilterBoxWidth, Height,
 		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
 	SendMessage(FilterBox, EM_LIMITTEXT, (WPARAM)BUF_SIZE - 2, 0);
 	FilterBoxWndProc = (WNDPROC)SetWindowLong(FilterBox, GWL_WNDPROC, (long)SubClassFilterBoxProc);
@@ -2819,6 +2828,9 @@ static BOOL InitWindow(HWND hWnd)
 	// Width[1] = width used by buttons
 	if (Width[0] - Width[1] < op.FilterBoxWidth) {
 		ShowWindow(FilterBox,SW_HIDE);
+		if (FilterLabel) {
+			ShowWindow(FilterLabel,SW_HIDE);
+		}
 	}
 #endif
 
@@ -2970,9 +2982,10 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 #ifndef _WIN32_WCE
 	// FilterBox
 	if (FilterBox != NULL) {
-		int Width;
+		int Width, Height, Top = 0;
 		GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
 		Width = subwinRect.right - subwinRect.left;
+		Height = op.ToolBarHeight-2;
 		if (MainBmp) {
 			Width -= (op.MainBmpSize + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 		} else {
@@ -2980,10 +2993,19 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 		if (Width >= op.FilterBoxWidth) {
 			Left = subwinRect.right - subwinRect.left - op.FilterBoxWidth;
-			MoveWindow(FilterBox, Left, 0, op.FilterBoxWidth, op.ToolBarHeight-2, TRUE);
+			if (FilterLabel) {
+				Height /= 2;
+				Top = Height;
+				MoveWindow(FilterLabel, Left, 0, op.FilterBoxWidth, Height, TRUE);
+				ShowWindow(FilterLabel,SW_SHOW);
+			}
+			MoveWindow(FilterBox, Left, Top, op.FilterBoxWidth, Height, TRUE);
 			ShowWindow(FilterBox,SW_SHOW);
 		} else {
 			ShowWindow(FilterBox,SW_HIDE);
+			if (FilterLabel) {
+				ShowWindow(FilterLabel,SW_HIDE);
+			}
 		}
 	}
 #endif
