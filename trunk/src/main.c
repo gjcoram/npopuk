@@ -70,7 +70,7 @@
 #define TIMEOUT_QUIT_WPARAM		2007
 
 #define TRAY_ID					100					// タスクトレイID
-
+#define FILTERBOX_HEIGHT		20
 #define WNDPROC_KEY				TEXT("OldWndProc")
 
 #define CMD_RSET				"RSET"
@@ -109,7 +109,7 @@ BOOL WiFiStatus = FALSE;
 HWND MainWnd;								// メインウィンドウのハンドル
 HWND FocusWnd;								// フォーカスを持つウィンドウのハンドル
 HWND mListView;								// mail list
-HWND FilterBox = NULL, FilterLabel = NULL;	// filter messages to display
+HWND FilterBox = NULL;	// filter messages to display
 TCHAR *FilterString = NULL;
 int FilterBoxInstruction = 0;
 HFONT hListFont = NULL;						// ListViewのフォント
@@ -2069,7 +2069,8 @@ static LRESULT NotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	}
 	if (CForm->code == EN_LINK) {
 		ENLINK *openLink = (ENLINK *) lParam;
-		if (openLink->msg == WM_LBUTTONDBLCLK) {
+		if ((openLink->msg == WM_LBUTTONDBLCLK && op.RichEditClick == 2) ||
+			(openLink->msg == WM_LBUTTONUP && op.RichEditClick != 2)) {
 			OpenURL(hWnd, &openLink->chrg);
 			return TRUE;
 		}
@@ -2810,15 +2811,14 @@ static BOOL InitWindow(HWND hWnd)
 
 #ifndef _WIN32_WCE_PPC
 	Left = Width[0] - op.FilterBoxWidth - Right;
-	Height = op.ToolBarHeight-2;
-	Top = 0;
-	if (Height >= 12) {
-		Height /= 2;
-		Top = Height;
-		FilterLabel = CreateWindowEx(WS_EX_STATICEDGE, TEXT("STATIC"), STR_FILTER_MESSAGES,
-			WS_VISIBLE | WS_CHILD | SS_LEFTNOWORDWRAP | SS_NOPREFIX,
-			Left, 0, op.FilterBoxWidth, Height, hToolBar, (HMENU)IDC_FILTER_LABEL, hInst, NULL);
+	if (op.ToolBarHeight > FILTERBOX_HEIGHT) {
+		Height = FILTERBOX_HEIGHT;
+		Top = (op.ToolBarHeight - FILTERBOX_HEIGHT) / 2;
+	} else {
+		Height = op.ToolBarHeight - 2;
+		Top = 0;
 	}
+
 	FilterBox = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""),
 		WS_VISIBLE | WS_CHILD, Left, Top, op.FilterBoxWidth, Height,
 		hToolBar, (HMENU)IDC_FILTER, hInst, NULL);
@@ -2828,9 +2828,6 @@ static BOOL InitWindow(HWND hWnd)
 	// Width[1] = width used by buttons
 	if (Width[0] - Width[1] < op.FilterBoxWidth) {
 		ShowWindow(FilterBox,SW_HIDE);
-		if (FilterLabel) {
-			ShowWindow(FilterLabel,SW_HIDE);
-		}
 	}
 #endif
 
@@ -2985,7 +2982,13 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		int Width, Height, Top = 0;
 		GetWindowRect(GetDlgItem(hWnd, IDC_TB), &subwinRect);
 		Width = subwinRect.right - subwinRect.left;
-		Height = op.ToolBarHeight-2;
+		if (op.ToolBarHeight > FILTERBOX_HEIGHT) {
+			Height = FILTERBOX_HEIGHT;
+			Top = (op.ToolBarHeight - FILTERBOX_HEIGHT) / 2;
+		} else {
+			Height = op.ToolBarHeight - 2;
+			Top = 0;
+		}
 		if (MainBmp) {
 			Width -= (op.MainBmpSize + 8) * (TB_MAINBUTTONS - (op.EnableLAN ? 3 : 1));
 		} else {
@@ -2993,19 +2996,10 @@ static BOOL SetWindowSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		}
 		if (Width >= op.FilterBoxWidth) {
 			Left = subwinRect.right - subwinRect.left - op.FilterBoxWidth;
-			if (FilterLabel) {
-				Height /= 2;
-				Top = Height;
-				MoveWindow(FilterLabel, Left, 0, op.FilterBoxWidth, Height, TRUE);
-				ShowWindow(FilterLabel,SW_SHOW);
-			}
 			MoveWindow(FilterBox, Left, Top, op.FilterBoxWidth, Height, TRUE);
 			ShowWindow(FilterBox,SW_SHOW);
 		} else {
 			ShowWindow(FilterBox,SW_HIDE);
-			if (FilterLabel) {
-				ShowWindow(FilterLabel,SW_HIDE);
-			}
 		}
 	}
 #endif

@@ -44,7 +44,7 @@ extern HWND MainWnd, hViewWnd;
 #ifdef _WIN32_WCE_PPC
 extern HWND hMainToolBar, hViewToolBar;
 #else
-extern HWND FilterBox, FilterLabel;
+extern HWND FilterBox;
 #endif
 
 extern MAILBOX *MailBox;
@@ -786,7 +786,7 @@ void mailbox_select(HWND hWnd, int Sel)
 
 	SelBox = Sel;
 	SelectMBMenu(SelBox);
-	if (FilterBox && !FilterLabel) {
+	if (FilterBox) {
 		SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)STR_FILTER_MESSAGES);
 		FilterBoxInstruction = TRUE;
 	}

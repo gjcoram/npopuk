@@ -4469,6 +4469,11 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 #ifndef _WIN32_WCE
 		SendDlgItemMessage(hDlg, IDC_CHECK_RICHEDIT, BM_SETCHECK, (op.RichEdit>0), 0);
 		SetDlgItemInt(hDlg, IDC_EDIT_RICHEDIT, (op.RichEdit>=0) ? op.RichEdit : -op.RichEdit, FALSE);
+		if (op.RichEditClick == 2) {
+			SendDlgItemMessage(hDlg, IDC_RADIO_DOUBLE, BM_SETCHECK, 1, 0);
+		} else {
+			SendDlgItemMessage(hDlg, IDC_RADIO_SINGLE, BM_SETCHECK, 1, 0);
+		}
 #endif
 		break;
 
@@ -4544,6 +4549,11 @@ static BOOL CALLBACK SetAdvOptionProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			op.RichEdit = GetDlgItemInt(hDlg, IDC_EDIT_RICHEDIT, NULL, FALSE);
 			if (SendDlgItemMessage(hDlg, IDC_CHECK_RICHEDIT, BM_GETCHECK, 0, 0) == 0) {
 				op.RichEdit = -op.RichEdit;
+			}
+			if (SendDlgItemMessage(hDlg, IDC_RADIO_DOUBLE, BM_GETCHECK, 0, 0) == 1) {
+				op.RichEditClick = 2;
+			} else {
+				op.RichEditClick = 1;
 			}
 			op.RichEditWparam = set_richedit_params();
 #endif

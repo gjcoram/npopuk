@@ -391,7 +391,8 @@ static LRESULT NotifyProc(HWND hWnd, LPARAM lParam)
 		ENLINK *openLink = (ENLINK *) lParam;
 		LastLinkRange.cpMin = openLink->chrg.cpMin;
 		LastLinkRange.cpMax = openLink->chrg.cpMax;
-		if (openLink->msg == WM_LBUTTONDBLCLK) {
+		if ((openLink->msg == WM_LBUTTONDBLCLK && op.RichEditClick == 2) ||
+			(openLink->msg == WM_LBUTTONUP && op.RichEditClick != 2)) {
 			OpenURL(hWnd, &openLink->chrg);
 			return TRUE;
 		} else if (openLink->msg == WM_RBUTTONDOWN) {
