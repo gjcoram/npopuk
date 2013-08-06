@@ -690,6 +690,7 @@ void ini_read_general(HWND hWnd)
 	op.ViewWindowCursor = profile_get_int(GENERAL, TEXT("ViewWindowCursor"), 0);
 	op.ViewShowAttach = profile_get_int(GENERAL, TEXT("ViewShowAttach"), 0);
 	op.RichEdit = profile_get_int(GENERAL, TEXT("RichEdit"), 4);
+	op.RichEditClick = profile_get_int(GENERAL, TEXT("RichEditClick"), 2);
 	op.WindowClass = TEXT("EDIT");
 #ifndef _WIN32_WCE
 	re_wparam = set_richedit_params();
@@ -1459,7 +1460,8 @@ void ini_write_general(void)
 	profile_write_int(GENERAL, TEXT("AutoOpenAttachMsg"), op.AutoOpenAttachMsg);
 	profile_write_int(GENERAL, TEXT("ViewWindowCursor"), op.ViewWindowCursor);
 	profile_write_int(GENERAL, TEXT("ViewShowAttach"), op.ViewShowAttach);
-	profile_write_int(GENERAL, TEXT("RichEdit"), op.RichEdit); // hold off on writing this
+	profile_write_int(GENERAL, TEXT("RichEdit"), op.RichEdit);
+	profile_write_int(GENERAL, TEXT("RichEditClick"), op.RichEditClick);
 	//profile_write_string(GENERAL, TEXT("WindowClass"), op.WindowClass); // dynamically derived from RichEdit
 	profile_write_string(GENERAL, TEXT("EditApp"), op.EditApp);
 	profile_write_string(GENERAL, TEXT("EditAppCmdLine"), op.EditAppCmdLine);

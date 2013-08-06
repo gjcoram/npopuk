@@ -111,6 +111,8 @@
 #define IDC_ADDR_GRP_COMBO              227
 #define IDC_ADDR_GRP_COMBOL             228
 #define IDC_COMBO_SMTPAUTHTYPE          229
+#define IDC_RADIO_SINGLE                230
+#define IDC_RADIO_DOUBLE                231
 #define IDC_VIEWNEXTDEL_NEXT            233
 #define IDC_VIEWNEXTDEL_UNREAD          234
 #define IDC_VIEWSKIPDEL_NEVER           235

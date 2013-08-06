@@ -1023,11 +1023,13 @@ void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		BOOL match = FALSE;
 		if (tpMailItem != NULL) {
-			if (str_match_t(str, tpMailItem->Subject)) {
+			if (tpMailItem->Subject != NULL && str_match_t(str, tpMailItem->Subject)) {
 				match = TRUE;
-			} else if (SelBox == MAILBOX_SEND && str_match_t(str, tpMailItem->To)) {
+			//} else if (SelBox == MAILBOX_SEND && tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
+			} else if (tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
 				match = TRUE;
-			} else if (SelBox != MAILBOX_SEND && str_match_t(str, tpMailItem->From)) {
+			//} else if (SelBox != MAILBOX_SEND && tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
+			} else if (tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
 				match = TRUE;
 			}
 		}
