@@ -1,5 +1,5 @@
-nPOPuk v3.02                                     readme.txt
-                                                8 June 2013
+nPOPuk v3.03 RC1                                 readme.txt
+                                             10 August 2013
 -----------------------------------------------------------
 
 
@@ -61,6 +61,9 @@ NOTES:
 
 This version extends the original nPOP v1.0.9 version to
 include the following features:
+
+* A box to filter the displayed messages for quick
+  searching.
 
 * Highlighting links and making them active in received
   messages (RichEdit functionality). 
