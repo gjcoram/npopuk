@@ -85,8 +85,8 @@ extern HMENU hEditPop;
 #else
 CHARRANGE LastLinkRange = {0,0};
 extern HMENU hLinkPop;
-#endif
 POINT RDownPos = {0,0};
+#endif
 
 MULTIPART **vMultiPart = NULL;
 int MultiPartCnt=0, MultiPartTextIndex=0;
@@ -799,12 +799,14 @@ static LRESULT CALLBACK SubClassViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		break;
 
 	case WM_LBUTTONDBLCLK:
+#ifndef _WIN32_WCE
 		{
 			POINT apos;
 			GetCursorPos((LPPOINT)&apos);
 			RDownPos.x = apos.x;
 			RDownPos.y = apos.y;
 		}
+#endif
 		SetTimer(GetParent(hWnd), ID_CLICK_TIMER, 100, NULL);
 		break;
 
