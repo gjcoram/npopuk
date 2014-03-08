@@ -1,5 +1,5 @@
-nPOPuk v3.03 RC1                                 readme.txt
-                                             10 August 2013
+nPOPuk v3.03                                     readme.txt
+                                               8 March 2014
 -----------------------------------------------------------
 
 
