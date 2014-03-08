@@ -786,10 +786,12 @@ void mailbox_select(HWND hWnd, int Sel)
 
 	SelBox = Sel;
 	SelectMBMenu(SelBox);
+#ifndef _WIN32_WCE_PPC
 	if (FilterBox) {
 		SendMessage(FilterBox, WM_SETTEXT, 0, (LPARAM)STR_FILTER_MESSAGES);
 		FilterBoxInstruction = TRUE;
 	}
+#endif
 
 	//Acquisition
 #ifdef _WIN32_WCE

@@ -3302,12 +3302,14 @@ static BOOL EndWindow(HWND hWnd)
 	SetWindowLong(mListView, GWL_WNDPROC, (long)ListViewWindowProcedure);
 	ListViewWindowProcedure = NULL;
 
+#ifndef _WIN32_WCE_PPC
 	if (FilterBox) {
 		//cancel custom window handler for FilterBox
 		SetWindowLong(FilterBox, GWL_WNDPROC, (long)FilterBoxWndProc);
 		FilterBoxWndProc = NULL;
 		DestroyWindow(FilterBox);
 	}
+#endif
 	mem_free(&FilterString);
 
 	//of image list Cancellation
