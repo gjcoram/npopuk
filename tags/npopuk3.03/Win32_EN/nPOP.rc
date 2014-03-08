@@ -1,0 +1,1875 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "..\src\npop_ver.h"
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_MAIN           ICON                    "..\\res\\ico_main.ico"
+IDI_ICON_DEL            ICON                    "..\\res\\icon_del.ico"
+IDI_ICON_DOWN           ICON                    "..\\res\\ico_down.ico"
+IDI_ICON_NEW            ICON                    "..\\res\\icon_new.ico"
+IDI_ICON_NON            ICON                    "..\\res\\ico_none.ico"
+IDI_ICON_SENTMAIL       ICON                    "..\\res\\ico_sent.ico"
+IDI_ICON_SEND           ICON                    "..\\res\\ico_send.ico"
+IDI_ICON_NOCHECK        ICON                    "..\\res\\ico_nchk.ico"
+IDI_ICON_CHECK          ICON                    "..\\res\\icon_chk.ico"
+IDI_ICON_CLIP           ICON                    "..\\res\\icon_cli.ico"
+IDI_ICON_READ           ICON                    "..\\res\\ico_read.ico"
+IDI_ICON_CLIP_HIGH      ICON                    "..\\res\\ico_clhi.ico"
+IDI_ICON_CLIP_LOW       ICON                    "..\\res\\ico_cllo.ico"
+IDI_ICON_LOW            ICON                    "..\\res\\icon_low.ico"
+IDI_ICON_HIGH           ICON                    "..\\res\\ico_high.ico"
+IDI_ICON_FWD            ICON                    "..\\res\\icon_fwd.ico"
+IDI_ICON_REPL           ICON                    "..\\res\\ico_repl.ico"
+IDI_ICON_REPLFWD        ICON                    "..\\res\\ico_refw.ico"
+IDI_ICON_ERROR          ICON                    "..\\res\\icon_err.ico"
+IDI_ICON_HTML           ICON                    "..\\res\\ico_html.ico"
+IDI_ICON_HTML_HIGH      ICON                    "..\\res\\ico_h_hi.ico"
+IDI_ICON_HTML_LOW       ICON                    "..\\res\\ico_h_lo.ico"
+IDI_ICON_FLAG           ICON                    "..\\res\\ico_flag.ico"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_READMAIL,   VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_UNREADMAIL, VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "C",            ID_MENUITEM_SAVECOPY,   VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_MENUITEM_EXEC,       VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_MENUITEM_EXEC,       VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "J",            ID_MENUITEM_ALLCHECK,   VIRTKEY, CONTROL, NOINVERT
+    "K",            ID_MENUITEM_FILTER,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_MENUITEM_MOVESBOX,   VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_MENUITEM_RECV,       VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "R",            ID_MENUITEM_ALLREMESSEGE,  VIRTKEY, ALT, CONTROL, 
+                                                    NOINVERT
+    "R",            ID_MENUITEM_ALLREMESSEGE,  VIRTKEY, SHIFT, ALT, 
+                                                    CONTROL, NOINVERT
+    "O",            ID_MENUITEM_FORWARD,    VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_MENUITEM_FORWARD,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "S",            ID_MENUITEM_STOP,       VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_MENUITEM_THREADVIEW, VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_MENUITEM_UNMARK,     VIRTKEY, CONTROL, NOINVERT
+    VK_APPS,        ID_KEY_SHOWMENU,        VIRTKEY, NOINVERT
+    VK_DELETE,      ID_KEY_DELETE,          VIRTKEY, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELETE,     VIRTKEY, SHIFT, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_KEY_ALTDOWN,         VIRTKEY, ALT, NOINVERT
+    VK_ESCAPE,      ID_KEY_ESC,             VIRTKEY, NOINVERT
+    VK_F10,         ID_KEY_SHOWMENU,        VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+    VK_F5,          ID_MENUITEM_EXEC,       VIRTKEY, NOINVERT
+    VK_F5,          ID_MENUITEM_ALLEXEC,    VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_MENUITEM_EXEC,       VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          ID_MENUITEM_ALLEXEC,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_F6,          ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_F6,          ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
+    VK_F8,          ID_MENUITEM_PREVPANE,   VIRTKEY, NOINVERT
+    VK_F9,          ID_MENUITEM_MBOXPANE,   VIRTKEY, NOINVERT
+    VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, NOINVERT
+    VK_RETURN,      ID_KEY_CTRLENTER,       VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_KEY_ENTER,           VIRTKEY, SHIFT, NOINVERT
+//    VK_RIGHT,       ID_KEY_TAB,             VIRTKEY, NOINVERT
+//    VK_LEFT,        ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         ID_KEY_TAB,             VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_KEY_ALTUP,           VIRTKEY, ALT, NOINVERT
+    "W",            ID_MENUITEM_NEWMAIL,    VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_MENUITEM_NEWMAIL,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+END
+
+IDR_ACCELERATOR_EDIT ACCELERATORS 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_SBOXMARK,   VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_MENUITEM_SEND,       VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "H",            ID_MENUITEM_REPLACE,    VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_MENUITEM_SENDINFO,   VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_MENUITEM_FLAGMARK,   VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REFLOW,     VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_MENUITEM_SENDBOX,    VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_MENUITEM_PASTEQUOT,  VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    VK_BACK,        ID_KEY_DELWORD,         VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+END
+
+IDR_ACCELERATOR_VIEW ACCELERATORS 
+BEGIN
+    "A",            ID_MENUITEM_ALLSELECT,  VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_READMAIL,   VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_MENUITEM_UNREADMAIL, VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "C",            ID_MENUITEM_COPY,       VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_MENUITEM_DOWNMARK,   VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_MENUITEM_FIND,       VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_MENUITEM_PROP,       VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_MENUITEM_REMESSEGE,  VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "R",            ID_MENUITEM_ALLREMESSEGE,  VIRTKEY, ALT, CONTROL, 
+                                                    NOINVERT
+    "R",            ID_MENUITEM_ALLREMESSEGE,  VIRTKEY, SHIFT, ALT, 
+                                                     CONTROL, NOINVERT
+    "O",            ID_MENUITEM_FORWARD,    VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_MENUITEM_FORWARD,    VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "S",            ID_MENUITEM_SAVE,       VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_MENUITEM_PREVMAIL,   VIRTKEY, NOINVERT
+    VK_DELETE,      ID_KEY_DELETE,          VIRTKEY, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELETE,     VIRTKEY, SHIFT, NOINVERT
+    VK_DELETE,      ID_MENUITEM_DELMARK,    VIRTKEY, CONTROL, NOINVERT
+//  VK_DOWN,        ID_KEY_DOWN,            VIRTKEY, NOINVERT
+//  VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, CONTROL, NOINVERT
+//  VK_DOWN,        ID_MENUITEM_NEXTMAIL,   VIRTKEY, ALT, NOINVERT
+//  VK_DOWN,        ID_MENUITEM_NEXTUNREAD, VIRTKEY, CONTROL, ALT, NOINVERT
+//  VK_DOWN,        WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_MENUITEM_CLOSE,      VIRTKEY, NOINVERT
+    VK_F3,          ID_MENUITEM_NEXTFIND,   VIRTKEY, NOINVERT
+//  VK_LEFT,        ID_KEY_LEFT,            VIRTKEY, NOINVERT
+//  VK_LEFT,        WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_MENUITEM_NEXTMAIL,   VIRTKEY, NOINVERT
+    VK_RETURN,      ID_MENUITEM_NEXTUNREAD, VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_MENUITEM_VIEW,       VIRTKEY, SHIFT, NOINVERT
+//  VK_RIGHT,       ID_KEY_RIGHT,           VIRTKEY, NOINVERT
+//  VK_RIGHT,       WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         ID_MENUITEM_NEXTMAIL,   VIRTKEY, NOINVERT
+    VK_TAB,         ID_MENUITEM_PREVMAIL,   VIRTKEY, SHIFT, NOINVERT
+//  VK_UP,          ID_KEY_UP,              VIRTKEY, NOINVERT
+//  VK_UP,          ID_MENUITEM_PREVMAIL,   VIRTKEY, CONTROL, NOINVERT
+//  VK_UP,          ID_MENUITEM_PREVMAIL,   VIRTKEY, ALT, NOINVERT
+//  VK_UP,          WM_NOMSG,               VIRTKEY, SHIFT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TOOLBAR_VIEW        BITMAP                  "..\\res\\tbar_view.bmp"
+IDB_TOOLBAR_EDIT        BITMAP                  "..\\res\\tbar_edit.bmp"
+IDB_TOOLBAR             BITMAP                  "..\\res\\tbar_main.bmp"
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_VIEW MENU 
+BEGIN
+    POPUP "&Mail"
+    BEGIN
+        MENUITEM "&Prev mail\tBackspace",       ID_MENUITEM_PREVMAIL
+        MENUITEM "&Next mail\tEnter",           ID_MENUITEM_NEXTMAIL
+        MENUITEM "Next &unread mail\tCtrl+Enter", ID_MENUITEM_NEXTUNREAD
+        MENUITEM SEPARATOR
+        MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
+        MENUITEM "Reply to &all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "&Forward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "Redirec&t...",                ID_MENUITEM_REDIRECT
+        MENUITEM "Address &information...\tCtrl+I", ID_MENUITEM_PROP
+        MENUITEM SEPARATOR
+        MENUITEM "F&lag for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
+        MENUITEM "&Mark to download\tCtrl+D",  ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",  ID_MENUITEM_DELMARK
+        MENUITEM SEPARATOR
+        MENUITEM "Mark as r&ead\tCtrl+B",        ID_MENUITEM_READMAIL
+        MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "&Save as...\tCtrl+S",         ID_MENUITEM_SAVE
+        MENUITEM "External &viewer\tShift+Enter", ID_MENUITEM_VIEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
+        MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
+        MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Wrap text",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "F&ont...",                    ID_MENUITEM_FONT
+        MENUITEM "S&how date",                  ID_MENUITEM_SHOW_DATE
+    END
+    POPUP "&Transfer"
+    BEGIN
+        MENUITEM "&Copy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "&Move to..."                  ID_MENUITEM_MOVESBOX
+    END
+END
+
+IDR_MENU_EDIT MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Send now\tShift+Ctrl+G",     ID_MENUITEM_SEND
+        MENUITEM "Save and &Mark\tCtrl+G",      ID_MENUITEM_SBOXMARK
+        MENUITEM "Save to &Outbox\tCtrl+S",     ID_MENUITEM_SENDBOX
+        MENUITEM SEPARATOR
+        MENUITEM "E&xternal editor",            ID_MENUITEM_VIEW
+        MENUITEM "Sa&ve as...",                 ID_MENUITEM_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Property...\tCtrl+I",        ID_MENUITEM_SENDINFO
+        MENUITEM "&Encoding...",                ID_MENUITEM_ENCODE
+        MENUITEM "&Attach files...",            ID_MENUITEM_ATTACH
+        MENUITEM SEPARATOR
+        MENUITEM "&Close\tEsc",                 ID_MENUITEM_CLOSE
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_MENUITEM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_MENUITEM_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_MENUITEM_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_MENUITEM_PASTE
+        MENUITEM "Paste as &quotation\tShift+Ctrl+V", ID_MENUITEM_PASTEQUOT
+        MENUITEM "Ref&low selection\tCtrl+R",   ID_MENUITEM_REFLOW
+        MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
+        MENUITEM "Find &next\tF3",              ID_MENUITEM_NEXTFIND
+        MENUITEM "&Replace...\tCtrl+H",         ID_MENUITEM_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Paste fro&m file...",         ID_MENUITEM_FILEOPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Wrap text",                  ID_MENUITEM_WORDBREAK
+        MENUITEM "F&ont...",                    ID_MENUITEM_FONT
+    END
+END
+
+IDR_MENU_POPUP MENU 
+BEGIN
+    POPUP "tray"
+    BEGIN
+        MENUITEM "&Restore window",             ID_MENUITEM_RESTORE
+        MENUITEM SEPARATOR
+        MENUITEM "Check &all accounts",         ID_MENUITEM_ALLCHECK
+        POPUP "&Check"
+        BEGIN
+        MENUITEM "&All",                        ID_MENUITEM_TRAYMAX
+        END
+        MENUITEM "&Stop",                       ID_MENUITEM_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "&New message...",             ID_MENUITEM_NEWMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "&Exit",                       ID_MENUITEM_QUIT
+    END
+END
+
+IDR_MENU_WINDOW MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New message...\tCtrl+W",     ID_MENUITEM_NEWMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "&Address book...",            ID_MENUITEM_ADDRESS
+        MENUITEM SEPARATOR
+        MENUITEM "Global &Options...",          ID_MENUITEM_OPTION
+        MENUITEM "&Enable auto-check",          ID_MENUITEM_AUTOCHECK
+        POPUP "&Connection"
+        BEGIN
+            MENUITEM "&Dial-up",                ID_MENUITEM_RAS_CONNECT
+            MENUITEM "&Hang up",                ID_MENUITEM_RAS_DISCONNECT
+            MENUITEM SEPARATOR
+            MENUITEM "&LAN",                    ID_MENUITEM_LAN
+            MENUITEM SEPARATOR
+            MENUITEM "&View log",               ID_MENUITEM_SOCLOG
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Save all",                   ID_MENUITEM_SAVEALL
+        MENUITEM "&Backup files ...",           ID_MENUITEM_BACKUP
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_MENUITEM_QUIT
+    END
+    POPUP "Mail&box"
+    BEGIN
+        MENUITEM "&Next\tAlt+Up",               ID_KEY_ALTDOWN
+        MENUITEM "&Previous\tAlt+Down",         ID_KEY_ALTUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Add...",                     ID_MENUITEM_ADDMAILBOX
+        MENUITEM "&Edit...",                    ID_MENUITEM_SETMAILBOX
+        MENUITEM "&Delete...",                  ID_MENUITEM_DELETEMAILBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Move &up",                    ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "Move d&own",                  ID_MENUITEM_MOVEDOWNMAILBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Su&mmary...",                 ID_MENUITEM_MAILBOXES
+        MENUITEM "Pre&view pane\tF8",           ID_MENUITEM_PREVPANE
+        MENUITEM "Mail&box pane\tF9",           ID_MENUITEM_MBOXPANE
+        MENUITEM SEPARATOR
+        POPUP "&Sort by"
+        BEGIN
+            MENUITEM "&Number",                 ID_MENUITEM_FILESORT
+            MENUITEM "&Icon",                   ID_MENUITEM_ICONSORT
+            MENUITEM "&From/To",                ID_MENUITEM_FROMSORT
+            MENUITEM "&Subject",                ID_MENUITEM_SUBJSORT
+            MENUITEM "&Date",                   ID_MENUITEM_DATESORT
+            MENUITEM "Si&ze",                   ID_MENUITEM_SIZESORT
+            MENUITEM "&Thread\tCtrl+T",         ID_MENUITEM_THREADVIEW
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Initialise...",              ID_MENUITEM_LISTINIT
+    END
+    POPUP "&Connect"
+    BEGIN
+        MENUITEM "&Check account\tCtrl+N",      ID_MENUITEM_RECV
+        MENUITEM "Check &all accounts\tCtrl+J", ID_MENUITEM_ALLCHECK
+        MENUITEM SEPARATOR
+        MENUITEM "&Update account\tCtrl+E",     ID_MENUITEM_EXEC
+        MENUITEM "U&pdate all accounts\tCtrl+G", ID_MENUITEM_ALLEXEC
+        MENUITEM SEPARATOR
+        MENUITEM "&Stop\tCtrl+S",               ID_MENUITEM_STOP
+    END
+    POPUP "&Mail"
+    BEGIN
+        MENUITEM "Ope&n\tEnter",                ID_MENUITEM_OPEN
+        MENUITEM "&Reply...\tCtrl+R",           ID_MENUITEM_REMESSEGE
+        MENUITEM "Repl&y to all...\tCtrl+Alt+R", ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "For&ward...\tCtrl+O",         ID_MENUITEM_FORWARD
+        MENUITEM "Red&irect...",                ID_MENUITEM_REDIRECT
+        MENUITEM SEPARATOR
+        MENUITEM "Fla&g for follow-up\tCtrl+L", ID_MENUITEM_FLAGMARK
+        MENUITEM "&Mark to download\tCtrl+D",   ID_MENUITEM_DOWNMARK
+        MENUITEM "Mark to &delete\tCtrl+Del",   ID_MENUITEM_DELMARK
+        MENUITEM "&Cancel mark\tCtrl+U",        ID_MENUITEM_UNMARK
+        MENUITEM SEPARATOR
+        MENUITEM "Mark as r&ead\tCtrl+B",       ID_MENUITEM_READMAIL
+        MENUITEM "Mark as &unread\tShift+Ctrl+B", ID_MENUITEM_UNREADMAIL
+        MENUITEM SEPARATOR
+        MENUITEM "C&opy to..."                  ID_MENUITEM_COPYSBOX
+        MENUITEM "Mo&ve to..."                  ID_MENUITEM_MOVESBOX
+        MENUITEM "Delete from &list\tShift+Del", ID_MENUITEM_DELETE
+        MENUITEM "Delete attac&hments",         ID_MENUITEM_DELATTACH
+        MENUITEM SEPARATOR
+        MENUITEM "Select &all\tCtrl+A",         ID_MENUITEM_ALLSELECT
+        MENUITEM "&Find...\tCtrl+F",            ID_MENUITEM_FIND
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_MENUITEM_ABOUT
+        MENUITEM "About &SSL...",               ID_MENUITEM_ABOUT_SSL
+        MENUITEM "&On-line docs",               ID_MENUITEM_VISIT_WEB
+    END
+END
+
+IDR_MENU_MAINPOP MENU
+BEGIN
+    POPUP "Mailbox"
+    BEGIN
+        MENUITEM "Open",                ID_MENUITEM_OPEN
+        MENUITEM "Reply",               ID_MENUITEM_REMESSEGE
+        MENUITEM "Reply to all",        ID_MENUITEM_ALLREMESSEGE
+        MENUITEM "Forward",             ID_MENUITEM_FORWARD
+        POPUP "Mark"
+        BEGIN
+            MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+            MENUITEM "Mark to download",    ID_MENUITEM_DOWNMARK
+            MENUITEM "Mark to delete",      ID_MENUITEM_DELMARK
+            MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+            MENUITEM SEPARATOR
+            MENUITEM "Mark as read",        ID_MENUITEM_READMAIL
+            MENUITEM "Mark as unread",      ID_MENUITEM_UNREADMAIL
+        END
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+        MENUITEM "Delete attachments",  ID_MENUITEM_DELATTACH
+        MENUITEM SEPARATOR
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM "Thread mode",         ID_MENUITEM_THREADVIEW
+    END
+    POPUP "Outbox"
+    BEGIN
+        MENUITEM "Open",                ID_MENUITEM_OPEN
+        MENUITEM "Property...",         ID_MENUITEM_PROP
+        MENUITEM "Edit as new..."       ID_MENUITEM_SAVECOPY
+        MENUITEM "Forward...",          ID_MENUITEM_FORWARD
+        MENUITEM "Flag for follow-up",  ID_MENUITEM_FLAGMARK
+        MENUITEM "Mark to send",        ID_MENUITEM_SENDMARK
+        MENUITEM "Cancel mark",         ID_MENUITEM_UNMARK
+        MENUITEM "Delete from list",    ID_MENUITEM_DELETE
+    END
+END
+
+IDR_MENU_VIEWPOP MENU
+BEGIN
+    POPUP "View"
+    BEGIN
+        MENUITEM "Copy",                ID_MENUITEM_COPY
+        MENUITEM "Select all",          ID_MENUITEM_ALLSELECT
+        MENUITEM SEPARATOR
+        MENUITEM "Copy to..."           ID_MENUITEM_COPYSBOX
+        MENUITEM "Move to..."           ID_MENUITEM_MOVESBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Wrap text",           ID_MENUITEM_WORDBREAK
+    END
+END
+
+IDR_MENU_LINKPOP MENU
+BEGIN
+    POPUP "Link"
+    BEGIN
+        MENUITEM "Open link",           ID_MENUITEM_OPENLINK
+        MENUITEM "Copy to clipboard",   ID_MENUITEM_COPYLINK
+    END
+END
+
+IDR_MENU_MBPOPUP MENU 
+BEGIN
+    POPUP "Mailbox"
+    BEGIN
+        MENUITEM "&Hide this pane",     ID_MENUITEM_MBOXPANE
+        MENUITEM SEPARATOR
+        MENUITEM "&Check",              ID_MENUITEM_RECV
+        MENUITEM "&Update",             ID_MENUITEM_EXEC
+        MENUITEM "&Initialise...",      ID_MENUITEM_LISTINIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Add...",             ID_MENUITEM_ADDMAILBOX
+        MENUITEM "&Edit...",            ID_MENUITEM_SETMAILBOX
+        MENUITEM "&Save",               ID_MENUITEM_SAVEMAILBOX
+        MENUITEM "&Delete...",          ID_MENUITEM_DELETEMAILBOX
+        MENUITEM SEPARATOR
+        MENUITEM "Move u&p",            ID_MENUITEM_MOVEUPMAILBOX
+        MENUITEM "Move d&own",          ID_MENUITEM_MOVEDOWNMAILBOX
+    END
+END
+
+IDR_ADDRESS_POPUP MENU 
+BEGIN
+    POPUP "Address"
+    BEGIN
+        MENUITEM "Edit...",             IDC_BUTTON_EDIT
+        MENUITEM "Delete...",           IDC_BUTTON_DELETE
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_ABOUT DIALOGEX 0, 0, 156, 143
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "Tahoma", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,121,46,14
+    LTEXT           "Static",IDC_APPNAME,31,4,107,8
+    LTEXT           "Build",IDC_BUILDNAME,31,12,107,8
+    ICON            IDI_ICON_MAIN,IDC_STATIC,7,2,21,20
+    EDITTEXT        IDC_ABOUT_TEXT,3,52,150,64,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL
+    PUSHBUTTON      "STR_WEB_ADDR",IDC_VISIT_WEB,7,23,142,14
+    PUSHBUTTON      "STR_OPENSSL_WEB_ADDR",IDC_VISIT_OPENSSL,7,23,142,14
+END
+
+IDD_DIALOG_INPUTPASS DIALOG  0, 0, 135, 83
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "nPOPuk"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Password:",IDC_STATIC_TITLE,5,5,125,10
+    EDITTEXT        IDC_EDIT_PASS,5,16,124,15,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "&Remember password until exit",IDC_CHECK_TMPPASS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,35,115,10
+    CONTROL         "&Save password in nPOPuk.ini",IDC_CHECK_INIPASS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,48,115,10
+    DEFPUSHBUTTON   "OK",IDOK,15,65,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,70,65,50,14
+END
+
+IDD_DIALOG_SETSEND DIALOGEX 0, 0, 291, 107
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Property"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Account:",IDC_STATIC,6,8,29,10
+    COMBOBOX        IDC_COMBO_SMTP,40,5,85,130,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "R&eplyTo:",IDC_REPLY_OR_FROM,135,8,30,10
+    COMBOBOX        IDC_COMBO_REPLYTO,168,5,117,75,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP | CBS_AUTOHSCROLL
+    PUSHBUTTON      "&To:",IDC_BUTTON_TO,5,25,30,12
+    EDITTEXT        IDC_EDIT_TO,40,25,245,12,ES_AUTOHSCROLL
+    LTEXT           "&Subject:",IDC_STATIC,6,44,29,10
+    EDITTEXT        IDC_EDIT_TITLE,40,42,245,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Recipients",IDC_BUTTON_CC,40,58,52,14
+    PUSHBUTTON      "Attac&h",IDC_BUTTON_ATTACH,40,72,52,14
+    LTEXT           "&Priority:",IDC_STATIC,5,88,26,8
+    COMBOBOX        IDC_PRIORITY,40,86,52,66,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Del&ivery receipt",IDC_DELIV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,60,70,10
+    CONTROL         "Rea&d receipt",IDC_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,170,60,60,10
+    CONTROL         "Attach &message",IDC_CHECK_ATT_MSG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,98,74,70,10
+    CONTROL         "Add &new recipients to address book",IDC_CHECK_ADD_RECIP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,98,74,150,10
+    CONTROL         "&Quote text",IDC_CHECK_QUOTATION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,98,88,54,10
+    CONTROL         "&Quote text",IDC_CHECK_QUOT_3ST,"Button",
+                    BS_AUTO3STATE | WS_TABSTOP,98,88,54,10
+    DEFPUSHBUTTON   "&OK",IDOK,180,86,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,235,86,50,14
+END
+
+IDD_DIALOG_REDIRECT DIALOGEX 0, 0, 191, 70
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Redirect"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Account:",IDC_STATIC,6,8,29,10
+    COMBOBOX        IDC_COMBO_SMTP,40,5,85,130,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&To:",IDC_BUTTON_TO,5,25,30,12
+    EDITTEXT        IDC_EDIT_TO,40,25,145,12,ES_AUTOHSCROLL
+    CONTROL         "&Mark to send",IDC_CHECK_MARKSEND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,52,54,10
+    DEFPUSHBUTTON   "&OK",IDOK,80,50,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,135,50,50,14
+END
+
+IDD_DIALOG_POP DIALOGEX 0, 0, 212, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "POP3"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Account name:",IDC_STATIC,10,5,55,10
+    EDITTEXT        IDC_EDIT_NAME,70,3,130,12,ES_AUTOHSCROLL
+    GROUPBOX        "POP3",IDC_STATIC,5,17,200,128
+    LTEXT           "POP3 &server:",IDC_STATIC,10,29,51,10
+    EDITTEXT        IDC_EDIT_SERVER,64,27,136,12,ES_AUTOHSCROLL
+    LTEXT           "&Port:",IDC_STATIC,10,44,40,10
+    EDITTEXT        IDC_EDIT_PORT,64,42,50,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "User&name:",IDC_STATIC,10,60,40,10
+    EDITTEXT        IDC_EDIT_USER,64,58,136,12,ES_AUTOHSCROLL
+    LTEXT           "Pass&word:",IDC_STATIC,10,75,40,10
+    EDITTEXT        IDC_EDIT_PASS,64,73,136,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Enable AP&OP",IDC_CHECK_APOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,64,90,100,10
+    CONTROL         "Enable SS&L",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,64,104,70,11
+    PUSHBUTTON      "set&up",IDC_BUTTON_SETSSL,160,104,30,12
+    CONTROL         "Exempt from &Check All/Update All",IDC_CHECK_CYCLIC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,131,120,10
+    CONTROL         "Disable '&RETR' command",IDC_CHECK_NORETR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,118,120,11
+END
+
+IDD_DIALOG_SMTP DIALOG  0, 0, 212, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SMTP"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    GROUPBOX        "SMTP",IDC_STATIC,5,5,200,140
+    LTEXT           "&Name:",IDC_STATIC,10,20,45,10
+    EDITTEXT        IDC_EDIT_NAME,64,18,136,12,ES_AUTOHSCROLL
+    LTEXT           "Mail &address:",IDC_STATIC,10,35,45,10
+    EDITTEXT        IDC_EDIT_MAILADDRESS,64,33,136,12,ES_AUTOHSCROLL
+    LTEXT           "&SMTP server:",IDC_STATIC,10,55,49,10
+    EDITTEXT        IDC_EDIT_SERVER,64,53,136,12,ES_AUTOHSCROLL
+    LTEXT           "&Port:",IDC_STATIC,10,71,45,10
+    EDITTEXT        IDC_EDIT_PORT,64,69,50,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Enable S&MTP-AUTH",IDC_CHECK_SMTPAUTH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,86,85,10
+    PUSHBUTTON      "set&up",IDC_BUTTON_SETAUTH,160,84,30,12
+    CONTROL         "Enable SS&L",IDC_CHECK_SSL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,64,99,70,11
+    PUSHBUTTON      "se&tup",IDC_BUTTON_SETSSL,160,100,30,12
+    CONTROL         "POP &before SMTP",IDC_CHECK_POPBEFORESMTP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,114,90,10
+    CONTROL         "Always B&cc",IDC_CHECK_MYADDR2BCC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,64,128,50,10
+    EDITTEXT        IDC_BCCADDRESS,117,126,83,12,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_SIG DIALOG  0, 0, 212, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Signature"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&Signature:",IDC_STATIC,5,4,100,10
+    EDITTEXT        IDC_EDIT_SIG,5,15,199,117,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_DIALOG_OPTION_REPLY DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Reply"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    CONTROL         "&Quote original message",IDC_CHECK_AUTOQUOT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,10,145,10
+    LTEXT           "Q&uotation char:",IDC_STATIC,18,25,65,10
+    EDITTEXT        IDC_EDIT_QUOTCHAR,85,23,55,12,ES_AUTOHSCROLL
+    CONTROL         "&Signature above quoted message",IDC_SIGNRE_ABOVE,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,45,125,10
+    LTEXT           "Reply &header:",IDC_STATIC,5,62,75,10
+    EDITTEXT        IDC_EDIT_REHEAD,5,75,204,72,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    CONTROL         "&Close message window when reply/forward created",
+                    IDC_CHECK_VIEWCLOSE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,170,180,10
+END
+
+IDD_DIALOG_OPTION_FWD DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Forward"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT          "Forward message:",IDC_STATIC,5,10,65,10
+    CONTROL         "&Quoted",IDC_QUOTSTYLE_0,"Button",BS_AUTORADIOBUTTON,
+                    70,10,40,10
+    CONTROL         "&In-line",IDC_QUOTSTYLE_1,"Button",BS_AUTORADIOBUTTON,
+                    130,10,40,10
+    CONTROL         "As &Attachment",IDC_QUOTSTYLE_2,"Button",BS_AUTORADIOBUTTON,
+                    70,25,60,10
+    CONTROL         "&Use signature for forwarded mail",IDC_SIGNFWD,
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP,5,45,125,10
+    CONTROL         "A&bove orig msg",IDC_SIGNFWD_ABOVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,130,45,65,10
+    LTEXT           "&Forward header:",IDC_STATIC,5,62,75,10
+    EDITTEXT        IDC_EDIT_FWDHEAD,5,75,204,72,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    CONTROL         "&Close message window when reply/forward created",
+                    IDC_CHECK_VIEWCLOSE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,170,180,10
+END
+
+IDD_DIALOG_OPTION_RECV DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Recv"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,5,12,85,10
+    EDITTEXT        IDC_EDIT_READLINE,95,10,40,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "&Download entire body when checking",
+                    IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,25,165,10
+    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,40,120,10
+    CONTROL         "&Get messages in reverse order",IDC_CHECK_GETREVERSE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,55,160,10
+    GROUPBOX        "Account messages",IDC_STATIC,5,72,205,58
+    CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,85,120,10
+    CONTROL         "&Only header is saved",IDC_RADIO_HEADSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,100,105,10
+    CONTROL         "&Nothing saved",IDC_RADIO_NOSAVE,"Button",
+                    BS_AUTORADIOBUTTON,10,114,105,10
+END
+
+IDD_DIALOG_ACCOUNT_RECV DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Recv"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    CONTROL         "&Use global option",IDC_CHECK_GLOBAL_RECV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,10,120,10
+    LTEXT           "&Lines to be downloaded:",IDC_TEXT_READLINE,15,27,80,10
+    EDITTEXT        IDC_EDIT_READLINE,100,25,40,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "&Download entire body when checking",
+                    IDC_CHECK_LISTDOWNLOAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,40,165,10
+//    CONTROL         "&Keep all header lines",IDC_CHECK_SHOWHEAD,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,15,54,120,10
+    CONTROL         "&Get messages in reverse order",IDC_CHECK_GETREVERSE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,55,160,10
+    GROUPBOX        "Account messages",IDC_STATIC,15,70,185,60
+    CONTROL         "&Header and body are saved",IDC_RADIO_ALLSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,85,120,10
+    CONTROL         "&Only header is saved",IDC_RADIO_HEADSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,100,105,10
+    CONTROL         "&Nothing saved",IDC_RADIO_NOSAVE,"Button",
+                    BS_AUTORADIOBUTTON,20,115,105,10
+    LTEXT           "&Filename:",IDC_STATIC,5,142,30,10
+    EDITTEXT        IDC_MBOX_FILE,40,140,105,12,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_OPTION_SEND DIALOGEX 0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Send"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Line wrap at",IDC_STATIC,5,12,45,10
+    EDITTEXT        IDC_EDIT_BREAKCNT,56,10,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "characters",IDC_STATIC,91,12,45,10
+    CONTROL         "&Quoted lines do not word wrap",IDC_CHECK_QBREAK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,25,135,10
+    CONTROL         "Send '&Message-Id'",IDC_CHECK_SENDMESSAGEID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,40,110,10
+    CONTROL         "Send '&Date'",IDC_CHECK_SENDDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,54,110,10
+    CONTROL         "Show '&Outbox' on 'Save to Outbox'",
+                    IDC_CHECK_SELECTSENDBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,68,160,10
+    CONTROL         "&Check queued (",IDC_CHECK_QUEUE_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,82,65,10
+    CONTROL         "and &failed send",IDC_CHECK_SENDERR_EXIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,70,82,60,10
+    LTEXT           ") on exit",IDC_STATIC,131,82,45,10
+    PUSHBUTTON      "&Encoding...",IDC_BUTTON_ENCODE,5,110,80,15
+END
+
+IDD_DIALOG_CC DIALOG  0, 0, 254, 175
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Recipients"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_MAILADDRESS,50,4,200,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&To",IDC_BUTTON_TO,50,20,40,15
+    DEFPUSHBUTTON   "&Cc",IDC_BUTTON_CC,95,20,40,15
+    PUSHBUTTON      "&Bcc",IDC_BUTTON_BCC,145,20,40,15
+    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,200,20,50,15
+    CONTROL         "List1",IDC_LIST_CC,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_TABSTOP,5,40,245,110
+    PUSHBUTTON      "&OK",IDOK,145,155,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,200,155,50,14
+    PUSHBUTTON      "&Address:",IDC_BUTTON_ADD,3,4,45,12
+END
+
+IDD_DIALOG_OPTION_CHECK DIALOG  0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Check"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    CONTROL         "&Display message when new mail arrives",
+                    IDC_CHECK_SHIWNEWMESSAGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,10,170,10
+//    CONTROL         "Display message when &no new mail",
+//                    IDC_CHECK_SHIWNOMESSAGE,"Button",BS_AUTOCHECKBOX | 
+//                    WS_TABSTOP,5,23,145,10
+    CONTROL         "&Messages filtered to delete are not new",
+                    IDC_CHECK_DELNOTNEW,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,23,145,10
+    CONTROL         "&Sound when new mail:",IDC_CHECK_SOUND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,36,115,10
+    EDITTEXT        IDC_EDIT_SOUND,15,50,165,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_FILE_BROWSE,183,50,12,13
+    PUSHBUTTON      ">",IDC_BUTTON_SOUND_PLAY,196,50,12,13
+    CONTROL         "&Play sound when update complete",IDC_CHECK_EXECSOUND,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,68,125,10
+    CONTROL         "&Auto-check:",IDC_CHECK_AUTOCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,81,50,10
+    EDITTEXT        IDC_EDIT_AUTOCHECKTIME,63,79,35,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    LTEXT           "min",IDC_STATIC,102,82,20,10
+    CONTROL         "&Check mail at start-up",IDC_CHECK_STARTCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,94,110,10
+    CONTROL         "C&heck after update",IDC_CHECK_CHECKAFTERUPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,107,75,10
+    CONTROL         "&Update after check",IDC_CHECK_UPDATEAFTERCHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,120,75,10
+    PUSHBUTTON      "&Options",IDC_BUTTON_UPDATEOPTS,102,117,42,13
+    CONTROL         "&Ignore send error",IDC_CHECK_SENDIGNOREERROR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,133,110,10
+    CONTROL         "Ignore &receive error",IDC_CHECK_IGNOREERROR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,146,110,10
+END
+
+IDD_DIALOG_ADDRESS_EDIT DIALOG  0, 0, 269, 115
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Address"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&Mail address:",IDC_STATIC,5,5,50,10
+    EDITTEXT        IDC_EDIT_MAILADDRESS,5,15,255,12,ES_AUTOHSCROLL
+    LTEXT           "Commen&t:",IDC_STATIC,5,35,45,10
+    EDITTEXT        IDC_EDIT_COMMENT,5,45,255,12,ES_AUTOHSCROLL
+    LTEXT           "&Group:",IDC_STATIC,5,65,50,10
+    COMBOBOX        IDC_ADDR_GRP_COMBO,5,75,100,110,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Add",IDC_RADIO_GROUP_ADD,"Button",BS_AUTORADIOBUTTON,
+                    115,77,30,10
+    CONTROL         "&Remove",IDC_RADIO_GROUP_DEL,"Button",BS_AUTORADIOBUTTON,
+                    150,77,40,10
+    DEFPUSHBUTTON   "OK",IDOK,155,95,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,210,95,50,14
+END
+
+IDD_DIALOG_ADDRESS DIALOGEX 0, 0, 282, 206
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Address book"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,2,2,254,160
+    PUSHBUTTON      "#",IDC_BUTTON_NUM,258,2,22,14
+    PUSHBUTTON      "+10",IDC_BUTTON_UP10,258,35,22,14
+    CONTROL         "&Up",IDC_BUTTON_UP,"Button",BS_OWNERDRAW | WS_TABSTOP,
+                    258,55,22,14
+    CONTROL         "&Down",IDC_BUTTON_DOWN,"Button",BS_OWNERDRAW | 
+                    WS_TABSTOP,258,100,22,14
+    PUSHBUTTON      "-10",IDC_BUTTON_DOWN10,258,120,22,14
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,53,165,50,14
+    PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,108,165,50,14
+    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,163,165,51,14
+    PUSHBUTTON      "&Mail",IDC_BUTTON_MAIL,218,165,50,14
+    LTEXT           "Show &Group:",IDC_STATIC_TITLE,10,188,45,10
+    COMBOBOX        IDC_ADDR_GRP_COMBOL,55,185,100,110,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,163,185,51,14
+    PUSHBUTTON      "Cancel",IDCANCEL,218,185,50,14
+END
+
+IDD_DIALOG_SAVEATTACH DIALOGEX 0, 0, 282, 206
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Attachments"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "List1",IDC_LIST_FILE,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,2,2,278,160
+    PUSHBUTTON      "Select &All",IDC_BUTTON_ALLSEL,3,185,60,14
+    PUSHBUTTON      "Select &None",IDC_BUTTON_NOSEL,68,185,60,14
+    LTEXT           "Save &to:",IDC_STATIC_TITLE,10,168,28,10
+    EDITTEXT        IDC_EDIT_SAVEDIR,40,165,174,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BUTTON_FILE_BROWSE,218,165,50,14
+    DEFPUSHBUTTON   "&Save",IDOK,163,185,51,14
+    PUSHBUTTON      "Cancel",IDCANCEL,218,185,50,14
+END
+
+IDD_DIALOG_MAILBOXES DIALOGEX 0, 0, 282, 206
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Mailboxes"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "List1",IDC_LIST_MAILBOXES,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,2,2,254,180
+//    PUSHBUTTON      "+10",IDC_BUTTON_UP10,258,35,22,14
+    CONTROL         "&Up",IDC_BUTTON_UP,"Button",BS_OWNERDRAW | WS_TABSTOP,
+                    258,55,22,14
+    CONTROL         "&Down",IDC_BUTTON_DOWN,"Button",BS_OWNERDRAW |
+                    WS_TABSTOP,258,100,22,14
+//    PUSHBUTTON      "-10",IDC_BUTTON_DOWN10,258,120,22,14
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,4,186,40,14
+    PUSHBUTTON      "&Save",IDC_BUTTON_SAVE,50,186,40,14
+    PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,96,186,40,14
+    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,142,186,44,14
+    DEFPUSHBUTTON   "&Go to",IDOK,192,186,40,14
+    PUSHBUTTON      "D&one",IDCANCEL,238,186,40,14
+END
+
+IDD_DIALOG_MSG DIALOG  0, 0, 158, 59
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    ICON            IDI_ICON_MAIN,IDC_STATIC_ICON,8,7,20,20
+    LTEXT           "You've got new mail!\nWould you like to view it now?",
+                    IDC_MSG_DIALOG_TXT,35,10,120,21
+    DEFPUSHBUTTON   "&Yes",IDOK,26,37,50,14
+    PUSHBUTTON      "&No",IDCANCEL,81,37,50,14
+END
+
+IDD_DIALOG_OPTION_SORT DIALOGEX 0, 0, 217, 187
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sort"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&All mailboxes in file order",IDC_AUTOSORT0,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,10,110,10
+    CONTROL         "&SaveBoxes by column",IDC_AUTOSORT1,"Button",
+                    BS_AUTORADIOBUTTON,10,25,90,10
+    CONTROL         "All mailboxes &by column",IDC_AUTOSORT2,"Button",
+                    BS_AUTORADIOBUTTON,10,40,90,10
+    CONTROL         "Use bare &e-mail address",IDC_SORT_FROM_EMAIL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,55,90,10
+    LTEXT           "when sorting by 'From'",IDC_SORT_FROM_TEXT,22,65,80,10
+    GROUPBOX        "Column",IDC_STATIC,108,25,85,60
+    CONTROL         "Subjec&t",IDC_SORTITEM1,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,114,40,40,10
+    CONTROL         "Fro&m",IDC_SORTITEM2,"Button",BS_AUTORADIOBUTTON,114,55,
+                    40,10
+    CONTROL         "&Date",IDC_SORTITEM3,"Button",BS_AUTORADIOBUTTON,155,40,
+                    31,10
+    CONTROL         "Si&ze",IDC_SORTITEM4,"Button",BS_AUTORADIOBUTTON,155,55,
+                    29,10
+    CONTROL         "&Reverse Order",IDC_CHECK_SORTORDER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,114,70,61,10
+    GROUPBOX        "When changing mailboxes, select",IDC_STATIC,3,97,190,31
+    CONTROL         "&First",IDC_SORT_SELECT_FIRST,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,110,30,10
+    CONTROL         "&Last item in list",IDC_SORT_SELECT_LAST,"Button",
+                    BS_AUTORADIOBUTTON,40,110,90,10
+    GROUPBOX        "First column is",IDC_STATIC,3,135,190,31
+    CONTROL         "S&ubject",IDC_COL_SFDZ,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,9,148,40,10
+    CONTROL         "Fr&om/To",IDC_COL_FSDZ,"Button",BS_AUTORADIOBUTTON,
+                    55,148,90,10
+END
+
+IDD_DIALOG_OPTION_VIEW DIALOGEX 0, 0, 217, 187
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "View"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&Scan all mailboxes for unread mail",
+                    IDC_CHECK_SCANALLFORUNREAD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,10,190,10
+    LTEXT           "When message is marked for deletion, move to",
+                    IDC_STATIC,10,25,205,10
+    CONTROL         "&Next message",IDC_VIEWNEXTDEL_NEXT,"Button",
+                    BS_AUTOCHECKBOX,15,37,60,10
+    CONTROL         "that is &unread",IDC_VIEWNEXTDEL_UNREAD,"Button",
+                    BS_AUTOCHECKBOX,77,37,80,10
+    GROUPBOX        "Skip messages marked for deletion",IDC_STATIC,5,55,205,50
+    CONTROL         "Ne&ver",IDC_VIEWSKIPDEL_NEVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,67,110,10
+    CONTROL         "&When moving (prev, next, next unread)",IDC_VIEWSKIPDEL_ALWAYS,
+                    "Button",BS_AUTORADIOBUTTON,10,79,160,10
+    CONTROL         "When &looking for next unread message",IDC_VIEWSKIPDEL_UNREAD,
+                    "Button",BS_AUTORADIOBUTTON,10,91,160,10
+    CONTROL         "&Close window if no next message",IDC_VIEWCLOSENONEXT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,112,147,10
+    CONTROL         "&Append attachment list to message in view window",
+                    IDC_VIEWSHOWATTACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    10,126,177,10
+    CONTROL         "&External viewer gets message source",IDC_VIEWAPP_MSGSRC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,140,187,10
+    CONTROL         "S&how cursor in view window",IDC_VIEWWND_CURSOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,154,187,10
+    CONTROL         "Auto-select message for &preview",IDC_AUTO_PREVIEW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,187,10
+END
+
+IDD_DIALOG_OPTION_ETC DIALOGEX 0, 0, 217, 187
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Other"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&Display icon in system tray",IDC_CHECK_SHOWTRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,10,125,10
+    CONTROL         "&Hide to System Tray when minimised",
+                    IDC_CHECK_MINSIZEHIDE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,24,140,10
+    CONTROL         "&Keep System Tray icon when closed",IDC_CHECK_CLOSEHIDE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,37,140,10
+    GROUPBOX        "Password setup",IDC_STATIC,5,55,205,70
+    LTEXT           "Password required to:",IDC_STATIC,15,67,70,10
+    CONTROL         "&open program",IDC_CHECK_STARTPASS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,87,67,80,10
+    CONTROL         "open &window",IDC_CHECK_SHOWPASS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,87,81,80,10
+    CONTROL         "&configure program",IDC_CHECK_CONFIGPASS,
+                    "Button",BS_AUTO3STATE | WS_TABSTOP,87,95,80,10
+    LTEXT           "&Password:",IDC_STATIC,15,110,35,10
+    EDITTEXT        IDC_EDIT_PASS,52,108,130,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Disable warning popup &boxes",IDC_CHECK_PARANOID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,134,120,10
+    LTEXT           "&Date format:",IDC_STATIC,5,153,46,10
+    EDITTEXT        IDC_DATE_FORMAT,52,152,70,12,ES_AUTOHSCROLL
+    LTEXT           "&Time format:",IDC_STATIC,5,168,46,10
+    EDITTEXT        IDC_TIME_FORMAT,52,166,70,12,ES_AUTOHSCROLL
+END
+
+IDD_DIALOG_OPTION_ADV DIALOGEX 0, 0, 217, 187
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "File format",IDC_STATIC,5,10,200,48
+    CONTROL         "&nPOP",IDC_RADIO_FORMAT_NPOP,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP,15,25,35,10
+    CONTROL         "&MBOX (not backwards compatible)",IDC_RADIO_FORMAT_MBOX,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,55,25,140,10
+    CONTROL         "&Scramble (ROT13)",IDC_CHECK_SCRAMBLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,15,40,100,10
+    GROUPBOX        "Load mailboxes",IDC_STATIC,5,65,200,50
+    COMBOBOX        IDC_COMBO_LAZYLOAD,16,78,175,95,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Append to saveboxes without loading",
+                    IDC_CHECK_BLINDAPPEND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP | WS_GROUP,15,97,170,10
+    CONTROL         "&Underline links (RichEdit=",IDC_CHECK_RICHEDIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,5,125,95,10
+    EDITTEXT        IDC_EDIT_RICHEDIT,103,123,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           ")",IDC_STATIC,125,125,46,10
+    CONTROL         "&Single-",IDC_RADIO_SINGLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP,15,137,35,10
+    CONTROL         "&Double-click to follow",IDC_RADIO_DOUBLE,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,55,137,140,10
+END
+
+IDD_DIALOG_OPTION_EDITOR DIALOG  0, 0, 212, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Options Editor"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_INI,5,5,202,117,ES_MULTILINE | ES_WANTRETURN | 
+                    ES_NOHIDESEL | WS_VSCROLL | WS_HSCROLL
+    EDITTEXT        IDC_EDIT_FIND,5,129,61,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Find",IDC_FIND,73,129,30,14
+    DEFPUSHBUTTON   "OK",IDOK,120,129,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,129,40,14
+END
+
+IDD_DIALOG_FILTER DIALOGEX 0, 0, 217, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Filter"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "Enable &filters",IDC_CHECK_FILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,4,4,56,10
+    CONTROL         "&Refilter on download",IDC_CHECK_REFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,65,4,80,10
+    CONTROL         "Use &globals",IDC_CHECK_GBLFILTER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,150,4,80,10
+    CONTROL         "List1",IDC_LIST_FILTER,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_TABSTOP,2,20,190,95
+    CONTROL         "&Up",IDC_BUTTON_UP,"Button",BS_OWNERDRAW | WS_TABSTOP,
+                    194,40,22,15
+    CONTROL         "&Down",IDC_BUTTON_DOWN,"Button",BS_OWNERDRAW | 
+                    WS_TABSTOP,194,80,22,15
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,31,120,50,14
+    PUSHBUTTON      "&Edit",IDC_BUTTON_EDIT,86,120,50,14
+    PUSHBUTTON      "De&lete",IDC_BUTTON_DELETE,141,120,51,14
+END
+
+IDD_DIALOG_FILTER_EDIT DIALOGEX 0, 0, 201, 196
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Filter item"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&Enable filter item",IDC_CHECK_FLAG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,5,75,10
+    LTEXT           "&Action:",IDC_STATIC,15,23,30,10
+    COMBOBOX        IDC_COMBO_ACTION,55,20,130,110,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_SBOX_OR_PRIO,15,40,30,10
+    COMBOBOX        IDC_COMBO_FILT2BOX,55,37,130,110,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_FILTER_FWDADDR,55,37,130,15,ES_AUTOHSCROLL
+    GROUPBOX        "Conditions",IDC_STATIC,5,57,190,115
+    LTEXT           "&Item1:",IDC_STATIC,15,76,30,10
+    COMBOBOX        IDC_COMBO_HEAD1,55,72,130,75,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Content1:",IDC_STATIC,15,94,35,10
+    EDITTEXT        IDC_EDIT_CONTENT1,55,90,130,15,ES_AUTOHSCROLL
+    CONTROL         "A&ND",IDC_FILTER_AND,"Button",BS_AUTORADIOBUTTON |
+                     WS_GROUP,60,112,30,10
+    CONTROL         "O&R",IDC_FILTER_OR,"Button",BS_AUTORADIOBUTTON,100,112,25,10
+    CONTROL         "&UNLESS",IDC_FILTER_UNLESS,"Button",BS_AUTORADIOBUTTON,
+                     135,112,45,10
+    LTEXT           "I&tem2:",IDC_STATIC,15,131,25,10
+    COMBOBOX        IDC_COMBO_HEAD2,55,128,130,79,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "C&ontent2:",IDC_STATIC,15,149,35,10
+    EDITTEXT        IDC_EDIT_CONTENT2,55,146,130,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,90,177,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,145,177,50,14
+END
+
+IDD_DIALOG_INITMAILBOX DIALOG  0, 0, 177, 168
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Initialise"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "On next check of account:",IDC_STATIC,10,5,185,10
+    CONTROL         "&Download new mail only",IDC_RADIO_FIRSTGET,"Button",
+                    BS_AUTORADIOBUTTON,15,18,100,10
+    CONTROL         "&Initialise",IDC_RADIO_SETGET,"Button",
+                    BS_AUTORADIOBUTTON,15,35,40,10
+    CONTROL         "&Fill in",IDC_RADIO_FILLIN,"Button",
+                    BS_AUTORADIOBUTTON,15,47,40,10
+    CONTROL         "Fix &message numbers",IDC_RADIO_FIX_UIDL,"Button",
+                    BS_AUTORADIOBUTTON,15,64,100,10
+    CONTROL         "&Empty mailbox on server",IDC_RADIO_EMPTY,"Button",
+                    BS_AUTORADIOBUTTON,15,93,100,10
+    LTEXT           "from item &number:",IDC_STATIC,60,42,105,10
+    EDITTEXT        IDC_EDIT_GETNUM,125,40,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Immediately:",IDC_STATIC,10,80,185,10
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,110,167,1
+    LTEXT           "Account details:",IDC_STATIC,10,113,61,8
+    LTEXT           "Messages:",IDC_STATIC,15,125,48,9
+    LTEXT           "",IDC_STATIC_MAILCNT,69,125,126,9
+    LTEXT           "Total size:",IDC_STATIC,15,136,48,9
+    LTEXT           "",IDC_STATIC_MAILSIZE,69,136,126,9
+    DEFPUSHBUTTON   "&OK",IDOK,55,150,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,111,150,50,14
+END
+
+IDD_DIALOG_RAS DIALOG  0, 0, 212, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connection"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    CONTROL         "&LAN",IDC_RADIO_RASMODE_0,"Button",BS_AUTORADIOBUTTON,
+                    10,5,155,10
+    CONTROL         "&Dial-up",IDC_RADIO_RASMODE_1,"Button",
+                    BS_AUTORADIOBUTTON,10,20,155,10
+    GROUPBOX        "Option",IDC_STATIC,5,35,200,97
+    LTEXT           "&Connection:",IDC_STATIC,10,49,40,10
+    COMBOBOX        IDC_COMBO_ENTRY,55,45,145,75,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Username:",IDC_STATIC,10,65,40,10
+    EDITTEXT        IDC_EDIT_USER,55,63,145,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,10,83,40,10
+    EDITTEXT        IDC_EDIT_PASS,55,81,145,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Hang up and dial this &account's server",
+                    IDC_CHECK_RASRECON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    55,100,148,10
+    LTEXT           "(Effective only when connected by nPOPuk)",IDC_STATIC,
+                    55,110,140,10
+END
+
+IDD_DIALOG_ATTACH DIALOGEX 0, 0, 239, 139
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Attach files"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    LISTBOX         IDC_LIST_FILE,0,0,238,100,LBS_NOINTEGRALHEIGHT | 
+                    LBS_WANTKEYBOARDINPUT | LBS_EXTENDEDSEL | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,130,104,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,184,104,50,14
+    DEFPUSHBUTTON   "OK",IDOK,130,122,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,184,122,50,14
+END
+
+IDD_DIALOG_MAILPROP DIALOGEX 0, 0, 251, 155
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Address information"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "List1",IDC_LIST_ADDRESS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,2,2,245,110
+    DEFPUSHBUTTON   "&New mail",IDC_BUTTON_NEW,71,115,55,14
+    PUSHBUTTON      "&Reply",IDC_BUTTON_REPLY,131,115,55,14
+    PUSHBUTTON      "&Address book",IDC_BUTTON_ADDADDRESS,191,115,55,14
+    PUSHBUTTON      "Close",IDCANCEL,191,135,55,14
+END
+
+IDD_DIALOG_FIND DIALOG  0, 0, 263, 88
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Find &text:",IDC_STATIC,5,12,33,10
+    EDITTEXT        IDC_EDIT_FIND,40,10,152,12,ES_AUTOHSCROLL
+    CONTROL         "Match &case",IDC_CHECK_CASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,30,50,10
+    CONTROL         "Search in &subject",IDC_CHECK_SUBJECT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,60,30,70,10
+    CONTROL         "Use &wildcards",IDC_WILDCARD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,135,30,60,10
+    LTEXT           "Search:",IDC_TEXT_SEARCH,5,44,25,10
+    CONTROL         "This &message only",IDC_FIND_THISMSG,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,44,130,10
+    CONTROL         "&All messages in mailbox",IDC_FIND_ALLMSGS,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,58,130,10
+    CONTROL         "All mailbo&xes",IDC_FIND_ALLBOXES,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,72,130,10
+    LTEXT           "Re&place with:",IDC_REPLACE_LABEL,5,50,43,10
+    EDITTEXT        IDC_EDIT_REPLACE,50,48,142,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Find next",IDC_FIND,200,10,55,14
+    PUSHBUTTON      "&Next message",IDC_FIND_NEXT_MESSAGE,200,28,55,14
+    PUSHBUTTON      "&Replace",IDC_REPLACE,200,28,55,14
+    PUSHBUTTON      "Next &mailbox",IDC_FIND_NEXT_MAILBOX,200,46,55,14
+    PUSHBUTTON      "Replace &all",IDC_REPLACE_ALL,200,46,55,14
+    PUSHBUTTON      "Cancel",IDCANCEL,200,64,55,14
+END
+
+IDD_DIALOG_OPTION_RAS DIALOGEX 0, 0, 217, 158
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dial-up"
+FONT 8, "Microsoft Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "&Auto-connect to process mail",IDC_CHECK_RASCON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,10,170,10
+    CONTROL         "&Disconnect, when mail processing is done (Conn by nPOPuk)",
+                    IDC_CHECK_CHENDDISCON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,24,210,10
+    CONTROL         "Disconnect, on &exit of program (Connect by nPOPuk)",
+                    IDC_CHECK_ENDDISCON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,38,185,10
+    CONTROL         "Auto &check only if connected",IDC_CHECK_NORASNOCHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,52,160,10
+    LTEXT           "&Pause between dial-up attempts: ",IDC_STATIC,5,75,155,
+                    8
+    EDITTEXT        IDC_EDIT_WAIT,5,85,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "sec",IDC_STATIC,39,88,17,10
+END
+
+IDD_DIALOG_SETSMTPAUTH DIALOG  0, 0, 199, 104
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SMTP-AUTH"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&Auth type:",IDC_STATIC,10,8,40,10
+    COMBOBOX        IDC_COMBO_SMTPAUTHTYPE,50,5,105,75,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "U&se POP3 option",IDC_CHECK_POP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,25,135,10
+    LTEXT           "&Username:",IDC_STATIC,10,47,35,10
+    EDITTEXT        IDC_EDIT_USER,50,45,140,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,10,63,35,10
+    EDITTEXT        IDC_EDIT_PASS,50,61,140,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,85,85,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,140,85,50,14
+END
+
+IDD_DIALOG_SETSSL DIALOG  0, 0, 126, 71
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Set SSL"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&SSL Type:",IDC_STATIC,10,5,80,10
+    COMBOBOX        IDC_COMBO_SSLTYPE,10,15,105,75,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Verify",IDC_CHECK_VERIFY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,34,100,10
+    DEFPUSHBUTTON   "OK",IDOK,10,50,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,65,50,50,14
+END
+
+IDD_DIALOG_ATTACH_NOTICE DIALOG  0, 0, 223, 131
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Attached file"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    RTEXT           "From:",IDC_STATIC,0,10,30,10
+    LTEXT           "",IDC_STATIC_FROM,35,10,180,17
+    RTEXT           "Type:",IDC_STATIC,10,30,20,10
+    LTEXT           "",IDC_STATIC_TYPE,35,30,180,10
+    RTEXT           "Name:",IDC_STATIC,0,45,30,10
+    LTEXT           "",IDC_STATIC_FILENAME,35,45,180,21
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,5,65,210,1
+    CONTROL         "&Open",IDC_RADIO_OPEN,"Button",BS_AUTORADIOBUTTON,15,75,
+                    120,10
+    CONTROL         "&Save As...",IDC_RADIO_SAVE,"Button",BS_AUTORADIOBUTTON,
+                    15,90,120,10
+    DEFPUSHBUTTON   "OK",IDOK,110,110,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,165,110,50,14
+END
+
+IDD_DIALOG_ENCODE DIALOG  0, 0, 254, 109
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Encoding"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    GROUPBOX        "Header",IDC_STATIC,5,5,120,70
+    LTEXT           "&Charset:",IDC_STATIC,10,20,90,9
+    COMBOBOX        IDC_COMBO_CHARSET_H,10,30,110,155,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Encoding:",IDC_STATIC,10,45,90,9
+    COMBOBOX        IDC_COMBO_ENCODE_H,10,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Body",IDC_STATIC,130,5,120,70
+    LTEXT           "C&harset:",IDC_STATIC,135,20,90,9
+    COMBOBOX        IDC_COMBO_CHARSET,135,30,110,155,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "E&ncoding:",IDC_STATIC,135,45,90,9
+    COMBOBOX        IDC_COMBO_ENCODE,135,55,110,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Use header encoding (not RFC2231) for attachment filenames",
+                    IDC_CHECK_ENCODETYPE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,80,210,10
+    DEFPUSHBUTTON   "OK",IDOK,145,94,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,200,94,50,14
+END
+
+IDD_DIALOG_SELSAVEBOX DIALOG 0, 0, 130, 70
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Transfer"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Copy to:",IDC_MOVECOPYTEXT,10,10,65,10
+    COMBOBOX        IDC_SAVEBOX_COMBO,10,20,110,110,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&OK",IDOK,10,50,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,50,50,14
+END
+
+IDD_DIALOG_STARTCONFIG DIALOG  0, 0, 130, 68
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Welcome to nPOPuk.",IDC_STATIC,5,5,75,10
+    LTEXT           "Ready to create a new account?",IDC_STATIC,5,17,110,10
+    CONTROL         "&Use setup file",IDC_CHECK_TEMPL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,30,90,10
+    DEFPUSHBUTTON   "&OK",IDOK,10,50,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,50,50,14
+END
+
+IDD_DIALOG_MBOXTYPE DIALOG  0, 0, 130, 105
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add mailbox"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    CONTROL         "Create new &account",IDC_RADIO_MBOXIN,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,5,90,10
+    CONTROL         "&Using setup file",IDC_CHECK_TEMPL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,20,90,10
+    CONTROL         "Create new &savebox",IDC_RADIO_MBOXSAVE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,35,90,10
+    LTEXT           "&Name:",IDC_STATIC,25,50,25,10
+    EDITTEXT        IDC_MBOX_NAME,52,48,58,13,ES_AUTOHSCROLL
+    CONTROL         "&Import savebox",IDC_RADIO_IMPORTSBOX,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,65,90,10
+    DEFPUSHBUTTON   "&OK",IDOK,10,85,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,85,50,14
+END
+
+IDD_DIALOG_TEMPLATE DIALOG  0, 0, 210, 55
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Setup File"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Enter value for:",IDC_STATIC_TYPE,10,10,55,10
+    EDITTEXT        IDC_EDIT_NAME,69,8,131,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&OK",IDOK,64,30,50,14
+END
+
+IDD_DIALOG_SBOXEDIT DIALOG  0, 0, 130, 105
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Savebox"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,10,10,25,10
+    EDITTEXT        IDC_MBOX_NAME,45,8,75,13,ES_AUTOHSCROLL
+    LTEXT           "&Filename:",IDC_STATIC,10,30,35,10
+    EDITTEXT        IDC_MBOX_FILE,45,28,75,13,ES_AUTOHSCROLL
+    LTEXT           "&Default account:",IDC_STATIC,10,50,85,10
+    COMBOBOX        IDC_COMBO_SMTP,10,60,110,110,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&OK",IDOK,10,85,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,85,50,14
+END
+
+IDD_DIALOG_DIGEST_REPLY DIALOG  0, 0, 130, 80
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Digest Reply"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "Send reply to:",IDC_STATIC,10,10,48,10
+    CONTROL         "&List",IDC_RADIO_DIGEST_LIST,"Button",
+                    BS_AUTORADIOBUTTON,60,10,90,10
+    CONTROL         "&Sender",IDC_RADIO_DIGEST_SENDER,"Button",
+                    BS_AUTORADIOBUTTON,60,25,90,10
+    CONTROL         "&All",IDC_RADIO_DIGEST_ALL,"Button",
+                    BS_AUTORADIOBUTTON,60,40,90,10
+    DEFPUSHBUTTON   "&OK",IDOK,10,60,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,60,50,14
+END
+
+IDD_DIALOG_UPDATEOPTS DIALOG DISCARDABLE  0, 0, 130, 95
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Update after Check"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "When updating after check, messages",IDC_STATIC,5,5,125,10
+    LTEXT           "marked for deletion should be:",IDC_STATIC,5,14,125,10
+    CONTROL         "&Deleted",IDC_RADIO_UAC_DELETE,"Button",
+                    BS_AUTORADIOBUTTON,10,27,90,10
+    CONTROL         "&Kept until stand-alone Update",IDC_RADIO_UAC_KEEP,
+                    "Button",BS_AUTORADIOBUTTON,10,40,110,10
+    CONTROL         "&Ask each time",IDC_RADIO_UAC_ASK,"Button",
+                    BS_AUTORADIOBUTTON,10,53,90,10
+    DEFPUSHBUTTON   "&OK",IDOK,10,75,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,70,75,50,14
+END
+
+IDD_DIALOG_IMPORTSBOX DIALOG DISCARDABLE  0, 0, 160, 145
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Import savebox"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    LTEXT           "&File to import:",IDC_STATIC,10,5,100,10
+    EDITTEXT        IDC_IMPORT_FILE,10,17,140,15,ES_AUTOHSCROLL
+    LTEXT           "&Copy to nPOPuk directory as:",IDC_STATIC,10,35,100,10
+    EDITTEXT        IDC_IMPORT_SBOXFILE,10,47,140,15,ES_AUTOHSCROLL
+    LTEXT           "&Savebox name:",IDC_STATIC,10,73,55,10
+    EDITTEXT        IDC_IMPORT_SBOXNAME,65,70,85,15,ES_AUTOHSCROLL
+    LTEXT           "If Status is unknown, mark messages as:",IDC_STATIC,10,95,140,10
+    CONTROL         "&Read",IDC_IMPORT_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,107,40,10
+    CONTROL         "&Fully downloaded",IDC_IMPORT_DOWN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,75,107,135,10
+    DEFPUSHBUTTON   "&Import",IDOK,10,125,55,12
+    PUSHBUTTON      "Cancel",IDCANCEL,95,125,55,12
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG_ABOUT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 139
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 122
+    END
+
+    IDD_DIALOG_INPUTPASS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_DIALOG_SETSEND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_DIALOG_POP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_SMTP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_DIALOG_SIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_DIALOG_OPTION_REPLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_OPTION_FWD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_OPTION_RECV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_OPTION_SEND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_CC, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 168
+    END
+
+    IDD_DIALOG_OPTION_CHECK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_ADDRESS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 108
+    END
+
+    IDD_DIALOG_ADDRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 287
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 199
+    END
+
+    IDD_DIALOG_MSG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 151
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 52
+    END
+
+    IDD_DIALOG_OPTION_PASS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_OPTION_ETC, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_FILTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_DIALOG_FILTER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 194
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 189
+    END
+
+    IDD_DIALOG_INITMAILBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_DIALOG_RAS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_DIALOG_ATTACH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 132
+    END
+
+    IDD_DIALOG_MAILPROP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+
+    IDD_DIALOG_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+
+    IDD_DIALOG_OPTION_RAS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_DIALOG_SETSMTPAUTH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 192
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 97
+    END
+
+    IDD_DIALOG_SETSSL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 119
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_DIALOG_ATTACH_NOTICE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 124
+    END
+
+    IDD_DIALOG_ENCODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 92
+    END
+
+    IDD_DIALOG_SELSAVEBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_DIALOG_MBOXTYPE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_DIALOG_DIGEST_REPLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 70
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "..\\res\\manifest.xml"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    ID_MENUITEM_RECV        "Check account"
+    ID_MENUITEM_EXEC        "Update account"
+    ID_MENUITEM_ALLCHECK    "Check all accounts"
+    ID_MENUITEM_ALLEXEC     "Update all accounts"
+    ID_MENUITEM_STOP        "Stop"
+    ID_MENUITEM_ADDRESS     "Address book"
+    ID_MENUITEM_RAS_CONNECT "Dial-up Connect"
+    ID_MENUITEM_RAS_DISCONNECT "Dial-up Disconnect"
+    ID_MENUITEM_FLAGMARK    "Flag for follow-up"
+    ID_MENUITEM_DOWNMARK    "Mark to download"
+    ID_MENUITEM_DELMARK     "Mark to delete"
+    ID_MENUITEM_DELETE      "Delete from list"
+    ID_MENUITEM_UNREADMAIL  "Mark as unread"
+    ID_MENUITEM_READMAIL    "Mark as read"
+    ID_MENUITEM_UNREADMARK  "Mark as read"
+    ID_MENUITEM_NEXTMAIL    "Next mail"
+    ID_MENUITEM_NEXTUNREAD  "Next unread mail"
+    ID_MENUITEM_PREVMAIL    "Prev mail"
+    ID_MENUITEM_REMESSEGE   "Reply"
+    ID_MENUITEM_FORWARD     "Forward"
+    ID_MENUITEM_NEWMAIL     "New message"
+    ID_MENUITEM_ALLREMESSEGE "Reply to all"
+    ID_MENUITEM_FIND        "Find"
+    ID_MENUITEM_NEXTFIND    "Find next"
+    ID_MENUITEM_SEND        "Send now"
+    ID_MENUITEM_SENDMARK    "Mark to send"
+    ID_MENUITEM_SBOXMARK    "Save and Mark"
+    ID_MENUITEM_SENDBOX     "Save to Outbox"
+    ID_MENUITEM_SAVECOPY    "Edit as New"
+    ID_MENUITEM_SENDINFO    "Property"
+END
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION NPOPVER
+ PRODUCTVERSION NPOPVER
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x29L
+#else
+ FILEFLAGS 0x28L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "Comments", "nPOPuk " NPOPVERSTR " based on nPOP 1.0.9"
+            VALUE "FileDescription", "nPOPuk"
+            VALUE "FileVersion", NPOPVERLNG
+            VALUE "InternalName", "nPOPuk"
+            VALUE "LegalCopyright", "Copyright ©2010 by Nakashima Tomoaki, Geoffrey Coram"
+            VALUE "OriginalFilename", "nPOPuk.exe"
+            VALUE "PrivateBuild", "nPOPuk Ver " NPOPVERSTR
+            VALUE "ProductName", "nPOPuk"
+            VALUE "ProductVersion", NPOPVERLNG
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

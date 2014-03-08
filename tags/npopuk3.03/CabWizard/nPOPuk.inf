@@ -1,0 +1,238 @@
+;
+; AppInstall "nPOPuk" CabWiz INF file
+;   This INF file is used as the input file for "Cabwiz.exe".
+;   It will create multiple CAB files for the following devices:
+;
+;       - H/PC with the SH3 cpu
+;       - H/PC with the MIPS cpu
+;
+;       - H/PC Pro with the ARM cpu
+;       - H/PC Pro with the MIPS cpu
+;       - H/PC Pro with the SH3 cpu
+;       - H/PC Pro with the SH4 cpu
+;
+;       - H/PC 2000 with the ARM cpu
+;       - H/PC 2000 with the MIPS cpu
+;       - H/PC 2000 with the X86 cpu
+;
+
+
+;
+; Required "Version" section
+;   Contains INF version information
+;
+[Version]
+Signature   = "$Windows NT$"    ; required as-is
+Provider    = "Coram Technologies" ; full app name will be "<Provider> <AppName>"
+CESignature = "$Windows CE$"    ; required as-is
+
+
+;
+; Required "CEStrings" section
+;   Specific strings used by Windows CE AppInstall
+;
+[CEStrings]
+AppName     = "nPOPuk" ; full app name will be "<Provider> <AppName>"
+InstallDir  = %CE1%\%AppName%    ; default install directory,
+                                 ; (which can be changed by end user on H/PCs)
+                                 ; %CE1% resolves to \Program Files
+
+;
+; Required "CEDevice[.label]" section
+;   Specifies the various types of CAB files that will be generated
+;
+
+; a processor type of zero means this CAB can install on all processor types - this is required when using CEF
+ProcessorType           = 0
+
+[CEDevice.HPC_SH3]                              ; H/PC on SH3
+ProcessorType           = 10003                 ; SH3 cpu numeric value
+UnsupportedPlatforms    = "Palm PC","Jupiter"   ; exclude PsPC and H/PC Pro devices
+
+[CEDevice.HPC_MIPS]                             ; H/PC on MIPS
+ProcessorType           = 4000                  ; MIPS cpu numeric value
+UnsupportedPlatforms    = "Palm PC","Jupiter"
+
+[CEDevice.HPCPro_ARM]                           ; H/PC Pro on ARM
+ProcessorType           = 2577                  ; StrongARM cpu numeric value
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPCPro_MIPS]                          ; H/PC Pro on MIPS
+ProcessorType           = 4000
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPCPro_SH3]                           ; H/PC Pro on SH3
+ProcessorType           = 10003
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPCPro_SH4]                           ; H/PC Pro on SH4
+ProcessorType           = 10005
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPC2000_ARM]                          ; H/PC 2000 on ARM
+ProcessorType           = 2577                  ; StrongARM cpu numeric value
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPC2000_MIPS]                         ; H/PC 2000 on MIPS
+ProcessorType           = 4000
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+[CEDevice.HPC2000_X86]                          ; H/PC 2000 on X86
+ProcessorType           = 686
+UnsupportedPlatforms    = "Palm PC","HPC"
+
+;
+; Required "SourceDisksNames[.label]" section
+;   Specifies the source directories of the binary files
+;
+;   Format:     <source ID> = ,<comments>,,<source directory>
+;       <source ID> will be used to specify the source files belonging to this directory
+;       <comments> is unused
+;       <source directory> is the relative or absolute directory of the source files
+;
+[SourceDisksNames]                  ; CPU-independent files
+1 = ,"Common files",,Platform       ; files are in .\Platform directory
+
+[SourceDisksNames.HPC_SH3]          ; H/PC on SH3
+2 = ,"SH3 files",,Cpu\CE_2.0\SH3    ; SH3-specific files are in .\Cpu\SH3
+
+[SourceDisksNames.HPC_MIPS]         ; H/PC on MIPS
+2 = ,"MIPS files",,Cpu\CE_2.0\MIPS
+
+[SourceDisksNames.HPCPro_ARM]       ; H/PC Pro on ARM
+2 = ,"ARM files",,Cpu\CE_2.1\ARM
+
+[SourceDisksNames.HPCPro_MIPS]      ; H/PC Pro on MIPS
+2 = ,"MIPS files",,Cpu\CE_2.1\MIPS
+
+[SourceDisksNames.HPCPro_SH3]       ; H/PC Pro on SH3
+2 = ,"SH3 files",,Cpu\CE_2.1\SH3
+
+[SourceDisksNames.HPCPro_SH4]       ; H/PC Pro on SH4
+2 = ,"SH4 files",,Cpu\CE_2.1\SH4
+
+[SourceDisksNames.HPC2000_ARM]      ; H/PC 2000 on ARM
+2 = ,"ARM files",,Cpu\CE_3.0\ARM
+
+[SourceDisksNames.HPC2000_MIPS]     ; H/PC 2000 on MIPS
+2 = ,"MIPS files",,Cpu\CE_3.0\MIPS
+
+[SourceDisksNames.HPC2000_X86]      ; H/PC 2000 on X86
+2 = ,"X86 files",,Cpu\CE_3.0\X86
+
+;
+; Required "SourceDisksFiles[.label]" section
+;   Specifies the source filenames that will be packaged in the CAB files
+;
+;   Format:     <filename> = <source ID>
+;       <filename> is the source filename (enclose in doublequotes for long filenames)
+;       <source ID> is the ID used in [SourceDisksNames] to specify the source directory
+;
+[SourceDisksFiles]
+    ;
+    ; CPU-independent files
+    ;
+nPOPuk.ini            = 1     ; nPOPuk system configuration file
+nPOPuk.txt            = 1     ; nPOPuk user configuration file
+readme.txt            = 1     ; nPOPuk readme
+LICENSE_openssl.txt   = 1     ; license for OpenSSL
+LICENSE_wcecompat.txt = 1     ; license for WCE Compat
+gmail.ins             = 1     ; setup file for GMail
+hotmail.ins           = 1     ; setup file for HotMail
+plusnet.ins           = 1     ; setup file for Plus Net
+yahoouk.ins           = 1     ; setup file for Yahoo! UK
+    ;
+    ; CPU-specific files
+    ;
+nPOPuk.exe   = 2     ; executable
+pimstore.dll = 2     ; DLL for PIM integration
+
+
+;
+; Required "DefaultInstall" section
+;   Specifies the INF sections for file copying, registry settings and creating shortcuts
+;   INF sections that are not listed here will not be used
+;
+[DefaultInstall]
+    ;
+    ; Required INF sections that lists the files to be copied
+    ;
+CopyFiles   = Files.InstallDir,Files.UserDir
+    ;
+    ; Required INF sections that lists the registry entries to be created
+    ;
+AddReg      =
+    ;
+    ; Optional INF sections that lists the shortcuts to be created
+    ;
+CEShortcuts = Links
+
+;
+; Required "DestinationDirs" section
+;   Specifies the directories to use for the file copy lists
+;
+;   Format:     <section name> = 0,<dest directory>
+;       <section name> is the section name used in "[DefaultInstall] CopyFiles"
+;       <dest directory> is the destination directory, using an absolute device path,
+;                   the directory macros, or the install directory %InstallDir%
+;
+[DestinationDirs]
+Files.InstallDir    = ,%InstallDir%
+Files.UserDir       = ,\My Documents\nPOPuk  ; dest dir for user files
+                                        ;   %CE1% resolves to \My Documents
+Links               = ,%CE11%           ; default dest dir for shortcuts specified in [Links]
+                                        ;   %CE11% resolves to \Windows\<StartMenu>\Programs
+DefaultDestDir      = ,%InstallDir%     ; default install dir for all other sections
+
+
+;
+; Required sections specified in "[DefaultInstall] CopyFiles" key
+;   Specifies the files to copy
+;
+;   Format:     <dest filename>,<source filename>,,<copy flags>
+;       <dest filename> is the destination filename (or the source filename if <source filename>
+;                       is empty)
+;       <source filename> is the source filename
+;       <copy flags> is the copy flags to use (the list of copy flags is in the CE SDK docs)
+;
+[Files.InstallDir]
+"nPOPuk.exe",nPOPuk.exe
+"nPOPuk.ini",nPOPuk.ini
+"pimstore.dll",pimstore.dll
+"readme.txt",readme.txt
+"LICENSE_openssl.txt",LICENSE_openssl.txt
+"LICENSE_wcecompat.txt",LICENSE_wcecompat.txt
+"gmail.ins",gmail.ins
+"hotmail.ins",hotmail.ins
+"plusnet.ins",plusnet.ins
+"yahoouk.ins",yahoouk.ins
+
+[Files.UserDir]
+"nPOPuk.txt",nPOPuk.txt
+
+;
+; Sections specified in "[DefaultInstall] CEShortcuts" key
+;   Specifies the shortcuts to create
+;
+;   Format:     <shortcut filename>,<shortcut type>,<target file/path>[,<standard dest path>]
+;       <shortcut filename> is the filename of the shortcut
+;       <shortcut type> specifies if the shortcut is to a file or a folder
+;       <target file/path> is the target filename or pathname, which depends on the
+;                          <shortcut type> flag used
+;       <standard dest path> is an optional destination directory macro (or %InstallDir%) to use
+;
+[Links]
+    ;
+    ; shortcut to a file, created in the standard destination path %CE3%
+    ;   (%CE3% resolves to \Windows\Desktop)
+    ;
+%LinkFilename%,0,"nPOPuk.exe",%CE3%
+
+;
+; Optional "Strings" section
+;   Contains string substitutions replacing the key string (enclosed with percent symbols)
+;       with the value string.
+;   For this example, it will store language-dependent strings
+;
+[Strings]
+LinkFilename        = "nPOPuk"
