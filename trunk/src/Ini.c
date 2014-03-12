@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2013 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -907,6 +907,9 @@ BOOL ini_read_setting(HWND hWnd)
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 		tpFilter->Content2 = profile_alloc_string(TEXT("FILTER"), key_buf, TEXT(""));
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
+		tpFilter->MatchCase = profile_get_int(TEXT("FILTER"), key_buf, 1);
 	}
 
 	cnt = profile_get_int(GENERAL, TEXT("MailBoxCnt"), 0);
@@ -1142,6 +1145,9 @@ BOOL ini_read_setting(HWND hWnd)
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 			tpFilter->Content2 = profile_alloc_string(buf, key_buf, TEXT(""));
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
+			tpFilter->MatchCase = profile_get_int(buf, key_buf, 1);
 		}
 
 		// RAS
@@ -1642,6 +1648,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 		profile_write_string(TEXT("FILTER"), key_buf, tpFilter->Content2);
+
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
+		profile_write_int(TEXT("FILTER"), key_buf, tpFilter->MatchCase);
 	}
 
 	// GJC clear any further filter keys
@@ -1673,6 +1682,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
 		profile_delete_key(GENERAL, key_buf);
 		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+		profile_delete_key(GENERAL, key_buf);
+		wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
 		profile_delete_key(GENERAL, key_buf);
 
 		t++;
@@ -1853,6 +1864,9 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Content2"));
 			profile_write_string(buf, key_buf, tpFilter->Content2);
+
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
+			profile_write_int(buf, key_buf, tpFilter->MatchCase);
 		}
 
 		// GJC clear any further filter keys
@@ -1884,6 +1898,8 @@ BOOL ini_save_setting(HWND hWnd, BOOL SaveMailFlag, BOOL SaveAll, TCHAR *SaveDir
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("FwdAddress"));
 			profile_delete_key(buf, key_buf);
 			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("Boolean"));
+			profile_delete_key(buf, key_buf);
+			wsprintf(key_buf, TEXT("FILTER-%d_%s"), t, TEXT("MatchCase"));
 			profile_delete_key(buf, key_buf);
 
 			t++;

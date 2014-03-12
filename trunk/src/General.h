@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2013 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -183,7 +183,6 @@ extern int sprintf_s();
 #define IDC_LISTVIEW			401
 #define IDC_STATUS				402
 #define IDC_FILTER				403
-#define IDC_FILTER_LABEL		404
 
 #ifndef LVS_EX_INFOTIP
 #define LVS_EX_INFOTIP			0x400
@@ -831,6 +830,7 @@ typedef struct _FILTER {
 	int Action;
 	int Boolean;
 	int Priority;
+	int MatchCase;
 	TCHAR *SaveboxName;
 	TCHAR *FwdAddress;
 	// TCHAR *TargetName; // for Savebox or Fwd?

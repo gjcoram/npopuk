@@ -17,8 +17,8 @@
 #define NPOPBETA_RELEASE_CAND (NPOPBETA_REAL_RELEASE-1)
 
 #define NPOPMAJOR  3
-#define NPOPMINOR  03
-#define NPOPBETA   100
+#define NPOPMINOR  04
+#define NPOPBETA   1
 #define NPOPPATCH  0
 
 
