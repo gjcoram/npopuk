@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2013 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1105,6 +1105,12 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		*buf = TEXT('\0');
 		ListView_GetItemText(hLvFilter, i, 6, buf, BUF_SIZE - 1);
 		SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT2, WM_SETTEXT, 0, (LPARAM)buf);
+
+		*buf = TEXT('\0');
+		ListView_GetItemText(hLvFilter, i, 7, buf, BUF_SIZE - 1);
+		if (buf[0] == TEXT('y') || buf[0] == TEXT('Y')) {
+			SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_SETCHECK, 1, 0);
+		}
 		break;
 
 	case WM_CLOSE:
@@ -1262,6 +1268,12 @@ static BOOL CALLBACK EditFilterProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			*buf = TEXT('\0');
 			SendDlgItemMessage(hDlg, IDC_EDIT_CONTENT2, WM_GETTEXT, BUF_SIZE - 1, (LPARAM)buf);
 			ListView_SetItemText(hLvFilter, i, 6, buf);
+
+			if (SendDlgItemMessage(hDlg, IDC_CHECK_CASE, BM_GETCHECK, 0, 0) == TRUE) {
+				ListView_SetItemText(hLvFilter, i, 7, TEXT("y"));
+			} else {
+				ListView_SetItemText(hLvFilter, i, 7, TEXT("n"));
+			}
 
 			ListView_SetItemState(hLvFilter, -1, 0, LVIS_SELECTED);
 			ListView_SetItemState(hLvFilter, i,
@@ -1465,6 +1477,7 @@ static void SetFilterList(HWND hListView)
 
 		ListView_SetItemText(hListView, ItemIndex, 5, tpFilter->Header2);
 		ListView_SetItemText(hListView, ItemIndex, 6, tpFilter->Content2);
+		ListView_SetItemText(hListView, ItemIndex, 7, (tpFilter->MatchCase ? TEXT("y") : TEXT("n")));
 	}
 }
 
@@ -1492,8 +1505,8 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 30, STR_FILTER_BOOLEAN, 4);
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 100, STR_FILTER_ITEM2, 5);
 		ListView_AddColumn(hListView, LVCFMT_LEFT, 100, STR_FILTER_CONTENT2, 6);
-		ListView_SetExtendedListViewStyle(hListView,
-			LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		ListView_AddColumn(hListView, LVCFMT_LEFT, 30, STR_FILTER_MATCHCASE, 7);
+		ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
 		if ((tpOptionMailBox == NULL && op.GlobalFilterEnable == 0)
 			|| (tpOptionMailBox != NULL && tpOptionMailBox->FilterEnable == 0)) {
@@ -1556,7 +1569,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			if ((SelectItem = ListView_GetNextItem(GetDlgItem(hDlg, IDC_LIST_FILTER), -1, LVNI_SELECTED)) <= 0) {
 				break;
 			}
-			ListView_MoveItem(GetDlgItem(hDlg, IDC_LIST_FILTER), SelectItem, -1, 6);
+			ListView_MoveItem(GetDlgItem(hDlg, IDC_LIST_FILTER), SelectItem, -1, 7);
 			break;
 
 		case IDC_BUTTON_DOWN:
@@ -1567,7 +1580,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			if (SelectItem == ListView_GetItemCount(hListView) - 1) {
 				break;
 			}
-			ListView_MoveItem(hListView, SelectItem, 1, 6);
+			ListView_MoveItem(hListView, SelectItem, 1, 7);
 			break;
 
 		case IDC_BUTTON_ADD:
@@ -1694,6 +1707,14 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 				(*(tpFilter + i))->Header2 = ListView_AllocGetText(hListView, i, 5);
 				(*(tpFilter + i))->Content2 = ListView_AllocGetText(hListView, i, 6);
+
+				*buf = TEXT('\0');
+				ListView_GetItemText(hListView, i, 7, buf, BUF_SIZE - 1);
+				if (buf[0] == TEXT('y') || buf[0] == TEXT('Y')) {
+					(*(tpFilter + i))->MatchCase = 1;
+				} else {
+					(*(tpFilter + i))->MatchCase = 0;
+				}
 			}
 			break;
 		}
