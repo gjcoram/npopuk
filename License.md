@@ -1,0 +1,9 @@
+nPOPuk is open source freeware
+
+# Open Source #
+
+The source code found here is open source under LGPL.
+
+# Freeware #
+
+More liberal licensing terms can be found at the npopsupport page, for released versions.  The original author released the program as "freeware", and versions released by others continue that tradition.
