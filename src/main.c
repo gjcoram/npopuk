@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2016 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -213,8 +213,8 @@ extern HANDLE hEvent;
 
 /* Local Function Prototypes */
 static BOOL GetAppPath(HINSTANCE hinst, TCHAR *lpCmdLine);
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon);
-static void SetTrayIcon(HWND hWnd, HICON hIcon);
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, BOOL Balloon);
+static void SetTrayIcon(HWND hWnd, HICON hIcon, BOOL Balloon);
 static void FreeAllMailBox(void);
 static BOOL CloseEditViewWindows(int Flag);
 static LRESULT CALLBACK SubClassListViewProc(HWND hWnd, UINT msg, WPARAM wParam,LPARAM lParam);
@@ -912,7 +912,7 @@ BOOL ConfirmPass(HWND hWnd, TCHAR *ps, BOOL Show)
 /*
  * TrayMessage - タスクトレイのアイコンの設定
  */
-static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
+static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon, BOOL Balloon)
 {
 	NOTIFYICONDATA tnd;
 	ZeroMemory(&tnd, sizeof(NOTIFYICONDATA));
@@ -922,7 +922,7 @@ static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
 	tnd.uID	= uID;
 	tnd.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 #if (_WIN32_IE >= 0x0500)
-	if (hIcon == TrayIcon_Mail && op.ShowNewMailBalloon == 1) {
+	if (hIcon == TrayIcon_Mail && op.ShowNewMailBalloon == 1 && Balloon == TRUE) {
 		tnd.uFlags |= NIF_INFO;
 		tnd.uTimeout = 5000;
 		lstrcpy(tnd.szInfoTitle, WINDOW_TITLE);
@@ -938,15 +938,16 @@ static BOOL TrayMessage(HWND hWnd, DWORD dwMessage, UINT uID, HICON hIcon)
 /*
  * SetTrayIcon - タスクトレイにアイコンを設定する
  */
-static void SetTrayIcon(HWND hWnd, HICON hIcon)
+static void SetTrayIcon(HWND hWnd, HICON hIcon, BOOL Balloon)
 {
 	static HICON last_icon = NULL;
 	if (op.ShowTrayIcon != 1 || hIcon == NULL || hIcon == last_icon) {
 		return;
 	}
-	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon) == FALSE) {
+	last_icon = hIcon;
+	if (TrayMessage(hWnd, NIM_MODIFY, TRAY_ID, hIcon, Balloon) == FALSE) {
 		//When it cannot modify, it adds the
-		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon);
+		TrayMessage(hWnd, NIM_ADD, TRAY_ID, hIcon, Balloon);
 	}
 }
 
@@ -2799,7 +2800,6 @@ static BOOL InitWindow(HWND hWnd)
 	i = SBS_SIZEGRIP | SBT_NOBORDERS;
 	hMenu = GetMenu(hWnd);
 #endif
-	Top = op.ToolBarHeight;
 
 	CheckMenuItem(hMenu, ID_MENUITEM_AUTOCHECK, (op.AutoCheck == 1) ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(hMenu, ID_MENUITEM_LAN, (op.EnableLAN == 1) ? MF_CHECKED : MF_UNCHECKED);
@@ -2864,6 +2864,7 @@ static BOOL InitWindow(HWND hWnd)
 	SendDlgItemMessage(hWnd, IDC_STATUS, SB_SETPARTS,
 		(WPARAM)(sizeof(Width) / sizeof(int)), (LPARAM)((LPINT)Width));
 
+	Top = op.ToolBarHeight;
 	Bottom = StatusRect.bottom - StatusRect.top;
 	// combobox or mailbox pane
 	if ((j = CreateMBMenu(hWnd, Top, Bottom)) == -1) {
@@ -3291,7 +3292,7 @@ static BOOL EndWindow(HWND hWnd)
 
 	//of idea contest of task tray Cancellation
 	op.ShowTrayIcon = 0;
-	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
+	TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, FALSE);
 
 	//of idea contest Cancellation
 	DestroyIcon(TrayIcon_Main);
@@ -3461,7 +3462,7 @@ static BOOL SendMail(HWND hWnd, MAILITEM *tpMailItem, int end_cmd)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check);
+	SetTrayIcon(hWnd, TrayIcon_Check, FALSE);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -3545,7 +3546,7 @@ static BOOL RecvMailList(HWND hWnd, int BoxIndex, BOOL SmtpFlag)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check);
+	SetTrayIcon(hWnd, TrayIcon_Check, FALSE);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -3742,7 +3743,7 @@ static BOOL ExecItem(HWND hWnd, int BoxIndex)
 	SetTimer(hWnd, ID_RECV_TIMER, RECVTIME, NULL);
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, TrayIcon_Check);
+	SetTrayIcon(hWnd, TrayIcon_Check, FALSE);
 	SwitchCursor(TRUE);
 	return TRUE;
 }
@@ -4435,7 +4436,7 @@ static void EndSocketFunc(HWND hWnd, BOOL DoTimer)
 	}
 #endif
 	SetMailMenu(hWnd);
-	SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
+	SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main, FALSE);
 
 	if (EndThreadSortFlag == TRUE) {
 		//Sort
@@ -4628,7 +4629,7 @@ static void NewMail_Message(HWND hWnd, int cnt)
 	}
 
 	NewMail_Flag = TRUE;
-	SetTrayIcon(hWnd, TrayIcon_Mail);
+	SetTrayIcon(hWnd, TrayIcon_Mail, TRUE);
 
 	// There is a new arrival in the message box; add the "* " in the drop-down combo
 	j = GetSelectedMBMenu();
@@ -4927,6 +4928,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 	static BOOL save_flag = FALSE;
 	int i, j, old_selbox, ans;
+#ifdef WSAASYNC
+	int evnt;
+#endif
 	BOOL ret;
 
 	switch (msg) {
@@ -5006,7 +5010,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			TrayIcon_Mail = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON_MAIN),
 				IMAGE_ICON, SICONSIZE, SICONSIZE, 0);
 		if (op.ShowTrayIcon == 1 && TrayIcon_Main != NULL) {
-			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main);
+			TrayMessage(hWnd, NIM_ADD, TRAY_ID, TrayIcon_Main, FALSE);
 		}
 
 #ifdef ENABLE_WIFI
@@ -5305,7 +5309,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_INITTRAYICON:
 		if (g_soc == -1) {
-			SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
+			SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main, FALSE);
 		}
 		break;
 
@@ -5676,6 +5680,18 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 			}
 			if (command_status == POP_RETR || command_status == POP_TOP) {
 				pop3_salvage_buffer(hWnd, (MailBox + RecvBox), RecvBox == SelBox);
+			} else if (command_status == POP_QUIT) {
+				// some POP servers fail to close connection
+				if (op.SocLog > 1) log_save_a("TIMEOUT after QUIT\r\n");
+				socket_close(hWnd, g_soc);
+				g_soc = -1;
+				SetMailboxMark(RecvBox, STATUS_DONE, FALSE);
+				RecvBox = -1;
+				SetItemCntStatusText(NULL, FALSE, TRUE);
+				SetUnreadCntTitle(TRUE);
+				EndSocketFunc(hWnd, FALSE);
+				if (op.SocLog > 0) log_flush();
+				break;
 			}
 			ErrorSocketEnd(hWnd, RecvBox);
 			SocketErrorMessage(hWnd, STR_ERR_SOCK_TIMEOUT, RecvBox);
@@ -5955,9 +5971,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 			// タスクトレイのアイコンの設定
 			if (op.ShowTrayIcon == 1) {
-				SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main);
+				SetTrayIcon(hWnd, (NewMail_Flag == TRUE) ? TrayIcon_Mail : TrayIcon_Main, FALSE);
 			} else {
-				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL);
+				TrayMessage(hWnd, NIM_DELETE, TRAY_ID, NULL, FALSE);
 			}
 			if (ret == TRUE && op.AutoSave != 0) {
 				ini_save_setting(hWnd, FALSE, FALSE, NULL);
@@ -7204,42 +7220,47 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 #ifdef WSAASYNC
 	case WM_SOCK_SELECT:
+		evnt = WSAGETSELECTEVENT(lParam);
 		if (g_soc != -1 && WSAGETSELECTERROR(lParam) != 0) {
-			ErrorSocketEnd(hWnd, RecvBox);
-			switch (WSAGETSELECTEVENT(lParam)) {
-			case FD_CONNECT:
-				{
-					TCHAR buf[BUF_SIZE];
-					TCHAR *hname;
-					if (RecvBox == MAILBOX_SEND) {
-						(MailBox+RecvBox)->SmtpIP = 0; // clear cached IP
-						hname = (MailBox+RecvBox)->SmtpServer;
-					} else {
-						(MailBox+RecvBox)->PopIP = 0; // clear cached IP
-						hname = (MailBox+RecvBox)->Server;
+			if (evnt == FD_CLOSE && command_status == POP_QUIT) {
+				if (op.SocLog > 1) log_save_a("TIMEOUT after QUIT\r\n");
+			} else {
+				ErrorSocketEnd(hWnd, RecvBox);
+				switch (evnt) {
+				case FD_CONNECT:
+					{
+						TCHAR buf[BUF_SIZE];
+						TCHAR *hname;
+						if (RecvBox == MAILBOX_SEND) {
+							(MailBox+RecvBox)->SmtpIP = 0; // clear cached IP
+							hname = (MailBox+RecvBox)->SmtpServer;
+						} else {
+							(MailBox+RecvBox)->PopIP = 0; // clear cached IP
+							hname = (MailBox+RecvBox)->Server;
+						}
+						wsprintf(buf, TEXT("%s (%s)"), STR_ERR_SOCK_CONNECT, hname); 
+						SocketErrorMessage(hWnd, buf, RecvBox);
 					}
-					wsprintf(buf, TEXT("%s (%s)"), STR_ERR_SOCK_CONNECT, hname); 
-					SocketErrorMessage(hWnd, buf, RecvBox);
+					break;
+
+				case FD_READ:
+				case FD_WRITE:
+					SocketErrorMessage(hWnd, STR_ERR_SOCK_SENDRECV, RecvBox);
+					break;
+
+				default:
+					SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
+					break;
 				}
 				break;
-
-			case FD_READ:
-			case FD_WRITE:
-				SocketErrorMessage(hWnd, STR_ERR_SOCK_SENDRECV, RecvBox);
-				break;
-
-			default:
-				SocketErrorMessage(hWnd, STR_ERR_SOCK_DISCONNECT, RecvBox);
-				break;
 			}
-			break;
 		}
 		// It should process the socket or decision
 		if (g_soc != (int)wParam) {
 			break;
 		}
 		// which It processes every socket event the
-		switch (WSAGETSELECTEVENT(lParam)) {
+		switch (evnt) {
 		case FD_CONNECT:					/* サーバへの接続が完了した事を示すイベント */
 			{
 				TCHAR ErrStr[BUF_SIZE];

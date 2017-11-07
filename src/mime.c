@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2016 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1505,62 +1505,7 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	}
 
 	if (*cnt > 0 && *TextIndex != -1) {
-		char *spos;
-		int encode = 0;
-		if (ViewSrc == FALSE) {
-			spos = (*(*tpPart + *TextIndex))->sPos;
-		} else {
-			spos = (*(*tpPart + *TextIndex))->hPos;
-		}
-
-		// 本文の取得
-		if ((*(*tpPart + *TextIndex))->ePos == NULL) {
-			body = alloc_copy(spos);
-			if (body == NULL) {
-				return NULL;
-			}
-		} else {
-			i = (*(*tpPart + *TextIndex))->ePos - spos;
-			body = (char *)mem_alloc(sizeof(char) * (i + 1));
-			if (body == NULL) {
-				return NULL;
-			}
-			if (i == 0) {
-				*body = '\0';
-			} else {
-				str_cpy_n(body, spos, i - 1);
-			}
-		}
-
-		// デコード
-		if ((*(*tpPart + *TextIndex))->Encoding != NULL) {
-			if (str_cmp_i((*(*tpPart + *TextIndex))->Encoding, ENCODE_BASE64) == 0) {
-				encode = ENC_TYPE_BASE64;
-			} else if (str_cmp_i((*(*tpPart + *TextIndex))->Encoding, ENCODE_Q_PRINT) == 0) {
-				encode = ENC_TYPE_Q_PRINT;
-			}
-		}
-		if (encode != 0) {
-			enc_ret = (char *)mem_alloc(tstrlen(body) + 1);
-			if (enc_ret != NULL) {
-				((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret, TRUE);
-				mem_free(&body);
-				body = enc_ret;
-			}
-		}
-
-		// キャラクタセットの変換
-		wenc_ret = MIME_body_decode_charset(body, (*(*tpPart + *TextIndex))->ContentType);
-		if (wenc_ret == NULL) {
-#ifdef UNICODE
-			wenc_ret = alloc_char_to_tchar(body);
-			mem_free(&body);
-#else
-			wenc_ret = body;
-#endif
-		} else {
-			mem_free(&body);
-		}
+		wenc_ret = MIME_text_extract_decode(*(*tpPart + *TextIndex), ViewSrc);
 	} else if (*TextIndex == -1 && tpMailItem->Body != NULL && op.ViewShowAttach) {
 		wenc_ret = alloc_copy_t(STR_MSG_NOTEXTPART);
 	}
@@ -1586,6 +1531,70 @@ TCHAR *MIME_body_decode(MAILITEM *tpMailItem, BOOL ViewSrc, BOOL StopAtTextPart,
 	}
 	return r;
 }
+
+/*
+ * MIME_text_extract_decode - extract text part and decode if necessary
+ */
+TCHAR *MIME_text_extract_decode(MULTIPART *tpPart, BOOL ViewSrc) {
+	TCHAR *ret = NULL;
+	char *spos, *body;
+	int encode = 0;
+	
+	if (ViewSrc == FALSE) {
+		spos = tpPart->sPos;
+	} else {
+		spos = tpPart->hPos;
+	}
+
+	if (tpPart->ePos == NULL) {
+		body = alloc_copy(spos);
+		if (body == NULL) {
+			return NULL;
+		}
+	} else {
+		int len = tpPart->ePos - spos;
+		body = (char *)mem_alloc(sizeof(char) * (len + 1));
+		if (body == NULL) {
+			return NULL;
+		}
+		if (len == 0) {
+			*body = '\0';
+		} else {
+			str_cpy_n(body, spos, len - 1);
+		}
+	}
+
+	if (tpPart->Encoding != NULL) {
+		if (str_cmp_i(tpPart->Encoding, ENCODE_BASE64) == 0) {
+			encode = ENC_TYPE_BASE64;
+		} else if (str_cmp_i(tpPart->Encoding, ENCODE_Q_PRINT) == 0) {
+			encode = ENC_TYPE_Q_PRINT;
+		}
+	}
+	if (encode != 0) {
+		char *enc_ret = (char *)mem_alloc(tstrlen(body) + 1);
+		if (enc_ret != NULL) {
+			((encode == ENC_TYPE_BASE64) ? base64_decode : QuotedPrintable_decode)(body, enc_ret, TRUE);
+			mem_free(&body);
+			body = enc_ret;
+		}
+	}
+
+	ret = MIME_body_decode_charset(body, tpPart->ContentType);
+	if (ret == NULL) {
+#ifdef UNICODE
+		ret = alloc_char_to_tchar(body);
+		mem_free(&body);
+#else
+		ret = body;
+#endif
+	} else {
+		mem_free(&body);
+	}
+
+	return ret;
+}
+
 
 /*
  * alloc_char_to_tchar_check - check for non-ASCII characters before conversion

@@ -1,4 +1,4 @@
-readme.txt for openssl (version 1.0.1c)
+readme.txt for openssl (version 1.0.2j)
 
 Please review LICENSE.txt
 
@@ -14,14 +14,19 @@ Please review LICENSE.txt
 
 4) Set up your compiler environment (eg, vcvars32.bat for MS VC++)
 
-5) nmake -f ntlib.mak
+5) If you are changing versions, you may need to re-create ntlib.mak
+   This requires perl.
+
+   perl Configure no-rc5 no-idea no-ec no-asm VC-WIN32
+
+6) nmake -f ntlib.mak
 
    You may need to replace crypto\cversion.c with the version here;
    there may be other minor tweaks necessary.  I found that they 
    can all be handled by changing things like 
    #include <openssl/asn1.h> to #include "asn1.h"
 
-6) The .lib files should now be in "out32"
+5) The .lib files should now be in "out32"
 
 
 For Windows CE, you will need to obtain wcecompat.lib; you should

@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2016 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1389,8 +1389,24 @@ static int SetAttachMenu(HWND hWnd, MAILITEM *tpMailItem, BOOL ViewSrc, BOOL IsA
 			mem_free(&alt_type);
 		}
 		if (ret == -1 && part_is_text != 0) {
-			// this is the text part
+			// this is the (first) text part
 			ret = i;
+		} else if (part_is_text == 1 && op.ViewShowAttach) {
+			// add additional text/plain parts to the attach list
+			TCHAR *tmp;
+			int len;
+			str = MIME_text_extract_decode(*(vMultiPart + i), FALSE);
+			len = lstrlen(str) + 3;
+			if (*attlist != NULL) {
+				len += lstrlen(*attlist);
+			}
+			tmp = (TCHAR *)mem_alloc(sizeof(TCHAR) * len);
+			if (tmp != NULL) {
+				str_join_t(tmp, *attlist, str, TEXT("\r\n"), (TCHAR *)-1);
+			}
+			mem_free(&str);
+			mem_free(&*attlist);
+			*attlist = tmp;
 		}
 		if (part_is_text != 1 || ret != i) {
 			if (AppendFlag == FALSE) {

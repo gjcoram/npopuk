@@ -250,7 +250,7 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="2"
 				AdditionalIncludeDirectories=".,..\EN,..\openssl\inc32"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;WSAASYNC;_WIN32_IE=0x0500;UNICODE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;WSAASYNC;_WIN32_IE=0x0500;UNICODE;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"

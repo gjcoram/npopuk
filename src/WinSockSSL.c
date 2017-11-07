@@ -734,7 +734,7 @@ static OPENSSL_INFO *ssl_init(
 	char *err_str)		// (OUT)ÉGÉâÅ[
 {
 	OPENSSL_INFO *si;
-	SSL_METHOD *sslm;
+	const SSL_METHOD *sslm;
 	SYSTEMTIME st;
 	long verify_result;
 	int ret, e, loop_cnt, hflag, tstart, tnow;
