@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2017 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -856,7 +856,7 @@ static BOOL CALLBACK MakeSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 /*
- * EditFilterProc - フィルタ項目編集プロシージャ
+ * SetComboItem
  */
 static void SetComboItem(HWND hCombo)
 {
@@ -1556,7 +1556,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			if ((SelectItem = ListView_GetNextItem(GetDlgItem(hDlg, IDC_LIST_FILTER), -1, LVNI_SELECTED)) <= 0) {
 				break;
 			}
-			ListView_MoveItem(GetDlgItem(hDlg, IDC_LIST_FILTER), SelectItem, -1, 6);
+			ListView_MoveItem(GetDlgItem(hDlg, IDC_LIST_FILTER), SelectItem, -1, 7);
 			break;
 
 		case IDC_BUTTON_DOWN:
@@ -1567,7 +1567,7 @@ static BOOL CALLBACK FilterSetProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			if (SelectItem == ListView_GetItemCount(hListView) - 1) {
 				break;
 			}
-			ListView_MoveItem(hListView, SelectItem, 1, 6);
+			ListView_MoveItem(hListView, SelectItem, 1, 7);
 			break;
 
 		case IDC_BUTTON_ADD:
