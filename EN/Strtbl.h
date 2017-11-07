@@ -412,7 +412,6 @@
 #define STR_FILTER_BOOLEAN			TEXT("Op")
 #define STR_FILTER_ITEM2			TEXT("Item 2")
 #define STR_FILTER_CONTENT2			TEXT("Content 2")
-#define STR_FILTER_MATCHCASE		TEXT("MC")
 #define STR_FILTER_UNRECV			TEXT("Reject")
 #define STR_FILTER_RECV				TEXT("Accept")
 #define STR_FILTER_DOWNLOADMARK		TEXT("Mark to download")
