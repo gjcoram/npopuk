@@ -117,7 +117,7 @@ HEADER=$(INCL_D)\e_os.h \
 	$(INCL_D)\rc2_locl.h $(INCL_D)\rc4_locl.h $(INCL_D)\bf_pi.h \
 	$(INCL_D)\bf_locl.h $(INCL_D)\cast_s.h $(INCL_D)\cast_lcl.h \
 	$(INCL_D)\aes_locl.h $(INCL_D)\cmll_locl.h $(INCL_D)\seed_locl.h \
-	$(INCL_D)\modes_lcl.h $(INCL_D)\bn_lcl.h $(INCL_D)\bn_prime.h \
+	$(INCL_D)\modes_lcl.h $(INCL_D)\bn_int.h $(INCL_D)\bn_lcl.h $(INCL_D)\bn_prime.h \
 	$(INCL_D)\dsa_locl.h $(INCL_D)\bio_lcl.h $(INCL_D)\obj_dat.h \
 	$(INCL_D)\obj_xref.h $(INCL_D)\evp_locl.h $(INCL_D)\asn1_locl.h \
 	$(INCL_D)\pcy_int.h $(INCL_D)\cms_lcl.h $(INCL_D)\conf_def.h \
@@ -351,7 +351,8 @@ CRYPTOOBJ=$(OBJ_D)\cryptlib.obj \
 	$(OBJ_D)\srp_vfy.obj \
 	$(OBJ_D)\e_aes_cbc_hmac_sha256.obj $(OBJ_D)\cms_kari.obj \
 	$(OBJ_D)\wrap128.obj $(OBJ_D)\dh_rfc5114.obj \
-	$(OBJ_D)\v3_scts.obj $(OBJ_D)\dh_kdf.obj
+	$(OBJ_D)\v3_scts.obj $(OBJ_D)\dh_kdf.obj \
+	$(OBJ_D)\getenv.obj
 
 E_SHLIB=
 
@@ -474,6 +475,9 @@ $(INCL_D)\modes_lcl.h: $(SRC_D)\crypto\modes\modes_lcl.h
 
 $(INCL_D)\bn_lcl.h: $(SRC_D)\crypto\bn\bn_lcl.h
 	$(CP) "$(SRC_D)\crypto\bn\bn_lcl.h" "$(INCL_D)\bn_lcl.h"
+
+$(INCL_D)\bn_int.h: $(SRC_D)\crypto\bn_int.h
+	$(CP) "$(SRC_D)\crypto\bn_int.h" "$(INCL_D)\bn_int.h"
 
 $(INCL_D)\bn_prime.h: $(SRC_D)\crypto\bn\bn_prime.h
 	$(CP) "$(SRC_D)\crypto\bn\bn_prime.h" "$(INCL_D)\bn_prime.h"
@@ -2508,6 +2512,9 @@ $(OBJ_D)\srp_lib.obj: $(SRC_D)\crypto\srp\srp_lib.c
 
 $(OBJ_D)\srp_vfy.obj: $(SRC_D)\crypto\srp\srp_vfy.c
 	$(CC) /Fo$(OBJ_D)\srp_vfy.obj  $(LIB_CFLAGS) -c $(SRC_D)\crypto\srp\srp_vfy.c
+
+$(OBJ_D)\getenv.obj: $(SRC_D)\crypto\getenv.c
+	$(CC) /Fo$(OBJ_D)\getenv.obj  $(LIB_CFLAGS) -c $(SRC_D)\crypto\getenv.c
 
 $(O_SSL): $(SSLOBJ)
 	$(MKLIB) /out:$(O_SSL) @<<
