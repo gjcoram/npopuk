@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2020 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -23,6 +23,7 @@
 #define IDC_CB				2000
 
 #define POP_PORT			110
+#define IMAP_PORT			143
 #define SMTP_PORT			25
 
 static HMENU hCOPYFLY = NULL, hMOVEFLY = NULL;
@@ -958,7 +959,8 @@ int mailbox_name_to_index(TCHAR *Name, int Type)
 		return -1;
 	}
 	for (i = 0; i < MailBoxCnt; i++) {
-		if (Type == (MailBox + i)->Type) { // MAILBOX_TYPE_SAVE or account
+		if (Type == (MailBox + i)->Type // MAILBOX_TYPE_SAVE or account
+			|| (Type == MAILBOX_TYPE_ACCOUNT && (MailBox + i)->Type == MAILBOX_TYPE_IMAP)) {
 			if (lstrcmpi((MailBox + i)->Name, Name) == 0) {
 				return i;
 			}

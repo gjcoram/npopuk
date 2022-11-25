@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2009 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2009-2022 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -723,7 +723,7 @@ static int load_system_verify(SSL_CTX *ssl_ctx)
  */
 static OPENSSL_INFO *ssl_init(
 	const int soc,		// ソケット
-	const int ssl_type,	// 0-SSLv23, 1-TLSv1, 2-SSLv3, 3-SSLv2
+	const int ssl_type,	// 0-SSLv23, 1-TLSv1, 2-SSLv3, 3-SSLv2, 5-TLSv1.2
 	int verify,			// 1-VERIFY_PEER, 0-VERIFY_NONE
 	int depth,			// 証明書チェーンの長さ
 	char *ca_file,		// CA証明書ファイル
@@ -763,12 +763,67 @@ static OPENSSL_INFO *ssl_init(
 	case 3:
 		sslm = SSLv2_client_method();
 		break;
+	// case 4: STARTTLS
+		// handled elsewhere 
+	case 5:
+		sslm = TLSv1_2_client_method();
+		break;
 	}
 	si->ctx = SSL_CTX_new(sslm);
 	if (si->ctx == NULL){
 		ERR_error_string(ERR_get_error(), err_str);
 		LocalFree(si);
 		return 0;
+	}
+	if (op.SocLog > 0) {
+		TCHAR msg[MSG_SIZE], *req_type = STR_SSL_UNKNOWN, *got_type = STR_SSL_UNKNOWN;
+		switch (ssl_type) {
+			case 0:
+			default:
+				req_type = STR_SSL_AUTO;
+				break;
+			case 1:
+				req_type = STR_SSL_TLS10;
+				break;
+			case 2:
+				req_type = STR_SSL_SSL30;
+				break;
+			case 3:
+				req_type = STR_SSL_SSL20;
+				break;
+			// case 4: STARTTLS
+				// handled elsewhere 
+			case 5:
+				req_type = STR_SSL_TLS12;
+				break;
+		}
+		if (si->ctx->method) {
+		switch (si->ctx->method->version) {
+			case 2:
+				got_type = STR_SSL_SSL20;
+				break;
+			case 768:
+				got_type = STR_SSL_SSL30;
+				break;
+			case 769:
+				got_type = STR_SSL_TLS10;
+				break;
+			case 770:
+				got_type = STR_SSL_TLS11;
+				break;
+			case 771:
+				got_type = STR_SSL_TLS12;
+				break;
+			case 772:
+				got_type = STR_SSL_TLS12;
+				break;
+			default:
+				got_type = STR_SSL_UNKNOWN;
+				break;
+		}
+		}
+		wsprintf(msg, TEXT("    SSL method requested %s, got %s\r\n"), req_type, got_type);
+		log_save(msg);
 	}
 	SSL_CTX_set_options(si->ctx, SSL_OP_ALL);
 	SSL_CTX_set_mode(si->ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);

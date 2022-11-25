@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2013 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -1982,14 +1982,13 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetCon
 	TCHAR path[BUF_SIZE], pathBackup[BUF_SIZE];
 	TCHAR *MemFile, *AllocBuf = NULL;
 	TCHAR *p, *r, *s;
-	char *FileBuf;
+	unsigned char *FileBuf;
 	long FileSize;
 #ifdef UNICODE
 	long Len;
 #endif
 	int LineCnt = 0;
-	int i;
-	int retcode = 0;
+	int i, offset = 0, retcode = 0;
 
 	str_join_t(path, DataDir, FileName, (TCHAR *)-1);
 
@@ -2038,17 +2037,20 @@ int file_read_address_book(TCHAR *FileName, ADDRESSBOOK *tpAddrBook, BOOL GetCon
 
 #ifdef UNICODE
 	//UNICODE
-	if (op.Version < 3000) {
+	if( *FileBuf == 0xEF && *(FileBuf+1) == 0xBB && *(FileBuf+2) == 0xBF ) {
+		CP_int = CP_UTF8;
+		offset = 3;
+	} else if (op.Version < 3000) {
 		// nPOPuk used CP_ACP for Version < 3000
 		CP_int = CP_ACP;
 	}
-	Len = char_to_tchar_size(FileBuf);
+	Len = char_to_tchar_size(FileBuf+offset);
 	MemFile = AllocBuf = (TCHAR *)mem_alloc(sizeof(TCHAR) * (Len + 1));
 	if (MemFile == NULL) {
 		mem_free(&FileBuf);
 		return -1;
 	}
-	char_to_tchar(FileBuf, MemFile, Len);
+	char_to_tchar(FileBuf+offset, MemFile, Len);
 	FileSize = Len;
 	CP_int = CP_UTF8; // restore to UTF8
 #else	// UNICODE

@@ -1,5 +1,5 @@
-nPOPuk v3.04                                     readme.txt
-                                            2 November 2017
+nPOPuk v3.05beta1                                readme.txt
+                                           25 November 2023
 -----------------------------------------------------------
 
 
@@ -63,7 +63,8 @@ This version extends the original nPOP v1.0.9 version to
 include the following features:
 
 * A box to filter the displayed messages for quick
-  searching.
+  searching; new in 3.05, "*" will show only new messages
+  and "~" will show only flagged messages.
 
 * Highlighting links and making them active in received
   messages (RichEdit functionality). 
@@ -85,6 +86,7 @@ include the following features:
   The Windows CE versions of this program also include
   software from http://www.essemer.com.au/
   Please read LICENSE_wcecompat.txt
+  New in 3.05, TLS 1.2 is added to the SSL setup dialog.
 
 * Option to set receive options (eg, number of lines to
   download on check) on a per-account basis, instead of

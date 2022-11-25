@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2022 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -119,8 +119,10 @@
 #define STR_ERR_SOCK_NOUSERID		TEXT("No username set")
 #define STR_ERR_SOCK_NOPASSWORD		TEXT("No password set")
 #define STR_ERR_SOCK_BADPASSWORD	TEXT("Username or password error\r\n")
+#define STR_ERR_SOCK_BADMAILBOX		TEXT("Mailbox not found\r\n")
 #define STR_ERR_SOCK_ACCOUNT		TEXT("Account was not accepted\r\n")
 #define STR_ERR_SOCK_NOAPOP			TEXT("Server does not accept APOP")
+#define STR_ERR_SOCK_NOPLAIN		TEXT("Server does not accept AUTH PLAIN")
 #define STR_ERR_SOCK_STAT			TEXT("STAT failed\r\n")
 #define STR_ERR_SOCK_TOP			TEXT("TOP failed\r\n")
 #define STR_ERR_SOCK_RETR			TEXT("RETR failed\r\n")
@@ -394,8 +396,12 @@
 // SSL, SMTP-AUTH
 #define STR_SSL_AUTO				TEXT("Auto")
 #define STR_SSL_TLS10				TEXT("TLS 1.0")
+#define STR_SSL_TLS11				TEXT("TLS 1.1")
+#define STR_SSL_TLS12				TEXT("TLS 1.2")
+#define STR_SSL_TLS13				TEXT("TLS 1.3")
 #define STR_SSL_SSL30				TEXT("SSL 3.0")
 #define STR_SSL_SSL20				TEXT("SSL 2.0")
+#define STR_SSL_UNKNOWN				TEXT("UNKNOWN")
 #define STR_SSL_STARTTLS			TEXT("STARTTLS")
 #define STR_SMTPAUTH_CRAM_MD5		TEXT("CRAM-MD5")
 #define STR_SMTPAUTH_LOGIN			TEXT("LOGIN")

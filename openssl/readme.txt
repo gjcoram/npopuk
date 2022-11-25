@@ -1,4 +1,4 @@
-readme.txt for openssl (version 1.0.2j)
+readme.txt for openssl (version 1.0.2u)
 
 Please review LICENSE.txt
 
@@ -17,7 +17,7 @@ Please review LICENSE.txt
 5) If you are changing versions, you may need to re-create ntlib.mak
    This requires perl.
 
-   perl Configure no-rc5 no-idea no-ec no-asm VC-WIN32
+   perl configure
 
 6) nmake -f ntlib.mak
 

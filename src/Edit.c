@@ -928,12 +928,14 @@ LRESULT CALLBACK SubClassSentProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
 				// new height of preview pane
 				pp_height = rcRect.bottom - rcRect.top;
 				if (pp_height < op.PreviewPaneMinHeight) {
+					// new height is too small -> clamp to minimum
 					pp_height = op.PreviewPaneMinHeight;
 				}
 				dh = op.PreviewPaneHeight - pp_height;
 				lv_height += dh;
-				if (lv_height < 2*op.PreviewPaneMinHeight) {
-					dh = 2*op.PreviewPaneMinHeight - lv_height;
+				// ensure lv_height is big enough
+				if (lv_height < op.PreviewPaneMinHeight) {
+					dh = op.PreviewPaneMinHeight - lv_height;
 					lv_height += dh;
 					pp_height -= dh;
 				}

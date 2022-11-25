@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2022 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -987,7 +987,7 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 	TCHAR *str = NULL;
 	int i, ItemCnt, len = lstrlen(buf);
-	BOOL redo = FALSE;
+	BOOL redo = FALSE, show_new = FALSE, show_flag = FALSE;
 
 	if (FilterString == NULL) {
 		redo = TRUE;
@@ -1008,11 +1008,17 @@ void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 	}
 	mem_free(&FilterString);
 	FilterString = alloc_copy_t(buf);
-	str = (TCHAR*)mem_alloc(sizeof(TCHAR) * (len+3));
-	if (str == NULL) {
-		return;
+	if( buf[0] == TEXT('*') && buf[1] == TEXT('\0')) {
+		show_new = TRUE;
+	} else if( buf[0] == TEXT('~') && buf[1] == TEXT('\0')) {
+		show_flag = TRUE;
+	} else {
+		str = (TCHAR*)mem_alloc(sizeof(TCHAR) * (len+3));
+		if (str == NULL) {
+			return;
+		}
+		wsprintf(str, TEXT("*%s*"), buf);
 	}
-	wsprintf(str, TEXT("*%s*"), buf);
 
 	if (redo) {
 		ListView_ShowItem(hListView, MailBox + SelBox, FALSE, FALSE);
@@ -1023,7 +1029,15 @@ void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		BOOL match = FALSE;
 		if (tpMailItem != NULL) {
-			if (tpMailItem->Subject != NULL && str_match_t(str, tpMailItem->Subject)) {
+			if (show_new) {
+				if (tpMailItem->New) {
+					match = TRUE;
+				}
+			} else if (show_flag) {
+				if (tpMailItem->Mark == ICON_FLAG) {
+					match = TRUE;
+				}
+			} else if (tpMailItem->Subject != NULL && str_match_t(str, tpMailItem->Subject)) {
 				match = TRUE;
 			//} else if (SelBox == MAILBOX_SEND && tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
 			} else if (tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {

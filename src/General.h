@@ -163,8 +163,8 @@ extern int sprintf_s();
 #define MAILBOX_USER			1
 #define MAILBOX_TYPE_ACCOUNT	0
 #define MAILBOX_TYPE_SAVE		1
-//#define MAILBOX_TYPE_IMAP		?
 #define MAILBOX_IMPORT_SAVE		2
+#define MAILBOX_TYPE_IMAP		4
 #define MAILBOX_ADD_SAVE		10
 
 #define VSELBOX_FLAG			100
@@ -252,6 +252,22 @@ extern int sprintf_s();
 #define POP_TOP					10
 #define POP_RETR				11
 #define POP_DELE				12
+
+#define IMAP_ERR				POP_ERR				//imap4 command flag
+#define IMAP_QUIT				POP_QUIT
+#define IMAP_START				POP_START
+#define IMAP_STARTTLS			1
+#define IMAP_USER				2
+#define IMAP_AUTH				3
+#define IMAP_SELECT				4
+#define IMAP_STAT				5
+#define IMAP_LIST				6
+#define IMAP_UIDL				7
+#define IMAP_UIDL_ALL			8
+#define IMAP_UIDL_CHECK			9
+#define IMAP_TOP				10
+#define IMAP_RETR				11
+#define IMAP_DELE				12
 
 #define SMTP_ERR				POP_ERR				//smtp command flag
 #define SMTP_QUIT				POP_QUIT
@@ -926,6 +942,12 @@ void pop3_free(void);
 HWND findTodayPlugin(WCHAR *wTodayItem);
 #endif
 
+// Imap4
+BOOL imap4_list_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL imap4_exec_proc(HWND hWnd, SOCKET soc, char *buf, int len, TCHAR *ErrStr, MAILBOX *tpMailBox, BOOL ShowFlag);
+BOOL imap4_salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
+void imap4_free(void);
+
 // Smtp
 void HMAC_MD5(unsigned char *input, int len, unsigned char *key, int keylen, unsigned char *digest);
 #ifdef WSAASYNC
@@ -1233,6 +1255,7 @@ void OpenItem(HWND hWnd, BOOL MsgFlag, BOOL NoAppFlag, BOOL CheckSel);
 BOOL ItemToSaveBox(HWND hWnd, MAILITEM *tpSingleItem, int TargetBox, TCHAR *fname, BOOL ask, BOOL del);
 void SetReplyFwdMark(MAILITEM *tpReMailItem, char Mark, int rebox);
 void SetMailboxMark(int Box, int Status, BOOL Add);
+BOOL salvage_buffer(HWND hWnd, MAILBOX *tpMailBox, BOOL ShowFlag);
 void ResetTimeoutTimer();
 int ParanoidMessageBox(HWND hWnd, TCHAR *strMsg, TCHAR *strTitle, unsigned int nStyle);
 #ifndef _WIN32_WCE
