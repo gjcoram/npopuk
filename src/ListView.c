@@ -984,6 +984,50 @@ LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam)
 	return FALSE;
 }
 
+BOOL ListView_CheckFilter(MAILITEM *tpMailItem, TCHAR *buf, BOOL show_new, BOOL show_flag, TCHAR *str) {
+	BOOL match = FALSE, free_str = FALSE;
+
+	if (str == NULL) {
+		// caller did not allocate str (nor set show_new, show_flag)
+		if( buf[0] == TEXT('*') && buf[1] == TEXT('\0')) {
+			show_new = TRUE;
+		} else if( buf[0] == TEXT('~') && buf[1] == TEXT('\0')) {
+			show_flag = TRUE;
+		} else {
+			int len = lstrlen(buf);
+			str = (TCHAR*)mem_alloc(sizeof(TCHAR) * (len+3));
+			if (str == NULL) {
+				return TRUE;
+			}
+			wsprintf(str, TEXT("*%s*"), buf);
+			free_str = TRUE;
+		}
+	}
+	if (show_new) {
+		if (tpMailItem->New) {
+			match = TRUE;
+		}
+	} else if (show_flag) {
+		if (tpMailItem->Mark == ICON_FLAG) {
+			match = TRUE;
+		}
+	} else if (tpMailItem->Subject != NULL && str_match_t(str, tpMailItem->Subject)) {
+		match = TRUE;
+	//} else if (SelBox == MAILBOX_SEND && tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
+	} else if (tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
+		match = TRUE;
+	//} else if (SelBox != MAILBOX_SEND && tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
+	} else if (tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
+		match = TRUE;
+	}
+
+	if (free_str) {
+		mem_free(&str);
+	}
+	return match;
+}
+
+
 void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 	TCHAR *str = NULL;
 	int i, ItemCnt, len = lstrlen(buf);
@@ -1029,23 +1073,7 @@ void ListView_FilterMessages(HWND hListView, TCHAR *buf) {
 		MAILITEM *tpMailItem = (MAILITEM *)ListView_GetlParam(hListView, i);
 		BOOL match = FALSE;
 		if (tpMailItem != NULL) {
-			if (show_new) {
-				if (tpMailItem->New) {
-					match = TRUE;
-				}
-			} else if (show_flag) {
-				if (tpMailItem->Mark == ICON_FLAG) {
-					match = TRUE;
-				}
-			} else if (tpMailItem->Subject != NULL && str_match_t(str, tpMailItem->Subject)) {
-				match = TRUE;
-			//} else if (SelBox == MAILBOX_SEND && tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
-			} else if (tpMailItem->To != NULL && str_match_t(str, tpMailItem->To)) {
-				match = TRUE;
-			//} else if (SelBox != MAILBOX_SEND && tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
-			} else if (tpMailItem->From != NULL && str_match_t(str, tpMailItem->From)) {
-				match = TRUE;
-			}
+			match = ListView_CheckFilter(tpMailItem, buf, show_new, show_flag, str);
 		}
 		if (match == FALSE) {
 			ListView_DeleteItem(hListView, i);

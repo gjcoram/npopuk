@@ -7,7 +7,7 @@
  *		http://www.nakka.com/
  *		nakka@nakka.com
  *
- * nPOPuk code additions copyright (C) 2006-2012 by Geoffrey Coram. All rights reserved.
+ * nPOPuk code additions copyright (C) 2006-2022 by Geoffrey Coram. All rights reserved.
  * Info at http://www.npopuk.org.uk
  */
 
@@ -97,6 +97,7 @@ extern BOOL NewMail_Flag;
 extern BOOL EndThreadSortFlag;
 extern BOOL ServerDelete;
 extern BOOL ViewReopen;
+extern TCHAR *FilterString;
 
 extern int PopBeforeSmtpFlag;
 extern int ssl_type;
@@ -1228,6 +1229,7 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 	MAILITEM *tpMailItem;
 	LV_ITEM lvi;
 	TCHAR *p;
+	BOOL show_msg = ShowFlag;
 	char *new_message_id;
 	int i, nOldMailCnt = NewMailCnt;
 	int st = 0, reverse;
@@ -1376,8 +1378,11 @@ static int list_proc_top(HWND hWnd, SOCKET soc, char *buf, int buflen, TCHAR *Er
 				(*(tpMailBox->tpMailItem + i))->New = FALSE;
 			}
 		}
+		if (show_msg == TRUE && FilterString != NULL && *FilterString != TEXT('\0')) {
+			show_msg = ListView_CheckFilter(tpMailItem, FilterString, 0, 0, NULL);
+		}
 
-		if (ShowFlag == TRUE) {
+		if (show_msg == TRUE) {
 			MAILITEM *listItem;
 
 			st = ListView_ComputeState(tpMailItem->Priority, tpMailItem->Multipart);

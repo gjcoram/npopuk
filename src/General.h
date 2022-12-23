@@ -1224,6 +1224,7 @@ BOOL ListView_ShowItem(HWND hListView, MAILBOX *tpMailBox, BOOL AddLast, BOOL Re
 int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK AddrCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 LRESULT ListView_NotifyProc(HWND hWnd, LPARAM lParam);
+BOOL ListView_CheckFilter(MAILITEM *tpMailItem, TCHAR *buf, BOOL show_new, BOOL show_flag, TCHAR *str);
 void ListView_FilterMessages(HWND hListView, TCHAR *buf);
 int ListView_ComputeState(int Priority, int Multipart);
 
