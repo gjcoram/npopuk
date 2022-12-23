@@ -17,7 +17,7 @@ OPENSSLDIR=\usr\local\ssl
 # Set your compiler options
 PLATFORM=VC-CE
 CC=$(CC)
-CFLAG= /MC /O1i /W3 /WX /GF /Gy /nologo -DUNICODE -D_UNICODE -DOPENSSL_SYSNAME_WINCE -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DNO_CHMOD -DOPENSSL_SMALL_FOOTPRINT -D_WIN32_WCE=211 -DUNDER_CE=211 -DWCE_PLATFORM_"MS_HPC_PRO" -Dx86 -D_X86_ -D_i386_ -Di_386_ -I$(WCECOMPAT)/include -DOPENSSL_NO_IDEA -DOPENSSL_NO_RC5 -DOPENSSL_NO_MD2 -DOPENSSL_NO_KRB5 -DOPENSSL_NO_EC -DOPENSSL_NO_ECDSA -DOPENSSL_NO_ECDH -DOPENSSL_NO_GOST -DOPENSSL_NO_JPAKE -DOPENSSL_NO_DYNAMIC_ENGINE -I"C:\Windows CE Tools\WCE211\MS HPC Pro\include" -I"..\zlib123"
+CFLAG= /MC /O1i /W3 /GF /Gy /nologo -DUNICODE -D_UNICODE -DOPENSSL_SYSNAME_WINCE -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DNO_CHMOD -DOPENSSL_SMALL_FOOTPRINT -D_WIN32_WCE=211 -DUNDER_CE=211 -DWCE_PLATFORM_"MS_HPC_PRO" -Dx86 -D_X86_ -D_i386_ -Di_386_ -I$(WCECOMPAT)/include -DOPENSSL_NO_IDEA -DOPENSSL_NO_RC5 -DOPENSSL_NO_MD2 -DOPENSSL_NO_KRB5 -DOPENSSL_NO_EC -DOPENSSL_NO_ECDSA -DOPENSSL_NO_ECDH -DOPENSSL_NO_GOST -DOPENSSL_NO_JPAKE -DOPENSSL_NO_DYNAMIC_ENGINE -I"C:\Windows CE Tools\WCE211\MS HPC Pro\include" -I"..\zlib123"
 APP_CFLAG= /Zi /Fd$(TMP_D)/app
 LIB_CFLAG= /Zi /Fd$(TMP_D)/lib
 SHLIB_CFLAG=
@@ -117,7 +117,7 @@ HEADER=$(INCL_D)\e_os.h \
 	$(INCL_D)\rc2_locl.h $(INCL_D)\rc4_locl.h $(INCL_D)\bf_pi.h \
 	$(INCL_D)\bf_locl.h $(INCL_D)\cast_s.h $(INCL_D)\cast_lcl.h \
 	$(INCL_D)\aes_locl.h $(INCL_D)\cmll_locl.h $(INCL_D)\seed_locl.h \
-	$(INCL_D)\modes_lcl.h $(INCL_D)\bn_lcl.h $(INCL_D)\bn_prime.h \
+	$(INCL_D)\modes_lcl.h $(INCL_D)\bn_int.h $(INCL_D)\bn_lcl.h $(INCL_D)\bn_prime.h \
 	$(INCL_D)\dsa_locl.h $(INCL_D)\bio_lcl.h $(INCL_D)\obj_dat.h \
 	$(INCL_D)\obj_xref.h $(INCL_D)\evp_locl.h $(INCL_D)\asn1_locl.h \
 	$(INCL_D)\pcy_int.h $(INCL_D)\cms_lcl.h $(INCL_D)\conf_def.h \
@@ -351,7 +351,8 @@ CRYPTOOBJ=$(OBJ_D)\cryptlib.obj \
 	$(OBJ_D)\srp_vfy.obj \
 	$(OBJ_D)\e_aes_cbc_hmac_sha256.obj $(OBJ_D)\cms_kari.obj \
 	$(OBJ_D)\wrap128.obj $(OBJ_D)\dh_rfc5114.obj \
-	$(OBJ_D)\v3_scts.obj $(OBJ_D)\dh_kdf.obj
+	$(OBJ_D)\v3_scts.obj $(OBJ_D)\dh_kdf.obj \
+	$(OBJ_D)\getenv.obj
 
 E_SHLIB=
 
@@ -471,6 +472,9 @@ $(INCL_D)\seed_locl.h: $(SRC_D)\crypto\seed\seed_locl.h
 
 $(INCL_D)\modes_lcl.h: $(SRC_D)\crypto\modes\modes_lcl.h
 	$(CP) "$(SRC_D)\crypto\modes\modes_lcl.h" "$(INCL_D)\modes_lcl.h"
+
+$(INCL_D)\bn_int.h: $(SRC_D)\crypto\bn_int.h
+	$(CP) "$(SRC_D)\crypto\bn_int.h" "$(INCL_D)\bn_int.h"
 
 $(INCL_D)\bn_lcl.h: $(SRC_D)\crypto\bn\bn_lcl.h
 	$(CP) "$(SRC_D)\crypto\bn\bn_lcl.h" "$(INCL_D)\bn_lcl.h"
@@ -2508,6 +2512,9 @@ $(OBJ_D)\srp_lib.obj: $(SRC_D)\crypto\srp\srp_lib.c
 
 $(OBJ_D)\srp_vfy.obj: $(SRC_D)\crypto\srp\srp_vfy.c
 	$(CC) /Fo$(OBJ_D)\srp_vfy.obj  $(LIB_CFLAGS) -c $(SRC_D)\crypto\srp\srp_vfy.c
+
+$(OBJ_D)\getenv.obj: $(SRC_D)\crypto\getenv.c
+	$(CC) /Fo$(OBJ_D)\getenv.obj  $(LIB_CFLAGS) -c $(SRC_D)\crypto\getenv.c
 
 $(O_SSL): $(SSLOBJ)
 	$(MKLIB) /out:$(O_SSL) @<<
