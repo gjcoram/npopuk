@@ -1,5 +1,5 @@
-nPOPuk v3.05beta1                                readme.txt
-                                           25 November 2023
+nPOPuk v3.05                                     readme.txt
+                                             3 January 2023
 -----------------------------------------------------------
 
 
